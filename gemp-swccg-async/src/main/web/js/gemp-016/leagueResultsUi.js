@@ -37,6 +37,19 @@ var LeagueResultsUI = Class.extend({
             });
     },
 
+    loadResultsWithLeague:function (type) {
+        var that = this;
+        this.communication.getLeagues(
+            function (xml) {
+                that.loadedLeagueResults(xml);
+                that.communication.getLeague(type,
+                    function (xml) {
+                        log(xml);
+                        that.loadedLeague(xml);
+                    });
+            });
+    },
+
     loadedLeague:function (xml) {
         var that = this;
         log(xml);
@@ -53,6 +66,7 @@ var LeagueResultsUI = Class.extend({
             var end = league.getAttribute("end");
             var member = league.getAttribute("member");
             var joinable = league.getAttribute("joinable");
+            var draftable = league.getAttribute("draftable");
 
             $("#leagueExtraInfo").append("<div class='leagueName'>" + leagueName + "</div>");
             $("#leagueExtraInfo").append("<div class='leagueID'>League ID: " + leagueType + "</div>");
@@ -60,8 +74,20 @@ var LeagueResultsUI = Class.extend({
             var costStr = formatPrice(cost);
             $("#leagueExtraInfo").append("<div class='leagueCost'><b>Cost:</b> " + costStr + "</div>");
 
-            if (member == "true")
-                $("#leagueExtraInfo").append("<div class='leagueMembership'>You are already a member of this league.</div>");
+            if (member == "true") {
+                var memberDiv = $("<div class='leagueMembership'>You are already a member of this league. </div>");
+                if (draftable == "true") {
+                    var draftBut = $("<button>Go to draft</button>").button();
+                    var draftFunc = (function (leagueCode) {
+                        return function() {
+                            location.href = "/gemp-swccg/soloDraft.html?leagueType="+leagueCode;
+                        };
+                    })(leagueType);
+                    draftBut.click(draftFunc);
+                    memberDiv.append(draftBut);
+                }
+                $("#leagueExtraInfo").append(memberDiv);
+            }
             else if (joinable == "true") {
                 var joinBut = $("<button>Join league</button>").button();
 
@@ -70,7 +96,7 @@ var LeagueResultsUI = Class.extend({
                         that.displayBuyAction("Do you want to join the league by paying " + costString + "?",
                             function () {
                                 that.communication.joinLeague(leagueCode, function () {
-                                    that.loadResults();
+                                    that.loadResultsWithLeague(leagueCode);
                                 }, {
                                     "409":function () {
                                         alert("You don't have enough funds to join this league.");

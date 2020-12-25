@@ -170,7 +170,7 @@ var GempSwccgCommunication = Class.extend({
                 participantId:getUrlParam("participantId") },
             success:this.deliveryCheck(callback),
             error:this.errorCheck(errorMap),
-            dataType:"xml"
+            dataType:"html"
         });
     },
     getReplay:function (replayId, callback, errorMap) {
@@ -725,6 +725,31 @@ var GempSwccgCommunication = Class.extend({
             success:this.deliveryCheck(callback),
             error:this.errorCheck(errorMap),
             dataType:"html"
+        });
+    },
+    getDraft:function (leagueType, callback, errorMap) {
+        $.ajax({
+            type:"GET",
+            url:this.url + "/soloDraft/"+leagueType,
+            cache:false,
+            data:{
+                participantId:getUrlParam("participantId")},
+            success:callback,
+            error:this.errorCheck(errorMap),
+            dataType:"xml"
+        });
+    },
+    makeDraftPick:function (leagueType, choiceId, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/soloDraft/"+leagueType,
+            cache:false,
+            data:{
+                choiceId:choiceId,
+                participantId:getUrlParam("participantId")},
+            success:callback,
+            error:this.errorCheck(errorMap),
+            dataType:"xml"
         });
     }
 });

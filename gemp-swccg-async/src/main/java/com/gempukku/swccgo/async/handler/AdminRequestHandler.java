@@ -5,6 +5,7 @@ import com.gempukku.swccgo.async.HttpProcessingException;
 import com.gempukku.swccgo.async.ResponseWriter;
 import com.gempukku.swccgo.cache.CacheManager;
 import com.gempukku.swccgo.collection.CollectionsManager;
+import com.gempukku.swccgo.draft2.SoloDraftDefinitions;
 import com.gempukku.swccgo.db.LeagueDAO;
 import com.gempukku.swccgo.db.PlayerDAO;
 import com.gempukku.swccgo.db.GempSettingDAO;
@@ -33,6 +34,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class AdminRequestHandler extends SwccgoServerRequestHandler implements UriRequestHandler {
+    private SoloDraftDefinitions _soloDraftDefinitions;
     private LeagueService _leagueService;
     private TournamentService _tournamentService;
     private CacheManager _cacheManager;
@@ -48,6 +50,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
     public AdminRequestHandler(Map<Type, Object> context) {
         super(context);
         _leagueService = extractObject(context, LeagueService.class);
+        _soloDraftDefinitions = extractObject(context, SoloDraftDefinitions.class);
         _tournamentService = extractObject(context, TournamentService.class);
         _cacheManager = extractObject(context, CacheManager.class);
         _hallServer = extractObject(context, HallServer.class);
@@ -78,6 +81,10 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             previewConstructedLeague(request, responseWriter);
         } else if (uri.equals("/addConstructedLeague") && request.getMethod() == HttpMethod.POST) {
             addConstructedLeague(request, responseWriter);
+        } else if (uri.equals("/previewSoloDraftLeague") && request.getMethod() == HttpMethod.POST) {
+            previewSoloDraftLeague(request, responseWriter);
+        } else if (uri.equals("/addSoloDraftLeague") && request.getMethod() == HttpMethod.POST) {
+            addSoloDraftLeague(request, responseWriter);
         } else if (uri.equals("/addPlayersToLeague") && request.getMethod() == HttpMethod.POST) {
             addPlayersToLeague(request, responseWriter, e);
         } else if (uri.equals("/addItems") && request.getMethod() == HttpMethod.POST) {
@@ -499,7 +506,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         }
 
         String parameters = sb.toString();
-        LeagueData leagueData = new NewConstructedLeagueData(_cardLibrary, parameters);
+        LeagueData leagueData = new NewConstructedLeagueData(_cardLibrary, _soloDraftDefinitions, parameters);
         List<LeagueSeriesData> series = leagueData.getSeries();
         int leagueStart = series.get(0).getStart();
         int displayEnd = DateUtils.offsetDate(series.get(series.size() - 1).getEnd(), 2);
@@ -536,7 +543,89 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         }
 
         String parameters = sb.toString();
-        LeagueData leagueData = new NewConstructedLeagueData(_cardLibrary, parameters);
+        LeagueData leagueData = new NewConstructedLeagueData(_cardLibrary, _soloDraftDefinitions, parameters);
+
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+
+        Document doc = documentBuilder.newDocument();
+
+        final List<LeagueSeriesData> series = leagueData.getSeries();
+
+        int end = series.get(series.size() - 1).getEnd();
+
+        Element leagueElem = doc.createElement("league");
+
+        leagueElem.setAttribute("name", name);
+        leagueElem.setAttribute("cost", String.valueOf(cost));
+        leagueElem.setAttribute("start", String.valueOf(series.get(0).getStart()));
+        leagueElem.setAttribute("end", String.valueOf(end));
+
+        for (LeagueSeriesData serie : series) {
+            Element serieElem = doc.createElement("serie");
+            serieElem.setAttribute("type", serie.getName());
+            serieElem.setAttribute("maxMatches", String.valueOf(serie.getMaxMatches()));
+            serieElem.setAttribute("start", String.valueOf(serie.getStart()));
+            serieElem.setAttribute("end", String.valueOf(serie.getEnd()));
+            serieElem.setAttribute("format", _formatLibrary.getFormat(serie.getFormat()).getName());
+            serieElem.setAttribute("collection", serie.getCollectionType().getFullName());
+            serieElem.setAttribute("limited", String.valueOf(serie.isLimited()));
+
+            leagueElem.appendChild(serieElem);
+        }
+
+        doc.appendChild(leagueElem);
+
+        responseWriter.writeXmlResponse(doc);
+    }
+
+    private void addSoloDraftLeague(HttpRequest request, ResponseWriter responseWriter) throws Exception {
+        validateLeagueAdmin(request);
+
+        HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
+        String format = getFormParameterSafely(postDecoder, "format");
+        String start = getFormParameterSafely(postDecoder, "start");
+        String serieDuration = getFormParameterSafely(postDecoder, "seriesDuration");
+        String maxMatches = getFormParameterSafely(postDecoder, "maxMatches");
+        String name = getFormParameterSafely(postDecoder, "name");
+        int cost = Integer.parseInt(getFormParameterSafely(postDecoder, "cost"));
+
+        String code = String.valueOf(System.currentTimeMillis());
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(format+","+start+","+serieDuration+","+maxMatches+","+code+","+name);
+
+        String parameters = sb.toString();
+        LeagueData leagueData = new SoloDraftLeagueData(_cardLibrary, _soloDraftDefinitions, parameters);
+        List<LeagueSeriesData> series = leagueData.getSeries();
+        int leagueStart = series.get(0).getStart();
+        int displayEnd = DateUtils.offsetDate(series.get(series.size() - 1).getEnd(), 2);
+
+        _leagueDao.addLeague(cost, name, code, leagueData.getClass().getName(), parameters, leagueStart, displayEnd, true, true, true, 10, 60);
+
+        _leagueService.clearCache();
+
+        responseWriter.writeHtmlResponse("OK");
+    }
+
+    private void previewSoloDraftLeague(HttpRequest request, ResponseWriter responseWriter) throws Exception {
+        validateLeagueAdmin(request);
+
+        HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
+        String format = getFormParameterSafely(postDecoder, "format");
+        String start = getFormParameterSafely(postDecoder, "start");
+        String serieDuration = getFormParameterSafely(postDecoder, "seriesDuration");
+        String maxMatches = getFormParameterSafely(postDecoder, "maxMatches");
+        String name = getFormParameterSafely(postDecoder, "name");
+        int cost = Integer.parseInt(getFormParameterSafely(postDecoder, "cost"));
+
+        String code = String.valueOf(System.currentTimeMillis());
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(format+","+start+","+serieDuration+","+maxMatches+","+code+","+name);
+
+        String parameters = sb.toString();
+        LeagueData leagueData = new SoloDraftLeagueData(_cardLibrary, _soloDraftDefinitions, parameters);
 
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
@@ -604,7 +693,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         String code = String.valueOf(System.currentTimeMillis());
 
         String parameters = format + "," + start + "," + seriesDuration + "," + maxMatches + "," + code + "," + name;
-        LeagueData leagueData = new NewSealedLeagueData(_cardLibrary, parameters);
+        LeagueData leagueData = new NewSealedLeagueData(_cardLibrary, _soloDraftDefinitions, parameters);
         List<LeagueSeriesData> series = leagueData.getSeries();
         int leagueStart = series.get(0).getStart();
         int displayEnd = DateUtils.offsetDate(series.get(series.size() - 1).getEnd(), 2);
@@ -636,7 +725,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         String code = String.valueOf(System.currentTimeMillis());
 
         String parameters = format + "," + start + "," + seriesDuration + "," + maxMatches + "," + code + "," + name;
-        LeagueData leagueData = new NewSealedLeagueData(_cardLibrary, parameters);
+        LeagueData leagueData = new NewSealedLeagueData(_cardLibrary, _soloDraftDefinitions, parameters);
 
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();

@@ -149,6 +149,13 @@
                                 previewDialog.dialog("open");
                             });
 
+                    $("#previewSoloDraft").click(
+                            function () {
+                                submitFormToAddress("/gemp-swccg-server/admin/previewSoloDraftLeague", $("#addSoloDraftForm").eq(0), displayPreview, previewError);
+                                previewDialog.html("");
+                                previewDialog.dialog("open");
+                            });
+
                     $("#previewConstructed").click(
                             function () {
                                 submitFormToAddress("/gemp-swccg-server/admin/previewConstructedLeague", $("#addConstructedForm").eq(0), displayPreview, previewError);
@@ -188,6 +195,23 @@
     Time Per Player (minutes) <input type="number" name="timePerPlayerMinutes" min="1" value=50 style="min-width: 4em"><br/>
     <input id="previewSealed" type="button" value="Preview sealed league">
     <input type="submit" value="Add sealed league">
+</form>
+
+<h2>Add solo-draft league</h2>
+
+<form id="addSoloDraftForm" method="POST" action="/gemp-swccg-server/admin/addSoloDraftLeague">
+    Name: <input type="text" name="name"><br/>
+    Cost (in silver): <input type="text" name="cost"><br/>
+    Start (YYYYMMDD): <input type="text" name="start"><br/>
+    Format:
+    <select name="format">
+        <option value="c6_draft">Cube v6 Draft</option>
+        <option value="c6obj_draft">Cube v6 Draft + Obj</option>
+    </select><br/>
+    Series duration in days: <input type="text" name="seriesDuration"><br/>
+    Maximum matches in series: <input type="text" name="maxMatches"><br/>
+    <input id="previewSoloDraft" type="button" value="Preview solo draft league">
+    <input type="submit" value="Add solo draft league">
 </form>
 
 <h2>Add constructed league</h2>

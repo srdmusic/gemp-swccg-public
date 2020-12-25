@@ -4,6 +4,7 @@ import com.gempukku.swccgo.DateUtils;
 import com.gempukku.swccgo.async.HttpProcessingException;
 import com.gempukku.swccgo.async.ResponseWriter;
 import com.gempukku.swccgo.competitive.PlayerStanding;
+import com.gempukku.swccgo.draft2.SoloDraftDefinitions;
 import com.gempukku.swccgo.db.vo.League;
 import com.gempukku.swccgo.db.vo.LeagueMatchResult;
 import com.gempukku.swccgo.game.Player;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 public class LeagueRequestHandler extends SwccgoServerRequestHandler implements UriRequestHandler {
+    private final SoloDraftDefinitions _soloDraftDefinitions;
     private LeagueService _leagueService;
     private SwccgoFormatLibrary _formatLibrary;
 
@@ -36,6 +38,7 @@ public class LeagueRequestHandler extends SwccgoServerRequestHandler implements 
 
         _leagueService = extractObject(context, LeagueService.class);
         _formatLibrary = extractObject(context, SwccgoFormatLibrary.class);
+        _soloDraftDefinitions = extractObject(context, SoloDraftDefinitions.class);
     }
 
     @Override
@@ -83,16 +86,19 @@ public class LeagueRequestHandler extends SwccgoServerRequestHandler implements 
         if (league == null)
             throw new HttpProcessingException(404);
 
-        final LeagueData leagueData = league.getLeagueData();
+        final LeagueData leagueData = league.getLeagueData(_soloDraftDefinitions);
         final List<LeagueSeriesData> series = leagueData.getSeries();
 
         int end = series.get(series.size() - 1).getEnd();
+        int start = series.get(0).getStart();
+        int currentDate = DateUtils.getCurrentDate();
 
         Element leagueElem = doc.createElement("league");
         boolean inLeague = _leagueService.isPlayerInLeague(league, resourceOwner);
 
         leagueElem.setAttribute("member", String.valueOf(inLeague));
         leagueElem.setAttribute("joinable", String.valueOf(!inLeague && end >= DateUtils.getCurrentDate()));
+        leagueElem.setAttribute("draftable", String.valueOf(inLeague && leagueData.isSoloDraftLeague() && start <= currentDate));
         leagueElem.setAttribute("type", league.getType());
         leagueElem.setAttribute("name", league.getName());
         leagueElem.setAttribute("cost", String.valueOf(league.getCost()));
@@ -155,7 +161,7 @@ public class LeagueRequestHandler extends SwccgoServerRequestHandler implements 
         Element leagues = doc.createElement("leagues");
 
         for (League league : _leagueService.getActiveLeagues()) {
-            final LeagueData leagueData = league.getLeagueData();
+            final LeagueData leagueData = league.getLeagueData(_soloDraftDefinitions);
             final List<LeagueSeriesData> series = leagueData.getSeries();
 
             int end = series.get(series.size() - 1).getEnd();

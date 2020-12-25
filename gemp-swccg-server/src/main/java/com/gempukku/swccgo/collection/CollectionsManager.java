@@ -78,7 +78,7 @@ public class CollectionsManager {
         }
     }
 
-    private CardCollection getDefaultCollection(boolean withPlaytesting) {
+    public CardCollection getDefaultCollection(boolean withPlaytesting) {
         try {
             _collectionReadyLatch.await();
         } catch (InterruptedException exp) {
@@ -205,7 +205,7 @@ public class CollectionsManager {
         return result;
     }
 
-    public void addItemsToPlayerCollection(boolean notifyPlayer, String reason, Player player, CollectionType collectionType, Collection<CardCollection.Item> items) {
+    public void addItemsToPlayerCollection(boolean notifyPlayer, String reason, Player player, CollectionType collectionType, Collection<CardCollection.Item> items, Map<String, Object> extraInformation) {
         _readWriteLock.writeLock().lock();
         try {
             final CardCollection playerCollection = getPlayerCollection(player, collectionType.getCode());
@@ -217,12 +217,22 @@ public class CollectionsManager {
                     addedCards.addItem(item.getBlueprintId(), item.getCount());
                 }
 
+                if (extraInformation != null) {
+                    Map<String, Object> resultExtraInformation = new HashMap<String, Object>(playerCollection.getExtraInformation());
+                    resultExtraInformation.putAll(extraInformation);
+                    mutableCardCollection.setExtraInformation(resultExtraInformation);
+                }
+
                 setPlayerCollection(player, collectionType.getCode(), mutableCardCollection);
                 _transferDAO.addTransferTo(notifyPlayer, player.getName(), reason, collectionType.getFullName(), 0, addedCards);
             }
         } finally {
             _readWriteLock.writeLock().unlock();
         }
+    }
+
+    public void addItemsToPlayerCollection(boolean notifyPlayer, String reason, Player player, CollectionType collectionType, Collection<CardCollection.Item> items) {
+        addItemsToPlayerCollection(notifyPlayer, reason, player, collectionType, items, null);
     }
 
     public void addItemsToPlayerCollection(boolean notifyPlayer, String reason, String player, CollectionType collectionType, Collection<CardCollection.Item> items) {

@@ -1,0 +1,11 @@
+[
+  {
+    "type": "c6_draft",
+    "location": "/draft/cube6Draft.json"
+  },
+
+  {
+    "type": "c6obj_draft",
+    "location": "/draft/cubeObj6Draft.json"
+  }
+]

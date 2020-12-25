@@ -7,6 +7,7 @@ import java.util.*;
 public class DefaultCardCollection implements MutableCardCollection {
     private Map<String, Item> _counts = new LinkedHashMap<String, Item>();
     private int _currency;
+    private Map<String, Object> _extraInformation = new HashMap<String, Object>();
 
     public DefaultCardCollection() {
     }
@@ -14,6 +15,15 @@ public class DefaultCardCollection implements MutableCardCollection {
     public DefaultCardCollection(CardCollection cardCollection) {
         _counts.putAll(cardCollection.getAll());
         _currency = cardCollection.getCurrency();
+    }
+
+    public synchronized void setExtraInformation(Map<String, Object> extraInformation) {
+        _extraInformation = extraInformation;
+    }
+
+    @Override
+    public synchronized Map<String, Object> getExtraInformation() {
+        return Collections.unmodifiableMap(_extraInformation);
     }
 
     @Override
