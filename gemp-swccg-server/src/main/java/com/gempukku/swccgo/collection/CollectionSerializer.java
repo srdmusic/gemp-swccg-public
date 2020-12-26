@@ -4,9 +4,6 @@ import com.gempukku.swccgo.common.CardCounts;
 import com.gempukku.swccgo.game.CardCollection;
 import com.gempukku.swccgo.game.DefaultCardCollection;
 import com.gempukku.swccgo.game.MutableCardCollection;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -251,6 +248,7 @@ public class CollectionSerializer {
                 collection.addItem(blueprintId + "*", foilCount);
 
         }
+        
         return collection;
     }
 
