@@ -579,35 +579,6 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         responseWriter.writeXmlResponse(doc);
     }
 
-    private void addSoloDraftLeague(HttpRequest request, ResponseWriter responseWriter) throws Exception {
-        validateLeagueAdmin(request);
-
-        HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        String format = getFormParameterSafely(postDecoder, "format");
-        String start = getFormParameterSafely(postDecoder, "start");
-        String serieDuration = getFormParameterSafely(postDecoder, "seriesDuration");
-        String maxMatches = getFormParameterSafely(postDecoder, "maxMatches");
-        String name = getFormParameterSafely(postDecoder, "name");
-        int cost = Integer.parseInt(getFormParameterSafely(postDecoder, "cost"));
-
-        String code = String.valueOf(System.currentTimeMillis());
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(format+","+start+","+serieDuration+","+maxMatches+","+code+","+name);
-
-        String parameters = sb.toString();
-        LeagueData leagueData = new SoloDraftLeagueData(_cardLibrary, _soloDraftDefinitions, parameters);
-        List<LeagueSeriesData> series = leagueData.getSeries();
-        int leagueStart = series.get(0).getStart();
-        int displayEnd = DateUtils.offsetDate(series.get(series.size() - 1).getEnd(), 2);
-
-        _leagueDao.addLeague(cost, name, code, leagueData.getClass().getName(), parameters, leagueStart, displayEnd, true, true, true, 10, 60);
-
-        _leagueService.clearCache();
-
-        responseWriter.writeHtmlResponse("OK");
-    }
-
     private void previewSoloDraftLeague(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         validateLeagueAdmin(request);
 
@@ -659,6 +630,47 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         doc.appendChild(leagueElem);
 
         responseWriter.writeXmlResponse(doc);
+    }
+
+    private void addSoloDraftLeague(HttpRequest request, ResponseWriter responseWriter) throws Exception {
+        validateLeagueAdmin(request);
+
+        HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
+        String format = getFormParameterSafely(postDecoder, "format");
+        String start = getFormParameterSafely(postDecoder, "start");
+        String serieDuration = getFormParameterSafely(postDecoder, "seriesDuration");
+        String maxMatches = getFormParameterSafely(postDecoder, "maxMatches");
+        String name = getFormParameterSafely(postDecoder, "name");
+        int cost = Integer.parseInt(getFormParameterSafely(postDecoder, "cost"));
+
+        String allowSpectatorsOnOff = getFormParameterSafely(postDecoder, "allowSpectators");
+        boolean allowSpectators = allowSpectatorsOnOff != null && allowSpectatorsOnOff.equals("on");
+
+        String allowTimeExtensionsOnOff = getFormParameterSafely(postDecoder, "allowTimeExtensions");
+        boolean allowTimeExtensions = allowTimeExtensionsOnOff != null && allowTimeExtensionsOnOff.equals("on");
+
+        String showPlayerNamesOnOff = getFormParameterSafely(postDecoder, "showPlayerNames");
+        boolean showPlayerNames = showPlayerNamesOnOff != null && showPlayerNamesOnOff.equals("on");
+
+        int decisionTimeoutSeconds = Integer.parseInt(getFormParameterSafely(postDecoder, "decisionTimeoutSeconds"));
+        int timePerPlayerMinutes = Integer.parseInt(getFormParameterSafely(postDecoder, "timePerPlayerMinutes"));
+
+        String code = String.valueOf(System.currentTimeMillis());
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(format+","+start+","+serieDuration+","+maxMatches+","+code+","+name);
+
+        String parameters = sb.toString();
+        LeagueData leagueData = new SoloDraftLeagueData(_cardLibrary, _soloDraftDefinitions, parameters);
+        List<LeagueSeriesData> series = leagueData.getSeries();
+        int leagueStart = series.get(0).getStart();
+        int displayEnd = DateUtils.offsetDate(series.get(series.size() - 1).getEnd(), 2);
+
+        _leagueDao.addLeague(cost, name, code, leagueData.getClass().getName(), parameters, leagueStart, displayEnd, allowSpectators, allowTimeExtensions, showPlayerNames, decisionTimeoutSeconds, timePerPlayerMinutes);
+
+        _leagueService.clearCache();
+
+        responseWriter.writeHtmlResponse("OK");
     }
 
     /**
