@@ -67,17 +67,28 @@ var LeagueResultsUI = Class.extend({
             var member = league.getAttribute("member");
             var joinable = league.getAttribute("joinable");
             var draftable = league.getAttribute("draftable");
+            var invitationOnly = league.getAttribute("invitationOnly");
+            var registrationInfo = league.getAttribute("registrationInfo");
+
 
             $("#leagueExtraInfo").append("<div class='leagueName'>" + leagueName + "</div>");
             $("#leagueExtraInfo").append("<div class='leagueID'>League ID: " + leagueType + "</div>");
 
-            var costStr = formatPrice(cost);
-            $("#leagueExtraInfo").append("<div class='leagueCost'><b>Cost:</b> " + costStr + "</div>");
+            if (invitationOnly == "true") {
+                if (registrationInfo != "" && registrationInfo != "null")
+                    $("#leagueExtraInfo").append("<div>Registration info: "+registrationInfo);
+                else
+                    $("#leagueExtraInfo").append("<div>Registration for this league by invitation only.</div>");
+
+            } else {
+                var costStr = formatPrice(cost);
+                $("#leagueExtraInfo").append("<div class='leagueCost'><b>Cost:</b> " + costStr + "</div>");
+            };
 
             if (member == "true") {
                 var memberDiv = $("<div class='leagueMembership'>You are already a member of this league. </div>");
                 if (draftable == "true") {
-                    var draftBut = $("<button>Go to draft</button>").button();
+                    var draftBut = $("<button>--> Go to draft <--</button>").button();
                     var draftFunc = (function (leagueCode) {
                         return function() {
                             location.href = "/gemp-swccg/soloDraft.html?leagueType="+leagueCode;
@@ -109,6 +120,9 @@ var LeagueResultsUI = Class.extend({
                 joinBut.click(joinFunc);
                 var joinDiv = $("<div class='leagueMembership'>You're not a member of this league. </div>");
                 joinDiv.append(joinBut);
+                $("#leagueExtraInfo").append(joinDiv);
+            } else if (joinable == "true" && invitationOnly == "true") {
+                var joinDiv = $("<div class='leagueMembership'>You're not a member of this league. </div>");
                 $("#leagueExtraInfo").append(joinDiv);
             }
 

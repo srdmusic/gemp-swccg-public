@@ -11,6 +11,8 @@ public interface CardCollection extends OwnershipCheck {
     Map<String, Object> getExtraInformation();
     void setExtraInformation(Map<String, Object> newExtraInformation);
 
+    boolean excludePackDuplicates();
+
     class Item implements CardItem {
         public enum Type {
             PACK, CARD, SELECTION

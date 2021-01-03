@@ -62,4 +62,9 @@ public class SumCardCollection implements CardCollection {
 
         return sum;
     }
+
+    @Override
+    public boolean excludePackDuplicates() {
+        return false;
+    }
 }
