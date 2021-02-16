@@ -91,7 +91,6 @@ var GempSwccgSoloDraftUI = Class.extend({
                     var draftState = root.getElementsByTagName("state")[0];
                     var stage = draftState.getAttribute("stage");
                     var stages = draftState.getAttribute("stages");
-                    var side = draftState.getAttribute("side");
                     for (var i = 0; i < availablePicks.length; i++) {
                         var availablePick = availablePicks[i];
                         var id = availablePick.getAttribute("id");
@@ -114,13 +113,7 @@ var GempSwccgSoloDraftUI = Class.extend({
                     }
                     that.picksCardGroup.layoutCards();
                     if (availablePicks.length > 0) {
-                        if (side == "light") {
-                            side = "Light";
-                        }
-                        if (side == "dark") {
-                            side = "Dark";
-                        }
-                        that.messageDiv.text("Make a pick (stage " + stage + " / " + stages + " - " + side + ")");
+                        that.messageDiv.text("Make a pick (stage " + stage + " / " + stages + ")");
                     }
                     else {
                         that.messageDiv.text("Draft is finished");
@@ -192,7 +185,6 @@ var GempSwccgSoloDraftUI = Class.extend({
                                     var draftState = root.getElementsByTagName("state")[0];
                                     var stage = draftState.getAttribute("stage");
                                     var stages = draftState.getAttribute("stages");
-                                    var side = draftState.getAttribute("side");
                                     for (var i = 0; i < availablePicks.length; i++) {
                                         var availablePick = availablePicks[i];
                                         var id = availablePick.getAttribute("id");
@@ -215,13 +207,7 @@ var GempSwccgSoloDraftUI = Class.extend({
                                     }
                                     that.picksCardGroup.layoutCards();
                                     if (availablePicks.length > 0) {
-                                        if (side == "light") {
-                                            side = "Light";
-                                        }
-                                        if (side == "dark") {
-                                            side = "Dark";
-                                        }
-                                        that.messageDiv.text("Make a pick (stage " + stage + " / " + stages + " - " + side + ")");
+                                        that.messageDiv.text("Make a pick (stage " + stage + " / " + stages + ")");
                                     }
                                     else {
                                         that.messageDiv.text("Draft is finished");

@@ -13,8 +13,6 @@ public interface SoloDraft {
 
     int stageCount();
 
-    String draftSide(int stage);
-
     int fixedCardCount();
 
     int currentStage(CardCollection currentCards);

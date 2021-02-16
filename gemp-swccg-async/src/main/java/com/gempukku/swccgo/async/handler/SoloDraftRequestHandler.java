@@ -81,7 +81,6 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
         boolean finished = (Boolean) collection.getExtraInformation().get("finished");
         int stage = ((Number) collection.getExtraInformation().get("stage")).intValue();
         int stages = ((Number) collection.getExtraInformation().get("stageCount")).intValue();
-        String side = collection.getExtraInformation().get("draftSide").toString();
         if (!finished) {
             long playerSeed = ((Number) collection.getExtraInformation().get("seed")).longValue();
 
@@ -100,7 +99,6 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
         Element draftStateElem = doc.createElement("state");
         draftStateElem.setAttribute("stage",String.valueOf(stage));
         draftStateElem.setAttribute("stages",String.valueOf(stages));
-        draftStateElem.setAttribute("side",side);
         availablePicksElem.appendChild(draftStateElem);
 
         doc.appendChild(availablePicksElem);
@@ -147,7 +145,6 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
 
         int stage = ((Number) collection.getExtraInformation().get("stage")).intValue();
         int stages = ((Number) collection.getExtraInformation().get("stageCount")).intValue();
-        String side = collection.getExtraInformation().get("draftSide").toString();
         long playerSeed = ((Number) collection.getExtraInformation().get("seed")).longValue();
 
         SoloDraft soloDraft = soloDraftLeagueData.getSoloDraft();
@@ -161,7 +158,6 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
         Map<String, Object> extraInformationChanges = new HashMap<String, Object>();
         boolean hasNextStage = soloDraft.hasNextStage(playerSeed, stage);
         extraInformationChanges.put("stage", stage + 1);
-        extraInformationChanges.put("draftSide", soloDraft.draftSide(stage));
         if (!hasNextStage)
             extraInformationChanges.put("finished", true);
 
@@ -178,7 +174,6 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
         Element draftStateElem = doc.createElement("state");
         draftStateElem.setAttribute("stage",String.valueOf(stage + 1));
         draftStateElem.setAttribute("stages",String.valueOf(stages));
-        draftStateElem.setAttribute("side",side);
         pickResultElem.appendChild(draftStateElem);
 
         doc.appendChild(pickResultElem);

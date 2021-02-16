@@ -92,15 +92,6 @@ public class DefaultSoloDraft implements SoloDraft {
     }
 
     @Override
-    public String draftSide(int stage) {
-        if (stage < _choiceCountPerSide) {
-            return "light";
-        } else {
-            return "dark";
-        }
-    }
-
-    @Override
     public int fixedCardCount() {
         return _fixedCardCount;
     }
