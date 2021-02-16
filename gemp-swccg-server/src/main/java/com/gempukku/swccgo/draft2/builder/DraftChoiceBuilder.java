@@ -99,6 +99,9 @@ public class DraftChoiceBuilder {
                                 public String getChoiceUrl() {
                                     return null;
                                 }
+
+                                @Override
+                                public String getObjPackDescription() { return null; }
                             });
                 }
                 return draftChoices;
@@ -153,6 +156,9 @@ public class DraftChoiceBuilder {
                         public String getChoiceUrl() {
                             return url;
                         }
+
+                        @Override
+                        public String getObjPackDescription() { return null; }
                     });
             cardsMap.put(choiceId, cardIds);
         }
@@ -218,6 +224,9 @@ public class DraftChoiceBuilder {
                                 public String getChoiceUrl() {
                                     return null;
                                 }
+
+                                @Override
+                                public String getObjPackDescription() { return null; }
                             });
                 }
                 return draftableCards;
@@ -293,6 +302,9 @@ public class DraftChoiceBuilder {
                                 public String getChoiceUrl() {
                                     return null;
                                 }
+
+                                @Override
+                                public String getObjPackDescription() { return null; }
                             });
                 }
                 return draftableCards;
@@ -352,6 +364,21 @@ public class DraftChoiceBuilder {
                 return result;
             }
 
+            String cardListForChoiceId(String choiceId) {
+                String result = "";
+
+                for (ObjPack objPack : objPacks) {
+                    if (objPack.firstCardId.equals(choiceId)) {
+                        for (String cardId : objPack.cards) {
+                            result += cardId + ",";
+                        }
+                        result = result.substring(0, result.length()-1);
+                        break;
+                    }
+                }
+                return result;
+            }
+
             @Override
             public Iterable<SoloDraft.DraftChoice> getDraftChoice(long seed, int stage, CardCollection currentCards, String currentChoice) {
                 List<String> tempCards = getShuffledCardsSpecial(seed, stage);
@@ -388,6 +415,9 @@ public class DraftChoiceBuilder {
                                 public String getChoiceUrl() {
                                     return null;
                                 }
+
+                                @Override
+                                public String getObjPackDescription() { return cardListForChoiceId(getChoiceId()); }
                             });
                 }
                 return draftableCards;

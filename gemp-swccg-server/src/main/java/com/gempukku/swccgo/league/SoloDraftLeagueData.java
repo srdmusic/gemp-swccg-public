@@ -86,6 +86,8 @@ public class SoloDraftLeagueData implements LeagueData {
             stage -= _draft.fixedCardCount();
             extraInformation.put("finished", (_draft.hasNextStage(seed, stage) == false));
             extraInformation.put("stage", stage);
+            extraInformation.put("draftSide", _draft.draftSide(stage));
+            extraInformation.put("stageCount", _draft.stageCount());
             extraInformation.put("seed", seed);
             collection.setExtraInformation(extraInformation);
         }
@@ -95,6 +97,8 @@ public class SoloDraftLeagueData implements LeagueData {
         Map<String, Object> extraInformation = new HashMap<String, Object>();
         extraInformation.put("finished", false);
         extraInformation.put("stage", 0);
+        extraInformation.put("draftSide", "light");
+        extraInformation.put("stageCount", _draft.stageCount());
         extraInformation.put("seed", seed);
         return extraInformation;
     }

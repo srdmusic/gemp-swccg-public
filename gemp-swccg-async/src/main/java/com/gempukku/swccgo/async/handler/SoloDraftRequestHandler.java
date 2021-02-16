@@ -79,8 +79,10 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
         ((SoloDraftLeagueData) leagueData).repairExtraInformation(collection, resourceOwner);
 
         boolean finished = (Boolean) collection.getExtraInformation().get("finished");
+        int stage = ((Number) collection.getExtraInformation().get("stage")).intValue();
+        int stages = ((Number) collection.getExtraInformation().get("stageCount")).intValue();
+        String side = collection.getExtraInformation().get("draftSide").toString();
         if (!finished) {
-            int stage = ((Number) collection.getExtraInformation().get("stage")).intValue();
             long playerSeed = ((Number) collection.getExtraInformation().get("seed")).longValue();
 
             SoloDraft soloDraft = soloDraftLeagueData.getSoloDraft();
@@ -94,6 +96,13 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
         Document doc = documentBuilder.newDocument();
 
         Element availablePicksElem = doc.createElement("availablePicks");
+
+        Element draftStateElem = doc.createElement("state");
+        draftStateElem.setAttribute("stage",String.valueOf(stage));
+        draftStateElem.setAttribute("stages",String.valueOf(stages));
+        draftStateElem.setAttribute("side",side);
+        availablePicksElem.appendChild(draftStateElem);
+
         doc.appendChild(availablePicksElem);
 
         appendAvailablePics(doc, availablePicksElem, availableChoices);
@@ -137,6 +146,8 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
             throw new HttpProcessingException(404);
 
         int stage = ((Number) collection.getExtraInformation().get("stage")).intValue();
+        int stages = ((Number) collection.getExtraInformation().get("stageCount")).intValue();
+        String side = collection.getExtraInformation().get("draftSide").toString();
         long playerSeed = ((Number) collection.getExtraInformation().get("seed")).longValue();
 
         SoloDraft soloDraft = soloDraftLeagueData.getSoloDraft();
@@ -150,6 +161,7 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
         Map<String, Object> extraInformationChanges = new HashMap<String, Object>();
         boolean hasNextStage = soloDraft.hasNextStage(playerSeed, stage);
         extraInformationChanges.put("stage", stage + 1);
+        extraInformationChanges.put("draftSide", soloDraft.draftSide(stage));
         if (!hasNextStage)
             extraInformationChanges.put("finished", true);
 
@@ -162,6 +174,13 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
         Document doc = documentBuilder.newDocument();
 
         Element pickResultElem = doc.createElement("pickResult");
+
+        Element draftStateElem = doc.createElement("state");
+        draftStateElem.setAttribute("stage",String.valueOf(stage + 1));
+        draftStateElem.setAttribute("stages",String.valueOf(stages));
+        draftStateElem.setAttribute("side",side);
+        pickResultElem.appendChild(draftStateElem);
+
         doc.appendChild(pickResultElem);
 
         for (CardCollection.Item item : selectedCards.getAll().values()) {
@@ -184,12 +203,15 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
             String choiceId = availableChoice.getChoiceId();
             String blueprintId = availableChoice.getBlueprintId();
             String choiceUrl = availableChoice.getChoiceUrl();
+            String packDesc = availableChoice.getObjPackDescription();
             Element availablePick = doc.createElement("availablePick");
             availablePick.setAttribute("id", choiceId);
             if (blueprintId != null)
                 availablePick.setAttribute("blueprintId", blueprintId);
             if (choiceUrl != null)
                 availablePick.setAttribute("url", choiceUrl);
+            if (packDesc != null)
+                availablePick.setAttribute("desc", packDesc);
             rootElem.appendChild(availablePick);
         }
     }

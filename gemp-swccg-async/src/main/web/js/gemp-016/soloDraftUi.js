@@ -88,6 +88,10 @@ var GempSwccgSoloDraftUI = Class.extend({
                 var root = xml.documentElement;
                 if (root.tagName == "availablePicks") {
                     var availablePicks = root.getElementsByTagName("availablePick");
+                    var draftState = root.getElementsByTagName("state")[0];
+                    var stage = draftState.getAttribute("stage");
+                    var stages = draftState.getAttribute("stages");
+                    var side = draftState.getAttribute("side");
                     for (var i = 0; i < availablePicks.length; i++) {
                         var availablePick = availablePicks[i];
                         var id = availablePick.getAttribute("id");
@@ -109,10 +113,18 @@ var GempSwccgSoloDraftUI = Class.extend({
                         }
                     }
                     that.picksCardGroup.layoutCards();
-                    if (availablePicks.length > 0)
-                        that.messageDiv.text("Make a pick");
-                    else
+                    if (availablePicks.length > 0) {
+                        if (side == "light") {
+                            side = "Light";
+                        }
+                        if (side == "dark") {
+                            side = "Dark";
+                        }
+                        that.messageDiv.text("Make a pick (stage " + stage + " / " + stages + " - " + side + ")");
+                    }
+                    else {
                         that.messageDiv.text("Draft is finished");
+                    }
                 }
             });
 
@@ -177,6 +189,10 @@ var GempSwccgSoloDraftUI = Class.extend({
                                     that.draftedCardGroup.layoutCards();
 
                                     var availablePicks = root.getElementsByTagName("availablePick");
+                                    var draftState = root.getElementsByTagName("state")[0];
+                                    var stage = draftState.getAttribute("stage");
+                                    var stages = draftState.getAttribute("stages");
+                                    var side = draftState.getAttribute("side");
                                     for (var i = 0; i < availablePicks.length; i++) {
                                         var availablePick = availablePicks[i];
                                         var id = availablePick.getAttribute("id");
@@ -198,10 +214,18 @@ var GempSwccgSoloDraftUI = Class.extend({
                                         }
                                     }
                                     that.picksCardGroup.layoutCards();
-                                    if (availablePicks.length > 0)
-                                        that.messageDiv.text("Make a pick");
-                                    else
+                                    if (availablePicks.length > 0) {
+                                        if (side == "light") {
+                                            side = "Light";
+                                        }
+                                        if (side == "dark") {
+                                            side = "Dark";
+                                        }
+                                        that.messageDiv.text("Make a pick (stage " + stage + " / " + stages + " - " + side + ")");
+                                    }
+                                    else {
                                         that.messageDiv.text("Draft is finished");
+                                    }
                                 }
                             });
                             $(".card", that.picksDiv).remove();

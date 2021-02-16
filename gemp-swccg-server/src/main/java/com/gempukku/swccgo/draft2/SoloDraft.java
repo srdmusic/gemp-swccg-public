@@ -11,6 +11,10 @@ public interface SoloDraft {
 
     boolean hasNextStage(long seed, int stage);
 
+    int stageCount();
+
+    String draftSide(int stage);
+
     int fixedCardCount();
 
     int currentStage(CardCollection currentCards);
@@ -21,5 +25,6 @@ public interface SoloDraft {
         String getChoiceId();
         String getBlueprintId();
         String getChoiceUrl();
+        String getObjPackDescription();
     }
 }
