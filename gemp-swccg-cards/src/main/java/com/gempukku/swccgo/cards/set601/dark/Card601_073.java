@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class Card601_073 extends AbstractNormalEffect {
     public Card601_073() {
-        super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, "A Sith's Plans", Uniqueness.UNIQUE);
+        super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, Title.A_Siths_Plans, Uniqueness.UNIQUE);
         setLore("The Imperial fleet keeps a tight grip on the systems under its control. Abuses and excesses by local citizens are not tolerated.");
         setGameText("Deploy on a site. Sunsdown is canceled. While you have 8 or fewer cards in hand, non-unique characters (except clones), vehicles, starships, weapons, and devices are immune to Grimtaash. Once per turn, may use 2 Force to deploy a non-war room battleground planet location (except a sector) not on table from Reserve Deck; reshuffle. [Immune to Alter.]");
         addIcons(Icon.LEGACY_BLOCK_5, Icon.SPECIAL_EDITION);
@@ -96,8 +96,8 @@ public class Card601_073 extends AbstractNormalEffect {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy a location");
-            action.appendCost(new UseForceEffect(action, playerId, 2));
             action.appendUsage(new OncePerTurnEffect(action));
+            action.appendCost(new UseForceEffect(action, playerId, 2));
             action.appendEffect(new DeployCardFromReserveDeckEffect(action,
                     Filters.and(Filters.not(Filters.war_room), Filters.not(Filters.sector), Filters.planet_location, Filters.battleground
                     //TODO not on table

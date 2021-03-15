@@ -59,14 +59,14 @@ public class Card601_078 extends AbstractNormalEffect {
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take card into hand from Reserve Deck");
+            action.setText("Take admiral or general into hand from Reserve Deck");
             action.setActionMsg("Take an admiral (except Piett) or a general into hand from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new TwicePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.and(Filters.and(Filters.admiral, Filters.except(Filters.Piett)), Filters.general), true));
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.and(Filters.admiral, Filters.except(Filters.Piett)), Filters.general), true));
             return Collections.singletonList(action);
         }
         return null;
@@ -84,6 +84,7 @@ public class Card601_078 extends AbstractNormalEffect {
             PhysicalCard endor = Filters.findFirstFromTopLocationsOnTable(game, Filters.and(Filters.opponents(playerId), Filters.Endor_system));
             if (endor != null) {
                 final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setPerformingPlayer(playerId);
                 action.setText("Raise converted Endor system to the top");
                 action.appendEffect(new ConvertLocationByRaisingToTopEffect(action, endor, true));
                 actions.add(action);

@@ -13,6 +13,7 @@ public interface Title {
     String _8D8 = "8D8";
     String A_Dangerous_Time = "A Dangerous Time";
     String A_Gift = "A Gift";
+    String A_Siths_Plans = "A Sith's Plans";
     String A_Stunning_Move = "A Stunning Move";
     String A_Useless_Gesture = "A Useless Gesture";
     String A_Valuable_Hostage = "A Valuable Hostage";
