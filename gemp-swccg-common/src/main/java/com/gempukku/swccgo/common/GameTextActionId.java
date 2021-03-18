@@ -746,6 +746,8 @@ public enum GameTextActionId {
     LEGACY__SONIC_BOMBARDMENT__UPLOAD_PRISON(true, true),
     LEGACY__VELKEN_TEZERI__JUST_DEPLOYED(false, true),
     LEGACY__NI_CHUBA_NA__RELOCATE_TO_SITE(false, true),
+    LEGACY__GENERAL_NEVAR__DEPLOY_LOCATION(true, true),
+    LEGACY__GENERAL_NEVAR__PEEK_AT_HAND(false, true),
 
     ;
 
