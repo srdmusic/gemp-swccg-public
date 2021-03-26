@@ -56,7 +56,7 @@ public class Card214_004 extends AbstractSite {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotForceDrainAtLocationModifier(self));
         modifiers.add(new CancelForceIconModifier(self, self, Integer.MAX_VALUE, Icon.LIGHT_FORCE, false));
-        modifiers.add(new DeployCostToLocationModifier(self, 2, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.character)));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.character), 2, self));
         return modifiers;
     }
 }
