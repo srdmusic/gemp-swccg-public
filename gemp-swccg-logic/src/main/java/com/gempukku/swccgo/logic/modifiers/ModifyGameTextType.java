@@ -9,6 +9,7 @@ public enum ModifyGameTextType {
 
     // Game text modifier flags
     // (Naming convention: CardIdentifier__ModificationIdentifier)
+    A_POWER_LOSS__CARDS_GO_LOST_INSTEAD_OF_USED("Cards from A Power Loss go to owner’s Lost Pile instead of Used Pile"),
     ADD_TWO_TO_BLOW_AWAY_SHIELD_GATE("Add 2 to total to blow away Shield Gate"),
     ALWAYS_THINKING_WITH_YOUR_STOMACH__MISSING_TREATED_AS_LANDSPEED_0("'Missing' treated as 'landspeed = 0 for remainder of turn"),
     BOONTA_EVE_PODRACE__RETRIEVE_FORCE_INTO_HAND("Take any or all force retrieved into hand"),
@@ -28,6 +29,7 @@ public enum ModifyGameTextType {
     GRIMTAASH__PUT_TWO_CARDS_IN_USED("Place two cards in used pile first"),
     HOTH_SENTRY__APPLIES_ALL_MODIFIERS("Applies all modifiers"),
     HUNT_DOWN__DO_NOT_PLACE_OUT_OF_PLAY_IF_MAUL_DUELS("Not placed out of play if Maul initiates a duel"),
+    I_CANT_BELIEVE_HES_GONE__ONLY_EFFECTS_BATTLES_WITH_LUKE_OR_LEIA("Only applies to battles with Luke or Leia"),
     IT_IS_THE_FUTURE_YOU_SEE__STACK_DESTINY_CARD_ON_JEDI_TEST_5("Stack destiny card on Jedi Test #5"),
     IMPERIAL_DECREE__DOES_NOT_COUNT_YAVIN_4_LOCATIONS("Does not count Yavin 4 locations"),
     LEIA_JABBAS_PALACE__TARGET_WARRIOR_AT_AUDIENCE_CHAMBER_INSTEAD_OF_JABBA("[Jabba's Palace] Leia may target a warrior at Audience Chamber instead of Jabba"),
@@ -49,6 +51,7 @@ public enum ModifyGameTextType {
     RESCUE_THE_PRINCESS__CANNOT_BE_PLACED_OUT_OF_PLAY("Cannot be placed out of play"),
     SAVE_YOU_IT_CAN__MOVE_PHASE_MAY_BE_TREATED_AS_DEPLOY_PHASE("'Move phase' may be treated as 'deploy phase'"),
     SCANNING_CREW__CARDS_WITH_REBEL_IN_TITLE_LOST("Cards with 'Rebel' in title lost"),
+    SET_YOUR_COURSE_FOR_ALDERAAN__ONLY_AFFECTS_DARK_SIDE_DEATH_STAR_SITES("Only affects Dark Side Death Star sites"),
     SHOT_IN_THE_DARK__LOSE_ADDITIONAL_FORCE_TO_DRAW("Must lose an additional 1 Force to draw a card"),
     SOLO__MAY_NOT_PLAY_INTERRUPT_FROM_LOST_PILE("May not play interrupt from lost pile"),
     SORRY_ABOUT_THE_MESS__WEAPONS_FIRED_MUST_TARGET_GREEDO_IF_POSSIBLE("Weapons fired must target Greedo (if possible)"),
@@ -61,6 +64,7 @@ public enum ModifyGameTextType {
     TALLON_ROLL__OPPONENT_ADDS_MANEUVER_AND_ABILITY("Opponent adds maneuver and ability"),
     TARKIN__CANNOT_CANCEL_DESTINY("Cannot cancel destiny"),
     TIBANNA_GAS_MINER__DOUBLE_FORCE_ACTIVATED("Force activated doubled"),
+    TK421__IMMUNITY_TO_ATTRITION_INCREASED("Add 2 to immunity to attrition"),
     TRAP_DOOR__DO_NOT_DRAW_DESTINY("Do not draw destiny"),
     TUSKEN_BREATH_MASK__MODIFIED_BY_SERGEANT_DOALLYN("Game text modified"),
     TUSKEN_SCAVENGERS__MAY_STEAL_CARDS_FOUND("May steal vehicles, weapons, and devices found"),

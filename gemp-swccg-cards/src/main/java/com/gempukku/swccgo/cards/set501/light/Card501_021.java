@@ -1,15 +1,35 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeConvertedModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Set: Set 15
  * Type: Location
  * Subtype: Site
- * Title: Death Star: Central Core (V)
+ * Title: Death Star: Central Core
  */
 public class Card501_021 extends AbstractSite {
     public Card501_021() {
@@ -19,8 +39,53 @@ public class Card501_021 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
-        setVirtualSuffix(true);
-        setTestingText("Death Star: Central Core (V)");
-        hideFromDeckBuilder();
+        setTestingText("Death Star: Central Core");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new ArrayList<>();
+        modifiers.add(new MayNotBeConvertedModifier(self));
+        return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextDarkSideTopLevelActions(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.DEATH_STAR_CENTRAL_CORE__DOWNLOAD_TROOPER;
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canDeployCardFromReserveDeck(game, playerOnDarkSideOfLocation, self, gameTextActionId)) {
+            TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy trooper here");
+            action.appendUsage(
+                    new OncePerGameEffect(action)
+            );
+            action.appendEffect(
+                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.trooper, Filters.here(self), false)
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(final String playerOnLightSideOfLocation, final SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        if (TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerOnLightSideOfLocation, self)
+                && GameConditions.canSpot(game, self, Filters.A_Power_Loss)
+                && GameConditions.hasStackedCards(game, self, Filters.A_Power_Loss)) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setActionMsg("Place a card stacked on " + GameUtils.getCardLink(Filters.findFirstActive(game, self, Filters.A_Power_Loss)) + " in owner's Used Pile.");
+            action.appendTargeting(
+                    new ChooseStackedCardEffect(action, playerOnLightSideOfLocation, self) {
+                        @Override
+                        protected void cardSelected(PhysicalCard selectedCard) {
+                            action.appendEffect(
+                                    new PutStackedCardInUsedPileEffect(action, game.getOpponent(playerOnLightSideOfLocation), selectedCard, false)
+                            );
+                        }
+                    }
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }

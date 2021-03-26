@@ -1,9 +1,19 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.conditions.AloneAtCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Set: Set 15
@@ -20,6 +30,19 @@ public class Card501_022 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.INTERIOR_SITE, Icon.EXTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
         setTestingText("Death Star: Hangar 327");
-        hideFromDeckBuilder();
+    }
+
+    @Override
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new ArrayList<>();
+        modifiers.add(new ImmuneToAttritionModifier(self, Filters.and(Filters.ObiWan, Filters.alone, Filters.here(self))));
+        return modifiers;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new ArrayList<>();
+        modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.and(Filters.on(Title.Death_Star), Filters.sameLocationAs(self, Filters.Vader)), new AloneAtCondition(self, Filters.ObiWan, self), game.getOpponent(self.getOwner())));
+        return modifiers;
     }
 }

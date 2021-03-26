@@ -13,6 +13,7 @@ public interface Title {
     String _8D8 = "8D8";
     String A_Dangerous_Time = "A Dangerous Time";
     String A_Gift = "A Gift";
+    String A_Power_Loss = "A Power Loss";
     String A_Stunning_Move = "A Stunning Move";
     String A_Useless_Gesture = "A Useless Gesture";
     String A_Valuable_Hostage = "A Valuable Hostage";
@@ -463,6 +464,7 @@ public interface Title {
     String Hypo = "Hypo";
     String I_Am_Your_Father = "I Am Your Father";
     String I_Can_Save_Him = "I Can Save Him";
+    String I_Cant_Believe_Hes_Gone = "I Can't Believe He's Gone";
     String I_Did_It = "I Did It!";
     String I_Feel_The_Conflict = "I Feel The Conflict";
     String I_Have_You_Now = "I Have You Now";
@@ -767,6 +769,7 @@ public interface Title {
     String Prepare_The_Chamber = "Prepare The Chamber";
     String Presence_Of_The_Force = "Presence Of The Force";
     String Pride_Of_The_Empire = "Pride Of The Empire";
+    String Prisoner_2187 = "Prisoner 2187";
     String Private_Platform = "Coruscant: Private Platform (Docking Bay)";
     String Probe_Droid = "Probe Droid";
     String Probe_Telemetry = "Probe Telemetry";
@@ -1015,6 +1018,7 @@ public interface Title {
     String Tibanna_Gas_Miner = "Tibanna Gas Miner";
     String Tibrin = "Tibrin";
     String TIE_Assault_Squadron = "TIE Assault Squadron";
+    String TK421 = "TK-421";
     String TK422 = "TK-422";
     String Too_Cold_For_Speeders = "Too Cold For Speeders";
     String Tonnika_Sisters = "Tonnika Sisters";

@@ -1,7 +1,21 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractDroid;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OnCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromUsedPileEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Set 15
@@ -17,7 +31,44 @@ public class Card501_025 extends AbstractDroid {
         addPersona(Persona.C3PO);
         addModelType(ModelType.PROTOCOL);
         addIcon(Icon.VIRTUAL_SET_15);
-        setTestingText("C-3PO (See-Threepio) (V)");
-        hideFromDeckBuilder();
+        setTestingText("C-3PO (V)");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+        Filter location = Filters.and(Filters.battleground_site, Filters.sameLocationAs(self, Filters.droid), Filters.sameLocationAs(self, Filters.Rebel));
+        List<Modifier> modifiers = new ArrayList<>();
+        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, location, opponent, playerId));
+        modifiers.add(new ForceDrainsMayNotBeModifiedModifier(self, location, opponent, playerId));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.A_Power_Loss, new OnCondition(self, Title.Death_Star), ModifyGameTextType.A_POWER_LOSS__CARDS_GO_LOST_INSTEAD_OF_USED));
+        return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+
+        // Card action 1
+        GameTextActionId gameTextActionId = GameTextActionId.C_3PO_V_DRAW_TOP_CARD_OF_USED_PILE;
+
+        // Check condition(s)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.hasUsedPile(game, playerId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Draw top card of Used Pile");
+            action.setActionMsg("Draw top card od Used Pile");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DrawCardIntoHandFromUsedPileEffect(action, playerId));
+            actions.add(action);
+        }
+
+        return actions;
     }
 }
