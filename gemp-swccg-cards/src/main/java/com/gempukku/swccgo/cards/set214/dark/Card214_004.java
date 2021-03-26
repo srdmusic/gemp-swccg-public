@@ -44,7 +44,7 @@ public class Card214_004 extends AbstractSite {
                     new OncePerGameEffect(action)
             );
             action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Filters.Emperor, Filters.icon(Icon.EPISODE_VII)), Filters.here(self), false)
+                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Filters.Emperor, Icon.EPISODE_VII), Filters.here(self), true)
             );
             return Collections.singletonList(action);
         }
