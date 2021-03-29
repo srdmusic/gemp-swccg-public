@@ -92,7 +92,6 @@ public class Card501_018 extends AbstractObjective {
         Filter yourDeathStarSites = Filters.and(Filters.your(playerId), Filters.Death_Star_site);
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new ForceGenerationModifier(self, yourDeathStarSites, 1, playerId));
-        modifiers.add(new ImmuneToTitleModifier(self, yourDeathStarSites, Title.Set_Your_Course_For_Alderaan));
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.not(Filters.ObiWan)), playerId));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Set_Your_Course_For_Alderaan, ModifyGameTextType.SET_YOUR_COURSE_FOR_ALDERAAN__ONLY_AFFECTS_DARK_SIDE_DEATH_STAR_SITES));
         modifiers.add(new ModifyGameTextModifier(self, Filters.I_Cant_Believe_Hes_Gone, ModifyGameTextType.I_CANT_BELIEVE_HES_GONE__ONLY_EFFECTS_BATTLES_WITH_LUKE_OR_LEIA));
@@ -129,14 +128,16 @@ public class Card501_018 extends AbstractObjective {
 
         if (GameConditions.canBeFlipped(game, self)
                 && GameConditions.canSpot(game, self, Filters.and(Filters.Leia, Filters.presentAt(Filters.Death_Star_site)))
-                && GameConditions.canSpot(game, self, Filters.A_Power_Loss)
-                && GameConditions.cardHasWhileInPlayDataSet(Filters.findFirstActive(game, self, Filters.A_Power_Loss))) {
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Flip");
-            action.appendEffect(
-                    new FlipCardEffect(action, self)
-            );
-            actions.add(action);
+                && GameConditions.canSpot(game, self, Filters.and(Filters.A_Power_Loss))) {
+            PhysicalCard aPowerLoss = Filters.findFirstActive(game, self, Filters.A_Power_Loss);
+            if (aPowerLoss != null && !GameConditions.cardHasWhileInPlayDataSet(aPowerLoss)) {
+                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setText("Flip");
+                action.appendEffect(
+                        new FlipCardEffect(action, self)
+                );
+                actions.add(action);
+            }
         }
 
         return actions;

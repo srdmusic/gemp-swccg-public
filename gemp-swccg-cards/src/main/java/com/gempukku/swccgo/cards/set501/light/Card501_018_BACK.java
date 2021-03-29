@@ -13,12 +13,13 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.CaptureWithImprisonmentEffect;
+import com.gempukku.swccgo.logic.effects.AttachCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.PassthruEffect;
 import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
 
 import java.util.ArrayList;
@@ -59,8 +60,8 @@ public class Card501_018_BACK extends AbstractObjective {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.and(Filters.Death_Star_site, Filters.otherLocation(self)))
-                && GameConditions.canSpot(game, self, Filters.and(Filters.ObiWan, Filters.at(Filters.Death_Star_site)))) {
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.ObiWan, Filters.at(Filters.Death_Star_site)))
+                && TriggerConditions.battleInitiatedAt(game, effectResult, Filters.and(Filters.Death_Star_site, Filters.not(Filters.sameLocationAs(self, Filters.ObiWan))))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Cancel battle");
@@ -76,7 +77,7 @@ public class Card501_018_BACK extends AbstractObjective {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
         if (GameConditions.canBeFlipped(game, self)
@@ -89,7 +90,7 @@ public class Card501_018_BACK extends AbstractObjective {
             actions.add(action);
         }
 
-        if (TriggerConditions.justHitBy(game, effectResult, Filters.character, Filters.blaster)) {
+        if (TriggerConditions.justHitBy(game, effectResult, Filters.character, Filters.and(Filters.your(self.getOwner()), Filters.blaster))) {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Make opponent lose 1 Force");
             action.appendEffect(
@@ -100,15 +101,21 @@ public class Card501_018_BACK extends AbstractObjective {
 
         if (TriggerConditions.isAboutToLeaveTable(game, effectResult, Filters.Leia)
                 && GameConditions.canSpot(game, self, Filters.Detention_Block_Corridor)) {
-            AboutToLeaveTableResult result = (AboutToLeaveTableResult) effectResult;
-            PhysicalCard leia = result.getCardAboutToLeaveTable();
+            final AboutToLeaveTableResult result = (AboutToLeaveTableResult) effectResult;
+            final PhysicalCard leia = result.getCardAboutToLeaveTable();
 
             if (leia != null) {
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Imprison Leia");
                 action.appendEffect(
-                        new CaptureWithImprisonmentEffect(action, leia, Filters.findFirstActive(game, self, Filters.Detention_Block_Corridor), leia.isUndercover(), leia.isMissing())
-                );
+                        new PassthruEffect(action) {
+                            @Override
+                            protected void doPlayEffect(SwccgGame game) {
+                                result.getPreventableCardEffect().preventEffectOnCard(leia);
+                            }
+                        });
+                action.appendEffect(
+                        new AttachCardFromTableEffect(action, leia, Filters.findFirstActive(game, self, Filters.Detention_Block_Corridor)));
                 actions.add(action);
             }
 

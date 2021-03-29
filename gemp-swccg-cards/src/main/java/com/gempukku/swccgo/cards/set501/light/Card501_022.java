@@ -28,7 +28,7 @@ public class Card501_022 extends AbstractSite {
         setLocationLightSideGameText("While Obi-Wan alone here, Vader may not Force drain on Death Star.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.INTERIOR_SITE, Icon.EXTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
         setTestingText("Death Star: Hangar 327");
     }
 

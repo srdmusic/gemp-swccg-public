@@ -10,8 +10,11 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.WhileInPlayData;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.decisions.YesNoDecision;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.PutStackedCardInLostPileEffect;
 import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
@@ -47,12 +50,30 @@ public class Card501_019 extends AbstractNormalEffect {
         final String playerId = self.getOwner();
         final String opponent = game.getOpponent(self.getOwner());
 
-        if (TriggerConditions.justDeployed(game, effectResult, self)
-                && GameConditions.hasHand(game, opponent)) {
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+        if (TriggerConditions.justDeployed(game, effectResult, self)) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setActionMsg(opponent + " may stack up to 4 cards from hand");
             action.appendEffect(
-                    new StackCardsFromHandEffect(action, opponent, 0, 4, self, false)
+                    new SetWhileInPlayDataEffect(action, self, new WhileInPlayData())
+            );
+            action.appendEffect(
+                    new PlayoutDecisionEffect(action, opponent, new YesNoDecision("Stack cards on " + GameUtils.getCardLink(self) + "?") {
+                        @Override
+                        protected void yes() {
+                            action.appendEffect(
+                                    new StackCardsFromHandEffect(action, opponent, 1, 4, self, false)
+                            );
+                        }
+
+                        @Override
+                        protected void no() {
+                            game.getGameState().sendMessage("Power is 'shut down'");
+                            action.addAnimationGroup(self);
+                            action.appendEffect(
+                                    new SetWhileInPlayDataEffect(action, self, null)
+                            );
+                        }
+                    })
             );
             actions.add(action);
         }
@@ -60,7 +81,7 @@ public class Card501_019 extends AbstractNormalEffect {
         if (TriggerConditions.wonBattleAt(game, effectResult, playerId, Filters.Death_Star_site)
                 && GameConditions.hasStackedCards(game, self)) {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setActionMsg("Place a card stacked here in " + opponent + "'s Used Pile");
+            action.setText("Place a card stacked here in " + opponent + "'s Used Pile");
             action.appendTargeting(
                     new ChooseStackedCardEffect(action, playerId, self) {
                         @Override
@@ -77,15 +98,30 @@ public class Card501_019 extends AbstractNormalEffect {
                         }
                     }
             );
-            if (!GameConditions.hasStackedCards(game, self)) {
-                game.getGameState().sendMessage("Power has been 'shut down'");
-                action.appendEffect(
-                        new SetWhileInPlayDataEffect(action, self, new WhileInPlayData())
-                );
-            }
+            actions.add(action);
+        }
+
+        if (TriggerConditions.isTableChanged(game, effectResult)
+                && !GameConditions.hasStackedCards(game, self)
+                && GameConditions.cardHasWhileInPlayDataSet(self)) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            game.getGameState().sendMessage("Power is 'shut down'");
+            action.addAnimationGroup(self);
+            action.appendEffect(
+                    new SetWhileInPlayDataEffect(action, self, null)
+            );
             actions.add(action);
         }
 
         return actions;
+    }
+
+    @Override
+    public String getDisplayableInformation(SwccgGame game, PhysicalCard self) {
+        if (!GameConditions.cardHasWhileInPlayDataSet(self)) {
+            return "Power is 'shut down'";
+        } else {
+            return "Power is on";
+        }
     }
 }

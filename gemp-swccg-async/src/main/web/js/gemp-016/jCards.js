@@ -3920,6 +3920,7 @@ var Card = Class.extend({
                    (cardNo == 15) ||
                    (cardNo == 20) ||
                    (cardNo == 21) ||
+                   (cardNo == 22) ||
                    (cardNo == 74) ||
                    (cardNo == 75);
         }

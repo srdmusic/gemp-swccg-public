@@ -348,6 +348,7 @@ public class TriggerConditions {
                 || effectResult.getType() == EffectResult.Type.STACKED_FROM_CARD_PILE
                 || effectResult.getType() == EffectResult.Type.STACKED_FROM_HAND
                 || effectResult.getType() == EffectResult.Type.STACKED_FROM_TABLE
+                || effectResult.getType() == EffectResult.Type.REMOVED_FROM_STACKED
                 || effectResult.getType() == EffectResult.Type.CONCEALED
                 || effectResult.getType() == EffectResult.Type.UNCONCEALED
                 || effectResult.getType() == EffectResult.Type.UTINNI_EFFECT_COMPLETED

@@ -111,4 +111,5 @@ public class StackCardsFromHandEffect extends AbstractSubActionEffect {
     protected boolean wasActionCarriedOut() {
         return _stackedSoFar >= _minimum;
     }
+
 }

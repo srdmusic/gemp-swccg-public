@@ -58,7 +58,7 @@ public class Card501_024 extends AbstractRebel {
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         String opponent = game.getOpponent(playerId);
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionId = GameTextActionId.TK_422__UPLOAD_CARD;
 
         // Check condition(s)
         if (TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.here(self))

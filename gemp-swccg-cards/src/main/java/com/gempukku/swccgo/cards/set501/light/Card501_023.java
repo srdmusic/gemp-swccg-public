@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class Card501_023 extends AbstractRebel {
     public Card501_023() {
-        super(Side.LIGHT, 1, 6, 3, 4, 7, Title.TK422, Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, 6, 3, 4, 7, Title.TK421, Uniqueness.UNIQUE);
         setArmor(5);
         setLore("Spy. Luke Skywalker. Stormtrooper");
         setGameText("Adds 3 to anything he pilots. Deploy -3 to Death Star. Once per battle, may cancel the game text of an Imperial of ability < 3 here. Immune to Nevar Yalnal and attrition < 4 (< 6 if I Can't Believe He's Gone added power this battle).");
