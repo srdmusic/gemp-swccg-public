@@ -14,7 +14,9 @@ public class Card501_034 extends AbstractResistance {
         super(Side.LIGHT, 3, 2, 2, 2, 5, Title.Paige, Uniqueness.UNIQUE);
         setLore("Female Gunner.");
         setGameText("While out of play, adds 1 to your total power where you have a resistance character of ability = 2. Adds 1 to weapon destiny and defense value of anything she is aboard as a passenger. When lost may place of out play.");
-        addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_9);
+        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_15);
         addKeywords(Keyword.FEMALE);
+        setTestingText("Paige Tico");
+        hideFromDeckBuilder();
     }
 }
