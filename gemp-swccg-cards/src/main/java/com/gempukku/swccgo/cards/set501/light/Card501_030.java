@@ -6,10 +6,6 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 
-//•Let The Wookiee Win (v)
-//LIGHT - USED OR STARTING INTERRUPT
-//USED: Subtract 2 from a destiny draw targeting your Wookiee’s ability or defense value. STARTING: If your starting location had exactly 2 [LS], deploy a Kashyyyk location and up to three Effects that are always immune to Alter. Place Interrupt in Reserve Deck.
-
 /**
  * Set: Set 15
  * Type: Interrupt
