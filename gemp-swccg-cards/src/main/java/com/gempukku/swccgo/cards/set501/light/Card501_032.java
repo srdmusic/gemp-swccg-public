@@ -6,7 +6,7 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 
 /**
- * Set: Endor
+ * Set: Set 15
  * Type: Location
  * Subtype: Site
  * Title: Kashyyyk: Kachirho
