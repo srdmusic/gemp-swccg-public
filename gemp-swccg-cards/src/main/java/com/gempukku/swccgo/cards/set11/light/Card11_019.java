@@ -3,16 +3,20 @@ package com.gempukku.swccgo.cards.set11.light;
 import com.gempukku.swccgo.cards.AbstractImmediateEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
 import com.gempukku.swccgo.logic.effects.ModifyTotalPowerUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.DefinedByGameTextDeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -27,7 +31,7 @@ import java.util.List;
  */
 public class Card11_019 extends AbstractImmediateEffect {
     public Card11_019() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "I Can't Believe He's Gone", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.I_Cant_Believe_Hes_Gone, Uniqueness.UNIQUE);
         setLore("Even though Luke felt the pain of losing his mentor, Obi-Wan continued to give him strength and guidance through the Force.");
         setGameText("If Obi-Wan was just placed out of play, use 1 Force to deploy Immediate Effect on table. If a battle was just initiated at a site, may use 1 Force to increase your total power by 5. (Immune to Control.)");
         addIcons(Icon.TATOOINE);
@@ -57,7 +61,13 @@ public class Card11_019 extends AbstractImmediateEffect {
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.site)
+        Filter locationFilter = Filters.site;
+
+        if (GameConditions.hasGameTextModification(game, self, ModifyGameTextType.I_CANT_BELIEVE_HES_GONE__ONLY_EFFECTS_BATTLES_WITH_LUKE_OR_LEIA)) {
+            locationFilter = Filters.and(locationFilter, Filters.sameLocationAs(self, Filters.or(Filters.Luke, Filters.Leia)));
+        }
+
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, locationFilter)
                 && GameConditions.canUseForce(game, playerId, 1)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
@@ -68,6 +78,9 @@ public class Card11_019 extends AbstractImmediateEffect {
             // Perform result(s)
             action.appendEffect(
                     new ModifyTotalPowerUntilEndOfBattleEffect(action, 5, playerId, "Adds 5 to total power"));
+            action.appendEffect(
+                    new AddUntilEndOfBattleModifierEffect(action, new ModifyGameTextModifier(self, Filters.TK421, ModifyGameTextType.TK421__IMMUNITY_TO_ATTRITION_INCREASED), "")
+            );
             return Collections.singletonList(action);
         }
         return null;

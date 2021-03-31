@@ -17074,6 +17074,7 @@ public class Filters {
     public static final Filter _8D8 = Filters.title(Title._8D8);
     public static final Filter A_Dangerous_Time = Filters.title(Title.A_Dangerous_Time);
     public static final Filter A_Gift = Filters.title(Title.A_Gift);
+    public static final Filter A_Power_Loss = Filters.title(Title.A_Power_Loss);
     public static final Filter A_Stunning_Move = Filters.title(Title.A_Stunning_Move);
     public static final Filter A_Useless_Gesture = Filters.title(Title.A_Useless_Gesture);
     public static final Filter A_Valuable_Hostage = Filters.title(Title.A_Valuable_Hostage);
@@ -17719,6 +17720,7 @@ public class Filters {
     public static final Filter Hypo = Filters.title(Title.Hypo);
     public static final Filter I_Am_Your_Father = Filters.title(Title.I_Am_Your_Father);
     public static final Filter I_Can_Save_Him = Filters.title(Title.I_Can_Save_Him);
+    public static final Filter I_Cant_Believe_Hes_Gone = Filters.title(Title.I_Cant_Believe_Hes_Gone);
     public static final Filter I_Did_It = Filters.title(Title.I_Did_It);
     public static final Filter I_Feel_The_Conflict = Filters.title(Title.I_Feel_The_Conflict);
     public static final Filter I_Have_You_Now = Filters.title(Title.I_Have_You_Now);
@@ -18156,6 +18158,7 @@ public class Filters {
     public static final Filter Presence_Of_The_Force = Filters.title(Title.Presence_Of_The_Force);
     public static final Filter Pride_Of_The_Empire = Filters.title(Title.Pride_Of_The_Empire);
     public static final Filter prison = Filters.keyword(Keyword.PRISON);
+    public static final Filter Prisoner_2187 = Filters.title(Title.Prisoner_2187);
     public static final Filter Private_Platform = Filters.title(Title.Private_Platform);
     public static final Filter probe_droid = Filters.modelType(ModelType.PROBE);
     public static final Filter Probe_Droid = Filters.title(Title.Probe_Droid);
@@ -18545,6 +18548,7 @@ public class Filters {
     public static final Filter TIE_sr = Filters.modelType(ModelType.TIE_SR);
     public static final Filter TIE_vn = Filters.modelType(ModelType.TIE_VN);
     public static final Filter Tigran = Filters.persona(Persona.TIGRAN);
+    public static final Filter TK421 = Filters.title(Title.TK421);
     public static final Filter TK422 = Filters.title(Title.TK422);
     public static final Filter Tonnika_Sisters = Filters.title(Title.Tonnika_Sisters);
     public static final Filter Too_Cold_For_Speeders = Filters.title(Title.Too_Cold_For_Speeders);
