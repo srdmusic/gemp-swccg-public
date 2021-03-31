@@ -3453,7 +3453,7 @@ var fixedImages = {
 "501_28":"/gemp-swccg/images/cards/DeathStarII-Dark/admiralpiett.gif",
 "501_29":"/gemp-swccg/images/cards/Virtual11-Dark/insidiousprisoner.gif",
 "501_30":"/gemp-swccg/images/cards/ANewHope-Light/letthewookieewin.gif",
-"501_31":"/gemp-swccg/images/cards/Endor-Dark/endorforestclearing.gif",
+"501_31":"/gemp-swccg/images/cards/Endor-Light/endordenseforest.gif",
 "501_32":"/gemp-swccg/images/cards/Endor-Light/endorewokvillage.gif",
 "501_33":"/gemp-swccg/images/cards/JabbasPalace-Light/tamtelskreej.gif",
 "501_34":"/gemp-swccg/images/cards/Virtual9-Light/rosetico.gif",
