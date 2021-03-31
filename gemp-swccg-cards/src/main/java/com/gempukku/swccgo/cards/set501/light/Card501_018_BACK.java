@@ -13,7 +13,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.AttachCardFromTableEffect;
+import com.gempukku.swccgo.logic.effects.CaptureWithImprisonmentEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
@@ -107,6 +107,7 @@ public class Card501_018_BACK extends AbstractObjective {
             if (leia != null) {
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Imprison Leia");
+                action.setPerformingPlayer(game.getOpponent(self.getOwner()));
                 action.appendEffect(
                         new PassthruEffect(action) {
                             @Override
@@ -115,7 +116,8 @@ public class Card501_018_BACK extends AbstractObjective {
                             }
                         });
                 action.appendEffect(
-                        new AttachCardFromTableEffect(action, leia, Filters.findFirstActive(game, self, Filters.Detention_Block_Corridor)));
+                        new CaptureWithImprisonmentEffect(action, leia, Filters.findFirstActive(game, self, Filters.Detention_Block_Corridor), leia.isUndercover(), leia.isMissing())
+                );
                 actions.add(action);
             }
 

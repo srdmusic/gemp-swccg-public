@@ -244,6 +244,7 @@ public interface Title {
     String Death_Squadron = "Death Squadron";
     String Death_Star = "Death Star";
     String Death_Star_Central_Core = "Death Star: Central Core";
+    String Death_Star_Hangar_327 = "Death Star: Hangar 327";
     String Death_Star_Gunner = "Death Star Gunner";
     String Death_Star_Conference_Room = "Death Star: Conference Room";
     String Death_Star_II = "Death Star II";

@@ -23,7 +23,7 @@ import java.util.List;
  */
 public class Card501_022 extends AbstractSite {
     public Card501_022() {
-        super(Side.LIGHT, "Death Star: Hangar 327", Title.Death_Star);
+        super(Side.LIGHT, Title.Death_Star_Hangar_327, Title.Death_Star);
         setLocationDarkSideGameText("While Obi-Wan alone here, he is immune to attrition.");
         setLocationLightSideGameText("While Obi-Wan alone here, Vader may not Force drain on Death Star.");
         addIcon(Icon.DARK_FORCE, 2);

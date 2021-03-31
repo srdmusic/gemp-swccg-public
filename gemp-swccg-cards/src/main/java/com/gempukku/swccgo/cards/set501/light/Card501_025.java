@@ -59,7 +59,7 @@ public class Card501_025 extends AbstractDroid {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Draw top card of Used Pile");
-            action.setActionMsg("Draw top card od Used Pile");
+            action.setActionMsg("Draw top card of Used Pile");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerGameEffect(action));

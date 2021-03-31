@@ -10,7 +10,6 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
@@ -70,21 +69,23 @@ public class Card501_021 extends AbstractSite {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(final String playerOnLightSideOfLocation, final SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         if (TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerOnLightSideOfLocation, self)
-                && GameConditions.canSpot(game, self, Filters.A_Power_Loss)
-                && GameConditions.hasStackedCards(game, self, Filters.A_Power_Loss)) {
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setActionMsg("Place a card stacked on " + GameUtils.getCardLink(Filters.findFirstActive(game, self, Filters.A_Power_Loss)) + " in owner's Used Pile.");
-            action.appendTargeting(
-                    new ChooseStackedCardEffect(action, playerOnLightSideOfLocation, self) {
-                        @Override
-                        protected void cardSelected(PhysicalCard selectedCard) {
-                            action.appendEffect(
-                                    new PutStackedCardInUsedPileEffect(action, game.getOpponent(playerOnLightSideOfLocation), selectedCard, false)
-                            );
+                && GameConditions.canSpot(game, self, Filters.A_Power_Loss)) {
+            PhysicalCard aPowerLoss = Filters.findFirstActive(game, self, Filters.A_Power_Loss);
+            if (GameConditions.hasStackedCards(game, aPowerLoss)) {
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setActionMsg("Place a card stacked on " + aPowerLoss + " in owner's Used Pile.");
+                action.appendTargeting(
+                        new ChooseStackedCardEffect(action, playerOnLightSideOfLocation, aPowerLoss) {
+                            @Override
+                            protected void cardSelected(PhysicalCard selectedCard) {
+                                action.appendEffect(
+                                        new PutStackedCardInUsedPileEffect(action, game.getOpponent(playerOnLightSideOfLocation), selectedCard, false)
+                                );
+                            }
                         }
-                    }
-            );
-            return Collections.singletonList(action);
+                );
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }

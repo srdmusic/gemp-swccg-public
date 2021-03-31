@@ -36,7 +36,7 @@ public class DeathStarLayout extends AbstractSystemLayout {
                 new LocationReversibleGroupOrder(
                         //  A) Interior sites
                         new LocationGroup("Interior sites", Filters.and(Filters.interior_site, Filters.not(Filters.exterior_site), Filters.partOfSystem(systemName))),
-                        //  C) Docking bay
+                        //  B) Docking bay
                         new LocationGroup("Docking bay", Filters.and(Filters.docking_bay, Filters.partOfSystem(systemName)))));
 
         List<LocationGroup> fixedGroupOrder = new ArrayList<LocationGroup>();

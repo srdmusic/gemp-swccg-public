@@ -68,7 +68,7 @@ public class Card501_019 extends AbstractNormalEffect {
                         @Override
                         protected void no() {
                             game.getGameState().sendMessage("Power is 'shut down'");
-                            action.addAnimationGroup(self);
+                            game.getGameState().showCardOnScreen(self);
                             action.appendEffect(
                                     new SetWhileInPlayDataEffect(action, self, null)
                             );
@@ -106,7 +106,7 @@ public class Card501_019 extends AbstractNormalEffect {
                 && GameConditions.cardHasWhileInPlayDataSet(self)) {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             game.getGameState().sendMessage("Power is 'shut down'");
-            action.addAnimationGroup(self);
+            game.getGameState().showCardOnScreen(self);
             action.appendEffect(
                     new SetWhileInPlayDataEffect(action, self, null)
             );
