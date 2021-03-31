@@ -820,6 +820,11 @@ public abstract class AbstractModifier implements Modifier {
     }
 
     @Override
+    public int getUnmodifiableForceDrainAmount(String playerId, GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard location) {
+        return 0;
+    }
+
+    @Override
     public float getTotalForceGenerationModifier(String playerId, GameState gameState, ModifiersQuerying modifiersQuerying) {
         return 0;
     }

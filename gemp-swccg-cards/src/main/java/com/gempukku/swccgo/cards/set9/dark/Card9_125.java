@@ -43,9 +43,13 @@ public class Card9_125 extends AbstractNormalEffect {
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return GameConditions.canSpotLocation(game, 5, Filters.Executor_site) ||
-                (game.getModifiersQuerying().hasGameTextModification(game.getGameState(), self, ModifyGameTextType.FLAGSHIP_OPERATIONS__MAY_DEPLOY_ON_EXECUTOR)
-                    && GameConditions.canSpot(game, self, Filters.Executor));
+        if (game.getModifiersQuerying().hasGameTextModification(game.getGameState(), self, ModifyGameTextType.FLAGSHIP_OPERATIONS__MAY_DEPLOY_ON_EXECUTOR)) {
+            return true;
+        } else {
+            return GameConditions.canSpotLocation(game, 5, Filters.Executor_site) ||
+                    (game.getModifiersQuerying().hasGameTextModification(game.getGameState(), self, ModifyGameTextType.FLAGSHIP_OPERATIONS__MAY_DEPLOY_ON_EXECUTOR)
+                            && GameConditions.canSpot(game, self, Filters.Executor));
+        }
     }
 
     @Override

@@ -540,6 +540,8 @@ public interface Modifier {
 
     boolean cantModifyForceLossFromForceDrain(GameState gameState, ModifiersQuerying modifiersQuerying, String playerModifying, String playerDraining);
 
+    int getUnmodifiableForceDrainAmount(String playerId, GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard location);
+
     float getTotalForceGenerationModifier(String playerId, GameState gameState, ModifiersQuerying modifiersQuerying);
 
     float getAsteroidDestinyAtLocationModifier(String playerId, GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard location);
