@@ -54,14 +54,14 @@ public class Card501_019 extends AbstractNormalEffect {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setActionMsg(opponent + " may stack up to 4 cards from hand");
             action.appendEffect(
-                    new SetWhileInPlayDataEffect(action, self, new WhileInPlayData())
-            );
-            action.appendEffect(
                     new PlayoutDecisionEffect(action, opponent, new YesNoDecision("Stack cards on " + GameUtils.getCardLink(self) + "?") {
                         @Override
                         protected void yes() {
                             action.appendEffect(
                                     new StackCardsFromHandEffect(action, opponent, 1, 4, self, false)
+                            );
+                            action.appendEffect(
+                                    new SetWhileInPlayDataEffect(action, self, new WhileInPlayData())
                             );
                         }
 
@@ -75,6 +75,7 @@ public class Card501_019 extends AbstractNormalEffect {
                         }
                     })
             );
+
             actions.add(action);
         }
 
