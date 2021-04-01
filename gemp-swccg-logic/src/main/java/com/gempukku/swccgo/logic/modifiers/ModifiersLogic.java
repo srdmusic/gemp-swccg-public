@@ -1281,6 +1281,13 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             float modifierAmount = modifier.getPowerModifier(gameState, this, physicalCard);
             if (modifierAmount <= 0 || !isProhibitedFromHavingPowerIncreasedByCard(gameState, physicalCard, playerId, sourceCard, modifierCollector)) {
                 if (modifierAmount >= 0 || !isProhibitedFromHavingPowerReduced(gameState, physicalCard, playerId, modifierCollector)) {
+                    for (Modifier limitModifier : getModifiersAffectingCard(gameState, ModifierType.POWER_INCREASE_MODIFIER_LIMIT, physicalCard)) {
+                        float limit = limitModifier.getForfeitModifierLimit(gameState, this, physicalCard);
+                        if (limit > 0 && modifierAmount > limit) {
+                            modifierAmount = limit;
+                            modifierCollector.addModifier(modifier);
+                        }
+                    }
                     result += modifierAmount;
                     modifierCollector.addModifier(modifier);
                 }
@@ -1899,6 +1906,13 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.FORFEIT_VALUE, physicalCard)) {
             float modifierAmount = modifier.getForfeitModifier(gameState, this, physicalCard);
             if ((modifierAmount >= 0 && !forfeitMayNotBeIncreased) || (modifierAmount <= 0 && !forfeitMayNotBeReduced)) {
+                for (Modifier limitModifier : getModifiersAffectingCard(gameState, ModifierType.FORFEIT_INCREASE_MODIFIER_LIMIT, physicalCard)) {
+                    float limit = limitModifier.getForfeitModifierLimit(gameState, this, physicalCard);
+                    if (limit > 0 && modifierAmount > limit) {
+                        modifierAmount = limit;
+                        modifierCollector.addModifier(modifier);
+                    }
+                }
                 result += modifierAmount;
                 modifierCollector.addModifier(modifier);
             }
@@ -2133,7 +2147,15 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
 
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.DESTINY, physicalCard)) {
-            result += modifier.getDestinyModifier(gameState, this, physicalCard);
+            float modifierValue = modifier.getDestinyModifier(gameState, this, physicalCard);
+            for (Modifier limitModifier : getModifiersAffectingCard(gameState, ModifierType.DESTINY_INCREASE_MODIFIER_LIMIT, physicalCard)) {
+                float limit = limitModifier.getDestinyModifierLimit(gameState, this, physicalCard);
+                if (limit > 0 && modifierValue > limit) {
+                    modifierValue = limit;
+                }
+                modifierCollector.addModifier(modifier);
+            }
+            result += modifierValue;
             modifierCollector.addModifier(modifier);
         }
 

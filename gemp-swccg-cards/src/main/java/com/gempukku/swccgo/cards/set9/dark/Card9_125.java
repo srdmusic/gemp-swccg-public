@@ -43,7 +43,7 @@ public class Card9_125 extends AbstractNormalEffect {
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        if (game.getModifiersQuerying().hasGameTextModification(game.getGameState(), self, ModifyGameTextType.FLAGSHIP_OPERATIONS__MAY_DEPLOY_ON_EXECUTOR)) {
+        if (game.getModifiersQuerying().hasGameTextModification(game.getGameState(), self, ModifyGameTextType.FLAGSHIP_OPERATIONS__MAY_IGNORE_DEPLOYMENT_RESTRICTIONS)) {
             return true;
         } else {
             return GameConditions.canSpotLocation(game, 5, Filters.Executor_site) ||

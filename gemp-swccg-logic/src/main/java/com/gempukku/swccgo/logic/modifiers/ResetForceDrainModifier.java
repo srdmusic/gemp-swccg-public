@@ -11,11 +11,11 @@ import com.gempukku.swccgo.logic.timing.GuiUtils;
 public class ResetForceDrainModifier extends AbstractModifier {
     private Evaluator _evaluator;
 
-    public ResetForceDrainModifier(PhysicalCard source, Filterable affectFilter, float modifier) {
+    public ResetForceDrainModifier(PhysicalCard source, Filterable affectFilter, int modifier) {
         this(source, affectFilter, null, modifier);
     }
 
-    public ResetForceDrainModifier(PhysicalCard source, Filterable affectFilter, Condition condition, float modifier) {
+    public ResetForceDrainModifier(PhysicalCard source, Filterable affectFilter, Condition condition, int modifier) {
         this(source, affectFilter, condition, new ConstantEvaluator(modifier));
     }
 
@@ -31,7 +31,7 @@ public class ResetForceDrainModifier extends AbstractModifier {
     }
 
     @Override
-    public float getUnmodifiableAbility(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-        return _evaluator.evaluateExpression(gameState, modifiersQuerying, physicalCard);
+    public int getUnmodifiableForceDrainAmount(String playerId, GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard location) {
+        return (int) _evaluator.evaluateExpression(gameState, modifiersQuerying, location);
     }
 }
