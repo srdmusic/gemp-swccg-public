@@ -68,6 +68,7 @@ public class Card101_002 extends AbstractRebel {
         modifiers.add(new ImmuneToAttritionModifier(self, isCasualCondition));
         modifiers.add(new PowerModifier(self, Filters.hasPiloting(self), isCasualCondition, 5));
         modifiers.add(new AddsBattleDestinyModifier(self, new AndCondition(isCasualCondition, new PilotingCondition(self)), 1));
+        modifiers.add(new MayNotHaveGameTextCanceledModifier(self, isCasualCondition));
         return modifiers;
     }
     @Override
