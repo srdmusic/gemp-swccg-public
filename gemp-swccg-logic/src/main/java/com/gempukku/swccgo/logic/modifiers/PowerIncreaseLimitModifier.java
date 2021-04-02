@@ -41,8 +41,8 @@ public class PowerIncreaseLimitModifier extends AbstractModifier {
 
     @Override
     public String getText(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard self) {
-        final float value = _evaluator.evaluateExpression(gameState, modifiersQuerying, self);
-        if (value >= 0)
+        final float value = getPowerModifierLimit(gameState, modifiersQuerying, self);
+        if (value > 0)
             return "Power may not be increased by more than " + GuiUtils.formatAsString(value);
         else
             return null;
