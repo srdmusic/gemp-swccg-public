@@ -70,7 +70,7 @@ public class DestinyModifier extends AbstractModifier {
     public float getDestinyModifier(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
         float value = _evaluator.evaluateExpression(gameState, modifiersQuerying, physicalCard);
         float limit = modifiersQuerying.getDestinyModifierLimit(gameState, modifiersQuerying, physicalCard);
-        if (limit > 1 && value > limit) {
+        if (limit > 0 && value > limit) {
             value = limit;
         }
         return value;

@@ -143,7 +143,7 @@ public class ForfeitModifier extends AbstractModifier {
     public float getForfeitModifier(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
         float value = _evaluator.evaluateExpression(gameState, modifiersQuerying, physicalCard);
         float limit = modifiersQuerying.getForfeitModifierLimit(gameState, modifiersQuerying, physicalCard);
-        if (limit > 1 && value > limit) {
+        if (limit > 0 && value > limit) {
             value = limit;
         }
         return value;

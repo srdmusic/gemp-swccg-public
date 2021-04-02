@@ -142,7 +142,7 @@ public class PowerModifier extends AbstractModifier {
     public float getPowerModifier(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
         float value = _evaluator.evaluateExpression(gameState, modifiersQuerying, physicalCard);
         float limit = modifiersQuerying.getPowerModifierLimit(gameState, modifiersQuerying, physicalCard);
-        if (limit > 1 && value > limit) {
+        if (limit > 0 && value > limit) {
             value = limit;
         }
         return value;
