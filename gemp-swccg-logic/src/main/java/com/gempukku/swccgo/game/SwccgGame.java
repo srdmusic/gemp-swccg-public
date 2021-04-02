@@ -289,6 +289,4 @@ public interface SwccgGame {
      * @return number of seconds elapsed from this player's clock
      */
     Integer getSecondsElapsed(String player);
-
-    boolean isCasual();
 }

@@ -7,6 +7,7 @@ import com.gempukku.swccgo.cards.conditions.GameTextModificationCondition;
 import com.gempukku.swccgo.cards.effects.CancelForceDrainEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.AbstractActionProxy;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -156,8 +157,14 @@ public class Card111_006 extends AbstractObjective {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         String playerId = self.getOwner();
 
+        Filter deathStarSites = Filters.Death_Star_site;
+
+        if (GameConditions.hasGameTextModification(game, self, ModifyGameTextType.SET_YOUR_COURSE_FOR_ALDERAAN__ONLY_AFFECTS_DARK_SIDE_DEATH_STAR_SITES)) {
+            deathStarSites = Filters.and(Filters.your(playerId), deathStarSites);
+        }
+
         // Check condition(s)
-        if (TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerId, Filters.Death_Star_site)
+        if (TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerId, deathStarSites)
                 && GameConditions.canCancelForceDrain(game, self)) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);

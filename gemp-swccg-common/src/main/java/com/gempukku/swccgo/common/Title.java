@@ -174,6 +174,7 @@ public interface Title {
     String Clakdor_VII = "Clak'dor VII";
     String Clash_Of_Sabers = "Clash Of Sabers";
     String Clone_Trooper = "Clone Trooper";
+    String Cloning_Cylinders = "Cloning Cylinders";
     String Closer = "Closer?!";
     String Cloud_City_Celebration = "Cloud City Celebration";
     String Cloud_City_Occupation = "Cloud City Occupation";
