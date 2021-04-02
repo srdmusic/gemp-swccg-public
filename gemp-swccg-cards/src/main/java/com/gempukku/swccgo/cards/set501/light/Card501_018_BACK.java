@@ -13,10 +13,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.CaptureWithImprisonmentEffect;
-import com.gempukku.swccgo.logic.effects.FlipCardEffect;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
+import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
@@ -105,7 +102,7 @@ public class Card501_018_BACK extends AbstractObjective {
             final PhysicalCard leia = result.getCardAboutToLeaveTable();
 
             if (leia != null) {
-                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Imprison Leia");
                 action.setPerformingPlayer(game.getOpponent(self.getOwner()));
                 action.appendEffect(
@@ -113,11 +110,13 @@ public class Card501_018_BACK extends AbstractObjective {
                             @Override
                             protected void doPlayEffect(SwccgGame game) {
                                 result.getPreventableCardEffect().preventEffectOnCard(leia);
+                                action.appendEffect(
+                                        new RestoreCardToNormalEffect(action, leia));
+                                action.appendEffect(
+                                        new CaptureWithImprisonmentEffect(action, leia, Filters.findFirstActive(game, self, Filters.Detention_Block_Corridor), leia.isUndercover(), leia.isMissing())
+                                );
                             }
                         });
-                action.appendEffect(
-                        new CaptureWithImprisonmentEffect(action, leia, Filters.findFirstActive(game, self, Filters.Detention_Block_Corridor), leia.isUndercover(), leia.isMissing())
-                );
                 actions.add(action);
             }
 

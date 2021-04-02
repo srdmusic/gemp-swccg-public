@@ -10,6 +10,7 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
@@ -73,7 +74,7 @@ public class Card501_021 extends AbstractSite {
             PhysicalCard aPowerLoss = Filters.findFirstActive(game, self, Filters.A_Power_Loss);
             if (GameConditions.hasStackedCards(game, aPowerLoss)) {
                 final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                action.setActionMsg("Place a card stacked on " + aPowerLoss + " in owner's Used Pile.");
+                action.setActionMsg("Place a card stacked on " + GameUtils.getCardLink(aPowerLoss) + " in owner's Used Pile.");
                 action.appendTargeting(
                         new ChooseStackedCardEffect(action, playerOnLightSideOfLocation, aPowerLoss) {
                             @Override
