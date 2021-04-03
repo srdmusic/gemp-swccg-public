@@ -3446,7 +3446,6 @@ var fixedImages = {
 "501_24":"/gemp-swccg/images/cards/SpecialEdition-Light/tk422.gif",
 "501_25":"/gemp-swccg/images/cards/Premiere-Light/c3po.gif",
 "501_26":"/gemp-swccg/images/cards/Premiere-Light/blasterrifle.gif",
-"501_27":"",
 "501_28":"/gemp-swccg/images/cards/DeathStarII-Dark/admiralpiett.gif",
 "501_29":"/gemp-swccg/images/cards/Virtual11-Dark/insidiousprisoner.gif",
 "501_30":"/gemp-swccg/images/cards/ANewHope-Light/letthewookieewin.gif",

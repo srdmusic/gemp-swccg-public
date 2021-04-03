@@ -324,6 +324,7 @@ public interface Title {
     String Ello_Asty = "Ello Asty";
     String Ellorrs_Madak = "Ellorrs Madak";
     String Emergency_Deployment = "Emergency Deployment";
+    String Emperors_Orders = "Emperor's Orders";
     String Emperors_Power = "Emperor's Power";
     String Empires_New_Order = "Empire's New Order";
     String Empires_Sinister_Agents = "Empire's Sinister Agents";

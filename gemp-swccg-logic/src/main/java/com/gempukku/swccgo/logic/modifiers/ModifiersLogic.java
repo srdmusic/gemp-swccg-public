@@ -1276,7 +1276,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.POWER, physicalCard)) {
             result *= modifier.getPowerMultiplierModifier(gameState, this, physicalCard);
-            PhysicalCard sourceCard = modifier.getSource(gameState) != null ? modifier.getSource(gameState) : null;
+            PhysicalCard sourceCard = modifier.getSource(gameState);
             String playerId = sourceCard != null ? sourceCard.getOwner() : null;
             float modifierAmount = modifier.getPowerModifier(gameState, this, physicalCard);
             if (modifierAmount <= 0 || !isProhibitedFromHavingPowerIncreasedByCard(gameState, physicalCard, playerId, sourceCard, modifierCollector)) {
@@ -1301,6 +1301,15 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
 
         return Math.max(0, result);
+    }
+
+    @Override
+    public float getPowerModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+        float result = 0;
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.POWER_INCREASE_MODIFIER_LIMIT, physicalCard)) {
+            result = modifier.getPowerModifierLimit(gameState, this, physicalCard);
+        }
+        return result;
     }
 
     /**
@@ -1927,6 +1936,15 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         return Math.max(0, result);
     }
 
+    @Override
+    public float getForfeitModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+        float result = 0;
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.FORFEIT_INCREASE_MODIFIER_LIMIT, physicalCard)) {
+            result = modifier.getForfeitModifierLimit(gameState, this, physicalCard);
+        }
+        return result;
+    }
+
     /**
      * Determines if a card remains in play and reduces it's forfeit when 'forfeited'.
      * @param gameState the game state
@@ -2133,10 +2151,20 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
 
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.DESTINY, physicalCard)) {
-            result += modifier.getDestinyModifier(gameState, this, physicalCard);
+            float modifierValue = modifier.getDestinyModifier(gameState, this, physicalCard);
+            result += modifierValue;
             modifierCollector.addModifier(modifier);
         }
 
+        return result;
+    }
+
+    @Override
+    public float getDestinyModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+        float result = 0;
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.DESTINY_INCREASE_MODIFIER_LIMIT, physicalCard)) {
+            result = modifier.getDestinyModifierLimit(gameState, this, physicalCard);
+        }
         return result;
     }
 
@@ -3654,6 +3682,13 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.FORCE_DRAIN_AMOUNT, location)) {
             if (modifier.isForPlayer(performingPlayerId)) {
                 result += modifier.getForceDrainModifier(performingPlayerId, gameState, this, location);
+                modifierCollector.addModifier(modifier);
+            }
+        }
+
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.UNMODIFIABLE_FORCE_DRAIN_AMOUNT, location)) {
+            if (modifier.isForPlayer(performingPlayerId)) {
+                result = modifier.getUnmodifiableForceDrainAmount(performingPlayerId, gameState, this, location);
                 modifierCollector.addModifier(modifier);
             }
         }
