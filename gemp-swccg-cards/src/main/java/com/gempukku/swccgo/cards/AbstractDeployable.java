@@ -2199,7 +2199,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
             return null;
         }
 
-        return new SquadronReplacementAction(self);
+        return new ReplacementAction(self);
     }
 
     /**
