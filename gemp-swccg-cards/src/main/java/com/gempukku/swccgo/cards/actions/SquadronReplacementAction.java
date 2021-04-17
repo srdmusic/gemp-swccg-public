@@ -34,14 +34,14 @@ public class SquadronReplacementAction extends AbstractTopLevelRuleAction {
     public SquadronReplacementAction(final PhysicalCard squadron) {
         super(squadron, squadron.getOwner());
         _squadron = squadron;
-        _text = "Replace starfighters";
+        _text = "Replace cards";
         _that = this;
 
         appendTargeting(
                 new PassthruEffect(_that) {
                     @Override
                     protected void doPlayEffect(final SwccgGame game) {
-                        final Filter replacementFilter = Filters.and(Filters.your(squadron), Filters.starfighter, squadron.getBlueprint().getReplacementFilterForSquadron());
+                        final Filter replacementFilter = Filters.and(Filters.your(squadron), Filters.or(Filters.starfighter, Filters.character), squadron.getBlueprint().getReplacementFilterForSquadron());
                         final Integer replacementCount = squadron.getBlueprint().getReplacementCountForSquadron();
 
                         // Find locations that have the required number of starfighters present
