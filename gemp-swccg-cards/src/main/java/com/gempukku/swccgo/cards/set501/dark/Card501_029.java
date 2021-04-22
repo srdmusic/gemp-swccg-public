@@ -29,7 +29,7 @@ public class Card501_029 extends AbstractEpicEventDeployable {
     public Card501_029() {
         super(Side.DARK, PlayCardZoneOption.ATTACHED, Title.Emperors_Orders);
         setGameText("The Alliance Will Die...: Deploy on Executor if you have no objective. Flagship Operations may deploy regardless of deployment restrictions. Your cards may not add more than 2 to the power, destiny and forfeit of a squadron." +
-                "...As Will Your Friends: Where you have a TIE with a capital ship, your force drains = 3. Your TIE assault squadrons may deploy for 3 force (without replacement). If Executor lost, this card lost and you lose 3 force." +
+                "...As Will Your Friends: At battleground systems where you have a Star Destroyer and a piloted TIE, your force drains = 3. Your TIE assault squadrons may deploy for 3 force (without replacement). If Executor lost, this card lost and you lose 3 force." +
                 "'I'm Hit!:' During battle, opponent may place their A-wing with Executor in Lost Pile to cancel Executor’s immunity to attrition");
         addIcons(Icon.VIRTUAL_SET_15);
         setTestingText("Emperor's Orders");
@@ -51,7 +51,7 @@ public class Card501_029 extends AbstractEpicEventDeployable {
         modifiers.add(new ModifyGameTextModifier(self, Filters.Flagship_Operations, ModifyGameTextType.FLAGSHIP_OPERATIONS__MAY_IGNORE_DEPLOYMENT_RESTRICTIONS));
         modifiers.add(new UseCalculationForDeployCostModifier(self, Filters.TIE_Assault_Squadron, new ConstantEvaluator(3)));
         modifiers.add(new MayDeployToTargetModifier(self, Filters.TIE_Assault_Squadron, Filters.any));
-        modifiers.add(new ResetForceDrainModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self.getOwner()), Filters.TIE, Filters.with(self, Filters.capital_starship))), 3));
+        modifiers.add(new ResetForceDrainModifier(self, Filters.and(Filters.battleground_system, Filters.sameLocationAs(self, Filters.and(Filters.your(self.getOwner()), Filters.and(Filters.piloted, Filters.TIE), Filters.with(self, Filters.Star_Destroyer)))), 3));
         modifiers.add(new PowerIncreaseLimitModifier(self, Filters.and(Filters.your(self.getOwner()), Filters.squadron), 2));
         modifiers.add(new DestinyIncreaseLimitModifier(self, Filters.and(Filters.your(self.getOwner()), Filters.squadron), 2));
         modifiers.add(new ForfeitIncreaseLimitModifier(self, Filters.and(Filters.your(self.getOwner()), Filters.squadron), 2));

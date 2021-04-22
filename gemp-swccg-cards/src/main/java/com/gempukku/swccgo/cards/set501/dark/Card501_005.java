@@ -13,9 +13,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ShowCardOnScreenEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckSimultaneouslyWithCardEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
-import com.gempukku.swccgo.logic.modifiers.KeywordModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
@@ -29,7 +27,7 @@ import java.util.List;
  */
 public class Card501_005 extends AbstractNormalEffect {
     public Card501_005() {
-        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Ubrikkian Industries");
+        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Ubrikkian Industries", Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy on table. During your deploy phase, reveal an alien with 'vehicle' in gametext from hand to take a transport vehicle (or vice versa) from Reserve Deck and deploy both simultaneously. Drivers are immune to Clash of Sabers. [Immune to Alter]");
         addIcons(Icon.VIRTUAL_SET_15);
