@@ -33,6 +33,7 @@ public class Card501_008 extends AbstractResistance {
         setGameText("Other Resistance characters of destiny = 2 (and Finn) are power +1 at same and adjacent sites. During battle, if opponent has more than four characters here, may exclude one of opponent's characters of ability < 4 from battle.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_15, Icon.EPISODE_VII);
         addKeywords(Keyword.FEMALE, Keyword.STORMTROOPER);
+        addPersona(Persona.JANNAH);
         setTestingText("Jannah");
     }
 

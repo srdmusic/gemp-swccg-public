@@ -17831,6 +17831,7 @@ public class Filters {
     public static final Filter Jakku_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Jakku));
     public static final Filter Jakku_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Jakku));
     public static final Filter Jango_Fett = Filters.persona(Persona.JANGO_FETT);
+    public static final Filter Jannah = Filters.persona(Persona.JANNAH);
     public static final Filter Jar_Jar = Filters.persona(Persona.JAR_JAR);
     public static final Filter Jawa = Filters.species(Species.JAWA);
     public static final Filter Jawa_Blaster = Filters.title(Title.Jawa_Blaster);
