@@ -17338,6 +17338,7 @@ public class Filters {
     public static final Filter Corellian_corvette = Filters.modelType(ModelType.CORELLIAN_CORVETTE);
     public static final Filter Corellian_Engineering_Corporation = Filters.title(Title.Corellian_Engineering_Corporation);
     public static final Filter Corellian_Slip = Filters.title(Title.Corellian_Slip);
+    public static final Filter Corran_Horn = Filters.persona(Persona.CORRAN_HORN);
     public static final Filter Coruscant_battleground_site = Filters.and(Filters.partOfSystem(Title.Coruscant), CardSubtype.SITE, Filters.battleground());
     public static final Filter Coruscant_Celebration = Filters.title(Title.Coruscant_Celebration);
     public static final Filter Coruscant_Guard = Filters.keyword(Keyword.CORUSCANT_GUARD);
