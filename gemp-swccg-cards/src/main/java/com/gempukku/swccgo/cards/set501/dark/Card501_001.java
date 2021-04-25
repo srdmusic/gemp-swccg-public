@@ -56,7 +56,7 @@ public class Card501_001 extends AbstractAlien {
             Species repSpecies = rep.getBlueprint().getSpecies();
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.appendEffect(
-                    new AddUntilEndOfGameModifierEffect(action, new SpeciesModifier(self, repSpecies), GameUtils.getCardLink(self) + " assumes species: " + repSpecies.getHumanReadable()));
+                    new AddUntilEndOfGameModifierEffect(action, new SpeciesModifier(self, repSpecies), " assumes species: " + repSpecies.getHumanReadable()));
             return Collections.singletonList(action);
         }
         return null;
@@ -78,7 +78,7 @@ public class Card501_001 extends AbstractAlien {
                 action.setActionMsg("Retrieve " + GameUtils.getCardLink(rep));
                 // Perform result(s)
                 action.appendEffect(
-                        new RetrieveCardEffect(action, playerId, Filters.sameCardId(rep)));
+                        new RetrieveCardEffect(action, playerId, Filters.sameTitle(rep)));
                 actions.add(action);
             }
 
