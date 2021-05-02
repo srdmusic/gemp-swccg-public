@@ -219,6 +219,14 @@ public interface ModifiersQuerying {
     float getPower(GameState gameState, PhysicalCard physicalCard, ModifierCollector modifierCollector);
 
     /**
+     * Gets a card's power modifier limit.
+     *
+     * @param gameState the game state
+     * @return the destiny value
+     */
+    float getPowerModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
+
+    /**
      * Determines if a card's power is less than a specified value.
      *
      * @param gameState the game state
@@ -470,6 +478,14 @@ public interface ModifiersQuerying {
     float getForfeit(GameState gameState, PhysicalCard physicalCard, ModifierCollector modifierCollector);
 
     /**
+     * Gets a card's forfeit modifier limit.
+     *
+     * @param gameState the game state
+     * @return the destiny value
+     */
+    float getForfeitModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
+
+    /**
      * Determines if a card's forfeit value is equal to a specified value.
      *
      * @param gameState the game state
@@ -598,6 +614,14 @@ public interface ModifiersQuerying {
      * @return the destiny value
      */
     float getDestiny(GameState gameState, PhysicalCard card, ModifierCollector modifierCollector);
+
+    /**
+     * Gets a card's destiny modifier limit.
+     *
+     * @param gameState the game state
+     * @return the destiny value
+     */
+    float getDestinyModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
 
     /**
      * Determines if a card's destiny value is less than a specified value.

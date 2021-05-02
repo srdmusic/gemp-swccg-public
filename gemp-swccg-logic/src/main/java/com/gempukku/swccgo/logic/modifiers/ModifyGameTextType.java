@@ -26,6 +26,7 @@ public enum ModifyGameTextType {
     ELLORRS_MADAK__ADDITIONAL_2_TO_POWER_BONUS("Additional 2 to power bonus"),
     FEAR_WILL_KEEP_THEM_IN_LINE__ADDS_1_TO_ATTRITION("Add 1 to attrition"),
     FLAGSHIP_OPERATIONS__MAY_DEPLOY_ON_EXECUTOR("May deploy on Executor"),
+    FLAGSHIP_OPERATIONS__MAY_IGNORE_DEPLOYMENT_RESTRICTIONS("May ignore deployment restrictions"),
     GRIMTAASH__PUT_TWO_CARDS_IN_USED("Place two cards in used pile first"),
     HOTH_SENTRY__APPLIES_ALL_MODIFIERS("Applies all modifiers"),
     HUNT_DOWN__DO_NOT_PLACE_OUT_OF_PLAY_IF_MAUL_DUELS("Not placed out of play if Maul initiates a duel"),

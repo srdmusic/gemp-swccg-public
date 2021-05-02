@@ -17338,6 +17338,7 @@ public class Filters {
     public static final Filter Corellian_corvette = Filters.modelType(ModelType.CORELLIAN_CORVETTE);
     public static final Filter Corellian_Engineering_Corporation = Filters.title(Title.Corellian_Engineering_Corporation);
     public static final Filter Corellian_Slip = Filters.title(Title.Corellian_Slip);
+    public static final Filter Corran_Horn = Filters.persona(Persona.CORRAN_HORN);
     public static final Filter Coruscant_battleground_site = Filters.and(Filters.partOfSystem(Title.Coruscant), CardSubtype.SITE, Filters.battleground());
     public static final Filter Coruscant_Celebration = Filters.title(Title.Coruscant_Celebration);
     public static final Filter Coruscant_Guard = Filters.keyword(Keyword.CORUSCANT_GUARD);
@@ -17831,6 +17832,7 @@ public class Filters {
     public static final Filter Jakku_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Jakku));
     public static final Filter Jakku_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Jakku));
     public static final Filter Jango_Fett = Filters.persona(Persona.JANGO_FETT);
+    public static final Filter Jannah = Filters.persona(Persona.JANNAH);
     public static final Filter Jar_Jar = Filters.persona(Persona.JAR_JAR);
     public static final Filter Jawa = Filters.species(Species.JAWA);
     public static final Filter Jawa_Blaster = Filters.title(Title.Jawa_Blaster);

@@ -3247,10 +3247,8 @@ var fixedImages = {
 "214_1":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/altercollateraldamage.png",
 "214_2":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/bestoonlegacy.png",
 "214_3":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/darksaber.png",
-//"214_4":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/exegolsiththrone.png",
 "214_4":"https://res.starwarsccg.org/cards/Virtual14-Dark/large/exegolsiththrone.gif",
 "214_5":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/intimidatorpersecutor.png",
-//"214_6":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/kijimids.png",
 "214_6":"https://res.starwarsccg.org/cards/Virtual14-Dark/large/kijimids.gif",
 "214_7":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/ochi.png",
 "214_8":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/palpatineemperorreturned.png",
@@ -3264,7 +3262,6 @@ var fixedImages = {
 "214_16":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/beaumontkin.png",
 "214_17":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/corporalpao.png",
 "214_18":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/dindjarin.png",
-//"214_19":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/endorchiefchirpashut.png",
 "214_19":"https://res.starwarsccg.org/cards/Virtual14-Light/large/endorchiefchirpashut.gif",
 "214_20":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/ouronlyhope.png",
 "214_21":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/plokoonsjedistarfighter.png",
@@ -3449,7 +3446,6 @@ var fixedImages = {
 "501_24":"/gemp-swccg/images/cards/SpecialEdition-Light/tk422.gif",
 "501_25":"/gemp-swccg/images/cards/Premiere-Light/c3po.gif",
 "501_26":"/gemp-swccg/images/cards/Premiere-Light/blasterrifle.gif",
-"501_27":"",
 "501_28":"/gemp-swccg/images/cards/DeathStarII-Dark/admiralpiett.gif",
 "501_29":"/gemp-swccg/images/cards/Virtual11-Dark/insidiousprisoner.gif",
 "501_30":"/gemp-swccg/images/cards/ANewHope-Light/letthewookieewin.gif",
@@ -3485,6 +3481,8 @@ var fixedImages = {
 "201_40ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Dark/slaveisymboloffear_ai.png",
 "203_14ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/stolendatatapes_ai.png",
 "203_21ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/wildkarrde_ai.png",
+"213_10ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Dark/maul_ai.png",
+"213_39ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/qira_ai.png",
 
 
 };
