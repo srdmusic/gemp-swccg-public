@@ -9,20 +9,16 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
+import com.gempukku.swccgo.logic.timing.results.BattleInitiatedResult;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -62,10 +58,31 @@ public class Card501_040 extends AbstractRebel {
                 action.setText("Deploy battleground from Reserve Deck");
                 action.setActionMsg("Deploy a battleground from Reserve Deck that is related to a location on table");
                 action.appendUsage(new OncePerTurnEffect(action));
-                action.appendEffect(new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.battleground, Filters.relatedLocationTo(self, Filters.onTable)), true));
+                action.appendEffect(new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.battleground, Filters.relatedLocationTo(self, Filters.and(Filters.location, Filters.onTable))), true));
 
                 return Collections.singletonList(action);
             }
+        }
+        return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggersWhileStacked(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if (game.getModifiersQuerying().isCommuning(game.getGameState(), self)
+            && TriggerConditions.battleInitiated(game, effectResult, self.getOwner())) {
+            String opponent = game.getOpponent(self.getOwner());
+
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            int forceLoss = 1;
+            if (GameConditions.isDuringBattleWithParticipant(game, Filters.Luke))
+                forceLoss = 2;
+
+            action.setText("Opponent loses "+forceLoss+" Force");
+            // Perform result(s)
+            action.appendEffect(
+                    new LoseForceEffect(action, opponent, forceLoss));
+            return Collections.singletonList(action);
         }
         return null;
     }

@@ -11,12 +11,14 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromVoidInLostPileEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromVoidInReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.StackCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.PassthruEffect;
 
 import java.util.Collections;
 import java.util.List;
@@ -70,19 +72,28 @@ public class Card501_038 extends AbstractUsedOrStartingInterrupt {
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.Communing, true, false)
                             );
-                            PhysicalCard communing = Filters.findFirstActive(game, null, Filters.Communing);
-                            if (communing != null) {
-                                action.appendEffect(
-                                        new StackCardFromReserveDeckEffect(action, communing, Filters.Jedi, false)
-                                );
-                            } else {
-                                System.out.println("couldn't find Communing");
-                            }
+
                             action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter,
-                                            Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table"))), 1, 3, true, false));
-                            action.appendEffect(
-                                    new PutCardFromVoidInLostPileEffect(action, playerId, self));
+                                    new PassthruEffect(action) {
+                                        @Override
+                                        protected void doPlayEffect(SwccgGame game) {
+                                            PhysicalCard communing = Filters.findFirstActive(game, null, Filters.Communing);
+                                            if (communing != null) {
+                                                action.appendEffect(
+                                                        new StackCardFromReserveDeckEffect(action, communing, Filters.Jedi, false)
+                                                );
+                                                action.appendEffect(
+                                                        new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter,
+                                                                Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table"))), 1, 3, true, false));
+                                            } else {
+                                                System.out.println("couldn't find Communing");
+                                            }
+
+                                            action.appendEffect(
+                                                    new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
+                                        }
+                                    }
+                            );
                         }
                     }
             );
