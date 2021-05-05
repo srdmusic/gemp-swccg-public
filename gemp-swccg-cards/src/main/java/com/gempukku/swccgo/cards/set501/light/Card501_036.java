@@ -25,7 +25,7 @@ import java.util.List;
  * Set: Set 15
  * Type: Character
  * Subtype: Rebel
- * Title: Ben Kenobi v
+ * Title: Ben Kenobi (V)
  */
 public class Card501_036 extends AbstractRebel {
     public Card501_036() {
@@ -35,7 +35,7 @@ public class Card501_036 extends AbstractRebel {
         setVirtualSuffix(true);
         addPersona(Persona.OBIWAN);
         addIcons(Icon.SPECIAL_EDITION, Icon.WARRIOR, Icon.VIRTUAL_SET_15);
-        setTestingText("Ben Kenobi v");
+        setTestingText("Ben Kenobi (V)");
     }
 
     @Override
