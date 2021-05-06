@@ -1392,6 +1392,17 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that may be revealed as a Resistance agent with I Want That Map
+     * @return Filter
+     */
+    public static final Filter mayBeRevealedAsResistanceAgent = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return modifiersQuerying.mayBeRevealedAsResistanceAgent(gameState, physicalCard);
+        }
+    };
+
+    /**
      * Filter that accepts cards that are always immune to a specified card title.
      *
      * @param title the card title
@@ -1760,6 +1771,24 @@ public class Filters {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
                 return destinyEqualTo(value).accepts(gameState, modifiersQuerying, builtInCardBlueprint.getPhysicalCard(gameState.getGame()));
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts cards that have a printed destiny < X.
+     *
+     * @param ability the value of X
+     * @return Filter
+     */
+    public static Filter printedDestinyLessThan(final float destiny) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                if (physicalCard.getBlueprint().getDestiny()==null)
+                    return false;
+
+                return physicalCard.getBlueprint().getDestiny() < destiny;
             }
         };
     }
