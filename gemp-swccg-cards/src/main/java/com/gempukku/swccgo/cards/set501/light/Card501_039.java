@@ -23,7 +23,7 @@ import java.util.List;
  * Set: Set 15
  * Type: Character
  * Subtype: Jedi Master
- * Title: Qui-Gon Jinn, An Old Friend
+ * Title: Master Qui-Gon Jinn, An Old Friend
  */
 public class Card501_039 extends AbstractJediMaster {
     public Card501_039() {
