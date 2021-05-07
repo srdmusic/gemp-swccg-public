@@ -40,6 +40,7 @@ public class Card501_039 extends AbstractJediMaster {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotDeployModifier(self, Filters.Rebel, communing, self.getOwner()));
         modifiers.add(new TotalPowerModifier(self, Filters.battleLocation, new StackedEvaluator(self, Filters.Communing), self.getOwner()));
+        modifiers.add(new MayDeployOtherCardsAsReactToLocationModifier(self, "Deploy Anakin or Obi-Wan as a react", communing, self.getOwner(), Filters.or(Filters.Anakin, Filters.ObiWan), Filters.any, -2));
         return modifiers;
     }
 

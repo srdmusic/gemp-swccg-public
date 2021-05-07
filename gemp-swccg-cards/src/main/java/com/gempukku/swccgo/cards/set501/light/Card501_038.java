@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrStartingInterrupt;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
@@ -39,21 +40,26 @@ public class Card501_038 extends AbstractUsedOrStartingInterrupt {
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
-        final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-        action.setText("Activate 1 Force");
-        // Allow response(s)
-        action.allowResponses(
-                new RespondablePlayCardEffect(action) {
-                    @Override
-                    protected void performActionResults(Action targetingAction) {
-                        // Perform result(s)
-                        action.appendEffect(
-                                new ActivateForceEffect(action, playerId, 1));
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
+        // Check condition(s)
+        if (GameConditions.canActivateForce(game, playerId)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Activate 1 Force");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new ActivateForceEffect(action, playerId, 1));
+                        }
                     }
-                }
-        );
-        return Collections.singletonList(action);
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
     @Override
@@ -85,8 +91,6 @@ public class Card501_038 extends AbstractUsedOrStartingInterrupt {
                                                 action.appendEffect(
                                                         new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter,
                                                                 Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table"))), 1, 3, true, false));
-                                            } else {
-                                                System.out.println("couldn't find Communing");
                                             }
 
                                             action.appendEffect(

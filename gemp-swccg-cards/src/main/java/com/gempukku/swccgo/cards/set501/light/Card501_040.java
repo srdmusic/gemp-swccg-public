@@ -19,6 +19,7 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.BattleInitiatedResult;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -58,7 +59,15 @@ public class Card501_040 extends AbstractRebel {
                 action.setText("Deploy battleground from Reserve Deck");
                 action.setActionMsg("Deploy a battleground from Reserve Deck that is related to a location on table");
                 action.appendUsage(new OncePerTurnEffect(action));
-                action.appendEffect(new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.battleground, Filters.relatedLocationTo(self, Filters.and(Filters.location, Filters.onTable))), true));
+
+                Collection<PhysicalCard> locationsOnTable = Filters.filterTopLocationsOnTable(game, Filters.any);
+                Collection<PhysicalCard> reserveDeck = game.getGameState().getReserveDeck(playerId);
+                Collection<PhysicalCard> locationsToDeployFromReserveDeck = new LinkedList<>();
+                for(PhysicalCard c:locationsOnTable) {
+                    locationsToDeployFromReserveDeck.addAll(Filters.filter(reserveDeck, game, Filters.relatedLocationEvenWhenNotInPlay(c)));
+                }
+
+                action.appendEffect(new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.battleground, Filters.in(locationsToDeployFromReserveDeck)), true));
 
                 return Collections.singletonList(action);
             }
