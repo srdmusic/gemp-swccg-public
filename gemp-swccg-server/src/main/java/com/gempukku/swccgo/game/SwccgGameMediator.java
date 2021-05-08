@@ -1217,6 +1217,11 @@ public class SwccgGameMediator {
                     // Slip Sliding Away (v)
                     return startingLocation.getBlueprint().getTitle() + " SSAv";
                 }
+                if(Filters.title("I Am Part Of The Living Force").accepts(_swccgoGame, startingInterrupt)
+                    && startingLocation.getBlueprint().getTitle() != null)  {
+                    // Communing
+                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Communing";
+                }
                 if (Filters.Communing.accepts(_swccgoGame, startingInterrupt)
                         && startingInterrupt.getBlueprint().isLegacy()) {
                     //Communing (ignore the location)
