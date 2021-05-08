@@ -2564,6 +2564,28 @@ public class GameState implements Snapshotable<GameState> {
                 return true;
         }
 
+
+        //need to visit stacked cards for Communing
+        for (PhysicalCard physicalCard : _stacked.get(_darkSidePlayer)) {
+            if (physicalCard.getZone() == Zone.STACKED
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.INTERRUPT
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.EPIC_EVENT) {
+                if (physicalCardVisitor.visitPhysicalCard(physicalCard))
+                    return true;
+            }
+        }
+
+        for (PhysicalCard physicalCard : _stacked.get(_lightSidePlayer)) {
+            if (physicalCard.getZone() == Zone.STACKED
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.INTERRUPT
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.EPIC_EVENT) {
+                if (physicalCardVisitor.visitPhysicalCard(physicalCard))
+                    return true;
+            }
+        }
+
         // Include "insert" cards on top of reserve decks
         for (PhysicalCard topOfReserveDeck : getTopCardsOfReserveDecks()) {
             if (topOfReserveDeck.isInserted())
