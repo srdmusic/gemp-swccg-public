@@ -2322,6 +2322,18 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
         if (TriggerConditions.forceDrainInitiatedBy(game, effectResult, game.getOpponent(playerId))
                 || TriggerConditions.battleInitiated(game, effectResult, game.getOpponent(playerId))) {
 
+            if (self.getZone() == Zone.STACKED) {
+                if (!game.getModifiersQuerying().isGameTextCanceled(game.getGameState(), self)) {
+                    // Deploy other cards as 'react'
+                    List<TriggerAction> deployOtherCardsAsReactActions = getDeployOtherCardsAsReactAction(playerId, game, self);
+                    if (deployOtherCardsAsReactActions != null) {
+                        for (TriggerAction deployOtherCardsAsReactAction : deployOtherCardsAsReactActions) {
+                            actions.add(deployOtherCardsAsReactAction);
+                        }
+                    }
+                }
+            }
+
             if (self.getZone().isInPlay()) {
                 boolean inPlayActive = game.getGameState().isCardInPlayActive(self, false, true, false, false, false, false, false, false);
 

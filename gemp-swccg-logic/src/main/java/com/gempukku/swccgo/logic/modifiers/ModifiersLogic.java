@@ -16248,6 +16248,10 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         return true;
     }
 
+    public boolean mayBeRevealedAsResistanceAgent(GameState gameState, PhysicalCard card) {
+        return !getModifiersAffectingCard(gameState, ModifierType.MAY_BE_REVEALED_AS_RESISTANCE_AGENT, card).isEmpty();
+    }
+
     public boolean isCommuning(GameState gameState, PhysicalCard card) {
         return !getModifiersAffectingCard(gameState, ModifierType.COMMUNING, card).isEmpty();
     }

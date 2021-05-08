@@ -1038,6 +1038,12 @@ public abstract class AbstractNonLocationPlaysToTable extends AbstractSwccgCardB
                 actions.addAll(gameTextActions);
         }
 
+        // Actions from game text when stacked
+        if (self.getZone() == Zone.STACKED) {
+            List<RequiredGameTextTriggerAction> gameTextActions = getGameTextRequiredAfterTriggersWhileStacked(game, effectResult, self, self.getCardId());
+            if (gameTextActions != null)
+                actions.addAll(gameTextActions);
+        }
         return actions;
     }
 
@@ -1660,6 +1666,19 @@ public abstract class AbstractNonLocationPlaysToTable extends AbstractSwccgCardB
      * @return the trigger actions, or null
      */
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggersAlwaysWhenInPlay(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        return null;
+    }
+
+    /**
+     * This method is overridden by individual cards to specify required "after" triggers to the specified effect result
+     * the card is stacked on another card
+     * @param game the game
+     * @param effectResult the effect result
+     * @param self the card
+     * @param gameTextSourceCardId the card id of the game text for this action comes from (when copied from another card)
+     * @return the trigger actions, or null
+     */
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggersWhileStacked(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         return null;
     }
 
