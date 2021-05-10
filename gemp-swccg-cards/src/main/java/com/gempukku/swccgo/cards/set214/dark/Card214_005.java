@@ -4,14 +4,12 @@ import com.gempukku.swccgo.cards.AbstractCapitalStarship;
 import com.gempukku.swccgo.cards.AbstractPermanentAboard;
 import com.gempukku.swccgo.cards.AbstractPermanentPilot;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
+import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -57,7 +55,7 @@ public class Card214_005 extends AbstractCapitalStarship {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Shield_Gate, new AtCondition(self, Title.Scarif), ModifyGameTextType.SUBTRACT_TWO_FROM_BLOW_AWAY_SHIELD_GATE));
+        modifiers.add(new AttemptToBlowAwayShieldGateTotalModifier(self, new AtCondition(self, Title.Scarif), -2));
         return modifiers;
     }
 }

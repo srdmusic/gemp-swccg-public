@@ -17445,6 +17445,7 @@ public class Filters {
     public static final Filter dejarik = Filters.keyword(Keyword.DEJARIK);
     public static final Filter Demotion = Filters.title(Title.Demotion);
     public static final Filter Dengar = Filters.persona(Persona.DENGAR);
+    public static final Filter Deploy_The_Garrison = Filters.title(Title.Deploy_The_Garrison);
     public static final Filter Deployable_By_SYCFA = Filters.and(Filters.side(Side.DARK), Filters.or(Filters.Alderaan_system, Filters.title(Title.Jedha_City)));
     public static final Filter Deploys_aboard_Blockade_Flagship = Filters.or(Filters.persona(Persona.BLOCKADE_FLAGSHIP), Filters.locationAndCardsAtLocation(Filters.siteOfStarshipOrVehicle(Persona.BLOCKADE_FLAGSHIP, false)));
     public static final Filter Deploys_aboard_Executor = Filters.or(Filters.persona(Persona.EXECUTOR), Filters.locationAndCardsAtLocation(Filters.siteOfStarshipOrVehicle(Persona.EXECUTOR, false)));
@@ -18115,6 +18116,7 @@ public class Filters {
     public static final Filter On_Hoth = Filters.on(Title.Hoth);
     public static final Filter On_Target = Filters.title(Title.On_Target);
     public static final Filter On_Tatooine = Filters.on(Title.Tatooine);
+    public static final Filter On_The_Verge_Of_Greatness = Filters.title(Title.On_The_Verge_Of_Greatness);
     public static final Filter One_In_A_Million = Filters.title(Title.One_In_A_Million);
     public static final Filter One_More_Pass = Filters.title(Title.One_More_Pass);
     public static final Filter Onyx_1 = Filters.persona(Persona.ONYX_1);
@@ -18500,6 +18502,7 @@ public class Filters {
     public static final Filter Target_The_Main_Generator = Filters.title(Title.Target_The_Main_Generator);
     public static final Filter Targeting_Computer = Filters.title(Title.Targeting_Computer);
     public static final Filter Tarkin = Filters.persona(Persona.TARKIN);
+    public static final Filter Tarkin_Doctrine = Filters.title(Title.Tarkin_Doctrine);
     public static final Filter Tatooine_battleground_site = Filters.and(Filters.partOfSystem(Title.Tatooine), CardSubtype.SITE, Filters.battleground());
     public static final Filter Tatooine_Celebration = Filters.title(Title.Tatooine_Celebration);
     public static final Filter Tatooine_location = Filters.partOfSystem(Title.Tatooine);

@@ -6063,6 +6063,21 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         return Math.max(0, result);
     }
 
+    /**
+     * Gets the 'blow away' Shield Gate attempt total.
+     * @param gameState the game state
+     * @param baseTotal the base total
+     * @return the total
+     */
+    @Override
+    public float getBlowAwayShieldGateAttemptTotal(GameState gameState, float baseTotal) {
+        float result = baseTotal;
+        for (Modifier modifier : getModifiers(gameState, ModifierType.BLOW_AWAY_SHIELD_GATE_ATTEMPT_TOTAL)) {
+            result += modifier.getValue(gameState, this, (PhysicalCard) null);
+        }
+        return Math.max(0, result);
+    }
+
     @Override
     public boolean mayNotBeUsed(GameState gameState, PhysicalCard deviceOrWeapon) {
         for (Modifier modifier : getModifiers(gameState, ModifierType.MAY_NOT_BE_USED)) {
@@ -16285,5 +16300,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             return ((ChangeCardSubtypeModifier)m).getSubtype();
         }
         return null;
+    }
+
+    public boolean isShieldGateBlownAway(GameState gameState) {
+        return !getModifiers(gameState, ModifierType.SHIELD_GATE_BLOWN_AWAY).isEmpty();
     }
 }
