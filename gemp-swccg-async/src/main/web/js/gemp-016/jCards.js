@@ -3492,6 +3492,7 @@ var fixedImages = {
 "203_21ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/wildkarrde_ai.png",
 "213_10ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Dark/maul_ai.png",
 "213_39ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/qira_ai.png",
+"204_26ai":"http://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/jakku_ai.png",
 
 
 };
