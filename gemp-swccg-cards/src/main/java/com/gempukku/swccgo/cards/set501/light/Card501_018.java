@@ -3,8 +3,6 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -15,15 +13,18 @@ import com.gempukku.swccgo.game.DeploymentRestrictionsOption;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,10 +38,9 @@ public class Card501_018 extends AbstractObjective {
     public Card501_018() {
         super(Side.LIGHT, 0, Title.Rescue_The_Princess);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Central Core, Trash Compactor, and Detention Block Corridor (with Prisoner 2187 imprisoned there)." +
-                "For remainder of game, your Death Star sites generate +1 Force for you and ignore Set Your Course For Alderaan. You may not deploy Jedi (except Obi-Wan)." +
-                "While this side up, once per turn you may deploy a Death Star site or A Power Loss from Reserve Deck; reshuffle." +
-                "Flip this card if Leia is present at a Death Star site and A Power Loss is 'shut down.'");
+        setGameText("Deploy Central Core, A Power Loss, Trash Compactor, and Detention Block Corridor (with Prisoner 2187 imprisoned there)." +
+                "For remainder of game, Path Of Least Resistance is canceled. Your Death Star sites generate +1 Force for you and ignore Set Your Course For Alderaan. Jedi (except Obi-Wan) are lost." +
+                "Flip this card If Leia is present at a Death Star site and A Power Loss is ‘shut down.’");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_15);
         setVirtualSuffix(true);
         setTestingText("Rescue The Princess / Sometimes I Amaze Even Myself (V)");
@@ -72,6 +72,13 @@ public class Card501_018 extends AbstractObjective {
                         return "Choose Detention Block to deploy";
                     }
                 });
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.A_Power_Loss, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose A Power Loss to deploy";
+                    }
+                });
 
         if (Filters.canSpot(gameState.getReserveDeck(playerId), game, Filters.Detention_Block_Corridor)) {
             action.appendRequiredEffect(
@@ -98,28 +105,19 @@ public class Card501_018 extends AbstractObjective {
         return modifiers;
     }
 
+
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<>();
-
-        GameTextActionId gameTextActionId = GameTextActionId.RESCUE_THE_PRINCESS__DOWNLOAD_SITE_OR_A_POWER_LOSS;
-
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy a card from Reserve Deck");
-            action.appendUsage(
-                    new OncePerTurnEffect(action)
-            );
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Death_Star_site, Filters.A_Power_Loss), true)
-            );
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.title(Title.Path_Of_Least_Resistance))
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
-            actions.add(action);
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            return Collections.singletonList(action);
         }
-
-        return actions;
+        return null;
     }
 
     @Override
@@ -128,16 +126,13 @@ public class Card501_018 extends AbstractObjective {
 
         if (GameConditions.canBeFlipped(game, self)
                 && GameConditions.canSpot(game, self, Filters.and(Filters.Leia, Filters.presentAt(Filters.Death_Star_site)))
-                && GameConditions.canSpot(game, self, Filters.and(Filters.A_Power_Loss))) {
-            PhysicalCard aPowerLoss = Filters.findFirstActive(game, self, Filters.A_Power_Loss);
-            if (aPowerLoss != null && !GameConditions.cardHasWhileInPlayDataSet(aPowerLoss)) {
+                && GameConditions.isDeathStarPowerShutDown(game)) {
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Flip");
                 action.appendEffect(
                         new FlipCardEffect(action, self)
                 );
                 actions.add(action);
-            }
         }
 
         return actions;

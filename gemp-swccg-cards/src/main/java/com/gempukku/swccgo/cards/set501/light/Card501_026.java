@@ -27,16 +27,15 @@ public class Card501_026 extends AbstractCharacterWeapon {
     public Card501_026() {
         super(Side.LIGHT, 3, "Stolen Stormtrooper Blaster Rifle");
         setLore("");
-        setGameText("Deploy on your warrior (warrior is power +1 if a stormtrooper here). May target a character, creature, or vehicle for free. Draw destiny; add 1 if targeting a character, 2 if a vehicle. Target hit, and may not be used to satisfy attrition, if total destiny > defense value.");
+        setGameText("Deploy on your Rebel or Stormtrooper. May target a character, creature, or vehicle for free. Draw destiny; add 1 if targeting a character, 2 if a vehicle. Target hit, (and, if hit by a Stormtrooper or Chewie, may not be used to satisfy attrition) if total destiny > defense value.");
         addIcons(Icon.VIRTUAL_SET_15);
         addKeywords(Keyword.BLASTER_RIFLE);
         setTestingText("Stolen Stormtrooper Blaster Rifle");
-        hideFromDeckBuilder();
     }
 
     @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.and(Filters.your(self), Filters.warrior);
+        return Filters.and(Filters.your(self), Filters.or(Filters.Rebel, Filters.stormtrooper));
     }
 
     @Override
@@ -60,7 +59,7 @@ public class Card501_026 extends AbstractCharacterWeapon {
         if (actionBuilder != null) {
 
             // Build action using common utility
-            FireWeaponAction action = actionBuilder.buildBlasterRifleVAction(0);
+            FireWeaponAction action = actionBuilder.buildStolenStormtrooperBlasterRifleAction(0);
             return Collections.singletonList(action);
         }
         return null;

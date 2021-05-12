@@ -10,12 +10,10 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
 import com.gempukku.swccgo.logic.effects.ModifyTotalPowerUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.DefinedByGameTextDeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -78,9 +76,6 @@ public class Card11_019 extends AbstractImmediateEffect {
             // Perform result(s)
             action.appendEffect(
                     new ModifyTotalPowerUntilEndOfBattleEffect(action, 5, playerId, "Adds 5 to total power"));
-            action.appendEffect(
-                    new AddUntilEndOfBattleModifierEffect(action, new ModifyGameTextModifier(self, Filters.TK421, ModifyGameTextType.TK421__IMMUNITY_TO_ATTRITION_INCREASED), "")
-            );
             return Collections.singletonList(action);
         }
         return null;
