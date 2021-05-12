@@ -515,6 +515,7 @@ public enum GameTextActionId {
     // Per game
     _3B310__UPLOAD_HALT(true, true),
     A_MILLION_VOICES_CRYING_OUT__UPLOAD_CPI(true, true),
+    A_SITH_LEGEND__CANCEL_GAME_TEXT(false, true),
     A_TRAGEDY_HAS_OCCURRED__STACK_INTERRUPT(false, true),
     ABYSSIN_ORNAMENT__RETRIEVE_FORCE(false, true),
     ADMIRAL_ACKBAR__UPLOAD_ADMIRALS_ORDER_OR_CHARACTER(true, true),
