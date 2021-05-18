@@ -31,7 +31,7 @@ public class Card501_036 extends AbstractRebel {
     public Card501_036() {
         super(Side.LIGHT, 1, 5, 5, 6, 9, "Ben Kenobi", Uniqueness.UNIQUE);
         setLore("Served Bail Organa during the Clone Wars. Saved Anakin's lightsaber until he was able to give it to Luke. Hasn't gone by the name Obi-Wan for a long time.");
-        setGameText("Opponent’s characters here are power -1 (-2 if [PW] Maul). Once per game, if a battle just ended here, may 'revive' (place here from Lost Pile) your character forfeited from same site this turn. Immune to attrition < 5.");
+        setGameText("Opponent's characters here are power -1 (-2 if [Permanent Weapon] Maul). Once per game, if a battle just ended here, may 'revive' (place here from Lost Pile) your character of lesser ability forfeited from same site this turn. Immune to attrition < 5.");
         setVirtualSuffix(true);
         addPersona(Persona.OBIWAN);
         addIcons(Icon.SPECIAL_EDITION, Icon.WARRIOR, Icon.VIRTUAL_SET_15);
@@ -65,6 +65,7 @@ public class Card501_036 extends AbstractRebel {
             // Perform result(s)
             action.appendEffect(
                     new PlaceAtLocationFromLostPileEffect(action, playerId, Filters.and(Filters.your(self), Filters.character,
+                            Filters.abilityLessThan(game.getModifiersQuerying().getAbility(game.getGameState(), self)),
                             Filters.forfeitedFromLocationThisTurn(Filters.sameSite(self))), Filters.sameSite(self), false, false));
             return Collections.singletonList(action);
         }

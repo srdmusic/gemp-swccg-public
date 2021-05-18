@@ -9,7 +9,6 @@ public enum ModifyGameTextType {
 
     // Game text modifier flags
     // (Naming convention: CardIdentifier__ModificationIdentifier)
-    A_POWER_LOSS__CARDS_GO_LOST_INSTEAD_OF_USED("Cards from A Power Loss go to owner’s Lost Pile instead of Used Pile"),
     ADD_TWO_TO_BLOW_AWAY_SHIELD_GATE("Add 2 to total to blow away Shield Gate"),
     ALWAYS_THINKING_WITH_YOUR_STOMACH__MISSING_TREATED_AS_LANDSPEED_0("'Missing' treated as 'landspeed = 0 for remainder of turn"),
     BOONTA_EVE_PODRACE__RETRIEVE_FORCE_INTO_HAND("Take any or all force retrieved into hand"),
@@ -65,7 +64,6 @@ public enum ModifyGameTextType {
     TALLON_ROLL__OPPONENT_ADDS_MANEUVER_AND_ABILITY("Opponent adds maneuver and ability"),
     TARKIN__CANNOT_CANCEL_DESTINY("Cannot cancel destiny"),
     TIBANNA_GAS_MINER__DOUBLE_FORCE_ACTIVATED("Force activated doubled"),
-    TK421__IMMUNITY_TO_ATTRITION_INCREASED("Add 2 to immunity to attrition"),
     TRAP_DOOR__DO_NOT_DRAW_DESTINY("Do not draw destiny"),
     TUSKEN_BREATH_MASK__MODIFIED_BY_SERGEANT_DOALLYN("Game text modified"),
     TUSKEN_SCAVENGERS__MAY_STEAL_CARDS_FOUND("May steal vehicles, weapons, and devices found"),
