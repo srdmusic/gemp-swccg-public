@@ -3466,6 +3466,7 @@ var fixedImages = {
 "501_75":"/gemp-swccg/images/cards/Endor-Dark/endorbackdoor.gif",
 "501_76":"/gemp-swccg/images/cards/Premiere-Dark/tatooine.gif",
 "501_77":"/gemp-swccg/images/cards/SpecialEdition-Dark/homingbeacon.gif",
+"501_78":"/gemp-swccg/images/cards/DeathStarII-Dark/lordvader.gif",
 "501_98":"/gemp-swccg/images/cards/Virtual11-Light/viceadmiralholdo.gif",
 
 "200_1ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/aaylasecura_ai.png",
