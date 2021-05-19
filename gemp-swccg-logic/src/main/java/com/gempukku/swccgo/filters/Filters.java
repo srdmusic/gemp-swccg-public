@@ -18713,7 +18713,7 @@ public class Filters {
     public static final Filter Yavin_4_Docking_Bay = Filters.title(Title.Yavin_4_Docking_Bay);
     public static final Filter Yavin_4_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Yavin_4));
     public static final Filter Yavin_4_sector = Filters.and(Filters.partOfSystem(Title.Yavin_4), CardSubtype.SECTOR);
-    public static final Filter Yavin_4_Operations = Filters.title(Title.Yavin_4_Operations);
+    public static final Filter Yavin_4_Base_Operations = Filters.title(Title.Yavin_4_Base_Operations);
     public static final Filter Yavin_4_site = Filters.and(Filters.partOfSystem(Title.Yavin_4), CardSubtype.SITE);
     public static final Filter Yavin_4_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Yavin_4));
     public static final Filter Yavin_4_War_Room = Filters.title(Title.Yavin_4_War_Room);

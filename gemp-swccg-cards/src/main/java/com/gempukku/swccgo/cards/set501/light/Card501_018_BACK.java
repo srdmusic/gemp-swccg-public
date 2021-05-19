@@ -11,10 +11,12 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
 import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
@@ -32,11 +34,10 @@ import java.util.List;
 public class Card501_018_BACK extends AbstractObjective {
     public Card501_018_BACK() {
         super(Side.LIGHT, 7, Title.Sometimes_I_Amaze_Even_Myself);
-        setGameText("For remainder of game I Can't Believe He's Gone may only add power in battles involving Luke or Leia. You retrieve no Force from Detention Block Corridor." +
-                "While this side up, whenever you 'hit' a character with a blaster, opponent loses 1 Force. " +
-                "May place Obi-Wan out of play from a Death Star site to cancel a battle at another Death Star site." +
-                "If Leia is about to be removed from table, either player may imprison her in Detention Block Corridor instead." +
-                "Flip this card if Leia is not on table.");
+        setGameText("For remainder of game, I Can't Believe He's Gone may only add power in battles involving Luke or Leia. You retrieve no Force from Detention Block Corridor." +
+                "While this side up, in order to initiate a Force drain, opponent must use +1 Force. Whenever you 'hit' a character with a blaster, opponent loses 1 Force. " +
+                "May place Obi-Wan out of play from a Death Star site to cancel any battle just initiated on Death Star." +
+                "Flip this card if Leia about to leave table (imprison her at Detention Block Corridor instead, if possible)");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_15);
         setVirtualSuffix(true);
         setTestingText("Rescue The Princess / Sometimes I Amaze Even Myself (V)");
@@ -52,7 +53,23 @@ public class Card501_018_BACK extends AbstractObjective {
         modifiers.add(new ModifyGameTextModifier(self, Filters.Set_Your_Course_For_Alderaan, ModifyGameTextType.SET_YOUR_COURSE_FOR_ALDERAAN__ONLY_AFFECTS_DARK_SIDE_DEATH_STAR_SITES));
         modifiers.add(new ModifyGameTextModifier(self, Filters.I_Cant_Believe_Hes_Gone, ModifyGameTextType.I_CANT_BELIEVE_HES_GONE__ONLY_EFFECTS_BATTLES_WITH_LUKE_OR_LEIA));
         modifiers.add(new MayNotContributeToForceRetrievalModifier(self, Filters.Detention_Block_Corridor));
+        modifiers.add(new InitiateForceDrainCostModifier(self, 1, game.getOpponent(self.getOwner())));
         return modifiers;
+    }
+
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.title(Title.Path_Of_Least_Resistance))
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
+
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
     @Override

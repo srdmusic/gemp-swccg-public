@@ -1416,7 +1416,7 @@ public class SwccgGameMediator {
                 // Watch Your Step
                 objectiveLabel = "WYS";
             }
-            if (Filters.or(Filters.Yavin_4_Operations, Filters.The_Time_To_Fight_Is_Now).accepts(_swccgoGame, objective)) {
+            if (Filters.or(Filters.Yavin_4_Base_Operations, Filters.The_Time_To_Fight_Is_Now).accepts(_swccgoGame, objective)) {
                 // Yavin 4 Operations
                 objectiveLabel = "Y4O";
             }

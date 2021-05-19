@@ -785,6 +785,7 @@ public interface Title {
     String Proton_Bombs = "Proton Bombs";
     String Proxima = "Lady Proxima";
     String Puck = "Puck";
+    String Put_All_Sections_On_Alert = "Put All Sections On Alert";
     String Quad_Laser_Cannon = "Quad Laser Cannon";
     String Quiet_Mining_Colony = "Quiet Mining Colony";
     String Quite_A_Mercenary = "Quite A Mercenary";
@@ -1121,7 +1122,7 @@ public interface Title {
     String Yarna_dal_Gargan = "Yarna d'al' Gargan";
     String Yavin_4 = "Yavin 4";
     String Yavin_4_Docking_Bay = "Yavin 4: Docking Bay";
-    String Yavin_4_Operations = "Yavin 4 Base Operations";
+    String Yavin_4_Base_Operations = "Yavin 4 Base Operations";
     String Yavin_4_War_Room = "Yavin 4: Massassi War Room";
     String Yavin_Sentry = "Yavin Sentry";
     String Yoda_Stew = "Yoda Stew";

@@ -64,7 +64,6 @@ public enum ModifyGameTextType {
     TALLON_ROLL__OPPONENT_ADDS_MANEUVER_AND_ABILITY("Opponent adds maneuver and ability"),
     TARKIN__CANNOT_CANCEL_DESTINY("Cannot cancel destiny"),
     TIBANNA_GAS_MINER__DOUBLE_FORCE_ACTIVATED("Force activated doubled"),
-    TK421__IMMUNITY_TO_ATTRITION_INCREASED("Add 2 to immunity to attrition"),
     TRAP_DOOR__DO_NOT_DRAW_DESTINY("Do not draw destiny"),
     TUSKEN_BREATH_MASK__MODIFIED_BY_SERGEANT_DOALLYN("Game text modified"),
     TUSKEN_SCAVENGERS__MAY_STEAL_CARDS_FOUND("May steal vehicles, weapons, and devices found"),
