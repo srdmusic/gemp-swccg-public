@@ -57,7 +57,7 @@ public class Card501_019 extends AbstractEpicEventDeployable {
                     new OncePerGameEffect(action)
             );
             action.appendEffect(
-                    new StackCardsFromHandEffect(action, playerId, 1, 4, self, true)
+                    new StackCardsFromHandEffect(action, playerId, 0, 4, self, true)
             );
             return Collections.singletonList(action);
         }

@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractDroid;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
@@ -49,7 +50,7 @@ public class Card501_025 extends AbstractDroid {
                 && GameConditions.hasHand(game, playerId)
                 && (GameConditions.canActivateForce(game, playerId) || GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId))) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Place a card from hand on Used Pile to activate 1 force");
             action.setActionMsg("Place a card from hand on Used Pile to activate 1 force");
             // Update usage limit(s)
@@ -68,7 +69,7 @@ public class Card501_025 extends AbstractDroid {
                 && GameConditions.hasHand(game, playerId)
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Place a card from hand on Used Pile to upload card");
             action.setActionMsg("Place a card from hand on Used Pile to upload card");
             // Update usage limit(s)
@@ -82,13 +83,19 @@ public class Card501_025 extends AbstractDroid {
             actions.add(action);
         }
 
-        if (GameConditions.isDuringYourPhase(game, playerId, Phase.CONTROL)
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        if (GameConditions.isOnceDuringYourPhase(game, self, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
                 && GameConditions.isWith(game, self, Filters.Rebel)
                 && GameConditions.isAtLocation(game, self, Filters.interior_mobile_site)) {
+
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 1 force");
             action.setActionMsg("Make opponent lose 1 force");
             // Perform result(s)
+            action.appendUsage(
+                    new OncePerPhaseEffect(action)
+            );
             action.appendEffect(
                     new LoseForceEffect(action, game.getOpponent(playerId), 1));
             actions.add(action);
@@ -102,12 +109,16 @@ public class Card501_025 extends AbstractDroid {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
 
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
         if (TriggerConditions.isEndOfYourPhase(game, self, effectResult, Phase.CONTROL)
+                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
                 && GameConditions.isWith(game, self, Filters.Rebel)
                 && GameConditions.isAtLocation(game, self, Filters.interior_mobile_site)) {
 
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Make " + opponent + " lose 1 Force");
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setPerformingPlayer(playerId);
+            action.setText("Make opponent lose 1 Force");
             // Perform result(s)
             action.appendEffect(
                     new LoseForceEffect(action, opponent, 1));
