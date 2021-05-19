@@ -48,9 +48,6 @@ public class Card501_048_BACK extends AbstractObjective {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.except(Filters.Vader), Filters.character, Filters.abilityMoreThan(4)), self.getOwner()));
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.Star_Destroyer, -1, Filters.Scarif_system));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Superlaser, ModifyGameTextType.SUPERLASER_IGNORES_DEPLOYMENT_RESTRICTIONS));
         modifiers.add(new PowerModifier(self, Filters.Vader, 2));
         modifiers.add(new MayNotHaveGameTextCanceledModifier(self, Filters.Vader));
         modifiers.add(new ForceGenerationModifier(self, new OnTableEvaluator(self, Filters.and(Filters.partOfSystem(Title.Scarif), Filters.blown_away)), playerId));

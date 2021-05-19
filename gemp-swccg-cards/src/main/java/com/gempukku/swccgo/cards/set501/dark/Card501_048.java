@@ -116,14 +116,18 @@ public class Card501_048 extends AbstractObjective {
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        String playerId = self.getOwner();
-
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.except(Filters.Vader), Filters.character, Filters.abilityMoreThan(4)), self.getOwner()));
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.Star_Destroyer, -1, Filters.Scarif_system));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Superlaser, ModifyGameTextType.SUPERLASER_IGNORES_DEPLOYMENT_RESTRICTIONS));
-        return modifiers;
+    protected RequiredGameTextTriggerAction getGameTextAfterDeploymentCompletedAction(String playerId, SwccgGame game, final PhysicalCard self, final int gameTextSourceCardId) {
+        RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+        action.appendEffect(
+                new AddUntilEndOfGameModifierEffect(action,
+                        new MayNotDeployModifier(self, Filters.and(Filters.except(Filters.Vader), Filters.character, Filters.abilityMoreThan(4)), self.getOwner()), null));
+        action.appendEffect(
+                new AddUntilEndOfGameModifierEffect(action,
+                        new DeployCostToLocationModifier(self, Filters.Star_Destroyer, -1, Filters.Scarif_system), null));
+        action.appendEffect(
+                new AddUntilEndOfGameModifierEffect(action,
+                        new ModifyGameTextModifier(self, Filters.Superlaser, ModifyGameTextType.SUPERLASER_IGNORES_DEPLOYMENT_RESTRICTIONS), null));
+        return action;
     }
 
     @Override

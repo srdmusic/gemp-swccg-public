@@ -42,7 +42,7 @@ public class Card501_074 extends AbstractSite {
     public Card501_074() {
         super(Side.DARK, Title.Scarif_Citadel_Tower, Title.Scarif);
         setLocationDarkSideGameText("If a player just Force drained here, they may raise a converted Scarif location to the top.");
-        setLocationLightSideGameText("If you occupy, add 1 to attempts to \"blow away\" Shield Gate (2 if you occupy with a spy).");
+        setLocationLightSideGameText("If you occupy, add 1 to attempts to 'blow away' Shield Gate (2 if you occupy with a spy).");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.PLANET, Icon.INTERIOR_SITE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
