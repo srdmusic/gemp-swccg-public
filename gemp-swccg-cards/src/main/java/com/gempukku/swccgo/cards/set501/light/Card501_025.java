@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractDroid;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
@@ -45,50 +46,54 @@ public class Card501_025 extends AbstractDroid {
         GameTextActionId gameTextActionId = GameTextActionId.C_3PO_V__PLACE_CARD_ON_USED_PILE;
 
         // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.hasHand(game, playerId)
-                && (GameConditions.canActivateForce(game, playerId) || GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId))) {
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.hasHand(game, playerId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place a card from hand on Used Pile to activate 1 force");
-            action.setActionMsg("Place a card from hand on Used Pile to activate 1 force");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new PutCardFromHandOnUsedPileEffect(action, playerId));
-            action.appendEffect(
-                    new ActivateForceEffect(action, playerId, 1));
-            actions.add(action);
+            if (GameConditions.canActivateForce(game, playerId)) {
+                TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Put card on Used Pile to activate 1 force");
+                action.setActionMsg("Activate 1 force");
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerTurnEffect(action));
+                // Perform result(s)
+                action.appendEffect(
+                        new PutCardFromHandOnUsedPileEffect(action, playerId));
+                action.appendEffect(
+                        new ActivateForceEffect(action, playerId, 1));
+                actions.add(action);
+            }
+
+            if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+                TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Put card on Used Pile to upload [A] R2-D2");
+                action.setActionMsg("Upload [A] R2-D2");
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerTurnEffect(action));
+                // Perform result(s)
+                action.appendEffect(
+                        new PutCardFromHandOnUsedPileEffect(action, playerId));
+                action.appendEffect(
+                        new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.and(Filters.R2D2, Filters.icon(Icon.A_NEW_HOPE)), true));
+                actions.add(action);
+            }
+
+
         }
 
-        // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.hasHand(game, playerId)
-                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place a card from hand on Used Pile to upload card");
-            action.setActionMsg("Place a card from hand on Used Pile to upload card");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new PutCardFromHandOnUsedPileEffect(action, playerId));
-            action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.and(Filters.R2D2, Filters.icon(Icon.A_NEW_HOPE)), true));
-            actions.add(action);
-        }
-
-        if (GameConditions.isDuringYourPhase(game, playerId, Phase.CONTROL)
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
                 && GameConditions.isWith(game, self, Filters.Rebel)
                 && GameConditions.isAtLocation(game, self, Filters.interior_mobile_site)) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 1 force");
             action.setActionMsg("Make opponent lose 1 force");
             // Perform result(s)
+            action.appendUsage(
+                    new OncePerPhaseEffect(action)
+            );
             action.appendEffect(
                     new LoseForceEffect(action, game.getOpponent(playerId), 1));
             actions.add(action);
@@ -102,17 +107,22 @@ public class Card501_025 extends AbstractDroid {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
 
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
         if (TriggerConditions.isEndOfYourPhase(game, self, effectResult, Phase.CONTROL)
+                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
                 && GameConditions.isWith(game, self, Filters.Rebel)
                 && GameConditions.isAtLocation(game, self, Filters.interior_mobile_site)) {
 
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Make " + opponent + " lose 1 Force");
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setPerformingPlayer(playerId);
+            action.setText("Make opponent lose 1 Force");
             // Perform result(s)
             action.appendEffect(
                     new LoseForceEffect(action, opponent, 1));
             return Collections.singletonList(action);
         }
+
         return null;
     }
 }

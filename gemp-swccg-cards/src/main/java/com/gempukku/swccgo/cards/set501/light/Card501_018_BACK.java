@@ -51,12 +51,9 @@ public class Card501_018_BACK extends AbstractObjective {
         modifiers.add(new ForceGenerationModifier(self, yourDeathStarSites, 1, self.getOwner()));
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.not(Filters.ObiWan)), self.getOwner()));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Set_Your_Course_For_Alderaan, ModifyGameTextType.SET_YOUR_COURSE_FOR_ALDERAAN__ONLY_AFFECTS_DARK_SIDE_DEATH_STAR_SITES));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.I_Cant_Believe_Hes_Gone, ModifyGameTextType.I_CANT_BELIEVE_HES_GONE__ONLY_EFFECTS_BATTLES_WITH_LUKE_OR_LEIA));
-        modifiers.add(new MayNotContributeToForceRetrievalModifier(self, Filters.Detention_Block_Corridor));
         modifiers.add(new InitiateForceDrainCostModifier(self, 1, game.getOpponent(self.getOwner())));
         return modifiers;
     }
-
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
@@ -93,6 +90,21 @@ public class Card501_018_BACK extends AbstractObjective {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
+
+        if (TriggerConditions.cardFlipped(game, effectResult, self)) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.appendEffect(
+                    new AddUntilEndOfGameModifierEffect(action,
+                            new ModifyGameTextModifier(self, Filters.I_Cant_Believe_Hes_Gone, ModifyGameTextType.I_CANT_BELIEVE_HES_GONE__ONLY_EFFECTS_BATTLES_WITH_LUKE_OR_LEIA),
+                            "I Can't Believe He's Gone may only add power in battles involving Luke or Leia for remainder of game.")
+            );
+            action.appendEffect(
+                    new AddUntilEndOfGameModifierEffect(action,
+                            new MayNotContributeToForceRetrievalModifier(self, Filters.Detention_Block_Corridor),
+                            "You retrieve no Force from Detention Block Corridor for remainder of game.")
+            );
+            actions.add(action);
+        }
 
         if (GameConditions.canBeFlipped(game, self)
                 && !GameConditions.canSpot(game, self, Filters.Leia)) {
