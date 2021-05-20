@@ -261,6 +261,7 @@ public interface Title {
     String Demotion = "Demotion";
     String Den_Of_Thieves = "Den Of Thieves";
     String Dengars_Blaster_Carbine =  "Dengar's Blaster Carbine";
+    String Deploy_The_Garrison = "Deploy The Garrison!";
     String Derlin = "Major Bren Derlin";
     String Desert_Heart = "Tatooine: Desert Heart";
     String Despair = "Despair";
@@ -714,6 +715,7 @@ public interface Title {
     String Ominous_Rumors = "Ominous Rumors";
     String Ommni_Box = "Ommni Box";
     String On_Target = "On Target";
+    String On_The_Verge_Of_Greatness = "On The Verge Of Greatness";
     String One_In_A_Million = "One In A Million";
     String One_More_Pass = "One More Pass";
     String Onyx_2 = "Onyx 2";
@@ -868,6 +870,7 @@ public interface Title {
     String Scanning_Crew = "Scanning Crew";
     String Scarif = "Scarif";
     String Scarif_Citadel_Tower = "Scarif: Citadel Tower";
+    String Scarif_Landing_Pad_Five = "Scarif: Landing Pad Five (Docking Bay)";
     String Scarif_Landing_Pad_Nine = "Scarif: Landing Pad Nine (Docking Bay)";
     String Scarif_Turbolift_Complex = "Scarif: Turbolift Complex";
     String Scimitar_1 = "Scimitar 1";
@@ -965,6 +968,7 @@ public interface Title {
     String Tantive_IV = "Tantive IV";
     String Targeting_Computer = "Targeting Computer";
     String Target_The_Main_Generator = "Target The Main Generator";
+    String Tarkin_Doctrine = "Tarkin Doctrine";
     String Tatooine = "Tatooine";
     String Tatooine_Celebration = "Tatooine Celebration";
     String Tatooine_Occupation = "Tatooine Occupation";

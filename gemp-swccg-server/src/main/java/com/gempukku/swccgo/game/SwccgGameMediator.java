@@ -1352,6 +1352,10 @@ public class SwccgGameMediator {
                 // Old Allies
                 objectiveLabel = "Old Allies";
             }
+            if (Filters.or(Filters.On_The_Verge_Of_Greatness, Filters.Deploy_The_Garrison).accepts(_swccgoGame, objective)) {
+                // On The Verge Of Greatness
+                objectiveLabel = "On The Verge Of Greatness";
+            }
             if (Filters.or(Filters.Local_Uprising, Filters.Liberation, Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
                 // Operatives
                 objectiveLabel = "Operatives";
