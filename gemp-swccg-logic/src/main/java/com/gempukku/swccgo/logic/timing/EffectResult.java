@@ -361,6 +361,9 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
 
         IMMUNITY_GRANTED,
 
+        // Recirculate as an effect (not at end of turn)
+        RECIRCULATE_EXCEPT_AT_END_OF_TURN
+
     }
 
     private Type _type;

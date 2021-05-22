@@ -4,6 +4,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.timing.AbstractStandardEffect;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.results.RecirculateResult;
 
 public class RecirculateEffect extends AbstractStandardEffect {
     private String _player;
@@ -22,6 +23,7 @@ public class RecirculateEffect extends AbstractStandardEffect {
     protected FullEffectResult playEffectReturningResult(SwccgGame game) {
         GameState gameState = game.getGameState();
         if (!gameState.getUsedPile(_player).isEmpty()) {
+            game.getActionsEnvironment().emitEffectResult(new RecirculateResult(_action.getPerformingPlayer()));
             gameState.sendMessage(_player + " re-circulates");
             gameState.recirculate(_player);
             return new FullEffectResult(true);
