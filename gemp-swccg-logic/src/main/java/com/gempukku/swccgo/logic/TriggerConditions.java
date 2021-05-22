@@ -2307,6 +2307,20 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a just-lost card accepted by the card filter is about to be removed from Lost Pile.
+     * @param game the game
+     * @param effectResult the effect result
+     * @param cardFilter the card filter
+     * @return true or false
+     */
+    public static boolean isAboutToRemoveJustLostCardFromLostPile(SwccgGame game, EffectResult effectResult, Filterable cardFilter) {
+        String lightPlayer = game.getLightPlayer();
+        String darkPlayer = game.getDarkPlayer();
+        return isAboutToRemoveJustLostCardFromLostPile(game, effectResult, lightPlayer, cardFilter) ||
+                isAboutToRemoveJustLostCardFromLostPile(game, effectResult, darkPlayer, cardFilter);
+    }
+
+    /**
      * Determines if a just-lost card accepted by the card filter is about to be removed from Lost Pile by the specified player.
      * @param game the game
      * @param effectResult the effect result
