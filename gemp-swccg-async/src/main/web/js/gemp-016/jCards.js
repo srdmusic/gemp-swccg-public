@@ -3427,7 +3427,7 @@ var fixedImages = {
 "501_6":"/gemp-swccg/images/cards/CloudCity-Dark/cloudcityeastplatformdockingbay.gif",
 "501_7":"/gemp-swccg/images/cards/ANewHope-Light/tzizvvt.gif",
 "501_8":"/gemp-swccg/images/cards/Virtual9-Light/lieutenantkaydelconnix.gif",
-"501_9":"/gemp-swccg/images/cards/Premiere-Dark/observationholocam.gif",
+"501_9":"https://res.starwarsccg.org/cards/Virtual9-Light/hires/abraveresistance.png",
 "501_10":"/gemp-swccg/images/cards/Virtual7-Light/sabinewren.gif",
 "501_11":"/gemp-swccg/images/cards/Premiere-Light/jawasiesta.gif",
 "501_12":"/gemp-swccg/images/cards/Endor-Light/firefight.gif",

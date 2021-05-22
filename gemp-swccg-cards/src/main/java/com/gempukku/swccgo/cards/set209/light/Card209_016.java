@@ -27,7 +27,7 @@ public class Card209_016 extends AbstractNormalEffect {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Brave Resistance", Uniqueness.UNIQUE);
         setLore("");
         setGameText("If Jakku on table, deploy on table. Your Force generation is +1 at Jakku battlegrounds you occupy. During your deploy phase, may place a Resistance character from hand on top of Used Pile to [upload] a Resistance character of equal or lesser ability. [Immune to Alter.]");
-        addIcons(Icon.VIRTUAL_SET_9);
+        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_9);
         addImmuneToCardTitle(Title.Alter);
     }
 

@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Set: Set 15
  * Type: Character
- * Subtype: Imperial
+ * Subtype: Republic / Sith
  * Title: Darth Vader, Betrayer Of The Jedi
  */
 public class Card501_078 extends AbstractRepublicSith {
