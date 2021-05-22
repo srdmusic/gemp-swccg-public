@@ -3462,6 +3462,9 @@ var fixedImages = {
 "501_42":"/gemp-swccg/images/cards/Endor-Light/generalsolo.gif",
 "501_43":"/gemp-swccg/images/cards/ANewHope-Light/cell2187.gif",
 "501_44":"/gemp-swccg/images/cards/SpecialEdition-Light/slightweaponsmalfunction.gif",
+"501_57":"/gemp-swccg/images/cards/ReflectionsIII-Dark/thehuttsaregangsters.gif",
+"501_58":"/gemp-swccg/images/cards/ANewHope-Dark/advosze.gif", // Rukh
+"501_59":"/gemp-swccg/images/cards/ANewHope-Dark/dannikjerriko.gif",
 "501_74":"/gemp-swccg/images/cards/Virtual11-Dark/coruscantprivateplatform.gif",
 "501_75":"/gemp-swccg/images/cards/Endor-Dark/endorbackdoor.gif",
 "501_76":"/gemp-swccg/images/cards/Premiere-Dark/tatooine.gif",
