@@ -1375,6 +1375,26 @@ public abstract class AbstractNonLocationPlaysToTable extends AbstractSwccgCardB
     }
 
     /**
+     * Gets modifiers that are from this card that are in effect while the card is out of play.
+     *
+     * @param game the game
+     * @param self the card
+     * @return the modifiers
+     */
+    @Override
+    public List<Modifier> getWhileOutOfPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new ArrayList<Modifier>();
+
+        // Modifiers from game text
+        List<Modifier> modifiersFromGameText = getWhileInPlayModifiers(game, self);
+        if (modifiersFromGameText != null) {
+            modifiers.addAll(modifiersFromGameText);
+        }
+
+        return modifiers;
+    }
+
+    /**
      * Gets modifiers that are from this card that are in effect while the card is stacked (face up) on another card.
      * @param game the game
      * @param self the card
