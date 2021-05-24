@@ -47,8 +47,8 @@ public class Card501_034 extends AbstractResistance {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new EachWeaponDestinyModifier(self, Filters.hasAboard(self), 1));
-        modifiers.add(new DefenseValueModifier(self, Filters.hasAboard(self), 1));
+        modifiers.add(new EachWeaponDestinyModifier(self, Filters.hasPassenger(self), 1));
+        modifiers.add(new DefenseValueModifier(self, Filters.hasPassenger(self), 1));
         return modifiers;
     }
 
