@@ -17302,7 +17302,7 @@ public class Filters {
     public static final Filter Carbonite_Chamber_Console = Filters.title(Title.Carbonite_Chamber_Console);
     public static final Filter Careful_Planning = Filters.title(Title.Careful_Planning);
     public static final Filter Carida_system = Filters.title(Title.Carida);
-    public static final Filter Cassian = Filters.title(Title.Cassian);
+    public static final Filter Cassian = Filters.persona(Persona.CASSIAN);
     public static final Filter Cease_Fire = Filters.title(Title.Cease_Fire);
     public static final Filter Cell_2187 = Filters.title(Title.Cell_2187);
     public static final Filter Chandrila_location = Filters.partOfSystem(Title.Chandrila);
