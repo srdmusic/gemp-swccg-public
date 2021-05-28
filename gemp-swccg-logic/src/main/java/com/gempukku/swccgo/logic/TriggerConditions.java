@@ -4534,6 +4534,21 @@ public class TriggerConditions {
         return false;
     }
 
+    public static boolean justLostForceFromForceDrainAt(SwccgGame game, EffectResult effectResult, String playerId, Filter locationFilter, boolean isFirstForceOnly) {
+        if (effectResult.getType() == EffectResult.Type.FORCE_LOST) {
+            LostForceResult lostForceResult = (LostForceResult) effectResult;
+            if (playerId.equals(lostForceResult.getPerformingPlayerId()) && lostForceResult.isFromForceDrain()) {
+                ForceDrainState forceDrainState = game.getGameState().getForceDrainState();
+                if (isFirstForceOnly) {
+                    return forceDrainState != null && locationFilter.accepts(game, forceDrainState.getLocation()) && lostForceResult.getAmountOfForceLost() == 1;
+                } else {
+                    return forceDrainState != null && locationFilter.accepts(game, forceDrainState.getLocation());
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * Determines if the specified player just lost more than a specified amount of Force from a Force drain.
      * @param game the game

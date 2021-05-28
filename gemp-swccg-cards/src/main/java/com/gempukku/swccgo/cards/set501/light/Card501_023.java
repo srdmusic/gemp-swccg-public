@@ -1,6 +1,8 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractCharacterDevice;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.Side;
@@ -9,10 +11,17 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.choose.StackCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.EachTrainingDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.IncreaseAbilityRequiredForBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.LostForceResult;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -47,6 +56,26 @@ public class Card501_023 extends AbstractCharacterDevice {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new EachTrainingDestinyModifier(self, hasAttached, 1));
         modifiers.add(new ForceDrainModifier(self, Filters.wherePresent(self, hasAttached), 1, self.getOwner()));
+        modifiers.add(new IncreaseAbilityRequiredForBattleDestinyModifier(self, Filters.here(self), new StackedEvaluator(self), game.getOpponent(self.getOwner())));
         return modifiers;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        if (TriggerConditions.justLostForceFromForceDrainAt(game, effectResult, game.getOpponent(self.getOwner()), Filters.here(self), true)
+                && GameConditions.isAttachedTo(game, self, Filters.any)
+                && GameConditions.isPresent(game, Filters.findFirstActive(game, self, Filters.hasAttached(self)))) {
+            LostForceResult lostForceResult = (LostForceResult) effectResult;
+            PhysicalCard cardToStack = lostForceResult.getCardLost();
+            if (cardToStack != null) {
+                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.appendEffect(
+                        new StackCardFromLostPileEffect(action, self, Filters.sameCardId(cardToStack), false)
+                );
+                return Collections.singletonList(action);
+            }
+        }
+
+        return null;
     }
 }
