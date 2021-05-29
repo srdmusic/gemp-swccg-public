@@ -296,6 +296,7 @@ public interface Title {
     String Dr_Evazan = "Dr. Evazan";
     String Dragonsnake = "Dragonsnake";
     String Draw_Their_Fire = "Draw Their Fire";
+    String Dreaded_Imperial_Starfleet = "Dreaded Imperial Starfleet";
     String Droid_Junkheap = "Sandcrawler: Droid Junkheap";
     String Droid_Merchant = "Droid Merchant";
     String Droid_Racks = "Droid Racks";

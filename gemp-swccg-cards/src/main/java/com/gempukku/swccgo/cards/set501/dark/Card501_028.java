@@ -13,6 +13,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotAttachModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
@@ -30,7 +31,7 @@ public class Card501_028 extends AbstractImperial {
     public Card501_028() {
         super(Side.DARK, 1, 4, 4, 3, 6, "Admiral Piett", Uniqueness.UNIQUE);
         setLore("Veteran of the Imperial military machine. Leader of the Imperial fleet at Endor. Skilled at political maneuvering and appeasing his powerful superiors.");
-        setGameText("While piloting Executor, adds 3 to power. Deploy -1 for each of your starship sites on table. If piloting Executor, once per game may take Emperor's Order into hand from Reserve Deck; reshuffle.");
+        setGameText("While piloting Executor, adds 3 to power. Deploys -1 for each of your starship sites on table. If piloting Executor, once per game may take Emperor's Orders into hand from Reserve Deck; reshuffle. Landing Claw may not attach here.");
         addPersona(Persona.PIETT);
         addIcons(Icon.VIRTUAL_SET_15, Icon.PILOT, Icon.WARRIOR);
         addKeywords(Keyword.ADMIRAL, Keyword.LEADER);
@@ -50,6 +51,7 @@ public class Card501_028 extends AbstractImperial {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3, Filters.Executor));
+        modifiers.add(new MayNotAttachModifier(self, Filters.here(self)));
         return modifiers;
     }
 
