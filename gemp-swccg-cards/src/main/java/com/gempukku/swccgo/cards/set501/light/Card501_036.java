@@ -1,10 +1,9 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractStarfighter;
+import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.HasPilotingCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.cards.evaluators.AbilityOfPilotEvaluator;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -12,70 +11,62 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.effects.CancelDestinyAndCauseRedrawEffect;
-import com.gempukku.swccgo.logic.modifiers.DefinedByGameTextManeuverModifier;
+import com.gempukku.swccgo.logic.effects.PlaceAtLocationFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 14
- * Type: Starship
- * Subtype: Starfighter
- * Title: Plo Koon's Jedi Starfighter
+ * Set: Set 15
+ * Type: Character
+ * Subtype: Rebel
+ * Title: Ben Kenobi (V)
  */
-public class Card501_036 extends AbstractStarfighter {
+public class Card501_036 extends AbstractRebel {
     public Card501_036() {
-        super(Side.LIGHT, 2, 2, 2, null, 0, 6, 5, "Plo Koon's Jedi Starfighter", Uniqueness.UNIQUE);
-        setGameText("May add 1 Jedi pilot. *Maneuver = pilot's ability. While Plo piloting, power +2, immune to attrition < 3, and once per turn, may cancel and redraw your weapon or battle destiny just drawn here.");
-        addIcons(Icon.EPISODE_I, Icon.REPUBLIC, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_14);
-        addModelType(ModelType.JEDI_INTERCEPTOR);
-        setPilotCapacity(1);
-        setMatchingPilotFilter(Filters.persona(Persona.PLO));
-        setTestingText("Plo Koon's Jedi Starfighter");
+        super(Side.LIGHT, 1, 5, 5, 6, 9, "Ben Kenobi", Uniqueness.UNIQUE);
+        setLore("Served Bail Organa during the Clone Wars. Saved Anakin's lightsaber until he was able to give it to Luke. Hasn't gone by the name Obi-Wan for a long time.");
+        setGameText("Opponent's characters here are power -1 (-2 if [Permanent Weapon] Maul). Once per game, if a battle just ended here, may 'revive' (place here from Lost Pile) your character of lesser ability forfeited from same site this turn. Immune to attrition < 5.");
+        setVirtualSuffix(true);
+        addPersona(Persona.OBIWAN);
+        addIcons(Icon.SPECIAL_EDITION, Icon.WARRIOR, Icon.VIRTUAL_SET_15);
+        setTestingText("Ben Kenobi (V)");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new ArrayList<>();
-        Condition ploPilotingCondition = new HasPilotingCondition(self, Persona.PLO);
-        modifiers.add(new PowerModifier(self, ploPilotingCondition, 2));
-        modifiers.add(new DefinedByGameTextManeuverModifier(self, new AbilityOfPilotEvaluator(self)));
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, ploPilotingCondition, 3));
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        Filter pwMaul = Filters.and(Filters.here(self), Filters.Maul, Filters.icon(Icon.PERMANENT_WEAPON));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.opponents(self), Filters.character, Filters.here(self)), new CardMatchesEvaluator(-1, -2, pwMaul)));
         return modifiers;
     }
 
     @Override
-    protected Filter getGameTextValidPilotFilter(String playerId, SwccgGame game, PhysicalCard self) {
-        return Filters.Jedi;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.ANY_CARD__CANCEL_AND_REDRAW_A_DESTINY;
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.BEN_KENOBI_V_REVIVE_CHARACTER;
 
         // Check condition(s)
-        if ((TriggerConditions.isWeaponDestinyJustDrawnBy(game, effectResult, playerId)
-                || TriggerConditions.isBattleDestinyJustDrawnBy(game, effectResult, playerId))
-                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.isInBattle(game, self)
-                && GameConditions.canCancelDestinyAndCauseRedraw(game, playerId)
-                && GameConditions.hasPiloting(game, self, Persona.PLO)) {
+        if (TriggerConditions.battleEndedAt(game, effectResult, Filters.sameSite(self))
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)
+                && GameConditions.wasForfeitedFromLocationThisTurn(game, Filters.and(Filters.your(self), Filters.character), Filters.sameSite(self))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Cancel destiny and cause re-draw");
+            action.setText("'Revive' a forfeited character");
             // Update usage limit(s)
             action.appendUsage(
-                    new OncePerTurnEffect(action));
+                    new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new CancelDestinyAndCauseRedrawEffect(action));
+                    new PlaceAtLocationFromLostPileEffect(action, playerId, Filters.and(Filters.your(self), Filters.character,
+                            Filters.abilityLessThan(game.getModifiersQuerying().getAbility(game.getGameState(), self)),
+                            Filters.forfeitedFromLocationThisTurn(Filters.sameSite(self))), Filters.sameSite(self), false, false));
             return Collections.singletonList(action);
         }
         return null;

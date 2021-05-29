@@ -1,131 +1,53 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.conditions.ControlsCondition;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
-import com.gempukku.swccgo.logic.effects.CancelDestinyEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
-import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.Effect;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotExistAtLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 9
- * Type: Interrupt
- * Subtype: Used Or Lost
- * Title: Rescue In The Clouds (V)
+ * Set: Set 15
+ * Type: Location
+ * Subtype: Site
+ * Title: Kashyyyk: Forest Depths
  */
-public class Card501_031 extends AbstractUsedOrLostInterrupt {
+public class Card501_031 extends AbstractSite {
     public Card501_031() {
-        super(Side.LIGHT, 5, "Rescue In The Clouds", Uniqueness.UNIQUE);
-        setVirtualSuffix(true);
-        setLore("'I know where Luke is.'");
-        setGameText("USED: At a system or Bespin location, choose: Cancel a just drawn destiny targeting the ability or defense value of your non-Undercover character of ability < 5. OR During battle, draw one battle destiny if unable to otherwise. LOST: Cancel Close Call.");
-        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_9);
-        setTestingText("Rescue in the Clouds (V) (ERRATA)");
+        super(Side.LIGHT, "Kashyyyk: Forest Depths", Title.Kashyyyk);
+        setLocationDarkSideGameText("No starships or vehicles here.");
+        setLocationLightSideGameText("While you control, Wookiees are destiny +1.");
+        addIcon(Icon.DARK_FORCE, 1);
+        addIcon(Icon.LIGHT_FORCE, 2);
+        addIcons(Icon.VIRTUAL_SET_15, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I);
+        addKeyword(Keyword.FOREST);
+        setTestingText("Kashyyyk: Forest Depths");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        Filter starshipsOrVehicles = Filters.or(Filters.starship, Filters.vehicle);
 
-        // Check condition(s)
-        if (GameConditions.canTargetToCancel(game, self, Filters.Close_Call)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Close_Call, Title.Close_Call);
-            actions.add(action);
-        }
-
-        Filter systemOrBespinLocation = Filters.or(Filters.system, Filters.Bespin_location);
-
-        // Check condition(s)
-        if (GameConditions.isDuringBattleAt(game, systemOrBespinLocation)) {
-
-            final PhysicalCard battleLocation = game.getGameState().getBattleLocation();
-            if (battleLocation != null) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-                action.setText("Draw battle destiny if unable to otherwise");
-                action.addAnimationGroup(battleLocation);
-                // Allow response(s)
-                action.allowResponses(
-                        new RespondablePlayCardEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new AddUntilEndOfTurnModifierEffect(action,
-                                                new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, Filters.at(battleLocation), 1), "Draws battle destiny if unable to otherwise")
-                                );
-
-                            }
-                        }
-                );
-
-                actions.add(action);
-            }
-        }
-
-        return actions;
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new MayNotExistAtLocationModifier(self, starshipsOrVehicles, self));
+        return modifiers;
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
-
-        // Check condition(s)
-        if (TriggerConditions.isDestinyJustDrawnTargetingAbilityManeuverOrDefenseValue(game, effectResult,
-                Filters.and(Filters.your(self), Filters.not(Filters.undercover_spy), Filters.character, Filters.abilityLessThan(5),
-                        Filters.at(Filters.or(Filters.system, Filters.Bespin_location))))
-                && GameConditions.canCancelDestiny(game, playerId)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-            action.setText("Cancel destiny");
-            // Allow response(s)
-            action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new CancelDestinyEffect(action));
-                        }
-                    }
-            );
-            actions.add(action);
-        }
-
-        return actions;
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new DestinyModifier(self, Filters.Wookiee, new ControlsCondition(playerOnLightSideOfLocation, self), 1));
+        return modifiers;
     }
-
-    @Override
-    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(String playerId, SwccgGame game, Effect effect, PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
-
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.Close_Call)
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
-
-            PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            actions.add(action);
-        }
-        return actions;
-    }
-
 }

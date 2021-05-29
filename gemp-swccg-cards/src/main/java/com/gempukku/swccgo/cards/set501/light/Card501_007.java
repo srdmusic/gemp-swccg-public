@@ -1,83 +1,103 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractResistance;
+import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.CardsInLostPileEqualToOrMoreThanCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
+import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
+import com.gempukku.swccgo.logic.modifiers.DefinedByGameTextDeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.SpeciesModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 14
+ * Set: Set 15
  * Type: Character
- * Subtype: Resistance
- * Title: Beaumont Kin
+ * Subtype: Alien
+ * Title: Alien Rabble
  */
-public class Card501_007 extends AbstractResistance {
+public class Card501_007 extends AbstractAlien {
     public Card501_007() {
-        super(Side.LIGHT, 2, 2, 3, 2, 4, "Beaumont Kin", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 3, null, 6, 2, 6, "Alien Rabble", Uniqueness.DIAMOND_1);
         setLore("");
-        setGameText("Deploy cost of opponent's characters may not be modified at same and related locations. If you have ten cards in your Lost Pile, Force drain +1 here. Once during battle, may add Beaumont's power to another character present; Beaumont is 'hit'.");
-        addPersona(Persona.BEAUMONT);
-        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_14, Icon.EPISODE_VII);
-        setTestingText("Beaumont Kin");
+        setGameText("* Replaces any 3 of your aliens at same Jabba’s Palace site (aliens go to Used Pile) or deploys for 4 Force. When deployed, may retrieve your Rep OR place your Rep stacked on your objective in Used pile. This alien assumes your Rep's species (if any).");
+        addIcons(Icon.WARRIOR, Icon.WARRIOR, Icon.WARRIOR, Icon.VIRTUAL_SET_15);
+        setTestingText("Alien Rabble");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ImmuneToDeployCostModifiersToLocationModifier(self, Filters.and(Filters.opponents(self.getOwner()), Filters.character), Filters.any, Filters.sameOrRelatedLocation(self)));
-        modifiers.add(new ForceDrainModifier(self, Filters.here(self), new CardsInLostPileEqualToOrMoreThanCondition(self.getOwner(), 10), 1, self.getOwner()));
+        modifiers.add(new DefinedByGameTextDeployCostModifier(self, 5));
         return modifiers;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (GameConditions.isDuringBattleWithParticipant(game, self)
-                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.character, Filters.other(self), Filters.present(self), Filters.participatingInBattle))
-                && GameConditions.canSpot(game, self, Filters.Beaumont)) {
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        PhysicalCard rep = game.getGameState().getRep(self.getOwner());
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId);
-            action.setText("Add power to another character");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerBattleEffect(action));
-            // Perform result(s)
-            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Add power to character", Filters.and(Filters.character, Filters.other(self), Filters.present(self), Filters.participatingInBattle)) {
-                                       @Override
-                                       protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                                           action.allowResponses(new RespondableEffect(action) {
-                                               @Override
-                                               protected void performActionResults(Action targetingAction) {
-                                                   PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
-                                                   PhysicalCard beaumont = Filters.findFirstActive(game, self, Filters.Beaumont);
-
-                                                   if (beaumont != null) {
-                                                       float toAdd = game.getModifiersQuerying().getPower(game.getGameState(), beaumont);
-                                                       action.appendEffect(new ModifyPowerUntilEndOfBattleEffect(action, finalTarget, toAdd));
-                                                       action.appendEffect(new HitCardEffect(action, beaumont, self));
-                                                   }
-                                               }
-                                           });
-
-                                       }
-                                   }
-            );
-
+        if (TriggerConditions.justDeployed(game, effectResult, self)
+                && rep != null) {
+            Species repSpecies = rep.getBlueprint().getSpecies();
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.appendEffect(
+                    new AddUntilEndOfGameModifierEffect(action, new SpeciesModifier(self, repSpecies), " assumes species: " + repSpecies.getHumanReadable()));
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new ArrayList<>();
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        PhysicalCard rep = game.getGameState().getRep(self.getOwner());
+
+        // Check condition(s)
+        if (TriggerConditions.justDeployed(game, effectResult, self)
+                && rep != null) {
+
+            if (GameConditions.hasLostPile(game, playerId)) {
+                OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Retrieve " + GameUtils.getCardLink(rep));
+                action.setActionMsg("Retrieve " + GameUtils.getCardLink(rep));
+                // Perform result(s)
+                action.appendEffect(
+                        new RetrieveCardEffect(action, playerId, Filters.sameTitle(rep)));
+                actions.add(action);
+            }
+
+            if (GameConditions.canSpot(game, self, Filters.and(Filters.your(playerId), Filters.Objective, Filters.hasStacked(Filters.sameTitle(rep))))) {
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Place stacked " + GameUtils.getCardLink(rep) + " in Used Pile");
+                action.setActionMsg("Place stacked " + GameUtils.getCardLink(rep) + " in Used Pile");
+                // Perform result(s)
+                action.appendTargeting(
+                        new ChooseStackedCardEffect(action, playerId, Filters.and(Filters.your(playerId), Filters.Objective), Filters.sameTitle(rep)) {
+                            @Override
+                            protected void cardSelected(PhysicalCard selectedCard) {
+                                action.appendEffect(
+                                        new PutStackedCardInUsedPileEffect(action, playerId, selectedCard, false));
+                            }
+                        }
+                );
+                actions.add(action);
+            }
+        }
+        return actions;
     }
 }

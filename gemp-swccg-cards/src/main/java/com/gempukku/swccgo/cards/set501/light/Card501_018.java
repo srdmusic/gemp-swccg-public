@@ -1,99 +1,139 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractJediMaster;
+import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.DefendingBattleCondition;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.DeployAsCaptiveOption;
+import com.gempukku.swccgo.game.DeploymentRestrictionsOption;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.conditions.OrCondition;
-import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
-import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
-import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.FlipCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 
 /**
- * Set: Set 13
- * Type: Character
- * Subtype: Jedi Master
- * Title: Yoda, Master Of The Force (V)
+ * Set: Set 15
+ * Type: Objective
+ * Title: Rescue The Princess / Sometimes I Amaze Even Myself (V)
  */
-public class Card501_018 extends AbstractJediMaster {
+public class Card501_018 extends AbstractObjective {
     public Card501_018() {
-        super(Side.LIGHT, 4, 4, 3, 7, 7, "Yoda, Master Of The Force", Uniqueness.UNIQUE);
-        setLore("Jedi Council Member. 'More to say have you?'");
-        setGameText("Power +3 while defending a battle (or while exactly two Jedi on table). Once per game, during your move phase, may relocate to an [Episode I] battleground site as a regular move. Immune to attrition.");
-        addPersona(Persona.YODA);
-        addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I, Icon.VIRTUAL_SET_13);
-        addKeywords(Keyword.JEDI_COUNCIL_MEMBER);
+        super(Side.LIGHT, 0, Title.Rescue_The_Princess);
+        setFrontOfDoubleSidedCard(true);
+        setGameText("Deploy Central Core, A Power Loss, Trash Compactor, and Detention Block Corridor (with Prisoner 2187 imprisoned there)." +
+                "For remainder of game, Path Of Least Resistance is canceled. Your Death Star sites generate +1 Force for you and ignore Set Your Course For Alderaan. Jedi (except Obi-Wan) are lost." +
+                "Flip this card If Leia is present at a Death Star site and A Power Loss is ‘shut down.’");
+        addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_15);
         setVirtualSuffix(true);
-        setTestingText("Yoda, Master Of The Force (V) (ERRATA)");
+        setTestingText("Rescue The Princess / Sometimes I Amaze Even Myself (V)");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        Condition defendingBattleCondition = new DefendingBattleCondition(self);
-        Condition exactlyTwoJediOnTable = new OnTableCondition(self, 2, true, Filters.and(Filters.your(self.getOwner()), Filters.Jedi));
-        modifiers.add(new PowerModifier(self, new OrCondition(defendingBattleCondition, exactlyTwoJediOnTable), 3));
-        modifiers.add(new ImmuneToAttritionModifier(self));
+    protected ObjectiveDeployedTriggerAction getGameTextWhenDeployedAction(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameState gameState = game.getGameState();
+
+        ObjectiveDeployedTriggerAction action = new ObjectiveDeployedTriggerAction(self);
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.Death_Star_Central_Core, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Central Core to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.Trash_Compactor, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Trash Compactor to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.Detention_Block_Corridor, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Detention Block to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.A_Power_Loss, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose A Power Loss to deploy";
+                    }
+                });
+
+        if (Filters.canSpot(gameState.getReserveDeck(playerId), game, Filters.Detention_Block_Corridor)) {
+            action.appendRequiredEffect(
+                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.Prisoner_2187, Filters.Detention_Block_Corridor, true, DeploymentRestrictionsOption.ignoreLocationDeploymentRestrictions(), DeployAsCaptiveOption.deployAsImprisonedCaptive(), false) {
+                        @Override
+                        public String getChoiceText() {
+                            return "Choose Prisoner 2187 to deploy";
+                        }
+                    });
+        }
+
+        return action;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        String playerId = self.getOwner();
+        Filter yourDeathStarSites = Filters.and(Filters.your(playerId), Filters.Death_Star_site);
+        List<Modifier> modifiers = new ArrayList<>();
+        modifiers.add(new ForceGenerationModifier(self, yourDeathStarSites, 1, playerId));
+        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.not(Filters.ObiWan)), playerId));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.Set_Your_Course_For_Alderaan, ModifyGameTextType.SET_YOUR_COURSE_FOR_ALDERAAN__ONLY_AFFECTS_DARK_SIDE_DEATH_STAR_SITES));
         return modifiers;
     }
 
+
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.YODA_MASTER_OF_THE_FORCE_V__RELOCATE;
-
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.isDuringYourPhase(game, self, Phase.MOVE)
-                && !GameConditions.mayNotMove(game, self)
-                && GameConditions.canSpot(game, self, Filters.and(Icon.EPISODE_I, Filters.battleground_site, Filters.otherLocation(self)))
-                && Filters.hasNotPerformedRegularMove.accepts(game, self)
-            ) {
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.title(Title.Path_Of_Least_Resistance))
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Relocate to a battleground site");
-            action.setActionMsg("Relocate to a battleground site");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            // Perform result(s)
-            action.appendTargeting(
-                    new ChooseCardOnTableEffect(action, playerId, "Choose site to relocate to", Filters.and(Icon.EPISODE_I, Filters.battleground_site, Filters.otherLocation(self))) {
-                        @Override
-                        protected void cardSelected(final PhysicalCard siteSelected) {
-                            action.addAnimationGroup(self);
-                            action.addAnimationGroup(siteSelected);
-                            // Allow response(s)
-                            action.allowResponses("Relocate " + GameUtils.getCardLink(self) + " to " + GameUtils.getCardLink(siteSelected),
-                                    new UnrespondableEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new RelocateBetweenLocationsEffect(action, self, siteSelected, true));
-                                        }
-                                    });
-                        }
-                    });
-
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
+
+        if (GameConditions.canBeFlipped(game, self)
+                && GameConditions.canSpot(game, self, Filters.and(Filters.Leia, Filters.presentAt(Filters.Death_Star_site)))
+                && GameConditions.isDeathStarPowerShutDown(game)) {
+                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setText("Flip");
+                action.appendEffect(
+                        new FlipCardEffect(action, self)
+                );
+                actions.add(action);
+        }
+
+        return actions;
     }
 }

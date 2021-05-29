@@ -266,6 +266,9 @@ public class SwccgGameMediator {
             if (card.isHatredCard()) {
                 sb.append("<div>").append("'Hatred' card").append("</div>");
             }
+            if (card.isEnslavedCard()) {
+                sb.append("<div>").append("'Enslaved' card").append("</div>");
+            }
             if (card.isCoaxiumCard()) {
                 sb.append("<div>").append("'Coaxium' card").append("</div>");
             }
@@ -801,7 +804,7 @@ public class SwccgGameMediator {
             }
 
             // Show affecting cards
-            if (cardZone.isInPlay() || cardZone == Zone.HAND) {
+            if (cardZone.isInPlay() || cardZone == Zone.HAND || cardZone == Zone.STACKED) {
                 for (Modifier modifier : modifiersQuerying.getModifiersAffecting(gameState, card)) {
                     modifierCollector.addModifier(modifier);
                 }
@@ -1214,6 +1217,22 @@ public class SwccgGameMediator {
                     // Slip Sliding Away (v)
                     return startingLocation.getBlueprint().getTitle() + " SSAv";
                 }
+                if(Filters.title("I Am Part Of The Living Force").accepts(_swccgoGame, startingInterrupt)
+                    && startingLocation.getBlueprint().getTitle() != null)  {
+                    // Communing
+                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Communing";
+                }
+                if (Filters.Communing.accepts(_swccgoGame, startingInterrupt)
+                        && startingInterrupt.getBlueprint().isLegacy()) {
+                    //Communing (ignore the location)
+                    return "Communing";
+                }
+                if (Filters.title("It Is The Future You See").accepts(_swccgoGame, startingInterrupt)
+                        && startingInterrupt.getBlueprint().hasVirtualSuffix()
+                        && startingInterrupt.getBlueprint().isLegacy()) {
+                    //Sonn v (ignore the location)
+                    return "Sonn v";
+                }
 
                 return startingLocation.getBlueprint().getTitle() + (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"");
             }
@@ -1333,6 +1352,10 @@ public class SwccgGameMediator {
                 // Old Allies
                 objectiveLabel = "Old Allies";
             }
+            if (Filters.or(Filters.On_The_Verge_Of_Greatness, Filters.Deploy_The_Garrison).accepts(_swccgoGame, objective)) {
+                // On The Verge Of Greatness
+                objectiveLabel = "On The Verge Of Greatness";
+            }
             if (Filters.or(Filters.Local_Uprising, Filters.Liberation, Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
                 // Operatives
                 objectiveLabel = "Operatives";
@@ -1360,6 +1383,10 @@ public class SwccgGameMediator {
             if (Filters.or(Filters.Plead_My_Case_To_The_Senate, Filters.Sanity_And_Compassion, Filters.My_Lord_Is_That_Legal, Filters.I_Will_Make_It_Legal).accepts(_swccgoGame, objective)) {
                 // Senate
                 objectiveLabel = "Senate";
+            }
+            if (Filters.or(Filters.Wookiee_Slaving_Operation, Filters.Indentured_To_The_Empire).accepts(_swccgoGame, objective)) {
+                //Wookiee Slaving Operation
+                objectiveLabel = "Slavers";
             }
             if (Filters.or(Filters.Shadow_Collective, Filters.You_Know_Who_I_Answer_To).accepts(_swccgoGame, objective)) {
                 // Shadow Collective
@@ -1389,7 +1416,7 @@ public class SwccgGameMediator {
                 // Watch Your Step
                 objectiveLabel = "WYS";
             }
-            if (Filters.or(Filters.Yavin_4_Operations, Filters.The_Time_To_Fight_Is_Now).accepts(_swccgoGame, objective)) {
+            if (Filters.or(Filters.Yavin_4_Base_Operations, Filters.The_Time_To_Fight_Is_Now).accepts(_swccgoGame, objective)) {
                 // Yavin 4 Operations
                 objectiveLabel = "Y4O";
             }

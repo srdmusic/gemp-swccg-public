@@ -172,7 +172,7 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
         FORFEITED_TO_LOST_PILE_FROM_OFF_TABLE,
         FORFEITED_TO_USED_PILE_FROM_OFF_TABLE,
         REMOVE_FROM_CARD_PILE,
-        REMOVE_FROM_STACKED,
+        REMOVED_FROM_STACKED,
         SHUFFLE_CARD_PILE,
         EXCHANGE_WITH_CARD_PILE,
         REORDER_CARD_PILE,
@@ -356,6 +356,8 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
         // Dark Hours
         DARK_HOURS_EFFECT,
 
+        // Enslave character
+        CHARACTER_ENSLAVED,
 
         IMMUNITY_GRANTED,
 

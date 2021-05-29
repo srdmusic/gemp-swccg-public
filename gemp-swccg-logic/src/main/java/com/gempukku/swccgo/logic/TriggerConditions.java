@@ -348,6 +348,7 @@ public class TriggerConditions {
                 || effectResult.getType() == EffectResult.Type.STACKED_FROM_CARD_PILE
                 || effectResult.getType() == EffectResult.Type.STACKED_FROM_HAND
                 || effectResult.getType() == EffectResult.Type.STACKED_FROM_TABLE
+                || effectResult.getType() == EffectResult.Type.REMOVED_FROM_STACKED
                 || effectResult.getType() == EffectResult.Type.CONCEALED
                 || effectResult.getType() == EffectResult.Type.UNCONCEALED
                 || effectResult.getType() == EffectResult.Type.UTINNI_EFFECT_COMPLETED
@@ -380,7 +381,8 @@ public class TriggerConditions {
                 || effectResult.getType() == EffectResult.Type.PARASITE_ATTACHED
                 || effectResult.getType() == EffectResult.Type.PARASITE_DETACHED
                 || effectResult.getType() == EffectResult.Type.RETARGETED_EFFECT
-                || effectResult.getType() == EffectResult.Type.DARK_HOURS_EFFECT);
+                || effectResult.getType() == EffectResult.Type.DARK_HOURS_EFFECT
+                || effectResult.getType() == EffectResult.Type.CHARACTER_ENSLAVED);
 
         // TODO: Just checking EffectResult.getType() would be faster???
 
@@ -5291,6 +5293,20 @@ public class TriggerConditions {
     public static boolean hiddenBaseProbed(SwccgGame game, EffectResult effectResult) {
         if (effectResult.getType() == EffectResult.Type.PROBED_HIDDEN_BASE) {
             return true;
+        }
+        return false;
+    }
+
+    /**
+     * Determines if a character was just 'enslaved' by a player
+     * @param game the game
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @return true or false
+     */
+    public static boolean characterEnslavedBy(SwccgGame game, EffectResult effectResult, String playerId) {
+        if (effectResult.getType() == EffectResult.Type.CHARACTER_ENSLAVED) {
+            return playerId.equals(effectResult.getPerformingPlayerId());
         }
         return false;
     }

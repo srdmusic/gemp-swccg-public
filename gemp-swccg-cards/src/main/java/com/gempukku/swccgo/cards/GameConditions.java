@@ -5410,4 +5410,8 @@ public class GameConditions {
         List<PhysicalCard> cardsDeployed = game.getModifiersQuerying().getCardsPlayedThisTurnToLocation(playerId, location);
         return Filters.filterCount(cardsDeployed, game, count, cardFilter).size() >= count;
     }
+
+    public static boolean isDeathStarPowerShutDown(SwccgGame game) {
+        return game.getModifiersQuerying().isDeathStarPowerShutDown();
+    }
 }

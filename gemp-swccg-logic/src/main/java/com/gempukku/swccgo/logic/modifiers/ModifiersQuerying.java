@@ -219,6 +219,14 @@ public interface ModifiersQuerying {
     float getPower(GameState gameState, PhysicalCard physicalCard, ModifierCollector modifierCollector);
 
     /**
+     * Gets a card's power modifier limit.
+     *
+     * @param gameState the game state
+     * @return the destiny value
+     */
+    float getPowerModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
+
+    /**
      * Determines if a card's power is less than a specified value.
      *
      * @param gameState the game state
@@ -470,6 +478,14 @@ public interface ModifiersQuerying {
     float getForfeit(GameState gameState, PhysicalCard physicalCard, ModifierCollector modifierCollector);
 
     /**
+     * Gets a card's forfeit modifier limit.
+     *
+     * @param gameState the game state
+     * @return the destiny value
+     */
+    float getForfeitModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
+
+    /**
      * Determines if a card's forfeit value is equal to a specified value.
      *
      * @param gameState the game state
@@ -598,6 +614,14 @@ public interface ModifiersQuerying {
      * @return the destiny value
      */
     float getDestiny(GameState gameState, PhysicalCard card, ModifierCollector modifierCollector);
+
+    /**
+     * Gets a card's destiny modifier limit.
+     *
+     * @param gameState the game state
+     * @return the destiny value
+     */
+    float getDestinyModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard);
 
     /**
      * Determines if a card's destiny value is less than a specified value.
@@ -1063,6 +1087,18 @@ public interface ModifiersQuerying {
      * @return true or false
      */
     boolean isBluffCardStackedThisTurn();
+
+    /**
+     * Records that the Death Star's power is 'shut down'.
+     */
+    public void deathStarPowerIsShutDown();
+
+    /**
+     * Determines if the Death Star's power is 'shut down'.
+     *
+     * @return true or false
+     */
+    public boolean isDeathStarPowerShutDown();
 
     /**
      * Records that the specified card being played (or being deployed).
@@ -4226,6 +4262,14 @@ public interface ModifiersQuerying {
     float getBlowAwayBlockadeFlagshipAttemptTotal(GameState gameState, float baseTotal);
 
     /**
+     * Gets the 'blow away' Shield Gate attempt total.
+     * @param gameState the game state
+     * @param baseTotal the base total
+     * @return the total
+     */
+    float getBlowAwayShieldGateAttemptTotal(GameState gameState, float baseTotal);
+
+    /**
      * Determines if the specified spy may not 'break cover' during deploy using normal Undercover rules.
      * @param gameState the game state
      * @param card the card
@@ -4522,6 +4566,10 @@ public interface ModifiersQuerying {
     SwccgCardBlueprint getMindscannedCharacterBlueprint(GameState gameState, PhysicalCard card);
 
     boolean mindscannedCharacterGameTextWasCanceled(GameState gameState, PhysicalCard card);
-
     CardSubtype getModifiedSubtype(GameState gameState, PhysicalCard card);
+    boolean mayBeRevealedAsResistanceAgent(GameState gameState, PhysicalCard card);
+    boolean isCommuning(GameState gameState, PhysicalCard card);
+    Collection<PhysicalCard> getCardsConsideredOutOfPlay(GameState gameState);
+    Collection<PhysicalCard> getActiveCardsAffectedByModifier(GameState gameState, ModifierType modifierType);
+    boolean isShieldGateBlownAway(GameState gameState);
 }

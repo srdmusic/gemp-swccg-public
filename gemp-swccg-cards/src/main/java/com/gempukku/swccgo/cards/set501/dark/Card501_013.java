@@ -1,8 +1,10 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -18,21 +20,22 @@ import com.gempukku.swccgo.logic.effects.choose.DeployCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
+import java.lang.annotation.Target;
 import java.util.*;
 
 
 /**
- * Set: Set 13
+ * Set: Set 15
  * Type: Interrupt
- * Subtype: Used Or Lost
+ * Subtype: Lost
  * Title: A Sith Legend
  */
-public class Card501_013 extends AbstractUsedOrLostInterrupt {
+public class Card501_013 extends AbstractLostInterrupt {
     public Card501_013() {
         super(Side.DARK, 2, "A Sith Legend", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("USED: Deploy a lightsaber (may simultaneously deploy a matching Dark Jedi or Sith character) from hand and/or Reserve Deck; reshuffle. [Immune to Sense.] LOST: Except during battle, relocate a Dark Jedi or Inquisitor to same battleground site as a Jedi.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_13);
+        setGameText("Deploy a lightsaber (may simultaneously deploy a matching Dark Jedi or Sith character) from hand and/or Reserve Deck; reshuffle. [Immune to Sense.] OR Once per game, cancel the game text of a character of equal or lesser ability present with your Dark Jedi or Inquisitor.");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_15);
         setTestingText("A Sith Legend");
     }
 
@@ -40,57 +43,57 @@ public class Card501_013 extends AbstractUsedOrLostInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
-        GameTextActionId exchangeCardActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionId = GameTextActionId.A_SITH_LEGEND__CANCEL_GAME_TEXT;
 
         // Check condition(s)
-        Filter jediAtBattlegroundSites = Filters.and(Filters.Jedi, Filters.at(Filters.battleground_site));
-        final Filter battlegroundSitesJediAreAt = Filters.sameSiteAs(self, jediAtBattlegroundSites);
-        Filter darkJediOrInquisitor = Filters.or(Filters.Dark_Jedi, Filters.inquisitor);
-        Filter darkJediOrInquisitorWhoCanBeRelocated = Filters.and(darkJediOrInquisitor, Filters.canBeRelocatedToLocation(battlegroundSitesJediAreAt, 0));
+        Filter darkJediOrInquisitor = Filters.and(Filters.your(self), Filters.or(Filters.Dark_Jedi, Filters.inquisitor));
+        Filter characterFilter = Filters.and(Filters.character, Filters.presentWith(self, darkJediOrInquisitor));
 
-        if (!GameConditions.isDuringBattle(game)
-            && GameConditions.canSpot(game, self, darkJediOrInquisitorWhoCanBeRelocated)) {
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_UNDERCOVER, characterFilter)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, exchangeCardActionId, CardSubtype.LOST);
-            action.setText("Relocate Dark Jedi or Inquisitor");
-            action.setActionMsg("Relocate a Dark Jedi or Inquisitor to same battleground site as a Jedi.");
+            Collection<PhysicalCard> potentialTargets = new LinkedList<>();
+            for(PhysicalCard card:Filters.filterActive(game, self, darkJediOrInquisitor)) {
+                float ability = game.getModifiersQuerying().getAbility(game.getGameState(), card);
+                potentialTargets.addAll(Filters.filterActive(game, self, SpotOverride.INCLUDE_UNDERCOVER, Filters.and(Filters.character, Filters.presentWith(card), Filters.abilityLessThanOrEqualTo(ability))));
+            }
 
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose Dark Jedi or Inquisitor", darkJediOrInquisitorWhoCanBeRelocated) {
-                        @Override
-                        protected void cardTargeted(final int targetGroupId, final PhysicalCard characterTargeted) {
-                            action.appendTargeting(
-                                    new TargetCardOnTableEffect(action, self.getOwner(), "Choose site to relocate character", battlegroundSitesJediAreAt) {
-                                        @Override
-                                        protected void cardTargeted(final int siteTargetingGroupId, final PhysicalCard siteSelected) {
-                                            action.addAnimationGroup(characterTargeted);
-                                            action.addAnimationGroup(siteSelected);
-                                            // Pay cost(s)
-                                            action.appendCost(
-                                                    new PayRelocateBetweenLocationsCostEffect(action, playerId, characterTargeted, siteSelected, 0));
-                                            // Allow response(s)
-                                            action.allowResponses("Relocate " + GameUtils.getCardLink(characterTargeted) + " to " + GameUtils.getCardLink(siteSelected),
-                                                    new RespondablePlayCardEffect(action) {
-                                                        @Override
-                                                        protected void performActionResults(Action targetingAction) {
-                                                            // Get the targeted card(s) from the action using the targetGroupId.
-                                                            // This needs to be done in case the target(s) were changed during the responses.
-                                                            Collection<PhysicalCard> finalCharacter = action.getPrimaryTargetCards(targetGroupId);
-                                                            PhysicalCard finalToSite = action.getPrimaryTargetCard(siteTargetingGroupId);
+            if (!potentialTargets.isEmpty()) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+                action.setText("Cancel game text of a character");
+                action.setActionMsg("Cancel the game text of a character of equal or lesser ability present with your Dark Jedi or Inquisitor");
 
-                                                            // Perform result(s)
-                                                            action.appendEffect(
-                                                                    new RelocateBetweenLocationsEffect(action, finalCharacter, finalToSite));
-                                                        }
-                                                    });
-                                        }
-                                    }
-                            );
+                action.appendUsage(new OncePerGameEffect(action));
+                // Choose target(s)
+                action.appendTargeting(
+                        new TargetCardOnTableEffect(action, playerId, "Choose character to cancel game text", Filters.in(potentialTargets)) {
+                            @Override
+                            protected void cardTargeted(final int targetGroupId, final PhysicalCard characterTargeted) {
+                                action.addAnimationGroup(characterTargeted);
+
+                                // Allow response(s)
+                                action.allowResponses("Cancel game text of " + GameUtils.getCardLink(characterTargeted),
+                                        new RespondablePlayCardEffect(action) {
+                                            @Override
+                                            protected void performActionResults(Action targetingAction) {
+                                                // Get the targeted card(s) from the action using the targetGroupId.
+                                                // This needs to be done in case the target(s) were changed during the responses.
+                                                Collection<PhysicalCard> finalCharacter = action.getPrimaryTargetCards(targetGroupId);
+
+                                                for(PhysicalCard card:finalCharacter) {
+                                                    // Perform result(s)
+                                                    action.appendEffect(
+                                                            new CancelGameTextEffect(action, card));
+                                                }
+                                            }
+                                        });
+                            }
+
+
                         }
-                    }
-            );
-            actions.add(action);
+                );
+                actions.add(action);
+            }
         }
 
         GameTextActionId downloadLightsaberActionId = GameTextActionId.A_SITH_LEGEND__DOWNLOAD_LIGHTSABER;
@@ -102,7 +105,7 @@ public class Card501_013 extends AbstractUsedOrLostInterrupt {
             final LinkedHashMap<PhysicalCard, List<PhysicalCard>> validPlaysFromHandOnly = getValidPlays(self, game, cardsInHand);
             if (!validPlaysFromHandOnly.isEmpty() || canDeployCardFromReserveDeck) {
 
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, downloadLightsaberActionId, CardSubtype.USED);
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, downloadLightsaberActionId);
                 action.setText("Deploy a lightsaber");
                 // Allow response(s)
                 action.allowResponses(
