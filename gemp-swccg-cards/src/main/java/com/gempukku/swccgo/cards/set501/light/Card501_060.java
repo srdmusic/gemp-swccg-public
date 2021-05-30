@@ -27,6 +27,7 @@ import java.util.List;
 public class Card501_060 extends AbstractSite {
     public Card501_060() {
         super(Side.LIGHT, Title.Detention_Block_Corridor, Title.Death_Star);
+        setVirtualSuffix(true);
         setLocationDarkSideGameText("If Leia is about to be lost from a Death Star site, imprison her here instead (if possible).");
         setLocationLightSideGameText("If you control with a spy, may use 2 Force to release Leia here (retrieve 1 Force).");
         addIcon(Icon.DARK_FORCE, 1);
