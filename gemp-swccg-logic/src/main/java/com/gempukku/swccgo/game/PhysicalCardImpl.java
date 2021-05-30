@@ -413,6 +413,8 @@ public class PhysicalCardImpl implements PhysicalCard, Cloneable {
         List<Modifier> modifiers;
         if (_zone == Zone.STACKED)
             modifiers = blueprint.getWhileStackedModifiers(game, this);
+        else if (_zone == Zone.OUT_OF_PLAY)
+            modifiers = blueprint.getWhileOutOfPlayModifiers(game, this);
         else
             modifiers = blueprint.getWhileInPlayModifiers(game, this);
 
