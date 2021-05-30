@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.CancelBattleEffect;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filter;
@@ -14,12 +15,11 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.PassthruEffect;
-import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,10 +34,9 @@ import java.util.List;
 public class Card501_018_BACK extends AbstractObjective {
     public Card501_018_BACK() {
         super(Side.LIGHT, 7, Title.Sometimes_I_Amaze_Even_Myself);
-        setGameText("For remainder of game, I Can't Believe He's Gone may only add power in battles involving Luke or Leia. You retrieve no Force from Detention Block Corridor." +
-                "While this side up, in order to initiate a Force drain, opponent must use +1 Force. Whenever you 'hit' a character with a blaster, opponent loses 1 Force. " +
-                "May place Obi-Wan out of play from a Death Star site to cancel any battle just initiated on Death Star." +
-                "Flip this card if Leia about to leave table (imprison her at Detention Block Corridor instead, if possible)");
+        setGameText("For remainder of game, I Can't Believe He's Gone may only add power in battles involving Luke or Leia." +
+                "While this side up, in order to initiate a Force drain, opponent must use +1 Force. Whenever you 'hit' a character with a blaster, opponent loses 1 Force. May place Obi-Wan out of play from a Death Star site to cancel any battle just initiated on Death Star. May retrieve 1 Force during opponent’s draw phase if opponent did not initiate a battle this turn." +
+                "Flip this card if Leia is not at a Death Star site");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_15);
         setVirtualSuffix(true);
         setTestingText("Rescue The Princess / Sometimes I Amaze Even Myself (V)");
@@ -52,7 +51,26 @@ public class Card501_018_BACK extends AbstractObjective {
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.not(Filters.ObiWan)), self.getOwner()));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Set_Your_Course_For_Alderaan, ModifyGameTextType.SET_YOUR_COURSE_FOR_ALDERAAN__ONLY_AFFECTS_DARK_SIDE_DEATH_STAR_SITES));
         modifiers.add(new InitiateForceDrainCostModifier(self, 1, game.getOpponent(self.getOwner())));
+        modifiers.add(new MayNotBeConvertedModifier(self, Filters.Death_Star_site));
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        String opponent = game.getOpponent(playerId);
+
+        // Check condition(s)
+        if (GameConditions.isDuringOpponentsPhase(game, playerId, Phase.DRAW)
+                && !GameConditions.hasInitiatedBattleThisTurn(game, opponent)) {
+
+            TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+            action.setText("Retrieve 1 Force");
+            // Perform result(s)
+            action.appendEffect(
+                    new RetrieveForceEffect(action, playerId, 1));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
     @Override
@@ -98,11 +116,6 @@ public class Card501_018_BACK extends AbstractObjective {
                             new ModifyGameTextModifier(self, Filters.I_Cant_Believe_Hes_Gone, ModifyGameTextType.I_CANT_BELIEVE_HES_GONE__ONLY_EFFECTS_BATTLES_WITH_LUKE_OR_LEIA),
                             "I Can't Believe He's Gone may only add power in battles involving Luke or Leia for remainder of game.")
             );
-            action.appendEffect(
-                    new AddUntilEndOfGameModifierEffect(action,
-                            new MayNotContributeToForceRetrievalModifier(self, Filters.Detention_Block_Corridor),
-                            "You retrieve no Force from Detention Block Corridor for remainder of game.")
-            );
             actions.add(action);
         }
 
@@ -123,32 +136,6 @@ public class Card501_018_BACK extends AbstractObjective {
                     new LoseForceEffect(action, game.getOpponent(self.getOwner()), 1)
             );
             actions.add(action);
-        }
-
-        if (TriggerConditions.isAboutToLeaveTable(game, effectResult, Filters.Leia)
-                && GameConditions.canSpot(game, self, Filters.Detention_Block_Corridor)) {
-            final AboutToLeaveTableResult result = (AboutToLeaveTableResult) effectResult;
-            final PhysicalCard leia = result.getCardAboutToLeaveTable();
-
-            if (leia != null) {
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                action.setText("Imprison Leia");
-                action.setPerformingPlayer(game.getOpponent(self.getOwner()));
-                action.appendEffect(
-                        new PassthruEffect(action) {
-                            @Override
-                            protected void doPlayEffect(SwccgGame game) {
-                                result.getPreventableCardEffect().preventEffectOnCard(leia);
-                                action.appendEffect(
-                                        new RestoreCardToNormalEffect(action, leia));
-                                action.appendEffect(
-                                        new CaptureWithImprisonmentEffect(action, leia, Filters.findFirstActive(game, self, Filters.Detention_Block_Corridor), leia.isUndercover(), leia.isMissing())
-                                );
-                            }
-                        });
-                actions.add(action);
-            }
-
         }
 
         return actions;
