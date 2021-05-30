@@ -21,7 +21,7 @@ public class Card501_042 extends AbstractRebel {
     public Card501_042() {
         super(Side.LIGHT, 1, 4, 4, 3, 6, "Han Solo, Optimistic General", Uniqueness.UNIQUE);
         setLore("Leader. Scout.");
-        setGameText("May be revealed by I Want That Map as a Resistance Agent. Adds 3 to the power of anything he pilots. Kylo's game text here is canceled. May add one destiny to total power with Chewie or [E] Leia. [Endor] scouts are destiny +1.");
+        setGameText("May be revealed by I Want That Map as a Resistance Agent. Adds 3 to the power of anything he pilots. Kylo's game text here is canceled. May add one destiny to total power with Chewie or [E] Leia. Your [Endor] scouts are destiny +1.");
         addIcons(Icon.WARRIOR, Icon.PILOT, Icon.ENDOR, Icon.VIRTUAL_SET_15);
         addPersona(Persona.HAN);
         addKeywords(Keyword.LEADER, Keyword.SCOUT, Keyword.GENERAL);
@@ -41,7 +41,7 @@ public class Card501_042 extends AbstractRebel {
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
         modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.Kylo, Filters.here(self))));
         modifiers.add(new AddsDestinyToPowerModifier(self, new WithCondition(self, Filters.or(Filters.Chewie, Filters.and(Filters.icon(Icon.ENDOR), Filters.Leia))), 1));
-        modifiers.add(new DestinyModifier(self, Filters.and(Filters.icon(Icon.ENDOR), Filters.scout), 1));
+        modifiers.add(new DestinyModifier(self, Filters.and(Filters.your(self.getOwner()), Filters.icon(Icon.ENDOR), Filters.scout), 1));
         return modifiers;
     }
 }
