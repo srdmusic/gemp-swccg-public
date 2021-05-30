@@ -3470,6 +3470,7 @@ var fixedImages = {
 "501_49":"/gemp-swccg/images/cards/ANewHope-Dark/deathstar.gif",
 "501_50":"/gemp-swccg/images/cards/Premiere-Dark/deathstarwarroom.gif",
 "501_51":"/gemp-swccg/images/cards/Endor-Dark/endorlandingplatformdockingbay.gif",
+"501_52":"/gemp-swccg/images/cards/Virtual4-Light/bailorgana.gif",
 "501_56":"/gemp-swccg/images/cards/Virtual7-Dark/directororsonkrennic.gif",
 "501_60":"/gemp-swccg/images/cards/SpecialEdition-Light/deathstardetentionblockcorridor.gif",
 "501_74":"/gemp-swccg/images/cards/Virtual11-Dark/coruscantprivateplatform.gif",
