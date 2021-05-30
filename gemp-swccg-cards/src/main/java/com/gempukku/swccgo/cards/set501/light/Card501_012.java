@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
+import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
@@ -30,11 +30,12 @@ import java.util.List;
  * Subtype: Used
  * Title: For the Republic!
  */
-public class Card501_012 extends AbstractUsedInterrupt {
+public class Card501_012 extends AbstractUsedOrLostInterrupt {
     public Card501_012() {
         super(Side.LIGHT, 5, "For the Republic!", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("If a battle was just initiated at a site, each of your clones present is power +1 (+2 if with a Jedi) and immune to attrition for remainder of turn. OR Deploy Cloning Cylinders for free from hand or Reserve Deck; reshuffle.");
+        setGameText("USED: Deploy Cloning Cylinders for free from hand or Reserve Deck; reshuffle. " +
+                "LOST: If a battle was just initiated at a site, each of your clones present is power +1 (+2 and immune to attrition if with a Jedi) for remainder of turn.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_15);
         setTestingText("For the Republic!");
     }
@@ -47,12 +48,12 @@ public class Card501_012 extends AbstractUsedInterrupt {
         if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.site)
                 && GameConditions.isDuringBattleWithParticipant(game, filter)) {
 
-            final int modifierAmount = (GameConditions.isDuringBattleWithParticipant(game, Filters.Jedi)?2:1);
+            final int modifierAmount = (GameConditions.isDuringBattleWithParticipant(game, Filters.Jedi) ? 2 : 1);
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setText("Add power and immunity to your clones");
             // Allow response(s)
-            action.allowResponses("Make clones present power +"+modifierAmount+" and immune to attrition",
+            action.allowResponses("Make clones present power +" + modifierAmount + " and immune to attrition",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
@@ -63,7 +64,7 @@ public class Card501_012 extends AbstractUsedInterrupt {
                                 action.appendEffect(
                                         new AddUntilEndOfTurnModifierEffect(action,
                                                 new PowerModifier(self, Filters.in(clones), modifierAmount),
-                                                "Makes " + GameUtils.getAppendedNames(clones) + " power +"+modifierAmount));
+                                                "Makes " + GameUtils.getAppendedNames(clones) + " power +" + modifierAmount));
                                 action.appendEffect(
                                         new AddUntilEndOfTurnModifierEffect(action,
                                                 new ImmuneToAttritionModifier(self, Filters.in(clones)),
@@ -89,7 +90,7 @@ public class Card501_012 extends AbstractUsedInterrupt {
             final Filter cloningCylinders = Filters.title(Title.Cloning_Cylinders);
 
             if (GameConditions.hasInHand(game, playerId, Filters.and(cloningCylinders, Filters.deployable(self, null, true, 0)))) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
                 action.setText("Deploy Cloning Cylinders from hand");
                 action.allowResponses("Deploy Cloning Cylinders from hand",
                         new RespondablePlayCardEffect(action) {
@@ -103,7 +104,7 @@ public class Card501_012 extends AbstractUsedInterrupt {
             }
 
             if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Cloning_Cylinders)) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
                 action.setText("Deploy Cloning Cylinders from Reserve Deck");
                 // Allow response(s)
                 action.allowResponses("Deploy Cloning Cylinders from Reserve Deck",

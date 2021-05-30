@@ -5743,6 +5743,9 @@ public class FireWeaponActionBuilder {
                                                             if (Filters.or(Filters.Corran_Horn, Filters.Kanan, Filters.ObiWan).accepts(game, gameState.getWeaponFiringState().getCardFiringWeapon())) {
                                                                 action.appendEffect(
                                                                         new HitCardAndMayNotBeUsedToSatisfyAttritionEffect(action, cardFiredAt, _weaponOrCardWithPermanentWeapon, _permanentWeapon, gameState.getWeaponFiringState().getCardFiringWeapon()));
+                                                                action.appendEffect(
+                                                                        new LoseForceEffect(action, _opponent, 1)
+                                                                );
                                                             } else {
                                                                 action.appendEffect(
                                                                         new HitCardEffect(action, cardFiredAt, _weaponOrCardWithPermanentWeapon)
