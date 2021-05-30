@@ -32,6 +32,6 @@ public class SwccgoAsyncServer {
         bootstrap.setPipelineFactory(new SwccgoServerPipelineFactory());
         bootstrap.setOption("child.tcpNoDelay", true);
         bootstrap.setOption("child.keepAlive", true);
-        bootstrap.bind(new InetSocketAddress(Integer.parseInt("8081")));
+        bootstrap.bind(new InetSocketAddress(Integer.parseInt(ApplicationConfiguration.getProperty("port"))));
     }
 }
