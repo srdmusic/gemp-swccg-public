@@ -17407,6 +17407,7 @@ public class Filters {
     public static final Filter Dark_Deal = Filters.title(Title.Dark_Deal);
     public static final Filter Dark_Forces = Filters.title(Title.Dark_Forces);
     public static final Filter Dark_Jedi = Filters.and(Filters.side(Side.DARK), Filters.character, Filters.abilityMoreThanOrEqualTo(6));
+    public static final Filter Dark_Jedi_Master = Filters.type(CardType.DARK_JEDI_MASTER);
     public static final Filter Dark_Jedi_Presence = Filters.title(Title.Dark_Jedi_Presence);
     public static final Filter Dark_Maneuvers = Filters.title(Title.Dark_Maneuvers);
     public static final Filter Dark_Side = Filters.side(Side.DARK);
