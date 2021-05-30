@@ -2158,6 +2158,11 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             modifierCollector.addModifier(modifier);
         }
 
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.UNMODIFIABLE_DESTINY, physicalCard)) {
+            result = modifier.getValue(gameState, this, physicalCard);
+            modifierCollector.addModifier(modifier);
+        }
+
         return result;
     }
 
