@@ -155,7 +155,7 @@ public interface Title {
     String Carbonite_Chamber_Console = "Carbonite Chamber Console";
     String Careful_Planning = "Careful Planning";
     String Carida = "Carida";
-    String Cassian = "Captain Cassian Andor";
+    String Captain_Cassian_Andor = "Captain Cassian Andor";
     String Cease_Fire = "Cease Fire!";
     String Cell_2187 = "Cell 2187";
     String Chandrila = "Chandrila";
