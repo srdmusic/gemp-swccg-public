@@ -86,7 +86,7 @@ public class Card501_019 extends AbstractEpicEventDeployable {
                         @Override
                         protected void cardSelected(PhysicalCard selectedCard) {
                             action.appendEffect(
-                                    new PutStackedCardInLostPileEffect(action, playerId, selectedCard, false)
+                                    new PutStackedCardInLostPileEffect(action, playerId, selectedCard, true)
                             );
 
                         }

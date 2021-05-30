@@ -3471,6 +3471,7 @@ var fixedImages = {
 "501_50":"/gemp-swccg/images/cards/Premiere-Dark/deathstarwarroom.gif",
 "501_51":"/gemp-swccg/images/cards/Endor-Dark/endorlandingplatformdockingbay.gif",
 "501_56":"/gemp-swccg/images/cards/Virtual7-Dark/directororsonkrennic.gif",
+"501_60":"/gemp-swccg/images/cards/SpecialEdition-Light/deathstardetentionblockcorridor.gif",
 "501_74":"/gemp-swccg/images/cards/Virtual11-Dark/coruscantprivateplatform.gif",
 "501_75":"/gemp-swccg/images/cards/Endor-Dark/endorbackdoor.gif",
 "501_76":"/gemp-swccg/images/cards/Premiere-Dark/tatooine.gif",
@@ -3951,6 +3952,7 @@ var Card = Class.extend({
                    (cardNo == 32) ||
                    (cardNo == 50) ||
                    (cardNo == 51) ||
+                   (cardNo == 60) ||
                    (cardNo == 74) ||
                    (cardNo == 75);
         }
