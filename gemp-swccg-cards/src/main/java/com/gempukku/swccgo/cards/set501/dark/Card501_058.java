@@ -30,6 +30,7 @@ public class Card501_058 extends AbstractAlien {
         super(Side.DARK, 2, 3, 4, 2, 4, "Rukh", Uniqueness.UNIQUE);
         setLore("Noghri assassin.");
         setGameText("If Rukh armed with a blaster: your assassins and leaders here are immune to Blaster Proficiency and Clash Of Sabers, and either player recirculated (except at end of turn), may peek at top 2 cards of your Reserve Deck and take one into hand.");
+        addIcons(Icon.WARRIOR);
         setSpecies(Species.NOGHRI);
         addKeyword(Keyword.ASSASSIN);
         setTestingText("Rukh");
