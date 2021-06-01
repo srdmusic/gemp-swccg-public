@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.CancelBattleEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -61,11 +62,15 @@ public class Card501_018_BACK extends AbstractObjective {
 
         // Check condition(s)
         if (GameConditions.isDuringOpponentsPhase(game, playerId, Phase.DRAW)
-                && !GameConditions.hasInitiatedBattleThisTurn(game, opponent)) {
+                && !GameConditions.hasInitiatedBattleThisTurn(game, opponent)
+                && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId)) {
 
             TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
             action.setText("Retrieve 1 Force");
             // Perform result(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action)
+            );
             action.appendEffect(
                     new RetrieveForceEffect(action, playerId, 1));
             return Collections.singletonList(action);
