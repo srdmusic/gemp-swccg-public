@@ -38,7 +38,6 @@ public class StackCardsFromHandEffect extends AbstractSubActionEffect {
      */
     public StackCardsFromHandEffect(Action action, String playerId, int minimum, int maximum, PhysicalCard stackOn, boolean faceDown) {
         this(action, playerId, minimum, maximum, stackOn, faceDown, Filters.any);
-        _hidden = !faceDown;
     }
 
     /**
@@ -60,7 +59,7 @@ public class StackCardsFromHandEffect extends AbstractSubActionEffect {
         _stackOn = stackOn;
         _faceDown = faceDown;
         _filters = filters;
-        _hidden = false;
+        _hidden = faceDown;
         _that = this;
     }
 

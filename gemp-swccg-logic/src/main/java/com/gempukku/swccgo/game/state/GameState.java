@@ -2178,8 +2178,8 @@ public class GameState implements Snapshotable<GameState> {
                 listener.cardCreated(card, this, false);
         }
 
-        // If the card is now "in play", "inserted", or "stacked" , then turn on its "while active in play" or "while stacked" modifiers.
-        if (zone.isInPlay() || card.isInserted() || card.getZone() == Zone.STACKED) {
+        // If the card is now "in play", "inserted", "stacked", or "out of play" then turn on its "while active in play", "while stacked" or "while out of play" modifiers.
+        if (zone.isInPlay() || card.isInserted() || card.getZone() == Zone.STACKED || card.getZone() == Zone.OUT_OF_PLAY) {
             startAffecting(_game, card);
         }
     }

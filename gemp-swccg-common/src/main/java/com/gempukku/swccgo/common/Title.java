@@ -155,7 +155,7 @@ public interface Title {
     String Carbonite_Chamber_Console = "Carbonite Chamber Console";
     String Careful_Planning = "Careful Planning";
     String Carida = "Carida";
-    String Cassian = "Captain Cassian Andor";
+    String Captain_Cassian_Andor = "Captain Cassian Andor";
     String Cease_Fire = "Cease Fire!";
     String Cell_2187 = "Cell 2187";
     String Chandrila = "Chandrila";
@@ -261,6 +261,7 @@ public interface Title {
     String Demotion = "Demotion";
     String Den_Of_Thieves = "Den Of Thieves";
     String Dengars_Blaster_Carbine =  "Dengar's Blaster Carbine";
+    String Deploy_The_Garrison = "Deploy The Garrison!";
     String Derlin = "Major Bren Derlin";
     String Desert_Heart = "Tatooine: Desert Heart";
     String Despair = "Despair";
@@ -295,6 +296,7 @@ public interface Title {
     String Dr_Evazan = "Dr. Evazan";
     String Dragonsnake = "Dragonsnake";
     String Draw_Their_Fire = "Draw Their Fire";
+    String Dreaded_Imperial_Starfleet = "Dreaded Imperial Starfleet";
     String Droid_Junkheap = "Sandcrawler: Droid Junkheap";
     String Droid_Merchant = "Droid Merchant";
     String Droid_Racks = "Droid Racks";
@@ -714,6 +716,7 @@ public interface Title {
     String Ominous_Rumors = "Ominous Rumors";
     String Ommni_Box = "Ommni Box";
     String On_Target = "On Target";
+    String On_The_Verge_Of_Greatness = "On The Verge Of Greatness";
     String One_In_A_Million = "One In A Million";
     String One_More_Pass = "One More Pass";
     String Onyx_2 = "Onyx 2";
@@ -868,6 +871,7 @@ public interface Title {
     String Scanning_Crew = "Scanning Crew";
     String Scarif = "Scarif";
     String Scarif_Citadel_Tower = "Scarif: Citadel Tower";
+    String Scarif_Landing_Pad_Five = "Scarif: Landing Pad Five (Docking Bay)";
     String Scarif_Landing_Pad_Nine = "Scarif: Landing Pad Nine (Docking Bay)";
     String Scarif_Turbolift_Complex = "Scarif: Turbolift Complex";
     String Scimitar_1 = "Scimitar 1";
@@ -965,6 +969,7 @@ public interface Title {
     String Tantive_IV = "Tantive IV";
     String Targeting_Computer = "Targeting Computer";
     String Target_The_Main_Generator = "Target The Main Generator";
+    String Tarkin_Doctrine = "Tarkin Doctrine";
     String Tatooine = "Tatooine";
     String Tatooine_Celebration = "Tatooine Celebration";
     String Tatooine_Occupation = "Tatooine Occupation";

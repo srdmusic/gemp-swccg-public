@@ -44,7 +44,7 @@ public class Card501_075 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new PowerModifier(self, Filters.or(Keyword.DEATH_TROOPER, Filters.Krennic), 1));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.here(self), Filters.or(Keyword.DEATH_TROOPER, Filters.Krennic)), 1));
         return modifiers;
     }
 }

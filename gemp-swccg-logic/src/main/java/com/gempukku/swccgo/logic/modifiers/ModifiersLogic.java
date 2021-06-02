@@ -2158,6 +2158,11 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             modifierCollector.addModifier(modifier);
         }
 
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.UNMODIFIABLE_DESTINY, physicalCard)) {
+            result = modifier.getValue(gameState, this, physicalCard);
+            modifierCollector.addModifier(modifier);
+        }
+
         return result;
     }
 
@@ -6078,6 +6083,21 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     public float getBlowAwayBlockadeFlagshipAttemptTotal(GameState gameState, float baseTotal) {
         float result = baseTotal;
         for (Modifier modifier : getModifiers(gameState, ModifierType.BLOW_AWAY_BLOCKADE_FLAGSHIP_ATTEMPT_TOTAL)) {
+            result += modifier.getValue(gameState, this, (PhysicalCard) null);
+        }
+        return Math.max(0, result);
+    }
+
+    /**
+     * Gets the 'blow away' Shield Gate attempt total.
+     * @param gameState the game state
+     * @param baseTotal the base total
+     * @return the total
+     */
+    @Override
+    public float getBlowAwayShieldGateAttemptTotal(GameState gameState, float baseTotal) {
+        float result = baseTotal;
+        for (Modifier modifier : getModifiers(gameState, ModifierType.BLOW_AWAY_SHIELD_GATE_ATTEMPT_TOTAL)) {
             result += modifier.getValue(gameState, this, (PhysicalCard) null);
         }
         return Math.max(0, result);
@@ -12245,6 +12265,14 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     @Override
     public boolean isPlayingCardProhibited(GameState gameState, PhysicalCard card, boolean isDejarikRules) {
         if (!getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY, card).isEmpty()) {
+            if (!getModifiersAffectingCard(gameState, ModifierType.IGNORES_DEPLOYMENT_RESTRICTIONS_FROM_CARD, card).isEmpty()) {
+                for (Modifier mayNotPlayModifier : getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY, card)) {
+                    for (Modifier ignoresDeploymentRestrictionFromCardModifier : getModifiersAffectingCard(gameState, ModifierType.IGNORES_DEPLOYMENT_RESTRICTIONS_FROM_CARD, card)) {
+                        Filter cardFilter = ((IgnoresDeploymentRestrictionsFromCardModifier) ignoresDeploymentRestrictionFromCardModifier).getCardFilter();
+                        return !cardFilter.accepts(gameState.getGame(), mayNotPlayModifier.getSource(gameState));
+                    }
+                }
+            }
             return true;
         }
         if (isDejarikRules && !getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY_USING_DEJARIK_RULES, card).isEmpty()) {
@@ -15061,7 +15089,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                                         Condition condition = modifier.getCondition();
                                         Condition additionalCondition = modifier.getAdditionalCondition(gameState, this, card);
                                         if ((condition == null || condition.isFulfilled(gameState, this)) && (additionalCondition == null || additionalCondition.isFulfilled(gameState, this)))
-                                            if (modifier.getSource(gameState) == null || modifier.isPersistent() || modifier.getSource(gameState).getZone() == Zone.STACKED || modifier.isWhileInactiveInPlay() == !gameState.isCardInPlayActive(modifier.getSource(gameState), false, true, false, false, false, false, false, false))
+                                            if (modifier.getSource(gameState) == null || modifier.isPersistent() || modifier.getSource(gameState).getZone() == Zone.STACKED || modifier.getSource(gameState).getZone() == Zone.OUT_OF_PLAY || modifier.isWhileInactiveInPlay() == !gameState.isCardInPlayActive(modifier.getSource(gameState), false, true, false, false, false, false, false, false))
                                                 if (modifier.getSource(gameState) == null || modifier.isPersistent() || !modifier.isFromPermanentPilot() || hasPermanentPilot(gameState, modifier.getSource(gameState)))
                                                     if (modifier.getSource(gameState) == null || modifier.isPersistent() || !modifier.isFromPermanentAstromech() || hasPermanentAstromech(gameState, modifier.getSource(gameState)))
                                                         if (checkAffectsCardFirst || card == null || modifier.affectsCard(gameState, this, card))
@@ -16316,5 +16344,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             return ((ChangeCardSubtypeModifier)m).getSubtype();
         }
         return null;
+    }
+
+    public boolean isShieldGateBlownAway(GameState gameState) {
+        return !getModifiers(gameState, ModifierType.SHIELD_GATE_BLOWN_AWAY).isEmpty();
     }
 }

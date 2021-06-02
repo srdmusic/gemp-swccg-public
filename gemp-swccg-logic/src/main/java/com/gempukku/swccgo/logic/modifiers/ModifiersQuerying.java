@@ -4270,6 +4270,14 @@ public interface ModifiersQuerying {
     float getBlowAwayBlockadeFlagshipAttemptTotal(GameState gameState, float baseTotal);
 
     /**
+     * Gets the 'blow away' Shield Gate attempt total.
+     * @param gameState the game state
+     * @param baseTotal the base total
+     * @return the total
+     */
+    float getBlowAwayShieldGateAttemptTotal(GameState gameState, float baseTotal);
+
+    /**
      * Determines if the specified spy may not 'break cover' during deploy using normal Undercover rules.
      * @param gameState the game state
      * @param card the card
@@ -4571,4 +4579,5 @@ public interface ModifiersQuerying {
     boolean isCommuning(GameState gameState, PhysicalCard card);
     Collection<PhysicalCard> getCardsConsideredOutOfPlay(GameState gameState);
     Collection<PhysicalCard> getActiveCardsAffectedByModifier(GameState gameState, ModifierType modifierType);
+    boolean isShieldGateBlownAway(GameState gameState);
 }

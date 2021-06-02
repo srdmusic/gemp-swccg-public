@@ -804,7 +804,7 @@ public class SwccgGameMediator {
             }
 
             // Show affecting cards
-            if (cardZone.isInPlay() || cardZone == Zone.HAND || cardZone == Zone.STACKED) {
+            if (cardZone.isInPlay() || cardZone == Zone.HAND || cardZone == Zone.STACKED || cardZone == Zone.OUT_OF_PLAY) {
                 for (Modifier modifier : modifiersQuerying.getModifiersAffecting(gameState, card)) {
                     modifierCollector.addModifier(modifier);
                 }
@@ -1351,6 +1351,10 @@ public class SwccgGameMediator {
             if (Filters.or(Filters.Old_Allies, Filters.We_Need_Your_Help).accepts(_swccgoGame, objective)) {
                 // Old Allies
                 objectiveLabel = "Old Allies";
+            }
+            if (Filters.or(Filters.On_The_Verge_Of_Greatness, Filters.Deploy_The_Garrison).accepts(_swccgoGame, objective)) {
+                // On The Verge Of Greatness
+                objectiveLabel = "On The Verge Of Greatness";
             }
             if (Filters.or(Filters.Local_Uprising, Filters.Liberation, Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
                 // Operatives

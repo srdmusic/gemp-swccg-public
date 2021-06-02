@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractRepublicSith;
+import com.gempukku.swccgo.cards.AbstractSith;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OnCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
@@ -25,10 +25,10 @@ import java.util.List;
 /**
  * Set: Set 15
  * Type: Character
- * Subtype: Imperial
+ * Subtype: Sith
  * Title: Darth Vader, Betrayer Of The Jedi
  */
-public class Card501_078 extends AbstractRepublicSith {
+public class Card501_078 extends AbstractSith {
     public Card501_078() {
         super(Side.DARK, 1, 6, 6, 6, 8, "Darth Vader, Betrayer Of The Jedi", Uniqueness.UNIQUE);
         setVirtualSuffix(true);

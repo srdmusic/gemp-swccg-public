@@ -39,8 +39,8 @@ public class Card501_018 extends AbstractObjective {
         super(Side.LIGHT, 0, Title.Rescue_The_Princess);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Central Core, A Power Loss, Trash Compactor, and Detention Block Corridor (with Prisoner 2187 imprisoned there)." +
-                "For remainder of game, Path Of Least Resistance is canceled. Your Death Star sites generate +1 Force for you and ignore Set Your Course For Alderaan. Jedi (except Obi-Wan) are lost." +
-                "Flip this card If Leia is present at a Death Star site and A Power Loss is ‘shut down.’");
+                "For remainder of game, Path Of Least Resistance is canceled. Your Death Star sites generate +1 Force for you and ignore Set Your Course For Alderaan. Death Star sites may not be converted. Jedi (except Obi-Wan) are lost." +
+                "Flip this card if Leia is present at a Death Star site and A Power Loss is ‘shut down.’");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_15);
         setVirtualSuffix(true);
         setTestingText("Rescue The Princess / Sometimes I Amaze Even Myself (V)");
@@ -101,7 +101,7 @@ public class Card501_018 extends AbstractObjective {
         modifiers.add(new ForceGenerationModifier(self, yourDeathStarSites, 1, playerId));
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.not(Filters.ObiWan)), playerId));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Set_Your_Course_For_Alderaan, ModifyGameTextType.SET_YOUR_COURSE_FOR_ALDERAAN__ONLY_AFFECTS_DARK_SIDE_DEATH_STAR_SITES));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.I_Cant_Believe_Hes_Gone, ModifyGameTextType.I_CANT_BELIEVE_HES_GONE__ONLY_EFFECTS_BATTLES_WITH_LUKE_OR_LEIA));
+        modifiers.add(new MayNotBeConvertedModifier(self, Filters.Death_Star_site));
         return modifiers;
     }
 

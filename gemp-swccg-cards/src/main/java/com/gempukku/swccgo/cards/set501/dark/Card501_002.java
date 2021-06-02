@@ -4,10 +4,8 @@ import com.gempukku.swccgo.cards.AbstractCombatVehicle;
 import com.gempukku.swccgo.cards.AbstractPermanentAboard;
 import com.gempukku.swccgo.cards.AbstractPermanentPilot;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.CalculationTotalModifier;
 import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -24,7 +22,7 @@ import java.util.List;
  */
 public class Card501_002 extends AbstractCombatVehicle {
     public Card501_002() {
-        super(Side.DARK, 1, 7, 6, 5, null, 1, 7, "Blizzard 8", Uniqueness.UNIQUE);
+        super(Side.DARK, 1, 7, 6, 6, null, 1, 7, "Blizzard 8", Uniqueness.UNIQUE);
         setLore("Death Squadron");
         setGameText("Permanent pilot provides ability 2. Draws one battle destiny if unable to otherwise. May add 1 pilot and 8 passengers. Immune to attrition <4.");
         addModelType(ModelType.AT_AT);

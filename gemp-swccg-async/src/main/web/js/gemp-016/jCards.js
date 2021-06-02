@@ -3427,7 +3427,7 @@ var fixedImages = {
 "501_6":"/gemp-swccg/images/cards/CloudCity-Dark/cloudcityeastplatformdockingbay.gif",
 "501_7":"/gemp-swccg/images/cards/ANewHope-Light/tzizvvt.gif",
 "501_8":"/gemp-swccg/images/cards/Virtual9-Light/lieutenantkaydelconnix.gif",
-"501_9":"/gemp-swccg/images/cards/Premiere-Dark/observationholocam.gif",
+"501_9":"https://res.starwarsccg.org/cards/Virtual9-Light/hires/abraveresistance.png",
 "501_10":"/gemp-swccg/images/cards/Virtual7-Light/sabinewren.gif",
 "501_11":"/gemp-swccg/images/cards/Premiere-Light/jawasiesta.gif",
 "501_12":"/gemp-swccg/images/cards/Endor-Light/firefight.gif",
@@ -3462,8 +3462,19 @@ var fixedImages = {
 "501_42":"/gemp-swccg/images/cards/Endor-Light/generalsolo.gif",
 "501_43":"/gemp-swccg/images/cards/ANewHope-Light/cell2187.gif",
 "501_44":"/gemp-swccg/images/cards/SpecialEdition-Light/slightweaponsmalfunction.gif",
-"501_58":"/gemp-swccg/images/cards/ANewHope-Dark/advosze.gif", // Rukh
+"501_45":"/gemp-swccg/images/cards/Virtual1-Dark/accordingtomydesign.gif",
+"501_46":"/gemp-swccg/images/cards/Premiere-Light/jedipresence.gif",
+"501_47":"/gemp-swccg/images/cards/Virtual11-Light/whereshan.gif",
+"501_48":"/gemp-swccg/images/cards/ThirdAnthology-Dark/setyourcourseforalderaan.gif",
+"501_48_BACK":"/gemp-swccg/images/cards/Endor-Dark/imperialoutpost.gif",
+"501_49":"/gemp-swccg/images/cards/ANewHope-Dark/deathstar.gif",
+"501_50":"/gemp-swccg/images/cards/Premiere-Dark/deathstarwarroom.gif",
+"501_51":"/gemp-swccg/images/cards/Endor-Dark/endorlandingplatformdockingbay.gif",
+"501_52":"/gemp-swccg/images/cards/Virtual4-Light/bailorgana.gif",
+"501_56":"/gemp-swccg/images/cards/Virtual7-Dark/directororsonkrennic.gif",
+"501_58":"/gemp-swccg/images/cards/ANewHope-Dark/advosze.gif",
 "501_59":"/gemp-swccg/images/cards/ANewHope-Dark/dannikjerriko.gif",
+"501_60":"/gemp-swccg/images/cards/SpecialEdition-Light/deathstardetentionblockcorridor.gif",
 "501_74":"/gemp-swccg/images/cards/Virtual11-Dark/coruscantprivateplatform.gif",
 "501_75":"/gemp-swccg/images/cards/Endor-Dark/endorbackdoor.gif",
 "501_76":"/gemp-swccg/images/cards/Premiere-Dark/tatooine.gif",
@@ -3494,6 +3505,7 @@ var fixedImages = {
 "203_21ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/wildkarrde_ai.png",
 "213_10ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Dark/maul_ai.png",
 "213_39ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/qira_ai.png",
+"204_26ai":"http://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/jakku_ai.png",
 
 
 };
@@ -3941,6 +3953,9 @@ var Card = Class.extend({
                    (cardNo == 22) ||
                    (cardNo == 31) ||
                    (cardNo == 32) ||
+                   (cardNo == 50) ||
+                   (cardNo == 51) ||
+                   (cardNo == 60) ||
                    (cardNo == 74) ||
                    (cardNo == 75);
         }

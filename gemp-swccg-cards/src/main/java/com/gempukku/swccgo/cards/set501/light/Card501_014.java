@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
@@ -12,7 +13,10 @@ import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.IconModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
 
@@ -31,7 +35,7 @@ public class Card501_014 extends AbstractRebel {
     public Card501_014() {
         super(Side.LIGHT, 1, 5, 4, 5, 8, Title.Daughter_Of_Skywalker, Uniqueness.UNIQUE);
         setLore("Scout. Leader. Made friends with Wicket. Negotiated an alliance with the Ewoks. Leia found out the truth about her father from Luke in the Ewok village.");
-        setGameText("Adds 1 [LS] Icon here. When in battle, may target one opponent’s character present. Draw destiny. Target’s gametext canceled and power -2 if destiny > ability. Scouts here are immune to Sniper, You Are Beaten and to attrition <4.");
+        setGameText("Adds one [Light Side] icon at same Endor site. During battle, may target one opponent's character present. Draw destiny. If destiny > ability, target is power -2 and its game text is canceled. Your scouts here are immune to Sniper, You Are Beaten, and attrition < 4.");
         addPersona(Persona.LEIA);
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_15, Icon.WARRIOR);
         addKeywords(Keyword.SCOUT, Keyword.LEADER, Keyword.FEMALE);
@@ -44,7 +48,7 @@ public class Card501_014 extends AbstractRebel {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         Filter scoutsHere = Filters.and(Filters.your(self), Filters.scout, Filters.here(self));
 
-        modifiers.add(new IconModifier(self, Filters.sameLocation(self), Icon.LIGHT_FORCE, 1));
+        modifiers.add(new IconModifier(self, Filters.sameSite(self), new AtCondition(self, Filters.Endor_site), Icon.LIGHT_FORCE, 1));
         modifiers.add(new ImmuneToTitleModifier(self, scoutsHere, Title.Sniper));
         modifiers.add(new ImmuneToTitleModifier(self, scoutsHere, Title.You_Are_Beaten));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, scoutsHere, 4));
@@ -66,6 +70,7 @@ public class Card501_014 extends AbstractRebel {
             && GameConditions.canTarget(game, self, targetFilter))
         {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Target opponent's character");
 
             action.appendTargeting(
                     new TargetCardOnTableEffect(action, playerId, "Choose character", targetFilter) {

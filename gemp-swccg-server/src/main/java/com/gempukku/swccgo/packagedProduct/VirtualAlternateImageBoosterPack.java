@@ -65,7 +65,7 @@ public class VirtualAlternateImageBoosterPack extends BasePackagedCardProduct {
         possibleCards.add("200_77^"); //DS-61-5
         possibleCards.add("203_27^"); //General Grievous
         possibleCards.add("201_18^"); //Green Leader In Green Squadron 1
-        possibleCards.add("204_51^"); //Jakku
+        possibleCards.add("204_51^"); //Jakku (DS)
         possibleCards.add("201_25^"); //Jango Fett
         possibleCards.add("209_49^"); //Jedha: Jedha City
         possibleCards.add("203_6^"); //Kanan Jarrus
@@ -75,6 +75,7 @@ public class VirtualAlternateImageBoosterPack extends BasePackagedCardProduct {
         possibleCards.add("201_40^"); //Slave I, Symbol Of Fear
         possibleCards.add("203_14^"); //Stolen Data Tapes
         possibleCards.add("203_21^"); //Wild Karrde
+        possibleCards.add("204_26^"); //Jakku (LS)
 
 
         Collections.shuffle(possibleCards, _random);
