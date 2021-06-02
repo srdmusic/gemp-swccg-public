@@ -33,7 +33,7 @@ public class Card501_059 extends AbstractAlien {
         super(Side.DARK, 2, 3, 3, 3, 5, "Dannik Jerriko", Uniqueness.UNIQUE);
         setLore("Anzati assassin. Cheek-folds hide proboscises which allow him to 'eat the soup' (consume the life Force) of his victims. Smokes t'bac. Currently working for Jabba.");
         setGameText("Characters lost from here, may not be removed from lost pile. (Except to be placed out of play.) While armed with a blaster, adds one battle destiny. Anything he hits is power and forfeit -2.");
-        addIcons(Icon.A_NEW_HOPE, Icon.WARRIOR);
+        addIcons(Icon.VIRTUAL_SET_15, Icon.A_NEW_HOPE, Icon.WARRIOR);
         setSpecies(Species.ANZATI);
         addKeyword(Keyword.ASSASSIN);
         setTestingText("Dannik Jerriko (V)");

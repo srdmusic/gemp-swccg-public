@@ -28,11 +28,11 @@ import java.util.List;
 public class Card501_058 extends AbstractAlien {
     public Card501_058() {
         super(Side.DARK, 2, 3, 4, 2, 4, "Rukh", Uniqueness.UNIQUE);
-        setLore("Noghri assassin.");
+        setLore("Noghri assassin and bodyguard.");
         setGameText("If Rukh armed with a blaster: your assassins and leaders here are immune to Blaster Proficiency and Clash Of Sabers, and either player recirculated (except at end of turn), may peek at top 2 cards of your Reserve Deck and take one into hand.");
-        addIcons(Icon.WARRIOR);
+        addIcons(Icon.VIRTUAL_SET_15, Icon.WARRIOR);
         setSpecies(Species.NOGHRI);
-        addKeyword(Keyword.ASSASSIN);
+        addKeywords(Keyword.ASSASSIN, Keyword.BODYGUARD);
         setTestingText("Rukh");
     }
 
@@ -50,7 +50,7 @@ public class Card501_058 extends AbstractAlien {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         if (TriggerConditions.eitherPlayerJustRecirculatedExceptAtEndOfTurn(effectResult) &&
                 GameConditions.hasReserveDeck(game, playerId) &&
-                (GameConditions.canSpot(game, self, Filters.and(self, Filters.armedWith(Filters.blaster))))) {
+                (GameConditions.isArmedWith(game, self, Filters.blaster))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Peek at top two cards of Reserve Deck.");
