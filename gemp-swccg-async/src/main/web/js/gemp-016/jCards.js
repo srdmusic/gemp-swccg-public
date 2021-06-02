@@ -3472,6 +3472,8 @@ var fixedImages = {
 "501_51":"/gemp-swccg/images/cards/Endor-Dark/endorlandingplatformdockingbay.gif",
 "501_52":"/gemp-swccg/images/cards/Virtual4-Light/bailorgana.gif",
 "501_56":"/gemp-swccg/images/cards/Virtual7-Dark/directororsonkrennic.gif",
+"501_58":"/gemp-swccg/images/cards/ANewHope-Dark/advosze.gif",
+"501_59":"/gemp-swccg/images/cards/ANewHope-Dark/dannikjerriko.gif",
 "501_60":"/gemp-swccg/images/cards/SpecialEdition-Light/deathstardetentionblockcorridor.gif",
 "501_74":"/gemp-swccg/images/cards/Virtual11-Dark/coruscantprivateplatform.gif",
 "501_75":"/gemp-swccg/images/cards/Endor-Dark/endorbackdoor.gif",

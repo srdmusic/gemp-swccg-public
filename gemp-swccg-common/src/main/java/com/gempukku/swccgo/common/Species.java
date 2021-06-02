@@ -69,6 +69,7 @@ public enum Species implements Filterable {
     NEIMOIDIAN("Neimoidian", true),
     NIKTO("Nikto", true),
     NIMBANEL("Nimbanel", true),
+    NOGHRI("Noghri", true),
     ORTOLAN("Ortolan", true),
     PACITHHIP("Pacithhip", true),
     PALOWICK("Pa'lowick", true),

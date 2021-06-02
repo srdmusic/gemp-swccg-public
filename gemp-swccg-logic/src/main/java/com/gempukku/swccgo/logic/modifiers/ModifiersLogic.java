@@ -14637,6 +14637,17 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     }
 
     /**
+     * Determines if the specified card may not be removed from lost pile if just lost
+     * @param gameState the game state
+     * @param card the card
+     * @return true if card may not be placed out of play, otherwise false
+     */
+    @Override
+    public boolean mayNotRemoveJustLostCardFromLostPile(GameState gameState, PhysicalCard card) {
+        return (!getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_REMOVE_JUST_LOST_CARDS_FROM_LOST_PILE, card).isEmpty());
+    }
+
+    /**
      * Determines if a card may not be targeted by weapons used by the specified card.
      * @param gameState the game state
      * @param cardTargeted the card targeted
