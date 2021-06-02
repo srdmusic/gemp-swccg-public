@@ -39,17 +39,18 @@ public class Card501_058 extends AbstractAlien {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        ArmedWithCondition ruhkArmedWithBlaster = new ArmedWithCondition(self, Filters.blaster);
+        ArmedWithCondition rukhArmedWithBlaster = new ArmedWithCondition(self, Filters.blaster);
         Filter yourAssassinsAndLeaders = Filters.and(Filters.your(self.getOwner()), Filters.or(Filters.assassin, Filters.leader));
-        modifiers.add(new ImmuneToTitleModifier(self, yourAssassinsAndLeaders, ruhkArmedWithBlaster, Title.Blaster_Proficiency));
-        modifiers.add(new ImmuneToTitleModifier(self, yourAssassinsAndLeaders, ruhkArmedWithBlaster, Title.Clash_Of_Sabers));
+        modifiers.add(new ImmuneToTitleModifier(self, yourAssassinsAndLeaders, rukhArmedWithBlaster, Title.Blaster_Proficiency));
+        modifiers.add(new ImmuneToTitleModifier(self, yourAssassinsAndLeaders, rukhArmedWithBlaster, Title.Clash_Of_Sabers));
         return modifiers;
     }
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         if (TriggerConditions.eitherPlayerJustRecirculatedExceptAtEndOfTurn(effectResult) &&
-                GameConditions.hasReserveDeck(game, playerId)) {
+                GameConditions.hasReserveDeck(game, playerId) &&
+                (GameConditions.canSpot(game, self, Filters.and(self, Filters.armedWith(Filters.blaster))))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Peek at top two cards of Reserve Deck.");
