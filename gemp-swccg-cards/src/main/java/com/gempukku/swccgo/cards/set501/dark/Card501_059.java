@@ -2,22 +2,22 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.conditions.ArmedWithCondition;
-import com.gempukku.swccgo.cards.effects.PreventEffectOnCardEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.ModifyForfeitEffect;
 import com.gempukku.swccgo.logic.effects.ModifyPowerEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotRemoveJustLostCardsFromLostPileModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.AboutToRemoveJustLostCardFromLostPileResult;
 import com.gempukku.swccgo.logic.timing.results.HitResult;
+import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -51,15 +51,14 @@ public class Card501_059 extends AbstractAlien {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
         // Prevent character removal from Lost Pile
-        Filter characterFilter = Filters.and(Filters.character, Filters.here(self));
-        if (TriggerConditions.isAboutToRemoveJustLostCardFromLostPile(game, effectResult, characterFilter) &&
-                (!TriggerConditions.isAboutToBePlacedOutOfPlayFromTable(game, effectResult, characterFilter))) {
-            final AboutToRemoveJustLostCardFromLostPileResult result = (AboutToRemoveJustLostCardFromLostPileResult) effectResult;
-            final PhysicalCard cardToRemoveFromLostPile = result.getCardToRemoveFromLostPile();
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText(GameUtils.getFullName(cardToRemoveFromLostPile) + " may not be removed from Lost Pile.");
-            action.appendEffect( new PreventEffectOnCardEffect(action, result.getPreventableCardEffect(), cardToRemoveFromLostPile, GameUtils.getCardLink(cardToRemoveFromLostPile) + " prevented from being removed from Lost Pile."));
+        // Check condition(s)
+        if (TriggerConditions.justLostFromLocation(game, effectResult, Filters.and(Filters.opponents(self), Filters.character), Filters.here(self))) {
+            final PhysicalCard lostCard = ((LostFromTableResult) effectResult).getCard();
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.appendEffect(
+                    new AddUntilEndOfTurnModifierEffect(action, new MayNotRemoveJustLostCardsFromLostPileModifier(self, Filters.sameCardId(lostCard))
+                            , "Prevents characters lost from here being removed from lost pile.")
+            );
             actions.add(action);
         }
 

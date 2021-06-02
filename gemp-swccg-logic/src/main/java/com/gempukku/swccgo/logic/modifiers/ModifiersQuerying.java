@@ -4155,6 +4155,14 @@ public interface ModifiersQuerying {
     boolean mayNotBePlacedOutOfPlay(GameState gameState, PhysicalCard card);
 
     /**
+     * Determines if the specified card may not be removed from lost pile if just lost
+     * @param gameState the game state
+     * @param card the card
+     * @return true if card may not be placed out of play, otherwise false
+     */
+    boolean mayNotRemoveJustLostCardFromLostPile(GameState gameState, PhysicalCard card);
+
+    /**
      * Determines if a card may not be targeted by weapons used by the specified card.
      * @param gameState the game state
      * @param cardTargeted the card targeted
