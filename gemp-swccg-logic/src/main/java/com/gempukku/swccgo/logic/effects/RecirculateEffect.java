@@ -1,6 +1,5 @@
 package com.gempukku.swccgo.logic.effects;
 
-import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.timing.AbstractStandardEffect;
@@ -24,11 +23,9 @@ public class RecirculateEffect extends AbstractStandardEffect {
     protected FullEffectResult playEffectReturningResult(SwccgGame game) {
         GameState gameState = game.getGameState();
         if (!gameState.getUsedPile(_player).isEmpty()) {
-            if (gameState.getCurrentPhase() != Phase.END_OF_TURN) {
-                game.getActionsEnvironment().emitEffectResult(new RecirculateResult(_action.getPerformingPlayer()));
-            }
             gameState.sendMessage(_player + " re-circulates");
             gameState.recirculate(_player);
+            game.getActionsEnvironment().emitEffectResult(new RecirculateResult(_action.getPerformingPlayer()));
             return new FullEffectResult(true);
         }
         return new FullEffectResult(false);
