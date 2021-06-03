@@ -3,15 +3,15 @@ package com.gempukku.swccgo.logic.timing.results;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
- * The effect result that is emitted when a player recirculates outside of the end of turn step.
+ * The effect result that is emitted when a player recirculates.
  */
 public class RecirculateResult extends EffectResult {
 
     /**
-     * Creates an effect result that is emitted when a card becomes 'enslaved'.
+     * Creates an effect result that is emitted when a player recirculates.
      * @param performingPlayerId the performing player
      */
     public RecirculateResult(String performingPlayerId) {
-        super(Type.RECIRCULATE_EXCEPT_AT_END_OF_TURN, performingPlayerId);
+        super(Type.RECIRCULATED, performingPlayerId);
     }
 }

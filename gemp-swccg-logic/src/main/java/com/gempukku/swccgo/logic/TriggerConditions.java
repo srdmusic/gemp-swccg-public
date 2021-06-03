@@ -5326,13 +5326,14 @@ public class TriggerConditions {
     }
 
     /**
-     * Determines if a Used Pile was just recirculated outside of end of turn step
+     * Determines if a player just recirculated
      * @param effectResult the effect result
+     * @param playerId the player
      * @return true or false
      */
-    public static boolean eitherPlayerJustRecirculatedExceptAtEndOfTurn(EffectResult effectResult) {
-        if (effectResult.getType() == EffectResult.Type.RECIRCULATE_EXCEPT_AT_END_OF_TURN) {
-            return true;
+    public static boolean justRecirculated(EffectResult effectResult, String playerId) {
+        if (effectResult.getType() == EffectResult.Type.RECIRCULATED) {
+            return playerId.equals(effectResult.getPerformingPlayerId());
         }
         return false;
     }

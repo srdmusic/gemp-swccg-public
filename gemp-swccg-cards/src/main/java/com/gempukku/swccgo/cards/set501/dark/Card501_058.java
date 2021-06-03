@@ -29,8 +29,8 @@ public class Card501_058 extends AbstractAlien {
     public Card501_058() {
         super(Side.DARK, 2, 3, 4, 2, 4, "Rukh", Uniqueness.UNIQUE);
         setLore("Noghri assassin and bodyguard.");
-        setGameText("If Rukh armed with a blaster: your assassins and leaders here are immune to Blaster Proficiency and Clash Of Sabers, and either player recirculated (except at end of turn), may peek at top 2 cards of your Reserve Deck and take one into hand.");
-        addIcons(Icon.VIRTUAL_SET_15, Icon.WARRIOR);
+        setGameText("While armed with a blaster, your assassins and leaders are immune to Blaster Proficiency and Clash Of Sabers here and, if Shadow Collective just flipped, may peek at top two cards of your Reserve Deck and take one into hand.");
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_15);
         setSpecies(Species.NOGHRI);
         addKeywords(Keyword.ASSASSIN, Keyword.BODYGUARD);
         setTestingText("Rukh");
@@ -48,9 +48,9 @@ public class Card501_058 extends AbstractAlien {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.eitherPlayerJustRecirculatedExceptAtEndOfTurn(effectResult) &&
-                GameConditions.hasReserveDeck(game, playerId) &&
-                (GameConditions.isArmedWith(game, self, Filters.blaster))) {
+        if (TriggerConditions.cardFlipped(game, effectResult, Filters.Shadow_Collective)
+                && GameConditions.hasReserveDeck(game, playerId)
+                && GameConditions.isArmedWith(game, self, Filters.blaster)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Peek at top two cards of Reserve Deck.");
