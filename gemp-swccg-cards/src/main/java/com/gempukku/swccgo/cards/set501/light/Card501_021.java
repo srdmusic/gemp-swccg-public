@@ -34,7 +34,7 @@ public class Card501_021 extends AbstractSite {
         super(Side.LIGHT, Title.Death_Star_Central_Core, Title.Death_Star);
         setLocationDarkSideGameText("While 2 cards stacked on A Power Loss, you lose no more than 1 Force to any Force drain.");
         setLocationLightSideGameText("If A Power Loss 'shut down', Force drain +1 here and Death Star Tractor Beam is lost.");
-        addIcon(Icon.LIGHT_FORCE, 1);
+        addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
         setTestingText("Death Star: Central Core");
