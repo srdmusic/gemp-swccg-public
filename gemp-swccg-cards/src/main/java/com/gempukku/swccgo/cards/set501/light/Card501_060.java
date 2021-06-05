@@ -61,7 +61,7 @@ public class Card501_060 extends AbstractSite {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.isAboutToLeaveTable(game, effectResult, Filters.Leia)) {
+        if (TriggerConditions.isAboutToBeLost(game, effectResult, Filters.and(Filters.at(Filters.Death_Star_site), Filters.Leia))) {
             final AboutToLeaveTableResult result = (AboutToLeaveTableResult) effectResult;
             final PhysicalCard leia = result.getCardAboutToLeaveTable();
 
