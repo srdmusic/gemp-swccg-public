@@ -38,7 +38,7 @@ public class Card501_034 extends AbstractResistance {
     }
 
     @Override
-    public List<Modifier> getWhileOutOfPlayModifiers(SwccgGame game, PhysicalCard self) {
+    public List<Modifier> getGameTextWhileOutOfPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new TotalPowerModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self.getOwner()), Filters.Resistance_character, Filters.abilityEqualTo(2))), 1, self.getOwner()));
         return modifiers;

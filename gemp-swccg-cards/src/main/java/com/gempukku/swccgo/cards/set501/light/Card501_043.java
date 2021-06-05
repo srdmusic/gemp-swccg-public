@@ -27,7 +27,7 @@ public class Card501_043 extends AbstractNormalEffect {
     public Card501_043() {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Cell_2187, Uniqueness.UNIQUE);
         setLore("");
-        setGameText("If Leia imprisoned, deploy on table. [Set 8] Luke is a spy and stormtrooper. Han, Leia, and Luke are immune to Nevar Yalnal and Put All Sections On Alert. Once per turn, may deploy a Death Star site from Reserve Deck; reshuffle. Immune to Alter and This Is Some Rescue!");
+        setGameText("If Leia imprisoned, deploy on table. [Set 8] Luke is a spy and stormtrooper. Han, Leia, and Luke are immune to Put All Sections On Alert! and Nevar Yalnal. Once per turn, may ▼[download] a Death Star site. Immune to Alter and This Is Some Rescue!");
         addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_15);
         setVirtualSuffix(true);
         addImmuneToCardTitle(Title.Alter);
@@ -37,7 +37,7 @@ public class Card501_043 extends AbstractNormalEffect {
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return !Filters.canSpot(game, self, Filters.and(Filters.Leia, Filters.imprisoned));
+        return Filters.canSpot(game, self, SpotOverride.INCLUDE_CAPTIVE, Filters.and(Filters.Leia, Filters.imprisoned));
     }
 
     @Override
