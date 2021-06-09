@@ -48,7 +48,7 @@ public class Card501_058 extends AbstractAlien {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.cardFlipped(game, effectResult, Filters.Shadow_Collective)
+        if (TriggerConditions.cardFlipped(game, effectResult, Filters.You_Know_Who_I_Answer_To)
                 && GameConditions.hasReserveDeck(game, playerId)
                 && GameConditions.isArmedWith(game, self, Filters.blaster)) {
 
