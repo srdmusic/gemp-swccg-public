@@ -54,7 +54,7 @@ public class Card501_029 extends AbstractEpicEventDeployable {
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new ModifyGameTextModifier(self, Filters.Flagship_Operations, ModifyGameTextType.FLAGSHIP_OPERATIONS__MAY_IGNORE_DEPLOYMENT_RESTRICTIONS));
         modifiers.add(new ResetDestinyModifier(self, Filters.and(Filters.your(playerId), Filters.squadron), 0));
-        modifiers.add(new MayNotDeployModifier(self, Filters.or(Filters.squadron, Filters.not(Filters.Imperial_starship)), playerId));
+        modifiers.add(new MayNotDeployModifier(self, Filters.or(Filters.squadron, Filters.and(Filters.starship, Filters.not(Filters.Imperial_starship))), playerId));
         modifiers.add(new SuspendsCardModifier(self, Filters.title(Title.Dreaded_Imperial_Starfleet), new UnlessCondition(new OccupiesCondition(playerId, Filters.battleground_site))));
         modifiers.add(new ResetForceDrainModifier(self, Filters.and(Filters.battleground_system, Filters.sameLocationAs(self, Filters.and(Filters.your(self.getOwner()), Filters.and(Filters.piloted, Filters.TIE), Filters.with(self, Filters.capital_starship)))), 2));
         return modifiers;
