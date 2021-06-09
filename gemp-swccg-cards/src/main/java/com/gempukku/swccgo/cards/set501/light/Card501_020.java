@@ -32,7 +32,6 @@ public class Card501_020 extends AbstractSite {
         super(Side.LIGHT, Title.Trash_Compactor, Title.Death_Star);
         setLocationLightSideGameText("During your move phase, you may move to here for free from any Death Star site.");
         setLocationDarkSideGameText("Unless you control adjacent site, We're All Going To Be A Lot Thinner is canceled.");
-        addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
         setVirtualSuffix(true);
         setTestingText("Death Star: Trash Compactor (V)");
