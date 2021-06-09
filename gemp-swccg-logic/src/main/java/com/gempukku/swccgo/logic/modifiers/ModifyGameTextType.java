@@ -24,7 +24,6 @@ public enum ModifyGameTextType {
     EBO__ADDITIONAL_SITE_TO_CANCEL("Opponent must occupy additional Hoth site to cancel"),
     ELLORRS_MADAK__ADDITIONAL_2_TO_POWER_BONUS("Additional 2 to power bonus"),
     FEAR_WILL_KEEP_THEM_IN_LINE__ADDS_1_TO_ATTRITION("Add 1 to attrition"),
-    FLAGSHIP_OPERATIONS__MAY_DEPLOY_ON_EXECUTOR("May deploy on Executor"),
     FLAGSHIP_OPERATIONS__MAY_IGNORE_DEPLOYMENT_RESTRICTIONS("May ignore deployment restrictions"),
     GRIMTAASH__PUT_TWO_CARDS_IN_USED("Place two cards in used pile first"),
     HOTH_SENTRY__APPLIES_ALL_MODIFIERS("Applies all modifiers"),
