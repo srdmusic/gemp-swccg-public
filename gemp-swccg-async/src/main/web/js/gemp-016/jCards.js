@@ -3481,6 +3481,7 @@ var fixedImages = {
 "501_77":"/gemp-swccg/images/cards/SpecialEdition-Dark/homingbeacon.gif",
 "501_78":"/gemp-swccg/images/cards/DeathStarII-Dark/lordvader.gif",
 "501_98":"/gemp-swccg/images/cards/Virtual11-Light/viceadmiralholdo.gif",
+"501_99":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/thedeadspeak.png",
 
 "200_1ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/aaylasecura_ai.png",
 "203_22ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Dark/agentkallus_ai.png",
