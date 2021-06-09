@@ -39,7 +39,7 @@ public class Card501_099 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new AttritionModifier(self, Filters.and(Filters.sameLocationAs(self, Filters.or(Filters.Rey, Filters.Kylo, Filters.Snoke))), new OnCondition(self, Filters.Emperor, Title.Exegol), 2, game.getOpponent(self.getOwner())));
+        modifiers.add(new AttritionModifier(self, Filters.and(Filters.sameLocationAs(self, Filters.or(Filters.Rey, Filters.Kylo, Filters.Snoke))), new OnCondition(self, Filters.and(Filters.icon(Icon.EPISODE_VII), Filters.Emperor), Title.Exegol), 2, game.getOpponent(self.getOwner())));
         return modifiers;
     }
 
