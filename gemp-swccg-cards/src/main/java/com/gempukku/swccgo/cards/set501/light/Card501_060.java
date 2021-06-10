@@ -31,7 +31,7 @@ public class Card501_060 extends AbstractSite {
         setLocationDarkSideGameText("If Leia is about to be lost from a Death Star site, imprison her here instead (if possible).");
         setLocationLightSideGameText("If you control with a spy, may use 2 Force to release Leia here (retrieve 1 Force).");
         addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.SPECIAL_EDITION, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.SPECIAL_EDITION, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
         addKeywords(Keyword.PRISON);
         setTestingText("Death Star: Detention Block Corridor (V)");
     }
