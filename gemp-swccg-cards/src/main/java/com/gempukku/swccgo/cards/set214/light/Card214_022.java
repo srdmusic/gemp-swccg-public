@@ -51,7 +51,8 @@ public class Card214_022 extends AbstractResistance {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
         GameTextActionId gameTextActionId1 = GameTextActionId.REY_ALL_OF_THE_JEDI__CHOOSE_CARDS_IN_LOST_PILE;
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId1, Phase.CONTROL)) {
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId1, Phase.CONTROL)
+                && GameConditions.numCardsInLostPile(game, playerId) >= 2) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId1);
             action.setText("Choose cards from Lost Pile");
             // Update usage limit(s)

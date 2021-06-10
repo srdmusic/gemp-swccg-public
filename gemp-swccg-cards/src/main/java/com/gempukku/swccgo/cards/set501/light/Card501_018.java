@@ -38,9 +38,10 @@ public class Card501_018 extends AbstractObjective {
     public Card501_018() {
         super(Side.LIGHT, 0, Title.Rescue_The_Princess);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Central Core, A Power Loss, Trash Compactor, and Detention Block Corridor (with Prisoner 2187 imprisoned there)." +
-                "For remainder of game, Path Of Least Resistance is canceled. Your Death Star sites generate +1 Force for you and ignore Set Your Course For Alderaan. Death Star sites may not be converted. Jedi (except Obi-Wan) are lost." +
-                "Flip this card if Leia is present at a Death Star site and A Power Loss is ‘shut down.’");
+        setGameText("Deploy Central Core, A Power Loss, Detention Block Corridor (with Prisoner 2187 imprisoned there), and Trash Compactor." +
+                "For remainder of game, Path Of Least Resistance is canceled. Your Force generation is +1 at your Death Star sites." +
+                "Your Death Star sites are immune to Set Your Course For Alderaan. Death Star sites may not be converted. Jedi (except Obi-Wan) are lost." +
+                "Flip this card if Leia is present at a Death Star site and A Power Loss has been ‘shut down’ this game.");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_15);
         setVirtualSuffix(true);
         setTestingText("Rescue The Princess / Sometimes I Amaze Even Myself (V)");

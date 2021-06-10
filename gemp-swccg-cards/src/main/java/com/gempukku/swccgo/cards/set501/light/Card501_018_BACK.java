@@ -35,9 +35,11 @@ import java.util.List;
 public class Card501_018_BACK extends AbstractObjective {
     public Card501_018_BACK() {
         super(Side.LIGHT, 7, Title.Sometimes_I_Amaze_Even_Myself);
-        setGameText("For remainder of game, I Can't Believe He's Gone may only add power in battles involving Luke or Leia." +
-                "While this side up, in order to initiate a Force drain, opponent must use +1 Force. Whenever you 'hit' a character with a blaster, opponent loses 1 Force. May place Obi-Wan out of play from a Death Star site to cancel any battle just initiated on Death Star. May retrieve 1 Force during opponent’s draw phase if opponent did not initiate a battle this turn." +
-                "Flip this card if Leia is not at a Death Star site");
+        setGameText("For remainder of game, I Can't Believe He's Gone may only add power in battles involving Leia or Luke." +
+                "While this side up, for opponent to initiate a Force drain, opponent must use +1 Force. " +
+                "Whenever you 'hit' a character with a blaster, opponent loses 1 Force. May place Obi-Wan out of play from a Death Star site to cancel a battle just initiated anywhere on Death Star. " +
+                "During opponent's draw phase, if opponent did not initiate a battle this turn, may retrieve 1 Force." +
+                "Flip this card if is Leia not at a Death Star site.");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_15);
         setVirtualSuffix(true);
         setTestingText("Rescue The Princess / Sometimes I Amaze Even Myself (V)");
@@ -95,7 +97,7 @@ public class Card501_018_BACK extends AbstractObjective {
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         if (GameConditions.canSpot(game, self, Filters.and(Filters.ObiWan, Filters.at(Filters.Death_Star_site)))
-                && TriggerConditions.battleInitiatedAt(game, effectResult, Filters.and(Filters.Death_Star_site, Filters.not(Filters.sameLocationAs(self, Filters.ObiWan))))) {
+                && TriggerConditions.battleInitiatedAt(game, effectResult, Filters.on(Title.Death_Star))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Cancel battle");
