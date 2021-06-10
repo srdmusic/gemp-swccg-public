@@ -17681,6 +17681,7 @@ public class Filters {
     public static final Filter Grondorn  = Filters.persona(Persona.GRONDORN);
     public static final Filter grabber = Filters.icon(Icon.GRABBER);
     public static final Filter Graveyard_Of_Giants = Filters.title(Title.Graveyard_Of_Giants);
+    public static final Filter Gravity_Shadow = Filters.title(Title.Gravity_Shadow);
     public static final Filter Gray_Squadron_2 = Filters.title(Title.Gray_Squadron_2);
     public static final Filter Gray_Squadron_Y_wing = Filters.and(Keyword.GRAY_SQUADRON, ModelType.Y_WING);
     public static final Filter Great_Pit_Of_Carkoon = Filters.title(Title.Great_Pit_Of_Carkoon);
@@ -18554,6 +18555,7 @@ public class Filters {
     public static final Filter There_Is_No_Try = Filters.title(Title.There_Is_No_Try);
     public static final Filter They_Have_No_Idea_Were_Coming = Filters.title(Title.They_Have_No_Idea_Were_Coming);
     public static final Filter Theyre_On_Dantooine = Filters.title(Title.Theyre_On_Dantooine);
+    public static final Filter Theyve_Shut_Down_The_Main_Reactor = Filters.title(Title.Theyve_Shut_Down_The_Main_Reactor);
     public static final Filter thief = Filters.keyword(Keyword.THIEF);
     public static final Filter Third_Marker = Filters.keyword(Keyword.MARKER_3);
     public static final Filter They_Will_Be_Lost_And_Confused = Filters.title(Title.They_Will_Be_Lost_And_Confused);
