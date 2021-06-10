@@ -51,7 +51,7 @@ public class Card501_028 extends AbstractImperial {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3, Filters.Executor));
-        modifiers.add(new MayNotAttachModifier(self, Filters.here(self)));
+        modifiers.add(new MayNotAttachModifier(self, Filters.and(Filters.Landing_Claw, Filters.here(self))));
         return modifiers;
     }
 
