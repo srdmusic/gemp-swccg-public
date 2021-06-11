@@ -4,10 +4,7 @@ import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.CancelBattleEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Phase;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -127,7 +124,7 @@ public class Card501_018_BACK extends AbstractObjective {
         }
 
         if (GameConditions.canBeFlipped(game, self)
-                && !GameConditions.canSpot(game, self, Filters.Leia)) {
+                && !GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Leia)) {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Flip");
             action.appendEffect(
