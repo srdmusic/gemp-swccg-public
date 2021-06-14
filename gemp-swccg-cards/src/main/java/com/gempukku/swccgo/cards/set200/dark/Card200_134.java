@@ -12,6 +12,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.UseOneForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.IconModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
@@ -31,7 +32,7 @@ import java.util.List;
 public class Card200_134 extends AbstractStarfighter {
     public Card200_134() {
         super(Side.DARK, 2, 4, 4, null, 5, 4, 5, "Elis In Hinthra", Uniqueness.UNIQUE);
-        setGameText("May add 1 pilot and 3 passengers. Permanent pilot is •Elis, who provides ability of 2. Once per game, may [download] a smuggler aboard. While at opponent's system, adds one [Light Force] icon. Immune to attrition < 5.");
+        setGameText("May add 1 pilot and 3 passengers. Permanent pilot is •Elis, who provides ability of 2. Once per game, may use 1 Force to [download] ▼ a smuggler aboard. Immune to attrition < 5.");
         addIcons(Icon.REFLECTIONS_II, Icon.INDEPENDENT, Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_0);
         addModelType(ModelType.HEAVILY_MODIFIED_FREIGHTER);
         setPilotCapacity(1);
@@ -57,6 +58,10 @@ public class Card200_134 extends AbstractStarfighter {
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerGameEffect(action));
+            // Append Cost
+            action.appendCost(
+                    new UseOneForceEffect(action, playerId, false)
+            );
             // Perform result(s)
             action.appendEffect(
                     new DeployCardToTargetFromReserveDeckEffect(action, Filters.smuggler, Filters.sameCardId(self), true));
