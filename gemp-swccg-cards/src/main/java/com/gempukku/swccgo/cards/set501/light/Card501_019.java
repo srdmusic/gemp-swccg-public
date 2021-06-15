@@ -16,11 +16,14 @@ import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.effects.PutStackedCardInLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeModifiedByModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.MovesFreeFromLocationToLocationModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -32,8 +35,8 @@ public class Card501_019 extends AbstractEpicEventDeployable {
     public Card501_019() {
         super(Side.LIGHT, PlayCardZoneOption.ATTACHED, Title.A_Power_Loss, Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on Central Core. Once per game, opponent may stack up to 4 cards from hand face-down here." +
-                "Allow The Ship To Leave: If you just won a battle on Death Star (or occupy two Death Star battlegrounds at the start of your turn), place a card stacked here in owner’s Lost Pile." +
+        setGameText("Deploy on Central Core. Leia may not modify Force drains. Once per game, opponent may stack up to 2 cards from hand face-down here." +
+                "Allow The Ship To Leave: If you just won a battle on Death Star (or initiated a Force Drain at Central Core), place a card stacked here in owner’s Lost Pile." +
                 "That Old Man Did It!: If you occupy this site and an additional Death Star site while no cards stacked here, power ‘shut down’ (place this card out of play; your movement this turn between Death Star locations is free).]");
         addIcons(Icon.VIRTUAL_SET_15);
         addImmuneToCardTitle(Title.Alter);
@@ -43,6 +46,13 @@ public class Card501_019 extends AbstractEpicEventDeployable {
     @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
         return Filters.Death_Star_Central_Core;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new ForceDrainsMayNotBeModifiedByModifier(self, Filters.Leia, self.getOwner()));
+        return modifiers;
     }
 
     @Override
@@ -58,7 +68,7 @@ public class Card501_019 extends AbstractEpicEventDeployable {
                     new OncePerGameEffect(action)
             );
             action.appendEffect(
-                    new StackCardsFromHandEffect(action, playerId, 0, 4, self, true)
+                    new StackCardsFromHandEffect(action, playerId, 0, 2, self, true)
             );
             return Collections.singletonList(action);
         }
@@ -75,14 +85,13 @@ public class Card501_019 extends AbstractEpicEventDeployable {
 
         if (GameConditions.hasStackedCards(game, self)
                 && (TriggerConditions.wonBattleAt(game, effectResult, playerId, Filters.on(Title.Death_Star))
-                || (TriggerConditions.isStartOfYourTurn(game, effectResult, self)
-                && GameConditions.occupies(game, playerId, 2, Filters.and(Filters.battleground, Filters.Death_Star_location))))) {
+                || TriggerConditions.forceDrainInitiatedAt(game, effectResult, Filters.Death_Star_Central_Core))) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setSingletonTrigger(true);
             action.setText("Place a card stacked here in " + opponent + "'s Lost Pile");
             action.appendTargeting(
-                    new ChooseStackedCardEffect(action, playerId, self) {
+                    new ChooseStackedCardEffect(action, playerId, self, Filters.any, true) {
                         @Override
                         protected void cardSelected(PhysicalCard selectedCard) {
                             action.appendEffect(

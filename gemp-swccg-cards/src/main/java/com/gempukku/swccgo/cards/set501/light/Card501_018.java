@@ -38,9 +38,9 @@ public class Card501_018 extends AbstractObjective {
     public Card501_018() {
         super(Side.LIGHT, 0, Title.Rescue_The_Princess);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Central Core, A Power Loss, Detention Block Corridor (with Prisoner 2187 imprisoned there), and Trash Compactor." +
+        setGameText("Deploy Central Core, A Power Loss, Trash Compactor, and Detention Block Corridor (with Prisoner 2187 imprisoned there)." +
                 "For remainder of game, Path Of Least Resistance is canceled. Your Force generation is +1 at your Death Star sites." +
-                "Your Death Star sites are immune to Set Your Course For Alderaan. Death Star sites may not be converted. Jedi (except Obi-Wan) are lost." +
+                "Your Death Star sites are immune to Set Your Course For Alderaan. Death Star sites may not be converted. You may not deploy Luke of ability > 4 or [EI] (or [EVII]) Jedi" +
                 "Flip this card if Leia is present at a Death Star site and A Power Loss has been ‘shut down’ this game.");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_15);
         setVirtualSuffix(true);
@@ -60,6 +60,13 @@ public class Card501_018 extends AbstractObjective {
                     }
                 });
         action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.A_Power_Loss, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose A Power Loss to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
                 new DeployCardFromReserveDeckEffect(action, Filters.Trash_Compactor, true, false) {
                     @Override
                     public String getChoiceText() {
@@ -71,13 +78,6 @@ public class Card501_018 extends AbstractObjective {
                     @Override
                     public String getChoiceText() {
                         return "Choose Detention Block to deploy";
-                    }
-                });
-        action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.A_Power_Loss, true, false) {
-                    @Override
-                    public String getChoiceText() {
-                        return "Choose A Power Loss to deploy";
                     }
                 });
 
@@ -100,7 +100,7 @@ public class Card501_018 extends AbstractObjective {
         Filter yourDeathStarSites = Filters.and(Filters.your(playerId), Filters.Death_Star_site);
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new ForceGenerationModifier(self, yourDeathStarSites, 1, playerId));
-        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.not(Filters.ObiWan)), playerId));
+        modifiers.add(new MayNotDeployModifier(self, Filters.or(Filters.and(Filters.Luke, Filters.abilityMoreThan(4)), Filters.and(Filters.Jedi, Filters.or(Filters.icon(Icon.EPISODE_I), Filters.icon(Icon.EPISODE_VII)))), playerId));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Set_Your_Course_For_Alderaan, ModifyGameTextType.SET_YOUR_COURSE_FOR_ALDERAAN__ONLY_AFFECTS_DARK_SIDE_DEATH_STAR_SITES));
         modifiers.add(new MayNotBeConvertedModifier(self, Filters.Death_Star_site));
         return modifiers;

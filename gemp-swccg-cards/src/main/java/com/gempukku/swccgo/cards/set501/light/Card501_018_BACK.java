@@ -48,7 +48,7 @@ public class Card501_018_BACK extends AbstractObjective {
         Filter yourDeathStarSites = Filters.and(Filters.your(playerId), Filters.Death_Star_site);
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new ForceGenerationModifier(self, yourDeathStarSites, 1, self.getOwner()));
-        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.not(Filters.ObiWan)), self.getOwner()));
+        modifiers.add(new MayNotDeployModifier(self, Filters.or(Filters.and(Filters.Luke, Filters.abilityMoreThan(4)), Filters.and(Filters.Jedi, Filters.or(Filters.icon(Icon.EPISODE_I), Filters.icon(Icon.EPISODE_VII)))), playerId));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Set_Your_Course_For_Alderaan, ModifyGameTextType.SET_YOUR_COURSE_FOR_ALDERAAN__ONLY_AFFECTS_DARK_SIDE_DEATH_STAR_SITES));
         modifiers.add(new InitiateForceDrainCostModifier(self, 1, game.getOpponent(self.getOwner())));
         modifiers.add(new MayNotBeConvertedModifier(self, Filters.Death_Star_site));
