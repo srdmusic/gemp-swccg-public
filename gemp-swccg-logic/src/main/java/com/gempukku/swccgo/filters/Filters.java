@@ -10960,6 +10960,37 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards whose power is 'ionized' (was hit by an Ion Cannon).
+     */
+    public static final Filter powerIonized = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return physicalCard.getIonization().contains(IonizationType.POWER_IONIZED);
+        }
+    };
+    /**
+     * Filter that accepts cards whose defense is 'ionized' (was hit by an Ion Cannon).
+     */
+    public static final Filter defenseIonized = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return physicalCard.getIonization().contains(IonizationType.DEFENSE_IONIZED);
+        }
+    };
+    /**
+     * Filter that accepts cards whose hyperspeed is 'ionized' (was hit by an Ion Cannon).
+     */
+    public static final Filter hyperspeedIonized = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return physicalCard.getIonization().contains(IonizationType.HYPERSPEED_IONIZED);
+        }
+    };
+    public static final Filter starship_defense_ionized = Filters.and(CardCategory.STARSHIP, Filters.defenseIonized());
+    public static final Filter starship_hyperspeed_ionized = Filters.and(CardCategory.STARSHIP, Filters.hyperspeedIonized());
+    public static final Filter starship_power_ionized = Filters.and(CardCategory.STARSHIP, Filters.powerIonized());
+
+    /**
      * Filter that accepts cards that are 'collapsed'.
      */
     public static final Filter collapsed = new Filter() {
@@ -18451,6 +18482,27 @@ public class Filters {
     public static final Filter Starkiller_Base_location = Filters.partOfSystem(Title.Starkiller_Base);
     public static final Filter starship = Filters.type(CardType.STARSHIP);
     public static final Filter starship_cannon = Filters.and(CardType.WEAPON, CardSubtype.STARSHIP, Filters.or(Keyword.CANNON, Keyword.ION_CANNON, Keyword.LASER_CANNON));
+
+    /**
+     * Wrapper method to allow other static filters to access the wrapped filter.
+     */
+    private static Filter powerIonized() {
+        return powerIonized;
+    }
+
+    /**
+     * Wrapper method to allow other static filters to access the wrapped filter.
+     */
+    private static Filter defenseIonized() {
+        return defenseIonized;
+    }
+
+    /**
+     * Wrapper method to allow other static filters to access the wrapped filter.
+     */
+    private static Filter hyperspeedIonized() {
+        return hyperspeedIonized;
+    }
     public static final Filter starship_site = Filters.and(CardSubtype.SITE, Icon.STARSHIP_SITE);
     public static final Filter starship_weapon = Filters.and(CardType.WEAPON, CardSubtype.STARSHIP);
     public static final Filter starship_weapon_that_deploys_on_capitals = Filters.keyword(Keyword.STARSHIP_WEAPON_THAT_DEPLOYS_ON_CAPITALS);
