@@ -23,7 +23,7 @@ public class Card215_021 extends AbstractCharacterWeapon {
         super(Side.LIGHT, 3, "Uncivilized Blaster", Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy on your warrior. May target a character, creature, or vehicle for free. Draw destiny. Target hit if destiny +2 > defense value. If hit by Corran, Kanan, or Obi-Wan, target may not be used to satisfy attrition, and opponent loses 1 Force.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.JABBAS_PALACE, Icon.EPISODE_I, Icon.VIRTUAL_SET_15);
         addKeywords(Keyword.BLASTER);
         setMatchingCharacterFilter(Filters.or(Filters.Corran_Horn, Filters.Kanan, Filters.ObiWan));
     }
