@@ -38,7 +38,7 @@ public class Card200_009 extends AbstractRebel {
         setLore("Scout. Leader. Made friends with Wicket. Negotiated an alliance with the Ewoks. Leia found out the truth about her father from Luke in the Ewok village.");
         setGameText("While at an Endor site, adds one [Light Side] icon here. During battle, may target one opponent's character present. Draw destiny. If destiny > ability, target is power -2 and its game text is canceled. Your scouts here are immune to Sniper, You Are Beaten, and attrition < 4.");
         addPersona(Persona.LEIA);
-        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_15, Icon.WARRIOR);
+        addIcons(Icon.ENDOR, Icon.WARRIOR);
         addKeywords(Keyword.SCOUT, Keyword.LEADER, Keyword.FEMALE);
     }
 
