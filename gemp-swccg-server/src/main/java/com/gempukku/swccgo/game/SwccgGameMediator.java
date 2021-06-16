@@ -943,14 +943,11 @@ public class SwccgGameMediator {
             return;
         }
 
-        if (_secondsGameTimerExtended > 0)
-            return;
-
-        String playerId = player.getName();
+        String playerName = player.getName();
         _writeLock.lock();
         try {
-            if (isPlayerPlaying(playerId)) {
-                _swccgoGame.requestExtendGameTimer(playerId, minutesToExtend);
+            if (isPlayerPlaying(playerName)) {
+                _swccgoGame.requestExtendGameTimer(playerName, minutesToExtend);
                 _secondsGameTimerExtended = _swccgoGame.getGameTimerExtendedInMinutes() * 60;
                 if (_secondsGameTimerExtended > 0) {
                     _swccgoGame.getGameState().sendMessage("The game timer has been extended by " + minutesToExtend + " minutes, by request of all players");
