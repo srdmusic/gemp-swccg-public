@@ -3267,6 +3267,33 @@ var fixedImages = {
 "214_21":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/plokoonsjedistarfighter.png",
 "214_22":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/reyallofthejedi.png",
 "215_1":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/oddballstorrentstarfighter.png",
+"215_2":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/apowerloss.png",
+"215_3":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/c3po.png",
+"215_4":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/calkestis.png",
+"215_5":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/cell2187.png",
+"215_6":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/deathstarcentralcore.png",
+"215_7":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/deathstardetentionblockcorridor.png",
+"215_8":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/deathstarhangar327.png",
+"215_9":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/deathstartrashcompactor.png",
+"215_10":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/fortherepublic.png",
+"215_11":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/hansolooptimisticgeneral.png",
+"215_12":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/jannah.png",
+"215_13":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/kashyyykforestdepths.png",
+"215_14":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/kashyyykkachirho.png",
+"215_15":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/larmadacy.png",
+"215_16":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/letthewookiewin.png",
+"215_17":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/rescuetheprincess.png",
+"215_17_BACK":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/sometimesiamazeevenmyself.png",
+"215_18":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/slightweaponsmalfunction.png",
+"215_19":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/stolenstormtrooperblasterrifle.png",
+"215_20":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/tk422.png",
+"215_21":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/uncivilizedblaster.png",
+"215_22":"https://res.starwarsccg.org/cards/Virtual15-Dark/hires/admiralpiett.png",
+"215_23":"https://res.starwarsccg.org/cards/Virtual15-Dark/hires/blizzard8.png",
+"215_24":"https://res.starwarsccg.org/cards/Virtual15-Dark/hires/dannikjerriko.png",
+"215_25":"https://res.starwarsccg.org/cards/Virtual15-Dark/hires/emperorsorders.png",
+"215_26":"https://res.starwarsccg.org/cards/Virtual15-Dark/hires/rukh.png",
+"215_27":"https://res.starwarsccg.org/cards/Virtual15-Dark/hires/ubrikkianindustries.png",
 
 "301_1":"/gemp-swccg/images/cards/VirtualPremium-Light/ahsokatanowithlightsabers.gif",
 "301_2":"/gemp-swccg/images/cards/VirtualPremium-Light/cityintheclouds.gif",
@@ -3945,6 +3972,11 @@ var Card = Class.extend({
         if(setNo == 214) {
             return (cardNo == 4) ||
                     (cardNo == 19);
+        }
+        if(setNo == 215){
+            return (cardNo >= 6 && cardNo <=9) ||
+                   (cardNo == 13) ||
+                   (cardNo == 14);
         }
         if (setNo == 501) {
             return (cardNo == 6) ||

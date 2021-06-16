@@ -20,6 +20,7 @@ public enum Persona implements Filterable {
     C3PO("C-3PO"),
     CAD("Cad"),
     CAL("Cal"),
+    CAL_KESTIS("Cal Kestis"),
     CASSIAN("Cassian"),
     CHEWIE("Chewie"),
     CONNIX("Connix"),
