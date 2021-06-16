@@ -10,6 +10,7 @@ public enum Persona implements Filterable {
     AMIDALA("Amidala"),
     ANAKIN("Anakin"),
     AURRA("Aurra"),
+    BAZE("Baze"),
     BB8("BB-8"),
     BECKETT("Beckett"),
     BEAUMONT("Beaumont"),

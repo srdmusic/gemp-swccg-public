@@ -7,9 +7,9 @@ import com.gempukku.swccgo.chat.ChatRoomMediator;
 import com.gempukku.swccgo.chat.ChatServer;
 import com.gempukku.swccgo.collection.CollectionsManager;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.db.GempSettingDAO;
 import com.gempukku.swccgo.db.IpBanDAO;
 import com.gempukku.swccgo.db.PlayerDAO;
-import com.gempukku.swccgo.db.GempSettingDAO;
 import com.gempukku.swccgo.db.vo.CollectionType;
 import com.gempukku.swccgo.db.vo.League;
 import com.gempukku.swccgo.draft.Draft;
@@ -608,7 +608,8 @@ public class HallServer extends AbstractServer {
                 visitor.motd(_motd);
             }
             else {
-                visitor.motd("Server is in operational mode and games are now able to be started.");
+                visitor.motd("Check out the new UI: https://gemp.starwarsccg.org/gemp-swccg/newgui.html & " +
+                        "VIRTUAL SET 15 spoilers: https://t.co/iUNGA0faG9");
             }
 
             // Only show playtesting table details if player is a playtester or admin
