@@ -608,8 +608,7 @@ public class HallServer extends AbstractServer {
                 visitor.motd(_motd);
             }
             else {
-                visitor.motd("Check out the new UI: https://gemp.starwarsccg.org/gemp-swccg/newgui.html & " +
-                        "VIRTUAL SET 15 spoilers: https://t.co/iUNGA0faG9");
+                visitor.motd("Check out the new UI: https://gemp.starwarsccg.org/gemp-swccg/newgui.html");
             }
 
             // Only show playtesting table details if player is a playtester or admin
