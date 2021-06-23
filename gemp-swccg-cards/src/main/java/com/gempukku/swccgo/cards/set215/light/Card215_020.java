@@ -28,7 +28,7 @@ import java.util.List;
  * Set: Set 15
  * Type: Character
  * Subtype: Rebel
- *Title: TK-422 (V)
+ * Title: TK-422 (V)
  */
 public class Card215_020 extends AbstractRebel {
     public Card215_020() {
