@@ -3281,7 +3281,7 @@ var fixedImages = {
 "215_13":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/kashyyykforestdepths.png",
 "215_14":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/kashyyykkachirho.png",
 "215_15":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/larmadacy.png",
-"215_16":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/letthewookiewin.png",
+"215_16":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/letthewookieewin.png",
 "215_17":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/rescuetheprincess.png",
 "215_17_BACK":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/sometimesiamazeevenmyself.png",
 "215_18":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/slightweaponsmalfunction.png",
