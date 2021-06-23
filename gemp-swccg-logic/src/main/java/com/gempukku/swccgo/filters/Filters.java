@@ -17230,7 +17230,7 @@ public class Filters {
     public static final Filter battleground_site = Filters.and(CardSubtype.SITE, Filters.battleground());
     public static final Filter battleground_system = Filters.and(CardSubtype.SYSTEM, Filters.battleground());
     public static final Filter battleship = Filters.modelType(ModelType.TRADE_FEDERATION_BATTLESHIP);
-    public static final Filter Baze = Filters.title(Title.Baze);
+    public static final Filter Baze = Filters.persona(Persona.BAZE);
     public static final Filter BB8 = Filters.persona(Persona.BB8);
     public static final Filter BB8_or_has_BB8_as_permanent_astromech = Filters.or(Filters.persona(Persona.BB8), Filters.hasPermanentAboard(Filters.persona(Persona.BB8)));
     public static final Filter Beaumont = Filters.persona(Persona.BEAUMONT);
