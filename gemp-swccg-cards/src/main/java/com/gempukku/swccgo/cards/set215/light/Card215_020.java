@@ -41,7 +41,6 @@ public class Card215_020 extends AbstractRebel {
         addIcons(Icon.SPECIAL_EDITION, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_15);
         addKeywords(Keyword.SPY, Keyword.SMUGGLER, Keyword.STORMTROOPER);
         setSpecies(Species.CORELLIAN);
-        setTestingText("TK-422 (V)");
     }
 
     @Override
