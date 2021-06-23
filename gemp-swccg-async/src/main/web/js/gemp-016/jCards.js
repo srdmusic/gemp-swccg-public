@@ -3259,7 +3259,6 @@ var fixedImages = {
 "214_13":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/alterfriendlyfire.png",
 "214_14":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/arc170starfighter.png",
 "214_15":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/ahsokasshotolightsaber.png",
-"214_15":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/ahsokasshotolightsaber.png",
 "214_16":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/beaumontkin.png",
 "214_17":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/corporalpao.png",
 "214_18":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/dindjarin.png",
