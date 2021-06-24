@@ -39,9 +39,9 @@ public class Card215_026 extends AbstractAlien {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         ArmedWithCondition rukhArmedWithBlaster = new ArmedWithCondition(self, Filters.blaster);
-        Filter yourAssassinsAndLeaders = Filters.and(Filters.your(self.getOwner()), Filters.or(Filters.assassin, Filters.leader));
-        modifiers.add(new ImmuneToTitleModifier(self, yourAssassinsAndLeaders, rukhArmedWithBlaster, Title.Blaster_Proficiency));
-        modifiers.add(new ImmuneToTitleModifier(self, yourAssassinsAndLeaders, rukhArmedWithBlaster, Title.Clash_Of_Sabers));
+        Filter yourAssassinsAndLeadersHere = Filters.and(Filters.your(self.getOwner()), Filters.here(self), Filters.or(Filters.assassin, Filters.leader));
+        modifiers.add(new ImmuneToTitleModifier(self, yourAssassinsAndLeadersHere, rukhArmedWithBlaster, Title.Blaster_Proficiency));
+        modifiers.add(new ImmuneToTitleModifier(self, yourAssassinsAndLeadersHere, rukhArmedWithBlaster, Title.Clash_Of_Sabers));
         return modifiers;
     }
 
