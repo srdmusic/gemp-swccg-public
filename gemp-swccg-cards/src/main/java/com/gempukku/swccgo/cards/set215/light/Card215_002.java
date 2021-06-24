@@ -84,7 +84,7 @@ public class Card215_002 extends AbstractEpicEventDeployable {
 
         if (GameConditions.hasStackedCards(game, self)
                 && (TriggerConditions.wonBattleAt(game, effectResult, playerId, Filters.on(Title.Death_Star))
-                || TriggerConditions.forceDrainInitiatedAt(game, effectResult, Filters.Death_Star_Central_Core))) {
+                || TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerId, Filters.Death_Star_Central_Core))) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setSingletonTrigger(true);
