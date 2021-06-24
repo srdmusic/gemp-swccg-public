@@ -60,9 +60,9 @@ public class Card215_017_BACK extends AbstractObjective {
         // Check condition(s)
         if (GameConditions.isDuringOpponentsPhase(game, playerId, Phase.DRAW)
                 && !GameConditions.hasInitiatedBattleThisTurn(game, opponent)
-                && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId)) {
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId)) {
 
-            TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+            TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId);
             action.setText("Retrieve 1 Force");
             // Perform result(s)
             action.appendUsage(
