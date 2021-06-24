@@ -12,7 +12,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -25,7 +25,7 @@ import java.util.List;
 
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Character
  * Subtype: Rebel
  * Title: Master Kenobi
@@ -35,7 +35,7 @@ public class Card501_040 extends AbstractRebel {
         super(Side.LIGHT, 1, 5, 5, 6, 9, "Master Kenobi", Uniqueness.UNIQUE);
         setLore("");
         setGameText("While 'communing': Once per turn, may deploy a battleground from Reserve Deck that is related to a location on table; reshuffle. If you just initiated battle, opponent loses 1 Force (2 if Luke in battle). You may not deploy Jedi (except Yoda).");
-        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         addPersona(Persona.OBIWAN);
         setTestingText("Master Kenobi");
     }

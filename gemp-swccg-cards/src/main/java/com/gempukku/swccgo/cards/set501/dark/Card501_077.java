@@ -1,8 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractDevice;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -11,12 +9,9 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.modifiers.ShieldGateBlownAwayModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -25,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Device
  * Title: Shield Gate
  */
@@ -34,7 +29,7 @@ public class Card501_077 extends AbstractDevice {
         super(Side.DARK, 0, PlayCardZoneOption.ATTACHED, Title.Shield_Gate, Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy on Scarif. If a starship was just lost from here or opponent just Force drained here, opponent may draw destiny. Add 1 for each spy out of play. If total destiny > 8, Shield Gate \"blown away\" (place out of play).");
-        addIcons(Icon.VIRTUAL_SET_15);
+        addIcons(Icon.VIRTUAL_SET_16);
         setVirtualSuffix(true);
         setTestingText("Shield Gate");
     }

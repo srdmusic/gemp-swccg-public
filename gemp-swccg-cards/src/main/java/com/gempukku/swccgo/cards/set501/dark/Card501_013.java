@@ -1,9 +1,7 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
-import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
@@ -20,12 +18,11 @@ import com.gempukku.swccgo.logic.effects.choose.DeployCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
-import java.lang.annotation.Target;
 import java.util.*;
 
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Interrupt
  * Subtype: Lost
  * Title: A Sith Legend
@@ -35,7 +32,7 @@ public class Card501_013 extends AbstractLostInterrupt {
         super(Side.DARK, 2, "A Sith Legend", Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy a lightsaber (may simultaneously deploy a matching Dark Jedi or Sith character) from hand and/or Reserve Deck; reshuffle. [Immune to Sense.] OR Once per game, cancel the game text of a character of equal or lesser ability present with your Dark Jedi or Inquisitor.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("A Sith Legend");
     }
 

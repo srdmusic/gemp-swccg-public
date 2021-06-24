@@ -18,7 +18,7 @@ import com.gempukku.swccgo.logic.timing.Action;
 
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Interrupt
  * Subtype: Starting
  * Title: What Gives A Jedi His Power
@@ -27,7 +27,7 @@ public class Card501_046 extends AbstractStartingInterrupt {
     public Card501_046() {
         super(Side.LIGHT, 0, "What Gives A Jedi His Power", Uniqueness.UNIQUE);
         setGameText("Take any one: antechamber, hut, or corridor; a unique (•) weapon, and two effects that are always [Immune to Alter.] into hand from Reserve Deck. When you draw your starting hand, draw only six more cards. Place Interrupt in Lost Pile.");
-        addIcons(Icon.VIRTUAL_SET_15);
+        addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("What Gives A Jedi His Power");
     }
 
