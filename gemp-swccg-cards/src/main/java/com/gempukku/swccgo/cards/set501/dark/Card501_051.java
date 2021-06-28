@@ -12,13 +12,15 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.DockingBayTransitFromCostModifier;
+import com.gempukku.swccgo.logic.modifiers.DockingBayTransitFromForFreeModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Location
  * Subtype: Site
  * Title: Scarif: Landing Pad Five (Docking Bay)
@@ -29,7 +31,7 @@ public class Card501_051 extends AbstractSite {
         setLocationDarkSideGameText("Your docking bay transit from here requires 1 Force (free if an Imperial leader here).");
         setLocationLightSideGameText("Your docking bay transit from here requires 3 Force (7 if Shield Gate on table).");
         addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.PLANET, Icon.EXTERIOR_SITE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.PLANET, Icon.EXTERIOR_SITE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_16);
         addKeywords(Keyword.DOCKING_BAY);
         setTestingText("Scarif: Landing Pad Five (Docking Bay)");
     }

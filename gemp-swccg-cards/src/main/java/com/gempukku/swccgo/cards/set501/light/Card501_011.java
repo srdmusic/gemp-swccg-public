@@ -6,7 +6,7 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Character
  * Subtype: Alien
  * Title: Offworld Jawas
@@ -17,7 +17,7 @@ public class Card501_011 extends AbstractAlien {
         setLore("");
         setGameText("Draws one battle destiny if unable to otherwise. If you just verified opponent's Reserve Deck, may use 1 force: search that Reserve Deck and place one weapon, device, or unpiloted starship found there in Lost Pile; if none there, opponent loses 1 force.");
         setArmor(4);
-        addIcons(Icon.WARRIOR, Icon.WARRIOR, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.WARRIOR, Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         setTestingText("Offworld Jawas");
         hideFromDeckBuilder();
     }

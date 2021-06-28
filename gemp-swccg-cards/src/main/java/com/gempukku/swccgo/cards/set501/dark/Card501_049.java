@@ -3,25 +3,18 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractMobileSystem;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.*;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.LightSideGoesFirstEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Location
  * Subtype: System
  * Title: Death Star (V)
@@ -31,7 +24,7 @@ public class Card501_049 extends AbstractMobileSystem {
         super(Side.DARK, Title.Death_Star, 1, 4);
         setLocationDarkSideGameText("X = parsec of current position. Deploys (at Parsec 4) only if On The Verge Of Greatness on table. Hyperspeed = 1. Your Star Destroyers and leaders deploy -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
-        addIcons(Icon.VIRTUAL_SET_15);
+        addIcons(Icon.VIRTUAL_SET_16);
         setVirtualSuffix(true);
         setTestingText("Death Star (V)");
     }

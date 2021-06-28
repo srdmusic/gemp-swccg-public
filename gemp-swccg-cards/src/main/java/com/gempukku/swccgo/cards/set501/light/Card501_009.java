@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Effect
  * Title: Be With Me
  */
@@ -30,7 +30,7 @@ public class Card501_009 extends AbstractNormalEffect {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Be With Me", Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy on table. Rey is power and immunity to attrition +1 for each Jedi out of play and, while Luke on table, ignores deployment restrictions on your [Set 11] objective. If Rey in battle with Kylo or a Dark Jedi Master, you may take the first weapons phase action. [Immune to Alter.]");
-        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Be With Me");
     }

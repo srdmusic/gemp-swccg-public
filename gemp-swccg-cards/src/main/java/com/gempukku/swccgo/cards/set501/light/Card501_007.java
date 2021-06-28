@@ -25,7 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Character
  * Subtype: Alien
  * Title: Alien Rabble
@@ -35,7 +35,7 @@ public class Card501_007 extends AbstractAlien {
         super(Side.LIGHT, 3, null, 6, 2, 6, "Alien Rabble", Uniqueness.DIAMOND_1);
         setLore("");
         setGameText("* Replaces any 3 of your aliens at same Jabba’s Palace site (aliens go to Used Pile) or deploys for 4 Force. When deployed, may retrieve your Rep OR place your Rep stacked on your objective in Used pile. This alien assumes your Rep's species (if any).");
-        addIcons(Icon.WARRIOR, Icon.WARRIOR, Icon.WARRIOR, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.WARRIOR, Icon.WARRIOR, Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         setTestingText("Alien Rabble");
     }
 

@@ -1,10 +1,8 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
-import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.HasAttachedCondition;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
-import com.gempukku.swccgo.cards.conditions.OrbitingCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -12,13 +10,15 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.AttemptToBlowAwayShieldGateTotalModifier;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Location
  * Subtype: System
  * Title: Scarif
@@ -30,7 +30,7 @@ public class Card501_076 extends AbstractSystem {
         setLocationLightSideGameText("While Profundity here, add 2 to attempts to 'blow away' Shield Gate.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_16);
         setTestingText("Scarif");
     }
 

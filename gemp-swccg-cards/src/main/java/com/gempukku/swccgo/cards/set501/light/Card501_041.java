@@ -13,7 +13,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
@@ -25,7 +25,7 @@ import java.util.List;
 
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Character
  * Subtype: Jedi Master
  * Title: Master Yoda
@@ -35,7 +35,7 @@ public class Card501_041 extends AbstractJediMaster {
         super(Side.LIGHT, 1, 5, 2, 7, 9, "Master Yoda", Uniqueness.UNIQUE);
         setLore("");
         setGameText("While 'communing': During your control phase, if you control more battlegrounds than opponent, retrieve 1 Force. Once per turn, may deploy a battleground with two [Dark Side] from Reserve Deck; reshuffle. Attrition against you is -2. You may not deploy [Permanent Weapon] cards.");
-        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         addPersona(Persona.YODA);
         setTestingText("Master Yoda");
     }

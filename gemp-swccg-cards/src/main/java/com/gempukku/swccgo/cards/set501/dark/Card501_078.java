@@ -23,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Character
  * Subtype: Sith
  * Title: Darth Vader, Betrayer Of The Jedi
@@ -35,7 +35,7 @@ public class Card501_078 extends AbstractSith {
         setLore("Leader");
         setGameText("[Pilot] 3. Vader’s game text may not be canceled. While on Coruscant, adds one [D] icon here. In battle with no other Dark Jedi, may: exclude Padme OR cancel immunity to attrition of a Jedi or Padawan. Immune to attrition < 5.");
         addPersona(Persona.VADER);
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("Darth Vader, Betrayer Of The Jedi");
     }
 

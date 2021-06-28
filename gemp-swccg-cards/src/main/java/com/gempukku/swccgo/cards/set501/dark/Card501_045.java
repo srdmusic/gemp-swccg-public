@@ -19,7 +19,7 @@ import com.gempukku.swccgo.logic.timing.Action;
 
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Interrupt
  * Subtype: Starting
  * Title: The Sith Will Rule The Galaxy
@@ -28,7 +28,7 @@ public class Card501_045 extends AbstractStartingInterrupt {
     public Card501_045() {
         super(Side.DARK, 0, "The Sith Will Rule The Galaxy", Uniqueness.UNIQUE);
         setGameText("Take Maul's Chambers, Sith Throne, Throne Room, or Vader's Castle, a unique (•) weapon, and two Effects that are always [Immune to Alter.] into hand from Reserve Deck. When you draw your starting hand, draw only six more cards. Place Interrupt in Lost Pile.");
-        addIcons(Icon.VIRTUAL_SET_15);
+        addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("The Sith Will Rule The Galaxy");
     }
 
