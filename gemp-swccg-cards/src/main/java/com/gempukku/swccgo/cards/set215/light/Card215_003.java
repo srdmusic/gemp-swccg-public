@@ -51,8 +51,8 @@ public class Card215_003 extends AbstractDroid {
 
             if (GameConditions.canActivateForce(game, playerId)) {
                 TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action.setText("Put card on Used Pile to activate 1 force");
-                action.setActionMsg("Activate 1 force");
+                action.setText("Activate 1 force");
+                action.setActionMsg("Put card on Used Pile to activate 1 force");
                 // Update usage limit(s)
                 action.appendUsage(
                         new OncePerTurnEffect(action));
@@ -66,8 +66,8 @@ public class Card215_003 extends AbstractDroid {
 
             if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
                 TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action.setText("Put card on Used Pile to upload [A] R2-D2");
-                action.setActionMsg("Upload [A] R2-D2");
+                action.setText("Upload [A New Hope] R2-D2");
+                action.setActionMsg("Put card on Used Pile to upload [A New Hope] R2-D2");
                 // Update usage limit(s)
                 action.appendUsage(
                         new OncePerTurnEffect(action));

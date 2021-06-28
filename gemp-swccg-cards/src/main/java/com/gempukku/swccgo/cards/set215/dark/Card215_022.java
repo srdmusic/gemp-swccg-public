@@ -64,8 +64,8 @@ public class Card215_022 extends AbstractImperial {
                 && GameConditions.isPiloting(game, self, Filters.Executor)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take Emeperor's Orders into hand from Reserve Deck");
-            action.setActionMsg("Take Emeperor's Orders into hand from Reserve Deck");
+            action.setText("Take Emperor's Orders into hand from Reserve Deck");
+            action.setActionMsg("Take Emperor's Orders into hand from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerGameEffect(action));

@@ -49,6 +49,7 @@ public class Card214_011 extends AbstractNormalEffect {
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
+                && GameConditions.canSpot(game, self, Filters.and(Filters.Emperor, Filters.on(Title.Exegol)))
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);

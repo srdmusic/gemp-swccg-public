@@ -86,7 +86,8 @@ public class Card214_008 extends AbstractDarkJediMasterFirstOrder {
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && TriggerConditions.isAboutToBeLostIncludingAllCardsSituation(game, effectResult, self)) {
+                && (TriggerConditions.isAboutToBeLostIncludingAllCardsSituation(game, effectResult, self)
+                || TriggerConditions.isAboutToBeForfeitedToLostPile(game, effectResult, self))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Return to hand");
