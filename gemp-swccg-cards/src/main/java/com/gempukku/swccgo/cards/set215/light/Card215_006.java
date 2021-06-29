@@ -16,7 +16,7 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.MoveCostFromLocationToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MoveCostModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
@@ -27,7 +27,7 @@ import java.util.List;
  * Set: Set 15
  * Type: Location
  * Subtype: Site
- * Title: Death Star: Central Core
+ * Title: Death Star: Central Core (Light)
  */
 public class Card215_006 extends AbstractSite {
     public Card215_006() {
@@ -49,7 +49,7 @@ public class Card215_006 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MoveCostFromLocationToLocationModifier(self, Filters.and(Filters.opponents(playerOnDarkSideOfLocation), Filters.character), new OccupiesCondition(playerOnDarkSideOfLocation, self), 1, Filters.here(self), Filters.any));
+        modifiers.add(new MoveCostModifier(self, Filters.and(Filters.opponents(playerOnDarkSideOfLocation), Filters.character, Filters.here(self)), new OccupiesCondition(playerOnDarkSideOfLocation, self), 1));
         return modifiers;
     }
 
