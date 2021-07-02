@@ -24,17 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * •Anakin Skywalker, Jedi Knight [TBD (V)] 1
- * [TBD - TBD]
- * Lore: Blank.
- * LIGHT - CHARACTER - REPUBLIC
- * POWER 7 ABILITY 6 JEDI KNIGHT
- * Text: Adds 3 to the power of anything he pilots. While armed with a lightsaber, adds 2 to his defense value. During battle, may lose 2 Force to add one battle destiny. Immune to attrition < 5 (< 6 if alone or armed with a lightsaber).
- * DEPLOY 8 FORFEIT 8
- * [Pilot] [Warrior] [Episode I] [Set 16]
- */
-
-/**
  * Set: Set 16
  * Type: Character
  * Subtype: Republic
