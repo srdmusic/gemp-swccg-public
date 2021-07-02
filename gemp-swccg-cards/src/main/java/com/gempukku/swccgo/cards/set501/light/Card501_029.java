@@ -29,8 +29,8 @@ import java.util.List;
  * Subtype: Republic
  * Title: Anakin Skywalker, Jedi Knight
  */
-public class Card501_021 extends AbstractRepublic {
-    public Card501_021() {
+public class Card501_029 extends AbstractRepublic {
+    public Card501_029() {
         super(Side.LIGHT, 1, 8, 7, 6, 8, "Anakin Skywalker, Padawan Learner", Uniqueness.UNIQUE);
         setGameText("Adds 3 to the power of anything he pilots. While armed with a lightsaber, adds 2 to his defense value. " +
                 "During battle, may lose 2 Force to add one battle destiny. Immune to attrition < 5 (< 6 if alone or armed with a lightsaber).");
