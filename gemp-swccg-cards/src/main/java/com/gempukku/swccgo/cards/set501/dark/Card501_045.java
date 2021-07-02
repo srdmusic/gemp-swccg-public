@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class Card501_045 extends AbstractUsedOrStartingInterrupt {
     public Card501_045() {
-        super(Side.DARK, 5, "The Sith Will Rule The Galaxy", Uniqueness.UNIQUE);
+        super(Side.DARK, 5, "The Sith Will Rule The Galaxy");
         setGameText("USED: Take a weapon into hand from Reserve Deck; reshuffle. STARTING: If your starting location was a battleground, deploy Rule Of Two and 2 Effects that deploy on table and are always Immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("The Sith Will Rule The Galaxy");

@@ -67,37 +67,33 @@ public class Card501_008 extends AbstractEpicEventDeployable {
                     new PlayoutDecisionEffect(action, self.getOwner(), new MultipleChoiceAwaitingDecision("Choose an apprentice", possibleResults) {
                         @Override
                         protected void validDecisionMade(int index, String result) {
+                            Filter siteFilter = null;
+                            Filter effectFilter = null;
                             Filter apprenticeFilter = null;
 
                             switch (result) {
                                 case MAUL:
-                                    action.appendEffect(
-                                            new DeployCardFromReserveDeckEffect(action, Filters.Desert_Landing_Site, false)
-                                    );
-                                    action.appendEffect(
-                                            new DeployCardFromReserveDeckEffect(action, Filters.They_Will_Be_No_Match_For_You, false)
-                                    );
+                                    siteFilter = Filters.Desert_Landing_Site;
+                                    effectFilter = Filters.They_Will_Be_No_Match_For_You;
                                     apprenticeFilter = Filters.Maul;
                                     break;
                                 case DOOKU:
-                                    action.appendEffect(
-                                            new DeployCardFromReserveDeckEffect(action, Filters.Invisible_Hand, false)
-                                    );
-                                    action.appendEffect(
-                                            new DeployCardFromReserveDeckEffect(action, Filters.Evil_Is_Everywhere, false)
-                                    );
+                                    siteFilter = Filters.Invisible_Hand_Bridge;
+                                    effectFilter = Filters.Evil_Is_Everywhere;
                                     apprenticeFilter = Filters.Dooku;
                                     break;
                                 case VADER:
-                                    action.appendEffect(
-                                            new DeployCardFromReserveDeckEffect(action, Filters.Vaders_Castle, false)
-                                    );
-                                    action.appendEffect(
-                                            new DeployCardFromReserveDeckEffect(action, Filters.I_Am_Your_Father, false)
-                                    );
+                                    siteFilter = Filters.Vaders_Castle;
+                                    effectFilter = Filters.I_Am_Your_Father;
                                     apprenticeFilter = Filters.Vader;
                                     break;
                             }
+                            action.appendEffect(
+                                    new DeployCardFromReserveDeckEffect(action, siteFilter, false)
+                            );
+                            action.appendEffect(
+                                    new DeployCardFromReserveDeckEffect(action, effectFilter, false)
+                            );
                             action.appendEffect(
                                     new AddUntilEndOfGameModifierEffect(action,
                                             new KeywordModifier(self, apprenticeFilter, Keyword.SITH_APPRENTICE), result + " is the Sith Apprentice")
