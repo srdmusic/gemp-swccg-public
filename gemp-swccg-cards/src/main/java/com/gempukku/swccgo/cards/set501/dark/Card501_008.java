@@ -96,7 +96,7 @@ public class Card501_008 extends AbstractEpicEventDeployable {
                             );
                             action.appendEffect(
                                     new AddUntilEndOfGameModifierEffect(action,
-                                            new KeywordModifier(self, apprenticeFilter, Keyword.SITH_APPRENTICE), result + " is the apprentice")
+                                            new KeywordModifier(self, apprenticeFilter, Keyword.SITH_APPRENTICE), " chooses " + result + " as the apprentice")
                             );
                             action.appendEffect(
                                     new SetWhileInPlayDataEffect(action, self, new WhileInPlayData(result))
@@ -144,6 +144,6 @@ public class Card501_008 extends AbstractEpicEventDeployable {
 
     @Override
     public String getDisplayableInformation(SwccgGame game, PhysicalCard self) {
-        return "Chosen Apprentice: " + self.getWhileInPlayData().getTextValue();
+        return "Chosen Apprentice is " + self.getWhileInPlayData().getTextValue();
     }
 }
