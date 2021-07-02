@@ -67,6 +67,19 @@ public class LoseForceEffect extends AbstractSubActionEffect {
 
     /**
      * Creates an effect that causes the specified player to lose a specified amount of Force.
+     *
+     * @param action            the action performing this effect
+     * @param playerToLoseForce the player
+     * @param amount            the amount of Force to lose
+     * @param cannotBeReduced   true if Force loss cannot be reduced, otherwise false
+     * @param fromLifeForceOnly true if Force must be lost from Life Force, otherwise false
+     */
+    public LoseForceEffect(Action action, String playerToLoseForce, float amount, boolean cannotBeReduced, boolean fromLifeForceOnly) {
+        this(action, playerToLoseForce, amount, cannotBeReduced, false, false, false, false, fromLifeForceOnly, null, false);
+    }
+
+    /**
+     * Creates an effect that causes the specified player to lose a specified amount of Force.
      * @param action the action performing this effect
      * @param playerToLoseForce the player
      * @param amount the amount of Force to lose
