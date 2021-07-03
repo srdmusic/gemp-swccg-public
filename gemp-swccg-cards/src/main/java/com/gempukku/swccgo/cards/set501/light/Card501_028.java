@@ -4,7 +4,6 @@ import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.SetWhileInPlayDataEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerForceDrainEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -12,6 +11,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
@@ -44,6 +44,23 @@ public class Card501_028 extends AbstractEpicEventDeployable {
                 "If Anakin's Lightsaber present during a battle or Force drain at Lars’ Moisture Farm, may retrieve 1 Force.");
         addIcons(Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_16);
         setTestingText("The Force Is Strong In My Family");
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        //If Anakin's Lightsaber present during a Force drain at Lars’ Moisture Farm, may retrieve 1 Force.
+        // Check condition(s)
+        if (TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerId, Filters.wherePresent(self, Filters.persona(Persona.ANAKINS_LIGHTSABER)))
+                && TriggerConditions.forceDrainInitiatedAt(game, effectResult, Filters.Lars_Moisture_Farm)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Retrieve 1 Force");
+            // Perform result(s)
+            action.appendEffect(
+                    new RetrieveForceEffect(action, playerId, 1));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
     @Override
@@ -157,24 +174,6 @@ public class Card501_028 extends AbstractEpicEventDeployable {
             // Add Usages
             action.appendUsage(
                     new OncePerBattleEffect(action)
-            );
-            // Perform result(s)
-            action.appendEffect(
-                    new RetrieveForceEffect(self, action, playerId, 1));
-            actions.add(action);
-        }
-
-        //If Anakin's Lightsaber present during a Force drain at Lars’ Moisture Farm, may retrieve 1 Force.
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-
-        if (GameConditions.isDuringForceDrainAt(game, Filters.and(Filters.Lars_Moisture_Farm, Filters.wherePresent(self, Filters.persona(Persona.ANAKINS_LIGHTSABER))))
-                && GameConditions.isOncePerForceDrain(game, self, gameTextActionId)) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Retrieve 1 Force");
-            action.setActionMsg("Retrieve 1 Force");
-            // Add Usages
-            action.appendUsage(
-                    new OncePerForceDrainEffect(action)
             );
             // Perform result(s)
             action.appendEffect(
