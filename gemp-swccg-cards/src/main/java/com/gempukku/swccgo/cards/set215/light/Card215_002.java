@@ -12,9 +12,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
-import com.gempukku.swccgo.logic.effects.PutStackedCardInLostPileEffect;
+import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeModifiedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -110,9 +108,13 @@ public class Card215_002 extends AbstractEpicEventDeployable {
                 && !game.getModifiersQuerying().isDeathStarPowerShutDown()) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Death Star Power is 'shut down'");
             action.setSingletonTrigger(true);
-            game.getModifiersQuerying().deathStarPowerIsShutDown();
+            action.appendEffect(
+                    new ShowCardOnScreenEffect(action, self)
+            );
+            action.appendEffect(
+                    new ShutDownDeathStarPowerEffect(action)
+            );
             action.appendEffect(
                     new AddUntilEndOfTurnModifierEffect(
                             action, new MovesFreeFromLocationToLocationModifier(self, Filters.your(playerId), Filters.Death_Star_location, Filters.Death_Star_location), "Your movement between Death Star locations is free"
