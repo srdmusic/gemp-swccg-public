@@ -68,7 +68,7 @@ public class Card215_016 extends AbstractUsedOrStartingInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
             action.setText("Deploy a Kashyyyk location and Effects from Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Deploy a Kashyyyk location and up to three Effects from Reserve Deck",
+            action.allowResponses("Deploy a Kashyyyk location and three Effects from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
@@ -76,7 +76,7 @@ public class Card215_016 extends AbstractUsedOrStartingInterrupt {
                             action.appendEffect(
                                     new DeployCardsFromReserveDeckEffect(action, Filters.Kashyyyk_location, 1, 1, true, false));
                             action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter), 1, 3, true, false));
+                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter), 3, 3, true, false));
                             action.appendEffect(
                                     new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
                         }
