@@ -86,7 +86,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
                                     break;
                                 case YOU_HAVE_THAT_POWER_TOO:
                                     //Deploy Rey's Encampment and My Parents Were Strong. You may not deploy Jedi (except [Episode VII] Jedi).
-                                    siteFilter = Filters.Im_Here_To_Rescue_You;
+                                    siteFilter = Filters.Reys_Encampment;
                                     effectFilter = Filters.title(Title.My_Parents_Were_Strong);
                                     cardsThatMayNotDeployFilter = Filters.and(Filters.Jedi, Filters.except(Icon.EPISODE_VII));
                                     break;
@@ -150,8 +150,8 @@ public class Card501_028 extends AbstractEpicEventDeployable {
 
         if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.persona(Persona.ANAKINS_LIGHTSABER)))
                 && GameConditions.isDuringBattleAt(game, Filters.Lars_Moisture_Farm)
-                && GameConditions.isOncePerBattle(game, self, gameTextSourceCardId, gameTextActionId)) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Retrieve 1 Force");
             action.setActionMsg("Retrieve 1 Force");
             // Add Usages
@@ -167,8 +167,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
         //If Anakin's Lightsaber present during a Force drain at Lars’ Moisture Farm, may retrieve 1 Force.
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
 
-        if (GameConditions.isDuringForceDrainAt(game, Filters.and(Filters.Lars_Moisture_Farm))
-                && GameConditions.canSpot(game, self, Filters.and(Filters.persona(Persona.ANAKINS_LIGHTSABER), Filters.at(Filters.Lars_Moisture_Farm)))
+        if (GameConditions.isDuringForceDrainAt(game, Filters.and(Filters.Lars_Moisture_Farm, Filters.wherePresent(self, Filters.persona(Persona.ANAKINS_LIGHTSABER))))
                 && GameConditions.isOncePerForceDrain(game, self, gameTextActionId)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Retrieve 1 Force");

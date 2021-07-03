@@ -3983,7 +3983,6 @@ var Card = Class.extend({
                    (cardNo == 20) ||
                    (cardNo == 21) ||
                    (cardNo == 22) ||
-                   (cardNo == 31) ||
                    (cardNo == 32) ||
                    (cardNo == 50) ||
                    (cardNo == 51) ||

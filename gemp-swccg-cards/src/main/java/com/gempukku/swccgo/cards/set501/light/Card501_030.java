@@ -75,8 +75,7 @@ public class Card501_030 extends AbstractNormalEffect {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextLeavesTableRequiredTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.justLost(game, effectResult, Filters.Shmi)
-                && GameConditions.isOpponentsTurn(game, self)) {
+        if (TriggerConditions.justLost(game, effectResult, Filters.Shmi)) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Make Anakin power +5");
