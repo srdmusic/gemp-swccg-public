@@ -611,6 +611,7 @@ public interface Title {
     String Life_Debt = "Life Debt";
     String Lift_Tube = "Lift Tube";
     String Lightsaber_Proficiency = "Lightsaber Proficiency";
+    String Like_My_Father_Before_Me = "Like My Father Before Me";
     String Limited_Resources = "Limited Resources";
     String Lirin_Carn = "Lirin Car'n";
     String Local_Trouble = "Local Trouble";
@@ -681,6 +682,7 @@ public interface Title {
     String My_Favorite_Decoration = "My Favorite Decoration";
     String My_Kind_Of_Scum = "My Kind Of Scum";
     String My_Lord_Is_That_Legal = "My Lord, Is That Legal?";
+    String My_Parents_Were_Strong = "My Parents Were Strong";
     String Mynock = "Mynock";
     String Myo = "Myo";
     String Nabrun_Leids = "Nabrun Leids";
@@ -996,6 +998,7 @@ public interface Title {
     String The_Camp = "The Camp";
     String The_Circle_Is_Now_Complete = "The Circle Is Now Complete";
     String The_First_Transport_Is_Away = "The First Transport Is Away!";
+    String The_Force_Is_Strong_In_My_Family = "The Force Is Strong In My Family";
     String The_Force_Is_Strong_With_This_One = "The Force Is Strong With This One";
     String The_Galaxy_May_Need_A_Legend = "The Galaxy May Need A Legend";
     String The_Hyperdrive_Generators_Gone = "The Hyperdrive Generator's Gone";
@@ -1147,6 +1150,7 @@ public interface Title {
     String You_Truly_Belong_Here_With_Us = "You Truly Belong Here With Us";
     String Your_Destiny = "Your Destiny";
     String Your_Insight_Serves_You_Well = "Your Insight Serves You Well";
+    String Your_Thoughts_Dwell_On_Your_Mother = "Your Thoughts Dwell On Your Mother";
     String Youre_A_Slave = "You're A Slave?";
     String Youre_All_Clear_Kid = "You're All Clear Kid!";
     String YT_1300_Transport = "YT-1300 Transport";

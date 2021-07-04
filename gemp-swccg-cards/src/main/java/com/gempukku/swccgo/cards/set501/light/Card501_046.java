@@ -1,21 +1,21 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractStartingInterrupt;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.cards.AbstractUsedOrStartingInterrupt;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.ModifyNumCardsDrawnInStartingHandEffect;
-import com.gempukku.swccgo.logic.effects.PutCardFromVoidInLostPileEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromVoidInReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardsIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Set: Set 16
@@ -23,38 +23,67 @@ import com.gempukku.swccgo.logic.timing.Action;
  * Subtype: Starting
  * Title: What Gives A Jedi His Power
  */
-public class Card501_046 extends AbstractStartingInterrupt {
+public class Card501_046 extends AbstractUsedOrStartingInterrupt {
     public Card501_046() {
-        super(Side.LIGHT, 0, "What Gives A Jedi His Power", Uniqueness.UNIQUE);
-        setGameText("Take any one: antechamber, hut, or corridor; a unique (•) weapon, and two effects that are always [Immune to Alter.] into hand from Reserve Deck. When you draw your starting hand, draw only six more cards. Place Interrupt in Lost Pile.");
+        super(Side.LIGHT, 5, "What Gives A Jedi His Power");
+        setGameText("USED: Take one weapon into hand from Reserve Deck; reshuffle." +
+                "STARTING: If your starting location was a battleground site with exactly two [Light Side]," +
+                "deploy The Force Is Strong In My Family and two Effects that are always immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("What Gives A Jedi His Power");
     }
 
     @Override
-    protected PlayInterruptAction getGameTextStartingAction(final String playerId, SwccgGame game, final PhysicalCard self) {
-        final PlayInterruptAction action = new PlayInterruptAction(game, self);
-        action.setText("Take a location, weapon, and two Effects into hand from Reserve Deck");
-        // Allow response(s)
-        action.allowResponses(
-                new RespondablePlayCardEffect(action) {
-                    @Override
-                    protected void performActionResults(Action targetingAction) {
-                        // Perform result(s)
-                        Filter locationFilter = Filters.and(Filters.location, Filters.or(Filters.titleContains("Antechamber"), Filters.titleContains("Corridor"), Filters.titleContains("Hut")));
-                        action.appendEffect(
-                                new TakeCardIntoHandFromReserveDeckEffect(action, playerId, locationFilter, false));
-                        action.appendEffect(
-                                new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.and(Filters.unique, Filters.weapon), false));
-                        action.appendEffect(
-                                new TakeCardsIntoHandFromReserveDeckEffect(action, playerId, 2, 2, Filters.and(Filters.Effect, Filters.immune_to_Alter), false));
-                        action.appendEffect(
-                                new ModifyNumCardsDrawnInStartingHandEffect(action, playerId, 6));
-                        action.appendEffect(
-                                new PutCardFromVoidInLostPileEffect(action, playerId, self));
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
+        GameTextActionId gameTextActionId = GameTextActionId.WHAT_GIVES_A_JEDI_HIS_POWER__UPLOAD_WEAPON;
+
+        // Check condition(s)
+        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
+            action.setText("Take a weapon into hand");
+            // Allow response(s)
+            action.allowResponses("Take a weapon into hand from Reserve Deck",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.weapon, true));
+                        }
                     }
-                }
-        );
-        return action;
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        // Check condition(s)
+        final PhysicalCard startingLocation = game.getModifiersQuerying().getStartingLocation(playerId);
+        if (startingLocation != null && Filters.battleground.accepts(game, startingLocation)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
+            action.setText("Deploy The Force is Strong In My Family and Effects from Reserve Deck");
+            // Allow response(s)
+            action.allowResponses("Deploy The Force is Strong In My Family and up to two Effects from Reserve Deck",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new DeployCardFromReserveDeckEffect(action, Filters.title(Title.The_Force_Is_Strong_In_My_Family), true, false));
+                            action.appendEffect(
+                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table")), Filters.always_immune_to_Alter), 1, 2, true, false));
+                            action.appendEffect(
+                                    new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
+                        }
+                    }
+            );
+            return action;
+        }
+
+        return null;
     }
 }
