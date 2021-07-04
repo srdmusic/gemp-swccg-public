@@ -14,6 +14,7 @@ public interface Title {
     String A_Dangerous_Time = "A Dangerous Time";
     String A_Gift = "A Gift";
     String A_Power_Loss = "A Power Loss";
+    String A_Sith_Legend = "A Sith Legend";
     String A_Stunning_Move = "A Stunning Move";
     String A_Useless_Gesture = "A Useless Gesture";
     String A_Valuable_Hostage = "A Valuable Hostage";
@@ -264,6 +265,7 @@ public interface Title {
     String Deploy_The_Garrison = "Deploy The Garrison!";
     String Derlin = "Major Bren Derlin";
     String Desert_Heart = "Tatooine: Desert Heart";
+    String Desert_Landing_Site = "Tatooine: Desert Landing Site";
     String Despair = "Despair";
     String Desperate_Reach = "Desperate Reach";
     String Detention_Block_Control_Room = "Death Star: Detention Block Control Room";
@@ -346,6 +348,7 @@ public interface Title {
     String Evader = "Evader";
     String Evacuation_Control = "Evacuation Control";
     String E_web_Blaster = "E-web Blaster";
+    String Evil_Is_Everywhere = "Evil Is Everywhere!";
     String Ewok_Bow = "Ewok Bow";
     String Ewok_Glider = "Ewok Glider";
     String Ewok_Rescue = "Ewok Rescue";
@@ -849,6 +852,7 @@ public interface Title {
     String Rogue_One = "Rogue One";
     String Rose = "Rose Tico";
     String Royal_Naboo_Security_Officer = "Royal Naboo Security Officer";
+    String Rule_Of_Two = "Rule Of Two";
     String Run_Luke_Run = "Run Luke, Run!";
     String Rya = "Lieutenant Rya Kirsch";
     String Rycar_Ryjerd = "Rycar Ryjerd";

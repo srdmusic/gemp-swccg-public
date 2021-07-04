@@ -29,7 +29,7 @@ import java.util.*;
  */
 public class Card501_013 extends AbstractLostInterrupt {
     public Card501_013() {
-        super(Side.DARK, 2, "A Sith Legend", Uniqueness.UNIQUE);
+        super(Side.DARK, 2, Title.A_Sith_Legend, Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy a lightsaber (may simultaneously deploy a matching Dark Jedi or Sith character) from hand and/or Reserve Deck; reshuffle. [Immune to Sense.] OR Once per game, cancel the game text of a character of equal or lesser ability present with your Dark Jedi or Inquisitor.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
