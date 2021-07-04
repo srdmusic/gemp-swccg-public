@@ -3497,7 +3497,8 @@ var fixedImages = {
 "501_49":"/gemp-swccg/images/cards/ANewHope-Dark/deathstar.gif",
 "501_50":"/gemp-swccg/images/cards/Premiere-Dark/deathstarwarroom.gif",
 "501_51":"/gemp-swccg/images/cards/Endor-Dark/endorlandingplatformdockingbay.gif",
-"501_52":"/gemp-swccg/images/cards/Virtual4-Light/bailorgana.gif",
+"501_52":"/gemp-swccg/images/cards/Coruscant-Dark/theywillbenomatchforyou.gif",
+"501_53":"/gemp-swccg/images/cards/SpecialEdition-Dark/coruscantimperialsquare.gif",
 "501_56":"/gemp-swccg/images/cards/Virtual7-Dark/directororsonkrennic.gif",
 "501_58":"/gemp-swccg/images/cards/ANewHope-Dark/advosze.gif",
 "501_59":"/gemp-swccg/images/cards/ANewHope-Dark/dannikjerriko.gif",
@@ -3980,15 +3981,9 @@ var Card = Class.extend({
         }
         if (setNo == 501) {
             return (cardNo == 6) ||
-                   (cardNo == 15) ||
-                   (cardNo == 20) ||
-                   (cardNo == 21) ||
-                   (cardNo == 22) ||
-                   (cardNo == 31) ||
-                   (cardNo == 32) ||
                    (cardNo == 50) ||
                    (cardNo == 51) ||
-                   (cardNo == 60) ||
+                   (cardNo == 53) ||
                    (cardNo == 74) ||
                    (cardNo == 75);
         }
