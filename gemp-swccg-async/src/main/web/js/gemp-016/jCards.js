@@ -3453,7 +3453,7 @@ var fixedImages = {
 "501_5":"/gemp-swccg/images/cards/Premiere-Dark/ubrikkian9000z001.gif",
 "501_6":"/gemp-swccg/images/cards/CloudCity-Dark/cloudcityeastplatformdockingbay.gif",
 "501_7":"/gemp-swccg/images/cards/ANewHope-Light/tzizvvt.gif",
-"501_8":"/gemp-swccg/images/cards/Virtual9-Light/lieutenantkaydelconnix.gif",
+"501_8":"/gemp-swccg/images/cards/ReflectionsIII-Dark/deephatred.gif",
 "501_9":"https://res.starwarsccg.org/cards/Virtual9-Light/hires/abraveresistance.png",
 "501_10":"/gemp-swccg/images/cards/Virtual7-Light/sabinewren.gif",
 "501_11":"/gemp-swccg/images/cards/Premiere-Light/jawasiesta.gif",
@@ -3496,7 +3496,8 @@ var fixedImages = {
 "501_49":"/gemp-swccg/images/cards/ANewHope-Dark/deathstar.gif",
 "501_50":"/gemp-swccg/images/cards/Premiere-Dark/deathstarwarroom.gif",
 "501_51":"/gemp-swccg/images/cards/Endor-Dark/endorlandingplatformdockingbay.gif",
-"501_52":"/gemp-swccg/images/cards/Virtual4-Light/bailorgana.gif",
+"501_52":"/gemp-swccg/images/cards/Coruscant-Dark/theywillbenomatchforyou.gif",
+"501_53":"/gemp-swccg/images/cards/SpecialEdition-Dark/coruscantimperialsquare.gif",
 "501_56":"/gemp-swccg/images/cards/Virtual7-Dark/directororsonkrennic.gif",
 "501_58":"/gemp-swccg/images/cards/ANewHope-Dark/advosze.gif",
 "501_59":"/gemp-swccg/images/cards/ANewHope-Dark/dannikjerriko.gif",
@@ -3979,14 +3980,9 @@ var Card = Class.extend({
         }
         if (setNo == 501) {
             return (cardNo == 6) ||
-                   (cardNo == 15) ||
-                   (cardNo == 20) ||
-                   (cardNo == 21) ||
-                   (cardNo == 22) ||
-                   (cardNo == 32) ||
                    (cardNo == 50) ||
                    (cardNo == 51) ||
-                   (cardNo == 60) ||
+                   (cardNo == 53) ||
                    (cardNo == 74) ||
                    (cardNo == 75);
         }

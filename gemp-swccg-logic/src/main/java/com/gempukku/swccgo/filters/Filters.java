@@ -17135,6 +17135,7 @@ public class Filters {
     public static final Filter A_Dangerous_Time = Filters.title(Title.A_Dangerous_Time);
     public static final Filter A_Gift = Filters.title(Title.A_Gift);
     public static final Filter A_Power_Loss = Filters.title(Title.A_Power_Loss);
+    public static final Filter A_Sith_Legend = Filters.title(Title.A_Sith_Legend);
     public static final Filter A_Stunning_Move = Filters.title(Title.A_Stunning_Move);
     public static final Filter A_Useless_Gesture = Filters.title(Title.A_Useless_Gesture);
     public static final Filter A_Valuable_Hostage = Filters.title(Title.A_Valuable_Hostage);
@@ -17513,6 +17514,7 @@ public class Filters {
     public static final Filter Derlin = Filters.title(Title.Derlin);
     public static final Filter desert = Filters.keyword(Keyword.DESERT);
     public static final Filter Desert_Heart = Filters.title(Title.Desert_Heart);
+    public static final Filter Desert_Landing_Site = Filters.title(Title.Desert_Landing_Site);
     public static final Filter Despair = Filters.title(Title.Despair);
     public static final Filter destroyer_droid = Filters.and(ModelType.DESTROYER, CardType.DROID);
     public static final Filter Detention_Block_Control_Room = Filters.title(Title.Detention_Block_Control_Room);
@@ -17610,6 +17612,7 @@ public class Filters {
     public static final Filter Establish_Secret_Base = Filters.title(Title.Establish_Secret_Base);
     public static final Filter Evader = Filters.title(Title.Evader);
     public static final Filter Evacuation_Control = Filters.title(Title.Evacuation_Control);
+    public static final Filter Evil_Is_Everywhere = Filters.title(Title.Evil_Is_Everywhere);
     public static final Filter Ewok = Filters.species(Species.EWOK);
     public static final Filter Ewok_Bow = Filters.title(Title.Ewok_Bow);
     public static final Filter Ewok_device = Filters.keyword(Keyword.EWOK_DEVICE);
@@ -18431,6 +18434,7 @@ public class Filters {
     public static final Filter Silence_Is_Golden = Filters.title(Title.Silence_Is_Golden);
     public static final Filter site = Filters.subtype(CardSubtype.SITE);
     public static final Filter Sith = Filters.type(CardType.SITH);
+    public static final Filter Sith_Apprentice = Filters.keyword(Keyword.SITH_APPRENTICE);
     public static final Filter Sith_Probe_Droid = Filters.title(Title.Sith_Probe_Droid);
     public static final Filter Sixth_Marker = Filters.keyword(Keyword.MARKER_6);
     public static final Filter skiff = Filters.keyword(Keyword.SKIFF);
@@ -18611,6 +18615,7 @@ public class Filters {
     public static final Filter thief = Filters.keyword(Keyword.THIEF);
     public static final Filter Third_Marker = Filters.keyword(Keyword.MARKER_3);
     public static final Filter They_Will_Be_Lost_And_Confused = Filters.title(Title.They_Will_Be_Lost_And_Confused);
+    public static final Filter They_Will_Be_No_Match_For_You = Filters.title(Title.They_Will_Be_No_Match_For_You);
     public static final Filter This_Deal_Is_Getting_Worse_All_The_Time = Filters.title(Title.This_Deal_Is_Getting_Worse_All_The_Time);
     public static final Filter This_Is_All_Your_Fault = Filters.title(Title.This_Is_All_Your_Fault);
     public static final Filter This_Is_Just_Wrong = Filters.title(Title.This_Is_Just_Wrong);
@@ -18687,6 +18692,7 @@ public class Filters {
     public static final Filter Utinni_Effect = Filters.and(CardType.EFFECT, CardSubtype.UTINNI);
     public static final Filter Utinni_Effect_that_retrieves_Force = Filters.and(CardType.EFFECT, CardSubtype.UTINNI, Keyword.UTINNI_EFFECT_THAT_RETRIEVES_FORCE);
     public static final Filter Vader = Filters.persona(Persona.VADER);
+    public static final Filter Vaders_Castle = Filters.title(Title.Vaders_Castle);
     public static final Filter Vaders_Custom_TIE = Filters.persona(Persona.VADERS_CUSTOM_TIE);
     public static final Filter Vaders_Lightsaber = Filters.persona(Persona.VADERS_LIGHTSABER);
     public static final Filter Vaders_Obsession = Filters.title(Title.Vaders_Obsession);

@@ -16,7 +16,7 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.MoveCostModifier;
+import com.gempukku.swccgo.logic.modifiers.MoveCostFromLocationModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ public class Card215_006 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MoveCostModifier(self, Filters.and(Filters.opponents(playerOnDarkSideOfLocation), Filters.character, Filters.here(self)), new OccupiesCondition(playerOnDarkSideOfLocation, self), 1));
+        modifiers.add(new MoveCostFromLocationModifier(self, Filters.and(Filters.opponents(playerOnDarkSideOfLocation), Filters.character), new OccupiesCondition(playerOnDarkSideOfLocation, self), 1, Filters.here(self)));
         return modifiers;
     }
 

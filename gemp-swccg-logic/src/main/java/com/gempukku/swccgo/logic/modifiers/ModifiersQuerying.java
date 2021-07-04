@@ -1091,14 +1091,14 @@ public interface ModifiersQuerying {
     /**
      * Records that the Death Star's power is 'shut down'.
      */
-    public void deathStarPowerIsShutDown();
+    void deathStarPowerIsShutDown();
 
     /**
      * Determines if the Death Star's power is 'shut down'.
      *
      * @return true or false
      */
-    public boolean isDeathStarPowerShutDown();
+    boolean isDeathStarPowerShutDown();
 
     /**
      * Records that the specified card being played (or being deployed).
