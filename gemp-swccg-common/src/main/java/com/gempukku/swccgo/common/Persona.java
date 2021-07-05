@@ -66,6 +66,7 @@ public enum Persona implements Filterable {
     LAUDICA("Laudica"),
     LEIA("Leia"),
     LOBOT("Lobot"),
+    LOTT("Lott"),
     LUKE("Luke"),
     MARA_JADE("Mara Jade"),
     MARA_SKYWALKER("Mara Skywalker"),

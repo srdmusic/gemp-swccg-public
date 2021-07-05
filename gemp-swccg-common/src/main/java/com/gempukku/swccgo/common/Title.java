@@ -852,6 +852,7 @@ public interface Title {
     String Rogue_4 = "Rogue 4";
     String Rogue_Asteroid = "Rogue Asteroid";
     String Rogue_One = "Rogue One";
+    String Rolling_Rolling_Rolling = "Rolling, Rolling, Rolling";
     String Rose = "Rose Tico";
     String Royal_Naboo_Security_Officer = "Royal Naboo Security Officer";
     String Rule_Of_Two = "Rule Of Two";
@@ -1010,6 +1011,7 @@ public interface Title {
     String The_Ultimate_Power_In_The_Universe = "The Ultimate Power In The Universe";
     String There_Is_Another = "There Is Another";
     String There_Is_No_Try = "There Is No Try";
+    String There_They_Are = "There They Are!";
     String Theed_Palace_Courtyard = "Naboo: Theed Palace Courtyard";
     String Theed_Palace_Generator = "Naboo: Theed Palace Generator";
     String Theed_Palace_Generator_Core = "Naboo: Theed Palace Generator Core";
