@@ -44,6 +44,7 @@ public interface Title {
     String Ambush = "Ambush";
     String An_Inkling_Of_Its_Destructive_Potential = "An Inkling Of Its Destructive Potential";
     String Anakin_Skywalker = "Anakin Skywalker";
+    String Anakins_Lightsaber = "Anakin's Lightsaber";
     String Anakins_Podracer = "Anakin's Podracer";
     String Anchorhead = "Tatooine: Anchorhead";
     String And_Now_Youll_Give_It_To_Me = "And Now You'll Give It To Me";

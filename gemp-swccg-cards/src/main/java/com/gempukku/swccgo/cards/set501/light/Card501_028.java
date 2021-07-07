@@ -136,6 +136,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
         List<TopLevelGameTextAction> actions = new ArrayList<>();
         //May deploy Anakin’s Lightsaber from Reserve Deck (reshuffle) or Lost Pile (lose 1 Force from Life Force)
         GameTextActionId gameTextActionId = GameTextActionId.THE_FORCE_IS_STRONG_IN_MY_FAMILY__DOWNLOAD_ANAKINS_SABER;
+        Filter anakinsLightsaberFilter = Filters.title(Title.Anakins_Lightsaber);
 
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, false, Persona.ANAKINS_LIGHTSABER)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
@@ -143,7 +144,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
             action.setActionMsg("Deploy Anakin’s Lightsaber from Reserve Deck");
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.persona(Persona.ANAKINS_LIGHTSABER), true));
+                    new DeployCardFromReserveDeckEffect(action, anakinsLightsaberFilter, true));
             actions.add(action);
         }
 
@@ -158,14 +159,14 @@ public class Card501_028 extends AbstractEpicEventDeployable {
             );
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromLostPileEffect(action, Filters.persona(Persona.ANAKINS_LIGHTSABER), false));
+                    new DeployCardFromLostPileEffect(action, anakinsLightsaberFilter, false));
             actions.add(action);
         }
 
         //If Anakin's Lightsaber present during a battle at Lars’ Moisture Farm, may retrieve 1 Force.
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.persona(Persona.ANAKINS_LIGHTSABER)))
+        if (GameConditions.isDuringBattleWithParticipant(game, Filters.persona(Persona.ANAKINS_LIGHTSABER))
                 && GameConditions.isDuringBattleAt(game, Filters.Lars_Moisture_Farm)
                 && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
