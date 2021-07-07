@@ -80,7 +80,6 @@ public class Card501_054 extends AbstractUsedOrLostInterrupt {
             );
             actions.add(action);
         }
-
         return actions;
     }
 }
