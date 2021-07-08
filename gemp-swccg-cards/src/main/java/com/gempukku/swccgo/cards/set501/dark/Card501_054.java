@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToPutOnBottomEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -48,6 +49,9 @@ public class Card501_054 extends AbstractUsedOrLostInterrupt {
                 && GameConditions.isDuringBattleAt(game, Filters.Theed_Palace_Generator_Core)) {
 
             PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.appendUsage(
+                    new OncePerGameEffect(action)
+            );
             // Build action using common utility
             CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
             return Collections.singletonList(action);
