@@ -3474,7 +3474,7 @@ var fixedImages = {
 "501_29":"/gemp-swccg/images/cards/Virtual0-Light/anakinskywalkerpadawanlearner.gif",
 "501_30":"/gemp-swccg/images/cards/Coruscant-Light/avergenceintheforce.gif",
 "501_31":"https://res.starwarsccg.org/cards/Virtual9-Light/hires/abraveresistance.png",
-"501_32":"/gemp-swccg/images/cards/Endor-Light/endorewokvillage.gif",
+"501_32":"/gemp-swccg/images/cards/Premiere-Light/returnofajedi.gif",
 "501_33":"/gemp-swccg/images/cards/JabbasPalace-Light/tamtelskreej.gif",
 "501_34":"/gemp-swccg/images/cards/Virtual9-Light/rosetico.gif",
 "501_35":"/gemp-swccg/images/cards/TheedPalace-Light/whoooo.gif",
