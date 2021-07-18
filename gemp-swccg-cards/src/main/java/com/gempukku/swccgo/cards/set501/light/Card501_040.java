@@ -34,7 +34,7 @@ public class Card501_040 extends AbstractRebel {
     public Card501_040() {
         super(Side.LIGHT, 1, 5, 5, 6, 9, "Master Kenobi", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("While 'communing': Once per turn, may deploy a battleground from Reserve Deck that is related to a location on table; reshuffle. If you just initiated battle, opponent loses 1 Force (2 if Luke in battle). You may not deploy Jedi (except Yoda).");
+        setGameText("While 'communing': Once per turn, may deploy a battleground from Reserve Deck that is related to a location on table; reshuffle. If you just initiated battle, opponent loses 1 Force (2 if non-[Permanent Weapon] Luke in battle). You may not deploy Jedi (except Yoda).");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         addPersona(Persona.OBIWAN);
         setTestingText("Master Kenobi");
@@ -83,7 +83,7 @@ public class Card501_040 extends AbstractRebel {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             int forceLoss = 1;
-            if (GameConditions.isDuringBattleWithParticipant(game, Filters.Luke))
+            if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.Luke, Filters.not(Filters.weapon_or_character_with_permanent_weapon))))
                 forceLoss = 2;
 
             action.setText("Opponent loses "+forceLoss+" Force");
