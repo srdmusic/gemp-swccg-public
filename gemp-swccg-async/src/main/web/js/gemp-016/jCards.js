@@ -3460,7 +3460,7 @@ var fixedImages = {
 "501_12":"/gemp-swccg/images/cards/Endor-Light/firefight.gif",
 "501_13":"/gemp-swccg/images/cards/Coruscant-Dark/maulstrikes.gif",
 "501_14":"/gemp-swccg/images/cards/Virtual0-Light/daughterofskywalker.gif",
-"501_15":"/gemp-swccg/images/cards/Coruscant-Light/coruscantjedicouncilchamber.gif",
+"501_15":"/gemp-swccg/images/cards/Virtual3-Light/kananjarrus.gif",
 "501_16":"/gemp-swccg/images/cards/Coruscant-Dark/lottdod.gif",
 "501_17":"/gemp-swccg/images/cards/TheedPalace-Dark/rollingrollingrolling.gif",
 "501_18":"/gemp-swccg/images/cards/Coruscant-Dark/naboo.gif",

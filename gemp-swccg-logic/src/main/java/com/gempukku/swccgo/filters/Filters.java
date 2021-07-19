@@ -17356,7 +17356,7 @@ public class Filters {
     public static final Filter Chimaera = Filters.title(Title.Chimaera);
     public static final Filter Chiraneau = Filters.title(Title.Chiraneau);
     public static final Filter Chirrut = Filters.title(Title.Chirrut);
-    public static final Filter Chopper = Filters.title(Title.Chopper);
+    public static final Filter Chopper = Filters.persona(Persona.CHOPPER);
     public static final Filter City_In_The_Clouds = Filters.title(Title.City_In_The_Clouds);
     public static final Filter City_Outskirts = Filters.title(Title.City_Outskirts);
     public static final Filter Civil_Disorder = Filters.title(Title.Civil_Disorder);

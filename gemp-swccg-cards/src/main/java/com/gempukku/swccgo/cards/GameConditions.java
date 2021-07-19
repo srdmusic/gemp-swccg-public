@@ -4522,6 +4522,10 @@ public class GameConditions {
         return game.getModifiersQuerying().mayNotMove(game.getGameState(), card);
     }
 
+    public static boolean hasPerformedRegularMoveThisTurn(SwccgGame game, PhysicalCard card) {
+        return game.getModifiersQuerying().hasPerformedRegularMoveThisTurn(card);
+    }
+
     /**
      * Determines if the player can use location's game text to perform a move.
      * @param playerId the player
