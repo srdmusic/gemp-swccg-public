@@ -1214,6 +1214,12 @@ public class SwccgGameMediator {
                     // Slip Sliding Away (v)
                     return startingLocation.getBlueprint().getTitle() + " SSAv";
                 }
+                if(Filters.Let_The_Wookiee_Win.accepts(_swccgoGame, startingInterrupt)
+                        && startingInterrupt.getBlueprint().hasVirtualSuffix()
+                        && startingLocation.getBlueprint().getTitle() != null){
+                    // Let The Wookiee Win (v)
+                    return startingLocation.getBlueprint().getTitle() + " LTWWv";
+                }
                 if(Filters.title("I Am Part Of The Living Force").accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null)  {
                     // Communing
