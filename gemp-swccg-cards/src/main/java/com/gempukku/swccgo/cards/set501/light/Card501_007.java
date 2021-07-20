@@ -2,25 +2,25 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
+import com.gempukku.swccgo.logic.effects.PlaceTopCardOfUsedPileOnTopOfForcePileEffect;
 import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
-import com.gempukku.swccgo.logic.modifiers.DefinedByGameTextDeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.SpeciesModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,33 +32,21 @@ import java.util.List;
  */
 public class Card501_007 extends AbstractAlien {
     public Card501_007() {
-        super(Side.LIGHT, 3, null, 6, 2, 6, "Alien Rabble", Uniqueness.DIAMOND_1);
+        super(Side.LIGHT, 3, 4, 6, 2, 5, "Alien Rabble", Uniqueness.DIAMOND_1);
         setLore("");
-        setGameText("* Replaces any 3 of your aliens at same Jabba’s Palace site (aliens go to Used Pile) or deploys for 4 Force. When deployed, may retrieve your Rep OR place your Rep stacked on your objective in Used pile. This alien assumes your Rep's species (if any).");
+        setGameText("This card has your Rep’s species. When deployed, may retrieve a Rep or place a Rep stacked on your Objective in Used Pile. Once per turn, if No Love For The Empire on table and you just retrieved Force, may place top card of Used Pile on Force Pile.");
         addIcons(Icon.WARRIOR, Icon.WARRIOR, Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         setTestingText("Alien Rabble");
     }
 
     @Override
     protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DefinedByGameTextDeployCostModifier(self, 5));
-        return modifiers;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         PhysicalCard rep = game.getGameState().getRep(self.getOwner());
-
-        if (TriggerConditions.justDeployed(game, effectResult, self)
-                && rep != null) {
-            Species repSpecies = rep.getBlueprint().getSpecies();
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.appendEffect(
-                    new AddUntilEndOfGameModifierEffect(action, new SpeciesModifier(self, repSpecies), " assumes species: " + repSpecies.getHumanReadable()));
-            return Collections.singletonList(action);
+        List<Modifier> modifiers = new LinkedList<>();
+        if (rep != null) {
+            modifiers.add(new SpeciesModifier(self, rep.getBlueprint().getSpecies()));
         }
-        return null;
+        return modifiers;
     }
 
     @Override
@@ -97,6 +85,20 @@ public class Card501_007 extends AbstractAlien {
                 );
                 actions.add(action);
             }
+        }
+
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+        if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canSpot(game, self, Filters.No_Love_For_The_Empire)
+                && GameConditions.hasUsedPile(game, playerId)
+                && TriggerConditions.justRetrievedForce(game, effectResult, playerId)) {
+            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Place top card of Used Pile on Force Pile");
+            action.setActionMsg("Place top card of Used Pile on Force Pile");
+            // Perform result(s)
+            action.appendEffect(
+                    new PlaceTopCardOfUsedPileOnTopOfForcePileEffect(action, playerId));
+            actions.add(action);
         }
         return actions;
     }
