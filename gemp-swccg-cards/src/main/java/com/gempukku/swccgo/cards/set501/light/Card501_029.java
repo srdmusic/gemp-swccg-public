@@ -2,17 +2,14 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.AloneCondition;
 import com.gempukku.swccgo.cards.conditions.ArmedWithCondition;
 import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
-import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
@@ -32,8 +29,7 @@ import java.util.List;
 public class Card501_029 extends AbstractRepublic {
     public Card501_029() {
         super(Side.LIGHT, 1, 8, 7, 6, 8, "Anakin Skywalker, Padawan Learner", Uniqueness.UNIQUE);
-        setGameText("Adds 3 to the power of anything he pilots. While armed with a lightsaber, adds 2 to his defense value. " +
-                "During battle, may lose 2 Force to add one battle destiny. Immune to attrition < 5 (< 6 if alone or armed with a lightsaber).");
+        setGameText("[P3]. While armed with a lightsaber, adds 2 to his defense value. During battle, may lose 3 force to add one battle destiny. Immune to attrition < 6.");
         addPersona(Persona.ANAKIN);
         addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         setTestingText("Anakin Skywalker, Jedi Knight");
@@ -41,12 +37,10 @@ public class Card501_029 extends AbstractRepublic {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        ArmedWithCondition armedWithLightsaberCondition = new ArmedWithCondition(self, Filters.lightsaber);
-
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
-        modifiers.add(new DefenseValueModifier(self, armedWithLightsaberCondition, 2));
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, new ConditionEvaluator(5, 6, new OrCondition(new AloneCondition(self), armedWithLightsaberCondition))));
+        modifiers.add(new DefenseValueModifier(self, new ArmedWithCondition(self, Filters.lightsaber), 2));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 6));
         return modifiers;
     }
 
@@ -65,7 +59,7 @@ public class Card501_029 extends AbstractRepublic {
                     new OncePerBattleEffect(action));
             // Pay Costs
             action.appendCost(
-                    new LoseForceEffect(action, playerId, 2)
+                    new LoseForceEffect(action, playerId, 3)
             );
             action.appendEffect(
                     new AddBattleDestinyEffect(action, 1));
