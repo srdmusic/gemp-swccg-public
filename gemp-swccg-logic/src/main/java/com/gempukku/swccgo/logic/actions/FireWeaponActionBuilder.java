@@ -1876,7 +1876,7 @@ public class FireWeaponActionBuilder {
                                                         if ((totalDestiny + plusOrMinus) > valueToCompare) {
                                                             gameState.sendMessage("Result: Succeeded");
                                                             action.appendEffect(
-                                                                    new ResetArmorManeuverAndHyperspeedEffect(action, cardFiredAt, 0));
+                                                                    new IonizeStarshipEffect(action, cardFiredAt, action.getCardFiringWeapon(), false, true, true));
                                                             Collection<PhysicalCard> starshipWeapons = Filters.filterAllOnTable(game, Filters.and(Filters.starship_weapon, Filters.attachedTo(cardFiredAt)));
                                                             if (!starshipWeapons.isEmpty()) {
                                                                 action.appendEffect(
@@ -5446,7 +5446,7 @@ public class FireWeaponActionBuilder {
                                                         if ((totalDestiny + 3) > valueToCompare) {
                                                             gameState.sendMessage("Result: Succeeded");
                                                             action.appendEffect(
-                                                                    new ResetPowerAndHyperspeedEffect(action, cardFiredAt, 0));
+                                                                    new IonizeStarshipEffect(action, cardFiredAt, action._weaponToFire, true, false, true));
                                                             Collection<PhysicalCard> starshipWeapons = Filters.filterAllOnTable(game, Filters.and(Filters.starship_weapon, Filters.attachedTo(cardFiredAt)));
                                                             if (!starshipWeapons.isEmpty()) {
                                                                 action.appendEffect(
@@ -5743,6 +5743,9 @@ public class FireWeaponActionBuilder {
                                                             if (Filters.or(Filters.Corran_Horn, Filters.Kanan, Filters.ObiWan).accepts(game, gameState.getWeaponFiringState().getCardFiringWeapon())) {
                                                                 action.appendEffect(
                                                                         new HitCardAndMayNotBeUsedToSatisfyAttritionEffect(action, cardFiredAt, _weaponOrCardWithPermanentWeapon, _permanentWeapon, gameState.getWeaponFiringState().getCardFiringWeapon()));
+                                                                action.appendEffect(
+                                                                        new LoseForceEffect(action, _opponent, 1)
+                                                                );
                                                             } else {
                                                                 action.appendEffect(
                                                                         new HitCardEffect(action, cardFiredAt, _weaponOrCardWithPermanentWeapon)

@@ -2,7 +2,8 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.PeekAtTopCardOfForcePileAndReserveDeckAndUsedPileAndReturnOneCardToEachEffect;
+import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfCardPileEffect;
+import com.gempukku.swccgo.cards.effects.complete.ChooseExistingCardPileEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.*;
@@ -13,9 +14,14 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.*;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.decisions.YesNoDecision;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
+import com.gempukku.swccgo.logic.effects.ShufflePileEffect;
+import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
+import com.gempukku.swccgo.logic.modifiers.CommuningModifier;
+import com.gempukku.swccgo.logic.modifiers.ConsideredOutOfPlayModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.TotalForceGenerationModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 import com.gempukku.swccgo.logic.timing.results.PlacedCardOutOfPlayFromTableResult;
@@ -25,7 +31,7 @@ import java.util.List;
 
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Epic Event
  * Title: Communing
  */
@@ -35,8 +41,8 @@ public class Card501_037 extends AbstractEpicEventDeployable {
         setGameText("Deploy on table.\n" +
                 "One With The Force: If a Jedi was just lost (or placed out of play) from table, may stack that card here.\n" +
                 "The Living Force: Jedi stacked here are 'communing' and are considered out of play. Your total Force generation is +1 for each Jedi stacked here.\n" +
-                "The Cosmic Force: Once per turn, if a Jedi is 'communing,' may use 1 Force to peek at the top card of Reserve Deck, Force Pile, and/or Used Pile; return one card to each deck or pile.");
-        addIcons(Icon.VIRTUAL_SET_15, Icon.EPISODE_I);
+                "The Cosmic Force: Once per turn, may peek at the top X cards of one of your decks or piles, where X = the number of Jedi 'communing'; may shuffle that deck or pile.");
+        addIcons(Icon.VIRTUAL_SET_16, Icon.EPISODE_I);
         setTestingText("Communing");
     }
 
@@ -58,23 +64,39 @@ public class Card501_037 extends AbstractEpicEventDeployable {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         if (GameConditions.hasStackedCards(game, self, Filters.Jedi)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canUseForce(game, playerId, 1)
-
-                //TODO need to allow "or" for this part which would mean these two conditions are unnecessary
-                && GameConditions.hasReserveDeck(game, playerId)
-                && GameConditions.numCardsInForcePile(game, playerId) >= 2
         ) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Look at top cards and replace");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            action.appendCost(
-                    new UseForceEffect(action, playerId, 1));
-            // Perform result(s)
-            action.appendEffect(
-                    new PeekAtTopCardOfForcePileAndReserveDeckAndUsedPileAndReturnOneCardToEachEffect(action, playerId));
-            actions.add(action);
+            final int stackedCount = Filters.countStacked(game, Filters.and(Filters.stackedOn(self), Filters.Jedi));
+
+            if (stackedCount>0) {
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Peek at top " + stackedCount + " card" + (stackedCount==1?"":"s") + " of a deck or pile");
+                        // Update usage limit(s)
+                        action.appendUsage(
+                                new OncePerTurnEffect(action));
+
+                // Perform result(s)
+                action.appendEffect(new ChooseExistingCardPileEffect(action, playerId) {
+                    @Override
+                    protected void pileChosen(final SwccgGame game, final String cardPileOwner, final Zone cardPile) {
+                        action.appendEffect(
+                                new PeekAtTopCardsOfCardPileEffect(action, playerId, cardPileOwner, cardPile, stackedCount));
+                        action.appendEffect(
+                                new PlayoutDecisionEffect(action, playerId,
+                                        new YesNoDecision("Shuffle "+cardPile.getHumanReadable()+"?") {
+                                            @Override
+                                            protected void yes() {
+                                                action.appendEffect(new ShufflePileEffect(action, cardPileOwner, cardPile));
+                                            }
+                                            @Override
+                                            protected void no() {
+                                                game.getGameState().sendMessage(playerId +" chooses not to shuffle "+cardPile.getHumanReadable());
+                                            }
+                                        }
+                                        ));
+                    }
+                });
+                actions.add(action);
+            }
         }
 
         return actions;

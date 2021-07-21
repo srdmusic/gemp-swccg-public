@@ -1091,14 +1091,14 @@ public interface ModifiersQuerying {
     /**
      * Records that the Death Star's power is 'shut down'.
      */
-    public void deathStarPowerIsShutDown();
+    void deathStarPowerIsShutDown();
 
     /**
      * Determines if the Death Star's power is 'shut down'.
      *
      * @return true or false
      */
-    public boolean isDeathStarPowerShutDown();
+    boolean isDeathStarPowerShutDown();
 
     /**
      * Records that the specified card being played (or being deployed).
@@ -4153,6 +4153,14 @@ public interface ModifiersQuerying {
      * @return true if card may not be placed out of play, otherwise false
      */
     boolean mayNotBePlacedOutOfPlay(GameState gameState, PhysicalCard card);
+
+    /**
+     * Determines if the specified card may not be removed from lost pile if just lost
+     * @param gameState the game state
+     * @param card the card
+     * @return true if card may not be placed out of play, otherwise false
+     */
+    boolean mayNotRemoveJustLostCardFromLostPile(GameState gameState, PhysicalCard card);
 
     /**
      * Determines if a card may not be targeted by weapons used by the specified card.

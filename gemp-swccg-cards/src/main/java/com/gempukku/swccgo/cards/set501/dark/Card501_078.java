@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractRepublicSith;
+import com.gempukku.swccgo.cards.AbstractSith;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OnCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
@@ -23,19 +23,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Character
- * Subtype: Imperial
+ * Subtype: Sith
  * Title: Darth Vader, Betrayer Of The Jedi
  */
-public class Card501_078 extends AbstractRepublicSith {
+public class Card501_078 extends AbstractSith {
     public Card501_078() {
         super(Side.DARK, 1, 6, 6, 6, 8, "Darth Vader, Betrayer Of The Jedi", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Leader");
         setGameText("[Pilot] 3. Vader’s game text may not be canceled. While on Coruscant, adds one [D] icon here. In battle with no other Dark Jedi, may: exclude Padme OR cancel immunity to attrition of a Jedi or Padawan. Immune to attrition < 5.");
         addPersona(Persona.VADER);
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("Darth Vader, Betrayer Of The Jedi");
     }
 

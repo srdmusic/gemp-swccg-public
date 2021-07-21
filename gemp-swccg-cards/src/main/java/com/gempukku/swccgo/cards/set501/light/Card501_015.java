@@ -1,45 +1,81 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
-import com.gempukku.swccgo.game.*;
-import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotMoveToLocationModifier;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.LookAtUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromUsedPileEffect;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 15
- * Type: Location
- * Subtype: Site
- * Title: Ajan Kloss: Jedi Training Ground
+ * Set: Set 16
+ * Type: Character
+ * Subtype: Rebel
+ * Title: Kanan Jarrus, Jedi Knight
  */
-public class Card501_015 extends AbstractSite {
+public class Card501_015 extends AbstractRebel {
     public Card501_015() {
-        super(Side.LIGHT, "Ajan Kloss: Jedi Training Ground", Title.Ajan_Kloss);
-        setLocationDarkSideGameText("Players may not deploy or move cards to this location.");
-        setLocationLightSideGameText("May only be deployed as a starting location.");
-        addIcon(Icon.LIGHT_FORCE, 3);
-        addIcons(Icon.EPISODE_VII, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_15);
-        setTestingText("Ajan Kloss: Jedi Training Ground");
+        super(Side.LIGHT, 2, 5, 4, 6, 6, "Kanan Jarrus, Jedi Knight", Uniqueness.UNIQUE);
+        setLore("");
+        setGameText("Whenever you deploy Chopper, Ezra, Hera, Sabine, or Zeb, may draw top card of your Used Pile. " +
+                "During your draw phase, if Kanan present at a battleground and he did not move this turn, may peek at your Used Pile. " +
+                "Immune to attrition < 5.");
+        addPersona(Persona.KANAN);
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
+        setTestingText("Kanan Jarrus, Jedi Knight");
     }
 
     @Override
-    protected boolean checkPlayRequirements(String playerId, SwccgGame game, PhysicalCard self, DeploymentRestrictionsOption deploymentRestrictionsOption, PlayCardOption playCardOption, ReactActionOption reactActionOption) {
-        return GameConditions.isDuringStartOfGame(game);
-    }
-
-    @Override
-    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MayNotDeployToLocationModifier(self, Filters.any, self));
-        modifiers.add(new MayNotMoveToLocationModifier(self, Filters.any, self));
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        if (GameConditions.isDuringYourPhase(game, playerId, Phase.DRAW)
+                && GameConditions.isPresentAt(game, self, Filters.battleground)
+                && !GameConditions.hasPerformedRegularMoveThisTurn(game, self)
+                && GameConditions.hasUsedPile(game, playerId)) {
+
+            TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+            action.setText("Peek at your Used Pile");
+            action.appendEffect(
+                    new LookAtUsedPileEffect(action, playerId, playerId)
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        Filter filter = Filters.or(Filters.Chopper, Filters.Ezra, Filters.Hera, Filters.Sabine, Filters.Zeb);
+
+        if (TriggerConditions.justDeployed(game, effectResult, playerId, filter)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Draw top card of Used Pile");
+            // Perform result(s)
+            action.appendEffect(
+                    new DrawCardIntoHandFromUsedPileEffect(action, playerId));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }

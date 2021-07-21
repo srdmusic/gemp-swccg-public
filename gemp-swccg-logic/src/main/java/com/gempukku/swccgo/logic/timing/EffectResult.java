@@ -179,6 +179,7 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
         STACKED_FROM_CARD_PILE,
         STACKED_FROM_HAND,
         LOOKED_AT_OWN_CARD_PILE,
+        RECIRCULATED,
 
         // Canceling/restoring game text
         CANCELED_GAME_TEXT,
@@ -212,6 +213,9 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
 
         // Disarmed
         DISARMED,
+
+        // Ionized
+        IONIZED,
 
         // Excluded from battle
         ABOUT_TO_HIDE_FROM_BATTLE,
@@ -359,8 +363,7 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
         // Enslave character
         CHARACTER_ENSLAVED,
 
-        IMMUNITY_GRANTED,
-
+        IMMUNITY_GRANTED
     }
 
     private Type _type;

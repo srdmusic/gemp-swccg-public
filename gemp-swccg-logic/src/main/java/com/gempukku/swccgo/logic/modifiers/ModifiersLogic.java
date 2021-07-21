@@ -2158,6 +2158,11 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             modifierCollector.addModifier(modifier);
         }
 
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.UNMODIFIABLE_DESTINY, physicalCard)) {
+            result = modifier.getValue(gameState, this, physicalCard);
+            modifierCollector.addModifier(modifier);
+        }
+
         return result;
     }
 
@@ -12260,6 +12265,14 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     @Override
     public boolean isPlayingCardProhibited(GameState gameState, PhysicalCard card, boolean isDejarikRules) {
         if (!getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY, card).isEmpty()) {
+            if (!getModifiersAffectingCard(gameState, ModifierType.IGNORES_DEPLOYMENT_RESTRICTIONS_FROM_CARD, card).isEmpty()) {
+                for (Modifier mayNotPlayModifier : getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY, card)) {
+                    for (Modifier ignoresDeploymentRestrictionFromCardModifier : getModifiersAffectingCard(gameState, ModifierType.IGNORES_DEPLOYMENT_RESTRICTIONS_FROM_CARD, card)) {
+                        Filter cardFilter = ((IgnoresDeploymentRestrictionsFromCardModifier) ignoresDeploymentRestrictionFromCardModifier).getCardFilter();
+                        return !cardFilter.accepts(gameState.getGame(), mayNotPlayModifier.getSource(gameState));
+                    }
+                }
+            }
             return true;
         }
         if (isDejarikRules && !getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY_USING_DEJARIK_RULES, card).isEmpty()) {
@@ -14624,6 +14637,17 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     }
 
     /**
+     * Determines if the specified card may not be removed from lost pile if just lost
+     * @param gameState the game state
+     * @param card the card
+     * @return true if card may not be placed out of play, otherwise false
+     */
+    @Override
+    public boolean mayNotRemoveJustLostCardFromLostPile(GameState gameState, PhysicalCard card) {
+        return (!getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_REMOVE_JUST_LOST_CARDS_FROM_LOST_PILE, card).isEmpty());
+    }
+
+    /**
      * Determines if a card may not be targeted by weapons used by the specified card.
      * @param gameState the game state
      * @param cardTargeted the card targeted
@@ -15065,7 +15089,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                                         Condition condition = modifier.getCondition();
                                         Condition additionalCondition = modifier.getAdditionalCondition(gameState, this, card);
                                         if ((condition == null || condition.isFulfilled(gameState, this)) && (additionalCondition == null || additionalCondition.isFulfilled(gameState, this)))
-                                            if (modifier.getSource(gameState) == null || modifier.isPersistent() || modifier.getSource(gameState).getZone() == Zone.STACKED || modifier.isWhileInactiveInPlay() == !gameState.isCardInPlayActive(modifier.getSource(gameState), false, true, false, false, false, false, false, false))
+                                            if (modifier.getSource(gameState) == null || modifier.isPersistent() || modifier.getSource(gameState).getZone() == Zone.STACKED || modifier.getSource(gameState).getZone() == Zone.OUT_OF_PLAY || modifier.isWhileInactiveInPlay() == !gameState.isCardInPlayActive(modifier.getSource(gameState), false, true, false, false, false, false, false, false))
                                                 if (modifier.getSource(gameState) == null || modifier.isPersistent() || !modifier.isFromPermanentPilot() || hasPermanentPilot(gameState, modifier.getSource(gameState)))
                                                     if (modifier.getSource(gameState) == null || modifier.isPersistent() || !modifier.isFromPermanentAstromech() || hasPermanentAstromech(gameState, modifier.getSource(gameState)))
                                                         if (checkAffectsCardFirst || card == null || modifier.affectsCard(gameState, this, card))

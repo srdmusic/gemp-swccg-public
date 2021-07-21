@@ -1,92 +1,89 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedOrStartingInterrupt;
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
-import com.gempukku.swccgo.logic.effects.PutCardFromVoidInReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.CancelDestinyAndCauseRedrawEffect;
+import com.gempukku.swccgo.logic.effects.ModifyPowerUntilEndOfPlayersNextTurnEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeDestinyCardIntoHandEffect;
+import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ResetDeployCostModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 15
- * Type: Interrupt
- * Subtype: Used Or Starting
- * Title: Let The Wookiee Win (V)
+ * Set: Set 16
+ * Type: Effect
+ * Title: Your Thoughts Dwell On Your Mother
  */
-public class Card501_030 extends AbstractUsedOrStartingInterrupt {
+public class Card501_030 extends AbstractNormalEffect {
     public Card501_030() {
-        super(Side.LIGHT, 5, Title.Let_The_Wookiee_Win, Uniqueness.UNIQUE);
-        setVirtualSuffix(true);
-        setLore("'It's not wise to upset a Wookiee.' 'But sir, nobody worries about upsetting a droid.' 'That's cause a droid don't pull people's arms out of their sockets when they lose.'");
-        setGameText("USED: Subtract 2 from a destiny draw targeting your Wookiee's ability or defense value." +
-                "STARTING: If your starting location had exactly 2 [Light Side], deploy a Kashyyyk location and up to three Effects that are always immune to Alter. Place Interrupt in Reserve Deck.");
-        addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_15);
-        setVirtualSuffix(true);
-        setTestingText("Let The Wookiee Win (V)");
+        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Your_Thoughts_Dwell_On_Your_Mother, Uniqueness.UNIQUE);
+        setLore("");
+        setGameText("If Slave Quarters on table, deploy on table. Anakin is deploy = 6 and, if drawn for destiny, may take him into hand to cancel and cause a redraw. Game text on Jedi Council Chamber is canceled. If Shmi is lost, Anakin is power +5 until end of your next turn. [Immune to Alter.]");
+        addIcons(Icon.EPISODE_I, Icon.CORUSCANT, Icon.VIRTUAL_SET_16);
+        addImmuneToCardTitle(Title.Alter);
+        setTestingText("Your Thoughts Dwell On Your Mother");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
-
-        // Check condition(s)
-        if (TriggerConditions.isDestinyJustDrawnTargetingAbilityManeuverOrDefenseValue(game, effectResult,
-                Filters.and(Filters.your(self), Filters.Wookiee))) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-            action.setText("Subtract 2 from destiny");
-            // Allow response(s)
-            action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new ModifyDestinyEffect(action, -2));
-                        }
-                    }
-            );
-            actions.add(action);
-        }
-        return actions;
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return GameConditions.canSpot(game, self, Filters.Slave_Quarters);
     }
 
     @Override
-    protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new ArrayList<>();
+        modifiers.add(new ResetDeployCostModifier(self, Filters.Anakin, 6));
+        modifiers.add(new CancelsGameTextModifier(self, Filters.Jedi_Council_Chamber));
+        return modifiers;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalDrawnAsDestinyTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.ANY_CARD__CANCEL_AND_REDRAW_A_DESTINY;
+
         // Check condition(s)
-        final PhysicalCard startingLocation = game.getModifiersQuerying().getStartingLocation(playerId);
-        if (startingLocation != null && Filters.iconCount(Icon.LIGHT_FORCE, 2).accepts(game, startingLocation)) {
+        if (GameConditions.isDestinyCardMatchTo(game, Filters.Anakin)
+                && GameConditions.canTakeDestinyCardIntoHand(game, playerId)
+                && GameConditions.canCancelDestinyAndCauseRedraw(game, playerId)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
-            action.setText("Deploy a Kashyyyk location and Effects from Reserve Deck");
-            // Allow response(s)
-            action.allowResponses("Deploy a Kashyyyk location and up to three Effects from Reserve Deck",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.Kashyyyk_location, 1, 1, true, false));
-                            action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter), 1, 3, true, false));
-                            action.appendEffect(
-                                    new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
-                        }
-                    }
-            );
-            return action;
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take into hand and cause re-draw");
+            action.setActionMsg("Cancel destiny and cause re-draw");
+            // Pay cost(s)
+            action.appendEffect(
+                    new TakeDestinyCardIntoHandEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new CancelDestinyAndCauseRedrawEffect(action));
+            return Collections.singletonList(action);
         }
+        return null;
+    }
 
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextLeavesTableRequiredTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if (TriggerConditions.justLost(game, effectResult, Filters.Shmi)) {
+
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Make Anakin power +5");
+            // Perform result(s)
+            action.appendEffect(
+                    new ModifyPowerUntilEndOfPlayersNextTurnEffect(action, self.getOwner(), Filters.Anakin, 5, "Makes Anakin's power +5"));
+            return Collections.singletonList(action);
+        }
         return null;
     }
 }

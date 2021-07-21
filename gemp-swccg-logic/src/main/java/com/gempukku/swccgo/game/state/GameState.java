@@ -1451,6 +1451,7 @@ public class GameState implements Snapshotable<GameState> {
         toCard.setConcealed(fromCard.isConcealed());
         toCard.setCollapsed(fromCard.isCollapsed());
         toCard.setCrashed(fromCard.isCrashed());
+        toCard.setIonization(fromCard.getIonization());
         toCard.setLeavingTable(fromCard.isLeavingTable());
         toCard.setGameTextCanceled(fromCard.isGameTextCanceled());
         toCard.setLocationGameTextCanceledForPlayer(fromCard.isLocationGameTextCanceledForPlayer(_darkSidePlayer), _darkSidePlayer);
@@ -1494,6 +1495,7 @@ public class GameState implements Snapshotable<GameState> {
         card.setConcealed(false);
         card.setCollapsed(false);
         card.setCrashed(false);
+        card.resetIonization();
         card.setLeavingTable(false);
         card.setGameTextCanceled(false);
         card.setLocationGameTextCanceledForPlayer(false, _darkSidePlayer);
@@ -2178,8 +2180,8 @@ public class GameState implements Snapshotable<GameState> {
                 listener.cardCreated(card, this, false);
         }
 
-        // If the card is now "in play", "inserted", or "stacked" , then turn on its "while active in play" or "while stacked" modifiers.
-        if (zone.isInPlay() || card.isInserted() || card.getZone() == Zone.STACKED) {
+        // If the card is now "in play", "inserted", "stacked", or "out of play" then turn on its "while active in play", "while stacked" or "while out of play" modifiers.
+        if (zone.isInPlay() || card.isInserted() || card.getZone() == Zone.STACKED || card.getZone() == Zone.OUT_OF_PLAY) {
             startAffecting(_game, card);
         }
     }

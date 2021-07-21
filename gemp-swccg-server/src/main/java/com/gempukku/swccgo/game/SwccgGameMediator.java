@@ -804,7 +804,7 @@ public class SwccgGameMediator {
             }
 
             // Show affecting cards
-            if (cardZone.isInPlay() || cardZone == Zone.HAND || cardZone == Zone.STACKED) {
+            if (cardZone.isInPlay() || cardZone == Zone.HAND || cardZone == Zone.STACKED || cardZone == Zone.OUT_OF_PLAY) {
                 for (Modifier modifier : modifiersQuerying.getModifiersAffecting(gameState, card)) {
                     modifierCollector.addModifier(modifier);
                 }
@@ -943,14 +943,11 @@ public class SwccgGameMediator {
             return;
         }
 
-        if (_secondsGameTimerExtended > 0)
-            return;
-
-        String playerId = player.getName();
+        String playerName = player.getName();
         _writeLock.lock();
         try {
-            if (isPlayerPlaying(playerId)) {
-                _swccgoGame.requestExtendGameTimer(playerId, minutesToExtend);
+            if (isPlayerPlaying(playerName)) {
+                _swccgoGame.requestExtendGameTimer(playerName, minutesToExtend);
                 _secondsGameTimerExtended = _swccgoGame.getGameTimerExtendedInMinutes() * 60;
                 if (_secondsGameTimerExtended > 0) {
                     _swccgoGame.getGameState().sendMessage("The game timer has been extended by " + minutesToExtend + " minutes, by request of all players");
@@ -1216,6 +1213,12 @@ public class SwccgGameMediator {
                         && startingLocation.getBlueprint().getTitle() != null){
                     // Slip Sliding Away (v)
                     return startingLocation.getBlueprint().getTitle() + " SSAv";
+                }
+                if(Filters.Let_The_Wookiee_Win.accepts(_swccgoGame, startingInterrupt)
+                        && startingInterrupt.getBlueprint().hasVirtualSuffix()
+                        && startingLocation.getBlueprint().getTitle() != null){
+                    // Let The Wookiee Win (v)
+                    return startingLocation.getBlueprint().getTitle() + " LTWWv";
                 }
                 if(Filters.title("I Am Part Of The Living Force").accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null)  {

@@ -21,7 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Character
  * Subtype: Rebel
  * Title: Lando, Hero of the Rebellion
@@ -32,7 +32,7 @@ public class Card501_033 extends AbstractRebelResistance {
         setLore("Leader. Resistance Agent.");
         setGameText("During your turn, may reveal the top three cards of your Reserve Deck, take one starship into hand with a deploy cost < 6 (if possible), and shuffle your Reserve Deck. Adds one destiny to total power, while piloting or with Chewie or Jannah.");
         addPersona(Persona.LANDO);
-        addIcons(Icon.VIRTUAL_SET_15, Icon.PILOT, Icon.WARRIOR);
+        addIcons(Icon.VIRTUAL_SET_16, Icon.PILOT, Icon.WARRIOR);
         addKeywords(Keyword.LEADER, Keyword.RESISTANCE_AGENT);
         setTestingText("Lando, Hero of the Rebellion");
     }

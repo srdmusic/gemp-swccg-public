@@ -18,7 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Character
  * Subtype: Alien
  * Title: Heavy Infantry Mandalorian
@@ -29,7 +29,7 @@ public class Card501_010 extends AbstractAlien {
         setLore("");
         setGameText("Permanent weapon is Flamethrower (may target a character for free; draw destiny; target hit if destiny +1 > defense value). May 'fly' (landspeed = 3). May move as a 'react'.");
         setArmor(4);
-        addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_15);
+        addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_16);
         setSpecies(Species.MANDALORIAN);
         setTestingText("Heavy Infantry Mandalorian");
     }
