@@ -2,16 +2,19 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrStartingInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromVoidInReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Collections;
@@ -26,30 +29,30 @@ import java.util.List;
 public class Card501_046 extends AbstractUsedOrStartingInterrupt {
     public Card501_046() {
         super(Side.LIGHT, 5, "What Gives A Jedi His Power");
-        setGameText("USED: Take one weapon into hand from Reserve Deck; reshuffle." +
-                "STARTING: If your starting location was a battleground site with exactly two [Light Side]," +
-                "deploy The Force Is Strong In My Family and two Effects that are always immune to Alter. Place Interrupt in Reserve Deck.");
+        setGameText("USED: Activate 1 Force if a Jedi on table. " +
+                "STARTING: If your starting location had exactly two [Light Side] icons, " +
+                "deploy The Force Is Strong In My Family and two Effects (except Wokling) that are always immune to Alter. " +
+                "Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("What Gives A Jedi His Power");
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
-        GameTextActionId gameTextActionId = GameTextActionId.WHAT_GIVES_A_JEDI_HIS_POWER__UPLOAD_WEAPON;
-
         // Check condition(s)
-        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (GameConditions.canActivateForce(game, playerId)
+                && GameConditions.canSpot(game, self, Filters.Jedi)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
-            action.setText("Take a weapon into hand");
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText(" Activate 1 Force");
             // Allow response(s)
-            action.allowResponses("Take a weapon into hand from Reserve Deck",
+            action.allowResponses(" Activate 1 Force",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.weapon, true));
+                                    new ActivateForceEffect(action, playerId, 1));
                         }
                     }
             );
@@ -62,7 +65,7 @@ public class Card501_046 extends AbstractUsedOrStartingInterrupt {
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
         // Check condition(s)
         final PhysicalCard startingLocation = game.getModifiersQuerying().getStartingLocation(playerId);
-        if (startingLocation != null && Filters.battleground.accepts(game, startingLocation)) {
+        if (startingLocation != null && Filters.iconCount(Icon.LIGHT_FORCE, 2).accepts(game, startingLocation)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
             action.setText("Deploy The Force is Strong In My Family and Effects from Reserve Deck");
@@ -75,7 +78,7 @@ public class Card501_046 extends AbstractUsedOrStartingInterrupt {
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.title(Title.The_Force_Is_Strong_In_My_Family), true, false));
                             action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table")), Filters.always_immune_to_Alter), 1, 2, true, false));
+                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table")), Filters.always_immune_to_Alter, Filters.not(Filters.title(Title.Wokling))), 1, 2, true, false));
                             action.appendEffect(
                                     new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
                         }

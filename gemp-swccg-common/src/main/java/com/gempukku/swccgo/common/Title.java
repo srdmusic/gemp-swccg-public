@@ -1119,6 +1119,7 @@ public interface Title {
     String Wioslea = "Wioslea";
     String Wise_Advice = "Wise Advice";
     String Wittin = "Wittin";
+    String Wokling = "Wokling";
     String Womp_Rat = "Womp Rat";
     String Wookiee_Slaving_Operation = "Wookiee Slaving Operation";
     String Wookiee_Roar = "Wookiee Roar";

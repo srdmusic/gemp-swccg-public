@@ -3,9 +3,9 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
-import com.gempukku.swccgo.game.PhysicalCard;
-import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.*;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
@@ -28,17 +28,17 @@ import java.util.List;
  */
 public class Card501_030 extends AbstractNormalEffect {
     public Card501_030() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Your_Thoughts_Dwell_On_Your_Mother, Uniqueness.UNIQUE);
+        super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Your_Thoughts_Dwell_On_Your_Mother, Uniqueness.UNIQUE);
         setLore("");
-        setGameText("If Slave Quarters on table, deploy on table. Anakin is deploy = 6 and, if drawn for destiny, may take him into hand to cancel and cause a redraw. Game text on Jedi Council Chamber is canceled. If Shmi is lost, Anakin is power +5 until end of your next turn. [Immune to Alter.]");
+        setGameText("Deploy on Slave Quarters. Anakin is deploy = 6 and, if drawn for destiny, may take him into hand to cancel and cause a redraw. Gametext on Jedi Council Chamber is cancelled. If Shmi is lost, Anakin is power +5 until end of your next turn. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.CORUSCANT, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Your Thoughts Dwell On Your Mother");
     }
 
     @Override
-    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return GameConditions.canSpot(game, self, Filters.Slave_Quarters);
+    protected Filter getValidDeployTargetFilter(String playerId, SwccgGame game, PhysicalCard self, PhysicalCard sourceCard, PlayCardOption playCardOption, boolean forFree, float changeInCost, DeploymentRestrictionsOption deploymentRestrictionsOption, DeployAsCaptiveOption deployAsCaptiveOption, ReactActionOption reactActionOption, boolean isSimDeployAttached, boolean ignorePresenceOrForceIcons) {
+        return Filters.Slave_Quarters;
     }
 
     @Override
@@ -50,7 +50,7 @@ public class Card501_030 extends AbstractNormalEffect {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalDrawnAsDestinyTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.ANY_CARD__CANCEL_AND_REDRAW_A_DESTINY;
 
         // Check condition(s)

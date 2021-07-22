@@ -3484,7 +3484,7 @@ var fixedImages = {
 "501_39":"/gemp-swccg/images/cards/Coruscant-Light/masterquigonai.gif",
 "501_40":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/masterkenobi.gif",
 "501_41":"/gemp-swccg/images/cards/Coruscant-Light/yodaseniorcouncilmemberai.gif",
-"501_42":"/gemp-swccg/images/cards/Endor-Light/generalsolo.gif",
+"501_42":"/gemp-swccg/images/cards/CloudCity-Light/chasm.gif",
 "501_43":"/gemp-swccg/images/cards/ANewHope-Light/cell2187.gif",
 "501_44":"/gemp-swccg/images/cards/SpecialEdition-Light/slightweaponsmalfunction.gif",
 "501_45":"/gemp-swccg/images/cards/Virtual1-Dark/accordingtomydesign.gif",

@@ -29,7 +29,7 @@ public class Card501_031 extends AbstractNormalEffect {
     public Card501_031() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.My_Parents_Were_Strong, Uniqueness.UNIQUE);
         setLore("");
-        setGameText("If Rey’s Encampment on table, deploy on table. Once per game, may deploy Hidden Recess from Reserve Deck; reshuffle. If Rey drawn for destiny, may take her into hand to cancel and redraw that destiny. While alone (or with Kylo), Rey is immune to attrition. [Immune to Alter.]");
+        setGameText("If Rey’s Encampment on table, deploy on table. Once per game, may [download] Hidden Recess. If Rey drawn for destiny, may take her into hand to cancel and redraw. While alone or with Kylo, Rey is immune to attrition. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("My Parents Were Strong");
@@ -69,7 +69,7 @@ public class Card501_031 extends AbstractNormalEffect {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalDrawnAsDestinyTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.ANY_CARD__CANCEL_AND_REDRAW_A_DESTINY;
 
         // Check condition(s)
