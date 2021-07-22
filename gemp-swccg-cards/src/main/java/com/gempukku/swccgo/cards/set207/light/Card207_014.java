@@ -32,7 +32,7 @@ public class Card207_014 extends AbstractUsedOrLostInterrupt {
         super(Side.LIGHT, 4, "They're Tracking Us", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("'Not this ship, sister.'");
-        setGameText("Cancel Close Call, Gravity Shadow, Overwhelmed or They’ve Shut Down The Main Reactor (Immune to Sense.) OR Add or subtract 1 from opponent's just drawn destiny. OR Activate 1 Force.");
+        setGameText("USED: Add or subtract 1 from opponent's just drawn destiny. OR Activate 1 Force. LOST: Cancel Close Call, Gravity Shadow, Overwhelmed, or They've Shut Down The Main Reactor. [Immune to Sense]");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_7);
     }
 
