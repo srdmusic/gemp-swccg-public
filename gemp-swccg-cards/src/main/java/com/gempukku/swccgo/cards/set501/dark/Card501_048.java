@@ -35,10 +35,11 @@ public class Card501_048 extends AbstractObjective {
     public Card501_048() {
         super(Side.DARK, 0, Title.On_The_Verge_Of_Greatness);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy [Set 15] Death Star and Scarif systems, Citadel Tower, and Shield Gate. May deploy Commence Primary Ignition.\n" +
-                "For remainder of game, you may not deploy characters of ability > 4 (except Vader). Star Destroyers deploy -1 to Scarif. Superlaser ignores deployment restrictions.\n" +
-                "While this side up, once per turn, may deploy a site or Imperial trooper to Scarif from Reserve Deck; reshuffle.\n" +
-                "Flip this card if Tarkin or Krennic on Scarif and Death Star orbiting Scarif.");
+        setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, and Shield Gate. May deploy [Set 9] Commence Primary Ignition." +
+                "For remainder of game, you may not deploy characters of ability > 4 (except Vader). " +
+                "Superlaser ignores deployment restrictions. Commence Primary Ignition may not be canceled." +
+                "While this side up, once per turn, may deploy a site or Imperial trooper to Scarif from Reserve Deck; reshuffle." +
+                "Flip this card if Krennic or Tarkin on Scarif and Death Star orbiting Scarif.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("On The Verge Of Greatness");
     }
@@ -47,7 +48,7 @@ public class Card501_048 extends AbstractObjective {
     protected ObjectiveDeployedTriggerAction getGameTextWhenDeployedAction(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         ObjectiveDeployedTriggerAction action = new ObjectiveDeployedTriggerAction(self);
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_15, Filters.Death_Star_system), true, false) {
+                new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_16, Filters.Death_Star_system), true, false) {
                     @Override
                     public String getChoiceText() {
                         return "Choose Death Star system to deploy";
@@ -75,7 +76,7 @@ public class Card501_048 extends AbstractObjective {
                     }
                 });
         action.appendOptionalEffect(
-                new DeployCardsFromReserveDeckEffect(action, Filters.Commence_Primary_Ignition, 0, 1, true, false) {
+                new DeployCardsFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_9, Filters.Commence_Primary_Ignition), 0, 1, true, false) {
                     @Override
                     public String getChoiceText(int numCardsToChoose) {
                         return "Choose Commence Primary Ignition to deploy";

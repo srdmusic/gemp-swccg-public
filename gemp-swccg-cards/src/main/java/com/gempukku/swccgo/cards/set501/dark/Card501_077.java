@@ -15,7 +15,6 @@ import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ShieldGateBlownAwayModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,7 +27,7 @@ public class Card501_077 extends AbstractDevice {
     public Card501_077() {
         super(Side.DARK, 0, PlayCardZoneOption.ATTACHED, Title.Shield_Gate, Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on Scarif. If a starship was just lost from here or opponent just Force drained here, opponent may draw destiny. Add 1 for each spy out of play. If total destiny > 8, Shield Gate \"blown away\" (place out of play).");
+        setGameText("Deploy on Scarif system. If a starship was just lost from here or opponent just Force drained here, opponent may draw destiny. Add 1 for each Scarif location opponent occupies. If total destiny > 8, Shield Gate 'blown away' (place out of play).");
         addIcons(Icon.VIRTUAL_SET_16);
         setVirtualSuffix(true);
         setTestingText("Shield Gate");
@@ -55,11 +54,10 @@ public class Card501_077 extends AbstractDevice {
                     new DrawDestinyEffect(action, playerId) {
                         @Override
                         protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
-                            Float attemptTotal = game.getModifiersQuerying().getBlowAwayShieldGateAttemptTotal(game.getGameState(), totalDestiny);
+                            float attemptTotal = game.getModifiersQuerying().getBlowAwayShieldGateAttemptTotal(game.getGameState(), totalDestiny);
 
-                            Collection<PhysicalCard> outOfPlaySpies = Filters.filter(game.getGameState().getAllOutOfPlayCards(), game, Filters.spy);
-                            int numSpiesOutOfPlay = outOfPlaySpies.size();
-                            attemptTotal = attemptTotal + numSpiesOutOfPlay;
+                            int scarifLocationsOccupiedByOpponent = Filters.countActive(game, self, Filters.and(Filters.Scarif_location, Filters.occupies(game.getOpponent(playerId))));
+                            attemptTotal = attemptTotal + scarifLocationsOccupiedByOpponent;
                             game.getGameState().sendMessage("Total: " + attemptTotal);
                             if (attemptTotal > 8) {
                                 game.getGameState().sendMessage("Result: Success. " + GameUtils.getCardLink(self) + " is 'blown away'");

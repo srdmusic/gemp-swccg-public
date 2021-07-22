@@ -1,15 +1,20 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -21,8 +26,8 @@ import java.util.List;
 public class Card501_050 extends AbstractSite {
     public Card501_050() {
         super(Side.DARK, "Scarif: Command Center", Title.Scarif);
-        setLocationDarkSideGameText("If your Imperial leader here, may add one destiny to your Commence Primary Ignition total while targeting a Scarif site.");
-        setLocationLightSideGameText("If your Rebel spy here, once per game may place a trooper out of play from opponent's Lost Pile.");
+        setLocationDarkSideGameText("If an Imperial leader here, add one destiny to your [Set 9] Epic Event total targeting a Scarif site.");
+        setLocationLightSideGameText("If Shield Gate on table, opponent’s Force drains here are +1.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.VIRTUAL_SET_16, Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK);
@@ -31,12 +36,16 @@ public class Card501_050 extends AbstractSite {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextDarkSideOptionalAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        return null;
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new ArrayList<>();
+        modifiers.add(new ModifyGameTextModifier(self, Filters.and(Icon.VIRTUAL_SET_9, Filters.Epic_Event), new HereCondition(self, Filters.Imperial_leader), ModifyGameTextType.COMMENCE_PRIMARY_IGNITION__ADDS_A_DESTINY_TO_TOTAL));
+        return modifiers;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        return null;
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new ArrayList<>();
+        modifiers.add(new ForceDrainModifier(self, new OnTableCondition(self, Filters.Shield_Gate), 1, game.getOpponent(playerOnLightSideOfLocation)));
+        return modifiers;
     }
 }
