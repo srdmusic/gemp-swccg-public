@@ -7,7 +7,7 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.*;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayMoveOtherCardsAsReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -22,7 +22,7 @@ import java.util.List;
 public class Card501_049 extends AbstractMobileSystem {
     public Card501_049() {
         super(Side.DARK, Title.Death_Star, 1, 4);
-        setLocationDarkSideGameText("X = parsec of current position. Deploys (at Parsec 4) only if On The Verge Of Greatness on table. Hyperspeed = 1. Your Star Destroyers and leaders deploy -1 here.");
+        setLocationDarkSideGameText("X = parsec of current position (starts at 4). Deploys only if On The Verge Of Greatness on table. Hyperspeed = 1. Starships may move between Death Star and system it orbits as a 'react.'");
         addIcon(Icon.DARK_FORCE, 2);
         addIcons(Icon.VIRTUAL_SET_16);
         setVirtualSuffix(true);
@@ -37,8 +37,11 @@ public class Card501_049 extends AbstractMobileSystem {
 
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.or(Filters.leader, Filters.Star_Destroyer)), -1, self));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new MayMoveOtherCardsAsReactToLocationModifier(self, "Move starship from system this orbits to here as a 'react'", null,
+                Filters.and(Filters.starship, Filters.at(Filters.isOrbitedBy(self))), self));
+        modifiers.add(new MayMoveOtherCardsAsReactToLocationModifier(self, "Move starship from here to system this orbits as a 'react'", null,
+                Filters.and(Filters.starship, Filters.here(self)), Filters.isOrbitedBy(self)));
         return modifiers;
     }
 }

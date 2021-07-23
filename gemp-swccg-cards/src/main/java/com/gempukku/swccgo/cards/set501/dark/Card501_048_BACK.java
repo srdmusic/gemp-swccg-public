@@ -32,9 +32,12 @@ import java.util.List;
 public class Card501_048_BACK extends AbstractObjective {
     public Card501_048_BACK() {
         super(Side.DARK, 7, Title.Deploy_The_Garrison);
-        setGameText("While this side up, Vader's game text may not be canceled and he is power +2. Your Force generation is +1 for each Scarif site 'blown away.' Tarkin Doctrine is [Immune to Alter.] and if it just caused Force loss, may take any one card into hand from Force Pile. Once per turn, may place opponent's character just lost from your location out of play unless opponent loses 1 Force.\n" +
-                "Flip this card if you have no leaders on Scarif.\n" +
-                "Place out of play if Shield Gate or Death Star 'blown away.'");
+        setGameText("While this side up, Vader’s game text may not be canceled and he is power +2. " +
+                "Your Force generation is +2 for each “blown away” Scarif site. " +
+                "Tarkin Doctrine is [Immune to Alter] and, once per turn, if it just caused Force loss, take any one card into hand from Force Pile. " +
+                "Once per turn, may place opponent's character just lost from your location out of play unless opponent loses 1 Force." +
+                "Flip this card if you have no leaders on Scarif." +
+                "Place this card (and Shield Gate) out of play if Shield Gate or Death Star 'blown away'.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("Deploy The Garrison!");
     }

@@ -2,10 +2,8 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
-import com.gempukku.swccgo.cards.conditions.OccupiesWithCondition;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.effects.ConvertLocationByRaisingToTopEffect;
-import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -16,10 +14,10 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.modifiers.AttemptToBlowAwayShieldGateTotalModifier;
+import com.gempukku.swccgo.logic.modifiers.AbilityRequiredForBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -37,8 +35,8 @@ import java.util.List;
 public class Card501_074 extends AbstractSite {
     public Card501_074() {
         super(Side.DARK, Title.Scarif_Citadel_Tower, Title.Scarif);
-        setLocationDarkSideGameText("If a player just Force drained here, they may raise a converted Scarif location to the top.");
-        setLocationLightSideGameText("If you occupy, add 1 to attempts to 'blow away' Shield Gate (2 if you occupy with a spy).");
+        setLocationDarkSideGameText(" If a player just Force drained here, they may raise a converted Scarif location to the top.");
+        setLocationLightSideGameText("Unless your spy here, total ability of 6 or more required for you to draw battle destiny here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.PLANET, Icon.INTERIOR_SITE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_16);
@@ -82,11 +80,8 @@ public class Card501_074 extends AbstractSite {
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        Condition occupiesCondition = new OccupiesCondition(playerOnLightSideOfLocation, self);
-        Condition occupiesWithSpyCondition = new OccupiesWithCondition(playerOnLightSideOfLocation, self, Filters.spy);
-
-        modifiers.add(new AttemptToBlowAwayShieldGateTotalModifier(self, occupiesCondition, new ConditionEvaluator(1, 2, occupiesWithSpyCondition)));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new AbilityRequiredForBattleDestinyModifier(self, self, new UnlessCondition(new HereCondition(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.spy))), 6, playerOnLightSideOfLocation));
         return modifiers;
     }
 }
