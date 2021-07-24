@@ -24,6 +24,7 @@ public class SealedLeagueProduct {
         createJpSealed();
         createEndorDsIISealed();
         createEpisodeISealed();
+        createNoveltySealed();
         createWattosCubeWithObjective();
         createWattosCubeWithFixed();
     }
@@ -146,6 +147,59 @@ public class SealedLeagueProduct {
         episodeISealed.add(secondWeek);
 
         _collections.put(SealedLeagueType.EPISODE_I_SEALED.getSealedCode(), episodeISealed);
+    }
+
+    /**
+     * Creates the collection of products to use for novelty sealed
+     */
+    private void createNoveltySealed() {
+
+        //current novelty sealed:
+        //  All Of The Jedi (2 series, each series = 1x each Decipher booster pack)
+
+        List<CardCollection> noveltySealed = new ArrayList<CardCollection>();
+
+        MutableCardCollection firstWeek = new DefaultCardCollection();
+        //first week
+        firstWeek.addItem(ProductName.PREMIERE_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.A_NEW_HOPE_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.HOTH_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.DAGOBAH_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.CLOUD_CITY_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.JABBAS_PALACE_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.SPECIAL_EDITION_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.ENDOR_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.DEATH_STAR_II_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.TATOOINE_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.CORUSCANT_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.THEED_PALACE_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.REFLECTIONS_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.REFLECTIONS_II_BOOSTER_PACK, 1);
+        firstWeek.addItem(ProductName.REFLECTIONS_III_BOOSTER_PACK, 1);
+
+        noveltySealed.add(firstWeek);
+
+        MutableCardCollection secondWeek = new DefaultCardCollection();
+        //second week
+        secondWeek.addItem(ProductName.PREMIERE_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.A_NEW_HOPE_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.HOTH_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.DAGOBAH_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.CLOUD_CITY_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.JABBAS_PALACE_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.SPECIAL_EDITION_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.ENDOR_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.DEATH_STAR_II_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.TATOOINE_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.CORUSCANT_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.THEED_PALACE_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.REFLECTIONS_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.REFLECTIONS_II_BOOSTER_PACK, 1);
+        secondWeek.addItem(ProductName.REFLECTIONS_III_BOOSTER_PACK, 1);
+
+        noveltySealed.add(secondWeek);
+
+        _collections.put(SealedLeagueType.NOVELTY_SEALED.getSealedCode(), noveltySealed);
     }
 
     /**
