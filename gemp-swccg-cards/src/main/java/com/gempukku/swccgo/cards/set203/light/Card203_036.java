@@ -33,7 +33,7 @@ public class Card203_036 extends AbstractRepublic {
         setGameText("Cancels Vader's game text here. If with a Skywalker, may add one destiny to attrition. Immune to attrition < 3.");
         addPersona(Persona.AMIDALA);
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.WARRIOR, Icon.VIRTUAL_SET_3);
-        addKeywords(Keyword.FEMALE, Keyword.HANDMAIDEN);
+        addKeywords(Keyword.FEMALE);
     }
 
     @Override
