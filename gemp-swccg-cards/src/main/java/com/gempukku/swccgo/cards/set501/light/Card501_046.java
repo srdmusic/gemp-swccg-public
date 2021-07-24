@@ -29,9 +29,8 @@ import java.util.List;
 public class Card501_046 extends AbstractUsedOrStartingInterrupt {
     public Card501_046() {
         super(Side.LIGHT, 5, "What Gives A Jedi His Power");
-        setGameText("USED: Activate 1 Force if a Jedi on table. " +
-                "STARTING: If your starting location had exactly two [Light Side] icons, " +
-                "deploy The Force Is Strong In My Family and two Effects (except Wokling) that are always immune to Alter. " +
+        setGameText("USED: If a Jedi on table, activate 1 Force. STARTING: If your starting location had exactly two [Light Side], " +
+                "deploy The Force Is Strong In My Family and an Effect (except Wokling) that is always immune to Alter. " +
                 "Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("What Gives A Jedi His Power");
@@ -78,7 +77,7 @@ public class Card501_046 extends AbstractUsedOrStartingInterrupt {
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.title(Title.The_Force_Is_Strong_In_My_Family), true, false));
                             action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table")), Filters.always_immune_to_Alter, Filters.not(Filters.title(Title.Wokling))), 1, 2, true, false));
+                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter, Filters.not(Filters.title(Title.Wokling))), 1, 1, true, false));
                             action.appendEffect(
                                     new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
                         }
