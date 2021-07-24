@@ -1225,9 +1225,19 @@ public class SwccgGameMediator {
                     // Communing
                     return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Communing";
                 }
+                if(Filters.title("What Gives A Jedi His Power").accepts(_swccgoGame, startingInterrupt)
+                    && startingLocation.getBlueprint().getTitle() != null) {
+                    // The Force Is Strong In My Family
+                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " TFISIMF";
+                }
+                if(Filters.title("The Sith Will Rule The Galaxy").accepts(_swccgoGame, startingInterrupt)
+                        && startingLocation.getBlueprint().getTitle() != null) {
+                    // Rule Of Two
+                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Rule Of Two";
+                }
                 if (Filters.Communing.accepts(_swccgoGame, startingInterrupt)
                         && startingInterrupt.getBlueprint().isLegacy()) {
-                    //Communing (ignore the location)
+                    // Legacy Communing (ignore the location)
                     return "Communing";
                 }
                 if (Filters.title("It Is The Future You See").accepts(_swccgoGame, startingInterrupt)

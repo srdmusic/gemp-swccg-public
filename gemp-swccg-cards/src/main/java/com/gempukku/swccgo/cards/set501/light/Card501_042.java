@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class Card501_042 extends AbstractNormalEffect {
     public Card501_042() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Now It Calls To You", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Now_It_Calls_To_You, Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy on table. May deploy Anakin’s Lightsaber from Reserve Deck; reshuffle (or place this Effect out of play to deploy it from Lost Pile). If Anakin's Lightsaber present during battle or Force drain, may retrieve 1 Force. [Immune to Alter].");
         addIcons(Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_16);

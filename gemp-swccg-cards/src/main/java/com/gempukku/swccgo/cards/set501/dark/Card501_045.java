@@ -26,7 +26,7 @@ import java.util.List;
 public class Card501_045 extends AbstractUsedOrStartingInterrupt {
     public Card501_045() {
         super(Side.DARK, 5, "The Sith Will Rule The Galaxy");
-        setGameText("USED: Take a weapon into hand from Reserve Deck; reshuffle. STARTING: If your starting location was a battleground, deploy Rule Of Two and 2 Effects that deploy on table and are always Immune to Alter. Place Interrupt in Reserve Deck.");
+        setGameText("USED: Take a weapon into hand from Reserve Deck; reshuffle. STARTING: If your starting location was a battleground, deploy Rule Of Two and two Effects that are always immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("The Sith Will Rule The Galaxy");
     }
@@ -73,7 +73,7 @@ public class Card501_045 extends AbstractUsedOrStartingInterrupt {
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Rule_Of_Two), true, false));
                             action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table")), Filters.always_immune_to_Alter), 1, 2, true, false));
+                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter), 2, 2, true, false));
                             action.appendEffect(
                                     new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
                         }

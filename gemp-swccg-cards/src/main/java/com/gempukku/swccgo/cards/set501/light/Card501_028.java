@@ -16,6 +16,7 @@ import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.LightSideGoesFirstEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -30,9 +31,9 @@ import java.util.List;
 public class Card501_028 extends AbstractEpicEventDeployable {
     public Card501_028() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.The_Force_Is_Strong_In_My_Family);
-        setGameText("Deploys on table only at start of game. Light Side goes first. Choose one:" +
-                "My Father Has It: Deploy Your Thoughts Dwell On Your Mother. You may not deploy characters of ability > 4 (except [Episode I] Jedi)." +
-                "I Have It: Deploy Like My Father Before Me. You may not deploy Jedi (except Luke or Ahsoka)." +
+        setGameText("Deploys on table only at start of game. Light Side goes first. May deploy Now It Calls To You. Choose one:\n" +
+                "My Father Has It: Deploy Your Thoughts Dwell On Your Mother. You may not deploy characters of ability > 4 (except [Episode I] Jedi).\n" +
+                "I Have It: Deploy Like My Father Before Me. You may not deploy Jedi (except Luke or Ahsoka).\n" +
                 "You Have That Power Too: Deploy My Parents Were Strong. You may not deploy Jedi (except [Episode VII] Jedi).");
         addIcons(Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_16);
         setTestingText("The Force Is Strong In My Family");
@@ -49,13 +50,15 @@ public class Card501_028 extends AbstractEpicEventDeployable {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setPerformingPlayer(self.getOwner());
 
+            action.appendEffect(new DeployCardsFromReserveDeckEffect(action, Filters.title(Title.Now_It_Calls_To_You), 0, 1, false));
+
             final String MY_FATHER_HAS_IT = "My Father Has It";
             final String I_HAVE_IT = "I Have It";
             final String YOU_HAVE_THAT_POWER_TOO = "You Have That Power Too";
 
             String[] possibleResults = new String[]{MY_FATHER_HAS_IT, I_HAVE_IT, YOU_HAVE_THAT_POWER_TOO};
 
-            action.appendTargeting(
+            action.appendEffect(
                     new PlayoutDecisionEffect(action, self.getOwner(), new MultipleChoiceAwaitingDecision("Choose an option", possibleResults) {
                         @Override
                         protected void validDecisionMade(int index, String result) {

@@ -710,6 +710,7 @@ public interface Title {
     String None_Shall_Pass = "None Shall Pass";
     String NOOOOOOOOOOOO = "NOOOOOOOOOOOO!";
     String North_Ridge = "Hoth: North Ridge (4th Marker)";
+    String Now_It_Calls_To_You = "Now It Calls To You";
     String Nute_Gunray = "Nute Gunray";
     String ObiWans_Hut = "Tatooine: Obi-Wan's Hut";
     String ObiWans_Journal = "Obi-Wan's Journal";
