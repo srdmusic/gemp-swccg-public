@@ -568,15 +568,16 @@ public interface Title {
     String Juri_Juice = "Juri Juice";
     String K2SO = "K-2SO (Kay-Tuesso)";
     String Kabe = "Kabe";
+    String Kachirho = "Kashyyyk: Kachirho";
     String KalFalnl_Cndros = "Kal'Falnl C'ndros";
     String Kalit = "Kalit";
     String Kamino= "Kamino";
     String Kanan = "Kanan Jarrus";
     String Karie_Neth = "Karie Neth";
+    String Kashyyyk = "Kashyyyk";
     String Keep_Your_Eyes_Open = "Keep Your Eyes Open";
     String Kessel = "Kessel";
     String Kessel_Run = "Kessel Run";
-    String Kashyyyk = "Kashyyyk";
     String Ke_Chu_Ke_Kukuta = "Ke Chu Ke Kukuta?";
     String Ket_Maliss = "Ket Maliss";
     String Ketwol = "Ketwol";

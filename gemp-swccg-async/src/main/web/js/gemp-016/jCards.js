@@ -3508,6 +3508,17 @@ var fixedImages = {
 "501_76":"/gemp-swccg/images/cards/Premiere-Dark/tatooine.gif",
 "501_77":"/gemp-swccg/images/cards/SpecialEdition-Dark/homingbeacon.gif",
 "501_78":"/gemp-swccg/images/cards/DeathStarII-Dark/lordvader.gif",
+"501_79":"/gemp-swccg/images/cards/Endor-Light/thatsone.gif",
+"501_80":"/gemp-swccg/images/cards/ANewHope-Light/bowcaster.gif",
+"501_81":"/gemp-swccg/images/cards/Endor-Light/chewbaccaofkashyyyk.gif",
+"501_82":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/tarffulwookieeinsurgent.gif",
+"501_83":"/gemp-swccg/images/cards/Coruscant-Light/yarua.gif",
+"501_84":"/gemp-swccg/images/cards/SpecialEdition-Light/wookiee.gif",
+"501_85":"/gemp-swccg/images/cards/Endor-Light/wookieeguide.gif",
+"501_86":"/gemp-swccg/images/cards/ANewHope-Light/wookieeroar.gif",
+"501_87":"/gemp-swccg/images/cards/Endor-Light/endorgreatforest.gif",
+"501_88":"/gemp-swccg/images/cards/Endor-Light/endorlandingplatformdockingbay.gif",
+"501_89":"/gemp-swccg/images/cards/Hoth-Dark/idjustassoonkissawookiee.gif",
 "501_98":"/gemp-swccg/images/cards/Virtual11-Light/viceadmiralholdo.gif",
 "501_99":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/thedeadspeak.png",
 
@@ -3985,7 +3996,9 @@ var Card = Class.extend({
                    (cardNo == 51) ||
                    (cardNo == 53) ||
                    (cardNo == 74) ||
-                   (cardNo == 75);
+                   (cardNo == 75) ||
+                   (cardNo == 87) ||
+                   (cardNo == 88);
         }
         if (setNo == 601) {
              return (cardNo == 14) ||
