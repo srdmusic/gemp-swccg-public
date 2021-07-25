@@ -2,10 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrStartingInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.CardSubtype;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -28,8 +25,9 @@ import java.util.List;
  */
 public class Card501_046 extends AbstractUsedOrStartingInterrupt {
     public Card501_046() {
-        super(Side.LIGHT, 5, "What Gives A Jedi His Power");
-        setGameText("USED: If a Jedi on table, activate 1 Force. STARTING: If your starting location had exactly two [Light Side], " +
+        super(Side.LIGHT, 5, "What Gives A Jedi His Power", Uniqueness.UNIQUE);
+        setGameText("USED: Activate 1 Force if a Jedi on table. " +
+                "STARTING: If your starting location had exactly two [Light Side] icons, " +
                 "deploy The Force Is Strong In My Family and an Effect (except Wokling) that is always immune to Alter. " +
                 "Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_16);
@@ -67,9 +65,9 @@ public class Card501_046 extends AbstractUsedOrStartingInterrupt {
         if (startingLocation != null && Filters.iconCount(Icon.LIGHT_FORCE, 2).accepts(game, startingLocation)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
-            action.setText("Deploy The Force is Strong In My Family and Effects from Reserve Deck");
+            action.setText("Deploy The Force is Strong In My Family and an Effect from Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Deploy The Force is Strong In My Family and up to two Effects from Reserve Deck",
+            action.allowResponses("Deploy The Force is Strong In My Family and an Effect from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {

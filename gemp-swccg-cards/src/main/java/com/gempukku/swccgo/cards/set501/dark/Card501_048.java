@@ -115,9 +115,6 @@ public class Card501_048 extends AbstractObjective {
                         new MayNotDeployModifier(self, Filters.and(Filters.except(Filters.Vader), Filters.character, Filters.abilityMoreThan(4)), self.getOwner()), null));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new DeployCostToLocationModifier(self, Filters.Star_Destroyer, -1, Filters.Scarif_system), null));
-        action.appendEffect(
-                new AddUntilEndOfGameModifierEffect(action,
                         new ModifyGameTextModifier(self, Filters.Superlaser, ModifyGameTextType.SUPERLASER_IGNORES_DEPLOYMENT_RESTRICTIONS), null));
         return action;
     }
