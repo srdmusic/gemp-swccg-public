@@ -3447,10 +3447,10 @@ var fixedImages = {
 
 //playtesting
 "501_1":"/gemp-swccg/images/cards/JabbasPalace-Dark/reeyees.gif",
-"501_2":"/gemp-swccg/images/cards/Hoth-Dark/blizzardwalker.gif",
+"501_2":"/gemp-swccg/images/cards/Premiere-Dark/labria.gif",
 "501_3":"/gemp-swccg/images/cards/CloudCity-Dark/projectivetelepathy.gif",
 "501_4":"/gemp-swccg/images/cards/CloudCity-Dark/shockingrevelation.gif",
-"501_5":"/gemp-swccg/images/cards/Premiere-Dark/ubrikkian9000z001.gif",
+"501_5":"/gemp-swccg/images/cards/Hoth-Dark/idjustassoonkissawookiee.gif",
 "501_6":"/gemp-swccg/images/cards/CloudCity-Dark/cloudcityeastplatformdockingbay.gif",
 "501_7":"/gemp-swccg/images/cards/ANewHope-Light/tzizvvt.gif",
 "501_8":"/gemp-swccg/images/cards/ReflectionsIII-Dark/deephatred.gif",
@@ -3459,7 +3459,7 @@ var fixedImages = {
 "501_11":"/gemp-swccg/images/cards/ANewHope-Light/tzizvvt.gif",
 "501_12":"/gemp-swccg/images/cards/Endor-Light/firefight.gif",
 "501_13":"/gemp-swccg/images/cards/Coruscant-Dark/maulstrikes.gif",
-"501_14":"/gemp-swccg/images/cards/Virtual0-Light/daughterofskywalker.gif",
+"501_14":"/gemp-swccg/images/cards/ReflectionsII-Light/obiwansjournal.gif",
 "501_15":"/gemp-swccg/images/cards/Virtual3-Light/kananjarrus.gif",
 "501_16":"/gemp-swccg/images/cards/Coruscant-Dark/lottdod.gif",
 "501_17":"/gemp-swccg/images/cards/TheedPalace-Dark/rollingrollingrolling.gif",
@@ -3518,7 +3518,6 @@ var fixedImages = {
 "501_86":"/gemp-swccg/images/cards/ANewHope-Light/wookieeroar.gif",
 "501_87":"/gemp-swccg/images/cards/Endor-Light/endorgreatforest.gif",
 "501_88":"/gemp-swccg/images/cards/Endor-Light/endorlandingplatformdockingbay.gif",
-"501_89":"/gemp-swccg/images/cards/Hoth-Dark/idjustassoonkissawookiee.gif",
 "501_98":"/gemp-swccg/images/cards/Virtual11-Light/viceadmiralholdo.gif",
 "501_99":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/thedeadspeak.png",
 
