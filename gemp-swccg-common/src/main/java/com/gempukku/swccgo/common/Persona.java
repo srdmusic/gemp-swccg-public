@@ -28,6 +28,7 @@ public enum Persona implements Filterable {
     CONNIX("Connix"),
     CORRAN_HORN("Corran Horn"),
     CRACKEN("Cracken"),
+    DANNIK("Dannik Jerriko"),
     DASH("Dash"),
     DENGAR("Dengar"),
     DIN("Din"),

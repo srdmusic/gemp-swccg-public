@@ -65,7 +65,7 @@ public class Card501_045 extends AbstractUsedOrStartingInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
             action.setText("Deploy a Rule of Two and Effects from Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Deploy Rule of Two and up to two Effects from Reserve Deck",
+            action.allowResponses("Deploy Rule of Two and two Effects from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {

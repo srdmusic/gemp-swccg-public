@@ -29,7 +29,6 @@ public class Card501_077 extends AbstractDevice {
         setLore("");
         setGameText("Deploy on Scarif system. If a starship was just lost from here or opponent just Force drained here, opponent may draw destiny. Add 1 for each Scarif location opponent occupies. If total destiny > 8, Shield Gate 'blown away' (place out of play).");
         addIcons(Icon.VIRTUAL_SET_16);
-        setVirtualSuffix(true);
         setTestingText("Shield Gate");
     }
 

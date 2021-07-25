@@ -50,8 +50,8 @@ public class Card501_029 extends AbstractRepublic {
 
         // Check condition(s)
         if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.isDuringBattleWithParticipant(game, self)
-                && GameConditions.canAddBattleDestinyDraws(game, self)) {
+                && GameConditions.canAddBattleDestinyDraws(game, self)
+                && GameConditions.isDuringBattleWithParticipant(game, self)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Add one battle destiny");
