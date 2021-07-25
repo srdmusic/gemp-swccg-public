@@ -4522,6 +4522,10 @@ public class GameConditions {
         return game.getModifiersQuerying().mayNotMove(game.getGameState(), card);
     }
 
+    public static boolean hasPerformedRegularMoveThisTurn(SwccgGame game, PhysicalCard card) {
+        return game.getModifiersQuerying().hasPerformedRegularMoveThisTurn(card);
+    }
+
     /**
      * Determines if the player can use location's game text to perform a move.
      * @param playerId the player
@@ -5409,5 +5413,9 @@ public class GameConditions {
     public static boolean hasDeployedAtLeastXCardsToLocationThisTurn(SwccgGame game, String playerId, int count, Filterable cardFilter, PhysicalCard location) {
         List<PhysicalCard> cardsDeployed = game.getModifiersQuerying().getCardsPlayedThisTurnToLocation(playerId, location);
         return Filters.filterCount(cardsDeployed, game, count, cardFilter).size() >= count;
+    }
+
+    public static boolean isDeathStarPowerShutDown(SwccgGame game) {
+        return game.getModifiersQuerying().isDeathStarPowerShutDown();
     }
 }

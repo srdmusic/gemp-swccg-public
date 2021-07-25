@@ -804,7 +804,7 @@ public class SwccgGameMediator {
             }
 
             // Show affecting cards
-            if (cardZone.isInPlay() || cardZone == Zone.HAND || cardZone == Zone.STACKED) {
+            if (cardZone.isInPlay() || cardZone == Zone.HAND || cardZone == Zone.STACKED || cardZone == Zone.OUT_OF_PLAY) {
                 for (Modifier modifier : modifiersQuerying.getModifiersAffecting(gameState, card)) {
                     modifierCollector.addModifier(modifier);
                 }
@@ -943,14 +943,11 @@ public class SwccgGameMediator {
             return;
         }
 
-        if (_secondsGameTimerExtended > 0)
-            return;
-
-        String playerId = player.getName();
+        String playerName = player.getName();
         _writeLock.lock();
         try {
-            if (isPlayerPlaying(playerId)) {
-                _swccgoGame.requestExtendGameTimer(playerId, minutesToExtend);
+            if (isPlayerPlaying(playerName)) {
+                _swccgoGame.requestExtendGameTimer(playerName, minutesToExtend);
                 _secondsGameTimerExtended = _swccgoGame.getGameTimerExtendedInMinutes() * 60;
                 if (_secondsGameTimerExtended > 0) {
                     _swccgoGame.getGameState().sendMessage("The game timer has been extended by " + minutesToExtend + " minutes, by request of all players");
@@ -1217,9 +1214,30 @@ public class SwccgGameMediator {
                     // Slip Sliding Away (v)
                     return startingLocation.getBlueprint().getTitle() + " SSAv";
                 }
+                if(Filters.Let_The_Wookiee_Win.accepts(_swccgoGame, startingInterrupt)
+                        && startingInterrupt.getBlueprint().hasVirtualSuffix()
+                        && startingLocation.getBlueprint().getTitle() != null){
+                    // Let The Wookiee Win (v)
+                    return startingLocation.getBlueprint().getTitle() + " LTWWv";
+                }
+                if(Filters.title("I Am Part Of The Living Force").accepts(_swccgoGame, startingInterrupt)
+                    && startingLocation.getBlueprint().getTitle() != null)  {
+                    // Communing
+                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Communing";
+                }
+                if(Filters.title("What Gives A Jedi His Power").accepts(_swccgoGame, startingInterrupt)
+                    && startingLocation.getBlueprint().getTitle() != null) {
+                    // The Force Is Strong In My Family
+                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " TFISIMF";
+                }
+                if(Filters.title("The Sith Will Rule The Galaxy").accepts(_swccgoGame, startingInterrupt)
+                        && startingLocation.getBlueprint().getTitle() != null) {
+                    // Rule Of Two
+                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Rule Of Two";
+                }
                 if (Filters.Communing.accepts(_swccgoGame, startingInterrupt)
                         && startingInterrupt.getBlueprint().isLegacy()) {
-                    //Communing (ignore the location)
+                    // Legacy Communing (ignore the location)
                     return "Communing";
                 }
                 if (Filters.title("It Is The Future You See").accepts(_swccgoGame, startingInterrupt)
@@ -1347,6 +1365,10 @@ public class SwccgGameMediator {
                 // Old Allies
                 objectiveLabel = "Old Allies";
             }
+            if (Filters.or(Filters.On_The_Verge_Of_Greatness, Filters.Deploy_The_Garrison).accepts(_swccgoGame, objective)) {
+                // On The Verge Of Greatness
+                objectiveLabel = "On The Verge Of Greatness";
+            }
             if (Filters.or(Filters.Local_Uprising, Filters.Liberation, Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
                 // Operatives
                 objectiveLabel = "Operatives";
@@ -1407,7 +1429,7 @@ public class SwccgGameMediator {
                 // Watch Your Step
                 objectiveLabel = "WYS";
             }
-            if (Filters.or(Filters.Yavin_4_Operations, Filters.The_Time_To_Fight_Is_Now).accepts(_swccgoGame, objective)) {
+            if (Filters.or(Filters.Yavin_4_Base_Operations, Filters.The_Time_To_Fight_Is_Now).accepts(_swccgoGame, objective)) {
                 // Yavin 4 Operations
                 objectiveLabel = "Y4O";
             }

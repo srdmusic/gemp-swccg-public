@@ -348,6 +348,7 @@ public class TriggerConditions {
                 || effectResult.getType() == EffectResult.Type.STACKED_FROM_CARD_PILE
                 || effectResult.getType() == EffectResult.Type.STACKED_FROM_HAND
                 || effectResult.getType() == EffectResult.Type.STACKED_FROM_TABLE
+                || effectResult.getType() == EffectResult.Type.REMOVED_FROM_STACKED
                 || effectResult.getType() == EffectResult.Type.CONCEALED
                 || effectResult.getType() == EffectResult.Type.UNCONCEALED
                 || effectResult.getType() == EffectResult.Type.UTINNI_EFFECT_COMPLETED
@@ -2303,6 +2304,20 @@ public class TriggerConditions {
                     && location != null && Filters.and(locationFilter).accepts(game.getGameState(), game.getModifiersQuerying(), location);
         }
         return false;
+    }
+
+    /**
+     * Determines if a just-lost card accepted by the card filter is about to be removed from Lost Pile.
+     * @param game the game
+     * @param effectResult the effect result
+     * @param cardFilter the card filter
+     * @return true or false
+     */
+    public static boolean isAboutToRemoveJustLostCardFromLostPile(SwccgGame game, EffectResult effectResult, Filterable cardFilter) {
+        String lightPlayer = game.getLightPlayer();
+        String darkPlayer = game.getDarkPlayer();
+        return isAboutToRemoveJustLostCardFromLostPile(game, effectResult, lightPlayer, cardFilter) ||
+                isAboutToRemoveJustLostCardFromLostPile(game, effectResult, darkPlayer, cardFilter);
     }
 
     /**
@@ -5305,6 +5320,19 @@ public class TriggerConditions {
      */
     public static boolean characterEnslavedBy(SwccgGame game, EffectResult effectResult, String playerId) {
         if (effectResult.getType() == EffectResult.Type.CHARACTER_ENSLAVED) {
+            return playerId.equals(effectResult.getPerformingPlayerId());
+        }
+        return false;
+    }
+
+    /**
+     * Determines if a player just recirculated
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @return true or false
+     */
+    public static boolean justRecirculated(EffectResult effectResult, String playerId) {
+        if (effectResult.getType() == EffectResult.Type.RECIRCULATED) {
             return playerId.equals(effectResult.getPerformingPlayerId());
         }
         return false;

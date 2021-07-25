@@ -1,92 +1,69 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.AbstractRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.DrawsNoMoreThanBattleDestinyEffect;
-import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndStackEffect;
+import com.gempukku.swccgo.cards.conditions.ArmedWithCondition;
+import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
-import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeStackedCardIntoHandEffect;
-import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotModifyBattleDestinyModifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 0
- * Type: Effect
- * Title: Flash Of Insight (V)
+ * Set: Set 16
+ * Type: Character
+ * Subtype: Republic
+ * Title: Anakin Skywalker, Jedi Knight
  */
-public class Card501_029 extends AbstractNormalEffect {
+public class Card501_029 extends AbstractRepublic {
     public Card501_029() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Flash Of Insight", Uniqueness.UNIQUE);
-        setVirtualSuffix(true);
-        setLore("Occasionally Han was capable of such feats, even without Threepio there to tell him these things.");
-        setGameText("Deploy on table; shuffle your Reserve Deck, peek at top two cards, and stack them face-up here. During battle, may take a card here into hand to prevent all battle destiny draws from being modified or canceled (each player may draw no more than one battle destiny). [Immune to Alter.]");
-        addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_0);
-        addImmuneToCardTitle(Title.Alter);
-        setTestingText("Flash Of Insight (V)");
+        super(Side.LIGHT, 1, 8, 7, 6, 8, "Anakin Skywalker, Jedi Knight", Uniqueness.UNIQUE);
+        setGameText("Adds 3 to power of anything he pilots. While armed with a lightsaber, adds 2 to his defense value. During battle, may lose 2 Force to add one battle destiny. Immune to attrition < 6.");
+        addPersona(Persona.ANAKIN);
+        addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_16, Icon.CLONE_ARMY);
+        setTestingText("Anakin Skywalker, Jedi Knight");
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        String playerId = self.getOwner();
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
+        modifiers.add(new DefenseValueModifier(self, new ArmedWithCondition(self, Filters.lightsaber), 2));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 6));
+        return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (TriggerConditions.justDeployed(game, effectResult, self)) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setPerformingPlayer(playerId);
-            // Perform result(s)
-            action.appendEffect(
-                    new ShuffleReserveDeckEffect(action, playerId));
-            action.appendEffect(
-                    new PeekAtTopCardsOfReserveDeckAndStackEffect(action, playerId, 2, self));
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        String opponent = game.getOpponent(playerId);
-
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-
-        // Check condition(s)
         if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.hasStackedCards(game, self)) {
+                && GameConditions.canAddBattleDestinyDraws(game, self)
+                && GameConditions.isDuringBattleWithParticipant(game, self)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take stacked card into hand");
-            action.setActionMsg("Prevent all battle destiny draws from being modified or canceled");
+            action.setText("Add one battle destiny");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerBattleEffect(action));
-            // Pay cost(s)
+            // Pay Costs
             action.appendCost(
-                    new TakeStackedCardIntoHandEffect(action, playerId, self));
-            // Perform result(s)
+                    new LoseForceEffect(action, playerId, 2)
+            );
             action.appendEffect(
-                    new AddUntilEndOfBattleModifierEffect(action,
-                            new MayNotModifyBattleDestinyModifier(self), "Prevents all battle destiny draws from being modified"));
-            action.appendEffect(
-                    new AddUntilEndOfBattleModifierEffect(action,
-                            new MayNotCancelBattleDestinyModifier(self), "Prevents all battle destiny draws from being canceled"));
-            action.appendEffect(
-                    new DrawsNoMoreThanBattleDestinyEffect(action, playerId, 1));
-            action.appendEffect(
-                    new DrawsNoMoreThanBattleDestinyEffect(action, opponent, 1));
+                    new AddBattleDestinyEffect(action, 1));
             return Collections.singletonList(action);
         }
         return null;

@@ -32,6 +32,8 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
     protected Filter _matchingVehicleFilter = Filters.none;
     protected Filter _matchingWeaponFilter = Filters.none;
     protected String _matchingSystem;
+    private Integer _replacementCountForSquadron;
+    private Filter _replacementFilterForSquadron;
 
     /**
      * Creates a blueprint for a deployable card.
@@ -2174,7 +2176,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
      */
     private Action getSquadronReplacementAction(String playerId, SwccgGame game, PhysicalCard self) {
         // Only squadrons that replace instead of deploy may replace
-        if (!Filters.squadron.accepts(game, self)) {
+        if (!Filters.or(Filters.squadron, Filters.character).accepts(game, self)) {
             return null;
         }
         Filter replacementFilter = self.getBlueprint().getReplacementFilterForSquadron();
@@ -2184,7 +2186,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
         }
 
         // Find locations that have the required number of starfighters present
-        replacementFilter = Filters.and(Filters.your(playerId), Filters.starfighter, replacementFilter);
+        replacementFilter = Filters.and(Filters.your(playerId), Filters.or(Filters.starfighter, Filters.character), replacementFilter);
         boolean foundLocation = false;
         Collection<PhysicalCard> locations = Filters.filterTopLocationsOnTable(game, Filters.wherePresent(self, replacementFilter));
         for (PhysicalCard location : locations) {
@@ -2197,7 +2199,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
             return null;
         }
 
-        return new SquadronReplacementAction(self);
+        return new ReplacementAction(self);
     }
 
     /**
@@ -2320,6 +2322,18 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
         if (TriggerConditions.forceDrainInitiatedBy(game, effectResult, game.getOpponent(playerId))
                 || TriggerConditions.battleInitiated(game, effectResult, game.getOpponent(playerId))) {
 
+            if (self.getZone() == Zone.STACKED) {
+                if (!game.getModifiersQuerying().isGameTextCanceled(game.getGameState(), self)) {
+                    // Deploy other cards as 'react'
+                    List<TriggerAction> deployOtherCardsAsReactActions = getDeployOtherCardsAsReactAction(playerId, game, self);
+                    if (deployOtherCardsAsReactActions != null) {
+                        for (TriggerAction deployOtherCardsAsReactAction : deployOtherCardsAsReactActions) {
+                            actions.add(deployOtherCardsAsReactAction);
+                        }
+                    }
+                }
+            }
+
             if (self.getZone().isInPlay()) {
                 boolean inPlayActive = game.getGameState().isCardInPlayActive(self, false, true, false, false, false, false, false, false);
 
@@ -2415,5 +2429,26 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
      */
     protected List<? extends AbstractPermanentAboard> getGameTextPermanentsAboard() {
         return Collections.emptyList();
+    }
+
+    @Override
+    public final Integer getReplacementCountForSquadron() {
+        return _replacementCountForSquadron;
+    }
+
+    @Override
+    public final Filter getReplacementFilterForSquadron() {
+        return _replacementFilterForSquadron;
+    }
+
+    /**
+     * Sets the filter and number of starfighters present at a location that are replaced by the squadron.
+     *
+     * @param count  the number of starfighters
+     * @param filter the filter
+     */
+    protected final void setReplacementForSquadron(int count, Filter filter) {
+        _replacementCountForSquadron = count;
+        _replacementFilterForSquadron = filter;
     }
 }

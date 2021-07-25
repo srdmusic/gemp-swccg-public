@@ -111,6 +111,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private Map<String, List<PhysicalCard>> _cardWithAbilityDeployedThisTurn = new HashMap<String, List<PhysicalCard>>();
     private Map<String, Map<Integer, List<PhysicalCard>>> _cardPlayedToLocationThisTurn = new HashMap<String, Map<Integer, List<PhysicalCard>>>();
     private boolean _bluffCardStacked;
+    private boolean _deathStarPowerShutDown;
     private Set<String> _usedCombatCard = new HashSet<String>();
     private Map<Integer, List<PhysicalCard>> _targetedByWeaponsMap = new HashMap<Integer, List<PhysicalCard>>();
     private Map<Integer, List<SwccgBuiltInCardBlueprint>> _targetedByPermanentWeaponsMap = new HashMap<Integer, List<SwccgBuiltInCardBlueprint>>();
@@ -438,8 +439,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 }
             }
         }
-        snapshot._bluffCardStacked = _bluffCardStacked;
 
+        snapshot._bluffCardStacked = _bluffCardStacked;
+        snapshot._deathStarPowerShutDown = _deathStarPowerShutDown;
 
         snapshot._usedCombatCard.addAll(_usedCombatCard);
         for (Integer cardId : _targetedByWeaponsMap.keySet()) {
@@ -1276,7 +1278,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.POWER, physicalCard)) {
             result *= modifier.getPowerMultiplierModifier(gameState, this, physicalCard);
-            PhysicalCard sourceCard = modifier.getSource(gameState) != null ? modifier.getSource(gameState) : null;
+            PhysicalCard sourceCard = modifier.getSource(gameState);
             String playerId = sourceCard != null ? sourceCard.getOwner() : null;
             float modifierAmount = modifier.getPowerModifier(gameState, this, physicalCard);
             if (modifierAmount <= 0 || !isProhibitedFromHavingPowerIncreasedByCard(gameState, physicalCard, playerId, sourceCard, modifierCollector)) {
@@ -1301,6 +1303,15 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
 
         return Math.max(0, result);
+    }
+
+    @Override
+    public float getPowerModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+        float result = 0;
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.POWER_INCREASE_MODIFIER_LIMIT, physicalCard)) {
+            result = modifier.getPowerModifierLimit(gameState, this, physicalCard);
+        }
+        return result;
     }
 
     /**
@@ -1927,6 +1938,15 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         return Math.max(0, result);
     }
 
+    @Override
+    public float getForfeitModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+        float result = 0;
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.FORFEIT_INCREASE_MODIFIER_LIMIT, physicalCard)) {
+            result = modifier.getForfeitModifierLimit(gameState, this, physicalCard);
+        }
+        return result;
+    }
+
     /**
      * Determines if a card remains in play and reduces it's forfeit when 'forfeited'.
      * @param gameState the game state
@@ -2133,10 +2153,25 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
 
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.DESTINY, physicalCard)) {
-            result += modifier.getDestinyModifier(gameState, this, physicalCard);
+            float modifierValue = modifier.getDestinyModifier(gameState, this, physicalCard);
+            result += modifierValue;
             modifierCollector.addModifier(modifier);
         }
 
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.UNMODIFIABLE_DESTINY, physicalCard)) {
+            result = modifier.getValue(gameState, this, physicalCard);
+            modifierCollector.addModifier(modifier);
+        }
+
+        return result;
+    }
+
+    @Override
+    public float getDestinyModifierLimit(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+        float result = 0;
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.DESTINY_INCREASE_MODIFIER_LIMIT, physicalCard)) {
+            result = modifier.getDestinyModifierLimit(gameState, this, physicalCard);
+        }
         return result;
     }
 
@@ -3470,6 +3505,24 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     }
 
     /**
+     * Records that the Death Star's power is 'shut down'.
+     */
+    @Override
+    public void deathStarPowerIsShutDown() {
+        _deathStarPowerShutDown = true;
+    }
+
+    /**
+     * Determines if the Death Star's power is 'shut down'.
+     *
+     * @return true or false
+     */
+    @Override
+    public boolean isDeathStarPowerShutDown() {
+        return _deathStarPowerShutDown;
+    }
+
+    /**
      * Records that the specified card being played (or being deployed).
      * @param card the card
      */
@@ -3654,6 +3707,13 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.FORCE_DRAIN_AMOUNT, location)) {
             if (modifier.isForPlayer(performingPlayerId)) {
                 result += modifier.getForceDrainModifier(performingPlayerId, gameState, this, location);
+                modifierCollector.addModifier(modifier);
+            }
+        }
+
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.UNMODIFIABLE_FORCE_DRAIN_AMOUNT, location)) {
+            if (modifier.isForPlayer(performingPlayerId)) {
+                result = modifier.getUnmodifiableForceDrainAmount(performingPlayerId, gameState, this, location);
                 modifierCollector.addModifier(modifier);
             }
         }
@@ -6023,6 +6083,21 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     public float getBlowAwayBlockadeFlagshipAttemptTotal(GameState gameState, float baseTotal) {
         float result = baseTotal;
         for (Modifier modifier : getModifiers(gameState, ModifierType.BLOW_AWAY_BLOCKADE_FLAGSHIP_ATTEMPT_TOTAL)) {
+            result += modifier.getValue(gameState, this, (PhysicalCard) null);
+        }
+        return Math.max(0, result);
+    }
+
+    /**
+     * Gets the 'blow away' Shield Gate attempt total.
+     * @param gameState the game state
+     * @param baseTotal the base total
+     * @return the total
+     */
+    @Override
+    public float getBlowAwayShieldGateAttemptTotal(GameState gameState, float baseTotal) {
+        float result = baseTotal;
+        for (Modifier modifier : getModifiers(gameState, ModifierType.BLOW_AWAY_SHIELD_GATE_ATTEMPT_TOTAL)) {
             result += modifier.getValue(gameState, this, (PhysicalCard) null);
         }
         return Math.max(0, result);
@@ -12190,6 +12265,14 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     @Override
     public boolean isPlayingCardProhibited(GameState gameState, PhysicalCard card, boolean isDejarikRules) {
         if (!getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY, card).isEmpty()) {
+            if (!getModifiersAffectingCard(gameState, ModifierType.IGNORES_DEPLOYMENT_RESTRICTIONS_FROM_CARD, card).isEmpty()) {
+                for (Modifier mayNotPlayModifier : getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY, card)) {
+                    for (Modifier ignoresDeploymentRestrictionFromCardModifier : getModifiersAffectingCard(gameState, ModifierType.IGNORES_DEPLOYMENT_RESTRICTIONS_FROM_CARD, card)) {
+                        Filter cardFilter = ((IgnoresDeploymentRestrictionsFromCardModifier) ignoresDeploymentRestrictionFromCardModifier).getCardFilter();
+                        return !cardFilter.accepts(gameState.getGame(), mayNotPlayModifier.getSource(gameState));
+                    }
+                }
+            }
             return true;
         }
         if (isDejarikRules && !getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY_USING_DEJARIK_RULES, card).isEmpty()) {
@@ -14554,6 +14637,17 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     }
 
     /**
+     * Determines if the specified card may not be removed from lost pile if just lost
+     * @param gameState the game state
+     * @param card the card
+     * @return true if card may not be placed out of play, otherwise false
+     */
+    @Override
+    public boolean mayNotRemoveJustLostCardFromLostPile(GameState gameState, PhysicalCard card) {
+        return (!getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_REMOVE_JUST_LOST_CARDS_FROM_LOST_PILE, card).isEmpty());
+    }
+
+    /**
      * Determines if a card may not be targeted by weapons used by the specified card.
      * @param gameState the game state
      * @param cardTargeted the card targeted
@@ -14995,7 +15089,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                                         Condition condition = modifier.getCondition();
                                         Condition additionalCondition = modifier.getAdditionalCondition(gameState, this, card);
                                         if ((condition == null || condition.isFulfilled(gameState, this)) && (additionalCondition == null || additionalCondition.isFulfilled(gameState, this)))
-                                            if (modifier.getSource(gameState) == null || modifier.isPersistent() || modifier.getSource(gameState).getZone() == Zone.STACKED || modifier.isWhileInactiveInPlay() == !gameState.isCardInPlayActive(modifier.getSource(gameState), false, true, false, false, false, false, false, false))
+                                            if (modifier.getSource(gameState) == null || modifier.isPersistent() || modifier.getSource(gameState).getZone() == Zone.STACKED || modifier.getSource(gameState).getZone() == Zone.OUT_OF_PLAY || modifier.isWhileInactiveInPlay() == !gameState.isCardInPlayActive(modifier.getSource(gameState), false, true, false, false, false, false, false, false))
                                                 if (modifier.getSource(gameState) == null || modifier.isPersistent() || !modifier.isFromPermanentPilot() || hasPermanentPilot(gameState, modifier.getSource(gameState)))
                                                     if (modifier.getSource(gameState) == null || modifier.isPersistent() || !modifier.isFromPermanentAstromech() || hasPermanentAstromech(gameState, modifier.getSource(gameState)))
                                                         if (checkAffectsCardFirst || card == null || modifier.affectsCard(gameState, this, card))
@@ -16213,6 +16307,10 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         return true;
     }
 
+    public boolean mayBeRevealedAsResistanceAgent(GameState gameState, PhysicalCard card) {
+        return !getModifiersAffectingCard(gameState, ModifierType.MAY_BE_REVEALED_AS_RESISTANCE_AGENT, card).isEmpty();
+    }
+
     public boolean isCommuning(GameState gameState, PhysicalCard card) {
         return !getModifiersAffectingCard(gameState, ModifierType.COMMUNING, card).isEmpty();
     }
@@ -16246,5 +16344,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             return ((ChangeCardSubtypeModifier)m).getSubtype();
         }
         return null;
+    }
+
+    public boolean isShieldGateBlownAway(GameState gameState) {
+        return !getModifiers(gameState, ModifierType.SHIELD_GATE_BLOWN_AWAY).isEmpty();
     }
 }

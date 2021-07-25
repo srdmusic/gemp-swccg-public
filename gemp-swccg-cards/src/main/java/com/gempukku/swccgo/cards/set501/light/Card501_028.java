@@ -1,66 +1,112 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.SetWhileInPlayDataEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.game.state.WhileInPlayData;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
+import com.gempukku.swccgo.logic.effects.LightSideGoesFirstEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 14
- * Type: Effect
- * Title: Slimy Piece Of Worm-Ridden Filth!
+ * Set: Set 16
+ * Type: Epic Event
+ * Title: The Force Is Strong In My Family
  */
-public class Card501_028 extends AbstractNormalEffect {
+public class Card501_028 extends AbstractEpicEventDeployable {
     public Card501_028() {
-        super(Side.LIGHT, 7, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Slimy Piece Of Worm-Ridden Filth!", Uniqueness.UNIQUE);
-        setLore("'Aacccck!'");
-        setGameText("Deploy on table. [Jabba's Palace] Leia may target a warrior at Audience Chamber instead of Jabba. May deploy [Jabba's Palace] Leia from Reserve Deck; reshuffle. Your aliens are immune to Dr. Evazan and Sniper. Seeking An Audience is immune to Alter. [Immune to Alter.]");
-        addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_14);
-        addImmuneToCardTitle(Title.Alter);
-        setTestingText("Slimy Piece Of Worm-Ridden Filth!");
+        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.The_Force_Is_Strong_In_My_Family);
+        setGameText("Deploys on table only at start of game. Light Side goes first. May deploy Now It Calls To You. Choose one:\n" +
+                "My Father Has It: Deploy Your Thoughts Dwell On Your Mother. You may not deploy characters of ability > 4 (except [Episode I] Jedi).\n" +
+                "I Have It: Deploy Like My Father Before Me. You may not deploy Jedi (except Luke or Ahsoka).\n" +
+                "You Have That Power Too: Deploy My Parents Were Strong. You may not deploy Jedi (except [Episode VII] Jedi).");
+        addIcons(Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_16);
+        setTestingText("The Force Is Strong In My Family");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.title(Title.Seeking_An_Audience), Title.Alter));
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.your(self.getOwner()), Filters.alien), Title.Sniper));
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.your(self.getOwner()), Filters.alien), Title.Dr_Evazan));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.and(Filters.Leia, Icon.JABBAS_PALACE), ModifyGameTextType.LEIA_JABBAS_PALACE__TARGET_WARRIOR_AT_AUDIENCE_CHAMBER_INSTEAD_OF_JABBA));
-        return modifiers;
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return GameConditions.isDuringStartOfGame(game);
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        if (TriggerConditions.justDeployed(game, effectResult, self)) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setPerformingPlayer(self.getOwner());
 
-        GameTextActionId gameTextActionId = GameTextActionId.SLIMY_PIECE_OF_WORM_RIDDEN_FILTH__DEPLOY_JABBAS_PALACE_LEIA;
+            action.appendEffect(new DeployCardsFromReserveDeckEffect(action, Filters.title(Title.Now_It_Calls_To_You), 0, 1, false));
 
-        // Check condition(s)
-        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.LEIA)) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Leia from Reserve Deck");
-            action.setActionMsg("Deploy [Jabba's Palace] Leia from Reserve Deck");
-            // Perform result(s)
+            final String MY_FATHER_HAS_IT = "My Father Has It";
+            final String I_HAVE_IT = "I Have It";
+            final String YOU_HAVE_THAT_POWER_TOO = "You Have That Power Too";
+
+            String[] possibleResults = new String[]{MY_FATHER_HAS_IT, I_HAVE_IT, YOU_HAVE_THAT_POWER_TOO};
+
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.Leia, Icon.JABBAS_PALACE), true));
-            actions.add(action);
+                    new PlayoutDecisionEffect(action, self.getOwner(), new MultipleChoiceAwaitingDecision("Choose an option", possibleResults) {
+                        @Override
+                        protected void validDecisionMade(int index, String result) {
+                            Filter effectFilter = null;
+                            Filter cardsThatMayNotDeployFilter = null;
+
+                            switch (result) {
+                                case MY_FATHER_HAS_IT:
+                                    //Deploy Your Thoughts Dwell On Your Mother. You may not deploy characters of ability > 4 (except [Episode I] Jedi).
+                                    effectFilter = Filters.title(Title.Your_Thoughts_Dwell_On_Your_Mother);
+                                    cardsThatMayNotDeployFilter = Filters.and(Filters.character, Filters.abilityMoreThan(4), Filters.except(Filters.and(Filters.icon(Icon.EPISODE_I), Filters.Jedi)));
+                                    break;
+                                case I_HAVE_IT:
+                                    //Deploy Like My Father Before Me. You may not deploy Jedi (except Luke or Ahsoka).
+                                    effectFilter = Filters.title(Title.Like_My_Father_Before_Me);
+                                    cardsThatMayNotDeployFilter = Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Luke, Filters.Ahsoka)));
+                                    break;
+                                case YOU_HAVE_THAT_POWER_TOO:
+                                    //Deploy My Parents Were Strong. You may not deploy Jedi (except [Episode VII] Jedi).
+                                    effectFilter = Filters.title(Title.My_Parents_Were_Strong);
+                                    cardsThatMayNotDeployFilter = Filters.and(Filters.Jedi, Filters.except(Icon.EPISODE_VII));
+                                    break;
+                            }
+                            action.appendEffect(
+                                    new LightSideGoesFirstEffect(action));
+                            action.appendEffect(
+                                    new DeployCardFromReserveDeckEffect(action, effectFilter, false)
+                            );
+                            action.appendEffect(
+                                    new AddUntilEndOfGameModifierEffect(action,
+                                            new MayNotPlayModifier(self, cardsThatMayNotDeployFilter, self.getOwner()), "")
+                            );
+                            action.appendEffect(
+                                    new SetWhileInPlayDataEffect(action, self, new WhileInPlayData(result))
+                            );
+
+                        }
+                    })
+            );
 
             return Collections.singletonList(action);
         }
 
         return null;
+    }
+
+    @Override
+    public String getDisplayableInformation(SwccgGame game, PhysicalCard self) {
+        return "Chosen option: " + self.getWhileInPlayData().getTextValue();
     }
 }

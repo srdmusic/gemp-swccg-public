@@ -1,65 +1,139 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractStarfighter;
-import com.gempukku.swccgo.cards.conditions.HasPilotingCondition;
-import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
+import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfCardPileEffect;
+import com.gempukku.swccgo.cards.effects.complete.ChooseExistingCardPileEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.decisions.YesNoDecision;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
+import com.gempukku.swccgo.logic.effects.ShufflePileEffect;
+import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
+import com.gempukku.swccgo.logic.modifiers.CommuningModifier;
+import com.gempukku.swccgo.logic.modifiers.ConsideredOutOfPlayModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.TotalForceGenerationModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
+import com.gempukku.swccgo.logic.timing.results.PlacedCardOutOfPlayFromTableResult;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Set: Set 14
- * Type: Starship
- * Subtype: Starfighter
- * Title: Odd Ball's Torrent Starfighter
+ * Set: Set 16
+ * Type: Epic Event
+ * Title: Communing
  */
-public class Card501_037 extends AbstractStarfighter {
+public class Card501_037 extends AbstractEpicEventDeployable {
     public Card501_037() {
-        super(Side.LIGHT, 3, 1, 2, null, 3, 3, 3, "Odd Ball's Torrent Starfighter", Uniqueness.UNIQUE);
-        setGameText("May add 1 clone pilot. Odd Ball deploys -1 aboard. While Odd Ball piloting, power, hyperspeed, and forfeit +1, and adds one destiny to total power. Immune to attrition < 3 if a clone piloting (< 5 if Odd Ball).");
-        addIcons(Icon.EPISODE_I, Icon.REPUBLIC, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_14);
-        addModelType(ModelType.V_19_TORRENT_STARFIGHTER);
-        setPilotCapacity(1);
-        setMatchingPilotFilter(Filters.persona(Persona.ODD_BALL));
-        setTestingText("Odd Ball's Torrent Starfighter ");
+        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Communing, Uniqueness.UNIQUE);
+        setGameText("Deploy on table.\n" +
+                "One With The Force: If a Jedi was just lost (or placed out of play) from table, may stack that card here.\n" +
+                "The Living Force: Jedi stacked here are 'communing' and are considered out of play. Your total Force generation is +1 for each Jedi stacked here.\n" +
+                "The Cosmic Force: Once per turn, may peek at the top X cards of one of your decks or piles, where X = the number of Jedi 'communing'; may shuffle that deck or pile.");
+        addIcons(Icon.VIRTUAL_SET_16, Icon.EPISODE_I);
+        setTestingText("Communing");
     }
 
     @Override
-    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        String playerId = self.getOwner();
+
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostForSimultaneouslyDeployingPilotModifier(self, Persona.ODD_BALL, -1));
+        modifiers.add(new TotalForceGenerationModifier(self, new StackedEvaluator(self, self), self.getOwner()));
+        modifiers.add(new CommuningModifier(self, Filters.and(Filters.stackedOn(self), Filters.Jedi)));
+        modifiers.add(new ConsideredOutOfPlayModifier(self, Filters.stackedOn(self)));
         return modifiers;
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiersEvenIfUnpiloted(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostToTargetModifier(self, Persona.ODD_BALL, -1, self));
-        return modifiers;
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        if (GameConditions.hasStackedCards(game, self, Filters.Jedi)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+        ) {
+            final int stackedCount = Filters.countStacked(game, Filters.and(Filters.stackedOn(self), Filters.Jedi));
+
+            if (stackedCount>0) {
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Peek at top " + stackedCount + " card" + (stackedCount==1?"":"s") + " of a deck or pile");
+                        // Update usage limit(s)
+                        action.appendUsage(
+                                new OncePerTurnEffect(action));
+
+                // Perform result(s)
+                action.appendEffect(new ChooseExistingCardPileEffect(action, playerId) {
+                    @Override
+                    protected void pileChosen(final SwccgGame game, final String cardPileOwner, final Zone cardPile) {
+                        action.appendEffect(
+                                new PeekAtTopCardsOfCardPileEffect(action, playerId, cardPileOwner, cardPile, stackedCount));
+                        action.appendEffect(
+                                new PlayoutDecisionEffect(action, playerId,
+                                        new YesNoDecision("Shuffle "+cardPile.getHumanReadable()+"?") {
+                                            @Override
+                                            protected void yes() {
+                                                action.appendEffect(new ShufflePileEffect(action, cardPileOwner, cardPile));
+                                            }
+                                            @Override
+                                            protected void no() {
+                                                game.getGameState().sendMessage(playerId +" chooses not to shuffle "+cardPile.getHumanReadable());
+                                            }
+                                        }
+                                        ));
+                    }
+                });
+                actions.add(action);
+            }
+        }
+
+        return actions;
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new ArrayList<>();
-        Condition oddBallPilotingCondition = new HasPilotingCondition(self, Persona.ODD_BALL);
-        modifiers.add(new PowerModifier(self, oddBallPilotingCondition, 1));
-        modifiers.add(new HyperspeedModifier(self, self, oddBallPilotingCondition, 1));
-        modifiers.add(new ForfeitModifier(self, oddBallPilotingCondition, 1));
-        modifiers.add(new AddsDestinyToPowerModifier(self, oddBallPilotingCondition, 1));
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, new ConditionEvaluator(3, 5, oddBallPilotingCondition)));
-        return modifiers;
-    }
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
-    @Override
-    protected Filter getGameTextValidPilotFilter(String playerId, SwccgGame game, PhysicalCard self) {
-        return Filters.clone;
+
+        // Check condition(s)
+        if(TriggerConditions.justLost(game,effectResult,Filters.Jedi)
+                ||TriggerConditions.justPlacedOutOfPlayFromTable(game,effectResult,Filters.Jedi)) {
+
+            final PhysicalCard jedi;
+            if (TriggerConditions.justLost(game, effectResult, Filters.Jedi)) {
+                LostFromTableResult result = (LostFromTableResult) effectResult;
+                jedi = result.getCard();
+            } else {
+                PlacedCardOutOfPlayFromTableResult result = (PlacedCardOutOfPlayFromTableResult) effectResult;
+                jedi = result.getCard();
+            }
+
+            if (jedi != null) {
+
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setText("Stack " + GameUtils.getFullName(jedi) + " here");
+                action.setActionMsg("Stack " + GameUtils.getCardLink(jedi) + " on " + GameUtils.getCardLink(self));
+                // Perform result(s)
+                if (TriggerConditions.justLost(game, effectResult, Filters.Jedi)) {
+                    action.appendEffect(new StackOneCardFromLostPileEffect(action, jedi, self, false, false, true));
+                } else {
+                    //TODO probably need a new StackCardFromOutOfPlayEffect
+                }
+                actions.add(action);
+            }
+        }
+        return actions;
     }
 }

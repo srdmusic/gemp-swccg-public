@@ -1,52 +1,132 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractCapitalStarship;
-import com.gempukku.swccgo.cards.AbstractPermanentAboard;
-import com.gempukku.swccgo.cards.AbstractPermanentPilot;
-import com.gempukku.swccgo.cards.conditions.AloneCondition;
-import com.gempukku.swccgo.cards.conditions.HasAboardCondition;
+import com.gempukku.swccgo.cards.AbstractSith;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OnCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.ForceIconsEqualizedModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
+import com.gempukku.swccgo.logic.effects.ExcludeFromBattleEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.Action;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 14
- * Type: Starship
- * Subtype: Capital
- * Title: Steadfast
+ * Set: Set 16
+ * Type: Character
+ * Subtype: Sith
+ * Title: Darth Vader, Betrayer Of The Jedi
  */
-public class Card501_078 extends AbstractCapitalStarship {
+public class Card501_078 extends AbstractSith {
     public Card501_078() {
-        super(Side.DARK, 1, 7, 9, 6, null, 3, 8, "Steadfast", Uniqueness.UNIQUE);
-        setLore("");
-        setGameText("May add 6 pilots, 8 passengers, and 2 starfighters. Permanent pilot provides ability of 2. While alone at a battleground, adds Force icons to equalize them for both sides here. Immune to attrition < 4.");
-        addPersona(Persona.STEADFAST);
-        addIcons(Icon.EPISODE_VII, Icon.FIRST_ORDER, Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_14);
-        addModelType(ModelType.RESURGENT_CLASS_STAR_DESTROYER);
-        setPilotCapacity(6);
-        setPassengerCapacity(8);
-        setStarfighterCapacity(2);
-        setTestingText("Steadfast");
-    }
-
-    @Override
-    protected List<? extends AbstractPermanentAboard> getGameTextPermanentsAboard() {
-        return Collections.singletonList(new AbstractPermanentPilot(2) {});
+        super(Side.DARK, 1, 6, 6, 6, 8, "Darth Vader, Betrayer Of The Jedi", Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
+        setLore("Leader");
+        setGameText("[Pilot] 3. Vader’s game text may not be canceled. While on Coruscant, adds one [D] icon here. In battle with no other Dark Jedi, may: exclude Padme OR cancel immunity to attrition of a Jedi or Padawan. Immune to attrition < 5.");
+        addPersona(Persona.VADER);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
+        setTestingText("Darth Vader, Betrayer Of The Jedi");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceIconsEqualizedModifier(self, Filters.and(Filters.battleground, Filters.sameLocation(self)), new AloneCondition(self)));
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
+        modifiers.add(new MayNotHaveGameTextCanceledModifier(self));
+        modifiers.add(new IconModifier(self, Filters.here(self), new OnCondition(self, Title.Coruscant), Icon.DARK_FORCE));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new ArrayList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (GameConditions.isDuringBattleAt(game, Filters.here(self))
+                && !GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.other(self), Filters.Dark_Jedi))
+                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+
+            TargetingReason targetingReason = TargetingReason.TO_BE_EXCLUDED_FROM_BATTLE;
+
+            if (GameConditions.isDuringBattleWithParticipant(game, Filters.Padme)
+                    && GameConditions.canTarget(game, self, targetingReason, Filters.Padme)) {
+
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Exclude Padme from battle");
+                action.appendUsage(
+                        new OncePerBattleEffect(action)
+                );
+                // Choose target(s)
+                action.appendTargeting(
+                        new TargetCardOnTableEffect(action, playerId, "Choose character", targetingReason, Filters.Padme) {
+                            @Override
+                            protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
+                                action.addAnimationGroup(targetedCard);
+                                // Allow response(s)
+                                action.allowResponses("Exclude " + GameUtils.getCardLink(targetedCard) + " from battle",
+                                        new UnrespondableEffect(action) {
+                                            @Override
+                                            protected void performActionResults(Action targetingAction) {
+                                                // Perform result(s)
+                                                action.appendEffect(
+                                                        new ExcludeFromBattleEffect(action, targetedCard));
+                                            }
+                                        }
+                                );
+                            }
+                        });
+                actions.add(action);
+            }
+
+            Filter jediOrPadawanHereFilter = Filters.and(Filters.or(Filters.Jedi, Filters.padawan), Filters.here(self), Filters.hasAnyImmunityToAttrition);
+            if (GameConditions.isDuringBattleWithParticipant(game, jediOrPadawanHereFilter)
+                    && GameConditions.canTarget(game, self, jediOrPadawanHereFilter)) {
+
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Cancel immunity to attrition of a Jedi or Padawan");
+                action.appendUsage(
+                        new OncePerBattleEffect(action)
+                );
+                // Choose target(s)
+                action.appendTargeting(
+                        new TargetCardOnTableEffect(action, playerId, "Choose Jedi or Padawan", jediOrPadawanHereFilter) {
+                            @Override
+                            protected void cardTargeted(final int targetGroupId, final PhysicalCard cardTargeted) {
+                                action.addAnimationGroup(cardTargeted);
+                                // Allow response(s)
+                                action.allowResponses("Cancel " + GameUtils.getCardLink(cardTargeted) + "'s immunity to attrition",
+                                        new UnrespondableEffect(action) {
+                                            @Override
+                                            protected void performActionResults(Action targetingAction) {
+                                                // Perform result(s)
+                                                action.appendEffect(
+                                                        new AddUntilEndOfGameModifierEffect(action,
+                                                                new CancelImmunityToAttritionModifier(self, cardTargeted),
+                                                                "Cancels " + GameUtils.getCardLink(cardTargeted) + "'s immunity to attrition")
+                                                );
+                                            }
+                                        }
+                                );
+                            }
+                        }
+                );
+                actions.add(action);
+            }
+        }
+        return actions;
     }
 }

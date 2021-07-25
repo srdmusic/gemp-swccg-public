@@ -556,6 +556,15 @@ public interface SwccgCardBlueprint {
     List<Modifier> getWhileInPlayModifiers(SwccgGame game, PhysicalCard self);
 
     /**
+     * Gets modifiers that are from this card that are in effect while the card is out of play.
+     *
+     * @param game the game
+     * @param self the card
+     * @return the modifiers
+     */
+    List<Modifier> getWhileOutOfPlayModifiers(SwccgGame game, PhysicalCard self);
+
+    /**
      * Gets modifiers that are from this card that are in effect while the card is stacked (face up) on another card.
      * @param game the game
      * @param self the card
@@ -1713,4 +1722,10 @@ public interface SwccgCardBlueprint {
      * @return true if this is a legacy card
      */
     boolean isLegacy();
+
+    /**
+     * Returns if this should be excluded from the deck builder
+     * @return true if this should be excluded from the deck buider
+     */
+    boolean excludeFromDeckBuilder();
 }

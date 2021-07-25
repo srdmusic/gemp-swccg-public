@@ -1038,6 +1038,12 @@ public abstract class AbstractNonLocationPlaysToTable extends AbstractSwccgCardB
                 actions.addAll(gameTextActions);
         }
 
+        // Actions from game text when stacked
+        if (self.getZone() == Zone.STACKED) {
+            List<RequiredGameTextTriggerAction> gameTextActions = getGameTextRequiredAfterTriggersWhileStacked(game, effectResult, self, self.getCardId());
+            if (gameTextActions != null)
+                actions.addAll(gameTextActions);
+        }
         return actions;
     }
 
@@ -1369,6 +1375,26 @@ public abstract class AbstractNonLocationPlaysToTable extends AbstractSwccgCardB
     }
 
     /**
+     * Gets modifiers that are from this card that are in effect while the card is out of play.
+     *
+     * @param game the game
+     * @param self the card
+     * @return the modifiers
+     */
+    @Override
+    public List<Modifier> getWhileOutOfPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new ArrayList<Modifier>();
+
+        // Modifiers from game text
+        List<Modifier> modifiersFromGameText = getGameTextWhileOutOfPlayModifiers(game, self);
+        if (modifiersFromGameText != null) {
+            modifiers.addAll(modifiersFromGameText);
+        }
+
+        return modifiers;
+    }
+
+    /**
      * Gets modifiers that are from this card that are in effect while the card is stacked (face up) on another card.
      * @param game the game
      * @param self the card
@@ -1456,6 +1482,17 @@ public abstract class AbstractNonLocationPlaysToTable extends AbstractSwccgCardB
      * @return the modifiers, or null
      */
     protected List<Modifier> getGameTextWhileStackedModifiers(SwccgGame game, PhysicalCard self) {
+        return null;
+    }
+
+    /**
+     * This method is overridden by individual cards to specify modifiers that are in effect while the card is out of play.
+     *
+     * @param game the game
+     * @param self the card
+     * @return the modifiers, or null
+     */
+    protected List<Modifier> getGameTextWhileOutOfPlayModifiers(SwccgGame game, PhysicalCard self) {
         return null;
     }
 
@@ -1660,6 +1697,19 @@ public abstract class AbstractNonLocationPlaysToTable extends AbstractSwccgCardB
      * @return the trigger actions, or null
      */
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggersAlwaysWhenInPlay(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        return null;
+    }
+
+    /**
+     * This method is overridden by individual cards to specify required "after" triggers to the specified effect result
+     * the card is stacked on another card
+     * @param game the game
+     * @param effectResult the effect result
+     * @param self the card
+     * @param gameTextSourceCardId the card id of the game text for this action comes from (when copied from another card)
+     * @return the trigger actions, or null
+     */
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggersWhileStacked(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         return null;
     }
 

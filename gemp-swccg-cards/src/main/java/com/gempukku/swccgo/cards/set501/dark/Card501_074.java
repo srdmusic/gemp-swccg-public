@@ -1,11 +1,9 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.effects.ConvertLocationByRaisingToTopEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -16,19 +14,20 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.AbilityRequiredForBattleDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 14
+ * Set: Set 16
  * Type: Location
  * Subtype: Site
  * Title: Scarif: Citadel Tower
@@ -36,53 +35,27 @@ import java.util.List;
 public class Card501_074 extends AbstractSite {
     public Card501_074() {
         super(Side.DARK, Title.Scarif_Citadel_Tower, Title.Scarif);
-        setLocationLightSideGameText("If a player just Force drained here, they may raise a converted Scarif location to the top.");
-        setLocationDarkSideGameText("Once per turn, if you occupy, may use 1 Force to deploy a Scarif site from Reserve Deck; reshuffle.");
+        setLocationDarkSideGameText(" If a player just Force drained here, they may raise a converted Scarif location to the top.");
+        setLocationLightSideGameText("Unless your spy here, total ability of 6 or more required for you to draw battle destiny here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.PLANET, Icon.INTERIOR_SITE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_14);
+        addIcons(Icon.PLANET, Icon.INTERIOR_SITE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_16);
         setTestingText("Scarif: Citadel Tower");
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextDarkSideTopLevelActions(final String playerOnDarkSideOfLocation, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.CITADEL_TOWER__DOWNLOAD_SCARIF_SITE;
-
-        // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerOnDarkSideOfLocation, self, gameTextActionId)
-                && GameConditions.canUseForce(game, playerOnDarkSideOfLocation, 1)
-                && GameConditions.occupies(game, playerOnDarkSideOfLocation, self)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Scarif site from Reserve Deck");
-            action.setActionMsg("Deploy a Scarif site from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            action.appendCost(
-                    new UseForceEffect(action, playerOnDarkSideOfLocation, 1));
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Scarif_site, true));
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextLightSideOptionalAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        Filter scarifSite = Filters.and(Filters.Scarif_site, Filters.or(Filters.canBeConvertedByRaisingLocationToTop(playerOnLightSideOfLocation), Filters.canBeConvertedByRaisingLocationToTop(game.getOpponent(playerOnLightSideOfLocation))));
+    protected List<OptionalGameTextTriggerAction> getGameTextDarkSideOptionalAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        Filter scarifSite = Filters.and(Filters.Scarif_site, Filters.or(Filters.canBeConvertedByRaisingLocationToTop(playerOnDarkSideOfLocation), Filters.canBeConvertedByRaisingLocationToTop(game.getOpponent(playerOnDarkSideOfLocation))));
 
         // Check condition(s)
         if (TriggerConditions.forceDrainInitiatedAt(game, effectResult, self)
                 && GameConditions.canTarget(game, self, scarifSite)) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerOnLightSideOfLocation, gameTextSourceCardId);
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId);
             action.setText("Raise a converted Scarif site");
             // Choose target(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Target site to convert", scarifSite) {
+                    new TargetCardOnTableEffect(action, playerOnDarkSideOfLocation, "Target site to convert", scarifSite) {
                         @Override
                         protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
                             action.addAnimationGroup(targetedCard);
@@ -103,5 +76,12 @@ public class Card501_074 extends AbstractSite {
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new AbilityRequiredForBattleDestinyModifier(self, self, new UnlessCondition(new HereCondition(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.spy))), 6, playerOnLightSideOfLocation));
+        return modifiers;
     }
 }

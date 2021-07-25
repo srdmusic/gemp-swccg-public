@@ -1,88 +1,110 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
-import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromLostPileEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.PlaceCardsOutOfPlayFromLostPileEffect;
-import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.choose.TakeDestinyCardIntoHandEffect;
+import com.gempukku.swccgo.logic.modifiers.AbilityRequiredForBattleDestinyModifier;
+import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 14
- * Type: Effect
- * Title: The First Order Was Just The Beginning
+ * Set: Set 16
+ * Type: Interrupt
+ * Subtype: Used
+ * Title: Projective Telepathy (V)
  */
-public class Card501_003 extends AbstractNormalEffect {
+public class Card501_003 extends AbstractUsedInterrupt {
     public Card501_003() {
-        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "The First Order Was Just The Beginning", Uniqueness.UNIQUE);
-        setGameText("Deploy on table. Your [Episode VII] troopers are forfeit +1. If [Episode VII] Emperor on table, once per turn may deploy Kijimi from Reserve Deck (reshuffle) or place any three cards out of play from your Lost Pile to deploy a non-unique [Episode VII] trooper from Lost Pile. [Immune to Alter.]");
-        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_14);
-        addImmuneToCardTitle(Title.Alter);
-        setTestingText("The First Order Was Just The Beginning");
+        super(Side.DARK, 3, "Projective Telepathy", Uniqueness.UNIQUE);
+        setLore("'Luke.' 'Father.' 'Son, come with me.'");
+        setGameText("If drawn for destiny, may take into hand. \nDraw top card of Force Pile. OR During opponent's control phase, target a location. Total ability of 7 or more required for opponent to draw battle destiny there for remainder of turn.");
+        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_16);
+        setVirtualSuffix(true);
+        setTestingText("Projective Telepathy (V)");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.your(self), Filters.icon(Icon.EPISODE_VII), Filters.trooper), 1));
-        return modifiers;
-    }
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalDrawnAsDestinyTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if (GameConditions.isDestinyCardMatchTo(game, self)
+                && GameConditions.canTakeDestinyCardIntoHand(game, playerId)) {
 
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.THE_FIRST_ORDER_WAS_JUST_THE_BEGINNING__DOWNLOAD_KIJIMI_OR_DEPLOY_TROOPER_FROM_LOST_PILE;
-
-        List<TopLevelGameTextAction> actions = new LinkedList<>();
-
-        if (GameConditions.canSpot(game, self, Filters.and(Filters.icon(Icon.EPISODE_VII), Filters.Emperor))
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)) {
-
-            // Check condition(s)
-            if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Kijimi)) {
-
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action.setText("Deploy Kijimi from Reserve Deck");
-                action.setActionMsg("Deploy Kijimi from Reserve Deck");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerPhaseEffect(action));
-                // Perform result(s)
-                action.appendEffect(
-                        new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Kijimi), true));
-
-                actions.add(action);
-            }
-
-            // Check condition(s)
-            if (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)
-                    && GameConditions.numCardsInLostPile(game, playerId) >= 3) {
-
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action.setText("Deploy [Episode VII] trooper from Lost Pile");
-                action.setActionMsg("Deploy [Episode VII] trooper from Lost Pile");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerPhaseEffect(action));
-
-                action.appendCost(new PlaceCardsOutOfPlayFromLostPileEffect(action, playerId, playerId, 3, 3, false));
-                // Perform result(s)
-                action.appendEffect(
-                        new DeployCardFromLostPileEffect(action, Filters.and(Filters.icon(Icon.EPISODE_VII), Filters.non_unique, Filters.trooper), false));
-
-                actions.add(action);
-            }
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Take into hand");
+            action.setActionMsg("Take into hand");
+            // Pay cost(s)
+            action.appendEffect(
+                    new TakeDestinyCardIntoHandEffect(action));
+            return Collections.singletonList(action);
         }
+        return null;
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+
+        // Check condition(s)
+        if (GameConditions.hasForcePile(game, playerId)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Draw top card of Force Pile");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new DrawOneCardFromForcePileEffect(action, playerId));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
+        if (GameConditions.isDuringOpponentsPhase(game, playerId, Phase.CONTROL)
+            && GameConditions.canTarget(game, self, Filters.location)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+
+            action.setText("Target location");
+            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a location", Filters.location) {
+                @Override
+                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                    // Allow response(s)
+                    action.allowResponses("Require 7 or more ability for " + game.getOpponent(playerId) + " to draw battle destiny at " + GameUtils.getCardLink(targetedCard),
+                            new RespondablePlayCardEffect(action) {
+                                @Override
+                                protected void performActionResults(Action targetingAction) {
+                                    // Get the targeted card(s) from the action using the targetGroupId.
+                                    // This needs to be done in case the target(s) were changed during the responses.
+                                    PhysicalCard finalLocation = action.getPrimaryTargetCard(targetGroupId);
+
+                                    // Perform result(s)
+                                    action.appendEffect(new AddUntilEndOfTurnModifierEffect(action, new AbilityRequiredForBattleDestinyModifier(self, finalLocation, 7, game.getOpponent(playerId)), null));
+                                }
+                            }
+                    );
+                }
+            });
+
+
+            actions.add(action);
+        }
+
         return actions;
     }
 }
