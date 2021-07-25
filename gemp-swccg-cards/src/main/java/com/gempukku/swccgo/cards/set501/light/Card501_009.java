@@ -29,7 +29,9 @@ public class Card501_009 extends AbstractNormalEffect {
     public Card501_009() {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Be With Me", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on table. Rey is power and immunity to attrition +1 for each Jedi out of play and, while Luke on table, ignores deployment restrictions on your [Set 11] objective. If Rey in battle with Kylo or a Dark Jedi Master, you may take the first weapons phase action. [Immune to Alter.]");
+        setGameText("Deploy on table. Rey is power and immunity to attrition +1 for each Jedi out of play and, " +
+                "while Luke on table, ignores deployment restrictions on your [Set 11] objective. If Rey in battle with " +
+                "Kylo or a Dark Jedi Master, you may take the first weapons phase action. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Be With Me");
@@ -46,7 +48,7 @@ public class Card501_009 extends AbstractNormalEffect {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.sameLocationAs(self, Filters.and(Filters.Rey, Filters.with(self, Filters.or(Filters.Kylo, Filters.Dark_Jedi_Master)))))) {
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.sameLocationAs(self, Filters.and(Filters.Rey, Filters.with(self, Filters.or(Filters.Kylo, Filters.Emperor)))))) {
             OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Take first weapons segment action");
             action.appendEffect(

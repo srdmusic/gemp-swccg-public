@@ -50,7 +50,8 @@ public class Card501_029 extends AbstractRepublic {
 
         // Check condition(s)
         if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canAddBattleDestinyDraws(game, self)) {
+                && GameConditions.canAddBattleDestinyDraws(game, self)
+                && GameConditions.isDuringBattleWithParticipant(game, self)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Add one battle destiny");
@@ -59,7 +60,7 @@ public class Card501_029 extends AbstractRepublic {
                     new OncePerBattleEffect(action));
             // Pay Costs
             action.appendCost(
-                    new LoseForceEffect(action, playerId, 3)
+                    new LoseForceEffect(action, playerId, 2)
             );
             action.appendEffect(
                     new AddBattleDestinyEffect(action, 1));
