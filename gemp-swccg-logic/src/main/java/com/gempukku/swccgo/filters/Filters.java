@@ -2706,6 +2706,33 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that are locations where the given player has
+     * total power greater than the given number
+     *
+     * @param source    Source card making the query
+     * @param playerId  Player who's cards we are looking at
+     * @param greaterThan total power greater than this number
+     * @return Filter
+     */
+    public static Filter totalPowerGreaterThan(final PhysicalCard source, final String playerId, final float greaterThan) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+
+                // Only accepts locations
+                if (!Filters.location.accepts(gameState, modifiersQuerying, physicalCard)) {
+                    return false;
+                }
+
+                // Get the player's total power at the location
+                float totalPower = modifiersQuerying.getTotalPowerAtLocation(gameState, physicalCard, playerId, false, false);
+
+                return totalPower > greaterThan;
+            }
+        };
+    }
+
+    /**
      * Filter that accepts cards that are locations controlled for the purposes of Force draining by the specified player.
      *
      * @param playerId the player

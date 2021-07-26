@@ -48,6 +48,7 @@ public class Card215_014 extends AbstractSite {
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId)
                 && GameConditions.occupiesWith(game, self, playerOnLightSideOfLocation, Filters.and(self), Filters.Wookiee)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
