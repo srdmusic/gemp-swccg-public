@@ -28,7 +28,7 @@ public class Card501_058 extends AbstractLostOrStartingInterrupt {
         super(Side.DARK, 4, "Moment Of Triumph", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("A ruthless ruler of Outer Rim Territories. Grand Moff Tarkin used the Death Star to destroy Alderaan, creating the doctrine of rule by fear.");
-        setGameText("LOST: Deploy a battleground system from Reserve Deck; reshuffle. STARTING: If Ralltiir Operations on table, deploy Insignificant Rebellion and two Effects which deploy on table and are always immune to Alter. Place Interrupt in hand.");
+        setGameText("LOST: Deploy Eriadu from Reserve Deck; reshuffle. STARTING: If Ralltiir Operations on table, deploy Insignificant Rebellion and up to two Effects that deploy on table and are always immune to Alter. Place Interrupt in hand.");
         addIcon(Icon.VIRTUAL_SET_16);
         setTestingText("Moment Of Triumph (V)");
     }
@@ -43,15 +43,15 @@ public class Card501_058 extends AbstractLostOrStartingInterrupt {
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
-            action.setText("Deploy a battleground system from Reserve Deck");
+            action.setText("Deploy Eriadu from Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Deploy a battleground system from Reserve Deck",
+            action.allowResponses("Deploy Eriadu from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.system, Filters.battleground, true));
+                                    new DeployCardFromReserveDeckEffect(action, Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Eriadu)), true));
                         }
                     }
             );
@@ -68,7 +68,7 @@ public class Card501_058 extends AbstractLostOrStartingInterrupt {
         if (GameConditions.canSpot(game, self, Filters.Ralltiir_Operations)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Deploy Insignificant Rebellion and 2 Effects that deploy on table and are always immune to Alter.");
+            action.setText("Deploy Insignificant Rebellion and up to 2 Effects that deploy on table and are always immune to Alter.");
             // Allow response(s)
             action.allowResponses(
                     new RespondablePlayCardEffect(action) {
@@ -79,7 +79,7 @@ public class Card501_058 extends AbstractLostOrStartingInterrupt {
                                     new DeployCardFromReserveDeckEffect(action, Filters.Insignificant_Rebellion, true, false));
                             action.appendEffect(
                                     new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.immune_to_Alter,
-                                            Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table"))), 2, 2, true, false));
+                                            Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table"))), 1, 2, true, false));
                             action.appendEffect(
                                     new TakeCardFromVoidIntoHandEffect(action, playerId, self));
                         }
