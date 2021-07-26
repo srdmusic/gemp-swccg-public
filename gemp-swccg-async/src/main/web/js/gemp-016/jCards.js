@@ -3516,8 +3516,8 @@ var fixedImages = {
 "501_84":"/gemp-swccg/images/cards/SpecialEdition-Light/wookiee.gif",
 "501_85":"/gemp-swccg/images/cards/Endor-Light/wookieeguide.gif",
 "501_86":"/gemp-swccg/images/cards/ANewHope-Light/wookieeroar.gif",
-"501_87":"/gemp-swccg/images/cards/Endor-Light/endorgreatforest.gif",
-"501_88":"/gemp-swccg/images/cards/Endor-Light/endorlandingplatformdockingbay.gif",
+"501_87":"/gemp-swccg/images/cards/Endor-Light/endorhiddenforesttrail.gif",
+"501_88":"/gemp-swccg/images/cards/Endor-Light/endorbackdoor.gif",
 "501_98":"/gemp-swccg/images/cards/Virtual11-Light/viceadmiralholdo.gif",
 "501_99":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/thedeadspeak.png",
 

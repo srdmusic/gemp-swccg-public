@@ -7,7 +7,7 @@ import com.gempukku.swccgo.common.*;
  * Set: Set 16
  * Type: Interrupt
  * Subtype: Used
- * Title: Wookiee Roar
+ * Title: Wookiee Roar (V)
  */
 public class Card501_086 extends AbstractUsedInterrupt {
     public Card501_086() {

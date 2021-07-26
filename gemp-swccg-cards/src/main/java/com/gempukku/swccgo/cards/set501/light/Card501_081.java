@@ -1,11 +1,14 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.evaluators.PresentEvaluator;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -26,7 +29,6 @@ public class Card501_081 extends AbstractAlien {
         addKeywords(Keyword.SCOUT);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.ENDOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("Chewbacca, Defender Of Kashyyyk");
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -41,8 +43,25 @@ public class Card501_081 extends AbstractAlien {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        final String playerId = self.getOwner();
+        final String opponent = game.getOpponent(playerId);
+        Condition totalPowerCondition = new Condition() {
+            @Override
+            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
+                if (!gameState.isParticipatingInBattle(self))
+                    return false;
+
+                PhysicalCard battleLocation = gameState.getBattleLocation();
+                float totalPower = modifiersQuerying.getTotalPowerAtLocation(gameState, battleLocation, playerId, true,false);
+                float oppTotalPower = modifiersQuerying.getTotalPowerAtLocation(gameState, battleLocation, opponent, true,false);
+
+                return totalPower > oppTotalPower;
+            }
+        };
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
+        modifiers.add(new TotalPowerModifier(self, Filters.here(self), new PresentEvaluator(self, Filters.and(Filters.opponents(self), Filters.character)), self.getOwner()));
+        modifiers.add(new AddsDestinyToPowerModifier(self, totalPowerCondition, 1));
         return modifiers;
     }
 }
