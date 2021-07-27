@@ -75,7 +75,7 @@ public class Card501_037 extends AbstractEpicEventDeployable {
                                 new OncePerTurnEffect(action));
 
                 // Perform result(s)
-                action.appendEffect(new ChooseExistingCardPileEffect(action, playerId) {
+                action.appendEffect(new ChooseExistingCardPileEffect(action, playerId, playerId) {
                     @Override
                     protected void pileChosen(final SwccgGame game, final String cardPileOwner, final Zone cardPile) {
                         action.appendEffect(

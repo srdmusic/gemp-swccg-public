@@ -27,7 +27,7 @@ public class Card501_083 extends AbstractRepublic {
         super(Side.LIGHT, 2, 4, 5, 2, 4, "Yarua", Uniqueness.UNIQUE);
         setPolitics(2);
         setLore("Kashyyyk's senior Wookiee senator. Believes that a thorough taxation plan will assist funding of other worthwhile Republic programs. Despises the corruption around him.");
-        setGameText("If drawn for destiny, each of your Wookiees is power +1 for remainder of turn. Agenda: taxation. At sites where you have a Wookiee present and your total power > 10, your Force drains are +1.");
+        setGameText("If drawn for destiny, each of your Wookiees is power +1 for remainder of turn. Agenda: taxation. At Kashyyyk sites where you have a Wookiee present and your total power > 10, your Force drains are +1.");
         setSpecies(Species.WOOKIEE);
         addKeywords(Keyword.SENATOR);
         addIcons(Icon.WARRIOR, Icon.EPISODE_I, Icon.CORUSCANT, Icon.VIRTUAL_SET_16);
@@ -60,7 +60,7 @@ public class Card501_083 extends AbstractRepublic {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        Filter locationFilter = Filters.and(Filters.wherePresent(self, Filters.and(Filters.your(self), Filters.Wookiee)), Filters.totalPowerGreaterThan(self, self.getOwner(), 10));
+        Filter locationFilter = Filters.and(Filters.Kashyyyk_site, Filters.wherePresent(self, Filters.and(Filters.your(self), Filters.Wookiee)), Filters.totalPowerGreaterThan(self, self.getOwner(), 10));
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ForceDrainModifier(self, locationFilter, 1, self.getOwner()));
         return modifiers;
