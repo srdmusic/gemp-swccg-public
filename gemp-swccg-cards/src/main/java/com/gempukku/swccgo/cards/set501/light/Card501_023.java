@@ -13,7 +13,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.choose.StackCardFromLostPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.EachTrainingDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.IncreaseAbilityRequiredForBattleDestinyModifier;
@@ -34,7 +34,10 @@ public class Card501_023 extends AbstractCharacterDevice {
     public Card501_023() {
         super(Side.LIGHT, 2, "Jedi Holocron", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on your character of ability > 4. Adds 1 to training destiny draws here. Adds 1 to Force drain where present, and the first Force lost is stacked here face down. Opponent’s ability required to draw battle destiny here is +1 for each card stacked.");
+        setGameText("Deploy on your character of ability > 4. " +
+                "While present: adds 1 to training destiny draws and Force drains here; " +
+                "the first Force lost to a Force drain here is stacked here face down; " +
+                "opponent’s ability required to draw battle destiny here is +1 for each card stacked here.");
         addIcons(Icon.VIRTUAL_SET_15);
         setTestingText("Jedi Holocron");
     }
@@ -53,7 +56,7 @@ public class Card501_023 extends AbstractCharacterDevice {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Filter hasAttached = Filters.hasAttached(self);
 
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new EachTrainingDestinyModifier(self, hasAttached, 1));
         modifiers.add(new ForceDrainModifier(self, Filters.wherePresent(self, hasAttached), 1, self.getOwner()));
         modifiers.add(new IncreaseAbilityRequiredForBattleDestinyModifier(self, Filters.here(self), new StackedEvaluator(self), game.getOpponent(self.getOwner())));
@@ -70,7 +73,7 @@ public class Card501_023 extends AbstractCharacterDevice {
             if (cardToStack != null) {
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                 action.appendEffect(
-                        new StackCardFromLostPileEffect(action, self, Filters.sameCardId(cardToStack), false)
+                        new StackOneCardFromLostPileEffect(action, cardToStack, self, true, true, true)
                 );
                 return Collections.singletonList(action);
             }

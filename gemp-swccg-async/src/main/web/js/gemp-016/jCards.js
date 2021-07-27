@@ -3442,6 +3442,7 @@ var fixedImages = {
 "501_20":"/gemp-swccg/images/cards/Premiere-Light/deathstartrashcompactor.gif",
 "501_21":"/gemp-swccg/images/cards/SpecialEdition-Light/deathstardetentionblockcorridor.gif",
 "501_22":"/gemp-swccg/images/cards/Premiere-Light/deathstardockingbay327.gif",
+"501_23":"/gemp-swccg/images/cards/ReflectionsII-Light/obiwansjournal.gif",
 "501_24":"/gemp-swccg/images/cards/SpecialEdition-Light/tk422.gif",
 "501_25":"/gemp-swccg/images/cards/Premiere-Light/c3po.gif",
 "501_26":"/gemp-swccg/images/cards/Premiere-Light/blasterrifle.gif",
