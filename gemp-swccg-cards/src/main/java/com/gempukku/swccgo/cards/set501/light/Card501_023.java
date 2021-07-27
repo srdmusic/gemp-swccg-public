@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 15
+ * Set: Set 16
  * Type: Device
  * Title: Jedi Holocron
  */
@@ -38,7 +38,7 @@ public class Card501_023 extends AbstractCharacterDevice {
                 "While present: adds 1 to training destiny draws and Force drains here; " +
                 "the first Force lost to a Force drain here is stacked here face down; " +
                 "opponent’s ability required to draw battle destiny here is +1 for each card stacked here.");
-        addIcons(Icon.VIRTUAL_SET_15);
+        addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("Jedi Holocron");
     }
 
