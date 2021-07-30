@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.AbstractAlienRepublic;
 import com.gempukku.swccgo.cards.evaluators.PresentEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
@@ -16,10 +16,10 @@ import java.util.List;
 /**
  * Set: Set 16
  * Type: Character
- * Subtype: Alien
+ * Subtype: Alien/Republic
  * Title: Chewbacca, Defender Of Kashyyyk
  */
-public class Card501_081 extends AbstractAlien {
+public class Card501_081 extends AbstractAlienRepublic {
     public Card501_081() {
         super(Side.LIGHT, 1, 4, 6, 2, 7, "Chewbacca, Defender Of Kashyyyk", Uniqueness.UNIQUE);
         setLore("Wookiee scout. Volunteered for Han's Endor strike team. Keeps his distance, but doesn't look like he's keeping his distance. Always thinks with his stomach.");

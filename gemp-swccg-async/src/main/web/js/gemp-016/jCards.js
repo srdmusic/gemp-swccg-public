@@ -3457,7 +3457,7 @@ var fixedImages = {
 "501_9":"https://res.starwarsccg.org/cards/Virtual9-Light/hires/abraveresistance.png",
 "501_10":"/gemp-swccg/images/cards/Virtual7-Light/sabinewren.gif",
 "501_11":"/gemp-swccg/images/cards/ANewHope-Light/tzizvvt.gif",
-"501_12":"/gemp-swccg/images/cards/Endor-Light/firefight.gif",
+"501_12":"/gemp-swccg/images/cards/SpecialEdition-Light/tawsskhaa.gif",
 "501_13":"/gemp-swccg/images/cards/Coruscant-Dark/maulstrikes.gif",
 "501_14":"/gemp-swccg/images/cards/ReflectionsII-Light/obiwansjournal.gif",
 "501_15":"/gemp-swccg/images/cards/Virtual3-Light/kananjarrus.gif",

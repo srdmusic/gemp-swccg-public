@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractRepublic;
+import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddDestinyToTotalPowerEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
@@ -19,10 +19,10 @@ import java.util.List;
 /**
  * Set: Set 16
  * Type: Character
- * Subtype: Republic
+ * Subtype: Alien
  * Title: Wookiee Warrior
  */
-public class Card501_084 extends AbstractRepublic {
+public class Card501_084 extends AbstractAlien {
     public Card501_084() {
         super(Side.LIGHT, 2, 4, 2, 2, 4, "Wookiee Warrior", Uniqueness.RESTRICTED_3);
         setLore("");
