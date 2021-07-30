@@ -3,10 +3,11 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
-import com.gempukku.swccgo.game.PhysicalCard;
-import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.*;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.CancelDestinyAndCauseRedrawEffect;
@@ -27,17 +28,17 @@ import java.util.List;
  */
 public class Card501_031 extends AbstractNormalEffect {
     public Card501_031() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.My_Parents_Were_Strong, Uniqueness.UNIQUE);
+        super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.My_Parents_Were_Strong, Uniqueness.UNIQUE);
         setLore("");
-        setGameText("If Rey’s Encampment on table, deploy on table. Once per game, may [download] Hidden Recess. If Rey drawn for destiny, may take her into hand to cancel and redraw. While alone or with Kylo, Rey is immune to attrition. [Immune to Alter.]");
+        setGameText("Deploy on Rey's Encampment. Once per turn, may deploy Hidden Recess or Jakku from Reserve Deck; reshuffle. If Rey drawn for destiny, may take her into hand to cancel and redraw that destiny. While alone (or with Kylo), Rey is immune to attrition. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("My Parents Were Strong");
     }
 
     @Override
-    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return GameConditions.canSpot(game, self, Filters.Reys_Encampment);
+    protected Filter getValidDeployTargetFilter(String playerId, SwccgGame game, PhysicalCard self, PhysicalCard sourceCard, PlayCardOption playCardOption, boolean forFree, float changeInCost, DeploymentRestrictionsOption deploymentRestrictionsOption, DeployAsCaptiveOption deployAsCaptiveOption, ReactActionOption reactActionOption, boolean isSimDeployAttached, boolean ignorePresenceOrForceIcons) {
+        return Filters.Reys_Encampment;
     }
 
     @Override
@@ -49,20 +50,22 @@ public class Card501_031 extends AbstractNormalEffect {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.MY_PARENTS_WERE_STRONG__DOWNLOAD_HIDDEN_RECESS;
+        GameTextActionId gameTextActionId = GameTextActionId.MY_PARENTS_WERE_STRONG__DOWNLOAD_LOCATION;
 
         // Check condition(s)
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
+                && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Jakku)
+                    || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Hidden_Recess))) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Hidden Recess from Reserve Deck");
+            action.setText("Deploy location from Reserve Deck");
+            action.setActionMsg("Deploy Hidden Recess or Jakku from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
-                    new OncePerGameEffect(action));
+                    new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Hidden_Recess), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Jakku_system, Filters.title(Title.Hidden_Recess)), true));
             return Collections.singletonList(action);
         }
         return null;
