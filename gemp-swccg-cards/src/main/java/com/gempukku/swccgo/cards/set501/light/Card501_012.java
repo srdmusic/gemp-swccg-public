@@ -25,7 +25,7 @@ public class Card501_012 extends AbstractAlien {
         setGameText("During battle here, Interrupts may not be played unless they are [Immune to Sense]. Opponent may not target him with weapons unless each of your Mandalorians and non-[Episode I] Jedi present are 'hit.' Immune to attrition < 3.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("Grogu");
-//        hideFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 
     @Override
