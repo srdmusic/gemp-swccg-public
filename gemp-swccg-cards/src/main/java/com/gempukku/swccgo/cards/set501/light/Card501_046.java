@@ -26,9 +26,9 @@ import java.util.List;
 public class Card501_046 extends AbstractUsedOrStartingInterrupt {
     public Card501_046() {
         super(Side.LIGHT, 5, "What Gives A Jedi His Power", Uniqueness.UNIQUE);
-        setGameText("USED: Activate 1 Force if a Jedi on table. " +
-                "STARTING: If your starting location had exactly two [Light Side] icons, " +
-                "deploy The Force Is Strong In My Family and an Effect (except Wokling) that is always immune to Alter. " +
+        setGameText("USED: If a Jedi on table, activate 1 Force. " +
+                "STARTING: If your starting location was Lars' Homestead, deploy a site, " +
+                "The Force Is Strong In My Family, and up to two Effects that are always immune to Alter. " +
                 "Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("What Gives A Jedi His Power");
@@ -62,20 +62,22 @@ public class Card501_046 extends AbstractUsedOrStartingInterrupt {
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
         // Check condition(s)
         final PhysicalCard startingLocation = game.getModifiersQuerying().getStartingLocation(playerId);
-        if (startingLocation != null && Filters.iconCount(Icon.LIGHT_FORCE, 2).accepts(game, startingLocation)) {
+        if (startingLocation != null && Filters.title(Title.Lars_Homestead).accepts(game, startingLocation)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
-            action.setText("Deploy The Force is Strong In My Family and an Effect from Reserve Deck");
+            action.setText("Deploy a site, The Force is Strong In My Family, and up to two Effects from Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Deploy The Force is Strong In My Family and an Effect from Reserve Deck",
+            action.allowResponses("Deploy a site, The Force is Strong In My Family, and up to two Effects from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
+                                    new DeployCardFromReserveDeckEffect(action, Filters.site, true, false));
+                            action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.title(Title.The_Force_Is_Strong_In_My_Family), true, false));
                             action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter, Filters.not(Filters.title(Title.Wokling))), 1, 1, true, false));
+                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter), 1, 2, true, false));
                             action.appendEffect(
                                     new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
                         }

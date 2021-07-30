@@ -595,6 +595,7 @@ public interface Title {
     String Lana_Dobreed = "Lana Dobreed";
     String Landing_Claw = "Landing Claw";
     String Landing_Platform = "Endor: Landing Platform (Docking Bay)";
+    String Lars_Homestead = "Tatooine: Lars' Homestead";
     String Lars_Moisture_Farm = "Tatooine: Lars' Moisture Farm";
     String Laser_Cannon_Battery = "Laser Cannon Battery";
     String Laser_Gate = "Laser Gate";
@@ -711,7 +712,6 @@ public interface Title {
     String None_Shall_Pass = "None Shall Pass";
     String NOOOOOOOOOOOO = "NOOOOOOOOOOOO!";
     String North_Ridge = "Hoth: North Ridge (4th Marker)";
-    String Now_It_Calls_To_You = "Now It Calls To You";
     String Nute_Gunray = "Nute Gunray";
     String ObiWans_Hut = "Tatooine: Obi-Wan's Hut";
     String ObiWans_Journal = "Obi-Wan's Journal";

@@ -13,10 +13,8 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
-import com.gempukku.swccgo.logic.effects.LightSideGoesFirstEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -31,10 +29,10 @@ import java.util.List;
 public class Card501_028 extends AbstractEpicEventDeployable {
     public Card501_028() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.The_Force_Is_Strong_In_My_Family);
-        setGameText("Deploys on table only at start of game. Light Side goes first. May deploy Now It Calls To You. Choose one:\n" +
+        setGameText("Deploy on table (only at start of game). Choose one:\n" +
                 "My Father Has It: Deploy Your Thoughts Dwell On Your Mother. You may not deploy characters of ability > 4 (except [Episode I] Jedi).\n" +
-                "I Have It: Deploy Like My Father Before Me. You may not deploy Jedi (except Luke or Ahsoka).\n" +
-                "You Have That Power Too: Deploy My Parents Were Strong. You may not deploy Jedi (except [Episode VII] Jedi).");
+                "I Have It: Deploy Like My Father Before Me. You may not deploy Jedi (except Ahsoka or Luke).\n" +
+                "You Have That Power, Too: Deploy My Parents Were Strong. You may not deploy Jedi (except [Episode VII] Jedi).");
         addIcons(Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_16);
         setTestingText("The Force Is Strong In My Family");
     }
@@ -49,8 +47,6 @@ public class Card501_028 extends AbstractEpicEventDeployable {
         if (TriggerConditions.justDeployed(game, effectResult, self)) {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setPerformingPlayer(self.getOwner());
-
-            action.appendEffect(new DeployCardsFromReserveDeckEffect(action, Filters.title(Title.Now_It_Calls_To_You), 0, 1, false));
 
             final String MY_FATHER_HAS_IT = "My Father Has It";
             final String I_HAVE_IT = "I Have It";
@@ -82,8 +78,6 @@ public class Card501_028 extends AbstractEpicEventDeployable {
                                     cardsThatMayNotDeployFilter = Filters.and(Filters.Jedi, Filters.except(Icon.EPISODE_VII));
                                     break;
                             }
-                            action.appendEffect(
-                                    new LightSideGoesFirstEffect(action));
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, effectFilter, false)
                             );
