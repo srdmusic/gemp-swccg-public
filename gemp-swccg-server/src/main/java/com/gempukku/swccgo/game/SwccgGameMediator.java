@@ -1228,7 +1228,7 @@ public class SwccgGameMediator {
                 if(Filters.title("What Gives A Jedi His Power").accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null) {
                     // The Force Is Strong In My Family
-                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " TFISIMF";
+                    return "TFISIMF";
                 }
                 if(Filters.title("The Sith Will Rule The Galaxy").accepts(_swccgoGame, startingInterrupt)
                         && startingLocation.getBlueprint().getTitle() != null) {

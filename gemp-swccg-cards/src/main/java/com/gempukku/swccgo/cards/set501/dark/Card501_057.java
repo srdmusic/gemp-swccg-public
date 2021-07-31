@@ -35,6 +35,7 @@ public class Card501_057 extends AbstractCapitalStarship {
         setPassengerCapacity(8);
         setVehicleCapacity(2);
         setTIECapacity(4);
+        setMatchingPilotFilter(Filters.Vader);
         setTestingText("Devastator (V)");
     }
 
