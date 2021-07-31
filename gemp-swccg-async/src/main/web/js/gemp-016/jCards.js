@@ -3519,6 +3519,8 @@ var fixedImages = {
 "501_86":"/gemp-swccg/images/cards/ANewHope-Light/wookieeroar.gif",
 "501_87":"/gemp-swccg/images/cards/Endor-Light/endorhiddenforesttrail.gif",
 "501_88":"/gemp-swccg/images/cards/Endor-Light/endorbackdoor.gif",
+"501_90":"/gemp-swccg/images/cards/Coruscant-Dark/theywillbenomatchforyou.gif",
+"501_91":"/gemp-swccg/images/cards/Premiere-Dark/darkjedilightsaber.gif",
 "501_98":"/gemp-swccg/images/cards/Virtual11-Light/viceadmiralholdo.gif",
 "501_99":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/thedeadspeak.png",
 
