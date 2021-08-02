@@ -42,7 +42,7 @@ public class Card501_045 extends AbstractLostOrStartingInterrupt {
         // Check condition(s)
         if (GameConditions.canTarget(game, self, yourConvertedLocationFilter)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setText("Raise a converted location");
             // Choose target(s)
             action.appendTargeting(
