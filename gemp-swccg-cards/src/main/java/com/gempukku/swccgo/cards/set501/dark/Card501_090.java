@@ -14,24 +14,23 @@ import com.gempukku.swccgo.logic.modifiers.MayBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Set: Set 16
  * Type: Effect
- * Title: Tragedy Of Plageus
+ * Title: Tragedy Of Plagueis
  */
 public class Card501_090 extends AbstractNormalEffect {
     public Card501_090() {
-        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Tragedy Of Plageus", Uniqueness.UNIQUE);
+        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Tragedy Of Plagueis ", Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy on table. Once per turn may deploy a lightsaber on Sidious. " +
                 "If Sidious with a Dark Jedi, once per game may retrieve a character into hand. Sidious may be targeted by Force Lightning. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Tragedy Of Plageus");
+        setTestingText("Tragedy Of Plagueis ");
     }
 
     @Override
@@ -39,22 +38,6 @@ public class Card501_090 extends AbstractNormalEffect {
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new MayBeTargetedByModifier(self, Filters.Sidious, Title.Force_Lightning));
         return modifiers;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getOpponentsCardGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGEUS__RETURN_CHARACTER_TO_HAND_FROM_LOST_PILE;
-        if (GameConditions.canSpot(game, self, Filters.and(Filters.Sidious, Filters.with(self, Filters.Dark_Jedi)))
-                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
-            TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.appendEffect(
-                    new RetrieveCardIntoHandEffect(action, playerId, Filters.character)
-            );
-            return Collections.singletonList(action);
-        }
-
-        return null;
     }
 
     @Override
@@ -80,6 +63,16 @@ public class Card501_090 extends AbstractNormalEffect {
             action.appendEffect(
                     new DeployCardToTargetFromReserveDeckEffect(action, Filters.lightsaber, Filters.Sidious, true));
 
+            actions.add(action);
+        }
+
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.Sidious, Filters.with(self, Filters.Dark_Jedi)))
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
+            TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.appendEffect(
+                    new RetrieveCardIntoHandEffect(action, playerId, Filters.character)
+            );
             actions.add(action);
         }
 
