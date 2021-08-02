@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractRepublic;
+import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddDestinyToTotalPowerEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
@@ -19,14 +19,14 @@ import java.util.List;
 /**
  * Set: Set 16
  * Type: Character
- * Subtype: Republic
+ * Subtype: Alien
  * Title: Wookiee Warrior
  */
-public class Card501_084 extends AbstractRepublic {
+public class Card501_084 extends AbstractAlien {
     public Card501_084() {
         super(Side.LIGHT, 2, 4, 2, 2, 4, "Wookiee Warrior", Uniqueness.RESTRICTED_3);
         setLore("");
-        setGameText("During battle, may add one destiny to total power. During battle, unless 'hit,' may lose this character to restore your 'hit' character here to normal.");
+        setGameText("During battle at a site, may add one destiny to total power. During battle, unless 'hit,' may lose this character to restore your 'hit' character here to normal.");
         setSpecies(Species.WOOKIEE);
         addIcons(Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("Wookiee Warrior");
@@ -52,6 +52,7 @@ public class Card501_084 extends AbstractRepublic {
         // Check condition(s)
         if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.isInBattle(game, self)
+                && GameConditions.isDuringBattleAt(game, Filters.site)
                 && GameConditions.canAddDestinyDrawsToPower(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);

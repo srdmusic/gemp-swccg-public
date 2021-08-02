@@ -3457,7 +3457,7 @@ var fixedImages = {
 "501_9":"https://res.starwarsccg.org/cards/Virtual9-Light/hires/abraveresistance.png",
 "501_10":"/gemp-swccg/images/cards/Virtual7-Light/sabinewren.gif",
 "501_11":"/gemp-swccg/images/cards/ANewHope-Light/tzizvvt.gif",
-"501_12":"/gemp-swccg/images/cards/Endor-Light/firefight.gif",
+"501_12":"/gemp-swccg/images/cards/SpecialEdition-Light/tawsskhaa.gif",
 "501_13":"/gemp-swccg/images/cards/Coruscant-Dark/maulstrikes.gif",
 "501_14":"/gemp-swccg/images/cards/ReflectionsII-Light/obiwansjournal.gif",
 "501_15":"/gemp-swccg/images/cards/Virtual3-Light/kananjarrus.gif",
@@ -3519,8 +3519,13 @@ var fixedImages = {
 "501_86":"/gemp-swccg/images/cards/ANewHope-Light/wookieeroar.gif",
 "501_87":"/gemp-swccg/images/cards/Endor-Light/endorhiddenforesttrail.gif",
 "501_88":"/gemp-swccg/images/cards/Endor-Light/endorbackdoor.gif",
-"501_90":"/gemp-swccg/images/cards/Coruscant-Dark/theywillbenomatchforyou.gif",
+"501_89":"/gemp-swccg/images/cards/ANewHope-Dark/superlaser.gif",
+"501_90":"/gemp-swccg/images/cards/Virtual12-Dark/eviliseverywhere.gif",
 "501_91":"/gemp-swccg/images/cards/Premiere-Dark/darkjedilightsaber.gif",
+"501_92":"/gemp-swccg/images/cards/ReflectionsIII-Dark/crossfire.gif",
+"501_93":"/gemp-swccg/images/cards/SpecialEdition-Light/ketwol.gif",
+"501_94":"/gemp-swccg/images/cards/Premiere-Light/thebithshuffle.gif",
+"501_95":"/gemp-swccg/images/cards/Premiere-Light/tatooinelarsmoisturefarm.gif",
 "501_98":"/gemp-swccg/images/cards/Virtual11-Light/viceadmiralholdo.gif",
 "501_99":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/thedeadspeak.png",
 
@@ -4000,7 +4005,8 @@ var Card = Class.extend({
                    (cardNo == 74) ||
                    (cardNo == 75) ||
                    (cardNo == 87) ||
-                   (cardNo == 88);
+                   (cardNo == 88) ||
+                   (cardNo == 95);
         }
         if (setNo == 601) {
              return (cardNo == 14) ||
