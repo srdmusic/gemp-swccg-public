@@ -53,24 +53,17 @@ public class Card501_094 extends AbstractAlien {
 
         // During your control phase, if you have alien characters of five different species on table, may retrieve 1 Force.
         if (GameConditions.hasLostPile(game, playerId)
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
+                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+                && GameConditions.countSpeciesOnTable(game, playerId) >= 5) {
 
-            int numSpecies = 0;
-            for (Species species : Species.values()) {
-                if (GameConditions.canSpot(game, self, 1, false, Filters.and(Filters.species(species), Filters.alien, Filters.your(self.getOwner())))) {
-                    numSpecies++;
-                }
-            }
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Retrieve 1 Force");
+            action.appendUsage(
+                    new OncePerPhaseEffect(action));
+            action.appendEffect(new RetrieveForceEffect(action, playerId, 1));
 
-            if (numSpecies >= 5) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action.setText("Retrieve 1 Force");
-                action.appendUsage(
-                        new OncePerPhaseEffect(action));
-                action.appendEffect(new RetrieveForceEffect(action, playerId, 1));
+            actions.add(action);
 
-                actions.add(action);
-            }
         }
 
 
