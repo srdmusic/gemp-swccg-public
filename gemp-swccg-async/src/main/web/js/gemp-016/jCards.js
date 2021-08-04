@@ -3526,8 +3526,13 @@ var fixedImages = {
 "501_93":"/gemp-swccg/images/cards/SpecialEdition-Light/ketwol.gif",
 "501_94":"/gemp-swccg/images/cards/Premiere-Light/thebithshuffle.gif",
 "501_95":"/gemp-swccg/images/cards/Premiere-Light/tatooinelarsmoisturefarm.gif",
+"501_96":"/gemp-swccg/images/cards/CloudCity-Dark/cloudcitydiningroom.gif",
 "501_98":"/gemp-swccg/images/cards/Virtual11-Light/viceadmiralholdo.gif",
 "501_99":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/thedeadspeak.png",
+"501_102":"/gemp-swccg/images/cards/CloudCity-Light/cloudcityupperplazacorridor.gif",
+"501_103":"/gemp-swccg/images/cards/Premiere-Light/tatooineobiwanshut.gif",
+"501_104":"/gemp-swccg/images/cards/Dagobah-Light/dagobahyodashut.gif",
+
 
 "200_1ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/aaylasecura_ai.png",
 "203_22ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Dark/agentkallus_ai.png",
@@ -4006,7 +4011,11 @@ var Card = Class.extend({
                    (cardNo == 75) ||
                    (cardNo == 87) ||
                    (cardNo == 88) ||
-                   (cardNo == 95);
+                   (cardNo == 95) ||
+                   (cardNo == 96) ||
+                   (cardNo == 102) ||
+                   (cardNo == 103) ||
+                   (cardNo == 104);
         }
         if (setNo == 601) {
              return (cardNo == 14) ||

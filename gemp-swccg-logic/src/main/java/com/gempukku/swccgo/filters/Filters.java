@@ -17938,6 +17938,7 @@ public class Filters {
     public static final Filter Jedi = Filters.and(Filters.side(Side.LIGHT), Filters.character, Filters.abilityMoreThanOrEqualTo(6));
     public static final Filter Jedi_Council_Chamber = Filters.title(Title.Jedi_Council_Chamber);
     public static final Filter Jedi_Council_member = Filters.keyword(Keyword.JEDI_COUNCIL_MEMBER);
+    public static final Filter Jedi_Knight = Filters.and(Filters.Jedi, Filters.abilityEqualTo(6));
     public static final Filter Jedi_Lightsaber = Filters.title(Title.Jedi_Lightsaber);
     public static final Filter Jedi_Master = Filters.type(CardType.JEDI_MASTER);
     public static final Filter Jedi_Presence = Filters.title(Title.Jedi_Presence);

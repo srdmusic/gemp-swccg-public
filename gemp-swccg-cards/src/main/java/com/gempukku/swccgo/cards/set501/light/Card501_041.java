@@ -2,7 +2,9 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractJediMaster;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.CommuningCondition;
 import com.gempukku.swccgo.cards.conditions.StackedOnCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
@@ -15,9 +17,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.LinkedList;
@@ -34,17 +34,19 @@ public class Card501_041 extends AbstractJediMaster {
     public Card501_041() {
         super(Side.LIGHT, 1, 5, 2, 7, 9, "Master Yoda", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("While 'communing': During your control phase, if you control more battlegrounds than opponent, retrieve 1 Force. Once per turn, may deploy a battleground with two [Dark Side] from Reserve Deck; reshuffle. Attrition against you is -2. You may not deploy [Permanent Weapon] cards.");
+        setGameText("While 'communing': You may not deploy Jedi Knights or [Maintenance] cards; [Dagobah] Luke is deploy -1 and power and defense value +1; once per game, may retrieve 1 Force; once per turn, may deploy a battleground with two [Dark Side] from Reserve Deck; reshuffle.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         addPersona(Persona.YODA);
         setTestingText("Master Yoda");
     }
 
     public List<Modifier> getWhileStackedModifiers(SwccgGame game, PhysicalCard self) {
-        Condition communing = new StackedOnCondition(self, Filters.Communing);
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotDeployModifier(self, Icon.PERMANENT_WEAPON, communing, self.getOwner()));
-        modifiers.add(new AttritionModifier(self, -2, self.getOwner()));
+        modifiers.add(new MayNotDeployModifier(self, Filters.or(Filters.Jedi_Knight, Icon.MAINTENANCE), new CommuningCondition(self), self.getOwner()));
+        modifiers.add(new DeployCostModifier(self, Filters.and(Icon.DAGOBAH, Filters.Luke), new CommuningCondition(self), -1));
+        modifiers.add(new PowerModifier(self, Filters.and(Icon.DAGOBAH, Filters.Luke), new CommuningCondition(self), 1));
+        modifiers.add(new DefenseValueModifier(self, Filters.and(Icon.DAGOBAH, Filters.Luke), new CommuningCondition(self), 1));
+
         return modifiers;
     }
 
@@ -65,50 +67,19 @@ public class Card501_041 extends AbstractJediMaster {
             }
         }
 
-        GameTextActionId gameTextActionId2 = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionId2 = GameTextActionId.MASTER_YODA__RETRIEVE_FORCE;
 
         if (game.getModifiersQuerying().isCommuning(game.getGameState(), self)
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId2, Phase.CONTROL)
-                && GameConditions.hasLostPile(game, playerId)
-                && Filters.countAllOnTable(game, Filters.and(Filters.battleground, Filters.controls(playerId)))
-                > Filters.countAllOnTable(game, Filters.and(Filters.battleground, Filters.controls(game.getOpponent(playerId))))
-        ) {
+                && GameConditions.isOncePerGame(game, self, gameTextActionId2)
+                && GameConditions.hasLostPile(game, playerId)) {
             TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId2);
 
             action.setText("Retrieve 1 Force");
-            action.appendUsage(new OncePerPhaseEffect(action));
+            action.appendUsage(new OncePerGameEffect(action));
             action.appendEffect(new RetrieveForceEffect(action, playerId, 1));
 
             actions.add(action);
         }
-        return actions;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggersWhileStacked(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
-
-        String playerId = self.getOwner();
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        // Check condition(s)
-        // Check if reached end of each control phase and action was not performed yet.
-        if (TriggerConditions.isEndOfYourPhase(game, effectResult, Phase.CONTROL, playerId)
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && Filters.countAllOnTable(game, Filters.and(Filters.battleground, Filters.controls(playerId)))
-                > Filters.countAllOnTable(game, Filters.and(Filters.battleground, Filters.controls(game.getOpponent(playerId))))
-        ) {
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setPerformingPlayer(playerId);
-
-            action.setText("Retrieve 1 Force");
-            action.setActionMsg("Retrieve 1 Force");
-            action.appendUsage(new OncePerPhaseEffect(action));
-            action.appendEffect(new RetrieveForceEffect(action, playerId, 1));
-
-            actions.add(action);
-        }
-
         return actions;
     }
 }
