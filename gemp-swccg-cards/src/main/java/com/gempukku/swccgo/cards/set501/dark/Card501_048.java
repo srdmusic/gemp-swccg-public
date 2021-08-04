@@ -3,23 +3,27 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
+import com.gempukku.swccgo.cards.conditions.CantSpotCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.AbstractActionProxy;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
-import com.gempukku.swccgo.logic.effects.FlipCardEffect;
+import com.gempukku.swccgo.logic.actions.TriggerAction;
+import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToSystemFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
+import com.gempukku.swccgo.logic.effects.choose.MoveCardUsingLandspeedEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -35,10 +39,9 @@ public class Card501_048 extends AbstractObjective {
     public Card501_048() {
         super(Side.DARK, 0, Title.On_The_Verge_Of_Greatness);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, and Shield Gate. May deploy [Set 9] Commence Primary Ignition." +
-                "For remainder of game, you may not deploy characters of ability > 4 (except Vader). " +
-                "Superlaser ignores deployment restrictions. Commence Primary Ignition may not be canceled." +
-                "While this side up, once per turn, may deploy a site or Imperial trooper to Scarif from Reserve Deck; reshuffle." +
+        setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, Shield Gate, and [Set 9] Commence Primary Ignition.\n" +
+                "For remainder of game, you may not deploy characters of ability > 4 (except Vader). Vader is power +2 and he (or a Star Destroyer he is piloting) may make a regular move to a battle just initiated.\n" +
+                "While this side up, once per turn, may deploy a site or Imperial trooper to Scarif from Reserve Deck; reshuffle.\n" +
                 "Flip this card if Krennic or Tarkin on Scarif and Death Star orbiting Scarif.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("On The Verge Of Greatness");
@@ -75,10 +78,10 @@ public class Card501_048 extends AbstractObjective {
                         return "Choose Shield Gate to deploy";
                     }
                 });
-        action.appendOptionalEffect(
-                new DeployCardsFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_9, Filters.Commence_Primary_Ignition), 0, 1, true, false) {
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_9, Filters.Commence_Primary_Ignition), true, false) {
                     @Override
-                    public String getChoiceText(int numCardsToChoose) {
+                    public String getChoiceText() {
                         return "Choose Commence Primary Ignition to deploy";
                     }
                 });
@@ -115,7 +118,56 @@ public class Card501_048 extends AbstractObjective {
                         new MayNotDeployModifier(self, Filters.and(Filters.except(Filters.Vader), Filters.character, Filters.abilityMoreThan(4)), self.getOwner()), null));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new ModifyGameTextModifier(self, Filters.Superlaser, ModifyGameTextType.SUPERLASER_IGNORES_DEPLOYMENT_RESTRICTIONS), null));
+                        new PowerModifier(self, Filters.Vader, 2), null));
+        action.appendEffect(
+                new AddUntilEndOfGameActionProxyEffect(action,
+                        new AbstractActionProxy() {
+                            @Override
+                            public List<TriggerAction> getOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult) {
+
+                                // Vader... (or a Star Destroyer he is piloting) may make a regular move to a battle just initiated.
+                                Filter vaderOrStarDestroyerHePilots = Filters.and(Filters.or(Filters.Vader, Filters.and(Filters.Star_Destroyer, Filters.hasPiloting(self, Filters.Vader)))
+                                        , Filters.movableAsRegularMove(playerId, false, 0, false, Filters.battleLocation));
+
+                                if (TriggerConditions.battleInitiated(game, effectResult)
+                                        && GameConditions.canTarget(game, self, vaderOrStarDestroyerHePilots)) {
+                                    final PhysicalCard battleLocation = game.getGameState().getBattleLocation();
+
+                                    final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+                                    action.setPerformingPlayer(playerId);
+                                    action.setText("Move Vader or a Star Destroyer he pilots to battle");
+                                    action.setActionMsg("Move Vader or a Star Destroyer he is piloting as a regular move to a battle just initiated");
+                                    action.appendTargeting(
+                                            new TargetCardOnTableEffect(action, playerId, "Choose Vader or Star Destroyer", vaderOrStarDestroyerHePilots) {
+                                                @Override
+                                                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                                                    action.addAnimationGroup(targetedCard);
+                                                    action.addAnimationGroup(battleLocation);
+                                                    // Allow response(s)
+                                                    action.allowResponses("Move " + GameUtils.getCardLink(targetedCard) + " to " + GameUtils.getCardLink(battleLocation),
+                                                            new RespondableEffect(action) {
+                                                                @Override
+                                                                protected void performActionResults(Action targetingAction) {
+                                                                    // Get the targeted card(s) from the action using the targetGroupId.
+                                                                    // This needs to be done in case the target(s) were changed during the responses.
+                                                                    final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+
+                                                                    // Perform result(s)
+                                                                    action.appendEffect(
+                                                                            new MoveCardAsRegularMoveEffect(action, playerId, finalTarget, false, false, Filters.battleLocation));
+                                                                }
+                                                            }
+                                                    );
+                                                }
+                                            }
+                                    );
+
+                                    return Collections.singletonList((TriggerAction)action);
+                                }
+                                return null;
+                            }
+                        }
+                ));
         return action;
     }
 
