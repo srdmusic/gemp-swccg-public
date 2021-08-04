@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.*;
@@ -32,12 +33,9 @@ import java.util.List;
 public class Card501_048_BACK extends AbstractObjective {
     public Card501_048_BACK() {
         super(Side.DARK, 7, Title.Deploy_The_Garrison);
-        setGameText("While this side up, Vader’s game text may not be canceled and he is power +2. " +
-                "Your Force generation is +2 for each “blown away” Scarif site. " +
-                "Tarkin Doctrine is [Immune to Alter] and, once per turn, if it just caused Force loss, take any one card into hand from Force Pile. " +
-                "Once per turn, may place opponent's character just lost from your location out of play unless opponent loses 1 Force." +
-                "Flip this card if you have no leaders on Scarif." +
-                "Place this card (and Shield Gate) out of play if Shield Gate or Death Star 'blown away'.");
+        setGameText("While this side up, your Force generation is +2 for each 'blown away' Scarif site. Tarkin Doctrine is immune to Alter and, when it initiates Force loss, may take any one card into hand from Force Pile. Once per turn, if opponent's character just lost from your site, may place it out of play unless opponent loses 1 Force. While Tarkin on table, add 3 to total of Commence Primary Ignition.\n" +
+                "Flip this card if you have no leaders on Scarif.\n" +
+                "Place this card (and Shield Gate) out of play if Shield Gate or Death Star \"blown away.\"");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("Deploy The Garrison!");
     }
@@ -47,10 +45,9 @@ public class Card501_048_BACK extends AbstractObjective {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new PowerModifier(self, Filters.Vader, 2));
-        modifiers.add(new MayNotHaveGameTextCanceledModifier(self, Filters.Vader));
         modifiers.add(new ForceGenerationModifier(self, new OnTableEvaluator(self, Filters.and(Filters.partOfSystem(Title.Scarif), Filters.blown_away)), playerId));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.Tarkin_Doctrine, Title.Alter));
+        modifiers.add(new CommencePrimaryIgnitionTotalModifier(self, new OnTableCondition(self, Filters.Tarkin),3));
         return modifiers;
     }
 
@@ -61,12 +58,13 @@ public class Card501_048_BACK extends AbstractObjective {
 
         // if [Tarkin Doctrine] just caused Force loss, may take any one card into hand from Force Pile.
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        if (TriggerConditions.justLostForceFromCard(game, effectResult, opponent, Filters.Tarkin_Doctrine)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && TriggerConditions.justLostForceFromCard(game, effectResult, opponent, Filters.Tarkin_Doctrine)
                 && GameConditions.hasForcePile(game, playerId)) {
             OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Take a card into hand from Force Pile");
             action.setActionMsg("Take any one card into hand from Force Pile");
-
+            action.appendUsage(new OncePerTurnEffect(action));
             action.appendEffect(new TakeCardIntoHandFromForcePileEffect(action, playerId, true));
 
             actions.add(action);
