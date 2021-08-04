@@ -5418,4 +5418,14 @@ public class GameConditions {
     public static boolean isDeathStarPowerShutDown(SwccgGame game) {
         return game.getModifiersQuerying().isDeathStarPowerShutDown();
     }
+
+    public static int countSpeciesOnTable(SwccgGame game, String playerId) {
+        int numSpecies = 0;
+        for (Species species : Species.values()) {
+            if (GameConditions.canSpot(game, null, 1, false, Filters.and(Filters.species(species), Filters.alien, Filters.your(playerId)))) {
+                numSpecies++;
+            }
+        }
+        return numSpecies;
+    }
 }
