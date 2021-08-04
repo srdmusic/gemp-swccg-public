@@ -36,6 +36,7 @@ public class Card501_032 extends AbstractUsedOrLostInterrupt {
         setGameText("USED: Use 1 Force to take a card with 'Obi-Wan' in title into hand from Reserve Deck; reshuffle (or, once per game, retrieve into hand). " +
                 "LOST: If opponent just initiated battle where Obi-Wan alone on Tatooine, choose: Add one destiny to power. OR Opponent must use 3 Force or cancel the battle.");
         addIcon(Icon.VIRTUAL_SET_16);
+        setVirtualSuffix(true);
         setTestingText("Return Of A Jedi (V)");
     }
 

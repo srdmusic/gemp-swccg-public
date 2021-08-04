@@ -1230,7 +1230,7 @@ public class SwccgGameMediator {
                     // The Force Is Strong In My Family
                     return "TFISIMF";
                 }
-                if(Filters.title("The Sith Will Rule The Galaxy").accepts(_swccgoGame, startingInterrupt)
+                if(Filters.title("Rise Of The Sith").accepts(_swccgoGame, startingInterrupt)
                         && startingLocation.getBlueprint().getTitle() != null) {
                     // Rule Of Two
                     return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Rule Of Two";
