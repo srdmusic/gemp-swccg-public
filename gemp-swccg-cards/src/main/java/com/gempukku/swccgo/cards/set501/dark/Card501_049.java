@@ -21,8 +21,8 @@ import java.util.List;
  */
 public class Card501_049 extends AbstractMobileSystem {
     public Card501_049() {
-        super(Side.DARK, Title.Death_Star, 1, 4);
-        setLocationDarkSideGameText("X = parsec of current position (starts at 4). Deploys only if On The Verge Of Greatness on table. Hyperspeed = 1. Starships may move between Death Star and system it orbits as a 'react.'");
+        super(Side.DARK, Title.Death_Star, 2, 4);
+        setLocationDarkSideGameText("X = parsec of current position (starts at 4). Deploys only if On The Verge Of Greatness on table. Hyperspeed = 2. Starships may move between Death Star and system it orbits as a 'react.'");
         addIcon(Icon.DARK_FORCE, 2);
         addIcons(Icon.VIRTUAL_SET_16);
         setVirtualSuffix(true);
