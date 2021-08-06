@@ -11,7 +11,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
-import com.gempukku.swccgo.logic.effects.PutCardFromVoidInReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromVoidInLostPileEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
@@ -32,7 +32,7 @@ import java.util.List;
 public class Card501_038 extends AbstractUsedOrStartingInterrupt {
     public Card501_038() {
         super(Side.LIGHT, 5, "I Am Part Of The Living Force", Uniqueness.UNIQUE);
-        setGameText("USED: Activate 1 Force. STARTING: If your starting location had exactly 2 [Light Side], deploy Communing and stack a Jedi on it from Reserve Deck. Deploy up to three Effects that deploy on table and are always immune to Alter. Place Interrupt in Reserve Deck.");
+        setGameText("USED: Activate 1 Force. STARTING: If your starting location had exactly 2 [Light Side], deploy Communing and stack a Jedi on it from Reserve Deck. Deploy up to three Effects that deploy on table and are always immune to Alter. Place Interrupt in Lost Pile.");
         addIcons(Icon.VIRTUAL_SET_16, Icon.EPISODE_I);
         setTestingText("I Am Part Of The Living Force");
     }
@@ -92,7 +92,7 @@ public class Card501_038 extends AbstractUsedOrStartingInterrupt {
                                             }
 
                                             action.appendEffect(
-                                                    new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
+                                                    new PutCardFromVoidInLostPileEffect(action, playerId, self));
                                         }
                                     }
                             );

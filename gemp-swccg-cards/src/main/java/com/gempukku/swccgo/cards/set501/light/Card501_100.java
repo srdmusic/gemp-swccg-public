@@ -36,6 +36,7 @@ public class Card501_100 extends AbstractRebel {
                 "Characters Luke 'hits' are lost. Immune to attrition < 4.");
         addIcons(Icon.DAGOBAH, Icon.CLOUD_CITY, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         addPersona(Persona.LUKE);
+        setVirtualSuffix(true);
         setTestingText("Son Of Skywalker (V)");
     }
 

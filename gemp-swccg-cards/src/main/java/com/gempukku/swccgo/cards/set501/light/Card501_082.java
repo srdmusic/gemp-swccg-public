@@ -35,7 +35,6 @@ public class Card501_082 extends AbstractAlienRepublic {
         addKeywords(Keyword.LEADER);
         addIcons(Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("Tarfful");
-        hideFromDeckBuilder();
     }
 
     @Override

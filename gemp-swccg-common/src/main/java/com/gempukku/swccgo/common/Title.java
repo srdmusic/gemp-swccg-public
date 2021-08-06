@@ -371,6 +371,7 @@ public interface Title {
     String Feltipern_Trevagg = "Feltipern Trevagg";
     String Field_Promotion = "Field Promotion";
     String Fighters_Coming_In = "Fighters Coming In";
+    String Figrin_Dan = "Figrin D'an";
     String Finalizer = "Finalizer";
     String Finn = "Finn";
     String Fire_Extinguisher = "Fire Extinguisher";

@@ -107,8 +107,6 @@ public class SealedLeagueProduct {
         firstWeek.addItem(ProductName.THEED_PALACE_BOOSTER_PACK,5);
         firstWeek.addItem("13_74",1); //Lord Maul
         firstWeek.addItem("13_33",1); //Obi-Wan Kenobi, Jedi Knight
-        firstWeek.addItem("11_97",1); //Sebulba's Podracer
-        firstWeek.addItem("11_47",1); //Anakin's Podracer
         firstWeek.addItem("14_114",1); //Blockade Flagship
         firstWeek.addItem("12_184",2); //Trade Federation Battleship
         firstWeek.addItem("12_91",1); //Queen's Royal Starship

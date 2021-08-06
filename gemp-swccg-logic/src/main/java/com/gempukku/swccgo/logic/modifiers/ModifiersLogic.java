@@ -16311,8 +16311,13 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         return !getModifiersAffectingCard(gameState, ModifierType.MAY_BE_REVEALED_AS_RESISTANCE_AGENT, card).isEmpty();
     }
 
-    public boolean isCommuning(GameState gameState, PhysicalCard card) {
-        return !getModifiersAffectingCard(gameState, ModifierType.COMMUNING, card).isEmpty();
+    public boolean isCommuning(GameState gameState, Filterable filter) {
+        Collection<PhysicalCard> stackedCards = Filters.filterStacked(gameState.getGame(), Filters.and(filter));
+        for (PhysicalCard card:stackedCards) {
+            if(!getModifiersAffectingCard(gameState, ModifierType.COMMUNING, card).isEmpty())
+                return true;
+        }
+        return false;
     }
 
     public Collection<PhysicalCard> getCardsConsideredOutOfPlay(GameState gameState) {
