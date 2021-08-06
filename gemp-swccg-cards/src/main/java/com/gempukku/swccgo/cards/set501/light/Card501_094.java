@@ -27,10 +27,10 @@ import java.util.List;
  */
 public class Card501_094 extends AbstractAlien {
     public Card501_094() {
-        super(Side.LIGHT, 2, 5, 4, 5, 5, "Figrin D'an & The Modal Nodes", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 3, 4, 4, 2, 6, "Figrin D'an & The Modal Nodes", Uniqueness.UNIQUE);
         addComboCardTitles(Title.Figrin_Dan, "The Modal Nodes");
-        setLore("Bith musicians. Figrin D'an, Doikk Na'ts, Ickabel G'ont, Nalan Cheel, Tedn Dahai.");
-        setGameText("Power +2 at a bar, cantina, Jabba's Palace site, night club, or Maz's Castle site. During your control phase, if you have alien characters of five different species on table, may retrieve 1 Force. Once per game, may re-circulate.");
+        setLore("Bith musicians. Figrin D'an, Doikk Na'ts, Ickabel G'ont, Nalan Cheel, and Tedn Dahai.");
+        setGameText("Power +2 at an antechamber, bar, cantina, or night club. Draws one battle destiny if unable to otherwise. During your control phase, if you have alien characters of five different species on table, may retrieve 1 Force. Once per game, may re-circulate.");
         addIcons(Icon.VIRTUAL_SET_16);
         addKeywords(Keyword.MUSICIAN);
         setSpecies(Species.BITH);
@@ -39,10 +39,21 @@ public class Card501_094 extends AbstractAlien {
     }
 
     @Override
+    public final boolean hasSpecialDefenseValueAttribute() {
+        return true;
+    }
+
+    @Override
+    public final float getSpecialDefenseValue() {
+        return 4;
+    }
+
+    @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        Filter venueFilter = Filters.or(Filters.titleContains("bar"), Filters.Cantina, Filters.Jabbas_Palace_site, Filters.Nightclub, Filters.Mazs_Castle_Location);
+        Filter venueFilter = Filters.or(Filters.titleContains("antechamber"), Filters.titleContains("bar"), Filters.titleContains("cantina"), Filters.titleContains("night club"));
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new PowerModifier(self, new AtCondition(self, venueFilter), 2));
+        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, 1));
         return modifiers;
     }
 

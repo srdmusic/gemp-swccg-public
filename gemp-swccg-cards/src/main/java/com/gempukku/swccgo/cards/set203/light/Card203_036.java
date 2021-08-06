@@ -39,7 +39,7 @@ public class Card203_036 extends AbstractRepublic {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.Vader, Filters.here(self))));
+        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.Vader, Filters.here(self), Filters.not(Filters.immuneToCardTitle(self.getTitle())))));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
         return modifiers;
     }
