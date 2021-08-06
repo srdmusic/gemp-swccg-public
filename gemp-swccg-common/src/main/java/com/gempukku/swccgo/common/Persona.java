@@ -64,6 +64,7 @@ public enum Persona implements Filterable {
     JONUS("Jonus"),
     JUNKIN("Junkin"),
     KANAN("Kanan"),
+    KETWOL("Ketwol"),
     KRENNIC("Krennic"),
     KYLO("Kylo"),
     L3_37("L3-37"),
