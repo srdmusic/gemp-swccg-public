@@ -3526,6 +3526,7 @@ var fixedImages = {
 "501_93":"/gemp-swccg/images/cards/SpecialEdition-Light/ketwol.gif",
 "501_94":"/gemp-swccg/images/cards/Premiere-Light/thebithshuffle.gif",
 "501_95":"/gemp-swccg/images/cards/Premiere-Light/tatooinelarsmoisturefarm.gif",
+"501_100":"/gemp-swccg/images/cards/Dagobah-Light/sonofskywalker.gif",
 
 "200_1ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/aaylasecura_ai.png",
 "203_22ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Dark/agentkallus_ai.png",
