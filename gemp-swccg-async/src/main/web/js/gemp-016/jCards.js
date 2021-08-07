@@ -3536,7 +3536,6 @@ var fixedImages = {
 "501_103":"/gemp-swccg/images/cards/Premiere-Light/tatooineobiwanshut.gif",
 "501_104":"/gemp-swccg/images/cards/Dagobah-Light/dagobahyodashut.gif",
 
-
 "200_1ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/aaylasecura_ai.png",
 "203_22ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Dark/agentkallus_ai.png",
 "200_2ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/anakinskywalkerpadawanlearner_ai.png",
