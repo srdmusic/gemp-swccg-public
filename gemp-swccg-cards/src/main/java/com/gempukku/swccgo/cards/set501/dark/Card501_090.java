@@ -30,7 +30,7 @@ public class Card501_090 extends AbstractNormalEffect {
                 "If Sidious with a Dark Jedi, once per game may retrieve a character into hand. Sidious may be targeted by Force Lightning. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Tragedy Of Plagueis ");
+        setTestingText("[Set 17] Tragedy Of Plagueis ");
     }
 
     @Override

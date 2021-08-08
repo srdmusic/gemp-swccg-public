@@ -37,7 +37,7 @@ public class Card501_032 extends AbstractUsedOrLostInterrupt {
                 "LOST: If opponent just initiated battle where Obi-Wan alone on Tatooine, choose: Add one destiny to power. OR Opponent must use 3 Force or cancel the battle.");
         addIcon(Icon.VIRTUAL_SET_16);
         setVirtualSuffix(true);
-        setTestingText("Return Of A Jedi (V)");
+        setTestingText("[Set 17] Return Of A Jedi (V)");
     }
 
     @Override

@@ -48,7 +48,7 @@ public class Card501_097 extends AbstractCapitalStarship {
             action.setText("Deploy character aboard from Reserve Deck");
             action.setActionMsg("Deploy a captain (or Imperial with armor) aboard from Reserve Deck");
             action.appendUsage(new OncePerGameEffect(action));
-            action.appendEffect(new DeployCardAboardFromReserveDeckEffect(action, Filters.or(Filters.captain, Filters.and(Filters.Imperial, Filters.hasArmor)), Filters.sameCardId(self), true));
+            action.appendEffect(new DeployCardAboardFromReserveDeckEffect(action, Filters.or(Filters.captain, Filters.and(Filters.Imperial, Filters.hasArmor)), Filters.sameCardId(self), -2, true));
 
             return Collections.singletonList(action);
         }

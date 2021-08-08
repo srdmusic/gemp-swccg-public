@@ -39,7 +39,7 @@ public class Card501_017 extends AbstractUsedOrLostInterrupt {
                 "OR During a battle you initiated, your non-unique battle droids and non-unique destroyer droids present are each power +1." +
                 "LOST: Target a Jedi at a site where you have two battle droids and/or destroyer droids. Target's game text is canceled for remainder of turn.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
-        setTestingText("Rolling, Rolling, Rolling & There They Are!");
+        setTestingText("[Set 17] Rolling, Rolling, Rolling & There They Are!");
     }
 
     @Override

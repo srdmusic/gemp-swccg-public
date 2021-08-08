@@ -37,7 +37,7 @@ public class Card501_091 extends AbstractCharacterWeapon {
         addKeywords(Keyword.LIGHTSABER);
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setMatchingCharacterFilter(Filters.Sidious);
-        setTestingText("Sidious's Lightsaber");
+        setTestingText("[Set 17] Sidious's Lightsaber");
     }
 
     @Override

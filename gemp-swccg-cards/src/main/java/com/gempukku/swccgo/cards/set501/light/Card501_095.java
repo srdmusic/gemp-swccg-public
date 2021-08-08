@@ -41,7 +41,7 @@ public class Card501_095 extends AbstractSite {
         setLocationLightSideGameText("May deploy Anakin's Lightsaber from Reserve Deck; reshuffle (or once per game, deploy it from Lost Pile).");
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.DEATH_STAR_II, Icon.EPISODE_VII, Icon.VIRTUAL_SET_16);
-        setTestingText("Tatooine: Lars' Homestead");
+        setTestingText("[Set 17] Tatooine: Lars' Homestead");
     }
 
     @Override

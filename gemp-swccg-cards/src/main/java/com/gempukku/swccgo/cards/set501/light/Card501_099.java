@@ -21,7 +21,7 @@ public class Card501_099 extends AbstractDroid {
         addIcons(Icon.SPECIAL_EDITION, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_16);
         addModelType(ModelType.ASTROMECH);
         setVirtualSuffix(true);
-        setTestingText("R3-A2 (Arthree-Aytoo) (V)");
+        setTestingText("[Set 17] R3-A2 (Arthree-Aytoo) (V)");
         hideFromDeckBuilder();
     }
 }

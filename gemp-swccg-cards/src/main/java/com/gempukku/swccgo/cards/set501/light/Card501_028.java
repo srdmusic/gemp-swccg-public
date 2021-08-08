@@ -34,7 +34,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
                 "I Have It: Deploy Like My Father Before Me. You may not deploy Jedi (except Ahsoka or Luke).\n" +
                 "You Have That Power, Too: Deploy My Parents Were Strong. You may not deploy Jedi (except [Episode VII] Jedi).");
         addIcons(Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_16);
-        setTestingText("The Force Is Strong In My Family");
+        setTestingText("[Set 17] The Force Is Strong In My Family");
     }
 
     @Override

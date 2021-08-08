@@ -16,7 +16,7 @@ public class Card501_098 extends AbstractAlien {
         setGameText("If with an information broker or creature during a battle or attack, adds one destiny to total power. Once per game, may deploy a creature (or card with 'creature' in lore or game text if it is a blaster, a rifle, or a non-[Permanent Weapon] non-weapon card) here from Reserve Deck, reshuffle.");
         setSpecies(Species.DOWUTIN);
         addIcons(Icon.WARRIOR, Icon.EPISODE_VII, Icon.VIRTUAL_SET_16);
-        setTestingText("Grummgar");
+        setTestingText("[Set 17] Grummgar");
         hideFromDeckBuilder();
     }
 }

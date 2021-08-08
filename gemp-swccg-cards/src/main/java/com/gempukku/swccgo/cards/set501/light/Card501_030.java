@@ -33,7 +33,7 @@ public class Card501_030 extends AbstractNormalEffect {
         setGameText("Deploy on Slave Quarters. Anakin is deploy = 6 and, if drawn for destiny, may take him into hand to cancel and cause a redraw. Gametext on Jedi Council Chamber is cancelled. If Shmi is lost, Anakin is power +5 until end of your next turn. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.CORUSCANT, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Your Thoughts Dwell On Your Mother");
+        setTestingText("[Set 17] Your Thoughts Dwell On Your Mother");
     }
 
     @Override

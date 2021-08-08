@@ -1228,7 +1228,7 @@ public class SwccgGameMediator {
                 if(Filters.title("What Gives A Jedi His Power").accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null) {
                     // The Force Is Strong In My Family
-                    return "TFISIMF";
+                    return "Skywalker Saga";
                 }
                 if(Filters.title("Rise Of The Sith").accepts(_swccgoGame, startingInterrupt)
                         && startingLocation.getBlueprint().getTitle() != null) {

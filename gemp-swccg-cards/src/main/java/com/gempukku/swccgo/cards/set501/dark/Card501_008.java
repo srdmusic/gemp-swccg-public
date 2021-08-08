@@ -41,7 +41,7 @@ public class Card501_008 extends AbstractEpicEventDeployable {
                 "A Sith Legend, Always Two There Are, Sidious, and your apprentice are destiny +2. " +
                 "If a Jedi just lost from same location as your Dark Jedi, opponent loses 1 Force.");
         addIcon(Icon.VIRTUAL_SET_16);
-        setTestingText("Rule Of Two");
+        setTestingText("[Set 17] Rule Of Two");
     }
 
     @Override
