@@ -31,7 +31,7 @@ public class Card501_046 extends AbstractUsedOrStartingInterrupt {
                 "The Force Is Strong In My Family, and up to two Effects that are always immune to Alter. " +
                 "Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("What Gives A Jedi His Power");
+        setTestingText("[Set 17] What Gives A Jedi His Power");
     }
 
     @Override

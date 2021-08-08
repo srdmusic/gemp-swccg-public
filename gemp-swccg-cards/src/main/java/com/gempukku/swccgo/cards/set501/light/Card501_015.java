@@ -35,7 +35,7 @@ public class Card501_015 extends AbstractRebel {
                 "Immune to attrition < 5.");
         addPersona(Persona.KANAN);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
-        setTestingText("Kanan Jarrus, Jedi Knight");
+        setTestingText("[Set 17] Kanan Jarrus, Jedi Knight");
     }
 
     @Override

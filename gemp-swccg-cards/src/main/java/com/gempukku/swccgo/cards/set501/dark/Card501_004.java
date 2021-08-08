@@ -19,7 +19,7 @@ public class Card501_004 extends AbstractUsedInterrupt {
         setGameText("Each player reveals the top 2 cards from their reserve deck. For every destiny = 5 revealed, choose one action: peek at opponent’s hand OR take one of your revealed cards into hand OR activate 1 Force. Return revealed cards to owners’ Reserve deck; reshuffle.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_16);
         setVirtualSuffix(true);
-        setTestingText("Shocking Revelation (V)");
+        setTestingText("[Set 17] Shocking Revelation (V)");
         hideFromDeckBuilder();
     }
 }

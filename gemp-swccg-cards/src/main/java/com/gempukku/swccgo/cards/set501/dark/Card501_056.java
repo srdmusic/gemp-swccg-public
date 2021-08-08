@@ -31,7 +31,7 @@ public class Card501_056 extends AbstractImperial {
         setGameText("During battle, may place an Imperial of ability < 4 out play from your lost pile to add their ability to your total attrition. Except during battle, may lose Valin Hess to place an opponent’s undercover spy here in lost pile.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         addKeywords(Keyword.LEADER);
-        setTestingText("Officer Valin Hess");
+        setTestingText("[Set 17] Officer Valin Hess");
     }
 
     @Override

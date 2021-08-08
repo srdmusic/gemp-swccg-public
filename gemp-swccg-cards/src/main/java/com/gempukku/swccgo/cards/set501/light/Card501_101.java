@@ -31,7 +31,7 @@ public class Card501_101 extends AbstractSystem {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.DAGOBAH, Icon.PLANET, Icon.VIRTUAL_SET_16);
         setVirtualSuffix(true);
-        setTestingText("Dagobah (V)");
+        setTestingText("[Set 17] Dagobah (V)");
     }
 
     @Override

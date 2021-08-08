@@ -33,7 +33,7 @@ public class Card501_031 extends AbstractNormalEffect {
         setGameText("Deploy on Rey's Encampment. Once per turn, may deploy Hidden Recess or Jakku from Reserve Deck; reshuffle. If Rey drawn for destiny, may take her into hand to cancel and redraw that destiny. While alone (or with Kylo), Rey is immune to attrition. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("My Parents Were Strong");
+        setTestingText("[Set 17] My Parents Were Strong");
     }
 
     @Override

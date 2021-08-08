@@ -20,7 +20,7 @@ public class Card501_005 extends AbstractUsedOrLostInterrupt {
         setGameText("USED: Use 1 Force to target a just-deployed Rebel or Resistance character (free if Leia while a Wookiee on table). Opponent must move the character away or return character to hand. LOST: Perform the Used function of this Interrupt for free.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_16);
         setVirtualSuffix(true);
-        setTestingText("I'd Just As Soon Kiss A Wookiee (V)");
+        setTestingText("[Set 17] I'd Just As Soon Kiss A Wookiee (V)");
         hideFromDeckBuilder();
     }
 }

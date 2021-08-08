@@ -26,7 +26,7 @@ public class Card501_096 extends AbstractSite {
         setLocationLightSideGameText("Opponent may not target Ezra with weapons here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.UNDERGROUND, Icon.INTERIOR_SITE, Icon.PLANET, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_16);
-        setTestingText("Malachor: Sith Temple Gateway");
+        setTestingText("[Set 17] Malachor: Sith Temple Gateway");
     }
 
     @Override

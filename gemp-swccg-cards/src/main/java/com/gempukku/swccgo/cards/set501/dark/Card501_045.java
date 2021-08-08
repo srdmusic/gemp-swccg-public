@@ -32,7 +32,7 @@ public class Card501_045 extends AbstractLostOrStartingInterrupt {
         setGameText("LOST: Raise your converted location to the top. " +
                 "STARTING: If your starting location was a battleground, deploy Rule Of Two and 2 Effects that deploy on table and are always Immune to Alter. Place Interrupt in hand.");
         addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("Rise Of The Sith");
+        setTestingText("[Set 17] Rise Of The Sith");
     }
 
     @Override
