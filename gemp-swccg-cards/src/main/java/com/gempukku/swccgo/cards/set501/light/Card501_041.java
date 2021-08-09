@@ -34,7 +34,7 @@ public class Card501_041 extends AbstractJediMaster {
     public Card501_041() {
         super(Side.LIGHT, 1, 5, 2, 7, 9, "Master Yoda", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("While 'communing': You may not deploy Jedi Knights or [Maintenance] cards; [Dagobah] Luke is deploy -1 and power and defense value +1; once per game, may retrieve 1 Force; once per turn, may deploy a battleground with two [Dark Side] from Reserve Deck; reshuffle.");
+        setGameText("While 'communing': You may not deploy Jedi Knights or [Maintenance] cards; [Dagobah] Luke is deploy -1 and power and defense value +1; once per turn, may [download] a battleground with two [Dark Side]; once per game, may retrieve 1 Force.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         addPersona(Persona.YODA);
         setTestingText("Master Yoda");

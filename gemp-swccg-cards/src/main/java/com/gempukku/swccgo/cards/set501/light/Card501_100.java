@@ -63,7 +63,7 @@ public class Card501_100 extends AbstractRebel {
         TargetingReason targetingReason = TargetingReason.TO_BE_LOST;
 
         // Check condition(s)
-        if (TriggerConditions.justHit(game, effectResult, Filters.and(Filters.opponents(self), Filters.character))) {
+        if (TriggerConditions.justHitBy(game, effectResult, Filters.character, Filters.Luke)) {
             PhysicalCard cardHit = ((HitResult) effectResult).getCardHit();
             if (GameConditions.canTarget(game, self, targetingReason, cardHit)) {
 

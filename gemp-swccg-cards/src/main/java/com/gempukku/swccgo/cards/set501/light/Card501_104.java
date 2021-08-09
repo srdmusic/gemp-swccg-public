@@ -30,8 +30,8 @@ import java.util.List;
 public class Card501_104 extends AbstractSite {
     public Card501_104() {
         super(Side.LIGHT, Title.Yodas_Hut, Title.Dagobah);
-        setLocationDarkSideGameText("If Yoda here or [Set 16] Yoda 'communing,' Broken Concentration is canceled.");
-        setLocationLightSideGameText("If Yoda here or [Set 16] Yoda 'communing,' once per turn, may subtract 2 from attrition against you.");
+        setLocationDarkSideGameText("If Yoda here or 'communing,' once per turn, may subtract 2 from attrition against you.");
+        setLocationLightSideGameText("If Yoda here or 'communing,' Broken Concentration is canceled.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.DAGOBAH, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_16);
         setVirtualSuffix(true);
@@ -43,7 +43,7 @@ public class Card501_104 extends AbstractSite {
         // Check condition(s)
         if (TriggerConditions.isPlayingCard(game, effect, Filters.Broken_Concentration)
             && (GameConditions.isHere(game, self, Filters.Yoda)
-                || game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.and(Icon.VIRTUAL_SET_16, Filters.Yoda)))) {
+                || game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.Yoda))) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             // Build action using common utility
@@ -58,7 +58,7 @@ public class Card501_104 extends AbstractSite {
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canSpot(game, self, Filters.Broken_Concentration)
                 && (GameConditions.isHere(game, self, Filters.Yoda)
-                || game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.and(Icon.VIRTUAL_SET_16, Filters.Yoda)))) {
+                || game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.Yoda))) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             // Build action using common utility
@@ -75,7 +75,7 @@ public class Card501_104 extends AbstractSite {
                 && GameConditions.isDuringBattle(game)
                 && GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId)
                 && (GameConditions.isHere(game, self, Filters.Yoda)
-                || game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.and(Icon.VIRTUAL_SET_16, Filters.Yoda)))) {
+                || game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.Yoda))) {
             final BattleState battleState = game.getGameState().getBattleState();
             if (battleState.getAttritionTotal(game, playerOnLightSideOfLocation) > 0) {
 

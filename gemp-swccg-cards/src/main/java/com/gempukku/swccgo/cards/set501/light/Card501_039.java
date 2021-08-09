@@ -10,7 +10,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.DrawOneCardFromForcePileEffect;
+import com.gempukku.swccgo.logic.effects.DrawOneCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromHandOnUsedPileEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 
@@ -29,7 +29,7 @@ public class Card501_039 extends AbstractJediMaster {
     public Card501_039() {
         super(Side.LIGHT, 1, 7, 6, 7, 8, "Master Qui-Gon Jinn, An Old Friend", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("While 'communing': You may not deploy Rebels; your total Force generation (and your total power in battles) is +1 for each Jedi 'communing'; once per turn, may place a card from hand on Used Pile to draw top card of Force Pile.");
+        setGameText("While 'communing': You may not deploy Rebels; your total Force generation (and your total power in battles) is +1 for each Jedi 'communing'; once per turn, may place a card from hand on Used Pile to draw top card of Reserve Deck.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16, Icon.EPISODE_I);
         addPersona(Persona.QUIGON);
         setTestingText("Master Qui-Gon Jinn, An Old Friend");
@@ -46,19 +46,19 @@ public class Card501_039 extends AbstractJediMaster {
     public List<TopLevelGameTextAction> getGameTextTopLevelWhileStackedActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        if (game.getModifiersQuerying().isCommuning(game.getGameState(), self)){
-            if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.numCardsInForcePile(game, playerId) > 0) {
-                TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+        if (game.getModifiersQuerying().isCommuning(game.getGameState(), self)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.hasReserveDeck(game, playerId)) {
+            TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
 
-                action.setText("Place card from hand on Used Pile");
-                action.setActionMsg("Place card from hand on Used Pile to draw card from Force Pile");
-                action.appendUsage(new OncePerTurnEffect(action));
-                action.appendCost(new PutCardFromHandOnUsedPileEffect(action, playerId));
-                action.appendEffect(new DrawOneCardFromForcePileEffect(action, playerId));
+            action.setText("Place card from hand on Used Pile");
+            action.setActionMsg("Place a card from hand on Used Pile to draw top card of Reserve Deck");
+            action.appendUsage(new OncePerTurnEffect(action));
+            action.appendCost(new PutCardFromHandOnUsedPileEffect(action, playerId));
+            action.appendEffect(new DrawOneCardFromReserveDeckEffect(action, playerId));
 
-                return Collections.singletonList(action);
-            }
+            return Collections.singletonList(action);
+
         }
         return null;
     }

@@ -1220,10 +1220,10 @@ public class SwccgGameMediator {
                     // Let The Wookiee Win (v)
                     return startingLocation.getBlueprint().getTitle() + " LTWWv";
                 }
-                if(Filters.title("I Am Part Of The Living Force").accepts(_swccgoGame, startingInterrupt)
+                if(Filters.title("More Powerful Than You Can Possibly Imagine").accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null)  {
-                    // Communing
-                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Communing";
+                    // Communing (ignore the location)
+                    return "Communing";
                 }
                 if(Filters.title("What Gives A Jedi His Power").accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null) {

@@ -12,6 +12,8 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.ModifyTotalPowerUntilEndOfBattleEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -33,7 +35,7 @@ public class Card501_040 extends AbstractRebel {
     public Card501_040() {
         super(Side.LIGHT, 1, 5, 5, 6, 9, "Master Kenobi", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("While 'communing': Once per turn, may deploy a battleground from Reserve Deck that is related to a location on table; reshuffle. If you just initiated battle, opponent loses 1 Force (2 if non-[Permanent Weapon] Luke in battle). You may not deploy Jedi (except Yoda).");
+        setGameText("While 'communing': You may not deploy Jedi (except Yoda) or [Permanent Weapon] cards; if a Rebel in battle, may use 1 Force to add 3 to your total power (5 if Luke); once per turn, may deploy a battleground from Reserve Deck that is related to a location on table; reshuffle.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         addPersona(Persona.OBIWAN);
         setTestingText("Master Kenobi");
@@ -41,11 +43,13 @@ public class Card501_040 extends AbstractRebel {
 
     public List<Modifier> getWhileStackedModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.except(Filters.Yoda)), new CommuningCondition(self), self.getOwner()));
+        modifiers.add(new MayNotDeployModifier(self, Filters.or(Filters.and(Filters.Jedi, Filters.except(Filters.Yoda)), Icon.PERMANENT_WEAPON), new CommuningCondition(self), self.getOwner()));
         return modifiers;
     }
 
     public List<TopLevelGameTextAction> getGameTextTopLevelWhileStackedActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
+
         GameTextActionId gameTextActionId = GameTextActionId.MASTER_KENOBI__DEPLOY_BATTLEGROUND;
 
         if (game.getModifiersQuerying().isCommuning(game.getGameState(), self)){
@@ -66,30 +70,27 @@ public class Card501_040 extends AbstractRebel {
 
                 action.appendEffect(new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.battleground, Filters.in(locationsToDeployFromReserveDeck)), true));
 
-                return Collections.singletonList(action);
+                actions.add(action);
             }
         }
-        return null;
-    }
 
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggersWhileStacked(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (game.getModifiersQuerying().isCommuning(game.getGameState(), self)
-            && TriggerConditions.battleInitiated(game, effectResult, self.getOwner())) {
-            String opponent = game.getOpponent(self.getOwner());
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        if(GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+            && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.Rebel))
+            && GameConditions.canUseForce(game, playerId, 1)) {
 
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            int forceLoss = 1;
-            if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.Luke, Filters.not(Filters.weapon_or_character_with_permanent_weapon))))
-                forceLoss = 2;
+            int toAdd = 3;
+            if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.Rebel, Filters.Luke)))
+                toAdd = 5;
 
-            action.setText("Opponent loses "+forceLoss+" Force");
-            // Perform result(s)
-            action.appendEffect(
-                    new LoseForceEffect(action, opponent, forceLoss));
-            return Collections.singletonList(action);
+            TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Add "+toAdd+" to total power");
+            action.appendCost(new UseForceEffect(action, playerId, 1));
+            action.appendEffect(new ModifyTotalPowerUntilEndOfBattleEffect(action, toAdd, playerId, "Add "+toAdd+" to total power"));
+
+            actions.add(action);
         }
-        return null;
+
+        return actions;
     }
 }

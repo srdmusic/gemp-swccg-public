@@ -3481,7 +3481,7 @@ var fixedImages = {
 "501_35":"/gemp-swccg/images/cards/TheedPalace-Light/whoooo.gif",
 "501_36":"/gemp-swccg/images/cards/SpecialEdition-Light/benkenobi.gif",
 "501_37":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/communing.gif",
-"501_38":"/gemp-swccg/images/cards/Coruscant-Light/areyoubraindead.gif",
+"501_38":"/gemp-swccg/images/cards/Premiere-Light/noblesacrifice.gif",
 "501_39":"/gemp-swccg/images/cards/Coruscant-Light/masterquigonai.gif",
 "501_40":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/masterkenobi.gif",
 "501_41":"/gemp-swccg/images/cards/Coruscant-Light/yodaseniorcouncilmemberai.gif",
@@ -3535,6 +3535,8 @@ var fixedImages = {
 "501_102":"/gemp-swccg/images/cards/CloudCity-Light/cloudcityupperplazacorridor.gif",
 "501_103":"/gemp-swccg/images/cards/Premiere-Light/tatooineobiwanshut.gif",
 "501_104":"/gemp-swccg/images/cards/Dagobah-Light/dagobahyodashut.gif",
+"501_107":"/gemp-swccg/images/cards/JabbasPalaceSealedDeck-Light/ouneeta.gif",
+"501_108":"/gemp-swccg/images/cards/CloudCity-Dark/landocalrissian.gif",
 
 "200_1ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/aaylasecura_ai.png",
 "203_22ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Dark/agentkallus_ai.png",
