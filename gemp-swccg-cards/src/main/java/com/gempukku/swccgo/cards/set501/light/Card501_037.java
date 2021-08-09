@@ -33,12 +33,17 @@ import java.util.List;
 public class Card501_037 extends AbstractEpicEventDeployable {
     public Card501_037() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Communing, Uniqueness.UNIQUE);
-        setGameText("Deploy on table.\n" +
+        setGameText("Deploy on table (only at start of game).\n" +
                 "One With The Force: If a Jedi was just lost (or placed out of play) from table, may stack that card here.\n" +
                 "The Living Force: Jedi stacked here are 'communing' and are considered out of play.\n" +
                 "The Cosmic Force: Once per turn, may peek at the top X cards of one of your decks or piles, where X = the number of Jedi 'communing'; may move one of those cards to the bottom of that deck or pile.");
         addIcons(Icon.VIRTUAL_SET_16, Icon.EPISODE_I);
         setTestingText("Communing");
+    }
+
+    @Override
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return GameConditions.isDuringStartOfGame(game);
     }
 
     @Override
