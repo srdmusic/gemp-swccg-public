@@ -12,7 +12,7 @@ import java.util.*;
  */
 public class SealedLeagueProduct {
     private Map<String, List<CardCollection>> _collections = new HashMap<String, List<CardCollection>>();
-    private Map<String, List<List<CustomPair>>> _fixedFromPool = new HashMap<>();
+    private Map<String, List<List<PoolIntPair>>> _fixedFromPool = new HashMap<>();
     /**
      * Creates the sealed league project to use for sealed leagues.
      */
@@ -155,7 +155,7 @@ public class SealedLeagueProduct {
         //  series 2 = 1x each Decipher booster pack
 
         List<CardCollection> noveltySealed = new ArrayList<CardCollection>();
-        List<List<CustomPair>> pools = new LinkedList<>();
+        List<List<PoolIntPair>> pools = new LinkedList<>();
 
 
         MutableCardCollection firstWeek = new DefaultCardCollection();
@@ -250,11 +250,11 @@ public class SealedLeagueProduct {
         lightSystemPool.add("1_135"); //Yavin 4
 
 
-        List<CustomPair> firstWeekPools = new LinkedList<>();
-        firstWeekPools.add(new CustomPair(darkSitePool, 2));
-        firstWeekPools.add(new CustomPair(darkSystemPool, 2));
-        firstWeekPools.add(new CustomPair(lightSitePool, 2));
-        firstWeekPools.add(new CustomPair(lightSystemPool, 2));
+        List<PoolIntPair> firstWeekPools = new LinkedList<>();
+        firstWeekPools.add(new PoolIntPair(darkSitePool, 1));
+        firstWeekPools.add(new PoolIntPair(darkSystemPool, 1));
+        firstWeekPools.add(new PoolIntPair(lightSitePool, 1));
+        firstWeekPools.add(new PoolIntPair(lightSystemPool, 1));
 
         pools.add(firstWeekPools);
 
@@ -279,7 +279,7 @@ public class SealedLeagueProduct {
 
         noveltySealed.add(secondWeek);
 
-        List<CustomPair> secondWeekPools = new LinkedList<>();
+        List<PoolIntPair> secondWeekPools = new LinkedList<>();
         //nothing
         pools.add(secondWeekPools);
 
@@ -353,7 +353,7 @@ public class SealedLeagueProduct {
         } else {
             MutableCardCollection collection = new DefaultCardCollection(_collections.get(leagueCode).get(seriesIndex));
             if (_fixedFromPool.get(leagueCode).get(seriesIndex)!=null) {
-                for (CustomPair pair : _fixedFromPool.get(leagueCode).get(seriesIndex)) {
+                for (PoolIntPair pair : _fixedFromPool.get(leagueCode).get(seriesIndex)) {
                     List<String> pool = new LinkedList(pair.getPool());
                     Collections.shuffle(pool);
                     for (int i = 0; i < pair.getCount(); i++) {
@@ -366,10 +366,11 @@ public class SealedLeagueProduct {
             return collection;
         }
     }
-    private class CustomPair {
+
+    private class PoolIntPair {
         private List<String> _cards;
         private int _toAdd;
-        public CustomPair(List<String> cards, int toAdd) {
+        public PoolIntPair(List<String> cards, int toAdd) {
             _cards = new LinkedList<>();
             _cards.addAll(cards);
             _toAdd = toAdd;
