@@ -33,7 +33,7 @@ public class Card501_100 extends AbstractRebel {
         setLore("Luke Skywalker. Son of Anakin. Seeker of Yoda. Levitator of rocks. Ignorer of advice. Incapable of impossible. Reckless is he.");
         setGameText("Adds 2 to power of anything he pilots. Deploys -3 to Dagobah. " +
                 "Your Destiny is suspended. Luke's training destiny draws are +1. " +
-                "Characters Luke 'hits' are lost. Immune to attrition < 4.");
+                "If Luke alone, characters Luke 'hits' are lost. Immune to attrition < 4.");
         addIcons(Icon.DAGOBAH, Icon.CLOUD_CITY, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         addPersona(Persona.LUKE);
         setVirtualSuffix(true);
@@ -63,7 +63,8 @@ public class Card501_100 extends AbstractRebel {
         TargetingReason targetingReason = TargetingReason.TO_BE_LOST;
 
         // Check condition(s)
-        if (TriggerConditions.justHitBy(game, effectResult, Filters.character, Filters.Luke)) {
+        if (GameConditions.isAlone(game, self)
+                && TriggerConditions.justHitBy(game, effectResult, Filters.character, Filters.Luke)) {
             PhysicalCard cardHit = ((HitResult) effectResult).getCardHit();
             if (GameConditions.canTarget(game, self, targetingReason, cardHit)) {
 
