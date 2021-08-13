@@ -3498,7 +3498,7 @@ var fixedImages = {
 "501_51":"/gemp-swccg/images/cards/Endor-Dark/endorlandingplatformdockingbay.gif",
 "501_52":"/gemp-swccg/images/cards/Coruscant-Dark/theywillbenomatchforyou.gif",
 "501_53":"/gemp-swccg/images/cards/SpecialEdition-Dark/coruscantimperialsquare.gif",
-"501_54":"/gemp-swccg/images/cards/Premiere-Dark/alter.gif",
+"501_54":"/gemp-swccg/images/cards/Coruscant-Dark/alter.gif",
 "501_56":"/gemp-swccg/images/cards/Virtual7-Dark/directororsonkrennic.gif",
 "501_57":"/gemp-swccg/images/cards/Premiere-Dark/devastator.gif",
 "501_58":"/gemp-swccg/images/cards/Premiere-Dark/momentoftriumph.gif",
@@ -3537,6 +3537,9 @@ var fixedImages = {
 "501_104":"/gemp-swccg/images/cards/Dagobah-Light/dagobahyodashut.gif",
 "501_107":"/gemp-swccg/images/cards/JabbasPalaceSealedDeck-Light/ouneeta.gif",
 "501_108":"/gemp-swccg/images/cards/CloudCity-Dark/landocalrissian.gif",
+"501_109":"/gemp-swccg/images/cards/Coruscant-Light/freeride&endorcelebration.gif",
+"501_110":"/gemp-swccg/images/cards/SpecialEdition-Light/moisturefarmer.gif",
+"501_111":"/gemp-swccg/images/cards/Virtual0-Light/goldenrod.gif",
 
 "200_1ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/aaylasecura_ai.png",
 "203_22ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Dark/agentkallus_ai.png",

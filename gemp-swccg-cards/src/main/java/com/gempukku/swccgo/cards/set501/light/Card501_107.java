@@ -36,7 +36,7 @@ public class Card501_107 extends AbstractNormalEffect {
         setLore("");
         setGameText("Deploy on a site. At same site, cancels Imperial Barrier and None Shall Pass. Players may not 'react' to or from here. Undercover spies here are lost. Non-[Maintenance] Lando is power +1 here. If Leia here, may place Effect in hand or Used Pile.");
         addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("Infiltration!");
+        setTestingText("[Set 17] Infiltration!");
     }
 
     @Override
