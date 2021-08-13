@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
@@ -66,10 +67,14 @@ public class Card501_090 extends AbstractNormalEffect {
             actions.add(action);
         }
 
+        gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGEUS__RETURN_CHARACTER_TO_HAND_FROM_LOST_PILE;
+
         if (GameConditions.canSpot(game, self, Filters.and(Filters.Sidious, Filters.with(self, Filters.Dark_Jedi)))
                 && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
             TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Retrieve a character into hand");
+            action.appendUsage(new OncePerGameEffect(action));
             action.appendEffect(
                     new RetrieveCardIntoHandEffect(action, playerId, Filters.character)
             );
