@@ -30,7 +30,7 @@ public class Card501_082 extends AbstractAlienRepublic {
     public Card501_082() {
         super(Side.LIGHT, 3, 4, 6, 2, 5, "Tarfful", Uniqueness.UNIQUE);
         setLore("Wookiee leader.");
-        setGameText("If a battle was just initiated here, may name an Interrupt; Interrupts with that title may not be played for remainder of battle (unless it is [Immune to Sense]). Once per game, if Yoda about to be lost, may take him into hand instead.");
+        setGameText("If a battle was just initiated at same site, may name an Interrupt; for remainder of battle, Interrupts with that title may not be played unless they are [Immune to Sense]. Once per game, if Yoda about to be lost, may take him into hand instead.");
         setSpecies(Species.WOOKIEE);
         addKeywords(Keyword.LEADER);
         addIcons(Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
@@ -75,7 +75,7 @@ public class Card501_082 extends AbstractAlienRepublic {
         }
 
         //If a battle was just initiated here, may name an Interrupt; Interrupts with that title may not be played for remainder of battle (unless it is [Immune to Sense]).
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.here(self))
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.sameSite(self))
                 && GameConditions.isDuringBattleWithParticipant(game, self)) {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
 
@@ -84,7 +84,6 @@ public class Card501_082 extends AbstractAlienRepublic {
                             new CardTitleAwaitingDecision(game, "Choose an Interrupt card title", CardCategory.INTERRUPT) {
                                 @Override
                                 protected void cardTitleChosen(final String cardTitle) {
-                                    //TODO fix this. the "unless immune to Sense" part doesn't work
                                     action.appendEffect(new AddUntilEndOfBattleModifierEffect(action,
                                             new MayNotPlayUnlessImmuneToSpecificTitleModifier(self, Filters.and(CardType.INTERRUPT, Filters.title(cardTitle)), Title.Sense),
                                             "For remainder of battle, "+cardTitle+" may not be played unless it is immune to Sense"));

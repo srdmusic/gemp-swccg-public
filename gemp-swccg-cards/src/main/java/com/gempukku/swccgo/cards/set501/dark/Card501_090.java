@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
@@ -27,8 +28,7 @@ public class Card501_090 extends AbstractNormalEffect {
     public Card501_090() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Tragedy Of Plagueis ", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on table. Once per turn may deploy a lightsaber on Sidious. " +
-                "If Sidious with a Dark Jedi, once per game may retrieve a character into hand. Sidious may be targeted by Force Lightning. [Immune to Alter.]");
+        setGameText("Deploy on table. Once per turn, may deploy a lightsaber on Sidious from Reserve Deck; reshuffle. Once per game, If Sidious with a Dark Jedi, may retrieve a character into hand. If Rule Of Two on table, Sidious may be targeted by Force Lightning. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("[Set 17] Tragedy Of Plagueis ");
@@ -37,7 +37,7 @@ public class Card501_090 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MayBeTargetedByModifier(self, Filters.Sidious, Title.Force_Lightning));
+        modifiers.add(new MayBeTargetedByModifier(self, Filters.Sidious, new OnTableCondition(self, Filters.title(Title.Rule_Of_Two)), Title.Force_Lightning));
         return modifiers;
     }
 
