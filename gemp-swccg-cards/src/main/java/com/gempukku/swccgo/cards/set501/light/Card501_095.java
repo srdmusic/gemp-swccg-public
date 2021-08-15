@@ -1,26 +1,27 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
+import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardToLoseFromTableEffect;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
-import com.gempukku.swccgo.logic.modifiers.NoForceLossFromCardModifier;
-import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
+import com.gempukku.swccgo.logic.effects.LoseCardsFromTableEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromLostPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.EachWeaponDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.GuiUtils;
-import com.gempukku.swccgo.logic.timing.results.SenseAlterDestinySuccessfulResult;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -28,277 +29,96 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 14
- * Type: Interrupt
- * Subtype: Used Or Lost
- * Title: Alter & Friendly Fire (V)
+ * Set: Set 16
+ * Type: Location
+ * Subtype: Site
+ * Title: Tatooine: Lars' Homestead
  */
-public class Card501_095 extends AbstractUsedOrLostInterrupt {
+public class Card501_095 extends AbstractSite {
     public Card501_095() {
-        super(Side.LIGHT, 4, "Alter & Friendly Fire");
-        addComboCardTitles(Title.Alter, Title.Friendly_Fire);
-        setVirtualSuffix(true);
-        setGameText("USED: Cancel Sense." +
-                "LOST: Target an Effect, Political Effect or Utinni Effect, and one of your characters on table. Draw destiny. If destiny < character's ability, target Effect is canceled. " +
-                "OR If a battle was just initiated as a site where opponent has four or more characters, draw destiny. If destiny < numbers of opponent's character at that site, opponent chooses one to be lost (you lose no Force to There is no Try). (Immune to opponent's Objective).");
-        addIcons(Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_14);
-        setImmuneToOpponentsObjective(true);
-        setTestingText("Alter & Friendly Fire (V)");
+        super(Side.LIGHT, Title.Lars_Homestead, Title.Tatooine);
+        setLocationDarkSideGameText("Sandwhirl and Tusken Raiders are lost here.");
+        setLocationLightSideGameText("May deploy Anakin's Lightsaber from Reserve Deck; reshuffle (or once per game, deploy it from Lost Pile).");
+        addIcon(Icon.LIGHT_FORCE, 1);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.DEATH_STAR_II, Icon.EPISODE_VII, Icon.VIRTUAL_SET_16);
+        setTestingText("[Set 17] Tatooine: Lars' Homestead");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
-        final Filter senseFilter = Filters.Sense;
-        final Filter effectFilter = Filters.or(Filters.Effect, Filters.Political_Effect, Filters.Utinni_Effect);
-        final Filter characterFilter = Filters.and(Filters.your(self), Filters.character, Filters.notPreventedFromApplyingAbilityForSenseAlterDestiny);
-
+    protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, senseFilter)
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
+        if (TriggerConditions.isTableChanged(game, effectResult)
+                && GameConditions.isHere(game, self, Filters.or(Filters.Sandwhirl, Filters.Tusken_Raider))) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            actions.add(action);
-        }
+            Collection<PhysicalCard> toBeLost = Filters.filterActive(game, self, Filters.and(Filters.here(self), Filters.or(Filters.Sandwhirl, Filters.Tusken_Raider)));
 
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, effectFilter)
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)
-                && GameConditions.canSpot(game, self, characterFilter)) {
-            final RespondablePlayingCardEffect respondableEffect = (RespondablePlayingCardEffect) effect;
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            String ownerText = (respondableEffect.getCard().getOwner().equals(playerId) ? "your " : "");
-            action.setText("Draw destiny to cancel " + ownerText + GameUtils.getFullName(respondableEffect.getCard()));
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardBeingPlayedForCancelingEffect(action, respondableEffect) {
-                        @Override
-                        protected void cardTargetedToBeCanceled(final PhysicalCard targetedEffect) {
-                            action.appendTargeting(
-                                    new TargetCardOnTableEffect(action, playerId, "Choose a character", characterFilter) {
-                                        @Override
-                                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCharacter) {
-                                            action.addAnimationGroup(targetedCharacter);
-                                            // Allow response(s)
-                                            action.allowResponses("Cancel " + GameUtils.getCardLink(targetedEffect) + " by drawing destiny against " + GameUtils.getCardLink(targetedCharacter),
-                                                    new RespondablePlayCardEffect(action) {
-                                                        @Override
-                                                        protected void performActionResults(Action targetingAction) {
-                                                            // Get the targeted card(s) from the action using the targetGroupId.
-                                                            // This needs to be done in case the target(s) were changed during the responses.
-                                                            final PhysicalCard finalCharacter = targetingAction.getPrimaryTargetCard(targetGroupId);
-
-                                                            // Perform result(s)
-                                                            action.appendEffect(
-                                                                    new DrawDestinyEffect(action, playerId) {
-                                                                        @Override
-                                                                        protected Collection<PhysicalCard> getGameTextAbilityManeuverOrDefenseValueTargeted() {
-                                                                            return finalCharacter != null ? Collections.singletonList(finalCharacter) : Collections.<PhysicalCard>emptyList();
-                                                                        }
-
-                                                                        @Override
-                                                                        protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
-                                                                            GameState gameState = game.getGameState();
-                                                                            if (totalDestiny == null) {
-                                                                                gameState.sendMessage("Result: Failed due to failed destiny draw");
-                                                                                return;
-                                                                            }
-                                                                            if (finalCharacter == null) {
-                                                                                gameState.sendMessage("Result: Failed due to no character");
-                                                                                return;
-                                                                            }
-
-                                                                            float ability = game.getModifiersQuerying().getAbility(game.getGameState(), finalCharacter);
-                                                                            gameState.sendMessage("Destiny: " + GuiUtils.formatAsString(totalDestiny));
-                                                                            gameState.sendMessage("Ability: " + GuiUtils.formatAsString(ability));
-                                                                            if (totalDestiny < ability) {
-                                                                                gameState.sendMessage("Result: Succeeded");
-                                                                                action.appendEffect(
-                                                                                        new AddUntilEndOfCardPlayedModifierEffect(action, self,
-                                                                                                new NoForceLossFromCardModifier(self, Filters.There_Is_No_Try, playerId), null));
-                                                                                action.appendEffect(
-                                                                                        new TriggeringResultEffect(action,
-                                                                                                new SenseAlterDestinySuccessfulResult(playerId)));
-                                                                                action.appendEffect(
-                                                                                        new CancelCardBeingPlayedEffect(action, respondableEffect));
-                                                                            } else {
-                                                                                gameState.sendMessage("Result: Failed");
-                                                                            }
-                                                                        }
-                                                                    });
-                                                        }
-                                                    });
-                                        }
-                                    });
-                        }
-                    });
-            actions.add(action);
-        }
-        return actions;
-    }
-
-    @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
-        final String opponent = game.getOpponent(playerId);
-
-        // Check condition(s)
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.and(Filters.site, Filters.canBeTargetedBy(self)))) {
-            TargetingReason targetingReason = TargetingReason.TO_BE_LOST;
-            Filter characterFilter = Filters.and(Filters.opponents(self), Filters.character, Filters.at(Filters.battleLocation));
-            if (GameConditions.canTarget(game, self, 4, targetingReason, characterFilter)) {
-
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-                action.setActionMsg("Make opponent lose a character");
-                // Choose target(s)
-                action.appendTargeting(
-                        new TargetCardsAtSameLocationEffect(action, playerId, "Choose characters", 4, Integer.MAX_VALUE, targetingReason, Filters.and(Filters.opponents(self), Filters.character, Filters.at(Filters.battleLocation))) {
-                            @Override
-                            protected boolean getUseShortcut() {
-                                return true;
-                            }
-
-                            @Override
-                            protected boolean isTargetAll() {
-                                return true;
-                            }
-
-                            @Override
-                            protected void cardsTargeted(final int targetGroupId1, Collection<PhysicalCard> targetedCharacters) {
-                                action.addAnimationGroup(targetedCharacters);
-                                // Set secondary target filter(s)
-                                action.addSecondaryTargetFilter(Filters.battleLocation);
-                                // Allow response(s)
-                                action.allowResponses("Make opponent lose one of the following characters: " + GameUtils.getAppendedNames(targetedCharacters),
-                                        new RespondablePlayCardEffect(action) {
-                                            @Override
-                                            protected void performActionResults(Action targetingAction) {
-                                                // Get the final targeted card(s)
-                                                final Collection<PhysicalCard> finalCharacters = action.getPrimaryTargetCards(targetGroupId1);
-                                                // Perform result(s)
-                                                action.appendEffect(
-                                                        new DrawDestinyEffect(action, playerId) {
-                                                            @Override
-                                                            protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, final List<Float> destinyDrawValues, Float totalDestiny) {
-                                                                final GameState gameState = game.getGameState();
-                                                                final ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
-                                                                if (totalDestiny == null) {
-                                                                    gameState.sendMessage("Result: No result due to failed destiny draw");
-                                                                    return;
-                                                                }
-
-                                                                gameState.sendMessage("Destiny: " + GuiUtils.formatAsString(totalDestiny));
-                                                                int numberOfCharacters = finalCharacters.size();
-                                                                gameState.sendMessage("Number of characters: " + numberOfCharacters);
-
-                                                                if (totalDestiny < numberOfCharacters) {
-                                                                    gameState.sendMessage("Result: Succeeded");
-                                                                    String playerToChoose = modifiersQuerying.getPlayerToChooseCardTargetAtLocation(gameState, self, gameState.getBattleLocation(), opponent);
-                                                                    action.appendEffect(
-                                                                            new AddUntilEndOfCardPlayedModifierEffect(action, self,
-                                                                                    new NoForceLossFromCardModifier(self, Filters.There_Is_No_Try, playerId), null));
-                                                                    action.appendEffect(
-                                                                            new TriggeringResultEffect(action,
-                                                                                    new SenseAlterDestinySuccessfulResult(playerId)));
-                                                                    action.appendEffect(
-                                                                            new ChooseCardToLoseFromTableEffect(action, playerToChoose, Filters.in(finalCharacters)));
-                                                                } else {
-                                                                    gameState.sendMessage("Result: Failed");
-                                                                }
-                                                            }
-                                                        });
-                                            }
-                                        }
-                                );
-                            }
-                        }
-                );
-                return Collections.singletonList(action);
-            }
-        }
-        return null;
-    }
-
-    @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
-        final Filter effectFilter = Filters.or(Filters.Effect, Filters.Utinni_Effect, Filters.Political_Effect);
-        final Filter characterFilter = Filters.and(Filters.your(self), Filters.character, Filters.notPreventedFromApplyingAbilityForSenseAlterDestiny);
-
-        // Check condition(s)
-        if (GameConditions.canTargetToCancel(game, self, effectFilter)
-                && GameConditions.canSpot(game, self, characterFilter)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            action.setText("Draw destiny to cancel Effect, Political Effect, or Utinni Effect");
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose Effect, Political Effect, or Utinni Effect", TargetingReason.TO_BE_CANCELED, effectFilter) {
-                        @Override
-                        protected void cardTargeted(final int targetGroupId1, final PhysicalCard targetedEffect) {
-                            action.addAnimationGroup(targetedEffect);
-                            action.appendTargeting(
-                                    new TargetCardOnTableEffect(action, playerId, "Choose a character", characterFilter) {
-                                        @Override
-                                        protected void cardTargeted(final int targetGroupId2, PhysicalCard targetedCharacter) {
-                                            action.addAnimationGroup(targetedCharacter);
-                                            // Allow response(s)
-                                            action.allowResponses("Cancel " + GameUtils.getCardLink(targetedEffect) + " by drawing destiny against " + GameUtils.getCardLink(targetedCharacter),
-                                                    new RespondablePlayCardEffect(action) {
-                                                        @Override
-                                                        protected void performActionResults(Action targetingAction) {
-                                                            // Get the targeted card(s) from the action using the targetGroupId.
-                                                            // This needs to be done in case the target(s) were changed during the responses.
-                                                            final PhysicalCard finalEffect = targetingAction.getPrimaryTargetCard(targetGroupId1);
-                                                            final PhysicalCard finalCharacter = targetingAction.getPrimaryTargetCard(targetGroupId2);
-
-                                                            // Perform result(s)
-                                                            action.appendEffect(
-                                                                    new DrawDestinyEffect(action, playerId) {
-                                                                        @Override
-                                                                        protected Collection<PhysicalCard> getGameTextAbilityManeuverOrDefenseValueTargeted() {
-                                                                            return finalCharacter != null ? Collections.singletonList(finalCharacter) : Collections.<PhysicalCard>emptyList();
-                                                                        }
-
-                                                                        @Override
-                                                                        protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
-                                                                            GameState gameState = game.getGameState();
-                                                                            if (totalDestiny == null) {
-                                                                                gameState.sendMessage("Result: Failed due to failed destiny draw");
-                                                                                return;
-                                                                            }
-                                                                            if (finalCharacter == null) {
-                                                                                gameState.sendMessage("Result: Failed due to no character");
-                                                                                return;
-                                                                            }
-
-                                                                            float ability = game.getModifiersQuerying().getAbility(game.getGameState(), finalCharacter);
-                                                                            gameState.sendMessage("Destiny: " + GuiUtils.formatAsString(totalDestiny));
-                                                                            gameState.sendMessage("Ability: " + GuiUtils.formatAsString(ability));
-                                                                            if (totalDestiny < ability) {
-                                                                                gameState.sendMessage("Result: Succeeded");
-                                                                                action.appendEffect(
-                                                                                        new AddUntilEndOfCardPlayedModifierEffect(action, self,
-                                                                                                new NoForceLossFromCardModifier(self, Filters.There_Is_No_Try, playerId), null));
-                                                                                action.appendEffect(
-                                                                                        new TriggeringResultEffect(action,
-                                                                                                new SenseAlterDestinySuccessfulResult(playerId)));
-                                                                                action.appendEffect(
-                                                                                        new CancelCardOnTableEffect(action, finalEffect));
-                                                                            } else {
-                                                                                gameState.sendMessage("Result: Failed");
-                                                                            }
-                                                                        }
-                                                                    });
-                                                        }
-                                                    });
-                                        }
-                                    });
-                        }
-                    });
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setSingletonTrigger(true);
+            action.setText("Make cards lost");
+            // Perform result(s)
+            action.appendEffect(
+                    new LoseCardsFromTableEffect(action, toBeLost));
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId)
+    {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+
+        // Using the same GameTextActionId for both actions since they are mutually exclusive per turn.
+        GameTextActionId gameTextActionId = GameTextActionId.TATOOINE_LARS_HOMESTEAD__DEPLOY_ANAKINS_LIGHTSABER;
+
+        // May deploy Anakin's Lightsaber from Reserve Deck; reshuffle (or once per game, deploy it from Lost Pile).
+
+        // Check condition(s)
+        if (GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, Persona.ANAKINS_LIGHTSABER)) {
+
+            // May deploy Anakin's Lightsaber from Reserve Deck; reshuffle
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Anakin's Lightsaber from Reserve Deck");
+
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Anakins_Lightsaber), true));
+
+            actions.add(action);
+        }
+
+
+        // Check condition(s)
+        if (GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.hasLostPile(game, playerOnLightSideOfLocation)
+                && GameConditions.canDeployCardFromLostPile(game, playerOnLightSideOfLocation, self, gameTextActionId, Persona.ANAKINS_LIGHTSABER)) {
+
+            // or once per game, deploy it from Lost Pile
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Anakin's Lightsaber from Lost Pile");
+
+            // Update usage limit(s)
+            // Note:  This case is a little unique because this action counts
+            // towards Once-per-game AND Once-per-turn limits
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromLostPileEffect(action, Filters.title(Title.Anakins_Lightsaber), false));
+            actions.add(action);
+        }
+
+        return actions;
     }
 }

@@ -1,52 +1,85 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractCapitalStarship;
-import com.gempukku.swccgo.cards.AbstractPermanentAboard;
-import com.gempukku.swccgo.cards.AbstractPermanentPilot;
-import com.gempukku.swccgo.cards.conditions.AloneCondition;
-import com.gempukku.swccgo.cards.conditions.HasAboardCondition;
+import com.gempukku.swccgo.cards.AbstractSith;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OnCondition;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.ForceIconsEqualizedModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.NotCondition;
+import com.gempukku.swccgo.logic.conditions.TrueCondition;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.HitResult;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 14
- * Type: Starship
- * Subtype: Capital
- * Title: Steadfast
+ * Set: Set 16
+ * Type: Character
+ * Subtype: Sith
+ * Title: Darth Vader, Betrayer Of The Jedi
  */
-public class Card501_078 extends AbstractCapitalStarship {
+public class Card501_078 extends AbstractSith {
     public Card501_078() {
-        super(Side.DARK, 1, 7, 9, 6, null, 3, 8, "Steadfast", Uniqueness.UNIQUE);
-        setLore("");
-        setGameText("May add 6 pilots, 8 passengers, and 2 starfighters. Permanent pilot provides ability of 2. While alone at a battleground, adds Force icons to equalize them for both sides here. Immune to attrition < 4.");
-        addPersona(Persona.STEADFAST);
-        addIcons(Icon.EPISODE_VII, Icon.FIRST_ORDER, Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_14);
-        addModelType(ModelType.RESURGENT_CLASS_STAR_DESTROYER);
-        setPilotCapacity(6);
-        setPassengerCapacity(8);
-        setStarfighterCapacity(2);
-        setTestingText("Steadfast");
-    }
-
-    @Override
-    protected List<? extends AbstractPermanentAboard> getGameTextPermanentsAboard() {
-        return Collections.singletonList(new AbstractPermanentPilot(2) {});
+        super(Side.DARK, 1, 6, 6, 6, 8, "Darth Vader, Betrayer Of The Jedi", Uniqueness.UNIQUE);
+        setLore("Leader.");
+        setGameText("Adds 3 to power of anything he pilots. During battle, if a lightsaber swung by Vader just 'hit' a character, character's game text is canceled (and if Amidala, she is immediately lost). While on Coruscant, adds one [Dark Side] icon here. Immune to [Set 3] Amidala and attrition < 5.");
+        addPersona(Persona.VADER);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
+        setTestingText("Darth Vader, Betrayer Of The Jedi");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceIconsEqualizedModifier(self, Filters.and(Filters.battleground, Filters.sameLocation(self)), new AloneCondition(self)));
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
+        modifiers.add(new IconModifier(self, Filters.and(Filters.location, Filters.here(self)), new OnCondition(self, Title.Coruscant), Icon.DARK_FORCE));
+        //immune to [Set 3] Padme. made him immune to Padme Naberrie and made her check if Vader is immune
+        modifiers.add(new ImmuneToTitleModifier(self, Title.Padme));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
         return modifiers;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        String opponent = game.getOpponent(self.getOwner());
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (TriggerConditions.justHitBy(game, effectResult, Filters.character, Filters.lightsaber, Filters.Vader)) {
+            PhysicalCard character = ((HitResult)effectResult).getCardHit();
+            if (Filters.character.accepts(game, character)) {
+                boolean isAmidala = Filters.Amidala.accepts(game, character);
+
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Character's game text canceled");
+                if (isAmidala)
+                    action.setActionMsg("Cancel "+GameUtils.getCardLink(character)+"'s game text and make her lost");
+                else
+                    action.setActionMsg("Cancel "+GameUtils.getCardLink(character)+"'s game text");
+
+                // Perform result(s)
+                action.appendEffect(new CancelGameTextEffect(action, character));
+                if (isAmidala) {
+                    action.appendEffect(new LoseCardFromTableEffect(action, character));
+                }
+                return Collections.singletonList(action);
+            }
+        }
+        return null;
     }
 }

@@ -1,95 +1,81 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
+import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.LookAtUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromUsedPileEffect;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
-import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 14
- * Type: Interrupt
- * Subtype: Used
- * Title: Our Only Hope (V)
+ * Set: Set 16
+ * Type: Character
+ * Subtype: Rebel
+ * Title: Kanan Jarrus, Jedi Knight
  */
-public class Card501_015 extends AbstractUsedInterrupt {
+public class Card501_015 extends AbstractRebel {
     public Card501_015() {
-        super(Side.LIGHT, 4, Title.Our_Only_Hope, Uniqueness.UNIQUE);
-        setLore("'The Emperor knew, as I did, if Anakin were to have any offspring, they would be a threat to him.'");
-        setGameText("Relocate Prophecy Of The Force to a site. OR If He Is The Chosen One or He Will Bring Balance on table, [upload] Yoda's Hut or a Death Star II site.");
-        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_14);
-        setVirtualSuffix(true);
-        setTestingText("Our Only Hope (V)");
+        super(Side.LIGHT, 2, 5, 4, 6, 6, "Kanan Jarrus, Jedi Knight", Uniqueness.UNIQUE);
+        setLore("");
+        setGameText("Whenever you deploy Chopper, Ezra, Hera, Sabine, or Zeb, may draw top card of your Used Pile. " +
+                "During your draw phase, if Kanan present at a battleground and he did not move this turn, may peek at your Used Pile. " +
+                "Immune to attrition < 5.");
+        addPersona(Persona.KANAN);
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
+        setTestingText("[Set 17] Kanan Jarrus, Jedi Knight");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
+        return modifiers;
+    }
 
-        GameTextActionId gameTextActionId = GameTextActionId.OUR_ONLY_HOPE_V__UPLOAD_SITE;
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        if (GameConditions.isDuringYourPhase(game, playerId, Phase.DRAW)
+                && GameConditions.isPresentAt(game, self, Filters.battleground)
+                && !GameConditions.hasPerformedRegularMoveThisTurn(game, self)
+                && GameConditions.hasUsedPile(game, playerId)) {
 
-        if (GameConditions.canSpot(game, self, Filters.or(Filters.He_Is_The_Chosen_One, Filters.He_Will_Bring_Balance))
-                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Take site into hand from Reserve Deck");
-            // Allow response(s)
-            action.allowResponses("Take Yoda's Hut or a Death Star II site into hand from Reserve Deck",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.Yodas_Hut, Filters.Death_Star_II_site), true));
-                        }
-                    }
+            TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+            action.setText("Peek at your Used Pile");
+            action.appendEffect(
+                    new LookAtUsedPileEffect(action, playerId, playerId)
             );
-            actions.add(action);
+            return Collections.singletonList(action);
         }
+        return null;
+    }
 
-        if (GameConditions.canSpot(game, self, Filters.Prophecy_Of_The_Force)) {
-            final PhysicalCard prophecyOfTheForce = Filters.findFirstActive(game, self, Filters.Prophecy_Of_The_Force);
-            boolean canRelocate = GameConditions.canSpot(game, self, Filters.canRelocateEffectTo(playerId, prophecyOfTheForce));
-            Collection<Modifier> modifiers = game.getModifiersQuerying().getModifiersAffecting(game.getGameState(), prophecyOfTheForce);
-            for (Modifier m: modifiers) {
-                if (m.getModifyGameTextType(game.getGameState(), game.getModifiersQuerying(), prophecyOfTheForce) == ModifyGameTextType.PROPHECY_OF_THE_FORCE__MAY_NOT_BE_RELOCATED)
-                    canRelocate = false;
-            }
-            if (canRelocate) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                action.setText("Relocate " + GameUtils.getCardLink(prophecyOfTheForce) + " to a site");
-                action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose site", Filters.canRelocateEffectTo(playerId, prophecyOfTheForce)) {
-                    @Override
-                    protected void cardTargeted(int targetGroupId, PhysicalCard site) {
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        Filter filter = Filters.or(Filters.Chopper, Filters.Ezra, Filters.Hera, Filters.Sabine, Filters.Zeb);
 
-                        final PhysicalCard finalSite = action.getPrimaryTargetCard(targetGroupId);
-                        action.addAnimationGroup(prophecyOfTheForce);
-                        action.addAnimationGroup(finalSite);
-                        action.allowResponses(new RespondablePlayCardEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                action.appendEffect(
-                                        new AttachCardFromTableEffect(action, prophecyOfTheForce, finalSite)
-                                );
-                            }
-                        });
-                    }
-                });
+        if (TriggerConditions.justDeployed(game, effectResult, playerId, filter)) {
 
-                actions.add(action);
-            }
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Draw top card of Used Pile");
+            // Perform result(s)
+            action.appendEffect(
+                    new DrawCardIntoHandFromUsedPileEffect(action, playerId));
+            return Collections.singletonList(action);
         }
-        return actions;
+        return null;
     }
 }

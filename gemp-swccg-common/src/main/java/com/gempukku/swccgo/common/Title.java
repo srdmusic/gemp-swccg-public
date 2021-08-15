@@ -14,6 +14,8 @@ public interface Title {
     String A_Dangerous_Time = "A Dangerous Time";
     String A_Gift = "A Gift";
     String A_Siths_Plans = "A Sith's Plans";
+    String A_Power_Loss = "A Power Loss";
+    String A_Sith_Legend = "A Sith Legend";
     String A_Stunning_Move = "A Stunning Move";
     String A_Useless_Gesture = "A Useless Gesture";
     String A_Valuable_Hostage = "A Valuable Hostage";
@@ -31,6 +33,7 @@ public interface Title {
     String Ahsokas_Lightsabers = "Ahsoka's Lightsabers";
     String Aiiii_Aaa_Agggggggggg = "Aiiii! Aaa! Agggggggggg!";
     String Aim_High = "Aim High";
+    String Ajan_Kloss = "Ajan Kloss";
     String Alderaan = "Alderaan";
     String All_Too_Easy = "All Too Easy";
     String All_Wings_Report_In = "All Wings Report In";
@@ -42,6 +45,7 @@ public interface Title {
     String Ambush = "Ambush";
     String An_Inkling_Of_Its_Destructive_Potential = "An Inkling Of Its Destructive Potential";
     String Anakin_Skywalker = "Anakin Skywalker";
+    String Anakins_Lightsaber = "Anakin's Lightsaber";
     String Anakins_Podracer = "Anakin's Podracer";
     String Anchorhead = "Tatooine: Anchorhead";
     String And_Now_Youll_Give_It_To_Me = "And Now You'll Give It To Me";
@@ -154,7 +158,7 @@ public interface Title {
     String Carbonite_Chamber_Console = "Carbonite Chamber Console";
     String Careful_Planning = "Careful Planning";
     String Carida = "Carida";
-    String Cassian = "Captain Cassian Andor";
+    String Captain_Cassian_Andor = "Captain Cassian Andor";
     String Cease_Fire = "Cease Fire!";
     String Cell_2187 = "Cell 2187";
     String Chandrila = "Chandrila";
@@ -173,6 +177,7 @@ public interface Title {
     String Clakdor_VII = "Clak'dor VII";
     String Clash_Of_Sabers = "Clash Of Sabers";
     String Clone_Trooper = "Clone Trooper";
+    String Cloning_Cylinders = "Cloning Cylinders";
     String Closer = "Closer?!";
     String Cloud_City_Celebration = "Cloud City Celebration";
     String Cloud_City_Occupation = "Cloud City Occupation";
@@ -243,6 +248,7 @@ public interface Title {
     String Death_Squadron = "Death Squadron";
     String Death_Star = "Death Star";
     String Death_Star_Central_Core = "Death Star: Central Core";
+    String Death_Star_Hangar_327 = "Death Star: Hangar 327";
     String Death_Star_Gunner = "Death Star Gunner";
     String Death_Star_Conference_Room = "Death Star: Conference Room";
     String Death_Star_II = "Death Star II";
@@ -258,8 +264,10 @@ public interface Title {
     String Demotion = "Demotion";
     String Den_Of_Thieves = "Den Of Thieves";
     String Dengars_Blaster_Carbine =  "Dengar's Blaster Carbine";
+    String Deploy_The_Garrison = "Deploy The Garrison!";
     String Derlin = "Major Bren Derlin";
     String Desert_Heart = "Tatooine: Desert Heart";
+    String Desert_Landing_Site = "Tatooine: Desert Landing Site";
     String Despair = "Despair";
     String Desperate_Reach = "Desperate Reach";
     String Detention_Block_Control_Room = "Death Star: Detention Block Control Room";
@@ -292,6 +300,7 @@ public interface Title {
     String Dr_Evazan = "Dr. Evazan";
     String Dragonsnake = "Dragonsnake";
     String Draw_Their_Fire = "Draw Their Fire";
+    String Dreaded_Imperial_Starfleet = "Dreaded Imperial Starfleet";
     String Droid_Junkheap = "Sandcrawler: Droid Junkheap";
     String Droid_Merchant = "Droid Merchant";
     String Droid_Racks = "Droid Racks";
@@ -321,6 +330,7 @@ public interface Title {
     String Ello_Asty = "Ello Asty";
     String Ellorrs_Madak = "Ellorrs Madak";
     String Emergency_Deployment = "Emergency Deployment";
+    String Emperors_Orders = "Emperor's Orders";
     String Emperors_Power = "Emperor's Power";
     String Empires_New_Order = "Empire's New Order";
     String Empires_Sinister_Agents = "Empire's Sinister Agents";
@@ -340,6 +350,7 @@ public interface Title {
     String Evader = "Evader";
     String Evacuation_Control = "Evacuation Control";
     String E_web_Blaster = "E-web Blaster";
+    String Evil_Is_Everywhere = "Evil Is Everywhere!";
     String Ewok_Bow = "Ewok Bow";
     String Ewok_Glider = "Ewok Glider";
     String Ewok_Rescue = "Ewok Rescue";
@@ -361,6 +372,7 @@ public interface Title {
     String Feltipern_Trevagg = "Feltipern Trevagg";
     String Field_Promotion = "Field Promotion";
     String Fighters_Coming_In = "Fighters Coming In";
+    String Figrin_Dan = "Figrin D'an";
     String Finalizer = "Finalizer";
     String Finn = "Finn";
     String Fire_Extinguisher = "Fire Extinguisher";
@@ -463,6 +475,7 @@ public interface Title {
     String Hypo = "Hypo";
     String I_Am_Your_Father = "I Am Your Father";
     String I_Can_Save_Him = "I Can Save Him";
+    String I_Cant_Believe_Hes_Gone = "I Can't Believe He's Gone";
     String I_Did_It = "I Did It!";
     String I_Feel_The_Conflict = "I Feel The Conflict";
     String I_Have_You_Now = "I Have You Now";
@@ -557,15 +570,16 @@ public interface Title {
     String Juri_Juice = "Juri Juice";
     String K2SO = "K-2SO (Kay-Tuesso)";
     String Kabe = "Kabe";
+    String Kachirho = "Kashyyyk: Kachirho";
     String KalFalnl_Cndros = "Kal'Falnl C'ndros";
     String Kalit = "Kalit";
     String Kamino= "Kamino";
     String Kanan = "Kanan Jarrus";
     String Karie_Neth = "Karie Neth";
+    String Kashyyyk = "Kashyyyk";
     String Keep_Your_Eyes_Open = "Keep Your Eyes Open";
     String Kessel = "Kessel";
     String Kessel_Run = "Kessel Run";
-    String Kashyyyk = "Kashyyyk";
     String Ke_Chu_Ke_Kukuta = "Ke Chu Ke Kukuta?";
     String Ket_Maliss = "Ket Maliss";
     String Ketwol = "Ketwol";
@@ -583,6 +597,7 @@ public interface Title {
     String Lana_Dobreed = "Lana Dobreed";
     String Landing_Claw = "Landing Claw";
     String Landing_Platform = "Endor: Landing Platform (Docking Bay)";
+    String Lars_Homestead = "Tatooine: Lars' Homestead";
     String Lars_Moisture_Farm = "Tatooine: Lars' Moisture Farm";
     String Laser_Cannon_Battery = "Laser Cannon Battery";
     String Laser_Gate = "Laser Gate";
@@ -601,6 +616,7 @@ public interface Title {
     String Life_Debt = "Life Debt";
     String Lift_Tube = "Lift Tube";
     String Lightsaber_Proficiency = "Lightsaber Proficiency";
+    String Like_My_Father_Before_Me = "Like My Father Before Me";
     String Limited_Resources = "Limited Resources";
     String Lirin_Carn = "Lirin Car'n";
     String Local_Trouble = "Local Trouble";
@@ -671,6 +687,7 @@ public interface Title {
     String My_Favorite_Decoration = "My Favorite Decoration";
     String My_Kind_Of_Scum = "My Kind Of Scum";
     String My_Lord_Is_That_Legal = "My Lord, Is That Legal?";
+    String My_Parents_Were_Strong = "My Parents Were Strong";
     String Mynock = "Mynock";
     String Myo = "Myo";
     String Nabrun_Leids = "Nabrun Leids";
@@ -709,6 +726,7 @@ public interface Title {
     String Ominous_Rumors = "Ominous Rumors";
     String Ommni_Box = "Ommni Box";
     String On_Target = "On Target";
+    String On_The_Verge_Of_Greatness = "On The Verge Of Greatness";
     String One_In_A_Million = "One In A Million";
     String One_More_Pass = "One More Pass";
     String Onyx_2 = "Onyx 2";
@@ -767,6 +785,7 @@ public interface Title {
     String Prepare_The_Chamber = "Prepare The Chamber";
     String Presence_Of_The_Force = "Presence Of The Force";
     String Pride_Of_The_Empire = "Pride Of The Empire";
+    String Prisoner_2187 = "Prisoner 2187";
     String Private_Platform = "Coruscant: Private Platform (Docking Bay)";
     String Probe_Droid = "Probe Droid";
     String Probe_Telemetry = "Probe Telemetry";
@@ -777,6 +796,7 @@ public interface Title {
     String Proton_Bombs = "Proton Bombs";
     String Proxima = "Lady Proxima";
     String Puck = "Puck";
+    String Put_All_Sections_On_Alert = "Put All Sections On Alert";
     String Quad_Laser_Cannon = "Quad Laser Cannon";
     String Quiet_Mining_Colony = "Quiet Mining Colony";
     String Quite_A_Mercenary = "Quite A Mercenary";
@@ -837,8 +857,10 @@ public interface Title {
     String Rogue_4 = "Rogue 4";
     String Rogue_Asteroid = "Rogue Asteroid";
     String Rogue_One = "Rogue One";
+    String Rolling_Rolling_Rolling = "Rolling, Rolling, Rolling";
     String Rose = "Rose Tico";
     String Royal_Naboo_Security_Officer = "Royal Naboo Security Officer";
+    String Rule_Of_Two = "Rule Of Two";
     String Run_Luke_Run = "Run Luke, Run!";
     String Rya = "Lieutenant Rya Kirsch";
     String Rycar_Ryjerd = "Rycar Ryjerd";
@@ -861,6 +883,7 @@ public interface Title {
     String Scanning_Crew = "Scanning Crew";
     String Scarif = "Scarif";
     String Scarif_Citadel_Tower = "Scarif: Citadel Tower";
+    String Scarif_Landing_Pad_Five = "Scarif: Landing Pad Five (Docking Bay)";
     String Scarif_Landing_Pad_Nine = "Scarif: Landing Pad Nine (Docking Bay)";
     String Scarif_Turbolift_Complex = "Scarif: Turbolift Complex";
     String Scimitar_1 = "Scimitar 1";
@@ -958,6 +981,7 @@ public interface Title {
     String Tantive_IV = "Tantive IV";
     String Targeting_Computer = "Targeting Computer";
     String Target_The_Main_Generator = "Target The Main Generator";
+    String Tarkin_Doctrine = "Tarkin Doctrine";
     String Tatooine = "Tatooine";
     String Tatooine_Celebration = "Tatooine Celebration";
     String Tatooine_Occupation = "Tatooine Occupation";
@@ -976,9 +1000,11 @@ public interface Title {
     String That_Things_Operational = "That Thing's Operational";
     String Thats_One = "That's One";
     String They_Have_No_Idea_Were_Coming = "They Have No Idea We're Coming";
+    String Theyve_Shut_Down_The_Main_Reactor = "They've Shut Down The Main Reactor";
     String The_Camp = "The Camp";
     String The_Circle_Is_Now_Complete = "The Circle Is Now Complete";
     String The_First_Transport_Is_Away = "The First Transport Is Away!";
+    String The_Force_Is_Strong_In_My_Family = "The Force Is Strong In My Family";
     String The_Force_Is_Strong_With_This_One = "The Force Is Strong With This One";
     String The_Galaxy_May_Need_A_Legend = "The Galaxy May Need A Legend";
     String The_Hyperdrive_Generators_Gone = "The Hyperdrive Generator's Gone";
@@ -990,6 +1016,7 @@ public interface Title {
     String The_Ultimate_Power_In_The_Universe = "The Ultimate Power In The Universe";
     String There_Is_Another = "There Is Another";
     String There_Is_No_Try = "There Is No Try";
+    String There_They_Are = "There They Are!";
     String Theed_Palace_Courtyard = "Naboo: Theed Palace Courtyard";
     String Theed_Palace_Generator = "Naboo: Theed Palace Generator";
     String Theed_Palace_Generator_Core = "Naboo: Theed Palace Generator Core";
@@ -1015,6 +1042,7 @@ public interface Title {
     String Tibanna_Gas_Miner = "Tibanna Gas Miner";
     String Tibrin = "Tibrin";
     String TIE_Assault_Squadron = "TIE Assault Squadron";
+    String TK421 = "TK-421";
     String TK422 = "TK-422";
     String Too_Cold_For_Speeders = "Too Cold For Speeders";
     String Tonnika_Sisters = "Tonnika Sisters";
@@ -1095,6 +1123,7 @@ public interface Title {
     String Wioslea = "Wioslea";
     String Wise_Advice = "Wise Advice";
     String Wittin = "Wittin";
+    String Wokling = "Wokling";
     String Womp_Rat = "Womp Rat";
     String Wookiee_Slaving_Operation = "Wookiee Slaving Operation";
     String Wookiee_Roar = "Wookiee Roar";
@@ -1110,7 +1139,7 @@ public interface Title {
     String Yarna_dal_Gargan = "Yarna d'al' Gargan";
     String Yavin_4 = "Yavin 4";
     String Yavin_4_Docking_Bay = "Yavin 4: Docking Bay";
-    String Yavin_4_Operations = "Yavin 4 Base Operations";
+    String Yavin_4_Base_Operations = "Yavin 4 Base Operations";
     String Yavin_4_War_Room = "Yavin 4: Massassi War Room";
     String Yavin_Sentry = "Yavin Sentry";
     String Yoda_Stew = "Yoda Stew";
@@ -1129,6 +1158,7 @@ public interface Title {
     String You_Truly_Belong_Here_With_Us = "You Truly Belong Here With Us";
     String Your_Destiny = "Your Destiny";
     String Your_Insight_Serves_You_Well = "Your Insight Serves You Well";
+    String Your_Thoughts_Dwell_On_Your_Mother = "Your Thoughts Dwell On Your Mother";
     String Youre_A_Slave = "You're A Slave?";
     String Youre_All_Clear_Kid = "You're All Clear Kid!";
     String YT_1300_Transport = "YT-1300 Transport";

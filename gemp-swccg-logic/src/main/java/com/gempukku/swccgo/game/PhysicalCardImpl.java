@@ -58,6 +58,7 @@ public class PhysicalCardImpl implements PhysicalCard, Cloneable {
     private boolean _isHit;
     private boolean _damaged;
     private boolean _disarmed;
+    private Set<IonizationType> _ionization = new HashSet<IonizationType>();
     private boolean _gameTextCanceled;
     private boolean _suspended;
     private boolean _binaryOff;
@@ -176,6 +177,7 @@ public class PhysicalCardImpl implements PhysicalCard, Cloneable {
         snapshot._isHit = _isHit;
         snapshot._damaged = _damaged;
         snapshot._disarmed = _disarmed;
+        snapshot._ionization = _ionization;
         snapshot._gameTextCanceled = _gameTextCanceled;
         snapshot._suspended = _suspended;
         snapshot._binaryOff = _binaryOff;
@@ -413,6 +415,8 @@ public class PhysicalCardImpl implements PhysicalCard, Cloneable {
         List<Modifier> modifiers;
         if (_zone == Zone.STACKED)
             modifiers = blueprint.getWhileStackedModifiers(game, this);
+        else if (_zone == Zone.OUT_OF_PLAY)
+            modifiers = blueprint.getWhileOutOfPlayModifiers(game, this);
         else
             modifiers = blueprint.getWhileInPlayModifiers(game, this);
 
@@ -803,6 +807,31 @@ public class PhysicalCardImpl implements PhysicalCard, Cloneable {
     @Override
     public boolean isCrashed() {
         return _isCrashed;
+    }
+
+    @Override
+    public Set<IonizationType> getIonization() {
+        return _ionization;
+    }
+
+    @Override
+    public void setIonization(Set<IonizationType> newIonizationSet) {
+        _ionization = newIonizationSet;
+    }
+
+    @Override
+    public boolean addIonization(IonizationType newIonization) {
+        return _ionization.add(newIonization);
+    }
+
+    @Override
+    public boolean removeIonization(IonizationType cleanIonization) {
+        return _ionization.remove(cleanIonization);
+    }
+
+    @Override
+    public void resetIonization() {
+        _ionization.clear();
     }
 
 //    @Override

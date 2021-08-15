@@ -1,101 +1,105 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractCharacterWeapon;
+import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.AddToForceDrainEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.*;
-import com.gempukku.swccgo.logic.effects.choose.StealOneCardIntoHandEffect;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.LostForceResult;
+import com.gempukku.swccgo.logic.timing.StandardEffect;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
 /**
- * Set: Set 14
- * Type: Weapon
- * Subtype: Character
- * Title: Darksaber
+ * Set: Set 16
+ * Type: Character
+ * Subtype: Alien
+ * Title: Burg
  */
-public class Card501_002 extends AbstractCharacterWeapon {
+public class Card501_002 extends AbstractAlien {
     public Card501_002() {
-        super(Side.DARK, 2, "Darksaber", Uniqueness.UNIQUE);
-        setLore("");
-        setGameText("Deploy on Gideon, [Set 13] Maul, or your Mandalorian. May add 1 to Force drain where present. May target a character. Draw destiny. Target hit, and its forfeit = 0, if destiny +2 > defense value. If just lost from table or hand, opponent may steal this weapon into hand.");
-        addIcons(Icon.VIRTUAL_SET_14);
-        addKeywords(Keyword.LIGHTSABER);
-        setMatchingCharacterFilter(Filters.or(Filters.Gideon, Filters.Maul));
-        setTestingText("Darksaber");
+        super(Side.DARK, 2, 3, 6, 1, 4, "Burg", Uniqueness.UNIQUE);
+        setArmor(3);
+        setLore("Devaronian mercenary.");
+        setGameText("Once during battle, may use 1 Force to make Burg power +2 for remainder of turn. Once during battle, opponent may use 1 Force to make Burg power -2 for remainder of turn. At the end of each of your turns, use 1 Force or place Burg in Used Pile.");
+        setSpecies(Species.DEVARONIAN);
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
+        setTestingText("[Set 17] Burg");
     }
 
     @Override
-    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.and(Filters.your(self), Filters.or(Filters.Gideon, Filters.and(Icon.VIRTUAL_SET_13, Filters.Maul), Filters.Mandalorian));
-    }
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-    @Override
-    protected Filter getGameTextValidToUseWeaponFilter(final SwccgGame game, final PhysicalCard self) {
-        return Filters.or(Filters.Gideon, Filters.Maul, Filters.Mandalorian);
-    }
+        if(GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canUseForce(game, playerId, 1)
+                && GameConditions.canSpot(game, self, Filters.title("Burg"))) {
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Make Burg power +2");
+            action.appendUsage(new OncePerBattleEffect(action));
+            action.appendCost(new UseForceEffect(action, playerId, 1));
+            action.appendEffect(new AddUntilEndOfTurnModifierEffect(action, new PowerModifier(self, Filters.title("Burg"), 2), "make Burg power +2 until end of turn"));
 
-    @Override
-    protected List<FireWeaponAction> getGameTextFireWeaponActions(String playerId, final SwccgGame game, final PhysicalCard self, boolean forFree, int extraForceRequired, PhysicalCard sourceCard, boolean repeatedFiring, Filter targetedAsCharacter, Float defenseValueAsCharacter, Filter fireAtTargetFilter, boolean ignorePerAttackOrBattleLimit) {
-        FireWeaponActionBuilder actionBuilder = FireWeaponActionBuilder.startBuildPrep(playerId, game, sourceCard, self, forFree, extraForceRequired, repeatedFiring, targetedAsCharacter, defenseValueAsCharacter, fireAtTargetFilter, ignorePerAttackOrBattleLimit)
-                .targetForFree(Filters.or(Filters.character, targetedAsCharacter), TargetingReason.TO_BE_HIT).finishBuildPrep();
-        if (actionBuilder != null) {
-
-            // Build action using common utility
-            FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 2, Statistic.DEFENSE_VALUE, true, 0);
             return Collections.singletonList(action);
         }
+
         return null;
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<TopLevelGameTextAction> getOpponentsCardGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+
+        if(GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canUseForce(game, playerId, 1)
+                && GameConditions.canSpot(game, self, Filters.title("Burg"))) {
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Make Burg power -2");
+            action.appendUsage(new OncePerBattleEffect(action));
+            action.appendCost(new UseForceEffect(action, playerId, 1));
+            action.appendEffect(new AddUntilEndOfTurnModifierEffect(action, new PowerModifier(self, Filters.title("Burg"), -2), "make Burg power -2 until end of turn"));
+
+            return Collections.singletonList(action);
+        }
+
+        return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        String playerId = self.getOwner();
+
+        // At the end of each of your turns, use 1 Force or place Burg in Used Pile.
+
         // Check condition(s)
-        if (TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerId, Filters.wherePresent(self))
-                && GameConditions.canUseWeapon(game, self.getAttachedTo(), self)) {
+        if (TriggerConditions.isEndOfYourTurn(game, effectResult, playerId)) {
+            boolean useForceIsOption = GameConditions.canUseForce(game, playerId, 1);
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Add 1 to Force drain");
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setPerformingPlayer(playerId);
+            if (useForceIsOption)
+                action.setText("Use 1 Force or place Burg in Used Pile");
+            else
+                action.setText("Place Burg in Used Pile");
+
             // Perform result(s)
-            action.appendEffect(
-                    new AddToForceDrainEffect(action, 1));
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    public List<OptionalGameTextTriggerAction> getOpponentsCardGameTextLeavesTableOptionalTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.justLost(game, effectResult, self)
-            && GameConditions.canSteal(game, self)) {
-            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, game.getOpponent(self.getOwner()), gameTextSourceCardId);
-            action.setText("Steal into hand");
-            action.appendEffect(new StealOneCardIntoHandEffect(action, self));
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getOpponentsCardGameTextLostFromLifeForceOptionalTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        if (effectResult.getType() == EffectResult.Type.FORCE_LOST) {
-            LostForceResult result = (LostForceResult)effectResult;
-            if (result.getZone() == Zone.HAND && Filters.and(self).accepts(game, result.getCardLost())) {
-                OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, game.getOpponent(self.getOwner()), gameTextSourceCardId);
-                action.setText("Steal into hand");
-                action.appendEffect(new StealOneCardIntoHandEffect(action, self));
-                return Collections.singletonList(action);
+            List<StandardEffect> effectsToChoose = new ArrayList<StandardEffect>();
+            if (useForceIsOption) {
+                effectsToChoose.add(new UseForceEffect(action, playerId, 1));
             }
+            effectsToChoose.add(new PlaceCardInUsedPileFromTableEffect(action, self));
+            action.appendEffect(
+                    new ChooseEffectEffect(action, playerId, effectsToChoose));
+            return Collections.singletonList(action);
         }
         return null;
     }

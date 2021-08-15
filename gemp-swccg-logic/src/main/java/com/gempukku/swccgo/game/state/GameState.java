@@ -1451,6 +1451,7 @@ public class GameState implements Snapshotable<GameState> {
         toCard.setConcealed(fromCard.isConcealed());
         toCard.setCollapsed(fromCard.isCollapsed());
         toCard.setCrashed(fromCard.isCrashed());
+        toCard.setIonization(fromCard.getIonization());
         toCard.setLeavingTable(fromCard.isLeavingTable());
         toCard.setGameTextCanceled(fromCard.isGameTextCanceled());
         toCard.setLocationGameTextCanceledForPlayer(fromCard.isLocationGameTextCanceledForPlayer(_darkSidePlayer), _darkSidePlayer);
@@ -1494,6 +1495,7 @@ public class GameState implements Snapshotable<GameState> {
         card.setConcealed(false);
         card.setCollapsed(false);
         card.setCrashed(false);
+        card.resetIonization();
         card.setLeavingTable(false);
         card.setGameTextCanceled(false);
         card.setLocationGameTextCanceledForPlayer(false, _darkSidePlayer);
@@ -2178,8 +2180,8 @@ public class GameState implements Snapshotable<GameState> {
                 listener.cardCreated(card, this, false);
         }
 
-        // If the card is now "in play", "inserted", or "stacked" , then turn on its "while active in play" or "while stacked" modifiers.
-        if (zone.isInPlay() || card.isInserted() || card.getZone() == Zone.STACKED) {
+        // If the card is now "in play", "inserted", "stacked", or "out of play" then turn on its "while active in play", "while stacked" or "while out of play" modifiers.
+        if (zone.isInPlay() || card.isInserted() || card.getZone() == Zone.STACKED || card.getZone() == Zone.OUT_OF_PLAY) {
             startAffecting(_game, card);
         }
     }
@@ -2564,6 +2566,28 @@ public class GameState implements Snapshotable<GameState> {
                 return true;
         }
 
+
+        //need to visit stacked cards for Communing
+        for (PhysicalCard physicalCard : _stacked.get(_darkSidePlayer)) {
+            if (physicalCard.getZone() == Zone.STACKED
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.INTERRUPT
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.EPIC_EVENT) {
+                if (physicalCardVisitor.visitPhysicalCard(physicalCard))
+                    return true;
+            }
+        }
+
+        for (PhysicalCard physicalCard : _stacked.get(_lightSidePlayer)) {
+            if (physicalCard.getZone() == Zone.STACKED
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.INTERRUPT
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.EPIC_EVENT) {
+                if (physicalCardVisitor.visitPhysicalCard(physicalCard))
+                    return true;
+            }
+        }
+
         // Include "insert" cards on top of reserve decks
         for (PhysicalCard topOfReserveDeck : getTopCardsOfReserveDecks()) {
             if (topOfReserveDeck.isInserted())
@@ -2675,7 +2699,10 @@ public class GameState implements Snapshotable<GameState> {
         }
         // Visit stacked cards to check for any actions, either whileStacked actions or any stacked cards that may deploy "as if from hand"
         for (PhysicalCard physicalCard : _stacked.get(playerId)) {
-            if (physicalCard.getZone() == Zone.STACKED) {
+            if (physicalCard.getZone() == Zone.STACKED
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.INTERRUPT
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION
+                    && physicalCard.getBlueprint().getCardCategory() != CardCategory.EPIC_EVENT) {
                 if (physicalCardVisitor.visitPhysicalCard(physicalCard))
                     return true;
             }

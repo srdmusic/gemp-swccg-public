@@ -10,14 +10,14 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.*;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayingCardEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotPlayUnlessImmuneToSpecificTitleModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifierType;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * The abstract class providing the common implementation for Interrupts.
@@ -76,7 +76,7 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
     public final List<Action> getTopLevelActions(String playerId, SwccgGame game, PhysicalCard self) {
         List<Action> actions = super.getTopLevelActions(playerId, game, self);
 
-        if (self.getZone() != Zone.STACKED && (checkPlayRequirements(playerId, game, self, null, null, null))) {
+        if (checkPlayRequirements(playerId, game, self, null, null, null)) {
             List<PlayInterruptAction> actionList1 = getGameTextTopLevelActions(playerId, game, self);
             if (actionList1 != null) {
                 actions.addAll(actionList1);
@@ -95,6 +95,8 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
                 actions.addAll(actionList3);
             }
         }
+
+        removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifier(game, self, actions);
 
         return actions;
     }
@@ -116,6 +118,8 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
                 actions.addAll(actionList1);
             }
         }
+
+        removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifier(game, self, actions);
 
         return actions;
     }
@@ -146,6 +150,8 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
             actionList.add(action);
         }
 
+        removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifierPlayCardAction(game, self, actionList);
+
         return actionList;
     }
 
@@ -174,6 +180,8 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
                 actions.addAll(actionList2);
             }
         }
+
+        removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifier(game, self, actions);
 
         return actions;
     }
@@ -204,6 +212,8 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
             }
         }
 
+        removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifierPlayCardAction(game, self, actions);
+
         return actions;
     }
 
@@ -220,7 +230,7 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
     public final List<Action> getOptionalAfterActions(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self) {
         List<Action> actions = new LinkedList<Action>();
 
-        if (self.getZone() != Zone.STACKED && checkPlayRequirements(playerId, game, self, null, null, null)) {
+        if (checkPlayRequirements(playerId, game, self, null, null, null)) {
             List<PlayInterruptAction> actionList1 = getGameTextOptionalAfterActions(playerId, game, effectResult, self);
             if (actionList1 != null) {
                 actions.addAll(actionList1);
@@ -239,6 +249,8 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
                 actions.addAll(actionList3);
             }
         }
+
+        removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifier(game, self, actions);
 
         return actions;
     }
@@ -301,6 +313,8 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
                 }
             }
         }
+
+        removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifierPlayCardAction(game, self, actions);
 
         return actions;
     }
@@ -443,6 +457,8 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
                 playCardActions.addAll(actionList2);
             }
         }
+
+        removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifierPlayCardAction(game, self, playCardActions);
 
         return playCardActions;
     }
@@ -692,5 +708,75 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
      */
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalDrawnAsDestinyTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         return null;
+    }
+
+    private void removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifier(SwccgGame game, PhysicalCard self, List<Action> actions) {
+        List<String> titles = new LinkedList<>();
+        for(Modifier m:game.getModifiersQuerying().getModifiersAffecting(game.getGameState(), self)) {
+            if (m.getModifierType() == ModifierType.MAY_NOT_BE_PLAYED_UNLESS_IMMUNE_TO_SPECIFIC_TITLE) {
+                titles.add(((MayNotPlayUnlessImmuneToSpecificTitleModifier)m).getTitle());
+            }
+        }
+
+        if (!titles.isEmpty()) {
+            // first check if the card has immunity to each title (like Crush The Rebellion making Evader immune to Sense)
+            boolean immuneToAll = true;
+            for(String title:titles) {
+                if (!game.getModifiersQuerying().isImmuneToCardTitle(game.getGameState(), self, title)) {
+                    immuneToAll = false;
+                }
+            }
+
+            if (!immuneToAll) {
+                for (Iterator<Action> iterator = actions.iterator(); iterator.hasNext(); ) {
+                    Action action = iterator.next();
+                    boolean remove = false;
+                    for (String title : titles) {
+                        if (!action.isImmuneTo(title))
+                            remove = true;
+                    }
+
+                    if (remove) {
+                        // Remove the current element from the iterator and the list.
+                        iterator.remove();
+                    }
+                }
+            }
+        }
+    }
+
+    private void removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifierPlayCardAction(SwccgGame game, PhysicalCard self, List<PlayCardAction> actions) {
+        List<String> titles = new LinkedList<>();
+        for(Modifier m:game.getModifiersQuerying().getModifiersAffecting(game.getGameState(), self)) {
+            if (m.getModifierType() == ModifierType.MAY_NOT_BE_PLAYED_UNLESS_IMMUNE_TO_SPECIFIC_TITLE) {
+                titles.add(((MayNotPlayUnlessImmuneToSpecificTitleModifier)m).getTitle());
+            }
+        }
+
+        if (!titles.isEmpty()) {
+            // first check if the card has immunity to each title (like Crush The Rebellion making Evader immune to Sense)
+            boolean immuneToAll = true;
+            for(String title:titles) {
+                if (!game.getModifiersQuerying().isImmuneToCardTitle(game.getGameState(), self, title)) {
+                    immuneToAll = false;
+                }
+            }
+
+            if (!immuneToAll) {
+                for (Iterator<PlayCardAction> iterator = actions.iterator(); iterator.hasNext(); ) {
+                    PlayCardAction action = iterator.next();
+                    boolean remove = false;
+                    for (String title : titles) {
+                        if (!action.isImmuneTo(title))
+                            remove = true;
+                    }
+
+                    if (remove) {
+                        // Remove the current element from the iterator and the list.
+                        iterator.remove();
+                    }
+                }
+            }
+        }
     }
 }
