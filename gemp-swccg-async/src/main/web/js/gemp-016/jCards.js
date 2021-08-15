@@ -3445,7 +3445,6 @@ var fixedImages = {
 "601_132_BACK":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/jabbasprizeback.gif",
 "601_133":"https://res.starwarsccg.org/cards/legacy/VirtualBlockDS-Light/large/dontdothatagain.gif",
 
-
 //playtesting
 "501_1":"/gemp-swccg/images/cards/JabbasPalace-Dark/reeyees.gif",
 "501_2":"/gemp-swccg/images/cards/Premiere-Dark/labria.gif",

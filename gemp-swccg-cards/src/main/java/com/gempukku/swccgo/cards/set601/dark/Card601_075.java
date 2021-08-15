@@ -31,6 +31,7 @@ public class Card601_075 extends AbstractUsedOrLostInterrupt {
         setGameText("USED: During battle, cancel and redraw a just drawn destiny. LOST: A just drawn battle or weapon destiny is -3");
         addIcons(Icon.DAGOBAH, Icon.LEGACY_BLOCK_2);
         setAsLegacy(true);
+        hideFromDeckBuilder();
     }
 
     @Override

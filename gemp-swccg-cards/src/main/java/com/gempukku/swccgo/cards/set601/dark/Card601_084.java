@@ -42,6 +42,7 @@ public class Card601_084 extends AbstractImperial {
         addKeywords(Keyword.GENERAL, Keyword.LEADER);
         setMatchingVehicleFilter(Filters.Blizzard_2);
         setAsLegacy(true);
+        hideFromDeckBuilder();
     }
 
     @Override

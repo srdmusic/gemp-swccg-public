@@ -43,6 +43,7 @@ public class Card601_086 extends AbstractImperial {
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.LEGACY_BLOCK_7);
         addKeywords(Keyword.LEADER, Keyword.MOFF);
         setAsLegacy(true);
+        hideFromDeckBuilder();
     }
 
     @Override

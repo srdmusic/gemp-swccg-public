@@ -30,6 +30,7 @@ public class Card601_081 extends AbstractSith {
         addIcons(Icon.CLOUD_CITY, Icon.WARRIOR, Icon.LEGACY_BLOCK_4);
         addPersona(Persona.GALEN);
         setAsLegacy(true);
+        hideFromDeckBuilder();
     }
 
     @Override

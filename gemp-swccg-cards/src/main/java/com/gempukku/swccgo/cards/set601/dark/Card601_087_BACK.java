@@ -42,6 +42,7 @@ public class Card601_087_BACK extends AbstractObjective {
                 "Flip this card if opponent has a unique (*) character of ability > 3 present at a battleground site.");
         addIcons(Icon.SPECIAL_EDITION, Icon.LEGACY_BLOCK_4);
         setAsLegacy(true);
+        hideFromDeckBuilder();
     }
 
     @Override

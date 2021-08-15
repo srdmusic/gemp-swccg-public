@@ -35,6 +35,7 @@ public class Card601_091 extends AbstractNormalEffect {
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.LEGACY_BLOCK_6);
         addImmuneToCardTitle(Title.Alter);
         setAsLegacy(true);
+        hideFromDeckBuilder();
     }
 
     @Override

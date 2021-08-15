@@ -31,6 +31,7 @@ public class Card601_093 extends AbstractUsedOrStartingInterrupt {
         addIcons(Icon.DEATH_STAR_II, Icon.LEGACY_BLOCK_7);
         setVirtualSuffix(true);
         setAsLegacy(true);
+        hideFromDeckBuilder();
     }
 
     @Override

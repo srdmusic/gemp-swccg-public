@@ -36,6 +36,7 @@ public class Card601_097 extends AbstractCapitalStarship {
         setPilotCapacity(4);
         setPassengerCapacity(6);
         setAsLegacy(true);
+        hideFromDeckBuilder();
     }
 
     @Override
