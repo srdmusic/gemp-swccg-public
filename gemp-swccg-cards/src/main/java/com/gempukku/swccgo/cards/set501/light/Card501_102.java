@@ -12,10 +12,8 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.MayDeployOtherCardsAsReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.NoForceLossFromCardModifier;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -31,7 +29,7 @@ public class Card501_102 extends AbstractSite {
     public Card501_102() {
         super(Side.LIGHT, "Coruscant: Jedi Temple Meditation Room", Title.Coruscant);
         setLocationDarkSideGameText("If Qui-Gon 'communing,' may deploy Theed Palace Generator from Reserve Deck; reshuffle.");
-        setLocationLightSideGameText("While Qui-Gon 'communing,' no Force drains here and opponent loses no Force to Your Destiny.");
+        setLocationLightSideGameText("While Qui-Gon 'communing,' no Force drains here.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("Coruscant: Jedi Temple Meditation Room");
@@ -54,7 +52,6 @@ public class Card501_102 extends AbstractSite {
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotForceDrainAtLocationModifier(self, new CommuningCondition(Filters.QuiGon)));
-        modifiers.add(new NoForceLossFromCardModifier(self, Filters.Your_Destiny, new CommuningCondition(Filters.QuiGon), game.getOpponent(playerOnDarkSideOfLocation)));
         return modifiers;
     }
 }

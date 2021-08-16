@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
@@ -27,8 +28,7 @@ public class Card501_090 extends AbstractNormalEffect {
     public Card501_090() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Tragedy Of Plagueis ", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on table. Once per turn may deploy a lightsaber on Sidious. " +
-                "If Sidious with a Dark Jedi, once per game may retrieve a character into hand. Sidious may be targeted by Force Lightning. [Immune to Alter.]");
+        setGameText("Deploy on table. Once per turn, may deploy a lightsaber on Sidious from Reserve Deck; reshuffle. Once per game, If Sidious with a Dark Jedi, may retrieve a character into hand. If Rule Of Two on table, Sidious may be targeted by Force Lightning. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("[Set 17] Tragedy Of Plagueis ");
@@ -37,7 +37,7 @@ public class Card501_090 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MayBeTargetedByModifier(self, Filters.Sidious, Title.Force_Lightning));
+        modifiers.add(new MayBeTargetedByModifier(self, Filters.Sidious, new OnTableCondition(self, Filters.title(Title.Rule_Of_Two)), Title.Force_Lightning));
         return modifiers;
     }
 
@@ -45,7 +45,7 @@ public class Card501_090 extends AbstractNormalEffect {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGEUS__DOWNLOAD_LIGHTSABER_ON_SIDIOUS;
+        GameTextActionId gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGUEIS__DOWNLOAD_LIGHTSABER_ON_SIDIOUS;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
@@ -67,7 +67,7 @@ public class Card501_090 extends AbstractNormalEffect {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGEUS__RETURN_CHARACTER_TO_HAND_FROM_LOST_PILE;
+        gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGUEIS__RETRIEVE_CHARACTER_INTO_HAND_FROM_LOST_PILE;
 
         if (GameConditions.canSpot(game, self, Filters.and(Filters.Sidious, Filters.with(self, Filters.Dark_Jedi)))
                 && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)
