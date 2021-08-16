@@ -745,6 +745,7 @@ public enum GameTextActionId {
     REACTOR_TERMINAL__ONCE_PER_TURN_OPTIONS(true, false, false, false, false, true),
     SUPPRESSIVE_FIRE__ACTIVATE_FORCE(false, false, false, false, false, true),
     UNTIL_WE_WIN_OR_THE_CHANCES_ARE_SPENT__CANCEL_DESTINY_OR_MOVE(true, false, false, false, false, true),
+    WOOKIEE_ROAR_V__ADD_POWER(false, false, false, false, false, true),
     VANEE_ACTIVATE_ONE_FORCE(false, false, false, false, false, true),
 
     // Actions that are for specified reasons
