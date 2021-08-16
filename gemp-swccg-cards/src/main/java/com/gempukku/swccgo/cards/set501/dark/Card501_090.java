@@ -45,7 +45,7 @@ public class Card501_090 extends AbstractNormalEffect {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGEUS__DOWNLOAD_LIGHTSABER_ON_SIDIOUS;
+        GameTextActionId gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGUEIS__DOWNLOAD_LIGHTSABER_ON_SIDIOUS;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
@@ -67,7 +67,7 @@ public class Card501_090 extends AbstractNormalEffect {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGEUS__RETURN_CHARACTER_TO_HAND_FROM_LOST_PILE;
+        gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGUEIS__RETRIEVE_CHARACTER_INTO_HAND_FROM_LOST_PILE;
 
         if (GameConditions.canSpot(game, self, Filters.and(Filters.Sidious, Filters.with(self, Filters.Dark_Jedi)))
                 && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)
