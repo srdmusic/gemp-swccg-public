@@ -313,6 +313,7 @@ var CardFilter = Class.extend({
             + "<option value='card'>Cards</option>"
             + "<option value='foil'>Foil Cards</option>"
             + "<option value='nonFoil'>Non-foil Cards</option>"
+            + "<option value='virtualAI'>Virtual AI Cards</option>"
             + "<option value='pack'>Packs/Boxes</option>"
             + "</select>");
 

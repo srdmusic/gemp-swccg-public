@@ -827,10 +827,33 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private int getIconCount(GameState gameState, PhysicalCard physicalCard, Icon iconInput, boolean skipEqualizeCheck, ModifierCollector modifierCollector) {
         Icon icon = iconInput;
         if (physicalCard.isCrossedOver()) {
+            /* May 2021 rules update
+            -Rebel becomes Imperial (or vice versa)
+            -Clone Army becomes Separatist (or vice versa)
+            -Resistance becomes First Order (or vice versa)
+            -Jedi Master becomes Dark Jedi Master (or vice versa)
+            -Republic becomes Sith (or vice versa)
+             */
             if (icon == Icon.IMPERIAL)
                 icon = Icon.REBEL;
             else if (icon == Icon.REBEL)
                 icon = Icon.IMPERIAL;
+            else if (icon == Icon.SEPARATIST)
+                icon = Icon.CLONE_ARMY;
+            else if (icon == Icon.CLONE_ARMY)
+                icon = Icon.SEPARATIST;
+            else if (icon == Icon.FIRST_ORDER)
+                icon = Icon.RESISTANCE;
+            else if (icon == Icon.RESISTANCE)
+                icon = Icon.FIRST_ORDER;
+            else if (icon == Icon.DARK_JEDI_MASTER)
+                icon = Icon.JEDI_MASTER;
+            else if (icon == Icon.JEDI_MASTER)
+                icon = Icon.DARK_JEDI_MASTER;
+            else if (icon == Icon.SITH)
+                icon = Icon.REPUBLIC;
+            else if (icon == Icon.REPUBLIC)
+                icon = Icon.SITH;
         }
 
         // Special case for Big One: Asteroid Cave or Space Slug Belly (planet site or creature site)

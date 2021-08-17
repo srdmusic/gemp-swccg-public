@@ -50,7 +50,7 @@ public class Card7_217 extends AbstractDevice {
 
     @Override
     protected Filter getGameTextValidToUseDeviceFilter(final SwccgGame game, final PhysicalCard self) {
-        return Filters.starship;
+        return Filters.or(Filters.starship, self);
     }
 
     @Override
