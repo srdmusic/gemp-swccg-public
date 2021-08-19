@@ -39,7 +39,7 @@ public class Card501_086 extends AbstractUsedInterrupt {
     public Card501_086() {
         super(Side.LIGHT, 3, Title.Wookiee_Roar, Uniqueness.UNIQUE);
         setLore("'GHRRRRAARRRRHG!'");
-        setGameText("When drawn for destiny, once per turn, choose one of your Wookiees to be power +2 for remainder of turn.\n"
+        setGameText("When drawn for destiny, once per turn, choose one of your Wookiees to be power +1 for remainder of turn.\n"
                 + "If a battle was just initiated involving your Wookiee, add one destiny to total power. OR Cancel an attempt by opponent to target your Wookiee to be lost or captured.");
         addIcons(Icon.A_NEW_HOPE, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setVirtualSuffix(true);
@@ -55,11 +55,11 @@ public class Card501_086 extends AbstractUsedInterrupt {
                 && GameConditions.isOncePerTurnForCardTitle(game, self, gameTextActionId)
                 && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.Wookiee, Filters.canBeTargetedBy(self)))) {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Add 2 to power of your Wookiee");
-            action.setActionMsg("Choose your Wookiee to be power +2 for remainder of turn");
+            action.setText("Add 1 to power of your Wookiee");
+            action.setActionMsg("Choose your Wookiee to be power +1 for remainder of turn");
             action.appendUsage(new OncePerTurnForCardTitleEffect(action));
             action.addAnimationGroup(self);
-            action.appendTargeting(new TargetCardOnTableEffect(action, self.getOwner(), "Choose your Wookiee to be power +2 for remainder of turn",
+            action.appendTargeting(new TargetCardOnTableEffect(action, self.getOwner(), "Choose your Wookiee to be power +1 for remainder of turn",
                     Filters.and(Filters.your(self), Filters.Wookiee, Filters.canBeTargetedBy(self))) {
                 @Override
                 protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
@@ -68,8 +68,8 @@ public class Card501_086 extends AbstractUsedInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
                             action.appendEffect(new AddUntilEndOfTurnModifierEffect(action,
-                                    new PowerModifier(self, finalTarget, 2)
-                                    , GameUtils.getCardLink(finalTarget)+" is power +2 for remainder of turn"));
+                                    new PowerModifier(self, finalTarget, 1)
+                                    , GameUtils.getCardLink(finalTarget)+" is power +1 for remainder of turn"));
                         }
                     });
                 }

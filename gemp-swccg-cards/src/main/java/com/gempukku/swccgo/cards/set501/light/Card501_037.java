@@ -14,11 +14,13 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
+import com.gempukku.swccgo.logic.effects.RestoreCardToNormalEffect;
+import com.gempukku.swccgo.logic.effects.StackCardFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
-import com.gempukku.swccgo.logic.timing.results.PlacedCardOutOfPlayFromTableResult;
+import com.gempukku.swccgo.logic.timing.PassthruEffect;
+import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
+import com.gempukku.swccgo.logic.timing.results.AboutToPlaceCardOutOfPlayFromTableResult;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +35,7 @@ public class Card501_037 extends AbstractEpicEventDeployable {
     public Card501_037() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Communing, Uniqueness.UNIQUE);
         setGameText("Deploy on table (only at start of game). You may not deploy Jedi with 'communing' in game text. " +
-                "One With The Force: If a Jedi was just lost (or placed out of play) from table, may stack that card here. " +
+                "One With The Force: If a Jedi is about to be lost (or placed out of play) from table, may stack that card here. " +
                 "The Living Force: Jedi stacked here are 'communing' and are considered out of play. Your total Force generation is +1 for each Jedi Master 'communing.' " +
                 "The Cosmic Force: Once per turn, may peek at the top X cards of your Force Pile or Lost Pile, where X = the number of Jedi 'communing'; may move one of those cards to the bottom of that pile.");
         addIcons(Icon.VIRTUAL_SET_16, Icon.EPISODE_I);
@@ -70,9 +72,9 @@ public class Card501_037 extends AbstractEpicEventDeployable {
             if (stackedCount>0) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
                 action.setText("Peek at top " + stackedCount + " card" + (stackedCount==1?"":"s") + " of  Force Pile or Lost Pile");
-                        // Update usage limit(s)
-                        action.appendUsage(
-                                new OncePerTurnEffect(action));
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerTurnEffect(action));
 
                 // Perform result(s)
                 action.appendEffect(new ChooseExistingCardPileEffect(action, playerId, playerId, Filters.or(Zone.FORCE_PILE, Zone.LOST_PILE)) {
@@ -93,31 +95,38 @@ public class Card501_037 extends AbstractEpicEventDeployable {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
-
         // Check condition(s)
-        if(TriggerConditions.justLost(game,effectResult,Filters.Jedi)
-                ||TriggerConditions.justPlacedOutOfPlayFromTable(game,effectResult,Filters.Jedi)) {
+        if (TriggerConditions.isAboutToBeLostIncludingAllCardsSituation(game, effectResult, Filters.Jedi)
+                || TriggerConditions.isAboutToBeForfeitedToLostPile(game, effectResult, Filters.Jedi)
+                || TriggerConditions.isAboutToBePlacedOutOfPlayFromTable(game, effectResult, Filters.Jedi)) {
 
             final PhysicalCard jedi;
-            if (TriggerConditions.justLost(game, effectResult, Filters.Jedi)) {
-                LostFromTableResult result = (LostFromTableResult) effectResult;
-                jedi = result.getCard();
+            if (TriggerConditions.isAboutToBePlacedOutOfPlayFromTable(game, effectResult, Filters.Jedi)) {
+                AboutToPlaceCardOutOfPlayFromTableResult result = (AboutToPlaceCardOutOfPlayFromTableResult) effectResult;
+                jedi = result.getCardToBePlacedOutOfPlay();
             } else {
-                PlacedCardOutOfPlayFromTableResult result = (PlacedCardOutOfPlayFromTableResult) effectResult;
-                jedi = result.getCard();
+                AboutToLeaveTableResult result = (AboutToLeaveTableResult) effectResult;
+                jedi = result.getCardAboutToLeaveTable();
             }
 
             if (jedi != null) {
-
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Stack " + GameUtils.getFullName(jedi) + " here");
                 action.setActionMsg("Stack " + GameUtils.getCardLink(jedi) + " on " + GameUtils.getCardLink(self));
-                // Perform result(s)
-                if (TriggerConditions.justLost(game, effectResult, Filters.Jedi)) {
-                    action.appendEffect(new StackOneCardFromLostPileEffect(action, jedi, self, false, false, true));
-                } else {
-                    //TODO probably need a new StackCardFromOutOfPlayEffect
-                }
+                action.appendEffect(new PassthruEffect(action) {
+                    @Override
+                    protected void doPlayEffect(SwccgGame game) {
+                        if (TriggerConditions.isAboutToBePlacedOutOfPlayFromTable(game, effectResult, Filters.Jedi)) {
+                            AboutToPlaceCardOutOfPlayFromTableResult result = (AboutToPlaceCardOutOfPlayFromTableResult) effectResult;
+                            result.getPreventableCardEffect().preventEffectOnCard(jedi);
+                        } else {
+                            AboutToLeaveTableResult result = (AboutToLeaveTableResult) effectResult;
+                            result.getPreventableCardEffect().preventEffectOnCard(jedi);
+                        }
+                        action.appendEffect(new StackCardFromTableEffect(action, jedi, self));
+                        action.appendEffect(new RestoreCardToNormalEffect(action, jedi, false));
+                    }
+                });
                 actions.add(action);
             }
         }

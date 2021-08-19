@@ -36,7 +36,7 @@ public class Card501_006 extends AbstractSite {
     public Card501_006() {
         super(Side.DARK, "Mustafar: Private Platform (Docking Bay)", Title.Mustafar);
         setLocationDarkSideGameText("Once per turn, may deploy a starfighter with 'Vader' in title here from Reserve Deck; reshuffle.");
-        setLocationLightSideGameText("Your docking bay transit to or from here requires 4 Force (+2 if Vader or Vaneé here, +4 if both).");
+        setLocationLightSideGameText("Your docking bay transit to or from here requires +4 Force (+6 Force if Vader or Vaneé here).");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 0);
         addIcons(Icon.EXTERIOR_SITE, Icon.INTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_16);
@@ -48,13 +48,9 @@ public class Card501_006 extends AbstractSite {
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         Condition vaderOrVaneeHere = new OrCondition(new HereCondition(self, Filters.Vader), new HereCondition(self, Filters.persona(Persona.VANEE)));
-        Condition vaderAndVaneeHere = new AndCondition(new HereCondition(self, Filters.Vader), new HereCondition(self, Filters.persona(Persona.VANEE)));
 
-        modifiers.add(new DockingBayTransitFromCostModifier(self, new NotCondition(vaderOrVaneeHere), 4, playerOnLightSideOfLocation));
-        modifiers.add(new DockingBayTransitToCostModifier(self, new NotCondition(vaderOrVaneeHere), new ConstantEvaluator(4), playerOnLightSideOfLocation));
-
-        modifiers.add(new DockingBayTransitFromCostModifier(self, vaderOrVaneeHere, new ConditionEvaluator(6, 8, vaderAndVaneeHere), playerOnLightSideOfLocation));
-        modifiers.add(new DockingBayTransitToCostModifier(self, vaderOrVaneeHere, new ConditionEvaluator(6, 8, vaderAndVaneeHere), playerOnLightSideOfLocation));
+        modifiers.add(new DockingBayTransitFromCostModifier(self, new ConditionEvaluator(4, 6, vaderOrVaneeHere), playerOnLightSideOfLocation));
+        modifiers.add(new DockingBayTransitToCostModifier(self,  new ConditionEvaluator(4, 6, vaderOrVaneeHere), playerOnLightSideOfLocation));
         return modifiers;
     }
 

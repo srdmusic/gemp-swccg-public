@@ -47,6 +47,7 @@ public enum Persona implements Filterable {
     GIDEON("Gideon"),
     GREEN_LEADER("Green Leader"),
     GRIEVOUS("Grievous"),
+    GROGU("Grogu"),
     GRONDORN("Grondorn"),
     GUNRAY("Gunray"),
     HAAKO("Haako"),

@@ -1,12 +1,12 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.conditions.DefendingBattleCondition;
 import com.gempukku.swccgo.cards.conditions.PresentAtCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.LinkedList;
@@ -22,7 +22,8 @@ public class Card501_012 extends AbstractAlien {
     public Card501_012() {
         super(Side.LIGHT, 2, 4, 2, 4, 6, "Grogu", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("During battle here, Interrupts may not be played unless they are [Immune to Sense]. Opponent may not target him with weapons unless each of your Mandalorians and non-[Episode I] Jedi present are 'hit.' Immune to attrition < 3.");
+        setGameText("While defending a battle, Interrupts may not be played unless they are [Immune to Sense]. Opponent may not target Grogu with weapons unless each of your Mandalorians and non-[Episode I] Jedi present are 'hit.' Immune to attrition < 3.");
+        addPersona(Persona.GROGU);
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("Grogu");
     }
@@ -33,8 +34,8 @@ public class Card501_012 extends AbstractAlien {
         final String opponent = game.getOpponent(playerId);
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotPlayUnlessImmuneToSpecificTitleModifier(self, Filters.Interrupt, new InBattleCondition(self), Title.Sense));
-        modifiers.add(new MayNotBeTargetedByWeaponsModifier(self, new PresentAtCondition(Filters.and(Filters.your(self), Filters.or(Filters.Mandalorian, Filters.and(Filters.not(Icon.EPISODE_I), Filters.Jedi))), Filters.here(self))));
+        modifiers.add(new MayNotPlayUnlessImmuneToSpecificTitleModifier(self, Filters.Interrupt, new DefendingBattleCondition(self), Title.Sense));
+        modifiers.add(new MayNotBeTargetedByWeaponsModifier(self, Filters.persona(Persona.GROGU), new PresentAtCondition(Filters.and(Filters.your(self), Filters.or(Filters.Mandalorian, Filters.and(Filters.not(Icon.EPISODE_I), Filters.Jedi))), Filters.here(self))));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
         return modifiers;
     }
