@@ -999,6 +999,7 @@ public interface Title {
     String That_Things_Operational = "That Thing's Operational";
     String Thats_One = "That's One";
     String They_Have_No_Idea_Were_Coming = "They Have No Idea We're Coming";
+    String They_Must_Never_Again_Leave_This_City = "They Must Never Again Leave This City";
     String Theyve_Shut_Down_The_Main_Reactor = "They've Shut Down The Main Reactor";
     String The_Camp = "The Camp";
     String The_Circle_Is_Now_Complete = "The Circle Is Now Complete";

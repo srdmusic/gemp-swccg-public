@@ -36,7 +36,7 @@ public class Card501_037 extends AbstractEpicEventDeployable {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Communing, Uniqueness.UNIQUE);
         setGameText("Deploy on table (only at start of game). You may not deploy Jedi with 'communing' in game text. " +
                 "One With The Force: If a Jedi is about to be lost (or placed out of play) from table, may stack that card here. " +
-                "The Living Force: Jedi stacked here are 'communing' and are considered out of play. Your total Force generation is +1 for each Jedi Master 'communing.' " +
+                "The Living Force: Jedi stacked here are 'communing' and are considered out of play. Your total Force generation is +1 for each Jedi 'communing.' " +
                 "The Cosmic Force: Once per turn, may peek at the top X cards of your Force Pile or Lost Pile, where X = the number of Jedi 'communing'; may move one of those cards to the bottom of that pile.");
         addIcons(Icon.VIRTUAL_SET_16, Icon.EPISODE_I);
         setTestingText("Communing");
@@ -55,7 +55,7 @@ public class Card501_037 extends AbstractEpicEventDeployable {
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.or(Filters.gameTextContains("communing"), Filters.gameTextContains("communings"))), playerId));
         modifiers.add(new CommuningModifier(self, Filters.and(Filters.stackedOn(self), Filters.Jedi)));
         modifiers.add(new ConsideredOutOfPlayModifier(self, Filters.stackedOn(self)));
-        modifiers.add(new TotalForceGenerationModifier(self, new StackedEvaluator(self, self, Filters.Jedi_Master), playerId));
+        modifiers.add(new TotalForceGenerationModifier(self, new StackedEvaluator(self, self, Filters.Jedi), playerId));
         return modifiers;
     }
 
