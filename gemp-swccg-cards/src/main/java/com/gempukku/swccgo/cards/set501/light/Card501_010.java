@@ -27,7 +27,7 @@ public class Card501_010 extends AbstractAlien {
     public Card501_010() {
         super(Side.LIGHT, 3, 3, 3, 2, 4, "Heavy Infantry Mandalorian", Uniqueness.RESTRICTED_3);
         setLore("");
-        setGameText("Permanent weapon is Flamethrower (may target a character for free; draw destiny; target hit if destiny +1 > defense value). May 'fly' (landspeed = 3). May move as a 'react'.");
+        setGameText("May 'fly' (landspeed = 3). May move as a 'react.' Permanent weapon is Flamethrower (may target a character or creature for free; draw destiny; target hit if destiny +1 > defense value).");
         setArmor(4);
         addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_16);
         setSpecies(Species.MANDALORIAN);
@@ -48,7 +48,7 @@ public class Card501_010 extends AbstractAlien {
             @Override
             public List<FireWeaponAction> getGameTextFireWeaponActions(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, int extraForceRequired, PhysicalCard sourceCard, boolean repeatedFiring, Filter targetedAsCharacter, Float defenseValueAsCharacter, Filter fireAtTargetFilter, boolean ignorePerAttackOrBattleLimit) {
                 FireWeaponActionBuilder actionBuilder = FireWeaponActionBuilder.startBuildPrep(playerId, game, sourceCard, self, this, forFree, extraForceRequired, repeatedFiring, targetedAsCharacter, defenseValueAsCharacter, fireAtTargetFilter, ignorePerAttackOrBattleLimit)
-                        .targetForFree(Filters.or(Filters.character, targetedAsCharacter), TargetingReason.TO_BE_HIT).finishBuildPrep();
+                        .targetForFree(Filters.or(Filters.character, targetedAsCharacter, Filters.creature), TargetingReason.TO_BE_HIT).finishBuildPrep();
                 if (actionBuilder != null) {
 
                     // Build action

@@ -34,7 +34,7 @@ public class Card501_009 extends AbstractNormalEffect {
                 "Kylo or a Dark Jedi Master, you may take the first weapons phase action. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Be With Me");
+        setTestingText("[Set 17] Be With Me");
     }
 
     @Override
