@@ -9,6 +9,7 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.modifiers.DeployCostForSimultaneouslyDeployingPilotModifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToTargetModifier;
 import com.gempukku.swccgo.logic.modifiers.MayDeployAsReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -49,6 +50,7 @@ public class Card501_057 extends AbstractCapitalStarship {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeployCostToTargetModifier(self, Filters.Vader, -2, self));
+        modifiers.add(new DeployCostForSimultaneouslyDeployingPilotModifier(self, Filters.Vader, -2, self));
         return modifiers;
     }
 

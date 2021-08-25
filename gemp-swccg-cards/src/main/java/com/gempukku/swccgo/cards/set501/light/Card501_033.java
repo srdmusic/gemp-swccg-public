@@ -30,7 +30,7 @@ public class Card501_033 extends AbstractRebelResistance {
     public Card501_033() {
         super(Side.LIGHT, 3, 3, 2, 3, 5, "Lando, Hero of the Rebellion", Uniqueness.UNIQUE);
         setLore("Leader. Resistance Agent.");
-        setGameText("During your turn, may reveal the top three cards of your Reserve Deck, take one starship into hand with a deploy cost < 6 (if possible), and shuffle your Reserve Deck. Adds one destiny to total power, while piloting or with Chewie or Jannah.");
+        setGameText("Adds one destiny to total power with Chewie or Jannah (or while piloting). During your turn, may reveal the top three cards of your Reserve Deck, take one starship with a deploy cost < 6 into hand (if possible), and shuffle your Reserve Deck.");
         addPersona(Persona.LANDO);
         addIcons(Icon.VIRTUAL_SET_16, Icon.PILOT, Icon.WARRIOR);
         addKeywords(Keyword.LEADER, Keyword.RESISTANCE_AGENT);
@@ -64,7 +64,7 @@ public class Card501_033 extends AbstractRebelResistance {
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new RevealTopCardsOfCardPileAndTakeCardsIntoHandEffect(action, playerId, playerId, Zone.RESERVE_DECK, Filters.and(Filters.starship, Filters.deployCostLessThanOrEqualTo(5)), 3));
+                    new RevealTopCardsOfCardPileAndTakeCardsIntoHandEffect(action, playerId, playerId, Zone.RESERVE_DECK, Filters.and(Filters.starship, Filters.deployCostLessThanOrEqualTo(5.99f)), 3));
             action.appendEffect(
                     new ShuffleReserveDeckEffect(action)
             );

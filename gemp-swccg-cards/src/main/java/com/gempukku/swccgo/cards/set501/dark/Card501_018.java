@@ -14,7 +14,6 @@ import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceGenerationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.TotalForceGenerationModifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -48,8 +47,8 @@ public class Card501_018 extends AbstractSystem {
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.or(Filters.character, Filters.vehicle)),
-                new AndCondition(new ControlsCondition(game.getOpponent(playerOnLightSideOfLocation), self)
-                ,new OnTableCondition(self, Filters.In_Complete_Control)),1, Filters.Naboo_site, true));
+                new AndCondition(new ControlsCondition(game.getOpponent(playerOnLightSideOfLocation), self),new OnTableCondition(self, Filters.In_Complete_Control)),
+                1, Filters.Naboo_site));
         return modifiers;
     }
 }

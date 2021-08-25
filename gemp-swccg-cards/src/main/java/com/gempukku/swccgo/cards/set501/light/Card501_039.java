@@ -39,7 +39,7 @@ public class Card501_039 extends AbstractJediMaster {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotDeployModifier(self, Filters.Rebel, new CommuningCondition(self), self.getOwner()));
         modifiers.add(new TotalPowerModifier(self, Filters.battleLocation, new CommuningCondition(self), new StackedEvaluator(self, Filters.Communing), self.getOwner()));
-        modifiers.add(new DestinyModifier(self, Filters.Jedi_Council_member, 1));
+        modifiers.add(new DestinyModifier(self, Filters.Jedi_Council_member, new CommuningCondition(self), 1));
         return modifiers;
     }
 

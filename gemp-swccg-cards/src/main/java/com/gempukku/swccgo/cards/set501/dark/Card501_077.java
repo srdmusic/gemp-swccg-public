@@ -53,9 +53,14 @@ public class Card501_077 extends AbstractDevice {
                     new DrawDestinyEffect(action, playerId) {
                         @Override
                         protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
+                            if (totalDestiny == null) {
+                                game.getGameState().sendMessage("Result: Failed due to failed destiny draw");
+                                return;
+                            }
+
                             float attemptTotal = game.getModifiersQuerying().getBlowAwayShieldGateAttemptTotal(game.getGameState(), totalDestiny);
 
-                            int scarifLocationsOccupiedByOpponent = Filters.countActive(game, self, Filters.and(Filters.Scarif_location, Filters.occupies(game.getOpponent(playerId))));
+                            int scarifLocationsOccupiedByOpponent = Filters.countActive(game, self, Filters.and(Filters.Scarif_location, Filters.occupies(game.getOpponent(self.getOwner()))));
                             attemptTotal = attemptTotal + scarifLocationsOccupiedByOpponent;
                             game.getGameState().sendMessage("Total: " + attemptTotal);
                             if (attemptTotal > 8) {

@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractCharacterDevice;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.PresentCondition;
 import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.PlayCardOptionId;
@@ -38,7 +39,7 @@ public class Card501_023 extends AbstractCharacterDevice {
                 "While present: adds 1 to training destiny draws and Force drains here; " +
                 "the first Force lost to a Force drain here is stacked here face down; " +
                 "opponent’s ability required to draw battle destiny here is +1 for each card stacked here.");
-        addIcons(Icon.VIRTUAL_SET_16);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("Jedi Holocron");
     }
 
@@ -57,7 +58,7 @@ public class Card501_023 extends AbstractCharacterDevice {
         Filter hasAttached = Filters.hasAttached(self);
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new EachTrainingDestinyModifier(self, hasAttached, 1));
+        modifiers.add(new EachTrainingDestinyModifier(self, Filters.jediTestTargetingApprentice(Filters.at(Filters.wherePresent(self))), new PresentCondition(self), 1));
         modifiers.add(new ForceDrainModifier(self, Filters.wherePresent(self, hasAttached), 1, self.getOwner()));
         modifiers.add(new IncreaseAbilityRequiredForBattleDestinyModifier(self, Filters.here(self), new StackedEvaluator(self), game.getOpponent(self.getOwner())));
         return modifiers;

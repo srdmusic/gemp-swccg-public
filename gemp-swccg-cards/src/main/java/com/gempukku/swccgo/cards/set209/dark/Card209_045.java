@@ -130,7 +130,13 @@ public class Card209_045 extends AbstractEpicEventDeployable {
                                             int numDestinyDraws = 1;
                                             if (modifiersQuerying.hasGameTextModification(gameState, self, ModifyGameTextType.COMMENCE_PRIMARY_IGNITION__ADDS_A_DESTINY_TO_TOTAL)
                                                     && Filters.Scarif_site.accepts(game, targetedSite)) {
-                                                numDestinyDraws = 2;
+                                                //add destiny for each modifier (could be > 1 from Expand The Empire)
+                                                for(Modifier m: modifiersQuerying.getModifiersAffecting(gameState, self)) {
+                                                    if (m.getModifierType() == ModifierType.MODIFY_GAME_TEXT
+                                                            && m.getModifyGameTextType(gameState, modifiersQuerying, self) == ModifyGameTextType.COMMENCE_PRIMARY_IGNITION__ADDS_A_DESTINY_TO_TOTAL) {
+                                                        numDestinyDraws++;
+                                                    }
+                                                }
                                             }
                                             action.appendEffect(
                                                     new DrawDestinyEffect(action, playerId, numDestinyDraws, DestinyType.EPIC_EVENT_AND_WEAPON_DESTINY) {
