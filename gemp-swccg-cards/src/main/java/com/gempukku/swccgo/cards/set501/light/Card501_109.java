@@ -25,14 +25,14 @@ import java.util.List;
  * Set: Set 16
  * Type: Interrupt
  * Subtype: Used
- * Title: Free Ride & Endor Celebration
+ * Title: Free Ride & Endor Celebration (V)
  */
 public class Card501_109 extends AbstractUsedInterrupt {
     public Card501_109() {
         super(Side.LIGHT, 5, "Free Ride & Endor Celebration", Uniqueness.UNIQUE);
         addComboCardTitles(Title.Free_Ride, Title.Endor_Celebration);
-        setGameText("Cancel Cloud City Occupation, Rebel Base Occupation, or Tatooine Occupation. [Immune to Sense.] OR During your turn, target opponent's combat vehicle or spy at a site you control; target is lost. OR Cancel a 'react' involving a combat vehicle (or at same site as Leia or Luke).");
-        addIcons(Icon.CORUSCANT);
+        setGameText("Cancel Cloud City Occupation, Rebel Base Occupation, or Tatooine Occupation. [Immune to Sense.] OR During your turn, target opponent's spy (or unpiloted combat vehicle) at a site you control; target is lost. OR Cancel an attempt to deploy or move a combat vehicle as a 'react.' OR Cancel a 'react' to or from same site as Leia or Luke.");
+        addIcons(Icon.CORUSCANT, Icon.VIRTUAL_SET_16);
         setVirtualSuffix(true);
         setTestingText("Free Ride & Endor Celebration (V)");
     }
@@ -71,13 +71,13 @@ public class Card501_109 extends AbstractUsedInterrupt {
         // Check condition(s)
         TargetingReason targetingReason = TargetingReason.TO_BE_LOST;
         Filter filter = Filters.and(Filters.at(Filters.controls(playerId)), Filters.opponents(playerId),
-                Filters.or(Filters.combat_vehicle, Filters.spy), Filters.canBeTargetedBy(self, targetingReason));
+                Filters.or(Filters.spy, Filters.and(Filters.unpiloted, Filters.combat_vehicle)), Filters.canBeTargetedBy(self, targetingReason));
 
         if (GameConditions.isDuringYourTurn(game, playerId)
                 && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_UNDERCOVER, filter)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Make combat vehicle or spy lost");
+            action.setText("Make spy or unpiloted combat vehicle lost");
             // Allow response(s)
             action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target card to be lost", SpotOverride.INCLUDE_UNDERCOVER, targetingReason, filter) {
                 @Override

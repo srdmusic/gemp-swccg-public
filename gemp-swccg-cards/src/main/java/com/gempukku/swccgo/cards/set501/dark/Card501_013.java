@@ -29,7 +29,7 @@ public class Card501_013 extends AbstractLostInterrupt {
     public Card501_013() {
         super(Side.DARK, 2, Title.A_Sith_Legend, Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Reveal a lightsaber from hand to take a matching Dark Jedi or Sith into hand from Reserve Deck; reshuffle (or vice versa). OR Once per game, cancel the game text of a non-Jedi character present with your Dark Jedi or Inquisitor for remainder of turn.");
+        setGameText("Reveal a lightsaber from hand to take a matching Dark Jedi or Sith into hand from Reserve Deck; reshuffle (or vice versa). OR Once per game, cancel the game text of an opponent's non-Jedi character present with your Dark Jedi or Inquisitor for remainder of turn.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("A Sith Legend");
     }
@@ -81,7 +81,7 @@ public class Card501_013 extends AbstractLostInterrupt {
 
         // Check condition(s)
         Filter darkJediOrInquisitor = Filters.and(Filters.your(self), Filters.or(Filters.Dark_Jedi, Filters.inquisitor));
-        Filter character = Filters.and(Filters.non_Jedi_character, Filters.presentWith(self, darkJediOrInquisitor));
+        Filter character = Filters.and(Filters.opponents(self), Filters.non_Jedi_character, Filters.presentWith(self, darkJediOrInquisitor));
 
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_UNDERCOVER, character)) {

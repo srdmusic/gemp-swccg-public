@@ -11,6 +11,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromReserveDeckOnTopOfCardPileEffect;
+import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
@@ -32,10 +33,11 @@ public class Card501_011 extends AbstractAlien {
     public Card501_011() {
         super(Side.LIGHT, 3, 4, 3, 2, 4, "Offworld Jawas", Uniqueness.RESTRICTED_2);
         setLore("Jawa. Scavenger. Thief.");
-        setGameText("Draws one battle destiny if unable to otherwise. If you just verified opponent's Reserve Deck, may use 1 Force to search that Reserve Deck and place one weapon, device, or unpiloted starship found there in Lost Pile; if none there, opponent loses 1 Force.");
+        setGameText("Draws one battle destiny if unable to otherwise. If you just verified opponent's Reserve Deck, may use 1 Force to search that Reserve Deck and place one device, weapon, or unpiloted starship there in Lost Pile; reshuffle. If none there, opponent loses 1 Force.");
         setSpecies(Species.JAWA);
         addKeywords(Keyword.SCAVENGER, Keyword.THIEF);
-        addIcons(Icon.WARRIOR, Icon.WARRIOR, Icon.WARRIOR, Icon.VIRTUAL_SET_16);
+        addIcons(Icon.VIRTUAL_SET_16);
+        addIcon(Icon.WARRIOR, 3);
         setTestingText("Offworld Jawas");
     }
 
@@ -51,18 +53,19 @@ public class Card501_011 extends AbstractAlien {
         final String opponent = game.getOpponent(playerId);
         Filter filter = Filters.or(Filters.weapon, Filters.device, Filters.and(Filters.unpiloted, Filters.starship));
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_REACT_MOVE_OTHER_CARDS;
+        GameTextActionId gameTextActionId = GameTextActionId.OFFWORLD_JAWAS__SEARCH_RESERVE_DECK;
 
         if (TriggerConditions.justVerifiedOpponentsReserveDeck(game, effectResult, playerId)
                 && GameConditions.canSearchOpponentsReserveDeck(game, playerId, self, gameTextActionId)
                 && GameConditions.canUseForce(game, playerId, 1)) {
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Search opponent's Reserve Deck");
+            action.setActionMsg("Search opponent's Reserve Deck for a device, weapon, or unpiloted starship");
             action.appendCost(
                     new UseForceEffect(action, playerId, 1)
             );
             action.appendEffect(
-                    new ChooseCardsFromReserveDeckEffect(action, playerId, opponent, 0, 1, filter) {
+                    new ChooseCardsFromReserveDeckEffect(action, playerId, opponent, 1, 1, filter) {
                         @Override
                         protected void cardsSelected(SwccgGame game, Collection<PhysicalCard> selectedCards) {
                             if (!selectedCards.isEmpty()) {
@@ -71,8 +74,10 @@ public class Card501_011 extends AbstractAlien {
                                     action.appendEffect(
                                             new PutCardFromReserveDeckOnTopOfCardPileEffect(action, selectedCard, Zone.LOST_PILE, false)
                                     );
+                                    action.appendEffect(new ShuffleReserveDeckEffect(action, opponent));
                                 }
                             } else {
+                                action.appendEffect(new ShuffleReserveDeckEffect(action, opponent));
                                 action.appendEffect(
                                         new LoseForceEffect(action, opponent, 1)
                                 );
