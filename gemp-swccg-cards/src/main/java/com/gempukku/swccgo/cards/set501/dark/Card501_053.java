@@ -33,7 +33,7 @@ public class Card501_053 extends AbstractSite {
         setLocationLightSideGameText("If opponent's [Special Edition] objective on table, gains one [Light Side] icon and Force drain +2 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 0);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_16);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("Coruscant: The Works");
     }
 
@@ -50,17 +50,12 @@ public class Card501_053 extends AbstractSite {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextDarkSideTopLevelActions(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionId = GameTextActionId.THE_WORKS__DEPLOY_SIDIOUS;
 
-        if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId)
-                && GameConditions.isDuringYourPhase(game, playerOnDarkSideOfLocation, Phase.DEPLOY)
-                && !GameConditions.canSpot(game, self, Filters.Sidious)) {
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerOnDarkSideOfLocation, self, gameTextActionId, Persona.SIDIOUS)) {
             TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy non-[Theed Palace] Sidious here from Reserve Deck");
             action.setActionMsg("Deploy non-[Theed Palace] Sidious here from Reserve Deck");
-            action.appendUsage(
-                    new OncePerTurnEffect(action)
-            );
             action.appendEffect(
                     new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Filters.not(Filters.icon(Icon.THEED_PALACE)), Filters.Sidious), Filters.here(self), true)
             );

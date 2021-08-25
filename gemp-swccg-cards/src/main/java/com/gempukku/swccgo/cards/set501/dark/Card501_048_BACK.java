@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.evaluators.MultiplyEvaluator;
 import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
@@ -28,16 +29,16 @@ import java.util.List;
 /**
  * Set: Set 16
  * Type: Objective 
- * Title: On The Verge Of Greatness / Deploy The Garrison!
+ * Title: On The Verge Of Greatness / Taking Control Of The Weapon
  */
 public class Card501_048_BACK extends AbstractObjective {
     public Card501_048_BACK() {
-        super(Side.DARK, 7, Title.Deploy_The_Garrison);
-        setGameText("While this side up, your Force generation is +2 for each 'blown away' Scarif site. Tarkin Doctrine is immune to Alter and, when it initiates Force loss, may take any one card into hand from Force Pile. Once per turn, if opponent's character just lost from your site, may place it out of play unless opponent loses 1 Force. While Tarkin on table, add 3 to total of Commence Primary Ignition.\n" +
+        super(Side.DARK, 7, Title.Taking_Control_Of_The_Weapon);
+        setGameText("While this side up, your Force generation is +2 for each 'blown away' Scarif site. Tarkin Doctrine is immune to Alter and, when it initiates Force loss, may take any one card into hand from Force Pile. Once per turn, if opponent's character just lost from your site, may place it out of play unless opponent loses 1 Force. Tarkin adds 3 to total of Commence Primary Ignition.\n" +
                 "Flip this card if you have no leaders on Scarif.\n" +
-                "Place this card (and Shield Gate) out of play if Shield Gate or Death Star \"blown away.\"");
+                "Place this card out of play if Shield Gate not on table or if Death Star has been 'blown away.'");
         addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("Deploy The Garrison!");
+        setTestingText("Taking Control Of The Weapon");
     }
 
     @Override
@@ -45,7 +46,7 @@ public class Card501_048_BACK extends AbstractObjective {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceGenerationModifier(self, new OnTableEvaluator(self, Filters.and(Filters.partOfSystem(Title.Scarif), Filters.blown_away)), playerId));
+        modifiers.add(new ForceGenerationModifier(self, new MultiplyEvaluator(2, new OnTableEvaluator(self, Filters.and(Filters.partOfSystem(Title.Scarif), Filters.blown_away))), playerId));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.Tarkin_Doctrine, Title.Alter));
         modifiers.add(new CommencePrimaryIgnitionTotalModifier(self, new OnTableCondition(self, Filters.Tarkin),3));
         return modifiers;
@@ -115,8 +116,8 @@ public class Card501_048_BACK extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Death_Star, true)))
             || (TriggerConditions.isTableChanged(game, effectResult)
-                && (game.getModifiersQuerying().isShieldGateBlownAway(game.getGameState())
-                        || GameConditions.canSpot(game, self, Filters.and(Filters.blown_away, Filters.or(Filters.and(Filters.system, Filters.title(Title.Death_Star, true)), Filters.Shield_Gate)))))) {
+                && (!GameConditions.canSpot(game, self, Filters.Shield_Gate)
+                        || GameConditions.canSpot(game, self, Filters.and(Filters.blown_away, Filters.and(Filters.system, Filters.title(Title.Death_Star, true))))))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Place out of play");

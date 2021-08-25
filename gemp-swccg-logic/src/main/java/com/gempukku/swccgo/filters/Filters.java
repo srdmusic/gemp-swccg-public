@@ -17505,7 +17505,6 @@ public class Filters {
     public static final Filter dejarik = Filters.keyword(Keyword.DEJARIK);
     public static final Filter Demotion = Filters.title(Title.Demotion);
     public static final Filter Dengar = Filters.persona(Persona.DENGAR);
-    public static final Filter Deploy_The_Garrison = Filters.title(Title.Deploy_The_Garrison);
     public static final Filter Deployable_By_SYCFA = Filters.and(Filters.side(Side.DARK), Filters.or(Filters.Alderaan_system, Filters.title(Title.Jedha_City)));
     public static final Filter Deploys_aboard_Blockade_Flagship = Filters.or(Filters.persona(Persona.BLOCKADE_FLAGSHIP), Filters.locationAndCardsAtLocation(Filters.siteOfStarshipOrVehicle(Persona.BLOCKADE_FLAGSHIP, false)));
     public static final Filter Deploys_aboard_Executor = Filters.or(Filters.persona(Persona.EXECUTOR), Filters.locationAndCardsAtLocation(Filters.siteOfStarshipOrVehicle(Persona.EXECUTOR, false)));
@@ -18515,6 +18514,7 @@ public class Filters {
     public static final Filter Starkiller_Base_location = Filters.partOfSystem(Title.Starkiller_Base);
     public static final Filter starship = Filters.type(CardType.STARSHIP);
     public static final Filter starship_cannon = Filters.and(CardType.WEAPON, CardSubtype.STARSHIP, Filters.or(Keyword.CANNON, Keyword.ION_CANNON, Keyword.LASER_CANNON));
+    public static final Filter Taking_Control_Of_The_Weapon = Filters.title(Title.Taking_Control_Of_The_Weapon);
 
     /**
      * Wrapper method to allow other static filters to access the wrapped filter.

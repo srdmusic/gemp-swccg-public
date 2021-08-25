@@ -28,7 +28,7 @@ import java.util.*;
 public class Card501_013 extends AbstractLostInterrupt {
     public Card501_013() {
         super(Side.DARK, 2, Title.A_Sith_Legend, Uniqueness.UNIQUE);
-        setLore("");
+        setLore("At his peak, no one could stand up to the Dark Lord of the Sith. His superior tactics devastated those who opposed him.");
         setGameText("Reveal a lightsaber from hand to take a matching Dark Jedi or Sith into hand from Reserve Deck; reshuffle (or vice versa). OR Once per game, cancel the game text of an opponent's non-Jedi character present with your Dark Jedi or Inquisitor for remainder of turn.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("A Sith Legend");

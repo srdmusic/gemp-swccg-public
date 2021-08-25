@@ -60,7 +60,8 @@ public class Card501_081 extends AbstractAlienRepublic {
 
         if (GameConditions.isDuringBattleWithParticipant(game, self)
                 && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.isAllAbilityInBattleProvidedBy(game, playerId, Filters.or(Filters.Yoda, Filters.smuggler, Filters.Wookiee))) {
+                && GameConditions.isAllAbilityInBattleProvidedBy(game, playerId, Filters.or(Filters.Yoda, Filters.smuggler, Filters.Wookiee))
+                && GameConditions.canAddDestinyDrawsToPower(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Add one destiny to total power");

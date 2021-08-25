@@ -83,7 +83,8 @@ public class Card501_086 extends AbstractUsedInterrupt {
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
         // Check condition(s)
         if (TriggerConditions.battleInitiated(game, effectResult)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.Wookiee))) {
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.Wookiee))
+                && GameConditions.canAddDestinyDrawsToPower(game, playerId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Add one destiny to power");

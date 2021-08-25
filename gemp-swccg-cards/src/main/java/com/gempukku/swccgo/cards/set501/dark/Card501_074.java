@@ -35,7 +35,7 @@ import java.util.List;
 public class Card501_074 extends AbstractSite {
     public Card501_074() {
         super(Side.DARK, Title.Scarif_Citadel_Tower, Title.Scarif);
-        setLocationDarkSideGameText(" If a player just Force drained here, they may raise a converted Scarif location to the top.");
+        setLocationDarkSideGameText("If a player just Force drained here, they may raise a converted Scarif location to the top.");
         setLocationLightSideGameText("Unless your spy here, total ability of 6 or more required for you to draw battle destiny here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 1);
