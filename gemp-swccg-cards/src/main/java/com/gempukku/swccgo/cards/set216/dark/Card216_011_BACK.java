@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.dark;
+package com.gempukku.swccgo.cards.set216.dark;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -18,7 +18,10 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.decisions.YesNoDecision;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromForcePileEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.CommencePrimaryIgnitionTotalModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceGenerationModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 
@@ -31,14 +34,13 @@ import java.util.List;
  * Type: Objective 
  * Title: On The Verge Of Greatness / Taking Control Of The Weapon
  */
-public class Card501_048_BACK extends AbstractObjective {
-    public Card501_048_BACK() {
+public class Card216_011_BACK extends AbstractObjective {
+    public Card216_011_BACK() {
         super(Side.DARK, 7, Title.Taking_Control_Of_The_Weapon);
         setGameText("While this side up, your Force generation is +2 for each 'blown away' Scarif site. Tarkin Doctrine is immune to Alter and, when it initiates Force loss, may take any one card into hand from Force Pile. Once per turn, if opponent's character just lost from your site, may place it out of play unless opponent loses 1 Force. Tarkin adds 3 to total of Commence Primary Ignition.\n" +
                 "Flip this card if you have no leaders on Scarif.\n" +
                 "Place this card out of play if Shield Gate not on table or if Death Star has been 'blown away.'");
         addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("Taking Control Of The Weapon");
     }
 
     @Override

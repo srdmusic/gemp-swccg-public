@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.dark;
+package com.gempukku.swccgo.cards.set216.light;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -28,16 +28,15 @@ import java.util.List;
  * Set: Set 16
  * Type: Character
  * Subtype: Alien
- * Title: Alien Mob
+ * Title: Alien Rabble
  */
-public class Card501_001 extends AbstractAlien {
-    public Card501_001() {
-        super(Side.DARK, 2, 4, 4, 2, 5, "Alien Mob", Uniqueness.DIAMOND_1);
+public class Card216_020 extends AbstractAlien {
+    public Card216_020() {
+        super(Side.LIGHT, 2, 4, 4, 2, 5, "Alien Rabble", Uniqueness.DIAMOND_1);
         setLore("");
-        setGameText("This card has your Rep’s species. When deployed, may retrieve a Rep or place a Rep stacked on your Objective in Used Pile. Once per turn, if Fearless And Inventive on table and you just retrieved Force, may place top card of Used Pile on Force Pile.");
+        setGameText("This card has your Rep’s species. When deployed, may retrieve a Rep or place a Rep stacked on your Objective in Used Pile. Once per turn, if No Love For The Empire on table and you just retrieved Force, may place top card of Used Pile on Force Pile.");
         addIcons(Icon.VIRTUAL_SET_16);
         addIcon(Icon.WARRIOR, 3);
-        setTestingText("Alien Mob");
     }
 
     @Override
@@ -90,7 +89,7 @@ public class Card501_001 extends AbstractAlien {
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
         if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canSpot(game, self, Filters.Fearless_And_Inventive)
+                && GameConditions.canSpot(game, self, Filters.No_Love_For_The_Empire)
                 && GameConditions.hasUsedPile(game, playerId)
                 && TriggerConditions.justRetrievedForce(game, effectResult, playerId)) {
             OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
