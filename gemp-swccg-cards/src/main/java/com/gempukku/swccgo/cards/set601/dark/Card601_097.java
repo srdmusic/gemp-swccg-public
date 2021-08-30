@@ -10,10 +10,7 @@ import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeModifiedByModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -36,7 +33,6 @@ public class Card601_097 extends AbstractCapitalStarship {
         setPilotCapacity(4);
         setPassengerCapacity(6);
         setAsLegacy(true);
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -51,11 +47,8 @@ public class Card601_097 extends AbstractCapitalStarship {
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new ImmuneToAttritionModifier(self, new OnTableCondition(self, Filters.and(Filters.opponents(self), Icon.REFLECTIONS_II, Filters.Objective))));
-        //TODO should actually be "may not be increased by" instead of "modified"
-
-        modifiers.add(new ForceDrainsMayNotBeModifiedByModifier(self, Filters.and(Filters.opponents(self), Filters.starship), opponent));
-        modifiers.add(new ForceDrainsMayNotBeModifiedByModifier(self, Filters.and(Filters.opponents(self), Filters.starship), playerId));
-        //TODO Opponent's starships may not add [Light Side]
+        modifiers.add(new CancelForceDrainBonusesFromCardModifier(self, Filters.and(Filters.opponents(self), Filters.starship)));
+        modifiers.add(new MayNotAddIconModifier(self, Filters.and(Filters.opponents(self), Filters.starship), Icon.LIGHT_FORCE));
         return modifiers;
     }
 }

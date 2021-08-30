@@ -19,6 +19,7 @@ import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,7 +37,6 @@ public class Card601_073 extends AbstractNormalEffect {
         addIcons(Icon.LEGACY_BLOCK_5, Icon.SPECIAL_EDITION);
         addImmuneToCardTitle(Title.Alter);
         setAsLegacy(true);
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -99,10 +99,9 @@ public class Card601_073 extends AbstractNormalEffect {
             action.setText("Deploy a location");
             action.appendUsage(new OncePerTurnEffect(action));
             action.appendCost(new UseForceEffect(action, playerId, 2));
+            Collection<PhysicalCard> locationsOnTable = Filters.filterTopLocationsOnTable(game, Filters.any);
             action.appendEffect(new DeployCardFromReserveDeckEffect(action,
-                    Filters.and(Filters.not(Filters.war_room), Filters.not(Filters.sector), Filters.planet_location, Filters.battleground
-                    //TODO not on table
-                    ),
+                    Filters.and(Filters.not(Filters.war_room), Filters.not(Filters.sector), Filters.planet_location, Filters.battleground, Filters.not(Filters.sameTitleAs(self, Filters.in(locationsOnTable)))),
                     true));
 
             actions.add(action);

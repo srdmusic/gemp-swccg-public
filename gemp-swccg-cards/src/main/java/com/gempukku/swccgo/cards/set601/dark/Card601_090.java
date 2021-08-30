@@ -35,7 +35,6 @@ public class Card601_090 extends AbstractAlienImperial {
         addIcons(Icon.PREMIUM, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.LEGACY_BLOCK_4);
         addKeywords(Keyword.FEMALE);
         setAsLegacy(true);
-        hideFromDeckBuilder();
     }
 
     @Override

@@ -35,7 +35,6 @@ public class Card601_079 extends AbstractUsedOrLostInterrupt {
         setGameText("USED: Cancel an attempt to use a character weapon to target your character of ability > 4. LOST: Use 2 Force to cancel an attempt to use a [Permanent Weapon] weapon to target your character.");
         addIcons(Icon.CLOUD_CITY, Icon.LEGACY_BLOCK_6);
         setAsLegacy(true);
-        hideFromDeckBuilder();
     }
 
     @Override

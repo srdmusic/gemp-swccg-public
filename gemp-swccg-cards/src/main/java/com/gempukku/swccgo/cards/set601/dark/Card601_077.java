@@ -31,7 +31,6 @@ public class Card601_077 extends AbstractNormalEffect {
         addIcons(Icon.DEATH_STAR_II, Icon.LEGACY_BLOCK_3);
         setVirtualSuffix(true);
         setAsLegacy(true);
-        hideFromDeckBuilder();
     }
 
     @Override

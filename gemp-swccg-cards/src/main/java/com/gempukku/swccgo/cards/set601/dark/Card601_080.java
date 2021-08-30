@@ -36,7 +36,6 @@ public class Card601_080 extends AbstractLostInterrupt {
         setGameText("Once per game, choose: During battle, use 2 Force to target your Dark Jedi and opponent's character or equal or lesser ability present. Both targets are excluded from battle. OR Exchange two cards from hand with any one card from Force Pile; reshuffle.");
         addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I, Icon.LEGACY_BLOCK_5);
         setAsLegacy(true);
-        hideFromDeckBuilder();
     }
 
     @Override
