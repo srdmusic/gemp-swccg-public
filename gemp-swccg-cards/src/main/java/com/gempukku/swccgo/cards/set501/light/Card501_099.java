@@ -1,14 +1,21 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractDroid;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.ModelType;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.cards.conditions.AtCondition;
+import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
+import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.modifiers.*;
+
+import java.util.LinkedList;
+import java.util.List;
 
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Character
  * Subtype: Droid
  * Title: R3-A2 (Arthree-Aytoo) (V)
@@ -22,6 +29,16 @@ public class Card501_099 extends AbstractDroid {
         addModelType(ModelType.ASTROMECH);
         setVirtualSuffix(true);
         setTestingText("[Set 17] R3-A2 (Arthree-Aytoo) (V)");
-        hideFromDeckBuilder();
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        Filter filter = Filters.and(Filters.your(self), Filters.starship, Filters.here(self),
+                Filters.hasAboard(self, Filters.and(Filters.astromech_droid, Filters.character)));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new PowerModifier(self, filter, new ConditionEvaluator(1, 2, new AtCondition(self, Filters.Hoth_system))));
+        modifiers.add(new ImmuneToTitleModifier(self, filter, Title.Lateral_Damage));
+        modifiers.add(new MayMoveOtherCardsAsReactToLocationModifier(self, "Move a starship as a react", self.getOwner(), filter, Filters.or(Filters.system, Filters.sector)));
+        return modifiers;
     }
 }

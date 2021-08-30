@@ -33,15 +33,15 @@ import java.util.List;
 /**
  * Set: Set 16
  * Type: Objective
- * Title: On The Verge Of Greatness / Deploy The Garrison!
+ * Title: On The Verge Of Greatness / Taking Control Of The Weapon
  */
 public class Card501_048 extends AbstractObjective {
     public Card501_048() {
         super(Side.DARK, 0, Title.On_The_Verge_Of_Greatness);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, Shield Gate, and [Set 9] Commence Primary Ignition.\n" +
+        setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, Commence Primary Ignition, and Shield Gate.\n" +
                 "For remainder of game, you may not deploy characters of ability > 4 (except Vader). Vader is power +2 and he (or a Star Destroyer he is piloting) may make a regular move to a battle just initiated.\n" +
-                "While this side up, once per turn, may deploy a site or Imperial trooper to Scarif from Reserve Deck; reshuffle.\n" +
+                "While this side up, once per turn, may [download] a site (or Imperial trooper) to Scarif.\n" +
                 "Flip this card if Krennic or Tarkin on Scarif and Death Star orbiting Scarif.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("On The Verge Of Greatness");
@@ -65,10 +65,17 @@ public class Card501_048 extends AbstractObjective {
                     }
                 });
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.title("Scarif: Citadel Tower"), true, false) {
+                new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Scarif_Citadel_Tower), true, false) {
                     @Override
                     public String getChoiceText() {
                         return "Choose Citadel Tower to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.Commence_Primary_Ignition, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Commence Primary Ignition to deploy";
                     }
                 });
         action.appendRequiredEffect(
@@ -76,13 +83,6 @@ public class Card501_048 extends AbstractObjective {
                     @Override
                     public String getChoiceText() {
                         return "Choose Shield Gate to deploy";
-                    }
-                });
-        action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_9, Filters.Commence_Primary_Ignition), true, false) {
-                    @Override
-                    public String getChoiceText() {
-                        return "Choose Commence Primary Ignition to deploy";
                     }
                 });
         return action;

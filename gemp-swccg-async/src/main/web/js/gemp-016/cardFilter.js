@@ -154,7 +154,7 @@ var CardFilter = Class.extend({
             + "<option value='open'>Open</option>"
             + "<option value='jawa'>Jawa</option>"
             + "<option value='open_no_shields'>Open (no shields)</option>"
-            + "<option value='open_no_virtual'>Open (no v-cards)</option>"
+            + "<option value='open_no_virtual'>Decipher Cards Only</option>"
             + "<option value='open_no_shields_no_virtual'>Open (no shields / no v-cards)</option>"
             + "<option value='classic'>Classic</option>"
             + "<option value='classic_no_virtual'>Classic (no virtual cards)</option>"
@@ -313,6 +313,7 @@ var CardFilter = Class.extend({
             + "<option value='card'>Cards</option>"
             + "<option value='foil'>Foil Cards</option>"
             + "<option value='nonFoil'>Non-foil Cards</option>"
+            + "<option value='virtualAI'>Virtual AI Cards</option>"
             + "<option value='pack'>Packs/Boxes</option>"
             + "</select>");
 

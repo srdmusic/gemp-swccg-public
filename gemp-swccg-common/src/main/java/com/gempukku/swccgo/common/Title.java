@@ -264,7 +264,6 @@ public interface Title {
     String Demotion = "Demotion";
     String Den_Of_Thieves = "Den Of Thieves";
     String Dengars_Blaster_Carbine =  "Dengar's Blaster Carbine";
-    String Deploy_The_Garrison = "Deploy The Garrison!";
     String Derlin = "Major Bren Derlin";
     String Desert_Heart = "Tatooine: Desert Heart";
     String Desert_Landing_Site = "Tatooine: Desert Landing Site";
@@ -974,6 +973,7 @@ public interface Title {
     String Take_The_Initiative = "Take the Initiative";
     String Take_Them_Away = "Take Them Away";
     String Take_Your_Fathers_Place = "Take Your Father's Place";
+    String Taking_Control_Of_The_Weapon = "Taking Control Of The Weapon";
     String Takeel = "Takeel";
     String Takodana = "Takodana";
     String Tala_1 = "Tala 1";
@@ -1001,6 +1001,7 @@ public interface Title {
     String That_Things_Operational = "That Thing's Operational";
     String Thats_One = "That's One";
     String They_Have_No_Idea_Were_Coming = "They Have No Idea We're Coming";
+    String They_Must_Never_Again_Leave_This_City = "They Must Never Again Leave This City";
     String Theyve_Shut_Down_The_Main_Reactor = "They've Shut Down The Main Reactor";
     String The_Camp = "The Camp";
     String The_Circle_Is_Now_Complete = "The Circle Is Now Complete";

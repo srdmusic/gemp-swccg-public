@@ -8,14 +8,12 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
 import com.gempukku.swccgo.logic.modifiers.EachWeaponDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.PassthruEffect;
-import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -30,8 +28,8 @@ import java.util.List;
 public class Card501_034 extends AbstractResistance {
     public Card501_034() {
         super(Side.LIGHT, 3, 2, 2, 2, 5, Title.Paige, Uniqueness.UNIQUE);
-        setLore("Female Gunner.");
-        setGameText("While out of play, adds 1 to your total power where you have a resistance character of ability = 2. Adds 1 to weapon destiny and defense value of anything she is aboard as a passenger. When lost may place of out play.");
+        setLore("Female gunner.");
+        setGameText("Adds 1 to weapon destiny draws and defense value of anything she is aboard as a passenger. While out of play, adds 1 to your total power where you have a Resistance character of ability = 2. If just lost, may place her out of play.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_16);
         addKeywords(Keyword.FEMALE, Keyword.GUNNER);
         setTestingText("Paige Tico");
@@ -53,25 +51,18 @@ public class Card501_034 extends AbstractResistance {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<OptionalGameTextTriggerAction> getGameTextLeavesTableOptionalTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        String opponent = game.getOpponent(playerId);
+
         // Check condition(s)
-        if (TriggerConditions.isAboutToBeLost(game, effectResult, self)
-                || TriggerConditions.isAboutToBeForfeitedToLostPile(game, effectResult, self)) {
-            final AboutToLeaveTableResult result = (AboutToLeaveTableResult) effectResult;
-            final PhysicalCard cardToBeLost = result.getCardAboutToLeaveTable();
+        if (TriggerConditions.justLost(game, effectResult, self)) {
+
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Place " + GameUtils.getFullName(cardToBeLost) + " out of play");
-            action.setActionMsg("Place " + GameUtils.getCardLink(cardToBeLost) + " out of play");
+            action.setText("Place out of play");
+            action.setActionMsg("Place " + GameUtils.getCardLink(self) + " out of play");
             // Perform result(s)
             action.appendEffect(
-                    new PassthruEffect(action) {
-                        @Override
-                        protected void doPlayEffect(SwccgGame game) {
-                            result.getPreventableCardEffect().preventEffectOnCard(cardToBeLost);
-                            action.appendEffect(
-                                    new PlaceCardOutOfPlayFromTableEffect(action, result.getCardAboutToLeaveTable()));
-                        }
-                    });
+                    new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, playerId, self, false));
             return Collections.singletonList(action);
         }
         return null;

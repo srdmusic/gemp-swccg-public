@@ -28,7 +28,7 @@ public class Card501_081 extends AbstractAlienRepublic {
     public Card501_081() {
         super(Side.LIGHT, 1, 4, 6, 2, 7, "Chewbacca, Defender Of Kashyyyk", Uniqueness.UNIQUE);
         setLore("Wookiee scout. Volunteered for Han's Endor strike team. Keeps his distance, but doesn't look like he's keeping his distance. Always thinks with his stomach.");
-        setGameText("Adds 2 to power of anything he pilots. Your total power here is +1 for each opponent's character present. During battle, if your total power here is greater than opponent's total power here, may add one destiny to total power.");
+        setGameText("[Pilot] 2. Your total power here is +1 for each opponent's character present. During battle, if all your ability here is provided by Yoda, smugglers, and/or Wookiees, may add one destiny to total power.");
         addPersona(Persona.CHEWIE);
         setSpecies(Species.WOOKIEE);
         addKeywords(Keyword.SCOUT);
@@ -59,20 +59,16 @@ public class Card501_081 extends AbstractAlienRepublic {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         if (GameConditions.isDuringBattleWithParticipant(game, self)
-            && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isAllAbilityInBattleProvidedBy(game, playerId, Filters.or(Filters.Yoda, Filters.smuggler, Filters.Wookiee))
+                && GameConditions.canAddDestinyDrawsToPower(game, playerId)) {
 
-            PhysicalCard battleLocation = game.getGameState().getBattleLocation();
-            float totalPower = game.getModifiersQuerying().getTotalPowerAtLocation(game.getGameState(), battleLocation, playerId, true,false);
-            float oppTotalPower = game.getModifiersQuerying().getTotalPowerAtLocation(game.getGameState(), battleLocation, game.getOpponent(playerId), true,false);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Add one destiny to total power");
+            action.appendUsage(new OncePerBattleEffect(action));
+            action.appendEffect(new AddDestinyToTotalPowerEffect(action, 1, playerId));
 
-            if (totalPower > oppTotalPower) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Add one destiny to total power");
-                action.appendUsage(new OncePerBattleEffect(action));
-                action.appendEffect(new AddDestinyToTotalPowerEffect(action, 1, playerId));
-
-                return Collections.singletonList(action);
-            }
+            return Collections.singletonList(action);
         }
 
         return null;

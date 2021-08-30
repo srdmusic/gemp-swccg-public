@@ -107,10 +107,12 @@ public enum Icon implements Filterable {
     GRABBER("Grabber"),
     INDEPENDENT("Independent"),
     MAINTENANCE("Maintenance"),
+    SCOMP_LINK("Scomp Link"),
     SEPARATIST("Separatist"),
     SETUP("Setup"),
-    SCOMP_LINK("Scomp Link"),
-    TRADE_FEDERATION("Trade Federation");
+    SIDIOUS("Sidious"),
+    TRADE_FEDERATION("Trade Federation"),
+    ;
 
     private String _humanReadable;
     private boolean _expansionIcon;

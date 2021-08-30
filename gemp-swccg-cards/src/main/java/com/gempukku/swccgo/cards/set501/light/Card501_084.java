@@ -5,6 +5,7 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddDestinyToTotalPowerEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -70,13 +71,15 @@ public class Card501_084 extends AbstractAlien {
 
 
         //During battle, unless 'hit,' may lose this character to restore your 'hit' character here to normal.
-
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+
+        Filter hitCharacterFilter = Filters.and(Filters.your(self), Filters.here(self), Filters.hit_character);
+
         // Check condition(s)
         if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.isInBattle(game, self)
                 && !GameConditions.isHit(game, self)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.hit_character))
+                && GameConditions.canSpot(game, self, hitCharacterFilter)
         ) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
@@ -86,7 +89,7 @@ public class Card501_084 extends AbstractAlien {
                     new OncePerBattleEffect(action));
             // Perform result(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose 'hit' character", Filters.and(Filters.your(self), Filters.hit_character)) {
+                    new TargetCardOnTableEffect(action, playerId, "Choose 'hit' character", hitCharacterFilter) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, final PhysicalCard cardTargeted) {
                             action.addAnimationGroup(cardTargeted);

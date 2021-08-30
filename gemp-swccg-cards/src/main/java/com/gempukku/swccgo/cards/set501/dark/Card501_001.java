@@ -32,10 +32,11 @@ import java.util.List;
  */
 public class Card501_001 extends AbstractAlien {
     public Card501_001() {
-        super(Side.DARK, 3, 4, 4, 2, 5, "Alien Mob", Uniqueness.DIAMOND_1);
+        super(Side.DARK, 2, 4, 4, 2, 5, "Alien Mob", Uniqueness.DIAMOND_1);
         setLore("");
         setGameText("This card has your Rep’s species. When deployed, may retrieve a Rep or place a Rep stacked on your Objective in Used Pile. Once per turn, if Fearless And Inventive on table and you just retrieved Force, may place top card of Used Pile on Force Pile.");
-        addIcons(Icon.WARRIOR, Icon.WARRIOR, Icon.WARRIOR, Icon.VIRTUAL_SET_16);
+        addIcons(Icon.VIRTUAL_SET_16);
+        addIcon(Icon.WARRIOR, 3);
         setTestingText("Alien Mob");
     }
 
