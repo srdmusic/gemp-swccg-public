@@ -769,10 +769,6 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
     @Override
     public boolean hasLightAndDarkForceIcons(GameState gameState, PhysicalCard physicalCard, PhysicalCard ignoreForceIconsFromCard) {
-        if (physicalCard.isBlownAway() || physicalCard.isCollapsed()) {
-            return false;
-        }
-
         // This is used as part of checking if a location is a battleground.  We use this since
         // we want to skip checking if location is rotated since it does not affect whether it is a battleground
         // for not. Also, in case there is a card that affects whether a location is rotated, based on
@@ -783,6 +779,12 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         int numLightIcons = physicalCard.getBlueprint().getIconCount(Icon.LIGHT_FORCE);
         int numDarkIcons = physicalCard.getBlueprint().getIconCount(Icon.DARK_FORCE);
+
+        //if location is blown away or collapsed ignore the printed force icons but it can still have icons added
+        if (physicalCard.isBlownAway() || physicalCard.isCollapsed()) {
+            numLightIcons = 0;
+            numDarkIcons = 0;
+        }
 
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.CANCEL_FORCE_ICON, physicalCard)) {
             numLightIcons -= modifier.getIconCountModifier(gameState, this, physicalCard, Icon.LIGHT_FORCE);
@@ -922,10 +924,6 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 return 0;
             }
 
-            if (physicalCard.isBlownAway() || physicalCard.isCollapsed()) {
-                return 0;
-            }
-
             boolean iconsCanceled = false;
             for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.CANCEL_FORCE_ICONS, physicalCard)) {
                 if (modifier.isForPlayer(icon == Icon.LIGHT_FORCE ? gameState.getLightPlayer() : gameState.getDarkPlayer())) {
@@ -937,7 +935,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 return 0;
             }
 
-            if (isRotatedLocation(gameState, physicalCard)) {
+            if (physicalCard.isBlownAway() || physicalCard.isCollapsed()) {
+                result = 0;
+            } else if (isRotatedLocation(gameState, physicalCard)) {
                 if (icon == Icon.LIGHT_FORCE)
                     result = physicalCard.getBlueprint().getIconCount(Icon.DARK_FORCE);
                 else
