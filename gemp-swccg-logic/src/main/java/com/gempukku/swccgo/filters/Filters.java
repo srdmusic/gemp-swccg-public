@@ -8050,6 +8050,7 @@ public class Filters {
                 PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
 
                 if ((cardToMove.getBlueprint().getCardCategory() != CardCategory.CHARACTER
+                        && cardToMove.getBlueprint().getCardCategory() != CardCategory.CREATURE
                         && cardToMove.getBlueprint().getCardCategory() != CardCategory.VEHICLE
                         && cardToMove.getBlueprint().getCardCategory() != CardCategory.STARSHIP)
                         || physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
