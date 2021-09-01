@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set200.light;
+package com.gempukku.swccgo.cards.set601.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -19,18 +19,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 0
+ * Set: Block 1
  * Type: Interrupt
  * Subtype: Used
  * Title: Antilles Maneuver (V)
  */
-public class Card200_049 extends AbstractUsedInterrupt {
-    public Card200_049() {
+public class Card601_134 extends AbstractUsedInterrupt {
+    public Card601_134() {
         super(Side.LIGHT, 5, "Antilles Maneuver", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("As their war with the Empire continued, Rebel pilots learned ways to counter standard Imperial tactics such as the Tallon Roll.");
         setGameText("For remainder of turn, opponent must first use 1 Force to fire a weapon and opponent's starship weapon destiny draws are -1. OR During opponent's deploy phase, [download] a Rebel of ability < 3 (except an admiral) aboard your starship.");
-        addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_0);
+        addIcons(Icon.SPECIAL_EDITION, Icon.LEGACY_BLOCK_1);
+        setAsLegacy(true);
     }
 
     @Override

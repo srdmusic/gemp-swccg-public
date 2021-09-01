@@ -99,10 +99,8 @@ public class Card601_073 extends AbstractNormalEffect {
             action.setText("Deploy a location");
             action.appendUsage(new OncePerTurnEffect(action));
             action.appendCost(new UseForceEffect(action, playerId, 2));
-            Collection<PhysicalCard> locationsOnTable = Filters.filterTopLocationsOnTable(game, Filters.any);
             action.appendEffect(new DeployCardFromReserveDeckEffect(action,
-                    Filters.and(Filters.not(Filters.war_room), Filters.not(Filters.sector), Filters.planet_location, Filters.battleground, Filters.not(Filters.sameTitleAs(self, Filters.in(locationsOnTable)))),
-                    true));
+                    Filters.and(Filters.not(Filters.war_room), Filters.not(Filters.sector), Filters.planet_location, Filters.battleground, Filters.not(Filters.sameTitleAs(self, Filters.onTable))),true));
 
             actions.add(action);
         }

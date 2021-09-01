@@ -2811,6 +2811,17 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             modifierCollector.addModifier(modifier);
         }
 
+        // Check if defense value may not be increased above a specified value
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_DEFENSE_VALUE_MODIFIED_TO, physicalCard)) {
+            float modifierAmount = modifier.getValue(gameState, this, physicalCard);
+
+            if (modifierAmount < (defenseValueBeforeModified + positiveBonuses)) {
+                result = Math.min(modifierAmount, result);
+            }
+
+            modifierCollector.addModifier(modifier);
+        }
+
         // Check if value was reset to an "unmodifiable value", and use lowest found
         Float lowestResetValue = null;
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.UNMODIFIABLE_DEFENSE_VALUE, physicalCard)) {
@@ -14022,6 +14033,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             return true;
 
         if (deploymentRestrictionsOption != null && deploymentRestrictionsOption.isAllowDeployLandedToExteriorSites() && Filters.exterior_site.accepts(gameState, this, location))
+            return true;
+
+        if (deploymentRestrictionsOption != null && deploymentRestrictionsOption.isAllowDeployUnpilotedToSystemOrSector() && Filters.or(Filters.system, Filters.sector).accepts(gameState, this, location))
             return true;
 
         return grantedToDeployToAsLanded(gameState, starship, location);

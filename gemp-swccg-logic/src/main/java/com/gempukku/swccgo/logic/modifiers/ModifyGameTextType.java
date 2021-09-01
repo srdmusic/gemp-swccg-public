@@ -86,6 +86,7 @@ public enum ModifyGameTextType {
     LEGACY__LET_THEM_MAKE_THE_FIRST_MOVE__ONLY_TARGET_DROIDS_AND_SPIES("May target only droids and spies"),
     LEGACY__IMPERIAL_DOMINATION_IGNORES_GARINDAN("Ignores Garindan"),
     LEGACY__THE_EMPIRES_BACK__VADER_MAY_BE_TREATED_AS_GALEN("'Vader' may be treated as 'Galen'"),
+    LEGACY__PALEJO_RESHAD__TREAT_AUDIENCE_CHAMBER_AS_CORELLIA("Treat 'Audience Chamber' as 'Corellia'"),
 
     ;
 

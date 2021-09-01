@@ -17421,6 +17421,7 @@ public class Filters {
     public static final Filter cannon = Filters.or(Keyword.CANNON, Keyword.ION_CANNON, Keyword.LASER_CANNON);
     public static final Filter Control = Filters.title(Title.Control);
     public static final Filter Coolant_Shaft = Filters.title(Title.Coolant_Shaft);
+    public static final Filter Corellia_location = Filters.partOfSystem(Title.Corellia);
     public static final Filter Corellia_site = Filters.and(Filters.partOfSystem(Title.Corellia), CardSubtype.SITE);
     public static final Filter Corellia_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Corellia));
     public static final Filter Corellian = Filters.species(Species.CORELLIAN);

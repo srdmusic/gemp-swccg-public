@@ -21,6 +21,7 @@ public class ReduceForceLossEffect extends AbstractSuccessfulEffect {
     private float _amount;
     private int _toMinimum;
     private boolean _reduceToAmount;
+    private ForceLossState _forceLossState;
 
     /**
      * Creates an effect that reduces Force loss.
@@ -50,12 +51,26 @@ public class ReduceForceLossEffect extends AbstractSuccessfulEffect {
      * @param toMinimum the minimum the Force loss can be reduced to
      * @param reduceToAmount true to reduce Force loss to amount, instead of by amount
      */
-    protected ReduceForceLossEffect(Action action, String playerId, int amount, int toMinimum, boolean reduceToAmount) {
+    public ReduceForceLossEffect(Action action, String playerId, int amount, int toMinimum, boolean reduceToAmount) {
+        this(action, playerId, amount, toMinimum, reduceToAmount, null);
+    }
+
+    /**
+     * Creates an effect that reduces Force loss.
+     * @param action the action performing this effect
+     * @param playerId the player whose Force loss is reduced
+     * @param amount the amount the Force loss is reduced by
+     * @param toMinimum the minimum the Force loss can be reduced to
+     * @param reduceToAmount true to reduce Force loss to amount, instead of by amount
+     * @param forceLossState which force loss state to target (should almost never have to use this)
+     */
+    public ReduceForceLossEffect(Action action, String playerId, int amount, int toMinimum, boolean reduceToAmount, ForceLossState forceLossState) {
         super(action);
         _playerId = playerId;
         _amount = amount;
         _toMinimum = toMinimum;
         _reduceToAmount = reduceToAmount;
+        _forceLossState = forceLossState;
     }
 
     @Override
@@ -64,7 +79,7 @@ public class ReduceForceLossEffect extends AbstractSuccessfulEffect {
             GameState gameState = game.getGameState();
             ModifiersEnvironment modifiersEnvironment = game.getModifiersEnvironment();
 
-            ForceLossState forceLossState = gameState.getTopForceLossState();
+            ForceLossState forceLossState = (_forceLossState == null ? gameState.getTopForceLossState() : _forceLossState);
             // Check if this is Force loss that is not from battle damage
             if (forceLossState != null) {
 

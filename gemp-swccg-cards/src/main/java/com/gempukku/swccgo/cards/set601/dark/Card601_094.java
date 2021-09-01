@@ -2,26 +2,17 @@ package com.gempukku.swccgo.cards.set601.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.AtSameLocationAsCondition;
-import com.gempukku.swccgo.cards.conditions.DuringBattleAtCondition;
-import com.gempukku.swccgo.cards.conditions.HereCondition;
-import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.conditions.*;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.InBattleCondition;
-import com.gempukku.swccgo.logic.effects.LoseCardsFromTableEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
+import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.rules.LeavesTableCardRule;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -58,13 +49,13 @@ public class Card601_094 extends AbstractNormalEffect {
         modifiers.add(new MayNotAddDestinyDrawsToPowerModifier(self, new DuringBattleAtCondition(Filters.here(self)), opponent));
         modifiers.add(new MayNotAddDestinyDrawsToAttritionModifier(self, new DuringBattleAtCondition(Filters.here(self)), opponent));
         modifiers.add(new DefenseValueModifier(self, Filters.and(Filters.Vader, Filters.with(self, Filters.or(Filters.Skywalker, Filters.Jedi))), 2));
-        //TODO "maximum 8"
+        modifiers.add(new MaximumDefenseValueModifiedToModifier(self, Filters.and(Filters.Vader, Filters.with(self, Filters.or(Filters.Skywalker, Filters.Jedi))), null,8));
         modifiers.add(new ImmunityToAttritionChangeModifier(self, Filters.and(Filters.Vader, Filters.with(self, Filters.or(Filters.Skywalker, Filters.Jedi))), 2));
         return modifiers;
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, final int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
         Filter filter = Filters.and(Icon.CORUSCANT, Filters.hologram);
@@ -83,40 +74,22 @@ public class Card601_094 extends AbstractNormalEffect {
             }
         }
 
-        System.out.println("[while in play] self just left table: " + TriggerConditions.leavesTable(game, effectResult, self));
-        System.out.println("[while in play] Vader just left table: " + TriggerConditions.leavesTable(game, effectResult, Filters.Vader));
-        System.out.println("Was this attached to something? " + (self.getAttachedTo() == null?"no":"yes: "+self.getAttachedTo().getTitle()));
-
-        if (TriggerConditions.leavesTable(game, effectResult, Filters.Vader)) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Place in Used Pile");
-            action.setActionMsg("Place " + GameUtils.getCardLink(self) + " in Used Pile");
-            // Perform result(s)
-            action.appendEffect(
-                    new PlaceCardInUsedPileFromTableEffect(action, self));
-            actions.add(action);
-        }
         return actions;
     }
 
+    @Override
     protected List<RequiredGameTextTriggerAction> getGameTextLeavesTableRequiredTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
-
-        //TODO this doesn't work
-        System.out.println("[leaves table] self just left table: " + TriggerConditions.leavesTable(game, effectResult, self));
-        System.out.println("[leaves table] Vader just left table: " + TriggerConditions.leavesTable(game, effectResult, Filters.Vader));
-        System.out.println("Was this attached to something? " + (self.getAttachedTo() == null?"no":"yes: "+self.getAttachedTo().getTitle()));
-        if (TriggerConditions.leavesTable(game, effectResult, Filters.Vader)) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Place in Used Pile");
-            action.setActionMsg("Place " + GameUtils.getCardLink(self) + " in Used Pile");
-            // Perform result(s)
-            action.appendEffect(
-                    new PlaceCardInUsedPileFromTableEffect(action, self));
-            actions.add(action);
+        //When Vader leaves table, place Effect in Used Pile.
+        //this is actually doing "If just lost and Vader not on table, place Effect in Used Pile."
+        if (TriggerConditions.justLost(game, effectResult, self)
+            && !GameConditions.canSpot(game, self, SpotOverride.INCLUDE_ALL, Filters.Vader)) {
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            Collection<PhysicalCard> cards = new LinkedList<>();
+            cards.add(self);
+            action.appendEffect(new PlaceCardsInUsedPileFromOffTableEffect(action, cards));
+            return Collections.singletonList(action);
         }
-        return actions;
+
+        return null;
     }
 }

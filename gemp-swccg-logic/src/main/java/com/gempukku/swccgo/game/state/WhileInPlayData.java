@@ -24,6 +24,7 @@ public class WhileInPlayData implements Snapshotable<WhileInPlayData> {
     private Evaluator _evaluator;
     private Map<String, Boolean> _stringBooleanMap = new HashMap<String, Boolean>();
     private Species _speciesValue;
+    private ForceLossState _forceLossState;
 
     @Override
     public void generateSnapshot(WhileInPlayData selfSnapshot, SnapshotData snapshotData) {
@@ -42,6 +43,7 @@ public class WhileInPlayData implements Snapshotable<WhileInPlayData> {
         snapshot._evaluator = _evaluator;
         snapshot._stringBooleanMap.putAll(_stringBooleanMap);
         snapshot._speciesValue = _speciesValue;
+        snapshot._forceLossState = _forceLossState;
     }
 
     /**
@@ -110,6 +112,10 @@ public class WhileInPlayData implements Snapshotable<WhileInPlayData> {
      */
     public WhileInPlayData(Evaluator evaluator) {
         _evaluator = evaluator;
+    }
+
+    public WhileInPlayData(ForceLossState forceLossState) {
+        _forceLossState = forceLossState;
     }
 
     /**
@@ -252,4 +258,7 @@ public class WhileInPlayData implements Snapshotable<WhileInPlayData> {
         return _stringBooleanMap;
     }
 
+    public ForceLossState getForceLossState() {
+        return _forceLossState;
+    }
 }

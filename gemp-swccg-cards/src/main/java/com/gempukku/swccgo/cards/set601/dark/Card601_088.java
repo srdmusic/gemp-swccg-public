@@ -2,28 +2,23 @@ package com.gempukku.swccgo.cards.set601.dark;
 
 import com.gempukku.swccgo.cards.AbstractImmediateEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.ClearTargetedCardsEffect;
-import com.gempukku.swccgo.cards.effects.SetTargetedCardEffect;
-import com.gempukku.swccgo.cards.effects.StackCardFromVoidEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerForceDrainEffect;
+import com.gempukku.swccgo.cards.effects.SetWhileInPlayDataEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerForceLossEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.ForceLossState;
+import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.ReduceForceLossEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayingCardEffect;
-import com.gempukku.swccgo.logic.modifiers.ForceLossModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.PassthruEffect;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -53,6 +48,8 @@ public class Card601_088 extends AbstractImmediateEffect {
                 && GameConditions.isDuringOpponentsPhase(game, playerId, Phase.CONTROL)) {
             PlayCardAction action = getPlayCardAction(playerId, game, self, self, false, 0, null, null, null, null, null, false, 0, Filters.none, null);
             if (action != null) {
+                action.appendBeforeCost(
+                        new SetWhileInPlayDataEffect(action, self, new WhileInPlayData(game.getGameState().getTopForceLossState())));
                 return Collections.singletonList(action);
             }
         }
@@ -64,21 +61,63 @@ public class Card601_088 extends AbstractImmediateEffect {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
         String playerId = self.getOwner();
 
-        //TODO this doesn't do anything
-
-
-        // Check condition(s)
         if (TriggerConditions.justDeployed(game, effectResult, self)
-                && TriggerConditions.isAboutToLoseForce(game, effectResult, playerId)
-                && GameConditions.canReduceForceLoss(game)) {
+                && self.getWhileInPlayData() != null) {
 
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setPerformingPlayer(playerId);
-            action.setText("Reduce Force loss by 2");
-            // Perform result(s)
-            action.appendEffect(
-                    new ReduceForceLossEffect(action, playerId, 2));
-            actions.add(action);
+            //TODO make sure this does what it should according to https://forum.starwarsccg.org/viewtopic.php?p=680654#p680654
+
+            //first reduce it by 2
+            if (GameConditions.canReduceForceLoss(game)
+                    && self.getWhileInPlayData().getForceLossState() != null) {
+
+                ForceLossState forceLossState = self.getWhileInPlayData().getForceLossState();
+
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setPerformingPlayer(playerId);
+                action.setText("Reduce Force loss by 2");
+
+                action.appendUsage(
+                        new OncePerForceLossEffect(action));
+                action.appendCost(
+                        new SetWhileInPlayDataEffect(action, self, null));
+                // Perform result(s)
+                action.appendEffect(
+                        new ReduceForceLossEffect(action, playerId, 2, 0, false, forceLossState));
+
+                if (GameConditions.isDuringOpponentsPhase(game, playerId, Phase.CONTROL)
+                        && GameConditions.canReduceForceLoss(game)) {
+
+                    //need to check if it's from my card or a force drain at a battleground without being able to use TriggerConditions because the current EffectResult is this card just being deployed
+                    //!TriggerConditions.isAboutToLoseForceFromCard(game, effectResult, playerId, Filters.or(Filters.your(self), Filters.immuneToCardTitle(self.getTitle())))
+                    //!TriggerConditions.isAboutToLoseForceFromForceDrainAt(game, effectResult, playerId, Filters.battleground)
+
+                    LoseForceEffect loseForceEffect = forceLossState.getLoseForceEffect();
+                    boolean ableToReduce = false;
+                    if (loseForceEffect.isForceDrain()) {
+                        PhysicalCard forceDrainLocation = game.getGameState().getForceDrainLocation();
+                        if (!Filters.battleground.accepts(game, forceDrainLocation))
+                            ableToReduce = true;
+                    } else if (loseForceEffect.getAction() != null){
+                        PhysicalCard source = loseForceEffect.getAction().getActionSource();
+                        if (source != null) {
+                            Filter myCardOrIsImmuneToThis = Filters.or(Filters.your(self), Filters.immuneToCardTitle(self.getTitle()));
+                            if (!myCardOrIsImmuneToThis.accepts(game, source))
+                                ableToReduce = true;
+                        } else {
+                            //not sure about this one. allows reducing if the source is null
+                            ableToReduce = true;
+                        }
+                    }
+
+                    if (ableToReduce) {
+                        action.appendEffect(new SendMessageEffect(action, playerId + " targets to cumulatively reduce Force loss by 1 (to a minimum of 1) using " + GameUtils.getCardLink(self)));
+                        action.appendEffect(
+                                new ReduceForceLossEffect(action, playerId, 1, 1, false, forceLossState));
+                    }
+                }
+
+                actions.add(action);
+            }
         }
 
         // Check condition(s)
@@ -99,7 +138,6 @@ public class Card601_088 extends AbstractImmediateEffect {
             // Perform result(s)
             action.appendEffect(
                     new ReduceForceLossEffect(action, playerId, 1, 1));
-            //TODO make this cumulative
             actions.add(action);
         }
 
