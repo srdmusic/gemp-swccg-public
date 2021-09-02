@@ -22,15 +22,15 @@ import com.gempukku.swccgo.logic.timing.PassthruEffect;
  * Set: Set 16
  * Type: Interrupt
  * Subtype: Starting
- * Title: More Powerful Than You Can Possibly Imagine
+ * Title: I Am Part Of The Living Force
  */
 public class Card501_038 extends AbstractStartingInterrupt {
     public Card501_038() {
-        super(Side.LIGHT, 5, "More Powerful Than You Can Possibly Imagine", Uniqueness.UNIQUE);
-        setLore("'You can't win Darth. If you strike me down I shall become more powerful than you can possibly imagine.' Obi-Wan's sacrifice gave the Rebels time to escape.");
+        super(Side.LIGHT, 5, "I Am Part Of The Living Force", Uniqueness.UNIQUE);
+        setLore("");
         setGameText("If your starting location had 'communing' in game text, deploy Communing and stack a Jedi with 'communing' in game text on it. Deploy up to three Effects that deploy on table and are always immune to Alter. Place Interrupt in Lost Pile.");
-        addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("More Powerful Than You Can Possibly Imagine");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
+        setTestingText("I Am Part Of The Living Force");
     }
 
     @Override

@@ -18,6 +18,7 @@ import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
 import com.gempukku.swccgo.logic.timing.results.AboutToLoseForceNotFromBattleDamageResult;
+import com.gempukku.swccgo.logic.timing.results.ForceLossInitiatedResult;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -244,6 +245,11 @@ public class LoseForceEffect extends AbstractSubActionEffect {
 
         SubAction subAction = new SubAction(_action);
         if (isPlayableInFull(game)) {
+
+            // 0) notify that force loss was initiated
+
+            subAction.appendEffect(
+                    new TriggeringResultEffect(subAction, new ForceLossInitiatedResult(subAction, _action.getActionSource(), _initialAmount)));
 
             // 1) Begin Force loss
             subAction.appendEffect(

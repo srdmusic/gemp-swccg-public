@@ -3481,7 +3481,7 @@ var fixedImages = {
 "501_35":"/gemp-swccg/images/cards/TheedPalace-Light/whoooo.gif",
 "501_36":"/gemp-swccg/images/cards/SpecialEdition-Light/benkenobi.gif",
 "501_37":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/communing.gif",
-"501_38":"/gemp-swccg/images/cards/Premiere-Light/noblesacrifice.gif",
+"501_38":"/gemp-swccg/images/cards/Coruscant-Light/areyoubraindead.gif",
 "501_39":"/gemp-swccg/images/cards/Coruscant-Light/masterquigonai.gif",
 "501_40":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/masterkenobi.gif",
 "501_41":"/gemp-swccg/images/cards/Coruscant-Light/yodaseniorcouncilmemberai.gif",

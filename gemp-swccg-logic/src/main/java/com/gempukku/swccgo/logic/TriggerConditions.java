@@ -1724,6 +1724,19 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if Force loss was just initiated.
+     * @param game the game
+     * @param effectResult the effect result
+     * @return true or false
+     */
+    public static boolean forceLossInitiated(SwccgGame game, EffectResult effectResult) {
+        if (effectResult.getType() == EffectResult.Type.FORCE_LOSS_INITIATED) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Determines if a Force drain was just initiated (and not canceled).
      * @param game the game
      * @param effectResult the effect result

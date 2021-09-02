@@ -20,6 +20,7 @@ import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromForcePileEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.ForceLossInitiatedResult;
 import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 
 import java.util.Collections;
@@ -57,18 +58,23 @@ public class Card501_048_BACK extends AbstractObjective {
         List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
         final String opponent = game.getOpponent(playerId);
 
-        // if [Tarkin Doctrine] just caused Force loss, may take any one card into hand from Force Pile.
+        // when [Tarkin Doctrine] initiates Force loss, may take any one card into hand from Force Pile
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && TriggerConditions.justLostForceFromCard(game, effectResult, opponent, Filters.Tarkin_Doctrine)
+                && TriggerConditions.forceLossInitiated(game, effectResult)
                 && GameConditions.hasForcePile(game, playerId)) {
-            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take a card into hand from Force Pile");
-            action.setActionMsg("Take any one card into hand from Force Pile");
-            action.appendUsage(new OncePerTurnEffect(action));
-            action.appendEffect(new TakeCardIntoHandFromForcePileEffect(action, playerId, true));
+            PhysicalCard source = ((ForceLossInitiatedResult)effectResult).getSource();
+            if (source != null
+                    && Filters.Tarkin_Doctrine.accepts(game, source)) {
 
-            actions.add(action);
+                OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Take a card into hand from Force Pile");
+                action.setActionMsg("Take any one card into hand from Force Pile");
+                action.appendUsage(new OncePerTurnEffect(action));
+                action.appendEffect(new TakeCardIntoHandFromForcePileEffect(action, playerId, true));
+
+                actions.add(action);
+            }
         }
 
         // Once per turn, may place opponent's character just lost from your location out of play unless opponent loses 1 Force.
@@ -115,9 +121,9 @@ public class Card501_048_BACK extends AbstractObjective {
 
         // Check condition(s)
         if (TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Death_Star, true)))
-            || (TriggerConditions.isTableChanged(game, effectResult)
+                || (TriggerConditions.isTableChanged(game, effectResult)
                 && (!GameConditions.canSpot(game, self, Filters.Shield_Gate)
-                        || GameConditions.canSpot(game, self, Filters.and(Filters.blown_away, Filters.and(Filters.system, Filters.title(Title.Death_Star, true))))))) {
+                || GameConditions.canSpot(game, self, Filters.and(Filters.blown_away, Filters.and(Filters.system, Filters.title(Title.Death_Star, true))))))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Place out of play");

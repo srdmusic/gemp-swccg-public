@@ -36,7 +36,7 @@ public class Card501_052 extends AbstractNormalEffect {
         setGameText("Deploy on 500 Republica. Your Emperor, Maul, aliens, and [Independent] starships are lost. At the start of your control phase, if Sidious here, may draw two cards from Force Pile. Once per game, may lose 1 Force to relocate Sidious here. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.SIDIOUS, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Unlimited Power!");
+        setTestingText("[Set 17] Unlimited Power!");
     }
 
     @Override
