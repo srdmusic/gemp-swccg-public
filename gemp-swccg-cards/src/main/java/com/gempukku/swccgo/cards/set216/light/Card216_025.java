@@ -28,7 +28,7 @@ import java.util.List;
 public class Card216_025 extends AbstractSite {
     public Card216_025() {
         super(Side.LIGHT, "Coruscant: Jedi Temple Meditation Room", Title.Coruscant);
-        setLocationDarkSideGameText("If Qui-Gon 'communing,' may deploy Theed Palace Generator from Reserve Deck; reshuffle.");
+        setLocationDarkSideGameText("If Qui-Gon 'communing,' may [download] Theed Palace Generator.");
         setLocationLightSideGameText("While Qui-Gon 'communing,' no Force drains here.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);

@@ -29,7 +29,7 @@ public class Card216_006 extends AbstractSith {
     public Card216_006() {
         super(Side.DARK, 1, 6, 6, 6, 8, "Darth Vader, Betrayer Of The Jedi", Uniqueness.UNIQUE);
         setLore("Leader.");
-        setGameText("Adds 3 to power of anything he pilots. During battle, if a lightsaber swung by Vader just 'hit' a character, character's game text is canceled (and if Amidala, she is immediately lost). While on Coruscant, adds one [Dark Side] icon here. Immune to [Set 3] Amidala and attrition < 5.");
+        setGameText("[Pilot] 3. During battle, if a lightsaber swung by Vader just 'hit' a character, character's game text is canceled (and if Amidala, she is immediately lost). While on Coruscant, adds one [Dark Side] icon here. Immune to [Set 3] Amidala and attrition < 5.");
         addPersona(Persona.VADER);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
     }

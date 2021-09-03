@@ -37,7 +37,7 @@ public class Card216_045 extends AbstractUsedInterrupt {
         super(Side.LIGHT, 4, "Wookiee Guide", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Chewie felt right at home in the forests of Endor, which closely resemble the environment on his homeworld of Kashyyyk.");
-        setGameText("If opponent just initiated battle at an Endor or Kashyyyk site (or any forest), move your non-unique Wookiee there as a 'react.' OR Deploy a Wookiee to a Kashyyyk site from Reserve Deck; reshuffle. OR Activate 1 Force for each Kashyyyk location you occupy.");
+        setGameText("If opponent just initiated battle at an Endor or Kashyyyk site (or any forest), move your non-unique Wookiee there as a 'react.' OR [download] a Wookiee to a Kashyyyk site. OR Activate 1 Force for each Kashyyyk location you occupy.");
         addIcons(Icon.ENDOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
     }
 

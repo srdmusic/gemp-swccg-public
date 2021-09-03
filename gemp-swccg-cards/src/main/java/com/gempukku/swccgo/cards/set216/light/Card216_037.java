@@ -31,7 +31,7 @@ public class Card216_037 extends AbstractJediMaster {
     public Card216_037() {
         super(Side.LIGHT, 1, 7, 6, 7, 8, "Master Qui-Gon Jinn, An Old Friend", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("While 'communing': You may not deploy Rebels; your total power in battles is +1 for each Jedi 'communing'; Jedi Council members are destiny +1; once per turn, may place a card from hand on Used Pile to draw top card of Force Pile.");
+        setGameText("While 'communing': You may not deploy Rebels; Jedi Council members are destiny +1; your total power in battles is +1 for each Jedi 'communing'; once per turn, may place a card from hand on Used Pile to draw top card of Force Pile.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16, Icon.EPISODE_I);
         addPersona(Persona.QUIGON);
     }

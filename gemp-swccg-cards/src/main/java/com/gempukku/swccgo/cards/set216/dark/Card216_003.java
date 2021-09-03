@@ -26,7 +26,7 @@ public class Card216_003 extends AbstractCapitalStarship {
         super(Side.DARK, 1, 8, 6, 7, null, 3, 9, Title.Avenger, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Key starship used to subjugate Outer Rim worlds. Reassigned to Death Squadron under the command of Captain Needa. Communications ship at the Battle of Endor.");
-        setGameText("May add 4 pilots, 4 passengers, 2 vehicles, and 4 TIEs. Permanent pilot provides ability of 2. Once per game, may deploy a captain (or Imperial with armor) aboard (deploy -2) from Reserve Deck; reshuffle.");
+        setGameText("May add 4 pilots, 4 passengers, 2 vehicles, and 4 TIEs. Permanent pilot provides ability of 2. Once per game, may [download] a captain (or Imperial with armor) aboard (deploy -2).");
         addIcons(Icon.DAGOBAH, Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_16);
         addModelType(ModelType.IMPERIAL_CLASS_STAR_DESTROYER);
         addKeywords(Keyword.DEATH_SQUADRON);

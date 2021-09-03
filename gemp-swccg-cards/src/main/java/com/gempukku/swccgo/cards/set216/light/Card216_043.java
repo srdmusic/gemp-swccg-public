@@ -32,7 +32,7 @@ public class Card216_043 extends AbstractSite {
         super(Side.LIGHT, Title.ObiWans_Hut, Title.Tatooine);
         setVirtualSuffix(true);
         setLocationDarkSideGameText("While Obi-Wan 'communing,' no Force drains here.");
-        setLocationLightSideGameText("If Obi-Wan 'communing,' once per turn may subtract 2 from a just drawn [Permanent Weapon] weapon destiny.");
+        setLocationLightSideGameText("If Obi-Wan 'communing,' once per turn, may subtract 2 from a just drawn [Permanent Weapon] weapon destiny.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_16);
     }

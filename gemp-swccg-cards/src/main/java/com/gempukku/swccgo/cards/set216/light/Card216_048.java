@@ -30,7 +30,7 @@ public class Card216_048 extends AbstractAlien {
     public Card216_048() {
         super(Side.LIGHT, 2, 4, 2, 2, 4, "Wookiee Warrior", Uniqueness.RESTRICTED_3);
         setLore("");
-        setGameText("During battle at a site, may add one destiny to total power. During battle, unless 'hit,' may lose this character to restore your 'hit' character here to normal.");
+        setGameText("During battle at a site, may add one destiny to total power. Once during battle, unless 'hit,' may lose this character to restore your 'hit' character here to normal.");
         setSpecies(Species.WOOKIEE);
         addIcons(Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
     }

@@ -30,7 +30,7 @@ public class Card216_021 extends AbstractRepublic {
     public Card216_021() {
         super(Side.LIGHT, 1, 8, 7, 6, 8, "Anakin Skywalker, Jedi Knight", Uniqueness.UNIQUE);
         setLore("Jedi Council member.");
-        setGameText("Adds 3 to power of anything he pilots. While armed with a lightsaber, adds 2 to his defense value. During battle, may lose 2 Force to add one battle destiny. Immune to attrition < 6.");
+        setGameText("[Pilot] 3. While armed with a lightsaber, adds 2 to his defense value. During battle, may lose 2 Force to add one battle destiny. Immune to attrition < 6.");
         addPersona(Persona.ANAKIN);
         addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_16, Icon.CLONE_ARMY);
         addKeyword(Keyword.JEDI_COUNCIL_MEMBER);

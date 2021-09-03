@@ -24,9 +24,8 @@ public class Card216_046 extends AbstractNormalEffect {
         super(Side.LIGHT, 0, PlayCardZoneOption.ATTACHED, "Wookiee Homestead", Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy on Kachirho. Your Wookiees deploy -1. If you have two Wookiees in battle, draw one battle destiny if unable to otherwise. While your Wookiee alone here, [Dark Side] icons here are canceled. [Immune to Alter.]");
-        addIcons(Icon.VIRTUAL_SET_16);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Wookiee Homestead");
     }
 
     @Override

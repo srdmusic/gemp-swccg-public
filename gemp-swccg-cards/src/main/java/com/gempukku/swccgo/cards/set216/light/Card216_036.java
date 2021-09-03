@@ -29,10 +29,9 @@ public class Card216_036 extends AbstractRebel {
     public Card216_036() {
         super(Side.LIGHT, 1, 5, 5, 6, 9, "Master Kenobi", Uniqueness.UNIQUE);
         setLore("'Luminous beings are we, not this crude matter.' The inner consciousness of a Jedi can transcend even death.");
-        setGameText("While 'communing': You may not deploy Jedi (except Yoda) or [Permanent Weapon] cards; if a Rebel in battle, may use 1 Force to add 3 to your total power (5 if Luke); once per turn, may deploy a battleground from Reserve Deck that is related to a location on table; reshuffle.");
+        setGameText("While 'communing': You may not deploy Jedi (except Yoda) or [Permanent Weapon] cards; if a Rebel in battle, may use 1 Force to add 3 to your total power (5 if Luke); once per turn, may [download] a battleground that is related to a location on table.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
         addPersona(Persona.OBIWAN);
-        setTestingText("Master Kenobi");
     }
 
     public List<Modifier> getWhileStackedModifiers(SwccgGame game, PhysicalCard self) {

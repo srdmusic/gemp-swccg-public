@@ -27,7 +27,7 @@ import java.util.List;
 public class Card216_004 extends AbstractSite {
     public Card216_004() {
         super(Side.DARK, "Coruscant: The Works", Title.Coruscant);
-        setLocationDarkSideGameText("May deploy non-[Theed Palace] Sidious here from Reserve Deck; reshuffle.");
+        setLocationDarkSideGameText("May [download] non-[Theed Palace] Sidious here.");
         setLocationLightSideGameText("If opponent's [Special Edition] objective on table, gains one [Light Side] icon and Force drain +2 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 0);
