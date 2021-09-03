@@ -29,9 +29,9 @@ import java.util.*;
 public class Card216_034 extends AbstractAlien {
     public Card216_034() {
         super(Side.LIGHT, 3, 2, 2, 2, 4, Title.Ketwol, Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
         setLore("Pacithhip scout. From an unknown system on the Outer Rim. Spends most of his time talking to pilots and travelers at local docking bays.");
-        setGameText("Adds 2 to power of anything he pilots. Your docking bay transit is free when moving to or from same site. " +
-                "If piloting a freighter or starfighter, may lose 1 Force to cancel an attempt by opponent to target that starship to be captured, 'hit,' or lost.");
+        setGameText("[Pilot] 2. Your docking bay transit is free when moving to or from same site. If piloting a freighter or starfighter, may lose 1 Force to cancel an attempt by opponent to target that starship to be captured, 'hit,' or lost.");
         addPersona(Persona.KETWOL);
         setSpecies(Species.PACITHHIP);
         addIcons(Icon.SPECIAL_EDITION, Icon.PILOT, Icon.VIRTUAL_SET_16);

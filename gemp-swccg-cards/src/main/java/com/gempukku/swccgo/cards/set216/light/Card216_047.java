@@ -40,8 +40,8 @@ public class Card216_047 extends AbstractUsedInterrupt {
         super(Side.LIGHT, 3, Title.Wookiee_Roar, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("'GHRRRRAARRRRHG!'");
-        setGameText("When drawn for destiny, once per turn, choose one of your Wookiees to be power +1 for remainder of turn.\n"
-                + "If a battle was just initiated involving your Wookiee, add one destiny to total power. OR Cancel an attempt by opponent to target your Wookiee to be lost or captured.");
+        setGameText("When drawn for destiny, once per turn, choose one of your Wookiees to be power +1 for remainder of turn. " +
+                "If a battle was just initiated involving your Wookiee, add one destiny to total power. OR Cancel an attempt by opponent to target your Wookiee to be lost or captured.");
         addIcons(Icon.A_NEW_HOPE, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
     }
 

@@ -28,7 +28,7 @@ public class Card216_008 extends AbstractCapitalStarship {
         super(Side.DARK, 1, 8, 9, 6, null, 3, 9, Title.Devastator, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Supported the devastating subjugation of Ralltiir. While under the command of Darth Vader, chased and captured the traitor Princess Leia Organa aboard the consular ship Tantive IV.");
-        setGameText("May add 6 pilots, 8 passengers, 2 vehicles and 4 TIEs. Vader deploys -2 aboard. May deploy -4 as a ‘react’ to Scarif or same location as Tantive IV. Permanent pilot aboard provides ability of 2.");
+        setGameText("May add 6 pilots, 8 passengers, 2 vehicles, and 4 TIEs. Permanent pilot provides ability of 2. Vader deploys -2 aboard. May deploy -4 as a 'react' to Scarif or same location as Tantive IV.");
         addIcons(Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_16);
         addModelType(ModelType.IMPERIAL_CLASS_STAR_DESTROYER);
         setPilotCapacity(6);

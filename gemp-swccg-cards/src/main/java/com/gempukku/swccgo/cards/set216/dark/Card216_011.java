@@ -36,9 +36,9 @@ public class Card216_011 extends AbstractObjective {
     public Card216_011() {
         super(Side.DARK, 0, Title.On_The_Verge_Of_Greatness);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, Commence Primary Ignition, and Shield Gate.\n" +
-                "For remainder of game, you may not deploy characters of ability > 4 (except Vader). Vader is power +2 and he (or a Star Destroyer he is piloting) may make a regular move to a battle just initiated.\n" +
-                "While this side up, once per turn, may [download] a site (or Imperial trooper) to Scarif.\n" +
+        setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, Commence Primary Ignition, and Shield Gate. \n" +
+                "For remainder of game, you may not deploy characters of ability > 4 (except Vader). Vader is power +2 and he (or a Star Destroyer he is piloting) may make a regular move to a battle just initiated. \n" +
+                "While this side up, once per turn, may [download] a site (or Imperial trooper) to Scarif. \n" +
                 "Flip this card if Krennic or Tarkin on Scarif and Death Star orbiting Scarif.");
         addIcons(Icon.VIRTUAL_SET_16);
     }
@@ -50,7 +50,7 @@ public class Card216_011 extends AbstractObjective {
                 new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_16, Filters.Death_Star_system), true, false) {
                     @Override
                     public String getChoiceText() {
-                        return "Choose Death Star system to deploy";
+                        return "Choose [Set 16] Death Star system to deploy";
                     }
                 });
         action.appendRequiredEffect(

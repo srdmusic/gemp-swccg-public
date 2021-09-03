@@ -35,10 +35,7 @@ public class Card216_031 extends AbstractCharacterDevice {
     public Card216_031() {
         super(Side.LIGHT, 2, "Jedi Holocron", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on your character of ability > 4. " +
-                "While present: adds 1 to training destiny draws and Force drains here; " +
-                "the first Force lost to a Force drain here is stacked here face down; " +
-                "opponent’s ability required to draw battle destiny here is +1 for each card stacked here.");
+        setGameText("Deploy on your character of ability > 4. While present: adds 1 to training destiny draws and Force drains here; the first Force lost to a Force drain here is stacked here face down; opponent's ability required to draw battle destiny here is +1 for each card stacked here.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
     }
 

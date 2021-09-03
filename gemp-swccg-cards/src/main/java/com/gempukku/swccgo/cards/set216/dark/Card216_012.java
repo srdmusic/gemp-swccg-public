@@ -37,8 +37,7 @@ public class Card216_012 extends AbstractUsedInterrupt {
         setVirtualSuffix(true);
         setLore("'Luke.' 'Father.' 'Son, come with me.'");
         setGameText("If drawn for destiny, may take into hand. Draw top card of Force Pile. " +
-                "OR During opponent's control phase, target a location. " +
-                "Total ability of 7 or more required for opponent to draw battle destiny there for remainder of turn.");
+                "OR During opponent's control phase, target a location. Total ability of 7 or more required for opponent to draw battle destiny there for remainder of turn.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_16);
     }
 

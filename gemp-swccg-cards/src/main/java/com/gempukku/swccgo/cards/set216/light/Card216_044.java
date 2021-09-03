@@ -35,7 +35,7 @@ public class Card216_044 extends AbstractUsedInterrupt {
     public Card216_044() {
         super(Side.LIGHT, 4, "This Is Where The Fun Begins", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("If a battle was just initiated, each of your [Republic] starfighters present is power +1 and immune to attrition for remainder of turn. OR If Anakin and Obi-Wan in battle together, cancel one opponent's destiny just drawn (except a battle destiny).");
+        setGameText("If a battle was just initiated, each of your [Republic] starfighters present is power +1 and immune to attrition for remainder of turn. OR If Anakin and Obi-Wan are in a battle together, cancel one opponent's destiny just drawn (except a battle destiny).");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
     }
 

@@ -34,7 +34,7 @@ public class Card216_020 extends AbstractAlien {
     public Card216_020() {
         super(Side.LIGHT, 2, 4, 4, 2, 5, "Alien Rabble", Uniqueness.DIAMOND_1);
         setLore("");
-        setGameText("This card has your Rep’s species. When deployed, may retrieve a Rep or place a Rep stacked on your Objective in Used Pile. Once per turn, if No Love For The Empire on table and you just retrieved Force, may place top card of Used Pile on Force Pile.");
+        setGameText("This card has your Rep's species. When deployed, may retrieve a Rep or place a Rep stacked on your Objective in Used Pile. Once per turn, if No Love For The Empire on table and you just retrieved Force, may place top card of Used Pile on Force Pile.");
         addIcons(Icon.VIRTUAL_SET_16);
         addIcon(Icon.WARRIOR, 3);
     }
