@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.dark;
+package com.gempukku.swccgo.cards.set216.dark;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
@@ -24,28 +24,27 @@ import java.util.List;
  * Subtype: System
  * Title: Naboo (V) (Dark)
  */
-public class Card501_018 extends AbstractSystem {
-    public Card501_018() {
+public class Card216_010 extends AbstractSystem {
+    public Card216_010() {
         super(Side.DARK, Title.Naboo, 5);
+        setVirtualSuffix(true);
         setLocationDarkSideGameText("If you control with a [Trade Federation] starship, your Force generation is +1 here.");
         setLocationLightSideGameText("If opponent controls and In Complete Control on table, your characters and vehicles deploy +1 to Naboo sites.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_16);
-        setVirtualSuffix(true);
-        setTestingText("Naboo (V)");
     }
 
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ForceGenerationModifier(self, new ControlsWithCondition(playerOnDarkSideOfLocation, self, Filters.and(Filters.icon(Icon.TRADE_FEDERATION), Filters.starship)), 1, playerOnDarkSideOfLocation));
         return modifiers;
     }
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.or(Filters.character, Filters.vehicle)),
                 new AndCondition(new ControlsCondition(game.getOpponent(playerOnLightSideOfLocation), self),new OnTableCondition(self, Filters.In_Complete_Control)),
                 1, Filters.Naboo_site));

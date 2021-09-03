@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.dark;
+package com.gempukku.swccgo.cards.set216.dark;
 
 import com.gempukku.swccgo.cards.AbstractMobileSystem;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -19,14 +19,13 @@ import java.util.List;
  * Subtype: System
  * Title: Death Star (V)
  */
-public class Card501_049 extends AbstractMobileSystem {
-    public Card501_049() {
+public class Card216_007 extends AbstractMobileSystem {
+    public Card216_007() {
         super(Side.DARK, Title.Death_Star, 2, 4);
+        setVirtualSuffix(true);
         setLocationDarkSideGameText("X = parsec of current position (starts at 4). Deploys only if On The Verge Of Greatness on table. Hyperspeed = 2. Starships may move between Death Star and system it orbits as a 'react.'");
         addIcon(Icon.DARK_FORCE, 2);
         addIcons(Icon.VIRTUAL_SET_16);
-        setVirtualSuffix(true);
-        setTestingText("Death Star (V)");
     }
 
     @Override

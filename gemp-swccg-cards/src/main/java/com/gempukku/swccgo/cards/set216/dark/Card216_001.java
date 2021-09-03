@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.dark;
+package com.gempukku.swccgo.cards.set216.dark;
 
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -11,13 +11,16 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.CancelGameTextEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
-import java.util.*;
-
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Set 16
@@ -25,20 +28,18 @@ import java.util.*;
  * Subtype: Lost
  * Title: A Sith Legend
  */
-public class Card501_013 extends AbstractLostInterrupt {
-    public Card501_013() {
+public class Card216_001 extends AbstractLostInterrupt {
+    public Card216_001() {
         super(Side.DARK, 2, Title.A_Sith_Legend, Uniqueness.UNIQUE);
         setLore("At his peak, no one could stand up to the Dark Lord of the Sith. His superior tactics devastated those who opposed him.");
-        setGameText("Reveal a lightsaber from hand to take a matching Dark Jedi or Sith into hand from Reserve Deck; reshuffle (or vice versa). OR Once per game, cancel the game text of an opponent's non-Jedi character present with your Dark Jedi or Inquisitor for remainder of turn.");
+        setGameText("Reveal a lightsaber from hand to take a matching Dark Jedi or Sith into hand from Reserve Deck; reshuffle (or vice versa). " +
+                "OR Once per game, cancel the game text of an opponent's non-Jedi character present with your Dark Jedi or Inquisitor for remainder of turn.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
-        setTestingText("A Sith Legend");
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
-
-
+        List<PlayInterruptAction> actions = new LinkedList<>();
 
         GameTextActionId gameTextActionId = GameTextActionId.A_SITH_LEGEND__UPLOAD_MATCHING_CARD;
 

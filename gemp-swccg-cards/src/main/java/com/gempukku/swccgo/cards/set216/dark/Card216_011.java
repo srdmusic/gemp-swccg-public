@@ -1,9 +1,8 @@
-package com.gempukku.swccgo.cards.set501.dark;
+package com.gempukku.swccgo.cards.set216.dark;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
-import com.gempukku.swccgo.cards.conditions.CantSpotCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
@@ -20,23 +19,21 @@ import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToSystemFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.MoveCardUsingLandspeedEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.List;
 
-
 /**
  * Set: Set 16
  * Type: Objective
  * Title: On The Verge Of Greatness / Taking Control Of The Weapon
  */
-public class Card501_048 extends AbstractObjective {
-    public Card501_048() {
+public class Card216_011 extends AbstractObjective {
+    public Card216_011() {
         super(Side.DARK, 0, Title.On_The_Verge_Of_Greatness);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, Commence Primary Ignition, and Shield Gate.\n" +
@@ -44,7 +41,6 @@ public class Card501_048 extends AbstractObjective {
                 "While this side up, once per turn, may [download] a site (or Imperial trooper) to Scarif.\n" +
                 "Flip this card if Krennic or Tarkin on Scarif and Death Star orbiting Scarif.");
         addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("On The Verge Of Greatness");
     }
 
     @Override
