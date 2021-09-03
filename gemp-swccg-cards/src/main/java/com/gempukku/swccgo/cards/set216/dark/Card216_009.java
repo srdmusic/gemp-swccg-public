@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.dark;
+package com.gempukku.swccgo.cards.set216.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -27,8 +27,8 @@ import java.util.List;
  * Subtype: Site
  * Title: Mustafar: Private Platform (Docking Bay)
  */
-public class Card501_006 extends AbstractSite {
-    public Card501_006() {
+public class Card216_009 extends AbstractSite {
+    public Card216_009() {
         super(Side.DARK, "Mustafar: Private Platform (Docking Bay)", Title.Mustafar);
         setLocationDarkSideGameText("Once per turn, may [download] a starfighter with 'Vader' in title here.");
         setLocationLightSideGameText("Your docking bay transit to or from here requires +4 Force (+6 Force if Vader or Vaneé here).");
@@ -36,12 +36,11 @@ public class Card501_006 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 0);
         addIcons(Icon.EXTERIOR_SITE, Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_16);
         addKeyword(Keyword.DOCKING_BAY);
-        setTestingText("Mustafar: Private Platform (Docking Bay)");
     }
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         Condition vaderOrVaneeHere = new OrCondition(new HereCondition(self, Filters.Vader), new HereCondition(self, Filters.persona(Persona.VANEE)));
 
         modifiers.add(new DockingBayTransitFromCostModifier(self, new ConditionEvaluator(4, 6, vaderOrVaneeHere), playerOnLightSideOfLocation));

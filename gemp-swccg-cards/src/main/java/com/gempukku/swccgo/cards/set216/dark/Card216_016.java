@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.dark;
+package com.gempukku.swccgo.cards.set216.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
@@ -23,15 +23,14 @@ import java.util.List;
  * Subtype: Site
  * Title: Scarif: Command Center
  */
-public class Card501_050 extends AbstractSite {
-    public Card501_050() {
+public class Card216_016 extends AbstractSite {
+    public Card216_016() {
         super(Side.DARK, "Scarif: Command Center", Title.Scarif);
         setLocationDarkSideGameText("If an Imperial leader here, add one destiny to your [Set 9] Epic Event total targeting a Scarif site.");
         setLocationLightSideGameText("If Shield Gate on table, opponent’s Force drains here are +1.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.VIRTUAL_SET_16, Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK);
-        setTestingText("Scarif: Command Center");
     }
 
     @Override
