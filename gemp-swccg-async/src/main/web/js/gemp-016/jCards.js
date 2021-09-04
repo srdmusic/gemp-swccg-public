@@ -3601,7 +3601,7 @@ var fixedImages = {
 "200_57ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/coruscantnightclub_ai.png",
 "200_80ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/droideka_ai.png",
 "200_77ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/ds615_ai.png",
-"203_27ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Dark/generalgrievous_ai.png",
+"203_27ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/generalgrievous_ai.png",
 "201_18ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/greenleaderingreensquadron1_ai.png",
 "204_51ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/jakku_ai.png",
 "201_25ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/jangofett_ai.png",
