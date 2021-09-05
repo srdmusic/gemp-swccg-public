@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Interrupt
  * Subtype: Lost or Starting
  * Title: Rise Of The Sith
@@ -31,8 +31,8 @@ public class Card501_045 extends AbstractLostOrStartingInterrupt {
         super(Side.DARK, 5, "Rise Of The Sith", Uniqueness.RESTRICTED_2);
         setGameText("LOST: Raise your converted location to the top. " +
                 "STARTING: If your starting location was a battleground, deploy Rule Of Two and 2 Effects that deploy on table and are always Immune to Alter. Place Interrupt in hand.");
-        addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("[Set 17] Rise Of The Sith");
+        addIcons(Icon.VIRTUAL_SET_17);
+        setTestingText("Rise Of The Sith");
     }
 
     @Override

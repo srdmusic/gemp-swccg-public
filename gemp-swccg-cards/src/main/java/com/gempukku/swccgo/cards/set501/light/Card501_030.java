@@ -22,7 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Effect
  * Title: Your Thoughts Dwell On Your Mother
  */
@@ -31,9 +31,9 @@ public class Card501_030 extends AbstractNormalEffect {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Your_Thoughts_Dwell_On_Your_Mother, Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy on Slave Quarters. Anakin is deploy = 6 and, if drawn for destiny, may take him into hand to cancel and cause a redraw. Gametext on Jedi Council Chamber is cancelled. If Shmi is lost, Anakin is power +5 until end of your next turn. [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.CORUSCANT, Icon.VIRTUAL_SET_16);
+        addIcons(Icon.EPISODE_I, Icon.CORUSCANT, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 17] Your Thoughts Dwell On Your Mother");
+        setTestingText("Your Thoughts Dwell On Your Mother");
     }
 
     @Override

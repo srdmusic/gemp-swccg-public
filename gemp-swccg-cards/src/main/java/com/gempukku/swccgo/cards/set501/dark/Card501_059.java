@@ -17,16 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * •Eriadu (V)
- * [Jedi Pack - PM]
- * DARK - LOCATION - SYSTEM
- * DARK (2): If Imperials control three battlegrounds, Force drain +1 here.
- * LIGHT (1): If Tarkin here, your starships deploy +1 here.
- * [Planet] [Parsec 1] [Set 16]
- */
-
-/**
- * Set: Set 16
+ * Set: Set 17
  * Type: Location
  * Subtype: System
  * Title: Eriadu (V)
@@ -38,8 +29,8 @@ public class Card501_059 extends AbstractSystem {
         setLocationLightSideGameText("If Tarkin here, your starships deploy +1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.PREMIUM, Icon.PLANET, Icon.VIRTUAL_SET_16);
-        setTestingText("[Set 17] Eriadu (V)");
+        addIcons(Icon.PREMIUM, Icon.PLANET, Icon.VIRTUAL_SET_17);
+        setTestingText("Eriadu (V)");
     }
 
     @Override

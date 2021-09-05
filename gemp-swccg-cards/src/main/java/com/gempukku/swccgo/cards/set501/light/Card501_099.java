@@ -8,7 +8,10 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
+import com.gempukku.swccgo.logic.modifiers.MayMoveOtherCardsAsReactToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -25,10 +28,10 @@ public class Card501_099 extends AbstractDroid {
         super(Side.LIGHT, 2, 2, 1, 3, "R3-A2 (Arthree-Aytoo)", Uniqueness.UNIQUE);
         setLore("Special-purpose astromech capable of coordinating piloting coordinates and approach angles during combat.");
         setGameText("Your starships here with an astromech character aboard are power +1 (+2 at Hoth), immune to Lateral Damage, and may move to systems or sectors as a 'react.'");
-        addIcons(Icon.SPECIAL_EDITION, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_16);
+        addIcons(Icon.SPECIAL_EDITION, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_17);
         addModelType(ModelType.ASTROMECH);
         setVirtualSuffix(true);
-        setTestingText("[Set 17] R3-A2 (Arthree-Aytoo) (V)");
+        setTestingText("R3-A2 (Arthree-Aytoo) (V)");
     }
 
     @Override

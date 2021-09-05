@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Weapon
  * Subtype: Character
  * Title: Sidious's Lightsaber
@@ -35,9 +35,9 @@ public class Card501_091 extends AbstractCharacterWeapon {
                 "May add 1 to Force drain where present. May target a character or creature for free. Draw two destiny. " +
                 "Target hit, and its forfeit = 0, if total destiny > defense value.");
         addKeywords(Keyword.LIGHTSABER);
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         setMatchingCharacterFilter(Filters.Sidious);
-        setTestingText("[Set 17] Sidious's Lightsaber");
+        setTestingText("Sidious's Lightsaber");
     }
 
     @Override

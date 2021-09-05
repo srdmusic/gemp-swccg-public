@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Epic Event
  * Title: Rule Of Two
  */
@@ -40,8 +40,8 @@ public class Card501_008 extends AbstractEpicEventDeployable {
                 "For remainder of game, you may not deploy Dark Jedi except Sidious and your chosen apprentice. " +
                 "A Sith Legend, Always Two There Are, Sidious, and your apprentice are destiny +2. " +
                 "If a Jedi just lost from same location as your Dark Jedi, opponent loses 1 Force.");
-        addIcon(Icon.VIRTUAL_SET_16);
-        setTestingText("[Set 17] Rule Of Two");
+        addIcon(Icon.VIRTUAL_SET_17);
+        setTestingText("Rule Of Two");
     }
 
     @Override
