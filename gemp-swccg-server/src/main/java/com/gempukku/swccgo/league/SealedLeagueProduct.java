@@ -297,7 +297,7 @@ public class SealedLeagueProduct {
         //  Lightspeed Sealed (1 series)
         //  series 1 = randomly select two "packets" of 20 cards
 
-        List<CardCollection> noveltySealed = new ArrayList<CardCollection>();
+        List<CardCollection> noveltySealed = new ArrayList<>();
         List<List<PoolIntPair>> pools = new LinkedList<>();
 
 
@@ -319,6 +319,7 @@ public class SealedLeagueProduct {
         darkPacketPool.add("LIGHTSPEED_DS_JABBAS_PALACE");
         darkPacketPool.add("LIGHTSPEED_DS_SEPARATISTS");
         darkPacketPool.add("LIGHTSPEED_DS_STAR_DESTROYERS");
+        darkPacketPool.add("LIGHTSPEED_DS_TIES");
         darkPacketPool.add("LIGHTSPEED_DS_WALKERS");
         darkPacketPool.add("LIGHTSPEED_DS_XIZORS_PALACE");
         lightPacketPool.add("LIGHTSPEED_LS_CLONES");
@@ -332,6 +333,7 @@ public class SealedLeagueProduct {
         lightPacketPool.add("LIGHTSPEED_LS_STAR_CRUISERS");
         lightPacketPool.add("LIGHTSPEED_LS_STARFIGHTERS");
         lightPacketPool.add("LIGHTSPEED_LS_WOOKIEES");
+        lightPacketPool.add("LIGHTSPEED_LS_JAWAS");
 
         List<PoolIntPair> firstWeekPools = new LinkedList<>();
         firstWeekPools.add(new PoolIntPair(darkPacketPool, 2));
@@ -542,6 +544,26 @@ public class SealedLeagueProduct {
                 collection.addItem("3_153",1); //Tyrant
                 collection.addItem("211_24",1); //Vengeance (V)
                 break;
+            case "LIGHTSPEED_DS_TIES":
+                collection.addItem("210_30",1); //Commander Brandei (V)
+                collection.addItem("9_129",1); //Mobilization Points
+                collection.addItem("7_241",1); //Sienar Fleet Systems
+                collection.addItem("7_246",1); //All Power To Weapons
+                collection.addItem("1_241",1); //Dark Maneuvers
+                collection.addItem("7_262",1); //Short Range Fighters
+                collection.addItem("6_160",1); //Twi'lek Advisor
+                collection.addItem("8_156",1); //Carida
+                collection.addItem("7_286",1); //Kuat
+                collection.addItem("213_30",1); //Wakeelmui (V)
+                collection.addItem("9_153",1); //Black 11
+                collection.addItem("106_10",2); //Black Squadron TIE
+                collection.addItem("200_132",1); //Colonel Jendon In Onyx 1
+                collection.addItem("105_5",1); //Death Star Assault Squadron
+                collection.addItem("106_13",2); //Dreadnaught-Class Heavy Cruiser
+                collection.addItem("200_136",1); //Onyx 2 (V)
+                collection.addItem("9_172",1); //The Emperor's Shield
+                collection.addItem("9_173",1); //The Emperor's Sword
+                break;
             case "LIGHTSPEED_DS_WALKERS":
                 collection.addItem("8_94",1); //Commander Igar
                 collection.addItem("208_30",1); //Darth Vader, Emperor's Enforcer
@@ -623,6 +645,25 @@ public class SealedLeagueProduct {
                 collection.addItem("205_9",1); //Ric In Queen's Royal Starship
                 collection.addItem("14_59",2); //Fambaa
                 collection.addItem("14_63",1); //Booma
+                break;
+            case "LIGHTSPEED_LS_JAWAS":
+                collection.addItem("6_5",1); //Aved Luun
+                collection.addItem("12_9",2); //Jawa
+                collection.addItem("6_22",1); //Kalit
+                collection.addItem("216_40",2); //Offworld Jawas
+                collection.addItem("208_10",1); //R'kik D'nec, Hero Of The Dune Sea (V)
+                collection.addItem("7_49",1); //Uutkik
+                collection.addItem("6_53",1); //Bargaining Table
+                collection.addItem("1_51",1); //Jawa Siesta
+                collection.addItem("6_65",1); //Dune Sea Sabacc
+                collection.addItem("10_13",1); //Nar Shaddaa Wind Chimes & Out Of Somewhere
+                collection.addItem("6_77",1); //The Signal
+                collection.addItem("1_118",1); //Utinni!
+                collection.addItem("6_86",1); //Tatooine: Hutt Canyon
+                collection.addItem("112_9",1); //Tatooine: Hutt Trade Route (Desert)
+                collection.addItem("1_131",1); //Tatooine: Jawa Camp
+                collection.addItem("7_155",2); //Ronto
+                collection.addItem("1_150",1); //Sandcrawler
                 break;
             case "LIGHTSPEED_LS_JEDI":
                 collection.addItem("210_19^",1); //Kit Fisto
