@@ -8,7 +8,7 @@ import com.gempukku.swccgo.common.Uniqueness;
 
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: I'd Just As Soon Kiss A Wookiee (V)
@@ -18,9 +18,9 @@ public class Card501_005 extends AbstractUsedOrLostInterrupt {
         super(Side.DARK, 2, Title.Id_Just_As_Soon_Kiss_A_Wookiee, Uniqueness.UNIQUE);
         setLore("'I can arrange that. You could USE a good kiss!'");
         setGameText("USED: Use 1 Force to target a just-deployed Rebel or Resistance character (free if Leia while a Wookiee on table). Opponent must move the character away or return character to hand. LOST: Perform the Used function of this Interrupt for free.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_16);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_17);
         setVirtualSuffix(true);
-        setTestingText("[Set 17] I'd Just As Soon Kiss A Wookiee (V)");
+        setTestingText("I'd Just As Soon Kiss A Wookiee (V)");
         hideFromDeckBuilder();
     }
 }

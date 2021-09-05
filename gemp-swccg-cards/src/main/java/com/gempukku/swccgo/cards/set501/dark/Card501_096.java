@@ -8,13 +8,15 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.TrueCondition;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.IgnoresDeploymentRestrictionsFromCardModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 13
+ * Set: Set 17
  * Type: Location
  * Subtype: Site
  * Title: Malachor: Sith Temple Gateway
@@ -25,8 +27,8 @@ public class Card501_096 extends AbstractSite {
         setLocationDarkSideGameText("[Set 13] Maul ignores [Set 13] objective deployment restrictions here.");
         setLocationLightSideGameText("Opponent may not target Ezra with weapons here.");
         addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.UNDERGROUND, Icon.INTERIOR_SITE, Icon.PLANET, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_16);
-        setTestingText("[Set 17] Malachor: Sith Temple Gateway");
+        addIcons(Icon.UNDERGROUND, Icon.INTERIOR_SITE, Icon.PLANET, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_17);
+        setTestingText("Malachor: Sith Temple Gateway");
     }
 
     @Override

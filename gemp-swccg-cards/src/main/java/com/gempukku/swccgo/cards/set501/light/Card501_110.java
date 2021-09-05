@@ -5,18 +5,25 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.PresentWithCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotFireWeaponsModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Character
  * Subtype: Alien
  * Title: Cliegg Lars
@@ -26,8 +33,8 @@ public class Card501_110 extends AbstractAlien {
         super(Side.LIGHT, 3, 2, 3, 2, 4, "Cliegg Lars", Uniqueness.UNIQUE);
         setLore("");
         setGameText("While present with Shmi, Vader may not fire weapons here. Once per game, may deploy Owen or a device that deploys on a site here from Reserve Deck; reshuffle. If with Shmi or a Vaporator, Force drain +1 here.");
-        addIcons(Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
-        setTestingText("[Set 17] Cliegg Lars");
+        addIcons(Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
+        setTestingText("Cliegg Lars");
     }
 
     @Override

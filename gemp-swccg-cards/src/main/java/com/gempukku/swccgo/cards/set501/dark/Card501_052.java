@@ -25,7 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Effect
  * Title: Unlimited Power!
  */
@@ -34,9 +34,9 @@ public class Card501_052 extends AbstractNormalEffect {
         super(Side.DARK, 1, PlayCardZoneOption.ATTACHED, "Unlimited Power!", Uniqueness.UNIQUE);
         setLore("Eliciting fear from the opponent gives the dark side a powerful advantage.");
         setGameText("Deploy on 500 Republica. Your Emperor, Maul, aliens, and [Independent] starships are lost. At the start of your control phase, if Sidious here, may draw two cards from Force Pile. Once per game, may lose 1 Force to relocate Sidious here. [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.SIDIOUS, Icon.VIRTUAL_SET_16);
+        addIcons(Icon.EPISODE_I, Icon.SIDIOUS, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 17] Unlimited Power!");
+        setTestingText("Unlimited Power!");
     }
 
     @Override

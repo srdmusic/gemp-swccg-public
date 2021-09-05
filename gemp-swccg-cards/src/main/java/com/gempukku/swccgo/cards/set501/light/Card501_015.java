@@ -21,7 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Character
  * Subtype: Rebel
  * Title: Kanan Jarrus, Jedi Knight
@@ -34,8 +34,8 @@ public class Card501_015 extends AbstractRebel {
                 "During your draw phase, if Kanan present at a battleground and he did not move this turn, may peek at your Used Pile. " +
                 "Immune to attrition < 5.");
         addPersona(Persona.KANAN);
-        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
-        setTestingText("[Set 17] Kanan Jarrus, Jedi Knight");
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_17);
+        setTestingText("Kanan Jarrus, Jedi Knight");
     }
 
     @Override

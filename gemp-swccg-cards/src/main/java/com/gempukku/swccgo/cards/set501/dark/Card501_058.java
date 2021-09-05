@@ -18,7 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Interrupt
  * Subtype: Lost
  * Title: Moment Of Triumph (V)
@@ -29,8 +29,8 @@ public class Card501_058 extends AbstractLostOrStartingInterrupt {
         setVirtualSuffix(true);
         setLore("A ruthless ruler of Outer Rim Territories. Grand Moff Tarkin used the Death Star to destroy Alderaan, creating the doctrine of rule by fear.");
         setGameText("LOST: Deploy Eriadu from Reserve Deck; reshuffle. STARTING: If Ralltiir Operations on table, deploy Insignificant Rebellion and up to two Effects that deploy on table and are always immune to Alter. Place Interrupt in hand.");
-        addIcon(Icon.VIRTUAL_SET_16);
-        setTestingText("[Set 17] Moment Of Triumph (V)");
+        addIcon(Icon.VIRTUAL_SET_17);
+        setTestingText("Moment Of Triumph (V)");
     }
 
     @Override

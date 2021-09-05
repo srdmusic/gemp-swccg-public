@@ -16,7 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Interrupt
  * Subtype: Used Or Lost
  * Title: Return Of A Jedi (V)
@@ -26,9 +26,9 @@ public class Card501_032 extends AbstractUsedOrLostInterrupt {
         super(Side.LIGHT, 3, Title.Return_Of_A_Jedi);
         setLore("'Where did you dig up that old fossil?' 'I don't think he exists anymore.' 'Surely he must be dead by now.' 'I can't believe he's gone.' 'Oh, he's not dead, not yet.' Obi's back!");
         setGameText("USED: Take Obi-Wan's Hut, Obi-Wan's Journal or a card with 'Mentor' in title into hand from Reserve Deck; reshuffle. LOST: During battle, if non-[Episode I] Obi-Wan with a Dark Jedi (or 'communing'), add one battle destiny.");
-        addIcon(Icon.VIRTUAL_SET_16);
+        addIcon(Icon.VIRTUAL_SET_17);
         setVirtualSuffix(true);
-        setTestingText("[Set 17] Return Of A Jedi (V)");
+        setTestingText("Return Of A Jedi (V)");
     }
 
     @Override
