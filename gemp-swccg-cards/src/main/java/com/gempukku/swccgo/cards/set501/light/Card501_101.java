@@ -32,7 +32,7 @@ public class Card501_101 extends AbstractSystem {
         setLocationLightSideGameText("Once per turn, may take a Jedi Test or Dagobah site into hand from Reserve Deck; reshuffle.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.DAGOBAH, Icon.PLANET, Icon.VIRTUAL_SET_1);
+        addIcons(Icon.DAGOBAH, Icon.PLANET, Icon.VIRTUAL_SET_17);
         setVirtualSuffix(true);
         setTestingText("Dagobah (V)");
     }
