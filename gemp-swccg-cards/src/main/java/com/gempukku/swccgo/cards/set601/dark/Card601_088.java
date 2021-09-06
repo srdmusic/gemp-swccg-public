@@ -83,7 +83,7 @@ public class Card601_088 extends AbstractImmediateEffect {
                 // Perform result(s)
                 action.appendEffect(
                         new ReduceForceLossEffect(action, playerId, 2, 0, false, forceLossState));
-
+/*
                 if (GameConditions.isDuringOpponentsPhase(game, playerId, Phase.CONTROL)
                         && GameConditions.canReduceForceLoss(game)) {
 
@@ -115,11 +115,11 @@ public class Card601_088 extends AbstractImmediateEffect {
                                 new ReduceForceLossEffect(action, playerId, 1, 1, false, forceLossState));
                     }
                 }
-
+*/
                 actions.add(action);
             }
         }
-
+/*
         // Check condition(s)
         if (TriggerConditions.isAboutToLoseForce(game, effectResult, playerId)
                 && GameConditions.isDuringOpponentsPhase(game, playerId, Phase.CONTROL)
@@ -139,7 +139,7 @@ public class Card601_088 extends AbstractImmediateEffect {
             action.appendEffect(
                     new ReduceForceLossEffect(action, playerId, 1, 1));
             actions.add(action);
-        }
+        }*/
 
         return actions;
     }
