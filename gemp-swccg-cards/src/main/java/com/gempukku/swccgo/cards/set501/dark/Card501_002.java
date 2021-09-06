@@ -10,7 +10,10 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.ChooseEffectEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.StandardEffect;
@@ -20,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Character
  * Subtype: Alien
  * Title: Burg
@@ -32,8 +35,8 @@ public class Card501_002 extends AbstractAlien {
         setLore("Devaronian mercenary.");
         setGameText("Once during battle, may use 1 Force to make Burg power +2 for remainder of turn. Once during battle, opponent may use 1 Force to make Burg power -2 for remainder of turn. At the end of each of your turns, use 1 Force or place Burg in Used Pile.");
         setSpecies(Species.DEVARONIAN);
-        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16);
-        setTestingText("[Set 17] Burg");
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_17);
+        setTestingText("Burg");
     }
 
     @Override

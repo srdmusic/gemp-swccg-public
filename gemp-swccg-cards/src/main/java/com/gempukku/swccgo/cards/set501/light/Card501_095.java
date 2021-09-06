@@ -5,22 +5,15 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.LoseCardsFromTableEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.EachWeaponDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collection;
@@ -29,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Location
  * Subtype: Site
  * Title: Tatooine: Lars' Homestead
@@ -40,8 +33,8 @@ public class Card501_095 extends AbstractSite {
         setLocationDarkSideGameText("Sandwhirl and Tusken Raiders are lost here.");
         setLocationLightSideGameText("May deploy Anakin's Lightsaber from Reserve Deck; reshuffle (or once per game, deploy it from Lost Pile).");
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.DEATH_STAR_II, Icon.EPISODE_VII, Icon.VIRTUAL_SET_16);
-        setTestingText("[Set 17] Tatooine: Lars' Homestead");
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.DEATH_STAR_II, Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
+        setTestingText("Tatooine: Lars' Homestead");
     }
 
     @Override

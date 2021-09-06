@@ -22,19 +22,19 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Epic Event
  * Title: The Force Is Strong In My Family
  */
 public class Card501_028 extends AbstractEpicEventDeployable {
     public Card501_028() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.The_Force_Is_Strong_In_My_Family);
-        setGameText("Deploy on table (only at start of game). Choose one:\n" +
-                "My Father Has It: Deploy Your Thoughts Dwell On Your Mother. You may not deploy characters of ability > 4 (except [Episode I] Jedi).\n" +
-                "I Have It: Deploy Like My Father Before Me. You may not deploy Jedi (except Ahsoka or Luke).\n" +
+        setGameText("Deploy on table (only at start of game). Choose one:" +
+                "My Father Has It: Deploy Your Thoughts Dwell On Your Mother. You may not deploy characters of ability > 4 (except [Episode I] Jedi)." +
+                "I Have It: Deploy Like My Father Before Me. You may not deploy Jedi (except Ahsoka or Luke)." +
                 "You Have That Power, Too: Deploy My Parents Were Strong. You may not deploy Jedi (except [Episode VII] Jedi).");
-        addIcons(Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_16);
-        setTestingText("[Set 17] The Force Is Strong In My Family");
+        addIcons(Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
+        setTestingText("The Force Is Strong In My Family");
     }
 
     @Override

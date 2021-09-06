@@ -2224,7 +2224,14 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
                     && isFiresDuringAttackRun(game, self)
                     && game.getGameState().isCardInPlayActive(self, false, false, false, false, false, false, false, false)) {
                 AttackRunState attackRunState = (AttackRunState) game.getGameState().getEpicEventState();
-                Filter validTarget = !attackRunState.getWingmen().isEmpty() ? Filters.wingmen_in_Attack_Run : Filters.lead_starfighter_in_Attack_Run;
+
+                //check for wingmen that are still on table
+                List<PhysicalCard> wingmen = new LinkedList<>();
+                for(PhysicalCard wingman:attackRunState.getWingmen()) {
+                    if(wingman.getZone().isInPlay())
+                        wingmen.add(wingman);
+                }
+                Filter validTarget = !wingmen.isEmpty() ? Filters.wingmen_in_Attack_Run : Filters.lead_starfighter_in_Attack_Run;
 
                 List<FireWeaponAction> fireWeaponActions = getFireWeaponActions(playerId, game, self, false, 0, self, false, Filters.none, null, validTarget, false);
                 if (fireWeaponActions != null)

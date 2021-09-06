@@ -2,23 +2,24 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.effects.LoseCardsFromTableEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
+import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotReactFromLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotReactToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.ForceDrainCompletedResult;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -26,7 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Effect
  * Title: Infiltration!
  */
@@ -35,8 +36,8 @@ public class Card501_107 extends AbstractNormalEffect {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, "Infiltration!", Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy on a site. At same site, cancels Imperial Barrier and None Shall Pass. Players may not 'react' to or from here. Undercover spies here are lost. Non-[Maintenance] Lando is power +1 here. If Leia here, may place Effect in hand or Used Pile.");
-        addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("[Set 17] Infiltration!");
+        addIcons(Icon.VIRTUAL_SET_17);
+        setTestingText("Infiltration!");
     }
 
     @Override

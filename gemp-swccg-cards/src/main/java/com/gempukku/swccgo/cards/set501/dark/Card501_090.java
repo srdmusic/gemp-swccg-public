@@ -20,7 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Effect
  * Title: Tragedy Of Plagueis
  */
@@ -29,9 +29,9 @@ public class Card501_090 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Tragedy Of Plagueis ", Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy on table. Once per turn, may deploy a lightsaber on Sidious from Reserve Deck; reshuffle. Once per game, If Sidious with a Dark Jedi, may retrieve a character into hand. If Rule Of Two on table, Sidious may be targeted by Force Lightning. [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 17] Tragedy Of Plagueis ");
+        setTestingText("Tragedy Of Plagueis ");
     }
 
     @Override

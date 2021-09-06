@@ -11951,10 +11951,21 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 result += getPower(gameState, presentCard);
         }
 
+        Map<PhysicalCard, Float> modifierSourceMap = new HashMap<>(); // for cumulative rule
         if (!onlyPresent) {
             // Apply modifiers to total power at location
-            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.TOTAL_POWER_AT_LOCATION, location))
-                result += modifier.getTotalPowerModifier(playerId, gameState, this, location);
+            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.TOTAL_POWER_AT_LOCATION, location)) {
+                PhysicalCard source = modifier.getSource(gameState);
+                float modifierAmount = modifier.getTotalPowerModifier(playerId, gameState, this, location);
+                if (!modifierSourceMap.containsKey(source))  {
+                    modifierSourceMap.put(source, modifierAmount);
+                    result += modifierAmount;
+                } else if (modifier.isCumulative()) {
+                    result += modifierAmount;
+                } else if (modifierSourceMap.get(source)<modifierAmount) {
+                    result += modifierAmount - modifierSourceMap.get(source);
+                }
+            }
         }
 
         result = Math.max(0, result);
@@ -15488,6 +15499,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     public void removeEndOfEpicEvent() {
         removeModifiers(_untilEndOfEpicEventModifiers);
         _untilEndOfEpicEventModifiers.clear();
+
+        _firedInAttackRunMap.clear();
+        _firedInAttackRunCompletedMap.clear();
     }
 
     /**

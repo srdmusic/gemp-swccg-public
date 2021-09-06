@@ -3,7 +3,10 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -17,7 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Location
  * Subtype: System
  * Title: Dagobah (V)
@@ -29,9 +32,9 @@ public class Card501_101 extends AbstractSystem {
         setLocationLightSideGameText("Once per turn, may take a Jedi Test or Dagobah site into hand from Reserve Deck; reshuffle.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.DAGOBAH, Icon.PLANET, Icon.VIRTUAL_SET_16);
+        addIcons(Icon.DAGOBAH, Icon.PLANET, Icon.VIRTUAL_SET_17);
         setVirtualSuffix(true);
-        setTestingText("[Set 17] Dagobah (V)");
+        setTestingText("Dagobah (V)");
     }
 
     @Override
