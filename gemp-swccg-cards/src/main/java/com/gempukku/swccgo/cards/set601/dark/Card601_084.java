@@ -3,25 +3,18 @@ package com.gempukku.swccgo.cards.set601.dark;
 import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PeekAtOpponentsHandEffect;
-import com.gempukku.swccgo.cards.effects.PeekAtTopCardOfReserveDeckEffect;
-import com.gempukku.swccgo.cards.effects.complete.ChooseExistingCardPileEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.DestinyDrawForActionSourceModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -36,7 +29,6 @@ public class Card601_084 extends AbstractImperial {
     public Card601_084() {
         super(Side.DARK, 2, 3, 3, 2, 4, "General Nevar", Uniqueness.UNIQUE);
         setLore("Leader.");
-        setGameText("[Pilot] 2, 3: Blizzard 2. Deploys -1 to Hoth. When deployed, may peek at top card of any Reserve Deck. When a spy here is targeted by Trample, adds 1 to your destiny draw.");
         setGameText("[Pilot] 2, 3: Blizzard 2. Deploys -1 on Hoth. Once per game, may deploy a marker site with < 2 [Dark Side] or a battleground (except Endor system or a war room). Once per game, if piloting at a site where no characters present, may peek at opponent's hand.");
         addIcons(Icon.PILOT, Icon.DAGOBAH, Icon.LEGACY_BLOCK_7);
         addKeywords(Keyword.GENERAL, Keyword.LEADER);

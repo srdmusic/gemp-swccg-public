@@ -12,7 +12,6 @@ import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.modifiers.*;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 

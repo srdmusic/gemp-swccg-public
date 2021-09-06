@@ -5,7 +5,6 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.DeploymentRestrictionsOption;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -42,6 +41,7 @@ public class Card601_146 extends AbstractObjective {
                 "Flip this card if you occupy Corellia system and control two Corellia battleground sites with Corellians.");
         addIcons(Icon.REFLECTIONS_II, Icon.LEGACY_BLOCK_4);
         setAsLegacy(true);
+        hideFromDeckBuilder();
     }
 
     @Override
