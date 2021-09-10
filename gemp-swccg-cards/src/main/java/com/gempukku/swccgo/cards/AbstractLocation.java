@@ -648,6 +648,10 @@ public abstract class AbstractLocation extends AbstractSwccgCardBlueprint {
                 List<OptionalGameTextTriggerAction> extraDarkSideActions = getGameTextDarkSideOptionalAfterTriggers(playerOnDarkSideOfLocation, game, effectResult, self, self.getCardId());
                 if (extraDarkSideActions != null)
                     actions.addAll(extraDarkSideActions);
+            } else {
+                List<OptionalGameTextTriggerAction> extraDarkSideActions = getGameTextDarkSideOpponentsActionOptionalAfterTriggers(game.getOpponent(playerOnDarkSideOfLocation), game, effectResult, self, self.getCardId());
+                if (extraDarkSideActions != null)
+                    actions.addAll(extraDarkSideActions);
             }
         }
 
@@ -656,6 +660,11 @@ public abstract class AbstractLocation extends AbstractSwccgCardBlueprint {
                 List<OptionalGameTextTriggerAction> extraLightSideActions = getGameTextLightSideOptionalAfterTriggers(playerOnLightSideOfLocation, game, effectResult, self, self.getCardId());
                 if (extraLightSideActions != null)
                     actions.addAll(extraLightSideActions);
+            } else {
+                List<OptionalGameTextTriggerAction> extraLightSideActions = getGameTextLightSideOpponentsActionOptionalAfterTriggers(game.getOpponent(playerOnLightSideOfLocation), game, effectResult, self, self.getCardId());
+                if (extraLightSideActions != null)
+                    actions.addAll(extraLightSideActions);
+
             }
         }
 
@@ -1114,6 +1123,34 @@ public abstract class AbstractLocation extends AbstractSwccgCardBlueprint {
      * @return the trigger actions, or null
      */
     protected List<OptionalGameTextTriggerAction> getGameTextLightSideOptionalAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        return null;
+    }
+
+    /**
+     * This method is overridden by individual cards to specify optional "after" triggers to the specified effect result
+     * on the Dark side of the location that can be performed by the opponent of the player on that side of the location.
+     * @param playerOnDarkSideOfLocation the player on Dark side of location
+     * @param game the game
+     * @param effectResult the effect result
+     * @param self the card
+     * @param gameTextSourceCardId the card id of the game text for this action comes from (when copied from another card)
+     * @return the trigger actions, or null
+     */
+    protected List<OptionalGameTextTriggerAction> getGameTextDarkSideOpponentsActionOptionalAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        return null;
+    }
+
+    /**
+     * This method is overridden by individual cards to specify optional "after" triggers to the specified effect result
+     * on the Light side of the location that can be performed by the opponent of the player on that side of the location.
+     * @param playerOnLightSideOfLocation the player on Light side of location
+     * @param game the game
+     * @param effectResult the effect result
+     * @param self the card
+     * @param gameTextSourceCardId the card id of the game text for this action comes from (when copied from another card)
+     * @return the trigger actions, or null
+     */
+    protected List<OptionalGameTextTriggerAction> getGameTextLightSideOpponentsActionOptionalAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         return null;
     }
 

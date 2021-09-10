@@ -400,7 +400,7 @@ public class SealedLeagueProduct {
                 collection.addItem("200_76",1); //Count Dooku
                 collection.addItem("9_109",1); //Emperor Palpatine
                 collection.addItem("205_12",1); //Emperor Palpatine, Foreseer
-                collection.addItem("11_64",1); //Sith Probe Droid
+                collection.addItem("200_90",1); //Sith Probe Droid (V)
                 collection.addItem("209_37^",1); //Kylo Ren With Lightsaber
                 collection.addItem("216_6",2); //Darth Vader, Betrayer Of The Jedi
                 collection.addItem("208_34",1); //Lord Maul With Lightsaber
