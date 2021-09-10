@@ -1778,7 +1778,7 @@ public class Filters {
     /**
      * Filter that accepts cards that have a printed destiny < X.
      *
-     * @param ability the value of X
+     * @param destiny the value of X
      * @return Filter
      */
     public static Filter printedDestinyLessThan(final float destiny) {
@@ -7535,6 +7535,12 @@ public class Filters {
 
                 // 2) Check that the card can move
                 if (modifiersQuerying.mayNotMove(gameState, cardToMove)) {
+                    return false;
+                }
+
+                if ((cardToMove.getBlueprint().getCardCategory() == CardCategory.STARSHIP
+                        || cardToMove.getBlueprint().getCardCategory() == CardCategory.VEHICLE)
+                        && !modifiersQuerying.isPiloted(gameState, cardToMove, false)) {
                     return false;
                 }
 
