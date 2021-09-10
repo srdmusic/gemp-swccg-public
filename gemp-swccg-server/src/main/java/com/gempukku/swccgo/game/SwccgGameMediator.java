@@ -5,6 +5,7 @@ import com.gempukku.swccgo.SubscriptionConflictException;
 import com.gempukku.swccgo.SubscriptionExpiredException;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.communication.GameStateListener;
+import com.gempukku.swccgo.db.vo.League;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.state.GameCommunicationChannel;
 import com.gempukku.swccgo.game.state.GameEvent;
@@ -44,6 +45,7 @@ public class SwccgGameMediator {
     private boolean _disablePlayerDecisionTimer;
     private int _secondsGameTimerExtended;
     private boolean _isPrivate;
+    private League _league;
 
     private ReentrantReadWriteLock _lock = new ReentrantReadWriteLock(true);
     private ReentrantReadWriteLock.ReadLock _readLock = _lock.readLock();
@@ -51,7 +53,7 @@ public class SwccgGameMediator {
     private int _channelNextIndex;
     private volatile boolean _destroyed;
 
-    public SwccgGameMediator(String gameId, SwccgFormat swccgFormat, SwccgGameParticipant[] participants, SwccgCardBlueprintLibrary library, int maxSecondsForGamePerPlayer,
+    public SwccgGameMediator(String gameId, SwccgFormat swccgFormat, League league, SwccgGameParticipant[] participants, SwccgCardBlueprintLibrary library, int maxSecondsForGamePerPlayer,
                              boolean allowSpectators, boolean cancelIfNoActions, boolean cancellable, boolean allowExtendGameTimer, int decisionTimeoutSeconds, boolean isPrivate) {
         _gameId = gameId;
         _maxSecondsForGamePerPlayer = maxSecondsForGamePerPlayer;
@@ -60,6 +62,7 @@ public class SwccgGameMediator {
         _cancellable = cancellable;
         _allowExtendGameTimer = allowExtendGameTimer;
         _playerDecisionTimeoutPeriod = decisionTimeoutSeconds * 1000;
+        _league = league;
         _isPrivate = isPrivate;
         if (participants.length < 1)
             throw new IllegalArgumentException("Game can't have less than one participant");
@@ -98,6 +101,10 @@ public class SwccgGameMediator {
 
     public SwccgFormat getFormat() {
         return _swccgoGame.getFormat();
+    }
+
+    public League getLeague() {
+        return _league;
     }
 
     public void setPlayerAutoPassSettings(String playerId, Set<Phase> phases) {
