@@ -96,6 +96,7 @@ AS SELECT id
 ,end_date
 ,format_name
 ,tournament
+,sealed_league_type
 ,winner_deck_archetype
 ,loser_deck_archetype
 ,winner_side
