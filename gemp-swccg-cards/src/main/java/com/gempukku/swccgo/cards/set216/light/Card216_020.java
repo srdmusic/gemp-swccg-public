@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set216.light;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
@@ -96,6 +97,9 @@ public class Card216_020 extends AbstractAlien {
             action.setText("Place top card of Used Pile on Force Pile");
             action.setActionMsg("Place top card of Used Pile on Force Pile");
             // Perform result(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action)
+            );
             action.appendEffect(
                     new PlaceTopCardOfUsedPileOnTopOfForcePileEffect(action, playerId));
             actions.add(action);
