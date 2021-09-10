@@ -17427,6 +17427,7 @@ public class Filters {
     public static final Filter cannon = Filters.or(Keyword.CANNON, Keyword.ION_CANNON, Keyword.LASER_CANNON);
     public static final Filter Control = Filters.title(Title.Control);
     public static final Filter Coolant_Shaft = Filters.title(Title.Coolant_Shaft);
+    public static final Filter Corellia_location = Filters.partOfSystem(Title.Corellia);
     public static final Filter Corellia_site = Filters.and(Filters.partOfSystem(Title.Corellia), CardSubtype.SITE);
     public static final Filter Corellia_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Corellia));
     public static final Filter Corellian = Filters.species(Species.CORELLIAN);
@@ -17718,6 +17719,7 @@ public class Filters {
     public static final Filter Gaderffii_Stick = Filters.title(Title.Gaderffii_Stick);
     public static final Filter Gailid = Filters.title(Title.Gailid);
     public static final Filter Galactic_Senate = Filters.title(Title.Galactic_Senate);
+    public static final Filter Galen = Filters.persona(Persona.GALEN);
     public static final Filter Gall_system = Filters.title(Title.Gall);
     public static final Filter Gamall_Wironicc = Filters.title(Title.Gamall_Wironicc);
     public static final Filter gambler = Filters.keyword(Keyword.GAMBLER);
@@ -17965,6 +17967,7 @@ public class Filters {
     public static final Filter Jundland_Wastes = Filters.title(Title.Jundland_Wastes);
     public static final Filter jungle = Filters.keyword(Keyword.JUNGLE);
     public static final Filter Junkin = Filters.persona(Persona.JUNKIN);
+    public static final Filter Juno = Filters.persona(Persona.JUNO);
     public static final Filter Juri_Juice = Filters.title(Title.Juri_Juice);
     public static final Filter justice_agenda = Filters.agenda(Agenda.JUSTICE);
     public static final Filter K2SO = Filters.title(Title.K2SO);

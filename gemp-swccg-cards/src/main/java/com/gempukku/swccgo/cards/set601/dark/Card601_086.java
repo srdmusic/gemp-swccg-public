@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set200.dark;
+package com.gempukku.swccgo.cards.set601.dark;
 
 import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -28,20 +28,21 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 0
+ * Set: Block 7
  * Type: Character
  * Subtype: Imperial
  * Title: Grand Moff Tarkin (V)
  */
-public class Card200_082 extends AbstractImperial {
-    public Card200_082() {
+public class Card601_086 extends AbstractImperial {
+    public Card601_086() {
         super(Side.DARK, 1, 4, 4, 3, 6, "Grand Moff Tarkin", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Leader. Governor of Outer Rim Territories. Commanded Death Star. Helped disband Imperial Senate. Defined doctrine of rule by fear. Plotted to use Death Star against Emperor.");
         setGameText("[Pilot] 2. Destiny +2 when drawn for destiny. Draws one battle destiny if unable to otherwise (if with Vader or an Imperial leader, may add one instead). During battle, if you just drew a destiny < number of Imperials here, may cancel and redraw that destiny.");
         addPersona(Persona.TARKIN);
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_0);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.LEGACY_BLOCK_7);
         addKeywords(Keyword.LEADER, Keyword.MOFF);
+        setAsLegacy(true);
     }
 
     @Override

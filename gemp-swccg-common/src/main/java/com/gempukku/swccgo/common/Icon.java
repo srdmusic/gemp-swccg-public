@@ -110,6 +110,7 @@ public enum Icon implements Filterable {
     MAINTENANCE("Maintenance"),
     SCOMP_LINK("Scomp Link"),
     SEPARATIST("Separatist"),
+    SETUP("Setup"),
     SIDIOUS("Sidious"),
     TRADE_FEDERATION("Trade Federation"),
     ;

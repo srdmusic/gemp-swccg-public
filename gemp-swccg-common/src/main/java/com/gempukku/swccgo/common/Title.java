@@ -13,6 +13,7 @@ public interface Title {
     String _8D8 = "8D8";
     String A_Dangerous_Time = "A Dangerous Time";
     String A_Gift = "A Gift";
+    String A_Siths_Plans = "A Sith's Plans";
     String A_Power_Loss = "A Power Loss";
     String A_Sith_Legend = "A Sith Legend";
     String A_Stunning_Move = "A Stunning Move";
@@ -855,6 +856,7 @@ public interface Title {
     String Rogue_4 = "Rogue 4";
     String Rogue_Asteroid = "Rogue Asteroid";
     String Rogue_One = "Rogue One";
+    String Rogue_Shadow = "Rogue Shadow";
     String Rolling_Rolling_Rolling = "Rolling, Rolling, Rolling";
     String Rose = "Rose Tico";
     String Royal_Naboo_Security_Officer = "Royal Naboo Security Officer";
