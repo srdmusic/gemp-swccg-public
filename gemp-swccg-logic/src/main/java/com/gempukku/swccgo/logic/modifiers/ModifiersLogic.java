@@ -57,6 +57,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private Map<String, LimitCounter> _turnLimitCounters = new HashMap<String, LimitCounter>();
     private Map<String, LimitCounter> _turnForCardTitleLimitCounters = new HashMap<String, LimitCounter>();
     private Map<String, LimitCounter> _battleLimitCounters = new HashMap<String, LimitCounter>();
+    private Map<String, LimitCounter> _attackLimitCounters = new HashMap<String, LimitCounter>();
     private Map<String, LimitCounter> _duelLimitCounters = new HashMap<String, LimitCounter>();
     private Map<Integer, Map<String, LimitCounter>> _forceLossLimitCounters = new HashMap<Integer, Map<String, LimitCounter>>();
     private Map<String, LimitCounter> _cardTitlePlayedTurnLimitCounters = new HashMap<String, LimitCounter>();
@@ -219,6 +220,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
         for (Map.Entry<String, LimitCounter> entry : _battleLimitCounters.entrySet()) {
             snapshot._battleLimitCounters.put(entry.getKey(), snapshotData.getDataForSnapshot(entry.getValue()));
+        }
+        for (Map.Entry<String, LimitCounter> entry : _attackLimitCounters.entrySet()) {
+            snapshot._attackLimitCounters.put(entry.getKey(), snapshotData.getDataForSnapshot(entry.getValue()));
         }
         for (Map.Entry<String, LimitCounter> entry : _duelLimitCounters.entrySet()) {
             snapshot._duelLimitCounters.put(entry.getKey(), snapshotData.getDataForSnapshot(entry.getValue()));
@@ -530,6 +534,20 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         if (limitCounter == null) {
             limitCounter = new DefaultLimitCounter();
             _battleLimitCounters.put(key, limitCounter);
+        }
+        return limitCounter;
+    }
+
+    @Override
+    public LimitCounter getUntilEndOfAttackLimitCounter(PhysicalCard card, String playerId, int gameTextSourceCardId, GameTextActionId gameTextActionId) {
+        String key = card.getCardId()+"|"+playerId+"|"+gameTextSourceCardId+"|"+ gameTextActionId;
+        if (card.getBlueprint().getCardCategory() == CardCategory.INTERRUPT) {
+            key = "|"+playerId+"|" + "|"+ gameTextActionId;
+        }
+        LimitCounter limitCounter = _attackLimitCounters.get(key);
+        if (limitCounter == null) {
+            limitCounter = new DefaultLimitCounter();
+            _attackLimitCounters.put(key, limitCounter);
         }
         return limitCounter;
     }
@@ -5326,6 +5344,28 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         if (isGetLimit) {
             // TODO: See getNumBattleDestinyDraws() for what to do here.
             return Integer.MAX_VALUE;
+        }
+
+        return Math.max(0, result);
+    }
+
+    @Override
+    public int getNumAttackDestinyDraws(GameState gameState, String player, boolean isGetLimit, boolean isForGui) {
+        AttackState attackState = gameState.getAttackState();
+        if (attackState == null)
+            return 0;
+
+        float abilityRequired = 4;
+        float totalAbility = getAttackTotalAbility(gameState, player);
+
+        int result = 0;
+        if (Float.compare(totalAbility, abilityRequired) >= 0) {
+            result++;
+        }
+
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.NUM_ATTACK_DESTINY_DRAWS, attackState.getAttackLocation())) {
+            int num = ((NumDestinyDrawsDuringAttackModifier)modifier).getNumAttackDestinyDraws(player, gameState, gameState.getGame().getModifiersQuerying());
+            result += num;
         }
 
         return Math.max(0, result);
@@ -12015,11 +12055,11 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     /**
      * Gets the total ability in the attack.
      * @param gameState the game state
-     * @param defender true if total for defender, otherwise total for attacker
+     * @param playerId which player
      * @return the total ability
      */
     @Override
-    public float getAttackTotalAbility(GameState gameState, boolean defender) {
+    public float getAttackTotalAbility(GameState gameState, String playerId) {
         AttackState attackState = gameState.getAttackState();
         if (attackState == null) {
             return 0;
@@ -12028,8 +12068,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         float result = 0;
 
         PhysicalCard attackLocation = attackState.getAttackLocation();
-        String owningPlayer = defender ? attackState.getDefenderOwner() : attackState.getAttackerOwner();
-        Collection<PhysicalCard> cardsInAttack = defender ? attackState.getCardsDefending() : attackState.getCardsAttacking();
+
+        Collection<PhysicalCard> cardsInAttack = Filters.filter(attackState.getAllCardsParticipating(), gameState.getGame(), Filters.your(playerId));
 
         for (PhysicalCard presentCard : Filters.filter(cardsInAttack, _swccgGame, Filters.present(attackState.getAttackLocation()))) {
 
@@ -12062,9 +12102,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         // Apply modifiers to total ability at location
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.TOTAL_ABILITY_AT_LOCATION, attackLocation)) {
-            if (modifier.isForPlayer(owningPlayer)) {
+            if (modifier.isForPlayer(playerId)) {
                 float modifierAmount = modifier.getValue(gameState, this, attackLocation);
-                if (modifierAmount >= 0 || !isProhibitedFromHavingTotalAbilityReduced(gameState, attackLocation, owningPlayer)) {
+                if (modifierAmount >= 0 || !isProhibitedFromHavingTotalAbilityReduced(gameState, attackLocation, playerId)) {
                     result += modifierAmount;
                 }
             }
@@ -12073,9 +12113,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         // Check if value was reset to an "unmodifiable value", and use lowest found
         Float lowestResetValue = null;
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.UNMODIFIABLE_TOTAL_ABILITY_AT_LOCATION, attackLocation)) {
-            if (modifier.isForPlayer(owningPlayer)) {
+            if (modifier.isForPlayer(playerId)) {
                 float modifierAmount = modifier.getValue(gameState, this, attackLocation);
-                if (modifierAmount >= result || !isProhibitedFromHavingTotalAbilityReduced(gameState, attackLocation, owningPlayer)) {
+                if (modifierAmount >= result || !isProhibitedFromHavingTotalAbilityReduced(gameState, attackLocation, playerId)) {
                     lowestResetValue = (lowestResetValue != null) ? Math.min(lowestResetValue, modifierAmount) : modifierAmount;
                 }
             }
@@ -15430,6 +15470,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     public void removeEndOfAttack() {
         removeModifiers(_untilEndOfAttackModifiers);
         _untilEndOfAttackModifiers.clear();
+        _attackLimitCounters.clear();
         _firedInAttackMap.clear();
         _firedInAttackCompletedMap.clear();
         _firedInAttackByPlayerMap.clear();
