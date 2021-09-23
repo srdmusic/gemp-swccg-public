@@ -11,6 +11,8 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.InitiateAttackNonCreatureAction;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfAttackModifierEffect;
@@ -19,6 +21,9 @@ import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.NumDestinyDrawsDuringAttackModifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.PassthruEffect;
+import com.gempukku.swccgo.logic.timing.results.AttackTargetSelectedResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -50,11 +55,41 @@ public class Card8_025 extends AbstractAlien {
         Condition atEndorSite = new AtCondition(self, Filters.Endor_site);
         Evaluator lightSideIconsAtLocation = new ForceIconsAtLocationEvaluator(self, false, true);
 
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new PowerModifier(self, atEndorSite, lightSideIconsAtLocation));
         modifiers.add(new ForfeitModifier(self, atEndorSite, lightSideIconsAtLocation));
         modifiers.add(new PowerModifier(self, new DuringAttackWithParticipantCondition(self), 2));
         return modifiers;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        //Where present, may substitute for a character just selected to be attacked by a creature.
+        if (effectResult.getType() == EffectResult.Type.ATTACK_TARGET_SELECTED) {
+            AttackTargetSelectedResult targetSelectedResult = ((AttackTargetSelectedResult)effectResult);
+            final InitiateAttackNonCreatureAction creatureAction = targetSelectedResult.getInitiateAttackNonCreatureAction();
+            PhysicalCard creature = targetSelectedResult.getCreature();
+            PhysicalCard currentTarget = targetSelectedResult.getTarget();
+
+            if (creatureAction != null
+                && creatureAction.isTargetChosen()
+                && !creatureAction.isTargetChanged()
+                && !Filters.and(self).accepts(game, currentTarget)
+                && Filters.nonCreatureCanBeAttackedByCreature(creature, false).accepts(game, self)) {
+
+                OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setText("Substitute for creature attack");
+                action.appendEffect(new PassthruEffect(action) {
+                    @Override
+                    protected void doPlayEffect(SwccgGame game) {
+                        creatureAction.setTarget(self);
+                    }
+                });
+                return Collections.singletonList(action);
+            }
+        }
+
+        return null;
     }
 
     @Override
@@ -75,6 +110,4 @@ public class Card8_025 extends AbstractAlien {
 
         return null;
     }
-
-    //Where present, may substitute for a character just selected to be attacked by a creature.
 }
