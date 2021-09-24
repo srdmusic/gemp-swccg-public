@@ -312,6 +312,7 @@ public class SealedLeagueProduct {
 
         darkPacketPool.add("LIGHTSPEED_DS_BIKER_SCOUTS");
         darkPacketPool.add("LIGHTSPEED_DS_BOUNTY_HUNTERS");
+        darkPacketPool.add("LIGHTSPEED_DS_CRIMSON_DAWN");
         darkPacketPool.add("LIGHTSPEED_DS_DARK_JEDI");
         darkPacketPool.add("LIGHTSPEED_DS_DROIDS");
         darkPacketPool.add("LIGHTSPEED_DS_FIRST_ORDER");
@@ -323,6 +324,7 @@ public class SealedLeagueProduct {
         darkPacketPool.add("LIGHTSPEED_DS_WALKERS");
         darkPacketPool.add("LIGHTSPEED_DS_XIZORS_PALACE");
         lightPacketPool.add("LIGHTSPEED_LS_CLONES");
+        lightPacketPool.add("LIGHTSPEED_LS_GHOST_CREW");
         lightPacketPool.add("LIGHTSPEED_LS_GUNGANS");
         lightPacketPool.add("LIGHTSPEED_LS_JEDI");
         lightPacketPool.add("LIGHTSPEED_LS_MAZS_CASTLE");
@@ -395,6 +397,27 @@ public class SealedLeagueProduct {
                 collection.addItem("6_171",1); //Tatooine: Jabba's Palace
                 collection.addItem("201_40^",1); //Slave I, Symbol Of Fear
                 collection.addItem("110_12",1); //Zuckuss In Mist Hunter
+                break;
+            case "LIGHTSPEED_DS_CRIMSON_DAWN":
+                collection.addItem("213_2",1); //Aemon Gremm With Percussive Cannon
+                collection.addItem("213_4",1); //Dryden Vos
+                collection.addItem("205_13",1); //Hondo Ohnaka
+                collection.addItem("213_7",1); //Hylobon Enforcer
+                collection.addItem("213_9",1); //Margo
+                collection.addItem("207_22",1); //Quiggold
+                collection.addItem("207_24",1); //Sidon Ithano
+                collection.addItem("9_126",1); //Inconsequential Losses
+                collection.addItem("200_114",1); //You'll Be Dead!
+                collection.addItem("213_17",1); //A Lawless Time
+                collection.addItem("213_19",1); //I Never Ask For Anything Twice
+                collection.addItem("6_160",1); //Twi'lek Advisor
+                collection.addItem("213_22",1); //Working Much More Closely
+                collection.addItem("213_25",1); //First Light: Bar
+                collection.addItem("213_26",1); //First Light: Dryden's Study
+                collection.addItem("213_27",1); //First Light: Reception Area
+                collection.addItem("200_130",1); //Boba Fett In Slave I (V)
+                collection.addItem("207_28",1); //Meson Martinet
+                collection.addItem("213_34",2); //Crimson Dawn Blaster
                 break;
             case "LIGHTSPEED_DS_DARK_JEDI":
                 collection.addItem("200_76",1); //Count Dooku
@@ -481,17 +504,17 @@ public class SealedLeagueProduct {
                 collection.addItem("211_25",1); //Dark Jedi Lightsaber (V)
                 break;
             case "LIGHTSPEED_DS_JABBAS_PALACE":
+                collection.addItem("209_33",1); //Bala-Tik
                 collection.addItem("6_104",1); //Gailid
-                collection.addItem("205_13",1); //Hondo Ohnaka
                 collection.addItem("200_84",1); //Jabba The Hutt (V)
                 collection.addItem("211_3",1); //Lady Proxima
+                collection.addItem("211_1",1); //Mitth'raw'nuruodo
                 collection.addItem("203_28",1); //Ortugg (V)
                 collection.addItem("200_87",1); //Ponda Baba (V)
                 collection.addItem("201_27",1); //Wooof (V)
                 collection.addItem("109_6",1); //4-LOM With Concussion Rifle
                 collection.addItem("201_31",1); //Jabba's Haven
                 collection.addItem("202_12",1); //Jabba's Trophies
-                collection.addItem("6_149",1); //Scum And Villainy
                 collection.addItem("7_256",1); //Jabba's Twerps
                 collection.addItem("6_157",1); //None Shall Pass
                 collection.addItem("6_160",1); //Twi'lek Advisor
@@ -503,8 +526,8 @@ public class SealedLeagueProduct {
                 collection.addItem("110_12",1); //Zuckuss In Mist Hunter
                 break;
             case "LIGHTSPEED_DS_SEPARATISTS":
+                collection.addItem("14_78",1); //Darth Sidious
                 collection.addItem("213_3",1); //Darth Tyranus
-                collection.addItem("208_35",1); //Lord Sidious
                 collection.addItem("212_5",1); //Admiral Trench
                 collection.addItem("203_27^",1); //General Grievous
                 collection.addItem("210_40",1); //Nute Gunray
@@ -556,13 +579,12 @@ public class SealedLeagueProduct {
                 collection.addItem("7_286",1); //Kuat
                 collection.addItem("213_30",1); //Wakeelmui (V)
                 collection.addItem("9_153",1); //Black 11
-                collection.addItem("106_10",2); //Black Squadron TIE
+                collection.addItem("106_10",3); //Black Squadron TIE
+                collection.addItem("205_21",1); //Captain Jonus In Scimitar 2
                 collection.addItem("200_132",1); //Colonel Jendon In Onyx 1
                 collection.addItem("105_5",1); //Death Star Assault Squadron
                 collection.addItem("106_13",2); //Dreadnaught-Class Heavy Cruiser
                 collection.addItem("200_136",1); //Onyx 2 (V)
-                collection.addItem("9_172",1); //The Emperor's Shield
-                collection.addItem("9_173",1); //The Emperor's Sword
                 break;
             case "LIGHTSPEED_DS_WALKERS":
                 collection.addItem("8_94",1); //Commander Igar
@@ -627,6 +649,27 @@ public class SealedLeagueProduct {
                 collection.addItem("211_41",1); //Kamino: Clone Training Center
                 collection.addItem("200_59",2); //Acclamator-Class Assault Ship
                 break;
+            case "LIGHTSPEED_LS_GHOST_CREW":
+                collection.addItem("208_2",1); //C1-10P (Chopper)
+                collection.addItem("211_59",1); //Ahsoka Tano
+                collection.addItem("204_3^",1); //Captain Hera Syndulla
+                collection.addItem("210_14",1); //Ezra Bridger
+                collection.addItem("203_6^",1); //Kanan Jarrus
+                collection.addItem("207_9",1); //Sabine Wren
+                collection.addItem("208_13",1); //Zeb Orrelios
+                collection.addItem("12_44",1); //Insurrection & Aim High
+                collection.addItem("1_70",1); //A Few Maneuvers
+                collection.addItem("208_20",1); //Mandalorian Mishap (V)
+                collection.addItem("1_105",1); //Rebel Barrier
+                collection.addItem("6_77",1); //The Signal
+                collection.addItem("207_15",2); //This Is MY Ship!
+                collection.addItem("106_2",1); //Corulag
+                collection.addItem("9_57",1); //Home One: Docking Bay
+                collection.addItem("1_129",1); //Tatooine: Docking Bay 94
+                collection.addItem("207_17",1); //Ghost
+                collection.addItem("208_27",1); //Phantom
+                collection.addItem("214_15",1); //Ahsoka's Shoto Lightsaber
+                break;
             case "LIGHTSPEED_LS_GUNGANS":
                 collection.addItem("14_5",1); //Boss Nass
                 collection.addItem("14_7",1); //Captain Tarpals
@@ -652,18 +695,17 @@ public class SealedLeagueProduct {
                 collection.addItem("6_22",1); //Kalit
                 collection.addItem("216_40",2); //Offworld Jawas
                 collection.addItem("208_10",1); //R'kik D'nec, Hero Of The Dune Sea (V)
-                collection.addItem("7_49",1); //Uutkik
                 collection.addItem("6_53",1); //Bargaining Table
-                collection.addItem("1_51",1); //Jawa Siesta
-                collection.addItem("6_65",1); //Dune Sea Sabacc
+                collection.addItem("12_41",1); //Battle Plan & Draw Their Fire
+                collection.addItem("6_65",2); //Dune Sea Sabacc
+                collection.addItem("10_8",1); //Houjix & Out Of Nowhere
                 collection.addItem("10_13",1); //Nar Shaddaa Wind Chimes & Out Of Somewhere
                 collection.addItem("6_77",1); //The Signal
-                collection.addItem("1_118",1); //Utinni!
                 collection.addItem("6_86",1); //Tatooine: Hutt Canyon
                 collection.addItem("112_9",1); //Tatooine: Hutt Trade Route (Desert)
                 collection.addItem("1_131",1); //Tatooine: Jawa Camp
+                collection.addItem("205_7",1); //Han, Chewie, And The Falcon (V)
                 collection.addItem("7_155",2); //Ronto
-                collection.addItem("1_150",1); //Sandcrawler
                 break;
             case "LIGHTSPEED_LS_JEDI":
                 collection.addItem("210_19^",1); //Kit Fisto
@@ -709,7 +751,6 @@ public class SealedLeagueProduct {
                 collection.addItem("203_21^",1); //Wild Karrde
                 break;
             case "LIGHTSPEED_LS_RESISTANCE":
-                collection.addItem("204_1",1); //BB-8 (Beebee-Ate)
                 collection.addItem("204_6",1); //Finn
                 collection.addItem("207_5",1); //General Leia Organa
                 collection.addItem("215_12",1); //Jannah
@@ -718,17 +759,18 @@ public class SealedLeagueProduct {
                 collection.addItem("209_10^",1); //Rey With Lightsaber
                 collection.addItem("209_11",1); //Rose Tico
                 collection.addItem("211_55",1); //Vice Admiral Holdo
-                collection.addItem("6_56",1); //Projection Of A Skywalker
                 collection.addItem("208_15",1); //Why Does Everyone Want To Go Back To Jakku?!
                 collection.addItem("204_17",1); //Are You Okay?
                 collection.addItem("207_13",1); //I Think I Can Handle Myself
                 collection.addItem("211_2",1); //See You Around, Kid
                 collection.addItem("6_77",1); //The Signal
                 collection.addItem("207_14",1); //They're Tracking Us (V)
+                collection.addItem("207_16",1); //Jakku: Docking Bay
                 collection.addItem("204_29",1); //Jakku: Rey's Encampment
-                collection.addItem("204_30",1); //Jakku: Starship Graveyard
                 collection.addItem("204_31",1); //Jakku: Tuanul Village
+                collection.addItem("211_28",1); //BB-8 In Black Squadron 1
                 collection.addItem("213_58",1); //Leia's Resistance Transport
+                collection.addItem("210_26",1); //V-4X-D Ski Speeder
                 break;
             case "LIGHTSPEED_LS_SCOUNDRELS":
                 collection.addItem("213_35",1); //Captain Lando Calrissian
@@ -741,8 +783,9 @@ public class SealedLeagueProduct {
                 collection.addItem("213_46",1); //Kessel Run (V)
                 collection.addItem("208_16",1); //Yarna d'al' Gargan (V)
                 collection.addItem("12_53",1); //All Wings Report In & Darklighter Spin
+                collection.addItem("213_50",1); //Han's Dice (V)
                 collection.addItem("213_51",1); //He's The Best Smuggler Around
-                collection.addItem("213_53",2); //I've Got A Really Good Feeling About This
+                collection.addItem("213_53",1); //I've Got A Really Good Feeling About This
                 collection.addItem("5_64",1); //Punch It!
                 collection.addItem("6_77",1); //The Signal
                 collection.addItem("1_126",1); //Kessel
@@ -758,11 +801,11 @@ public class SealedLeagueProduct {
                 collection.addItem("200_12",1); //General Airen Cracken
                 collection.addItem("8_14",1); //General Crix Madine
                 collection.addItem("215_11",1); //Han Solo, Optimistic General
+                collection.addItem("9_21",1); //Lieutenant Blount
                 collection.addItem("200_21",1); //Luke Skywalker, Rebel Scout (V)
                 collection.addItem("8_28",1); //Sergeant Bruckman
                 collection.addItem("9_41",1); //Strike Planning
                 collection.addItem("203_15",1); //The Shield Is Down! (V)
-                collection.addItem("8_51",1); //Fly Casual
                 collection.addItem("9_52",1); //Insertion Planning
                 collection.addItem("203_17",1); //Rebel Leadership (V)
                 collection.addItem("8_61",1); //Take the Initiative
@@ -770,8 +813,8 @@ public class SealedLeagueProduct {
                 collection.addItem("204_24",1); //Endor (V)
                 collection.addItem("8_69",1); //Endor: Back Door
                 collection.addItem("8_77",1); //Endor: Rebel Landing Site (Forest)
+                collection.addItem("200_62",1); //Gold Leader In Gold 1 (V)
                 collection.addItem("201_19",1); //Tantive IV (V)
-                collection.addItem("8_79",1); //Tydirium
                 break;
             case "LIGHTSPEED_LS_SKYWALKERS":
                 collection.addItem("11_12",1); //Shmi Skywalker
@@ -797,7 +840,7 @@ public class SealedLeagueProduct {
             case "LIGHTSPEED_LS_STAR_CRUISERS":
                 collection.addItem("203_1",1); //Admiral Ackbar (V)
                 collection.addItem("209_1",1); //Admiral Raddus
-                collection.addItem("200_20",1); //Luke Skywalker (V)
+                collection.addItem("9_12",1); //First Officer Thaneespi
                 collection.addItem("203_9",1); //Mon Calamari Admiral
                 collection.addItem("9_36",1); //Launching The Assault
                 collection.addItem("200_44",1); //Mon Calamari Dockyards
@@ -854,7 +897,7 @@ public class SealedLeagueProduct {
                 collection.addItem("215_14",1); //Kashyyyk: Kachirho
                 collection.addItem("216_32",1); //Kashyyyk: Sacred Falls (Forest)
                 collection.addItem("216_33",1); //Kashyyyk: Work Settlement #121
-                collection.addItem("7_144",1); //Medium Bulk Freighter
+                collection.addItem("200_59",1); //Acclamator-Class Assault Ship
                 collection.addItem("216_22",1); //Bowcaster (V)
                 break;
             default:
