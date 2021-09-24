@@ -1372,6 +1372,34 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a card accepted by the card filter is being deployed as a 'react'.
+     * @param game the game
+     * @param effect the effect
+     * @param cardFilter the card filter
+     * @return true or false
+     */
+    public static boolean isDeployingAsReact(SwccgGame game, Effect effect, Filterable cardFilter) {
+        if (effect.isCanceled()) {
+            return false;
+        }
+
+        if (effect.getType() == Effect.Type.PLAYING_CARD_EFFECT) {
+            RespondablePlayingCardEffect respondableEffect = (RespondablePlayingCardEffect) effect;
+            if (respondableEffect.isAsReact()) {
+                return Filters.and(cardFilter).accepts(game, respondableEffect.getCard());
+            }
+        }
+        else if (effect.getType() == Effect.Type.PLAYING_CARDS_EFFECT) {
+            RespondableDeployMultipleCardsSimultaneouslyEffect respondableEffect = (RespondableDeployMultipleCardsSimultaneouslyEffect) effect;
+            if (respondableEffect.isAsReact()) {
+                return Filters.and(cardFilter).accepts(game, respondableEffect.getCard1())||Filters.and(cardFilter).accepts(game, respondableEffect.getCard2());
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Determines if a card accepted by the card filter is beginning to move as a 'react'.
      * @param game the game
      * @param effect the effect

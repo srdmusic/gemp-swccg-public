@@ -122,10 +122,6 @@ public class FireWeaponActionBuilder {
             }
         }
 
-        // Check if there is a card in Reserve deck (if weapon destiny needs to be drawn)
-        if (!_noWeaponDestinyNeeded && gameState.getReserveDeckSize(_playerId) == 0)
-            return null;
-
         // Check number of times allowed to fire during battle
         if (!_repeatedFiring) {
             if (gameState.isDuringBattle()) {
