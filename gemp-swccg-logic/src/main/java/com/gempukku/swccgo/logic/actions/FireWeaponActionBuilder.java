@@ -122,10 +122,6 @@ public class FireWeaponActionBuilder {
             }
         }
 
-        // Check if there is a card in Reserve deck (if weapon destiny needs to be drawn)
-        if (!_noWeaponDestinyNeeded && gameState.getReserveDeckSize(_playerId) == 0)
-            return null;
-
         // Check number of times allowed to fire during battle
         if (!_repeatedFiring) {
             if (gameState.isDuringBattle()) {
@@ -1241,6 +1237,8 @@ public class FireWeaponActionBuilder {
                                                                             effectList.add(new HitCardModifyForfeitAndOpponentLosesForceEffect(action, cardFiredAt, forfeitModifierOrResetValue, opponentsForceLoss, _weaponOrCardWithPermanentWeapon, _permanentWeapon, gameState.getWeaponFiringState().getCardFiringWeapon()));
                                                                         } else if (forfeitModifierOrResetValue != 0 && powerModifierValue != 0) {
                                                                             effectList.add(new HitCardAndModifyPowerAndForfeitEffect(action, cardFiredAt, powerModifierValue, forfeitModifierOrResetValue, _weaponOrCardWithPermanentWeapon, _permanentWeapon, gameState.getWeaponFiringState().getCardFiringWeapon()));
+                                                                        } else if (forfeitModifierOrResetValue == 0 && powerModifierValue != 0) {
+                                                                            effectList.add(new HitCardAndModifyPowerEffect(action, cardFiredAt, powerModifierValue, _weaponOrCardWithPermanentWeapon, _permanentWeapon, gameState.getWeaponFiringState().getCardFiringWeapon()));
                                                                         } else {
                                                                             effectList.add(new HitCardAndModifyForfeitEffect(action, cardFiredAt, forfeitModifierOrResetValue, _weaponOrCardWithPermanentWeapon, _permanentWeapon, gameState.getWeaponFiringState().getCardFiringWeapon()));
                                                                         }

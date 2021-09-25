@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.SetWhileInPlayDataEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -12,12 +11,11 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.ExchangeCardsInHandWithCardInLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.KeywordModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
@@ -25,24 +23,24 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Epic Event
  * Title: Rule Of Two
  */
 public class Card501_008 extends AbstractEpicEventDeployable {
     public Card501_008() {
         super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Rule_Of_Two);
-        setGameText("Deploy on table at start of game. Choose an apprentice:" +
+        setGameText("Deploys on table only at start of game; choose an apprentice:" +
                 "Maul: Deploy Desert Landing Site and They Will Be No Match For You." +
                 "Dooku: Deploy Invisible Hand: Bridge and Evil Is Everywhere." +
                 "Vader: Deploy Vader's Castle and I Am Your Father." +
-                "For remainder of game, you may not deploy Dark Jedi except Sidious and your chosen apprentice. Always Two There Are," +
-                "A Sith Legend and your apprentice are destiny +2. Once per game may exchange 2 cards from hand with one character from Lost Pile.");
-        addIcon(Icon.VIRTUAL_SET_16);
+                "For remainder of game, you may not deploy Dark Jedi except Sidious and your chosen apprentice. " +
+                "A Sith Legend, Always Two There Are, Sidious, and your apprentice are destiny +2. " +
+                "If a Jedi just lost from same location as your Dark Jedi, opponent loses 1 Force.");
+        addIcon(Icon.VIRTUAL_SET_17);
         setTestingText("Rule Of Two");
     }
 
@@ -53,6 +51,8 @@ public class Card501_008 extends AbstractEpicEventDeployable {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new ArrayList<>();
+
         if (TriggerConditions.justDeployed(game, effectResult, self)) {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setPerformingPlayer(self.getOwner());
@@ -105,41 +105,31 @@ public class Card501_008 extends AbstractEpicEventDeployable {
                     })
             );
 
-            return Collections.singletonList(action);
+            actions.add(action);
         }
 
-        return null;
+        String opponent = game.getOpponent(self.getOwner());
+
+        // Check condition(s)
+        if (TriggerConditions.justLostFromLocation(game, effectResult, Filters.Jedi, Filters.sameSiteAs(self, Filters.Dark_Jedi))) {
+
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Make opponent lose 1 Force");
+            // Perform result(s)
+            action.appendEffect(
+                    new LoseForceEffect(action, opponent, 1));
+            actions.add(action);
+        }
+
+        return actions;
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new MayNotPlayModifier(self, Filters.and(Filters.Dark_Jedi, Filters.not(Filters.Sidious), Filters.not(Filters.Sith_Apprentice)), self.getOwner()));
-        modifiers.add(new DestinyModifier(self, Filters.or(Filters.Always_Two_There_Are, Filters.A_Sith_Legend, Filters.Sith_Apprentice), 2));
+        modifiers.add(new DestinyModifier(self, Filters.or(Filters.A_Sith_Legend, Filters.Always_Two_There_Are, Filters.Sidious, Filters.Sith_Apprentice), 2));
         return modifiers;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        //Once per game may exchange 2 cards from hand with one character from Lost Pile.
-        GameTextActionId gameTextActionId = GameTextActionId.RULE_OF_TWO__EXCHANGE_CARDS;
-
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.numCardsInHand(game, playerId) >= 2
-                && GameConditions.hasLostPile(game, playerId)) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Exchange cards with character in Lost Pile");
-            action.setActionMsg("Exchange two cards in hand with a character in Lost Pile");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new ExchangeCardsInHandWithCardInLostPileEffect(action, playerId, 2, 2, Filters.character));
-            return Collections.singletonList(action);
-        }
-
-        return null;
     }
 
     @Override

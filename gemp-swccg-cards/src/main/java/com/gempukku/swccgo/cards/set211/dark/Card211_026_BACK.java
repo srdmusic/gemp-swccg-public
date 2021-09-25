@@ -104,8 +104,8 @@ public class Card211_026_BACK extends AbstractObjective {
                 && GameConditions.hasForcePile(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Search your force pile and reveal a card");
-            action.setActionMsg("Search your force pile and reveal a card");
+            action.setText("Search your Force Pile and reveal a card");
+            action.setActionMsg("Search your Force Pile and reveal a card");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));

@@ -25,16 +25,16 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 17
  * Type: Effect
  * Title: Unlimited Power!
  */
 public class Card501_052 extends AbstractNormalEffect {
     public Card501_052() {
         super(Side.DARK, 1, PlayCardZoneOption.ATTACHED, "Unlimited Power!", Uniqueness.UNIQUE);
-        setLore("");
+        setLore("Eliciting fear from the opponent gives the dark side a powerful advantage.");
         setGameText("Deploy on 500 Republica. Your Emperor, Maul, aliens, and [Independent] starships are lost. At the start of your control phase, if Sidious here, may draw two cards from Force Pile. Once per game, may lose 1 Force to relocate Sidious here. [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
+        addIcons(Icon.EPISODE_I, Icon.SIDIOUS, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Unlimited Power!");
     }
@@ -63,7 +63,7 @@ public class Card501_052 extends AbstractNormalEffect {
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.UNLIMITED_POWER__RELOCATE_SIDIOUS;
-        Filter sidiousNotHereFilter = Filters.and(Filters.Sidious, Filters.not(Filters.here(self.getAttachedTo())));
+        Filter sidiousNotHereFilter = Filters.and(Filters.Sidious, Filters.not(Filters.here(self.getAttachedTo())), Filters.canBeRelocatedToLocation(self.getAttachedTo(), 0));
 
         if (GameConditions.canSpot(game, self, sidiousNotHereFilter)
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)) {

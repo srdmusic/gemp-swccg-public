@@ -1778,7 +1778,7 @@ public class Filters {
     /**
      * Filter that accepts cards that have a printed destiny < X.
      *
-     * @param ability the value of X
+     * @param destiny the value of X
      * @return Filter
      */
     public static Filter printedDestinyLessThan(final float destiny) {
@@ -2701,6 +2701,33 @@ public class Filters {
                 int playerStarshipCount = Filters.countActive(gameState.getGame(), source, playersStarshipsHere);
 
                 return playerStarshipCount < opponentStarshipCount;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts cards that are locations where the given player has
+     * total power greater than the given number
+     *
+     * @param source    Source card making the query
+     * @param playerId  Player who's cards we are looking at
+     * @param greaterThan total power greater than this number
+     * @return Filter
+     */
+    public static Filter totalPowerGreaterThan(final PhysicalCard source, final String playerId, final float greaterThan) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+
+                // Only accepts locations
+                if (!Filters.location.accepts(gameState, modifiersQuerying, physicalCard)) {
+                    return false;
+                }
+
+                // Get the player's total power at the location
+                float totalPower = modifiersQuerying.getTotalPowerAtLocation(gameState, physicalCard, playerId, false, false);
+
+                return totalPower > greaterThan;
             }
         };
     }
@@ -7511,6 +7538,12 @@ public class Filters {
                     return false;
                 }
 
+                if ((cardToMove.getBlueprint().getCardCategory() == CardCategory.STARSHIP
+                        || cardToMove.getBlueprint().getCardCategory() == CardCategory.VEHICLE)
+                        && !modifiersQuerying.isPiloted(gameState, cardToMove, false)) {
+                    return false;
+                }
+
                 // 3) Check destination is valid for card to move to
                 if (!cardToMove.getBlueprint().getValidMoveTargetFilter(cardToMove.getOwner(), gameState.getGame(), cardToMove, false).accepts(gameState, modifiersQuerying, physicalCard)) {
                     return false;
@@ -8023,6 +8056,7 @@ public class Filters {
                 PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
 
                 if ((cardToMove.getBlueprint().getCardCategory() != CardCategory.CHARACTER
+                        && cardToMove.getBlueprint().getCardCategory() != CardCategory.CREATURE
                         && cardToMove.getBlueprint().getCardCategory() != CardCategory.VEHICLE
                         && cardToMove.getBlueprint().getCardCategory() != CardCategory.STARSHIP)
                         || physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
@@ -17393,6 +17427,7 @@ public class Filters {
     public static final Filter cannon = Filters.or(Keyword.CANNON, Keyword.ION_CANNON, Keyword.LASER_CANNON);
     public static final Filter Control = Filters.title(Title.Control);
     public static final Filter Coolant_Shaft = Filters.title(Title.Coolant_Shaft);
+    public static final Filter Corellia_location = Filters.partOfSystem(Title.Corellia);
     public static final Filter Corellia_site = Filters.and(Filters.partOfSystem(Title.Corellia), CardSubtype.SITE);
     public static final Filter Corellia_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Corellia));
     public static final Filter Corellian = Filters.species(Species.CORELLIAN);
@@ -17478,7 +17513,6 @@ public class Filters {
     public static final Filter dejarik = Filters.keyword(Keyword.DEJARIK);
     public static final Filter Demotion = Filters.title(Title.Demotion);
     public static final Filter Dengar = Filters.persona(Persona.DENGAR);
-    public static final Filter Deploy_The_Garrison = Filters.title(Title.Deploy_The_Garrison);
     public static final Filter Deployable_By_SYCFA = Filters.and(Filters.side(Side.DARK), Filters.or(Filters.Alderaan_system, Filters.title(Title.Jedha_City)));
     public static final Filter Deploys_aboard_Blockade_Flagship = Filters.or(Filters.persona(Persona.BLOCKADE_FLAGSHIP), Filters.locationAndCardsAtLocation(Filters.siteOfStarshipOrVehicle(Persona.BLOCKADE_FLAGSHIP, false)));
     public static final Filter Deploys_aboard_Executor = Filters.or(Filters.persona(Persona.EXECUTOR), Filters.locationAndCardsAtLocation(Filters.siteOfStarshipOrVehicle(Persona.EXECUTOR, false)));
@@ -17685,6 +17719,7 @@ public class Filters {
     public static final Filter Gaderffii_Stick = Filters.title(Title.Gaderffii_Stick);
     public static final Filter Gailid = Filters.title(Title.Gailid);
     public static final Filter Galactic_Senate = Filters.title(Title.Galactic_Senate);
+    public static final Filter Galen = Filters.persona(Persona.GALEN);
     public static final Filter Gall_system = Filters.title(Title.Gall);
     public static final Filter Gamall_Wironicc = Filters.title(Title.Gamall_Wironicc);
     public static final Filter gambler = Filters.keyword(Keyword.GAMBLER);
@@ -17911,6 +17946,7 @@ public class Filters {
     public static final Filter Jedi = Filters.and(Filters.side(Side.LIGHT), Filters.character, Filters.abilityMoreThanOrEqualTo(6));
     public static final Filter Jedi_Council_Chamber = Filters.title(Title.Jedi_Council_Chamber);
     public static final Filter Jedi_Council_member = Filters.keyword(Keyword.JEDI_COUNCIL_MEMBER);
+    public static final Filter Jedi_Knight = Filters.and(Filters.Jedi, Filters.abilityEqualTo(6));
     public static final Filter Jedi_Lightsaber = Filters.title(Title.Jedi_Lightsaber);
     public static final Filter Jedi_Master = Filters.type(CardType.JEDI_MASTER);
     public static final Filter Jedi_Presence = Filters.title(Title.Jedi_Presence);
@@ -17931,6 +17967,7 @@ public class Filters {
     public static final Filter Jundland_Wastes = Filters.title(Title.Jundland_Wastes);
     public static final Filter jungle = Filters.keyword(Keyword.JUNGLE);
     public static final Filter Junkin = Filters.persona(Persona.JUNKIN);
+    public static final Filter Juno = Filters.persona(Persona.JUNO);
     public static final Filter Juri_Juice = Filters.title(Title.Juri_Juice);
     public static final Filter justice_agenda = Filters.agenda(Agenda.JUSTICE);
     public static final Filter K2SO = Filters.title(Title.K2SO);
@@ -18487,6 +18524,7 @@ public class Filters {
     public static final Filter Starkiller_Base_location = Filters.partOfSystem(Title.Starkiller_Base);
     public static final Filter starship = Filters.type(CardType.STARSHIP);
     public static final Filter starship_cannon = Filters.and(CardType.WEAPON, CardSubtype.STARSHIP, Filters.or(Keyword.CANNON, Keyword.ION_CANNON, Keyword.LASER_CANNON));
+    public static final Filter Taking_Control_Of_The_Weapon = Filters.title(Title.Taking_Control_Of_The_Weapon);
 
     /**
      * Wrapper method to allow other static filters to access the wrapped filter.
@@ -18793,6 +18831,7 @@ public class Filters {
     public static final Filter You_Truly_Belong_Here_With_Us = Filters.title(Title.You_Truly_Belong_Here_With_Us);
     public static final Filter You_Overestimate_Their_Chances = Filters.title(Title.You_Overestimate_Their_Chances);
     public static final Filter Your_Destiny = Filters.title(Title.Your_Destiny);
+    public static final Filter Youll_Be_Dead = Filters.title(Title.Youll_Be_Dead);
     public static final Filter Youre_A_Slave = Filters.title(Title.Youre_A_Slave);
     public static final Filter Youre_All_Clear_Kid = Filters.title(Title.Youre_All_Clear_Kid);
     public static final Filter YT_1300_Transport = Filters.title(Title.YT_1300_Transport);

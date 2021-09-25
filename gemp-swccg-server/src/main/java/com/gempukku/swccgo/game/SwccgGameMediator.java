@@ -5,6 +5,7 @@ import com.gempukku.swccgo.SubscriptionConflictException;
 import com.gempukku.swccgo.SubscriptionExpiredException;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.communication.GameStateListener;
+import com.gempukku.swccgo.db.vo.League;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.state.GameCommunicationChannel;
 import com.gempukku.swccgo.game.state.GameEvent;
@@ -44,6 +45,7 @@ public class SwccgGameMediator {
     private boolean _disablePlayerDecisionTimer;
     private int _secondsGameTimerExtended;
     private boolean _isPrivate;
+    private League _league;
 
     private ReentrantReadWriteLock _lock = new ReentrantReadWriteLock(true);
     private ReentrantReadWriteLock.ReadLock _readLock = _lock.readLock();
@@ -51,7 +53,7 @@ public class SwccgGameMediator {
     private int _channelNextIndex;
     private volatile boolean _destroyed;
 
-    public SwccgGameMediator(String gameId, SwccgFormat swccgFormat, SwccgGameParticipant[] participants, SwccgCardBlueprintLibrary library, int maxSecondsForGamePerPlayer,
+    public SwccgGameMediator(String gameId, SwccgFormat swccgFormat, League league, SwccgGameParticipant[] participants, SwccgCardBlueprintLibrary library, int maxSecondsForGamePerPlayer,
                              boolean allowSpectators, boolean cancelIfNoActions, boolean cancellable, boolean allowExtendGameTimer, int decisionTimeoutSeconds, boolean isPrivate) {
         _gameId = gameId;
         _maxSecondsForGamePerPlayer = maxSecondsForGamePerPlayer;
@@ -60,6 +62,7 @@ public class SwccgGameMediator {
         _cancellable = cancellable;
         _allowExtendGameTimer = allowExtendGameTimer;
         _playerDecisionTimeoutPeriod = decisionTimeoutSeconds * 1000;
+        _league = league;
         _isPrivate = isPrivate;
         if (participants.length < 1)
             throw new IllegalArgumentException("Game can't have less than one participant");
@@ -98,6 +101,10 @@ public class SwccgGameMediator {
 
     public SwccgFormat getFormat() {
         return _swccgoGame.getFormat();
+    }
+
+    public League getLeague() {
+        return _league;
     }
 
     public void setPlayerAutoPassSettings(String playerId, Set<Phase> phases) {
@@ -1222,12 +1229,22 @@ public class SwccgGameMediator {
                 }
                 if(Filters.title("I Am Part Of The Living Force").accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null)  {
-                    // Communing
-                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Communing";
+                    // Communing (ignore the location)
+                    return "Communing";
+                }
+                if(Filters.title("What Gives A Jedi His Power").accepts(_swccgoGame, startingInterrupt)
+                    && startingLocation.getBlueprint().getTitle() != null) {
+                    // The Force Is Strong In My Family
+                    return "Skywalker Saga";
+                }
+                if(Filters.title("Rise Of The Sith").accepts(_swccgoGame, startingInterrupt)
+                        && startingLocation.getBlueprint().getTitle() != null) {
+                    // Rule Of Two
+                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Rule Of Two";
                 }
                 if (Filters.Communing.accepts(_swccgoGame, startingInterrupt)
                         && startingInterrupt.getBlueprint().isLegacy()) {
-                    //Communing (ignore the location)
+                    // Legacy Communing (ignore the location)
                     return "Communing";
                 }
                 if (Filters.title("It Is The Future You See").accepts(_swccgoGame, startingInterrupt)
@@ -1355,7 +1372,7 @@ public class SwccgGameMediator {
                 // Old Allies
                 objectiveLabel = "Old Allies";
             }
-            if (Filters.or(Filters.On_The_Verge_Of_Greatness, Filters.Deploy_The_Garrison).accepts(_swccgoGame, objective)) {
+            if (Filters.or(Filters.On_The_Verge_Of_Greatness, Filters.Taking_Control_Of_The_Weapon).accepts(_swccgoGame, objective)) {
                 // On The Verge Of Greatness
                 objectiveLabel = "On The Verge Of Greatness";
             }

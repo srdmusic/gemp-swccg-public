@@ -13,6 +13,7 @@ public interface Title {
     String _8D8 = "8D8";
     String A_Dangerous_Time = "A Dangerous Time";
     String A_Gift = "A Gift";
+    String A_Siths_Plans = "A Sith's Plans";
     String A_Power_Loss = "A Power Loss";
     String A_Sith_Legend = "A Sith Legend";
     String A_Stunning_Move = "A Stunning Move";
@@ -263,7 +264,6 @@ public interface Title {
     String Demotion = "Demotion";
     String Den_Of_Thieves = "Den Of Thieves";
     String Dengars_Blaster_Carbine =  "Dengar's Blaster Carbine";
-    String Deploy_The_Garrison = "Deploy The Garrison!";
     String Derlin = "Major Bren Derlin";
     String Desert_Heart = "Tatooine: Desert Heart";
     String Desert_Landing_Site = "Tatooine: Desert Landing Site";
@@ -371,6 +371,7 @@ public interface Title {
     String Feltipern_Trevagg = "Feltipern Trevagg";
     String Field_Promotion = "Field Promotion";
     String Fighters_Coming_In = "Fighters Coming In";
+    String Figrin_Dan = "Figrin D'an";
     String Finalizer = "Finalizer";
     String Finn = "Finn";
     String Fire_Extinguisher = "Fire Extinguisher";
@@ -568,15 +569,16 @@ public interface Title {
     String Juri_Juice = "Juri Juice";
     String K2SO = "K-2SO (Kay-Tuesso)";
     String Kabe = "Kabe";
+    String Kachirho = "Kashyyyk: Kachirho";
     String KalFalnl_Cndros = "Kal'Falnl C'ndros";
     String Kalit = "Kalit";
     String Kamino= "Kamino";
     String Kanan = "Kanan Jarrus";
     String Karie_Neth = "Karie Neth";
+    String Kashyyyk = "Kashyyyk";
     String Keep_Your_Eyes_Open = "Keep Your Eyes Open";
     String Kessel = "Kessel";
     String Kessel_Run = "Kessel Run";
-    String Kashyyyk = "Kashyyyk";
     String Ke_Chu_Ke_Kukuta = "Ke Chu Ke Kukuta?";
     String Ket_Maliss = "Ket Maliss";
     String Ketwol = "Ketwol";
@@ -594,6 +596,7 @@ public interface Title {
     String Lana_Dobreed = "Lana Dobreed";
     String Landing_Claw = "Landing Claw";
     String Landing_Platform = "Endor: Landing Platform (Docking Bay)";
+    String Lars_Homestead = "Tatooine: Lars' Homestead";
     String Lars_Moisture_Farm = "Tatooine: Lars' Moisture Farm";
     String Laser_Cannon_Battery = "Laser Cannon Battery";
     String Laser_Gate = "Laser Gate";
@@ -853,6 +856,7 @@ public interface Title {
     String Rogue_4 = "Rogue 4";
     String Rogue_Asteroid = "Rogue Asteroid";
     String Rogue_One = "Rogue One";
+    String Rogue_Shadow = "Rogue Shadow";
     String Rolling_Rolling_Rolling = "Rolling, Rolling, Rolling";
     String Rose = "Rose Tico";
     String Royal_Naboo_Security_Officer = "Royal Naboo Security Officer";
@@ -969,6 +973,7 @@ public interface Title {
     String Take_The_Initiative = "Take the Initiative";
     String Take_Them_Away = "Take Them Away";
     String Take_Your_Fathers_Place = "Take Your Father's Place";
+    String Taking_Control_Of_The_Weapon = "Taking Control Of The Weapon";
     String Takeel = "Takeel";
     String Takodana = "Takodana";
     String Tala_1 = "Tala 1";
@@ -996,6 +1001,7 @@ public interface Title {
     String That_Things_Operational = "That Thing's Operational";
     String Thats_One = "That's One";
     String They_Have_No_Idea_Were_Coming = "They Have No Idea We're Coming";
+    String They_Must_Never_Again_Leave_This_City = "They Must Never Again Leave This City";
     String Theyve_Shut_Down_The_Main_Reactor = "They've Shut Down The Main Reactor";
     String The_Camp = "The Camp";
     String The_Circle_Is_Now_Complete = "The Circle Is Now Complete";
@@ -1119,6 +1125,7 @@ public interface Title {
     String Wioslea = "Wioslea";
     String Wise_Advice = "Wise Advice";
     String Wittin = "Wittin";
+    String Wokling = "Wokling";
     String Womp_Rat = "Womp Rat";
     String Wookiee_Slaving_Operation = "Wookiee Slaving Operation";
     String Wookiee_Roar = "Wookiee Roar";
@@ -1151,6 +1158,7 @@ public interface Title {
     String You_Overestimate_Their_Chances = "You Overestimate Their Chances";
     String You_Rebel_Scum = "You Rebel Scum";
     String You_Truly_Belong_Here_With_Us = "You Truly Belong Here With Us";
+    String Youll_Be_Dead = "You'll Be Dead!";
     String Your_Destiny = "Your Destiny";
     String Your_Insight_Serves_You_Well = "Your Insight Serves You Well";
     String Your_Thoughts_Dwell_On_Your_Mother = "Your Thoughts Dwell On Your Mother";

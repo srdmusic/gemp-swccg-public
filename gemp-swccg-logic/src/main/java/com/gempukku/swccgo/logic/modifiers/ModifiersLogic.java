@@ -769,10 +769,6 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
     @Override
     public boolean hasLightAndDarkForceIcons(GameState gameState, PhysicalCard physicalCard, PhysicalCard ignoreForceIconsFromCard) {
-        if (physicalCard.isBlownAway() || physicalCard.isCollapsed()) {
-            return false;
-        }
-
         // This is used as part of checking if a location is a battleground.  We use this since
         // we want to skip checking if location is rotated since it does not affect whether it is a battleground
         // for not. Also, in case there is a card that affects whether a location is rotated, based on
@@ -784,6 +780,12 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         int numLightIcons = physicalCard.getBlueprint().getIconCount(Icon.LIGHT_FORCE);
         int numDarkIcons = physicalCard.getBlueprint().getIconCount(Icon.DARK_FORCE);
 
+        //if location is blown away or collapsed ignore the printed force icons but it can still have icons added
+        if (physicalCard.isBlownAway() || physicalCard.isCollapsed()) {
+            numLightIcons = 0;
+            numDarkIcons = 0;
+        }
+
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.CANCEL_FORCE_ICON, physicalCard)) {
             numLightIcons -= modifier.getIconCountModifier(gameState, this, physicalCard, Icon.LIGHT_FORCE);
             numDarkIcons -= modifier.getIconCountModifier(gameState, this, physicalCard, Icon.DARK_FORCE);
@@ -794,10 +796,20 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
 
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.GIVE_ICON, physicalCard)) {
+            boolean skipAddingDarkIcon = false;
+            boolean skipAddingLightIcon = false;
+            for(Modifier m: getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_ADD_ICON, modifier.getSource(gameState))) {
+                if (m.getIcon() == Icon.DARK_FORCE)
+                    skipAddingDarkIcon = true;
+                if (m.getIcon() == Icon.LIGHT_FORCE)
+                    skipAddingLightIcon = true;
+            }
             if (ignoreForceIconsFromCard == null
                     || modifier.getSource(gameState).getCardId() != ignoreForceIconsFromCard.getCardId()) {
-                numLightIcons += modifier.getIconCountModifier(gameState, this, physicalCard, Icon.LIGHT_FORCE);
-                numDarkIcons += modifier.getIconCountModifier(gameState, this, physicalCard, Icon.DARK_FORCE);
+                if (!skipAddingLightIcon)
+                    numLightIcons += modifier.getIconCountModifier(gameState, this, physicalCard, Icon.LIGHT_FORCE);
+                if (!skipAddingDarkIcon)
+                    numDarkIcons += modifier.getIconCountModifier(gameState, this, physicalCard, Icon.DARK_FORCE);
             }
         }
 
@@ -827,10 +839,33 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private int getIconCount(GameState gameState, PhysicalCard physicalCard, Icon iconInput, boolean skipEqualizeCheck, ModifierCollector modifierCollector) {
         Icon icon = iconInput;
         if (physicalCard.isCrossedOver()) {
+            /* May 2021 rules update
+            -Rebel becomes Imperial (or vice versa)
+            -Clone Army becomes Separatist (or vice versa)
+            -Resistance becomes First Order (or vice versa)
+            -Jedi Master becomes Dark Jedi Master (or vice versa)
+            -Republic becomes Sith (or vice versa)
+             */
             if (icon == Icon.IMPERIAL)
                 icon = Icon.REBEL;
             else if (icon == Icon.REBEL)
                 icon = Icon.IMPERIAL;
+            else if (icon == Icon.SEPARATIST)
+                icon = Icon.CLONE_ARMY;
+            else if (icon == Icon.CLONE_ARMY)
+                icon = Icon.SEPARATIST;
+            else if (icon == Icon.FIRST_ORDER)
+                icon = Icon.RESISTANCE;
+            else if (icon == Icon.RESISTANCE)
+                icon = Icon.FIRST_ORDER;
+            else if (icon == Icon.DARK_JEDI_MASTER)
+                icon = Icon.JEDI_MASTER;
+            else if (icon == Icon.JEDI_MASTER)
+                icon = Icon.DARK_JEDI_MASTER;
+            else if (icon == Icon.SITH)
+                icon = Icon.REPUBLIC;
+            else if (icon == Icon.REPUBLIC)
+                icon = Icon.SITH;
         }
 
         // Special case for Big One: Asteroid Cave or Space Slug Belly (planet site or creature site)
@@ -889,10 +924,6 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 return 0;
             }
 
-            if (physicalCard.isBlownAway() || physicalCard.isCollapsed()) {
-                return 0;
-            }
-
             boolean iconsCanceled = false;
             for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.CANCEL_FORCE_ICONS, physicalCard)) {
                 if (modifier.isForPlayer(icon == Icon.LIGHT_FORCE ? gameState.getLightPlayer() : gameState.getDarkPlayer())) {
@@ -904,7 +935,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 return 0;
             }
 
-            if (isRotatedLocation(gameState, physicalCard)) {
+            if (physicalCard.isBlownAway() || physicalCard.isCollapsed()) {
+                result = 0;
+            } else if (isRotatedLocation(gameState, physicalCard)) {
                 if (icon == Icon.LIGHT_FORCE)
                     result = physicalCard.getBlueprint().getIconCount(Icon.DARK_FORCE);
                 else
@@ -932,8 +965,15 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
             for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.GIVE_ICON, physicalCard)) {
                 if (modifier.getIcon() == icon) {
-                    modifierCollector.addModifier(modifier);
-                    result += modifier.getIconCountModifier(gameState, this, physicalCard, icon);
+                    boolean skipAddingIcon = false;
+                    for(Modifier m: getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_ADD_ICON, modifier.getSource(gameState))) {
+                        if (m.getIcon() == icon)
+                            skipAddingIcon = true;
+                    }
+                    if (!skipAddingIcon) {
+                        modifierCollector.addModifier(modifier);
+                        result += modifier.getIconCountModifier(gameState, this, physicalCard, icon);
+                    }
                 }
             }
         }
@@ -2771,6 +2811,17 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             modifierCollector.addModifier(modifier);
         }
 
+        // Check if defense value may not be increased above a specified value
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_DEFENSE_VALUE_MODIFIED_TO, physicalCard)) {
+            float modifierAmount = modifier.getValue(gameState, this, physicalCard);
+
+            if (modifierAmount < (defenseValueBeforeModified + positiveBonuses)) {
+                result = Math.min(modifierAmount, result);
+            }
+
+            modifierCollector.addModifier(modifier);
+        }
+
         // Check if value was reset to an "unmodifiable value", and use lowest found
         Float lowestResetValue = null;
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.UNMODIFIABLE_DEFENSE_VALUE, physicalCard)) {
@@ -2784,8 +2835,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             result = lowestResetValue;
         }
 
-        boolean forfeitMayNotIncreaseBeyondPrinted = isProhibitedFromHavingDefenseValueIncreasedBeyondPrinted(gameState, physicalCard, modifierCollector);
-        if (forfeitMayNotIncreaseBeyondPrinted) {
+        boolean defenseValueMayNotIncreaseBeyondPrinted = isProhibitedFromHavingDefenseValueIncreasedBeyondPrinted(gameState, physicalCard, modifierCollector);
+        if (defenseValueMayNotIncreaseBeyondPrinted) {
             if (result > defenseValueBeforeModified) {
                 result = defenseValueBeforeModified;
             }
@@ -11900,10 +11951,21 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 result += getPower(gameState, presentCard);
         }
 
+        Map<PhysicalCard, Float> modifierSourceMap = new HashMap<>(); // for cumulative rule
         if (!onlyPresent) {
             // Apply modifiers to total power at location
-            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.TOTAL_POWER_AT_LOCATION, location))
-                result += modifier.getTotalPowerModifier(playerId, gameState, this, location);
+            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.TOTAL_POWER_AT_LOCATION, location)) {
+                PhysicalCard source = modifier.getSource(gameState);
+                float modifierAmount = modifier.getTotalPowerModifier(playerId, gameState, this, location);
+                if (!modifierSourceMap.containsKey(source))  {
+                    modifierSourceMap.put(source, modifierAmount);
+                    result += modifierAmount;
+                } else if (modifier.isCumulative()) {
+                    result += modifierAmount;
+                } else if (modifierSourceMap.get(source)<modifierAmount) {
+                    result += modifierAmount - modifierSourceMap.get(source);
+                }
+            }
         }
 
         result = Math.max(0, result);
@@ -13984,6 +14046,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         if (deploymentRestrictionsOption != null && deploymentRestrictionsOption.isAllowDeployLandedToExteriorSites() && Filters.exterior_site.accepts(gameState, this, location))
             return true;
 
+        if (deploymentRestrictionsOption != null && deploymentRestrictionsOption.isAllowDeployUnpilotedToSystemOrSector() && Filters.or(Filters.system, Filters.sector).accepts(gameState, this, location))
+            return true;
+
         return grantedToDeployToAsLanded(gameState, starship, location);
     }
 
@@ -14991,7 +15056,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                         if (modifier.isPersistent() || !(isGameTextCanceled(gameState, source, false, modifier.isEvenIfUnpilotedInPlay()) || source.isSuspended())) {
                             if (modifier.isPersistent() || modifier.getLocationSidePlayer() == null || !isLocationGameTextCanceledForPlayer(gameState, source, modifier.getLocationSidePlayer())) {
                                 // For some modifier types, the affects card checking is faster than the condition checking, so for those check targets card first
-                                boolean checkTargetsCardFirst = (modifierType == ModifierType.GIVE_ICON || modifierType == ModifierType.CANCEL_FORCE_ICON || modifierType == ModifierType.CANCEL_FORCE_ICONS || modifierType == ModifierType.CANCEL_ICONS || modifierType == ModifierType.EQUALIZE_FORCE_ICONS);
+                                boolean checkTargetsCardFirst = (modifierType == ModifierType.GIVE_ICON || modifierType == ModifierType.CANCEL_FORCE_ICON || modifierType == ModifierType.CANCEL_FORCE_ICONS || modifierType == ModifierType.CANCEL_ICONS || modifierType == ModifierType.EQUALIZE_FORCE_ICONS || modifierType == ModifierType.MAY_NOT_ADD_ICON);
                                 if (!checkTargetsCardFirst || modifier.isTargetingCard(gameState, this, card)) {
                                     Condition condition = modifier.getCondition();
                                     Condition additionalCondition = modifier.getAdditionalCondition(gameState, this, card);
@@ -15084,7 +15149,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                             if (modifier.getSource(gameState) == null || modifier.isPersistent() || !(isGameTextCanceled(gameState, modifier.getSource(gameState), false, modifier.isEvenIfUnpilotedInPlay()) || modifier.getSource(gameState).isSuspended())) {
                                 if (modifier.getSource(gameState) == null || modifier.isPersistent() || modifier.getLocationSidePlayer() == null || !isLocationGameTextCanceledForPlayer(gameState, modifier.getSource(gameState), modifier.getLocationSidePlayer())) {
                                     // For some modifier types, the affects card checking is faster than the condition checking, so for those check the affects card first
-                                    boolean checkAffectsCardFirst = (modifierType == ModifierType.GIVE_ICON || modifierType == ModifierType.CANCEL_FORCE_ICON || modifierType == ModifierType.CANCEL_FORCE_ICONS || modifierType == ModifierType.CANCEL_ICONS || modifierType == ModifierType.EQUALIZE_FORCE_ICONS);
+                                    boolean checkAffectsCardFirst = (modifierType == ModifierType.GIVE_ICON || modifierType == ModifierType.CANCEL_FORCE_ICON || modifierType == ModifierType.CANCEL_FORCE_ICONS || modifierType == ModifierType.CANCEL_ICONS || modifierType == ModifierType.EQUALIZE_FORCE_ICONS || modifierType == ModifierType.MAY_NOT_ADD_ICON);
                                     if (!checkAffectsCardFirst || card == null || modifier.affectsCard(gameState, this, card)) {
                                         Condition condition = modifier.getCondition();
                                         Condition additionalCondition = modifier.getAdditionalCondition(gameState, this, card);
@@ -15434,6 +15499,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     public void removeEndOfEpicEvent() {
         removeModifiers(_untilEndOfEpicEventModifiers);
         _untilEndOfEpicEventModifiers.clear();
+
+        _firedInAttackRunMap.clear();
+        _firedInAttackRunCompletedMap.clear();
     }
 
     /**
@@ -16311,8 +16379,13 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         return !getModifiersAffectingCard(gameState, ModifierType.MAY_BE_REVEALED_AS_RESISTANCE_AGENT, card).isEmpty();
     }
 
-    public boolean isCommuning(GameState gameState, PhysicalCard card) {
-        return !getModifiersAffectingCard(gameState, ModifierType.COMMUNING, card).isEmpty();
+    public boolean isCommuning(GameState gameState, Filterable filter) {
+        Collection<PhysicalCard> stackedCards = Filters.filterStacked(gameState.getGame(), Filters.and(filter));
+        for (PhysicalCard card:stackedCards) {
+            if(!getModifiersAffectingCard(gameState, ModifierType.COMMUNING, card).isEmpty())
+                return true;
+        }
+        return false;
     }
 
     public Collection<PhysicalCard> getCardsConsideredOutOfPlay(GameState gameState) {

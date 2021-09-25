@@ -9,11 +9,11 @@ public enum ModifyGameTextType {
 
     // Game text modifier flags
     // (Naming convention: CardIdentifier__ModificationIdentifier)
-    A_POWER_LOSS__CARDS_GO_LOST_INSTEAD_OF_USED("Cards from A Power Loss go to owner’s Lost Pile instead of Used Pile"),
     ALWAYS_THINKING_WITH_YOUR_STOMACH__MISSING_TREATED_AS_LANDSPEED_0("'Missing' treated as 'landspeed = 0 for remainder of turn"),
     BOONTA_EVE_PODRACE__RETRIEVE_FORCE_INTO_HAND("Take any or all force retrieved into hand"),
     BRING_HIM_BEFORE_ME__MAY_NOT_CAPTURE_LUKE("May not capture Luke"),
     BRING_HIM_BEFORE_ME__TARGETS_LEIA_INSTEAD_OF_LUKE("Targets Leia instead of Luke"),
+    COMMENCE_PRIMARY_IGNITION__ADDS_A_DESTINY_TO_TOTAL("Add one destiny to your [Set 9] Epic Event total targeting a Scarif site."),
     COUNTER_ASSAULT__ADD_DESTINY_TO_TOTAL("Add one destiny to total"),
     DARK_DEAL__ADDITIONAL_BESPIN_LOCATION_TO_CANCEL("Additional Bespin location required to cancel"),
     DEATH_STAR__MAY_DEPLOY_WITHOUT_COMPLETING_DEATH_STAR_PLANS("May deploy without completing Death Star Plans"),
@@ -84,6 +84,9 @@ public enum ModifyGameTextType {
     LEGACY__OUTRIDER_DOES_NOT_PLACE_UTINNI_EFFECTS_OUT_OF_PLAY("Does not place Utinni Effects out of play"),
     LEGACY__WELL_HANDLE_THIS__ONLY_TARGET_DROIDS_AND_SPIES("May target only droids and spies"),
     LEGACY__LET_THEM_MAKE_THE_FIRST_MOVE__ONLY_TARGET_DROIDS_AND_SPIES("May target only droids and spies"),
+    LEGACY__IMPERIAL_DOMINATION_IGNORES_GARINDAN("Ignores Garindan"),
+    LEGACY__THE_EMPIRES_BACK__VADER_MAY_BE_TREATED_AS_GALEN("'Vader' may be treated as 'Galen'"),
+    LEGACY__PALEJO_RESHAD__TREAT_AUDIENCE_CHAMBER_AS_CORELLIA("Treat 'Audience Chamber' as 'Corellia'"),
 
     ;
 

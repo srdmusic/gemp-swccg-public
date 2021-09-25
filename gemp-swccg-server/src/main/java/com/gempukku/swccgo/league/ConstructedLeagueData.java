@@ -84,4 +84,8 @@ public class ConstructedLeagueData implements LeagueData {
 
         return status;
     }
+
+    public boolean isSealed() {
+        return false;
+    }
 }

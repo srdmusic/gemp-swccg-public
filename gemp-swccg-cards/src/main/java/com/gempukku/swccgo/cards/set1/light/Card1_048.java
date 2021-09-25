@@ -46,6 +46,11 @@ public class Card1_048 extends AbstractNormalEffect {
     }
 
     @Override
+    public Filter getValidTargetFilterToRemainAttachedTo(SwccgGame game, PhysicalCard self) {
+        return Filters.and(Filters.character, Filters.canBeTargetedBy(self, TargetingReason.TO_BE_DISARMED));
+    }
+
+    @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
         if (TriggerConditions.justDeployed(game, effectResult, self)) {
