@@ -3550,6 +3550,10 @@ public interface ModifiersQuerying {
      */
     List<SwccgBuiltInCardBlueprint> permanentWeaponsTargetedByThisTurn(PhysicalCard target);
 
+    void hitOrMadeLostByWeapon(PhysicalCard target, PhysicalCard weapon);
+    void clearHitOrMadeLostByWeapon(PhysicalCard card);
+    boolean wasHitOrMadeLostByWeapon(PhysicalCard target, Filter hitBy);
+
 
     boolean mayNotBeFired(GameState gameState, PhysicalCard weapon);
 

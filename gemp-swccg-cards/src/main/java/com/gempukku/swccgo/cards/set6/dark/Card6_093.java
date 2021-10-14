@@ -14,10 +14,11 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfAttackModifierEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
+import com.gempukku.swccgo.logic.decisions.YesNoDecision;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.NumDestinyDrawsDuringAttackModifier;
@@ -56,7 +57,7 @@ public class Card6_093 extends AbstractAlien {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         if (GameConditions.isDuringAttackWithParticipant(game, self)
-            && GameConditions.isOncePerAttack(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+                && GameConditions.isOncePerAttack(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Add one destiny");
             action.appendUsage(
@@ -70,5 +71,49 @@ public class Card6_093 extends AbstractAlien {
         return null;
     }
 
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         //If Amanin is alone and causes a non-selective creature to be lost, creature is placed out of play and you may retrieve Force equal to its deploy cost.
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.creature, Filters.not(Icon.SELECTIVE_CREATURE)))
+                && GameConditions.isAlone(game, self)) {
+            final PhysicalCard creatureLost = ((LostFromTableResult) effectResult).getCard();
+
+            //check if Amanin "caused" it to be lost (defeating it in an attack or Amanin using a weapon to make it lost)
+            boolean defeatedInAttack = GameConditions.isDuringAttack(game)
+                    && game.getGameState().getAttackState().getCardsAttacking().contains(self)
+                    && game.getGameState().getAttackState().getCardsDefending().contains(creatureLost);
+            boolean amaninHitItWithAWeapon = game.getModifiersQuerying().wasHitOrMadeLostByWeapon(creatureLost, Filters.and(self));
+
+            if (defeatedInAttack || amaninHitItWithAWeapon) {
+                final String playerId = self.getOwner();
+                final float amountToRetrieve = game.getModifiersQuerying().getDeployCost(game.getGameState(), creatureLost);
+
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Place creature out of play");
+                action.appendEffect(new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, creatureLost.getOwner(), creatureLost, false));
+                action.appendEffect(
+                        new PlayoutDecisionEffect(action, playerId,
+                                new YesNoDecision("Do you want to retrieve " + amountToRetrieve + " Force?") {
+                                    @Override
+                                    protected void yes() {
+                                        game.getGameState().sendMessage(playerId + " chooses to retrieve " + amountToRetrieve + " Force");
+                                        action.appendEffect(
+                                                new RetrieveForceEffect(action, playerId, amountToRetrieve));
+                                    }
+                                    @Override
+                                    protected void no() {
+                                        game.getGameState().sendMessage(playerId + " chooses to not retrieve " + amountToRetrieve + " Force");
+                                    }
+                                }
+                        )
+                );
+
+                return Collections.singletonList(action);
+            }
+        }
+
+        return null;
+    }
 }

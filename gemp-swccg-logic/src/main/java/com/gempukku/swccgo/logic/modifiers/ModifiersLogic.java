@@ -116,6 +116,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private Set<String> _usedCombatCard = new HashSet<String>();
     private Map<Integer, List<PhysicalCard>> _targetedByWeaponsMap = new HashMap<Integer, List<PhysicalCard>>();
     private Map<Integer, List<SwccgBuiltInCardBlueprint>> _targetedByPermanentWeaponsMap = new HashMap<Integer, List<SwccgBuiltInCardBlueprint>>();
+    private Map<Integer, List<PhysicalCard>> _hitOrMadeLostByWeaponMap = new HashMap<>();
     private Map<Integer, PhysicalCard> _attemptedJediTestThisTurnMap = new HashMap<Integer, PhysicalCard>();
 
     private Set<PhysicalCard> _blownAwayCards = new HashSet<PhysicalCard>();
@@ -459,6 +460,13 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             List<SwccgBuiltInCardBlueprint> snapshotList = new LinkedList<SwccgBuiltInCardBlueprint>();
             snapshot._targetedByPermanentWeaponsMap.put(cardId, snapshotList);
             snapshotList.addAll(_targetedByPermanentWeaponsMap.get(cardId));
+        }
+        for (Integer cardId : _hitOrMadeLostByWeaponMap.keySet()) {
+            List<PhysicalCard> snapshotList = new LinkedList<PhysicalCard>();
+            snapshot._hitOrMadeLostByWeaponMap.put(cardId, snapshotList);
+            for (PhysicalCard card : _hitOrMadeLostByWeaponMap.get(cardId)) {
+                snapshotList.add(snapshotData.getDataForSnapshot(card));
+            }
         }
         for (Map.Entry<Integer, PhysicalCard> entry : _attemptedJediTestThisTurnMap.entrySet()) {
             snapshot._attemptedJediTestThisTurnMap.put(entry.getKey(), snapshotData.getDataForSnapshot(entry.getValue()));
@@ -6078,6 +6086,47 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             permanentWeapons = Collections.emptyList();
         }
         return permanentWeapons;
+    }
+
+    /**
+     * Records that the specified target card was hit or made lost by the specified weapon.
+     * @param target the target
+     * @param weapon the weapon
+     */
+    @Override
+    public void hitOrMadeLostByWeapon(PhysicalCard target, PhysicalCard weapon) {
+        List<PhysicalCard> hitOrMadeLostByWeapon = _hitOrMadeLostByWeaponMap.get(target.getPermanentCardId());
+        if (hitOrMadeLostByWeapon == null) {
+            hitOrMadeLostByWeapon = new LinkedList<>();
+            _hitOrMadeLostByWeaponMap.put(target.getPermanentCardId(), hitOrMadeLostByWeapon);
+        }
+        hitOrMadeLostByWeapon.add(weapon);
+        if (weapon.getAttachedTo() != null) {
+            hitOrMadeLostByWeapon.add(weapon.getAttachedTo());
+        }
+    }
+
+    /**
+     * Removes the card from the list of cards that have been hit or made lost by a weapon this turn (to be used when restored to normal)
+     * @param card the card
+     */
+    @Override
+    public void clearHitOrMadeLostByWeapon(PhysicalCard card) {
+        _hitOrMadeLostByWeaponMap.remove(card.getPermanentCardId());
+    }
+
+    /**
+     * Checks if a card was hit or made lost by a card accepted by the specified filter (or a weapon fired by the specified card)
+     * @param target the card that was hit
+     * @param hitBy the card that hit (or used a weapon to hit) the target
+     * @return
+     */
+    @Override
+    public boolean wasHitOrMadeLostByWeapon(PhysicalCard target, Filter hitBy) {
+        if (!_hitOrMadeLostByWeaponMap.containsKey(target.getPermanentCardId()))
+            return false;
+        List<PhysicalCard> hitOrMadeLostByWeapon = _hitOrMadeLostByWeaponMap.get(target.getPermanentCardId());
+        return Filters.filter(hitOrMadeLostByWeapon, _swccgGame, hitBy).isEmpty();
     }
 
     /**
@@ -15296,6 +15345,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         _asteroidDestinyDrawnAgainstMap.clear();
         _forfeitedFromLocationMap.clear();
         _targetedByWeaponsMap.clear();
+        _hitOrMadeLostByWeaponMap.clear();
         _regularMoveSet.clear();
         _locationAttackOnCreatureSet.clear();
         _attackOnCreatureParticipationSet.clear();

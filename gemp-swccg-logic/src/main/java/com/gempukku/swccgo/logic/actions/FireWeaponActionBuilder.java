@@ -1604,6 +1604,7 @@ public class FireWeaponActionBuilder {
                                                         else if (Filters.creature.accepts(game, cardFiredAt)) {
                                                             if ((totalDestiny + 1) > valueToCompare) {
                                                                 gameState.sendMessage("Result: Succeeded");
+                                                                game.getModifiersQuerying().hitOrMadeLostByWeapon(cardFiredAt, _weaponOrCardWithPermanentWeapon);
                                                                 action.appendEffect(
                                                                         new LoseCardFromTableEffect(action, cardFiredAt));
                                                             }
@@ -2041,6 +2042,7 @@ public class FireWeaponActionBuilder {
                                         final PhysicalCard cardFiredAt = targetingAction.getPrimaryTargetCard(targetGroupId);
                                         _game.getGameState().getWeaponFiringState().setTarget(cardFiredAt);
 
+                                        _game.getModifiersQuerying().hitOrMadeLostByWeapon(cardFiredAt, _weaponOrCardWithPermanentWeapon);
                                         // Perform result(s)
                                         action.appendEffect(
                                                 new LoseCardFromTableEffect(action, cardFiredAt));
@@ -2142,6 +2144,7 @@ public class FireWeaponActionBuilder {
                                                                 || (_targetedAsCharacter != null && _targetedAsCharacter.accepts(game, cardFiredAt))) {
                                                             if ((totalDestiny + characterPlusOrMinus) > valueToCompare) {
                                                                 gameState.sendMessage("Result: Succeeded");
+                                                                game.getModifiersQuerying().hitOrMadeLostByWeapon(cardFiredAt, _weaponOrCardWithPermanentWeapon);
                                                                 action.appendEffect(
                                                                         new LoseCardFromTableEffect(action, cardFiredAt));
                                                             }
@@ -2152,6 +2155,7 @@ public class FireWeaponActionBuilder {
                                                         else if (Filters.creature.accepts(game, cardFiredAt)) {
                                                             if (totalDestiny  > valueToCompare) {
                                                                 gameState.sendMessage("Result: Succeeded");
+                                                                game.getModifiersQuerying().hitOrMadeLostByWeapon(cardFiredAt, _weaponOrCardWithPermanentWeapon);
                                                                 action.appendEffect(
                                                                         new LoseCardFromTableEffect(action, cardFiredAt));
                                                             }
@@ -2162,6 +2166,7 @@ public class FireWeaponActionBuilder {
                                                         else if (Filters.vehicle.accepts(game, cardFiredAt)) {
                                                             if ((totalDestiny + vehiclePlusOrMinus) > valueToCompare) {
                                                                 gameState.sendMessage("Result: Succeeded");
+                                                                game.getModifiersQuerying().hitOrMadeLostByWeapon(cardFiredAt, _weaponOrCardWithPermanentWeapon);
                                                                 action.appendEffect(
                                                                         new LoseCardFromTableEffect(action, cardFiredAt));
                                                             }
@@ -2378,6 +2383,7 @@ public class FireWeaponActionBuilder {
                                                         else if (Filters.creature.accepts(game, cardFiredAt)) {
                                                             if ((totalDestiny + creaturePlusOrMinus) > valueToCompare) {
                                                                 gameState.sendMessage("Result: Succeeded");
+                                                                game.getModifiersQuerying().hitOrMadeLostByWeapon(cardFiredAt, _weaponOrCardWithPermanentWeapon);
                                                                 action.appendEffect(
                                                                         new LoseCardFromTableEffect(action, cardFiredAt));
                                                             }
@@ -2842,6 +2848,7 @@ public class FireWeaponActionBuilder {
                                                         else if (Filters.creature.accepts(game, cardFiredAt)) {
                                                             if ((totalDestiny + creaturePlusOrMinus) > valueToCompare) {
                                                                 gameState.sendMessage("Result: Succeeded");
+                                                                game.getModifiersQuerying().hitOrMadeLostByWeapon(cardFiredAt, _weaponOrCardWithPermanentWeapon);
                                                                 action.appendEffect(
                                                                         new LoseCardFromTableEffect(action, cardFiredAt));
                                                             }
@@ -3485,6 +3492,7 @@ public class FireWeaponActionBuilder {
                                                         if ((totalDestiny + valueForX) > valueToCompare) {
                                                             gameState.sendMessage("Result: Succeeded");
                                                             if (valueForX == 3) {
+                                                                game.getModifiersQuerying().hitOrMadeLostByWeapon(cardFiredAt, _weaponOrCardWithPermanentWeapon);
                                                                 action.appendEffect(
                                                                         new LoseCardFromTableEffect(action, cardFiredAt));
                                                             }
@@ -4484,6 +4492,7 @@ public class FireWeaponActionBuilder {
                                                         else if (Filters.creature.accepts(game, cardFiredAt)) {
                                                             if ((totalDestiny + 1) > valueToCompare) {
                                                                 gameState.sendMessage("Result: Succeeded");
+                                                                game.getModifiersQuerying().hitOrMadeLostByWeapon(cardFiredAt, _weaponOrCardWithPermanentWeapon);
                                                                 action.appendEffect(
                                                                         new LoseCardFromTableEffect(action, cardFiredAt));
                                                             }
@@ -4846,6 +4855,7 @@ public class FireWeaponActionBuilder {
                                                         if (Filters.artillery_weapon.accepts(game, cardFiredAt)) {
                                                             if (totalDestiny > valueToCompare) {
                                                                 gameState.sendMessage("Result: Succeeded");
+                                                                game.getModifiersQuerying().hitOrMadeLostByWeapon(cardFiredAt, _weaponOrCardWithPermanentWeapon);
                                                                 action.appendEffect(
                                                                         new LoseCardFromTableEffect(action, cardFiredAt));
                                                             }
