@@ -17235,7 +17235,7 @@ public class Filters {
     public static final Filter astromech_droid = Filters.modelType(ModelType.ASTROMECH);
     public static final Filter Astromech_Shortage = Filters.title(Title.Astromech_Shortage);
     public static final Filter AT_AT = Filters.modelType(ModelType.AT_AT);
-    public static final Filter AT_AT_Cannon = Filters.title(Title.AT_AT_Cannon);
+    public static final Filter AT_AT_Cannon = Filters.keyword(Keyword.AT_AT_CANNON);
     public static final Filter At_Last_We_Will_Have_Revenge = Filters.title(Title.At_Last_We_Will_Have_Revenge);
     public static final Filter At_Peace = Filters.title(Title.At_Peace);
     public static final Filter AT_ST = Filters.modelType(ModelType.AT_ST);
@@ -17424,7 +17424,7 @@ public class Filters {
     public static final Filter Communing = Filters.title(Title.Communing);
     public static final Filter Concussion_Grenade = Filters.title(Title.Concussion_Grenade);
     public static final Filter Concussion_Missiles = Filters.title(Title.Concussion_Missiles);
-    public static final Filter cannon = Filters.or(Keyword.CANNON, Keyword.ION_CANNON, Keyword.LASER_CANNON);
+    public static final Filter cannon = Filters.or(Keyword.CANNON, Keyword.ION_CANNON, Keyword.LASER_CANNON, Keyword.AT_AT_CANNON);
     public static final Filter Control = Filters.title(Title.Control);
     public static final Filter Coolant_Shaft = Filters.title(Title.Coolant_Shaft);
     public static final Filter Corellia_location = Filters.partOfSystem(Title.Corellia);
@@ -17489,6 +17489,8 @@ public class Filters {
     public static final Filter Dead_Ewok = Filters.title(Title.Dead_Ewok);
     public static final Filter Death_Mark = Filters.title(Title.Death_Mark);
     public static final Filter Death_Squadron = Filters.title(Title.Death_Squadron);
+    public static final Filter Death_Squadron_starship = Filters.and(CardType.STARSHIP, Keyword.DEATH_SQUADRON);
+    public static final Filter Death_Squadron_vehicle = Filters.and(CardType.VEHICLE, Keyword.DEATH_SQUADRON);
     public static final Filter Death_Star_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Death_Star));
     public static final Filter Death_Star_Central_Core = Filters.title(Title.Death_Star_Central_Core);
     public static final Filter Death_Star_Conference_Room = Filters.title(Title.Death_Star_Conference_Room);
