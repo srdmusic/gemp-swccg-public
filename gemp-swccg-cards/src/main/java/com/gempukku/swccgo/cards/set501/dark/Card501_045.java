@@ -85,7 +85,7 @@ public class Card501_045 extends AbstractLostOrStartingInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Rule_Of_Two), true, false));
+                                    new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Revenge_Of_The_Sith), true, false));
                             action.appendEffect(
                                     new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter), 1, 2, true, false));
                             action.appendEffect(

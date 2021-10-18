@@ -37,7 +37,7 @@ public class Card501_090 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MayBeTargetedByModifier(self, Filters.Sidious, new OnTableCondition(self, Filters.title(Title.Rule_Of_Two)), Title.Force_Lightning));
+        modifiers.add(new MayBeTargetedByModifier(self, Filters.Sidious, new OnTableCondition(self, Filters.title(Title.Revenge_Of_The_Sith)), Title.Force_Lightning));
         return modifiers;
     }
 

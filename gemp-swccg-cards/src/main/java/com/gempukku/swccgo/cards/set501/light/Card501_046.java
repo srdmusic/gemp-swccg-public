@@ -21,17 +21,17 @@ import java.util.List;
  * Set: Set 17
  * Type: Interrupt
  * Subtype: Starting
- * Title: What Gives A Jedi His Power
+ * Title: The Rise Of Skywalker
  */
 public class Card501_046 extends AbstractUsedOrStartingInterrupt {
     public Card501_046() {
-        super(Side.LIGHT, 5, "What Gives A Jedi His Power", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 5, "The Rise Of Skywalker", Uniqueness.UNIQUE);
         setGameText("USED: If a Jedi on table, activate 1 Force. " +
                 "STARTING: If your starting location was Lars' Homestead, deploy a site, " +
                 "The Force Is Strong In My Family, and up to two Effects that are always immune to Alter. " +
                 "Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_17);
-        setTestingText("What Gives A Jedi His Power");
+        setTestingText("The Rise Of Skywalker");
     }
 
     @Override
