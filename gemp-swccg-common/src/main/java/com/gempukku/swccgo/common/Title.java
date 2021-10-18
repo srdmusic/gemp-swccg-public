@@ -844,6 +844,7 @@ public interface Title {
     String Retract_The_Bridge = "Retract The Bridge";
     String Return_Of_A_Jedi = "Return Of A Jedi";
     String Revealed = "Revealed";
+    String Revenge_Of_The_Sith = "Revenge Of The Sith";
     String Revolution = "Revolution";
     String Rex = "Captain Rex, 501st Legion";
     String Rey = "Rey";
@@ -860,7 +861,6 @@ public interface Title {
     String Rolling_Rolling_Rolling = "Rolling, Rolling, Rolling";
     String Rose = "Rose Tico";
     String Royal_Naboo_Security_Officer = "Royal Naboo Security Officer";
-    String Rule_Of_Two = "Rule Of Two";
     String Run_Luke_Run = "Run Luke, Run!";
     String Rya = "Lieutenant Rya Kirsch";
     String Rycar_Ryjerd = "Rycar Ryjerd";

@@ -1,25 +1,22 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
-import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.common.*;
 
 /**
  * Set: Set 17
- * Type: Interrupt
- * Subtype: Used
- * Title: Shocking Revelation (V)
+ * Type: Effect
+ * Title: An Effective Demonstration
  */
-public class Card501_004 extends AbstractUsedInterrupt {
+public class Card501_004 extends AbstractNormalEffect {
     public Card501_004() {
-        super(Side.DARK, 5, Title.Shocking_Revelation, Uniqueness.UNIQUE);
-        setLore("'Well, don't blame me. I'm an interpreter. I'm not supposed to know a power socket from a computer terminal.'");
-        setGameText("Each player reveals the top 2 cards from their reserve deck. For every destiny = 5 revealed, choose one action: peek at opponent’s hand OR take one of your revealed cards into hand OR activate 1 Force. Return revealed cards to owners’ Reserve deck; reshuffle.");
-        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_17);
-        setVirtualSuffix(true);
-        setTestingText("Shocking Revelation (V)");
+        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "An Effective Demonstration");
+        setLore("");
+        setGameText("Deploy on table. [A New Hope] Epic Event destinies are +5 when targeting Alderaan. If Alderaan ‘blown away’, Death Star gains one [Light Side], and opponent's total battle destiny -1. Once per game, take Superlaser into hand from Reserve deck; reshuffle. [Immune to Alter.]");
+        addIcons(Icon.VIRTUAL_SET_17);
+        addImmuneToCardTitle(Title.Alter);
+        setTestingText("An Effective Demonstration");
         hideFromDeckBuilder();
     }
 }
+

@@ -28,11 +28,11 @@ import java.util.List;
 /**
  * Set: Set 17
  * Type: Epic Event
- * Title: Rule Of Two
+ * Title: Revenge Of The Sith
  */
 public class Card501_008 extends AbstractEpicEventDeployable {
     public Card501_008() {
-        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Rule_Of_Two);
+        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Revenge_Of_The_Sith);
         setGameText("Deploys on table only at start of game; choose an apprentice:" +
                 "Maul: Deploy Desert Landing Site and They Will Be No Match For You." +
                 "Dooku: Deploy Invisible Hand: Bridge and Evil Is Everywhere." +
@@ -41,7 +41,7 @@ public class Card501_008 extends AbstractEpicEventDeployable {
                 "A Sith Legend, Always Two There Are, Sidious, and your apprentice are destiny +2. " +
                 "If a Jedi just lost from same location as your Dark Jedi, opponent loses 1 Force.");
         addIcon(Icon.VIRTUAL_SET_17);
-        setTestingText("Rule Of Two");
+        setTestingText("Revenge Of The Sith");
     }
 
     @Override

@@ -1232,15 +1232,15 @@ public class SwccgGameMediator {
                     // Communing (ignore the location)
                     return "Communing";
                 }
-                if(Filters.title("What Gives A Jedi His Power").accepts(_swccgoGame, startingInterrupt)
+                if(Filters.title("The Rise Of Skywalker").accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null) {
                     // The Force Is Strong In My Family
                     return "Skywalker Saga";
                 }
                 if(Filters.title("Rise Of The Sith").accepts(_swccgoGame, startingInterrupt)
                         && startingLocation.getBlueprint().getTitle() != null) {
-                    // Rule Of Two
-                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Rule Of Two";
+                    // Revenge Of The Sith
+                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Revenge Of The Sith";
                 }
                 if (Filters.Communing.accepts(_swccgoGame, startingInterrupt)
                         && startingInterrupt.getBlueprint().isLegacy()) {
