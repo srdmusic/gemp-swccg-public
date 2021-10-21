@@ -62,7 +62,7 @@ public class Card4_059 extends AbstractUsedInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
-        Filter filter = Filters.and(Filters.opponents(playerId), Filters.creature, Filters.at(Filters.adjacentSiteTo(self, Filters.site)));
+        Filter filter = Filters.and(Filters.opponents(playerId), Filters.creature, Filters.not(Filters.attachedTo(Filters.any)), Filters.at(Filters.adjacentSiteTo(self, Filters.site)));
         // Check condition(s)
         if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.droid))
                 && GameConditions.canTarget(game, self, filter)) {
