@@ -3371,7 +3371,7 @@ var fixedImages = {
 "501_10_BACK":"/gemp-swccg/images/cards/SpecialEdition-Dark/imperialcontrol.gif",
 "501_11":"/gemp-swccg/images/cards/Hoth-Dark/thatsittherebelsarethere.gif",
 "501_12":"/gemp-swccg/images/cards/Tatooine-Dark/youmaystartyourlanding.gif",
-"501_13":"/gemp-swccg/images/cards/Virtual8-Dark/starkillerbaseforest.gif",
+"501_13":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Dark/large/hothmainpowergenerators.gif",
 "501_14":"/gemp-swccg/images/cards/Tatooine-Dark/amillionvoicescryingout.gif",
 "501_15":"/gemp-swccg/images/cards/Virtual3-Light/kananjarrus.gif",
 "501_16":"/gemp-swccg/images/cards/Coruscant-Dark/lottdod.gif",
@@ -3379,7 +3379,7 @@ var fixedImages = {
 "501_18":"/gemp-swccg/images/cards/CloudCity-Light/courageofaskywalker.gif",
 "501_19":"/gemp-swccg/images/cards/CloudCity-Light/glancingblow.gif",
 "501_20":"/gemp-swccg/images/cards/CloudCity-Light/darkapproach.gif",
-"501_21":"/gemp-swccg/images/cards/Hoth-Dark/hothnorthridge.gif",
+"501_21":"/gemp-swccg/images/cards/Virtual8-Dark/starkillerbaseforest.gif",
 "501_22":"/gemp-swccg/images/cards/Hoth-Dark/deathsquadron.gif",
 "501_23":"/gemp-swccg/images/cards/Hoth-Dark/walkerbarrage.gif",
 "501_24":"/gemp-swccg/images/cards/Hoth-Dark/walloffire.gif",
@@ -4059,19 +4059,10 @@ var Card = Class.extend({
                    (cardNo == 43);
 
         }if (setNo == 501) {
-            return (cardNo == 6) ||
-                   (cardNo == 50) ||
-                   (cardNo == 51) ||
-                   (cardNo == 53) ||
-                   (cardNo == 74) ||
-                   (cardNo == 75) ||
-                   (cardNo == 87) ||
-                   (cardNo == 88) ||
+            return (cardNo == 13) ||
+                   (cardNo == 21) ||
                    (cardNo == 95) ||
-                   (cardNo == 96) ||
-                   (cardNo == 102) ||
-                   (cardNo == 103) ||
-                   (cardNo == 104);
+                   (cardNo == 96);
         }
         if (setNo == 601) {
              return (cardNo == 14) ||
