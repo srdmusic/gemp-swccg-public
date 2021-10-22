@@ -10,8 +10,8 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.PutCardFromVoidInReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TakeCardFromVoidIntoHandEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
@@ -30,7 +30,7 @@ public class Card501_045 extends AbstractLostOrStartingInterrupt {
     public Card501_045() {
         super(Side.DARK, 5, "Rise Of The Sith", Uniqueness.RESTRICTED_2);
         setGameText("LOST: Raise your converted location to the top. " +
-                "STARTING: If your starting location was a battleground, deploy Rule Of Two and 2 Effects that deploy on table and are always Immune to Alter. Place Interrupt in hand.");
+                "STARTING: If your starting location was a battleground, deploy Revenge Of The Sith and up to two Effects that are always immune to Alter. Place Interrupt in hand.");
         addIcons(Icon.VIRTUAL_SET_17);
         setTestingText("Rise Of The Sith");
     }
@@ -77,9 +77,9 @@ public class Card501_045 extends AbstractLostOrStartingInterrupt {
         if (startingLocation != null && Filters.battleground.accepts(game, startingLocation)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
-            action.setText("Deploy a Rule of Two and Effects from Reserve Deck");
+            action.setText("Deploy Revenge Of The Sith and Effects from Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Deploy Rule of Two and two Effects from Reserve Deck",
+            action.allowResponses("Deploy Revenge Of The Sith and up to two Effects from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
@@ -89,7 +89,7 @@ public class Card501_045 extends AbstractLostOrStartingInterrupt {
                             action.appendEffect(
                                     new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter), 1, 2, true, false));
                             action.appendEffect(
-                                    new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
+                                    new TakeCardFromVoidIntoHandEffect(action, playerId, self));
                         }
                     }
             );
