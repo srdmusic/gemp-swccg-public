@@ -1,7 +1,6 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.evaluators.OutOfPlayEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
@@ -27,11 +26,9 @@ import java.util.List;
  */
 public class Card501_009 extends AbstractNormalEffect {
     public Card501_009() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Be With Me", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Be With Me", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on table. Rey is power and immunity to attrition +1 for each Jedi out of play and, " +
-                "while Luke on table, ignores deployment restrictions on your [Set 11] objective. If Rey in battle with " +
-                "Kylo or a Dark Jedi Master, you may take the first weapons phase action. [Immune to Alter.]");
+        setGameText("Deploy on table. Rey is power and immunity to attrition +1 for each Jedi out of play and ignores [Set 11] objective deployment restrictions. If a battle just initiated involving Rey and either Emperor or Kylo, may take the first weapons segment action. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Be With Me");
@@ -42,7 +39,7 @@ public class Card501_009 extends AbstractNormalEffect {
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new PowerModifier(self, Filters.Rey, new OutOfPlayEvaluator(self, Filters.Jedi)));
         modifiers.add(new ImmunityToAttritionChangeModifier(self, Filters.Rey, new OutOfPlayEvaluator(self, Filters.Jedi)));
-        modifiers.add(new IgnoresDeploymentRestrictionsFromCardModifier(self, Filters.Rey, new OnTableCondition(self, Filters.Luke), self.getOwner(), Filters.and(Filters.icon(Icon.VIRTUAL_SET_11), Filters.Objective)));
+        modifiers.add(new IgnoresDeploymentRestrictionsFromCardModifier(self, Filters.Rey, null, self.getOwner(), Filters.and(Filters.icon(Icon.VIRTUAL_SET_11), Filters.Objective)));
         return modifiers;
     }
 

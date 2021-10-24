@@ -45,6 +45,7 @@ public interface Title {
     String Ambush = "Ambush";
     String An_Inkling_Of_Its_Destructive_Potential = "An Inkling Of Its Destructive Potential";
     String Anakin_Skywalker = "Anakin Skywalker";
+    String Anakins_Funeral_Pyre = "Endor: Anakin's Funeral Pyre";
     String Anakins_Lightsaber = "Anakin's Lightsaber";
     String Anakins_Podracer = "Anakin's Podracer";
     String Anchorhead = "Tatooine: Anchorhead";
@@ -596,7 +597,6 @@ public interface Title {
     String Lana_Dobreed = "Lana Dobreed";
     String Landing_Claw = "Landing Claw";
     String Landing_Platform = "Endor: Landing Platform (Docking Bay)";
-    String Lars_Homestead = "Tatooine: Lars' Homestead";
     String Lars_Moisture_Farm = "Tatooine: Lars' Moisture Farm";
     String Laser_Cannon_Battery = "Laser Cannon Battery";
     String Laser_Gate = "Laser Gate";

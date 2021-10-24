@@ -3390,6 +3390,8 @@ var fixedImages = {
 "501_30":"/gemp-swccg/images/cards/Coruscant-Light/avergenceintheforce.gif",
 "501_31":"https://res.starwarsccg.org/cards/Virtual9-Light/hires/abraveresistance.png",
 "501_32":"/gemp-swccg/images/cards/Premiere-Light/returnofajedi.gif",
+"501_33":"/gemp-swccg/images/cards/Virtual13-Light/val.gif",
+"501_34":"/gemp-swccg/images/cards/DeathStarII-Light/homeonedockingbay.gif",
 "501_45":"/gemp-swccg/images/cards/Virtual1-Dark/accordingtomydesign.gif",
 "501_46":"/gemp-swccg/images/cards/Premiere-Light/jedipresence.gif",
 "501_52":"/gemp-swccg/images/cards/Coruscant-Dark/theywillbenomatchforyou.gif",
@@ -3398,7 +3400,7 @@ var fixedImages = {
 "501_59":"/gemp-swccg/images/cards/JediPack-Dark/eriadu.gif",
 "501_90":"/gemp-swccg/images/cards/Virtual12-Dark/eviliseverywhere.gif",
 "501_91":"/gemp-swccg/images/cards/Premiere-Dark/darkjedilightsaber.gif",
-"501_95":"/gemp-swccg/images/cards/Premiere-Light/tatooinelarsmoisturefarm.gif",
+"501_95":"/gemp-swccg/images/cards/Tatooine-Light/tatooineslavequarters.gif",
 "501_96":"/gemp-swccg/images/cards/CloudCity-Dark/cloudcitydiningroom.gif",
 "501_98":"/gemp-swccg/images/cards/JabbasPalace-Dark/malakili.gif",
 "501_99":"/gemp-swccg/images/cards/SpecialEdition-Light/r3a2.gif",
@@ -4061,6 +4063,7 @@ var Card = Class.extend({
         }if (setNo == 501) {
             return (cardNo == 13) ||
                    (cardNo == 21) ||
+                   (cardNo == 34) ||
                    (cardNo == 95) ||
                    (cardNo == 96);
         }
