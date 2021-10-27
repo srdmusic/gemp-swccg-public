@@ -1114,7 +1114,7 @@ public class SwccgGameMediator {
                 || player.hasType(Player.Type.PLAY_TESTER))) {
             throw new PrivateInformationException();
         }
-        
+
         _readLock.lock();
         try {
             int number = _channelNextIndex;
@@ -1378,10 +1378,18 @@ public class SwccgGameMediator {
             }
             if (Filters.or(Filters.Local_Uprising, Filters.Liberation, Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
                 // Operatives
-                objectiveLabel = "Operatives";
+                if (!objective.getBlueprint().hasVirtualSuffix()) {
+                    objectiveLabel = "Operatives";
+                }
+                // Imperial Occupation v
+                else if(Filters.or(Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
+                    objectiveLabel = "Imperial Occupation";
+                } else if(Filters.or(Filters.Local_Uprising, Filters.Liberation).accepts(_swccgoGame, objective)) {
+                    objectiveLabel = "Local Uprising";
+                }
             }
             if (Filters.or(Filters.You_Can_Either_Profit_By_This, Filters.Or_Be_Destroyed).accepts(_swccgoGame, objective)) {
-                // Your Can Either Profit By This...
+                // You Can Either Profit By This...
                 objectiveLabel = "Profit";
             }
             if (Filters.or(Filters.Quiet_Mining_Colony, Filters.Independent_Operation).accepts(_swccgoGame, objective)) {

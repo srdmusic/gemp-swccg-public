@@ -168,6 +168,15 @@ public class WhileInPlayData implements Snapshotable<WhileInPlayData> {
 
     /**
      * Creates data that is stored in while in play data.
+     * @param physicalCards a physical card list
+     */
+    public WhileInPlayData(String textValue, List<PhysicalCard> physicalCards) {
+        _textValue = textValue;
+        _physicalCards.addAll(physicalCards);
+    }
+
+    /**
+     * Creates data that is stored in while in play data.
      * @param stringBooleanMap a String/Boolean map
      */
     public WhileInPlayData(Map<String, Boolean> stringBooleanMap) {

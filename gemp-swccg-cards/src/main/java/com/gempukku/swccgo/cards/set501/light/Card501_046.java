@@ -1,17 +1,16 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedOrStartingInterrupt;
+import com.gempukku.swccgo.cards.AbstractLostOrStartingInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
+import com.gempukku.swccgo.logic.effects.LookAtForcePileEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromVoidInReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Collections;
@@ -20,16 +19,15 @@ import java.util.List;
 /**
  * Set: Set 17
  * Type: Interrupt
- * Subtype: Starting
+ * Subtype: Lost or Starting
  * Title: The Rise Of Skywalker
  */
-public class Card501_046 extends AbstractUsedOrStartingInterrupt {
+public class Card501_046 extends AbstractLostOrStartingInterrupt {
     public Card501_046() {
         super(Side.LIGHT, 5, "The Rise Of Skywalker", Uniqueness.UNIQUE);
-        setGameText("USED: If a Jedi on table, activate 1 Force. " +
-                "STARTING: If your starting location was Lars' Homestead, deploy a site, " +
-                "The Force Is Strong In My Family, and up to two Effects that are always immune to Alter. " +
-                "Place Interrupt in Reserve Deck.");
+        setGameText("LOST: Peek at Force Pile. " +
+                "STARTING: If Shmi's Hut, Anakin's Funeral Pyre, or Rey's Encampment on table, " +
+                "deploy The Force Is Strong In My Family, Battle Plan, Insurrection, and one Effect that is always immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_17);
         setTestingText("The Rise Of Skywalker");
     }
@@ -37,19 +35,18 @@ public class Card501_046 extends AbstractUsedOrStartingInterrupt {
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
         // Check condition(s)
-        if (GameConditions.canActivateForce(game, playerId)
-                && GameConditions.canSpot(game, self, Filters.Jedi)) {
+        if (GameConditions.hasForcePile(game, playerId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-            action.setText(" Activate 1 Force");
+            action.setText("Peek at Force Pile");
             // Allow response(s)
-            action.allowResponses(" Activate 1 Force",
+            action.allowResponses("Peek at Force Pile",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new ActivateForceEffect(action, playerId, 1));
+                                    new LookAtForcePileEffect(action, playerId, playerId));
                         }
                     }
             );
@@ -61,23 +58,25 @@ public class Card501_046 extends AbstractUsedOrStartingInterrupt {
     @Override
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
         // Check condition(s)
-        final PhysicalCard startingLocation = game.getModifiersQuerying().getStartingLocation(playerId);
-        if (startingLocation != null && Filters.title(Title.Lars_Homestead).accepts(game, startingLocation)) {
+
+        if (GameConditions.canSpot(game, self, Filters.or(Filters.title(Title.Slave_Quarters), Filters.title(Title.Anakins_Funeral_Pyre), Filters.title(Title.Reys_Encampment)))) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
-            action.setText("Deploy a site, The Force is Strong In My Family, and up to two Effects from Reserve Deck");
+            action.setText("Deploy The Force is Strong In My Family and Effects from Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Deploy a site, The Force is Strong In My Family, and up to two Effects from Reserve Deck",
+            action.allowResponses("Deploy The Force Is Strong In My Family, Battle Plan, Insurrection, and one Effect that is always immune to Alter from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.site, true, false));
-                            action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.title(Title.The_Force_Is_Strong_In_My_Family), true, false));
                             action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter), 1, 2, true, false));
+                                    new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Battle_Plan), true, false));
+                            action.appendEffect(
+                                    new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Insurrection), true, false));
+                            action.appendEffect(
+                                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter), true, false));
                             action.appendEffect(
                                     new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
                         }
