@@ -9,7 +9,6 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -23,19 +22,15 @@ import java.util.List;
 public class Card501_095 extends AbstractSite {
     public Card501_095() {
         super(Side.LIGHT, Title.Anakins_Funeral_Pyre, Title.Endor);
-        setLocationDarkSideGameText("You must lose 1 Force to initiate a Force drain here.");
+        setLocationDarkSideGameText("May be deployed instead of Jedi Council Chamber by He Is The Chosen One.");
         setLocationLightSideGameText("Once during any draw phase, if Prophecy Of The Force on table, may activate 1 Force.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
         setTestingText("Endor: Anakin's Funeral Pyre");
     }
 
-    @Override
-    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        //TODO modifiers.add(new LoseForceToInitiateForceDrainModifier(self, playerOnDarkSideOfLocation, 1));
-        return modifiers;
-    }
+    // NOTE: The "May be deployed instead of Jedi Council Chamber by He Is The Chosen One." portion of the text has been
+    // implemented on the HITCO objective.
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
