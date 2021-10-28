@@ -26,7 +26,7 @@ public class Card501_046 extends AbstractLostOrStartingInterrupt {
     public Card501_046() {
         super(Side.LIGHT, 5, "The Rise Of Skywalker", Uniqueness.UNIQUE);
         setGameText("LOST: Peek at Force Pile. " +
-                "STARTING: If Shmi's Hut, Anakin's Funeral Pyre, or Rey's Encampment on table, " +
+                "STARTING: If your starting location was Anakin's Funeral Pyre, Rey's Encampment, or Slave Quarters, " +
                 "deploy The Force Is Strong In My Family, Battle Plan, Insurrection, and one Effect that is always immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_17);
         setTestingText("The Rise Of Skywalker");
@@ -37,7 +37,7 @@ public class Card501_046 extends AbstractLostOrStartingInterrupt {
         // Check condition(s)
         if (GameConditions.hasForcePile(game, playerId)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setText("Peek at Force Pile");
             // Allow response(s)
             action.allowResponses("Peek at Force Pile",
