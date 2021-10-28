@@ -59,7 +59,8 @@ public class Card501_046 extends AbstractLostOrStartingInterrupt {
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
         // Check condition(s)
 
-        if (GameConditions.canSpot(game, self, Filters.or(Filters.title(Title.Slave_Quarters), Filters.title(Title.Anakins_Funeral_Pyre), Filters.title(Title.Reys_Encampment)))) {
+        final PhysicalCard startingLocation = game.getModifiersQuerying().getStartingLocation(playerId);
+        if (startingLocation != null && Filters.or(Filters.title(Title.Slave_Quarters), Filters.title(Title.Anakins_Funeral_Pyre), Filters.title(Title.Reys_Encampment)).accepts(game, startingLocation)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
             action.setText("Deploy The Force is Strong In My Family and Effects from Reserve Deck");

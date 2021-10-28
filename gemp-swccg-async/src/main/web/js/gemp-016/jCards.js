@@ -3366,7 +3366,7 @@ var fixedImages = {
 "501_6":"/gemp-swccg/images/cards/CloudCity-Dark/darkdeal.gif",
 "501_7":"/gemp-swccg/images/cards/Hoth-Dark/blizzard1.gif",
 "501_8":"/gemp-swccg/images/cards/ReflectionsIII-Dark/deephatred.gif",
-"501_9":"https://res.starwarsccg.org/cards/Virtual9-Light/hires/abraveresistance.png",
+"501_9":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/communing.png",
 "501_10":"/gemp-swccg/images/cards/SpecialEdition-Dark/imperialoccupation.gif",
 "501_10_BACK":"/gemp-swccg/images/cards/SpecialEdition-Dark/imperialcontrol.gif",
 "501_11":"/gemp-swccg/images/cards/Hoth-Dark/thatsittherebelsarethere.gif",
