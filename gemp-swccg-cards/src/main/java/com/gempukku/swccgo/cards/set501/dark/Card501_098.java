@@ -30,7 +30,7 @@ public class Card501_098 extends AbstractAlien {
     public Card501_098() {
         super(Side.DARK, 2, 4, 6, 2, 5, "Grummgar", Uniqueness.UNIQUE);
         setLore("Dowutin mercenary.");
-        setGameText("During battle with an information broker (or during an attack), adds one destiny to total power. Once per game, may deploy a non-[Permanent Weapon] non-weapon card with 'creature' in lore or game text (or any blaster, rifle, or creature) here from Reserve Deck; reshuffle.");
+        setGameText("During battle with an information broker (or during an attack), adds one destiny to total power. Once per game, may deploy a blaster, rifle, or creature (or a non-[Permanent Weapon], non-weapon card with 'creature' in lore or game text) here from Reserve Deck; reshuffle.");
         setSpecies(Species.DOWUTIN);
         addIcons(Icon.WARRIOR, Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
         setTestingText("Grummgar");
@@ -57,7 +57,7 @@ public class Card501_098 extends AbstractAlien {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card here from Reserve Deck");
-            action.setActionMsg("Deploy a blaster, rifle, or creature (or a non-[PW] non-weapon card with 'creature' in lore or game text) here from Reserve Deck");
+            action.setActionMsg("Deploy a blaster, rifle, or creature (or a non-[Permanent Weapon], non-weapon card with 'creature' in lore or game text) here from Reserve Deck");
             action.appendUsage(
                     new OncePerGameEffect(action));
             action.appendEffect(

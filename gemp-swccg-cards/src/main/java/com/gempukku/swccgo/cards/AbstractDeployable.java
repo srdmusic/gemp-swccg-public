@@ -2024,8 +2024,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
                 if (game.getGameState().isDuringAttack()
                         && (isInAttack //permanent weapons
                         || (self.getAttachedTo() != null && game.getGameState().isParticipatingInAttack(self.getAttachedTo())) //weapon cards
-                        || (game.getGameState().getAttackState().isNonCreatureAttackingCreature()
-                            && game.getGameState().getAttackState().getAttackerOwner().equals(playerId))) // long-range weapon firing into an attack against a creature
+                )
                 ) {
                     List<FireWeaponAction> fireWeaponActions = getFireWeaponActions(playerId, game, self, false, 0, self, false, Filters.none, null, Filters.participatingInAttack, false);
                     if (fireWeaponActions != null)

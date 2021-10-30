@@ -95,7 +95,7 @@ public class Card6_093 extends AbstractAlien {
                 action.appendEffect(new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, creatureLost.getOwner(), creatureLost, false));
                 action.appendEffect(
                         new PlayoutDecisionEffect(action, playerId,
-                                new YesNoDecision("Do you want to retrieve " + amountToRetrieve + " Force?") {
+                                new YesNoDecision("Retrieve " + amountToRetrieve + " Force?") {
                                     @Override
                                     protected void yes() {
                                         game.getGameState().sendMessage(playerId + " chooses to retrieve " + amountToRetrieve + " Force");
@@ -104,7 +104,7 @@ public class Card6_093 extends AbstractAlien {
                                     }
                                     @Override
                                     protected void no() {
-                                        game.getGameState().sendMessage(playerId + " chooses to not retrieve " + amountToRetrieve + " Force");
+                                        game.getGameState().sendMessage(playerId + " chooses not to retrieve " + amountToRetrieve + " Force");
                                     }
                                 }
                         )

@@ -62,17 +62,19 @@ public class Card4_059 extends AbstractUsedInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
-        Filter filter = Filters.and(Filters.opponents(playerId), Filters.creature, Filters.not(Filters.attachedTo(Filters.any)), Filters.at(Filters.adjacentSiteTo(self, Filters.site)));
+        Filter filter = Filters.and(Filters.opponents(playerId), Filters.creature, Filters.not(Filters.attachedTo(Filters.any)),
+                Filters.at(Filters.or(Filters.adjacentSiteTo(self, Filters.site), Filters.adjacentSectorTo(self, Filters.sector))),
+                Filters.canBeTargetedBy(self));
+
         // Check condition(s)
         if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.droid))
                 && GameConditions.canTarget(game, self, filter)) {
-
 
             Collection<PhysicalCard> possibleTargets = new LinkedList<>();
             for (PhysicalCard creature: Filters.filterAllOnTable(game, filter)) {
                 Filter habitat = creature.getBlueprint().getHabitatFilter(game, creature);
 
-                if (Filters.canSpot(game, self, Filters.and(Filters.adjacentSiteTo(self, Filters.at(creature)), habitat))) {
+                if (Filters.canSpotFromTopLocationsOnTable(game, Filters.and(habitat, Filters.or(Filters.adjacentSiteTo(self, Filters.atSameLocation(creature)), Filters.adjacentSectorTo(self, Filters.atSameLocation(creature)))))) {
                     possibleTargets.add(creature);
                 }
             }
@@ -85,7 +87,7 @@ public class Card4_059 extends AbstractUsedInterrupt {
                     @Override
                     protected void cardTargeted(final int targetGroupId1, PhysicalCard targetedCreature) {
                         Filter habitat = targetedCreature.getBlueprint().getHabitatFilter(game, targetedCreature);
-                        action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target location to move creature", Filters.and(Filters.adjacentSiteTo(self, Filters.at(targetedCreature)), habitat)) {
+                        action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target location to move creature", Filters.and(habitat, Filters.or(Filters.adjacentSiteTo(self, Filters.atSameLocation(targetedCreature)), Filters.adjacentSectorTo(self, Filters.atSameLocation(targetedCreature))))) {
                             @Override
                             protected void cardTargeted(final int targetGroupId2, PhysicalCard targetedLocation) {
                                 action.allowResponses(new RespondablePlayCardEffect(action) {

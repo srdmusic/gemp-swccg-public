@@ -42,8 +42,7 @@ public class Card4_046 extends AbstractUsedInterrupt {
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
         // Check condition(s)
-        if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.droid))
-                && effectResult.getType() == EffectResult.Type.ATTACK_TARGET_SELECTED) {
+        if (effectResult.getType() == EffectResult.Type.ATTACK_TARGET_SELECTED) {
 
             final InitiateAttackNonCreatureAction creatureAction = ((AttackTargetSelectedResult)effectResult).getInitiateAttackNonCreatureAction();
 
@@ -89,9 +88,9 @@ public class Card4_046 extends AbstractUsedInterrupt {
                     action.allowResponses(new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
-                            PhysicalCard finalCreature = action.getPrimaryTargetCard(targetGroupId);
+                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
 
-                            Collection<PhysicalCard> toDetach = Filters.filterAllOnTable(game, Filters.and(vineSnakeOrMynock, Filters.attachedTo(finalCreature), Filters.canBeTargetedBy(self)));
+                            Collection<PhysicalCard> toDetach = Filters.filterAllOnTable(game, Filters.and(vineSnakeOrMynock, Filters.attachedTo(finalTarget), Filters.canBeTargetedBy(self)));
                             action.appendEffect(new DetachParasitesEffect(action, toDetach));
                         }
                     });
