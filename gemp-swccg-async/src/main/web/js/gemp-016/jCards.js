@@ -3400,6 +3400,7 @@ var fixedImages = {
 "501_45":"/gemp-swccg/images/cards/Virtual1-Dark/accordingtomydesign.gif",
 "501_46":"/gemp-swccg/images/cards/Premiere-Light/jedipresence.gif",
 "501_52":"/gemp-swccg/images/cards/Coruscant-Dark/theywillbenomatchforyou.gif",
+"501_54":"/gemp-swccg/images/cards/ReflectionsIII-Dark/nomatchforasith.gif",
 "501_56":"/gemp-swccg/images/cards/Virtual7-Dark/directororsonkrennic.gif",
 "501_58":"/gemp-swccg/images/cards/Premiere-Dark/momentoftriumph.gif",
 "501_59":"/gemp-swccg/images/cards/JediPack-Dark/eriadu.gif",

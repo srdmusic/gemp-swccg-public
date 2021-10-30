@@ -9200,7 +9200,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             return 0;
 
         int result = lightsaberCombatState.getBaseNumDuelDestinyDraws(player);
-
+        for (Modifier modifier : getModifiers(gameState, ModifierType.NUM_LIGHTSABER_COMBAT_DESTINY_DRAWS)) {
+            result += modifier.getNumLightsaberCombatDestinyDrawsModifier(player, gameState, this);
+        }
         return Math.max(0, result);
     }
 
