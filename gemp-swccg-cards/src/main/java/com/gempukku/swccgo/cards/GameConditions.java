@@ -641,6 +641,21 @@ public class GameConditions {
     }
 
     /**
+     * Checks when action can be performed "Once per attack".
+     *
+     * @param game                 the game
+     * @param self                 the source card of the action
+     * @param playerId             the player to perform the action
+     * @param gameTextSourceCardId the card id of the game text for this action comes from (when copied from another card)
+     * @param gameTextActionId     the identifier for the card's specific action to check the limit of
+     * @return true if condition is satisfied, otherwise false
+     */
+    public static boolean isOncePerAttack(SwccgGame game, PhysicalCard self, String playerId, int gameTextSourceCardId, GameTextActionId gameTextActionId) {
+        return isDuringAttack(game)
+                && game.getModifiersQuerying().getUntilEndOfAttackLimitCounter(self, playerId, gameTextSourceCardId, gameTextActionId).getUsedLimit() < 1;
+    }
+
+    /**
      * Checks when action can be performed "Once per duel".
      *
      * @param game                 the game
@@ -1473,6 +1488,22 @@ public class GameConditions {
 
         Filter filterToUse = Filters.or(participantFilter, Filters.hasPermanentAboard(Filters.and(participantFilter)), Filters.hasPermanentWeapon(Filters.and(participantFilter)));
         return Filters.canSpot(battleState.getAllCardsParticipating(), game, 1, filterToUse);
+    }
+
+    /**
+     * Determines if an attack is in progress that has a participant accepted by the participant filter.
+     *
+     * @param game              the game
+     * @param participantFilter the participant filter
+     * @return true or false
+     */
+    public static boolean isDuringAttackWithParticipant(SwccgGame game, Filterable participantFilter) {
+        AttackState attackState = game.getGameState().getAttackState();
+        if (attackState == null)
+            return false;
+
+        Filter filterToUse = Filters.or(participantFilter, Filters.hasPermanentAboard(Filters.and(participantFilter)), Filters.hasPermanentWeapon(Filters.and(participantFilter)));
+        return Filters.canSpot(attackState.getAllCardsParticipating(), game, 1, filterToUse);
     }
 
     /**

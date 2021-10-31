@@ -23,6 +23,8 @@ public interface ModifiersQuerying {
 
     LimitCounter getUntilEndOfBattleLimitCounter(PhysicalCard card, String playerId, int gameTextSourceCardId, GameTextActionId gameTextActionId);
 
+    LimitCounter getUntilEndOfAttackLimitCounter(PhysicalCard card, String playerId, int gameTextSourceCardId, GameTextActionId gameTextActionId);
+
     LimitCounter getUntilEndOfDuelLimitCounter(PhysicalCard card, String playerId, int gameTextSourceCardId, GameTextActionId gameTextActionId);
 
     LimitCounter getUntilEndOfTurnLimitCounter(PhysicalCard card, String playerId, int gameTextSourceCardId, GameTextActionId gameTextActionId);
@@ -1815,6 +1817,8 @@ public interface ModifiersQuerying {
      */
     int getNumDestinyDrawsToAttritionOnly(GameState gameState, String player, boolean isGetLimit, boolean isForGui);
 
+    int getNumAttackDestinyDraws(GameState gameState, String player, boolean isGetLimit, boolean isForGui);
+
     boolean mayInitiateBattle(GameState gameState, PhysicalCard physicalCard);
 
     boolean mayBeBattled(GameState gameState, PhysicalCard physicalCard);
@@ -1836,10 +1840,10 @@ public interface ModifiersQuerying {
     /**
      * Gets the total ability in the attack.
      * @param gameState the game state
-     * @param defender true if total for defender, otherwise total for attacker
+     * @param playerId which player
      * @return the total ability
      */
-    float getAttackTotalAbility(GameState gameState, boolean defender);
+    float getAttackTotalAbility(GameState gameState, String playerId);
 
     /**
      * Determines if a specified player's total ability at the specified location may not be reduced.
@@ -3545,6 +3549,10 @@ public interface ModifiersQuerying {
      * @return the permanent weapons that have targeted the specified target this turn
      */
     List<SwccgBuiltInCardBlueprint> permanentWeaponsTargetedByThisTurn(PhysicalCard target);
+
+    void hitOrMadeLostByWeapon(PhysicalCard target, PhysicalCard weapon);
+    void clearHitOrMadeLostByWeapon(PhysicalCard card);
+    boolean wasHitOrMadeLostByWeapon(PhysicalCard target, Filter hitBy);
 
 
     boolean mayNotBeFired(GameState gameState, PhysicalCard weapon);

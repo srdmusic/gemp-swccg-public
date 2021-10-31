@@ -262,7 +262,7 @@ public class GuiUtils {
             if (attackState.getAttackDestinyTotal(attackState.getAttackerOwner()) != null) {
                 return 0;
             }
-            return (modifiersQuerying.getAttackTotalAbility(gameState, false) >= 4) ? 1 : 0;
+            return modifiersQuerying.getNumAttackDestinyDraws(gameState, attackState.getAttackerOwner(), false, true);
         }
     }
 
@@ -292,7 +292,7 @@ public class GuiUtils {
             if (attackState.getAttackDestinyTotal(attackState.getDefenderOwner()) != null) {
                 return 0;
             }
-            return (modifiersQuerying.getAttackTotalAbility(gameState, true) >= 4) ? 1 : 0;
+            return modifiersQuerying.getNumAttackDestinyDraws(gameState, attackState.getDefenderOwner(), false, true);
         }
     }
 

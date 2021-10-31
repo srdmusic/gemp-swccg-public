@@ -57,6 +57,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private Map<String, LimitCounter> _turnLimitCounters = new HashMap<String, LimitCounter>();
     private Map<String, LimitCounter> _turnForCardTitleLimitCounters = new HashMap<String, LimitCounter>();
     private Map<String, LimitCounter> _battleLimitCounters = new HashMap<String, LimitCounter>();
+    private Map<String, LimitCounter> _attackLimitCounters = new HashMap<String, LimitCounter>();
     private Map<String, LimitCounter> _duelLimitCounters = new HashMap<String, LimitCounter>();
     private Map<Integer, Map<String, LimitCounter>> _forceLossLimitCounters = new HashMap<Integer, Map<String, LimitCounter>>();
     private Map<String, LimitCounter> _cardTitlePlayedTurnLimitCounters = new HashMap<String, LimitCounter>();
@@ -115,6 +116,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private Set<String> _usedCombatCard = new HashSet<String>();
     private Map<Integer, List<PhysicalCard>> _targetedByWeaponsMap = new HashMap<Integer, List<PhysicalCard>>();
     private Map<Integer, List<SwccgBuiltInCardBlueprint>> _targetedByPermanentWeaponsMap = new HashMap<Integer, List<SwccgBuiltInCardBlueprint>>();
+    private Map<Integer, List<PhysicalCard>> _hitOrMadeLostByWeaponMap = new HashMap<>();
     private Map<Integer, PhysicalCard> _attemptedJediTestThisTurnMap = new HashMap<Integer, PhysicalCard>();
 
     private Set<PhysicalCard> _blownAwayCards = new HashSet<PhysicalCard>();
@@ -219,6 +221,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
         for (Map.Entry<String, LimitCounter> entry : _battleLimitCounters.entrySet()) {
             snapshot._battleLimitCounters.put(entry.getKey(), snapshotData.getDataForSnapshot(entry.getValue()));
+        }
+        for (Map.Entry<String, LimitCounter> entry : _attackLimitCounters.entrySet()) {
+            snapshot._attackLimitCounters.put(entry.getKey(), snapshotData.getDataForSnapshot(entry.getValue()));
         }
         for (Map.Entry<String, LimitCounter> entry : _duelLimitCounters.entrySet()) {
             snapshot._duelLimitCounters.put(entry.getKey(), snapshotData.getDataForSnapshot(entry.getValue()));
@@ -456,6 +461,13 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             snapshot._targetedByPermanentWeaponsMap.put(cardId, snapshotList);
             snapshotList.addAll(_targetedByPermanentWeaponsMap.get(cardId));
         }
+        for (Integer cardId : _hitOrMadeLostByWeaponMap.keySet()) {
+            List<PhysicalCard> snapshotList = new LinkedList<PhysicalCard>();
+            snapshot._hitOrMadeLostByWeaponMap.put(cardId, snapshotList);
+            for (PhysicalCard card : _hitOrMadeLostByWeaponMap.get(cardId)) {
+                snapshotList.add(snapshotData.getDataForSnapshot(card));
+            }
+        }
         for (Map.Entry<Integer, PhysicalCard> entry : _attemptedJediTestThisTurnMap.entrySet()) {
             snapshot._attemptedJediTestThisTurnMap.put(entry.getKey(), snapshotData.getDataForSnapshot(entry.getValue()));
         }
@@ -530,6 +542,20 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         if (limitCounter == null) {
             limitCounter = new DefaultLimitCounter();
             _battleLimitCounters.put(key, limitCounter);
+        }
+        return limitCounter;
+    }
+
+    @Override
+    public LimitCounter getUntilEndOfAttackLimitCounter(PhysicalCard card, String playerId, int gameTextSourceCardId, GameTextActionId gameTextActionId) {
+        String key = card.getCardId()+"|"+playerId+"|"+gameTextSourceCardId+"|"+ gameTextActionId;
+        if (card.getBlueprint().getCardCategory() == CardCategory.INTERRUPT) {
+            key = "|"+playerId+"|" + "|"+ gameTextActionId;
+        }
+        LimitCounter limitCounter = _attackLimitCounters.get(key);
+        if (limitCounter == null) {
+            limitCounter = new DefaultLimitCounter();
+            _attackLimitCounters.put(key, limitCounter);
         }
         return limitCounter;
     }
@@ -5331,6 +5357,28 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         return Math.max(0, result);
     }
 
+    @Override
+    public int getNumAttackDestinyDraws(GameState gameState, String player, boolean isGetLimit, boolean isForGui) {
+        AttackState attackState = gameState.getAttackState();
+        if (attackState == null)
+            return 0;
+
+        float abilityRequired = 4;
+        float totalAbility = getAttackTotalAbility(gameState, player);
+
+        int result = 0;
+        if (Float.compare(totalAbility, abilityRequired) >= 0) {
+            result++;
+        }
+
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.NUM_ATTACK_DESTINY_DRAWS, attackState.getAttackLocation())) {
+            int num = ((NumDestinyDrawsDuringAttackModifier)modifier).getNumAttackDestinyDraws(player, gameState, gameState.getGame().getModifiersQuerying());
+            result += num;
+        }
+
+        return Math.max(0, result);
+    }
+
     /**
      * Records that the specified card has performed a regular move.
      * @param card the card
@@ -6038,6 +6086,47 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             permanentWeapons = Collections.emptyList();
         }
         return permanentWeapons;
+    }
+
+    /**
+     * Records that the specified target card was hit or made lost by the specified weapon.
+     * @param target the target
+     * @param weapon the weapon
+     */
+    @Override
+    public void hitOrMadeLostByWeapon(PhysicalCard target, PhysicalCard weapon) {
+        List<PhysicalCard> hitOrMadeLostByWeapon = _hitOrMadeLostByWeaponMap.get(target.getPermanentCardId());
+        if (hitOrMadeLostByWeapon == null) {
+            hitOrMadeLostByWeapon = new LinkedList<>();
+            _hitOrMadeLostByWeaponMap.put(target.getPermanentCardId(), hitOrMadeLostByWeapon);
+        }
+        hitOrMadeLostByWeapon.add(weapon);
+        if (weapon.getAttachedTo() != null) {
+            hitOrMadeLostByWeapon.add(weapon.getAttachedTo());
+        }
+    }
+
+    /**
+     * Removes the card from the list of cards that have been hit or made lost by a weapon this turn (to be used when restored to normal)
+     * @param card the card
+     */
+    @Override
+    public void clearHitOrMadeLostByWeapon(PhysicalCard card) {
+        _hitOrMadeLostByWeaponMap.remove(card.getPermanentCardId());
+    }
+
+    /**
+     * Checks if a card was hit or made lost by a card accepted by the specified filter (or a weapon fired by the specified card)
+     * @param target the card that was hit
+     * @param hitBy the card that hit (or used a weapon to hit) the target
+     * @return
+     */
+    @Override
+    public boolean wasHitOrMadeLostByWeapon(PhysicalCard target, Filter hitBy) {
+        if (!_hitOrMadeLostByWeaponMap.containsKey(target.getPermanentCardId()))
+            return false;
+        List<PhysicalCard> hitOrMadeLostByWeapon = _hitOrMadeLostByWeaponMap.get(target.getPermanentCardId());
+        return Filters.filter(hitOrMadeLostByWeapon, _swccgGame, hitBy).isEmpty();
     }
 
     /**
@@ -12017,11 +12106,11 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     /**
      * Gets the total ability in the attack.
      * @param gameState the game state
-     * @param defender true if total for defender, otherwise total for attacker
+     * @param playerId which player
      * @return the total ability
      */
     @Override
-    public float getAttackTotalAbility(GameState gameState, boolean defender) {
+    public float getAttackTotalAbility(GameState gameState, String playerId) {
         AttackState attackState = gameState.getAttackState();
         if (attackState == null) {
             return 0;
@@ -12030,8 +12119,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         float result = 0;
 
         PhysicalCard attackLocation = attackState.getAttackLocation();
-        String owningPlayer = defender ? attackState.getDefenderOwner() : attackState.getAttackerOwner();
-        Collection<PhysicalCard> cardsInAttack = defender ? attackState.getCardsDefending() : attackState.getCardsAttacking();
+
+        Collection<PhysicalCard> cardsInAttack = Filters.filter(attackState.getAllCardsParticipating(), gameState.getGame(), Filters.your(playerId));
 
         for (PhysicalCard presentCard : Filters.filter(cardsInAttack, _swccgGame, Filters.present(attackState.getAttackLocation()))) {
 
@@ -12064,9 +12153,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         // Apply modifiers to total ability at location
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.TOTAL_ABILITY_AT_LOCATION, attackLocation)) {
-            if (modifier.isForPlayer(owningPlayer)) {
+            if (modifier.isForPlayer(playerId)) {
                 float modifierAmount = modifier.getValue(gameState, this, attackLocation);
-                if (modifierAmount >= 0 || !isProhibitedFromHavingTotalAbilityReduced(gameState, attackLocation, owningPlayer)) {
+                if (modifierAmount >= 0 || !isProhibitedFromHavingTotalAbilityReduced(gameState, attackLocation, playerId)) {
                     result += modifierAmount;
                 }
             }
@@ -12075,9 +12164,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         // Check if value was reset to an "unmodifiable value", and use lowest found
         Float lowestResetValue = null;
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.UNMODIFIABLE_TOTAL_ABILITY_AT_LOCATION, attackLocation)) {
-            if (modifier.isForPlayer(owningPlayer)) {
+            if (modifier.isForPlayer(playerId)) {
                 float modifierAmount = modifier.getValue(gameState, this, attackLocation);
-                if (modifierAmount >= result || !isProhibitedFromHavingTotalAbilityReduced(gameState, attackLocation, owningPlayer)) {
+                if (modifierAmount >= result || !isProhibitedFromHavingTotalAbilityReduced(gameState, attackLocation, playerId)) {
                     lowestResetValue = (lowestResetValue != null) ? Math.min(lowestResetValue, modifierAmount) : modifierAmount;
                 }
             }
@@ -15258,6 +15347,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         _asteroidDestinyDrawnAgainstMap.clear();
         _forfeitedFromLocationMap.clear();
         _targetedByWeaponsMap.clear();
+        _hitOrMadeLostByWeaponMap.clear();
         _regularMoveSet.clear();
         _locationAttackOnCreatureSet.clear();
         _attackOnCreatureParticipationSet.clear();
@@ -15432,6 +15522,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     public void removeEndOfAttack() {
         removeModifiers(_untilEndOfAttackModifiers);
         _untilEndOfAttackModifiers.clear();
+        _attackLimitCounters.clear();
         _firedInAttackMap.clear();
         _firedInAttackCompletedMap.clear();
         _firedInAttackByPlayerMap.clear();

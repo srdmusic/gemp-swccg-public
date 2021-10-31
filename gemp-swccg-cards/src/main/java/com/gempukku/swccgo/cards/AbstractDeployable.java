@@ -2023,7 +2023,8 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
                     && isFiresDuringWeaponsSegment(game, self)) {
                 if (game.getGameState().isDuringAttack()
                         && (isInAttack //permanent weapons
-                        || (self.getAttachedTo() != null && game.getGameState().isParticipatingInAttack(self.getAttachedTo()))) //weapon cards
+                        || (self.getAttachedTo() != null && game.getGameState().isParticipatingInAttack(self.getAttachedTo())) //weapon cards
+                )
                 ) {
                     List<FireWeaponAction> fireWeaponActions = getFireWeaponActions(playerId, game, self, false, 0, self, false, Filters.none, null, Filters.participatingInAttack, false);
                     if (fireWeaponActions != null)

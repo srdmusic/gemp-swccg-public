@@ -109,6 +109,7 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
         RETRIEVED_FORCE,
 
         // Attack
+        ATTACK_TARGET_SELECTED,
         ATTACK_INITIATED,
         ATTACK_ENDED,
         ATTACK_CANCELED,
