@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set216.dark;
 
 import com.gempukku.swccgo.cards.AbstractSith;
 import com.gempukku.swccgo.cards.conditions.OnCondition;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -9,6 +10,8 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.GameTextCanceledCondition;
 import com.gempukku.swccgo.logic.effects.CancelGameTextEffect;
 import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
@@ -42,6 +45,14 @@ public class Card216_006 extends AbstractSith {
         //immune to [Set 3] Padme. made him immune to Padme Naberrie and made her check if Vader is immune
         modifiers.add(new ImmuneToTitleModifier(self, Title.Padme));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
+        return modifiers;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileInPlayEvenIfGameTextCanceledModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        //immune to [Set 3] Padme. made him immune to Padme Naberrie and made her check if Vader is immune
+        modifiers.add(new ImmuneToTitleModifier(self, new AndCondition(new GameTextCanceledCondition(self), new WithCondition(self, Filters.and(Icon.VIRTUAL_SET_3, Filters.Padme))), Title.Padme));
         return modifiers;
     }
 

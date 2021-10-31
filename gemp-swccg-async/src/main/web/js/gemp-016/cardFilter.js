@@ -321,6 +321,7 @@ var CardFilter = Class.extend({
         this.sortLabel = $("<label for='sortSelect' class='filterLabel'>Sort&nbsp;by:</label>");
         this.sortSelect = $("<select id='sortSelect' class='filterInput'>"
             + "<option value='name,set,cardType' selected='selected'>Title</option>"
+            + "<option value='cardCategory,name,set'>Card category</option>"
             + "<option value='cardType,name,set'>Card type</option>"
             + "</select>");
 
