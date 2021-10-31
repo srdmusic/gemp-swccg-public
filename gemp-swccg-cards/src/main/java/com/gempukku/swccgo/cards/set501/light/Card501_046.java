@@ -26,7 +26,7 @@ public class Card501_046 extends AbstractLostOrStartingInterrupt {
     public Card501_046() {
         super(Side.LIGHT, 5, "The Rise Of Skywalker", Uniqueness.UNIQUE);
         setGameText("LOST: Peek at Force Pile. " +
-                "STARTING: If Shmi's Hut, Anakin's Funeral Pyre, or Rey's Encampment on table, " +
+                "STARTING: If your starting location was Anakin's Funeral Pyre, Rey's Encampment, or Slave Quarters, " +
                 "deploy The Force Is Strong In My Family, Battle Plan, Insurrection, and one Effect that is always immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_17);
         setTestingText("The Rise Of Skywalker");
@@ -37,7 +37,7 @@ public class Card501_046 extends AbstractLostOrStartingInterrupt {
         // Check condition(s)
         if (GameConditions.hasForcePile(game, playerId)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setText("Peek at Force Pile");
             // Allow response(s)
             action.allowResponses("Peek at Force Pile",
@@ -59,7 +59,8 @@ public class Card501_046 extends AbstractLostOrStartingInterrupt {
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
         // Check condition(s)
 
-        if (GameConditions.canSpot(game, self, Filters.or(Filters.title(Title.Slave_Quarters), Filters.title(Title.Anakins_Funeral_Pyre), Filters.title(Title.Reys_Encampment)))) {
+        final PhysicalCard startingLocation = game.getModifiersQuerying().getStartingLocation(playerId);
+        if (startingLocation != null && Filters.or(Filters.title(Title.Slave_Quarters), Filters.title(Title.Anakins_Funeral_Pyre), Filters.title(Title.Reys_Encampment)).accepts(game, startingLocation)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
             action.setText("Deploy The Force is Strong In My Family and Effects from Reserve Deck");
