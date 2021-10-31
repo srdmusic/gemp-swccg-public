@@ -43,6 +43,7 @@ public class Card501_035 extends AbstractNormalEffect {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         if(TriggerConditions.isStartOfYourTurn(game, effectResult, playerId)
             && GameConditions.numCardsInHand(game, playerId)>=2
+            && GameConditions.hasReserveDeck(game, playerId)
             && GameConditions.canSpot(game, self, Filters.Prophecy_Of_The_Force)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
