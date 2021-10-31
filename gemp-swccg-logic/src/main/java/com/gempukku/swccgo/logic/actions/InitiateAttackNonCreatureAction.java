@@ -135,6 +135,7 @@ public class InitiateAttackNonCreatureAction extends RequiredRuleTriggerAction {
                 Collection<PhysicalCard> possibleNonCreaturesToAttack = Filters.filterActive(game, _creature, SpotOverride.INCLUDE_ALL, Filters.nonCreatureCanBeAttackedByCreature(_creature, false));
                 _target = GameUtils.getRandomCards(Filters.filter(possibleNonCreaturesToAttack, game, Filters.owner(_owner)), 1).get(0);
                 gameState.sendMessage(GameUtils.getCardLink(_target) + " randomly chosen to be attacked");
+                gameState.cardAffectsCard(_creature.getOwner(), _creature, _target);
                 return new TriggeringResultEffect(this, new AttackTargetSelectedResult(this, _creature, _target));
             }
 
