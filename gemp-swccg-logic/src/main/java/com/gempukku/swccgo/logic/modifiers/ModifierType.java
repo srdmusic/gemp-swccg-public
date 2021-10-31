@@ -33,6 +33,7 @@ public enum ModifierType {
     CANT_DRIVE_OR_PILOT,
     DOES_NOT_ADD_TO_POWER_WHEN_PILOTING,
     MAY_NOT_PILOT_TARGET,
+    ADD_CARD_TYPE,
     MODIFY_CARD_SUBTYPE,
 
     // Agenda

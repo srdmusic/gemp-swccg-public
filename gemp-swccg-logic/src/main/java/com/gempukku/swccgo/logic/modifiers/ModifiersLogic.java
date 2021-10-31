@@ -12816,7 +12816,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     @Override
     public boolean ignoresObjectiveRestrictionsWhenForceDrainingAtLocation(GameState gameState, PhysicalCard location, PhysicalCard sourceCard, String playerId) {
 
-        if (location != null && sourceCard.getBlueprint().isCardType(CardType.OBJECTIVE)) {
+        if (location != null && getCardTypes(gameState, sourceCard).contains(CardType.OBJECTIVE)) {
             for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.IGNORES_OBJECTIVE_RESTRICTIONS_WHEN_FORCE_DRAINING_AT_LOCATION, location)) {
                 if (modifier.isForPlayer(playerId)) {
                     //if (modifier.isAffectedTarget(gameState, this, location)) {
@@ -12840,7 +12840,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     @Override
     public boolean ignoresObjectiveRestrictionsWhenInitiatingBattleAtLocation(GameState gameState, PhysicalCard location, PhysicalCard sourceCard, String playerId) {
 
-        if (location != null && sourceCard.getBlueprint().isCardType(CardType.OBJECTIVE)) {
+        if (location != null && getCardTypes(gameState, sourceCard).contains(CardType.OBJECTIVE)) {
             for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.IGNORES_OBJECTIVE_RESTRICTIONS_WHEN_INITIATING_BATTLE_AT_LOCATION, location)) {
                 if (modifier.isForPlayer(playerId)) {
                     //if (modifier.isAffectedTarget(gameState, this, location)) {
@@ -16417,6 +16417,18 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             return ((ChangeCardSubtypeModifier)m).getSubtype();
         }
         return null;
+    }
+
+    public Set<CardType> getCardTypes(GameState gameState, PhysicalCard card) {
+        Set<CardType> types = new HashSet<>();
+        if (card.isDejarikHologramAtHolosite())
+            return types;
+
+        types.addAll(card.getBlueprint().getCardTypes());
+        for(Modifier m:getModifiersAffectingCard(gameState, ModifierType.ADD_CARD_TYPE, card)) {
+            types.add(((AddCardTypeModifier)m).getType());
+        }
+        return types;
     }
 
     public boolean isShieldGateBlownAway(GameState gameState) {

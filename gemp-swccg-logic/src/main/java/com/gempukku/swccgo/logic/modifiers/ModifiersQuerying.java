@@ -4575,6 +4575,7 @@ public interface ModifiersQuerying {
 
     boolean mindscannedCharacterGameTextWasCanceled(GameState gameState, PhysicalCard card);
     CardSubtype getModifiedSubtype(GameState gameState, PhysicalCard card);
+    Set<CardType> getCardTypes(GameState gameState, PhysicalCard card);
     boolean mayBeRevealedAsResistanceAgent(GameState gameState, PhysicalCard card);
     boolean isCommuning(GameState gameState, Filterable filter);
     Collection<PhysicalCard> getCardsConsideredOutOfPlay(GameState gameState);
