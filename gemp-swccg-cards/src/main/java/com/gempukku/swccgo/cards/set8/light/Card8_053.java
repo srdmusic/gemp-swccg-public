@@ -47,7 +47,8 @@ public class Card8_053 extends AbstractUsedInterrupt {
         final Filter yourVehicleFilter = Filters.and(Filters.your(self), Filters.or(Filters.piloted, Filters.driven), Filters.non_creature_vehicle, Filters.hasManeuverDefined, Filters.presentWith(self, opponentsVehicleFilter));
 
         // Check condition(s)
-        if (GameConditions.canTarget(game, self, opponentsVehicleFilter)) {
+        if (GameConditions.canTarget(game, self, opponentsVehicleFilter)
+            && GameConditions.canTarget(game, self, yourVehicleFilter)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Target two non-creature vehicles");
