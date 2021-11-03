@@ -15,6 +15,7 @@ var GempSwccgMerchantUI = Class.extend({
     questionDialog:null,
 
     currencyCount:null,
+    ownedCompareSelect:'GREATER_THAN_OR_EQUAL',
     ownedMin:0,
     hideMerchant:false,
 
@@ -25,7 +26,7 @@ var GempSwccgMerchantUI = Class.extend({
 
         this.cardFilter = new CardFilter(cardFilterElem, cardFilterElem,
                 function (filter, start, count, callback) {
-                    that.comm.getMerchant(filter, that.ownedMin, start, count, callback);
+                    that.comm.getMerchant(filter, that.ownedCompareSelect, that.ownedMin, start, count, callback);
                 },
                 function (rootElem) {
                     that.clearList(rootElem);
@@ -48,7 +49,7 @@ var GempSwccgMerchantUI = Class.extend({
 
         this.hideMerchantDiv = $("<div class='hideMerchant'><label for='hideMerchantCheck'>Hide merchant</label><input type='checkbox' id='hideMerchantCheck' value='hideMerchant'/></div>");
 
-        this.countDiv = $("<div class='countDiv'>Owned >= <select id='ownedMin'><option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option><option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option><option value='8'>8</option><option value='9'>9</option><option value='10'>10</option></select></div>");
+        this.countDiv = $("<div class='countDiv'>Owned <select id='ownedCompareSelect'><option value='LESS_THAN_OR_EQUAL_TO'><=</option><option value='EQUALS'>=</option><option value='GREATER_THAN_OR_EQUAL_TO' selected>>=</option></select> <select id='ownedMin'><option value='0'>0</option><option value='1'>1</option><option value='2'>2</option><option value='3'>3</option><option value='4'>4</option><option value='5'>5</option><option value='6'>6</option><option value='7'>7</option><option value='8'>8</option><option value='9'>9</option><option value='10'>10</option></select></div>");
 
         this.filterDiv.append(this.pocketDiv);
         this.filterDiv.append(this.hideMerchantDiv);
@@ -57,6 +58,12 @@ var GempSwccgMerchantUI = Class.extend({
         $("#ownedMin").change(
                 function () {
                     that.ownedMin = $("#ownedMin option:selected").prop("value");
+                    that.cardFilter.getCollection();
+                });
+
+        $("#ownedCompareSelect").change(
+                function () {
+                    that.ownedCompareSelect = $("#ownedCompareSelect option:selected").prop("value");
                     that.cardFilter.getCollection();
                 });
 
