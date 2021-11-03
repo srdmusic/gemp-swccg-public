@@ -2,7 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -22,11 +22,22 @@ import java.util.List;
 public class Card501_095 extends AbstractSite {
     public Card501_095() {
         super(Side.LIGHT, Title.Anakins_Funeral_Pyre, Title.Endor);
-        setLocationDarkSideGameText("May be deployed instead of Jedi Council Chamber by He Is The Chosen One.");
-        setLocationLightSideGameText("Once during any draw phase, if Prophecy Of The Force on table, may activate 1 Force.");
+        setLocationDarkSideGameText("Deploys only as a starting location (or by He Is The Chosen One instead of Jedi Council Chamber).");
+        setLocationLightSideGameText("Once during opponent's turn, unless Anakin on table, may activate 1 Force.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
         setTestingText("Endor: Anakin's Funeral Pyre");
+    }
+
+    @Override
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self) {
+        return game.getGameState().getCurrentPhase() == Phase.PLAY_STARTING_CARDS
+                && ((game.getModifiersQuerying().getStartingLocation(playerId) == null
+                    && game.getGameState().getObjectivePlayed(playerId) == null) //as starting location
+                || (game.getGameState().getObjectivePlayed(playerId) != null
+                    && Filters.He_Is_The_Chosen_One.accepts(game, game.getGameState().getObjectivePlayed(playerId))
+                    && !GameConditions.canSpot(game, self, Filters.Jedi_Council_Chamber)) // this is definitely not the best way to do this
+            );
     }
 
     // NOTE: The "May be deployed instead of Jedi Council Chamber by He Is The Chosen One." portion of the text has been
@@ -38,19 +49,20 @@ public class Card501_095 extends AbstractSite {
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        // Once during any draw phase, if Prophecy Of The Force on table, may activate 1 Force.
+        // Once during opponent's turn, unless Anakin on table, may activate 1 Force.
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringEitherPlayersPhase(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId, Phase.DRAW)
+        if (GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isOpponentsTurn(game, playerOnLightSideOfLocation)
                 && GameConditions.canActivateForce(game, playerOnLightSideOfLocation)
-                && GameConditions.canSpot(game, self, Filters.Prophecy_Of_The_Force)) {
+                && !GameConditions.canSpot(game, self, Filters.Anakin)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.setText("Activate 1 Force");
 
             // Update usage limit(s)
             action.appendUsage(
-                    new OncePerPhaseEffect(action));
+                    new OncePerTurnEffect(action));
 
             // Perform result(s)
             action.appendEffect(

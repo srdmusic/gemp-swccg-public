@@ -70,6 +70,7 @@ public enum ModifyGameTextType {
     UGNAUGHT__DOUBLE_CARBON_FREEZING_DESTINY_BONUS("Carbon-Freezing destiny bonus doubled"),
     UNCERTAIN_IS_THE_FUTURE__MAY_NOT_BE_PLAYED_EXCEPT_TO_CANCEL_INTERRUPT("May not be played (except to cancel opponent's Interrupt)"),
     WALKER_GARRISON__ADDITIONAL_SITE_TO_GAIN_FORCE_DRAIN_BONUS("Additional site required for Force drain bonus"),
+    WAT_TAMBOR__IGNORED_BY_WHERE_ARE_THOSE_DROIDEKAS("Ignores Wat Tambor"),
     WATTOS_BOX__MAY_DEPLOY_REGARDLESS_OF_RACE_TOTAL("May deploy regardless of race total"),
     WELL_HANDLE_THIS__ONLY_TARGET_UNDERCOVER_SPIES_AND_5D6RA7("May target only Undercover spies and 5D6-RA-7"),
     VADER__DOES_NOT_ADD_1_TO_BATTLE_DESTINY("Does not add 1 to battle destiny"),
