@@ -44,7 +44,7 @@ public class Card8_145 extends AbstractUsedInterrupt {
 
         final String opponent = game.getOpponent(playerId);
         Filter opponentsVehicleFilter = Filters.and(Filters.opponents(self), Filters.non_creature_vehicle, Filters.hasManeuverDefined, Filters.presentAt(Filters.site), Filters.canBeTargetedBy(self, TargetingReason.TO_BE_LOST));
-        final Filter yourVehicleFilter = Filters.and(Filters.your(self), Filters.piloted, Filters.non_creature_vehicle, Filters.hasManeuverDefined, Filters.presentWith(self, opponentsVehicleFilter));
+        final Filter yourVehicleFilter = Filters.and(Filters.your(self), Filters.or(Filters.piloted, Filters.driven), Filters.non_creature_vehicle, Filters.hasManeuverDefined, Filters.presentWith(self, opponentsVehicleFilter));
 
         // Check condition(s)
         if (GameConditions.canTarget(game, self, opponentsVehicleFilter)) {
