@@ -15,7 +15,7 @@ var GempSwccgMerchantUI = Class.extend({
     questionDialog:null,
 
     currencyCount:null,
-    ownedCompareSelect:'GREATER_THAN_OR_EQUAL',
+    ownedCompareSelect:'GREATER_THAN_OR_EQUAL_TO',
     ownedMin:0,
     hideMerchant:false,
 
