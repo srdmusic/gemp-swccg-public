@@ -38,7 +38,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
                 "My Father Has It: Reveal Anakin (may also reveal Obi-Wan) from Reserve Deck. \n" +
                 "I Have It: Reveal Luke from Reserve Deck. \n" +
                 "You Have That Power Too: Reveal Rey (may also reveal [Episode VII] Luke) from Reserve Deck. \n" +
-                "Light Side goes first. During your first turn, you may not deploy cards with ability. You may not deploy Jedi (except Yoda and the revealed cards) or [Maintenance] cards. If Leia at a battleground site, flip Their Fire Has Gone Out Of The Universe (may not flip back).");
+                "Light Side goes first. During your first turn, you may not deploy cards with ability (except Shmi). You may not deploy Jedi (except Yoda and the revealed cards) or [Maintenance] cards. If Leia at a battleground site, flip Their Fire Has Gone Out Of The Universe (may not flip back).");
         addIcons(Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
         setTestingText("The Force Is Strong In My Family");
     }
@@ -165,7 +165,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
         };
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotDeployModifier(self, Filters.hasAbilityOrHasPermanentPilotWithAbility, new DuringPlayersTurnNumberCondition(self.getOwner(), 1), self.getOwner()));
+        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.except(Filters.Shmi)), new DuringPlayersTurnNumberCondition(self.getOwner(), 1), self.getOwner()));
         modifiers.add(new MayNotDeployModifier(self,
                 Filters.or(Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, revealedCardsFilter))),
                         Filters.icon(Icon.MAINTENANCE)), self.getOwner()));

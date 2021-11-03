@@ -30,8 +30,8 @@ public class Card501_015 extends AbstractRebel {
     public Card501_015() {
         super(Side.LIGHT, 2, 5, 4, 6, 6, "Kanan Jarrus, Jedi Knight", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Whenever you deploy Chopper, Ezra, Hera, Sabine, or Zeb, may draw top card of your Used Pile. " +
-                "During your draw phase, if Kanan present at a battleground and he did not move this turn, may peek at your Used Pile. " +
+        setGameText("Whenever you deploy Chopper, Ezra, Hera, Kanan, Sabine, or Zeb, may draw top card of your Used Pile. " +
+                "Once during your draw phase, if Kanan present at a battleground and he did not move this turn, may peek at your Used Pile. " +
                 "Immune to attrition < 5.");
         addPersona(Persona.KANAN);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_17);
@@ -65,7 +65,7 @@ public class Card501_015 extends AbstractRebel {
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        Filter filter = Filters.or(Filters.Chopper, Filters.Ezra, Filters.Hera, Filters.Sabine, Filters.Zeb);
+        Filter filter = Filters.or(Filters.Chopper, Filters.Ezra, Filters.Hera, Filters.Kanan, Filters.Sabine, Filters.Zeb);
 
         if (TriggerConditions.justDeployed(game, effectResult, playerId, filter)) {
 
