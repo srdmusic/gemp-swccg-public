@@ -389,7 +389,7 @@ var GempSwccgMerchantUI = Class.extend({
 
         this.pocketDiv.css({position:"absolute", left:filterWidth - 60, top:35, width:60, height:18});
         this.hideMerchantDiv.css({position:"absolute", left:filterWidth - 100, top:62, width:100, height:18});
-        this.countDiv.css({position:"absolute", left:filterWidth - 125, top:80, width:125, height:20});
+        this.countDiv.css({position:"absolute", left:filterWidth - 175, top:80, width:175, height:20});
     },
 
     processError:function (xhr, ajaxOptions, thrownError) {
