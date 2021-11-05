@@ -540,7 +540,7 @@ public class Filters {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                return (physicalCard.getBlueprint().isCardType(type) && !physicalCard.isDejarikHologramAtHolosite());
+                return (modifiersQuerying.getCardTypes(gameState, physicalCard).contains(type) && !physicalCard.isDejarikHologramAtHolosite());
             }
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {

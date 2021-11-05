@@ -16,10 +16,7 @@ import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.KeywordModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
@@ -33,13 +30,13 @@ import java.util.List;
 public class Card501_008 extends AbstractEpicEventDeployable {
     public Card501_008() {
         super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Revenge_Of_The_Sith);
-        setGameText("Deploys on table only at start of game; choose an apprentice:" +
-                "Maul: Deploy Desert Landing Site and They Will Be No Match For You." +
-                "Dooku: Deploy Invisible Hand: Bridge and Evil Is Everywhere." +
-                "Vader: Deploy Vader's Castle and I Am Your Father." +
-                "For remainder of game, you may not deploy Dark Jedi except Sidious and your chosen apprentice. " +
-                "A Sith Legend, Always Two There Are, Sidious, and your apprentice are destiny +2. " +
-                "If a Jedi just lost from same location as your Dark Jedi, opponent loses 1 Force.");
+        setGameText("Deploy on table (only at start of game) and choose an apprentice: " +
+                "Maul: Deploy Desert Landing Site and They Will Be No Match For You. " +
+                "Dooku: Deploy Invisible Hand: Bridge and Evil Is Everywhere. " +
+                "Vader: Deploy Vader's Castle and I Am Your Father. " +
+                "You may not deploy Dark Jedi except [Episode I] Sidious and the chosen apprentice. Sidious and the chosen apprentice gain [Sith]. " +
+                "A Sith Legend, Always Two There Are, and Sith are destiny +2. " +
+                "If a Jedi was just lost from same location as your Dark Jedi, opponent loses 1 Force.");
         addIcon(Icon.VIRTUAL_SET_17);
         setTestingText("Revenge Of The Sith");
     }
@@ -127,8 +124,9 @@ public class Card501_008 extends AbstractEpicEventDeployable {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MayNotPlayModifier(self, Filters.and(Filters.Dark_Jedi, Filters.not(Filters.Sidious), Filters.not(Filters.Sith_Apprentice)), self.getOwner()));
-        modifiers.add(new DestinyModifier(self, Filters.or(Filters.A_Sith_Legend, Filters.Always_Two_There_Are, Filters.Sidious, Filters.Sith_Apprentice), 2));
+        modifiers.add(new MayNotPlayModifier(self, Filters.and(Filters.Dark_Jedi, Filters.except(Filters.and(Icon.EPISODE_I, Filters.Sidious)), Filters.except(Filters.Sith_Apprentice)), self.getOwner()));
+        modifiers.add(new AddCardTypeModifier(self, Filters.or(Filters.Sidious, Filters.Sith_Apprentice), CardType.SITH));
+        modifiers.add(new DestinyModifier(self, Filters.or(Filters.A_Sith_Legend, Filters.Always_Two_There_Are, Filters.Sith), 2));
         return modifiers;
     }
 
