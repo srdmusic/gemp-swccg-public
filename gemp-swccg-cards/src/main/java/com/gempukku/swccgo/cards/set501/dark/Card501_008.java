@@ -124,7 +124,7 @@ public class Card501_008 extends AbstractEpicEventDeployable {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MayNotPlayModifier(self, Filters.and(Filters.Dark_Jedi, Filters.not(Filters.Sidious), Filters.not(Filters.Sith_Apprentice)), self.getOwner()));
+        modifiers.add(new MayNotPlayModifier(self, Filters.and(Filters.Dark_Jedi, Filters.except(Filters.and(Icon.EPISODE_I, Filters.Sidious)), Filters.except(Filters.Sith_Apprentice)), self.getOwner()));
         modifiers.add(new AddCardTypeModifier(self, Filters.or(Filters.Sidious, Filters.Sith_Apprentice), CardType.SITH));
         modifiers.add(new DestinyModifier(self, Filters.or(Filters.A_Sith_Legend, Filters.Always_Two_There_Are, Filters.Sith), 2));
         return modifiers;
