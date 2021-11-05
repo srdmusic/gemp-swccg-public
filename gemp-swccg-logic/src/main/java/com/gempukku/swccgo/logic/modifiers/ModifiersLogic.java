@@ -12478,14 +12478,16 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             personas.addAll(permanentAboard.getPersonas(_swccgGame));
         }
 
-        // Only check "out of play" for characters, starships, and vehicles
+        // Only check "out of play" for characters, starships, and vehicles owned by the same player
         if (blueprint.getCardCategory() == CardCategory.CHARACTER || blueprint.getCardCategory() == CardCategory.STARSHIP || blueprint.getCardCategory() == CardCategory.VEHICLE) {
             for (Persona persona : personas) {
-                if (!Filters.filterCount(gameState.getAllOutOfPlayCards(), gameState.getGame(), 1, Filters.persona(persona)).isEmpty()) {
+                if (!Filters.filterCount(gameState.getOutOfPlayPile(card.getOwner()), gameState.getGame(), 1, Filters.and(Filters.persona(persona), Filters.your(card))).isEmpty()) {
+                    return true;
+                }
+                if (!Filters.filterCount(getCardsConsideredOutOfPlay(gameState), gameState.getGame(), 1, Filters.and(Filters.persona(persona), Filters.your(card))).isEmpty()) {
                     return true;
                 }
             }
-
             // Add any permanent weapon personas
             permanentWeapon = getPermanentWeapon(gameState, card);
             if (permanentWeapon != null) {
@@ -12495,7 +12497,19 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         // Check uniqueness of any personas (within the card) on table
         for (Persona persona : personas) {
-            if (Filters.canSpotForUniquenessChecking(gameState.getGame(), Filters.and(Filters.not(card), Filters.or(Filters.persona(persona), Filters.hasPermanentAboard(Filters.persona(persona)), Filters.hasPermanentWeapon(Filters.persona(persona)))))) {
+            // cards owned by the same player
+            if (Filters.canSpotForUniquenessChecking(gameState.getGame(), Filters.and(Filters.your(card), Filters.not(card), Filters.or(Filters.persona(persona), Filters.hasPermanentAboard(Filters.persona(persona)), Filters.hasPermanentWeapon(Filters.persona(persona)))))) {
+                return true;
+            }
+
+            // opponent's cards that are stolen
+            if (Filters.canSpotForUniquenessChecking(gameState.getGame(), Filters.and(Filters.opponents(card), Filters.stolen, Filters.not(card), Filters.or(Filters.persona(persona), Filters.hasPermanentAboard(Filters.persona(persona)), Filters.hasPermanentWeapon(Filters.persona(persona)))))) {
+                return true;
+            }
+
+            // any captives (check for the light side player only)
+            if (_swccgGame.getLightPlayer().equals(card.getOwner())
+                    && Filters.canSpotForUniquenessChecking(gameState.getGame(), Filters.and(Filters.captive, Filters.not(card), Filters.or(Filters.persona(persona), Filters.hasPermanentAboard(Filters.persona(persona)), Filters.hasPermanentWeapon(Filters.persona(persona)))))) {
                 return true;
             }
         }
@@ -12521,7 +12535,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 // Only check out of play for characters, starships, and vehicles (except Jabba's Prize)
                 if ((blueprint.getCardCategory() == CardCategory.CHARACTER || blueprint.getCardCategory() == CardCategory.STARSHIP || blueprint.getCardCategory() == CardCategory.VEHICLE)
                         && !Filters.Jabbas_Prize.accepts(gameState, this, card)) {
-                    if (!Filters.filterCount(gameState.getAllOutOfPlayCards(), gameState.getGame(), 1, Filters.sameTitleAs(card, false)).isEmpty()) {
+                    if (!Filters.filterCount(gameState.getAllOutOfPlayCards(), gameState.getGame(), 1, Filters.and(Filters.your(card), Filters.sameTitleAs(card, false))).isEmpty()) {
                         return true;
                     }
                 }
@@ -16514,5 +16528,27 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
     public boolean isShieldGateBlownAway(GameState gameState) {
         return !getModifiers(gameState, ModifierType.SHIELD_GATE_BLOWN_AWAY).isEmpty();
+    }
+
+    public Collection<PhysicalCard> getCardsForPersonaChecking(String playerId) {
+        Collection<PhysicalCard> cards = new LinkedList<>();
+        //my cards on table
+        cards.addAll(Filters.filterAllOnTable(_swccgGame, Filters.your(playerId)));
+
+        //cards in my out of play pile
+        cards.addAll(_swccgGame.getGameState().getOutOfPlayPile(playerId));
+
+        //my cards that are considered out of play
+        cards.addAll(Filters.filter(_swccgGame.getModifiersQuerying().getCardsConsideredOutOfPlay(_swccgGame.getGameState()), _swccgGame, Filters.your(playerId)));
+
+        //opponent's cards on table that are stolen
+        cards.addAll(Filters.filterAllOnTable(_swccgGame, Filters.and(Filters.opponents(playerId), Filters.stolen)));
+
+        //captives on table (only for the light side player)
+        if (_swccgGame.getLightPlayer().equals(playerId)) {
+            cards.addAll(Filters.filterAllOnTable(_swccgGame, Filters.captive));
+        }
+
+        return cards;
     }
 }

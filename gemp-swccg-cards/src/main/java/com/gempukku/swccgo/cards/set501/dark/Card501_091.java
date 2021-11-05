@@ -35,18 +35,18 @@ public class Card501_091 extends AbstractCharacterWeapon {
         setGameText("When drawn for destiny, destiny +1 for each Dark Jedi or Jedi on table. Deploy on Sidious (even as a 'react'). May add 1 to Force drain where present. May target a character or creature for free. Draw two destiny. Target hit, and its forfeit = 0, if total destiny > defense value.");
         addKeywords(Keyword.LIGHTSABER);
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
-        setMatchingCharacterFilter(Filters.Sidious);
+        setMatchingCharacterFilter(Filters.or(Filters.Sidious, Filters.Emperor));
         setTestingText("Sidious's Lightsaber");
     }
 
     @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.Sidious;
+        return Filters.or(Filters.Sidious, Filters.Emperor);
     }
 
     @Override
     protected Filter getGameTextValidToUseWeaponFilter(final SwccgGame game, final PhysicalCard self) {
-        return Filters.Sidious;
+        return Filters.or(Filters.Sidious, Filters.Emperor);
     }
 
     @Override

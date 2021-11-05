@@ -4588,4 +4588,5 @@ public interface ModifiersQuerying {
     Collection<PhysicalCard> getCardsConsideredOutOfPlay(GameState gameState);
     Collection<PhysicalCard> getActiveCardsAffectedByModifier(GameState gameState, ModifierType modifierType);
     boolean isShieldGateBlownAway(GameState gameState);
+    Collection<PhysicalCard> getCardsForPersonaChecking(String playerId);
 }
