@@ -3038,18 +3038,26 @@ public class GameConditions {
         // Check for limit reached for any personas/titles to deploy
         if (!personas.isEmpty() || !titles.isEmpty()) {
 
-            List<PhysicalCard> outOfPlay = gameState.getAllOutOfPlayCards();
+            List<PhysicalCard> outOfPlay = new LinkedList<>();
+
+            outOfPlay.addAll(gameState.getOutOfPlayPile(playerId));
+            outOfPlay.addAll(Filters.filter(modifiersQuerying.getCardsConsideredOutOfPlay(gameState), game, Filters.your(playerId)));
 
             for (Persona persona : personas) {
                 // Check if persona is out of play (only if it's a character, vehicle, or starship)
                 //AR: Any unique character, vehicle, or starship that is out of
                 //play prevents any additional copies of that card (or
                 //other versions of its persona) from being played.
-                if (Filters.canSpot(outOfPlay, game, 1, Filters.and(persona, Filters.or(Filters.character, Filters.vehicle, Filters.starship))))
+                if (Filters.canSpot(outOfPlay, game, 1, Filters.and(Filters.your(playerId), persona, Filters.or(Filters.character, Filters.vehicle, Filters.starship))))
                     continue;
 
                 // Check if persona is in play (and cannot be converted by player)
-                if (Filters.canSpotForUniquenessChecking(game, Filters.and(persona, Filters.not(Filters.canBeConvertedByDeployment(playerId)))))
+                if (Filters.canSpotForUniquenessChecking(game, Filters.and(Filters.your(playerId), persona, Filters.not(Filters.canBeConvertedByDeployment(playerId)))))
+                    continue;
+                if (Filters.canSpotForUniquenessChecking(game, Filters.and(Filters.opponents(playerId), Filters.stolen, persona, Filters.not(Filters.canBeConvertedByDeployment(playerId)))))
+                    continue;
+                if (game.getLightPlayer().equals(playerId)
+                        && Filters.canSpotForUniquenessChecking(game, Filters.and(Filters.captive, persona, Filters.not(Filters.canBeConvertedByDeployment(playerId)))))
                     continue;
 
                 return true;
@@ -3058,7 +3066,7 @@ public class GameConditions {
             for (String title : titles) {
 
                 // Check if card title is out of play (only if unique character, starship, or vehicle)
-                if (Filters.canSpot(outOfPlay, game, 1, Filters.and(Filters.unique, Filters.title(title),
+                if (Filters.canSpot(outOfPlay, game, 1, Filters.and(Filters.unique, Filters.your(playerId), Filters.title(title),
                         Filters.or(Filters.character, Filters.starship, Filters.vehicle))))
                     continue;
 

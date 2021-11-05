@@ -2083,6 +2083,11 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
             return null;
         }
 
+        // Check if uniqueness limit reached
+        if (Filters.canSpotForUniquenessChecking(game, Filters.sameTitle(self))) {
+            return null;
+        }
+
         float power = modifiersQuerying.getPower(gameState, self);
         float ability = modifiersQuerying.getAbility(gameState, self);
         Collection<PhysicalCard> characterInPlay = Filters.filterActive(game, self,
@@ -2144,6 +2149,18 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
         // If no (or multiple) cards found sharing the same persona then conversion cannot be done
         if (characterInPlay.size() != 1) {
             return null;
+        }
+        // Check that the player doesn't already have this persona on table
+        if (Filters.canSpotForUniquenessChecking(game, Filters.and(Filters.samePersonaAs(self), Filters.in(game.getModifiersQuerying().getCardsForPersonaChecking(self.getOwner()))))) {
+            return null;
+        }
+        // Check that the player doesn't already have this persona out of play (only if it's a character, vehicle, or starship)
+        List<PhysicalCard> outOfPlay = new LinkedList<>();
+        outOfPlay.addAll(gameState.getOutOfPlayPile(playerId));
+        outOfPlay.addAll(Filters.filter(modifiersQuerying.getCardsConsideredOutOfPlay(gameState), game, Filters.your(playerId)));
+        for (Persona persona : modifiersQuerying.getPersonas(gameState, self)) {
+            if (Filters.canSpot(outOfPlay, game, 1, Filters.and(Filters.your(playerId), persona, Filters.or(Filters.character, Filters.vehicle, Filters.starship))))
+                return null;
         }
         // Check that character does not have a permanent weapon that is already on table
         SwccgBuiltInCardBlueprint permanentWeapon = self.getBlueprint().getPermanentWeapon(self);
