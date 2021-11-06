@@ -17627,7 +17627,7 @@ public class Filters {
     public static final Filter Ello_Asty = Filters.title(Title.Ello_Asty);
     public static final Filter Ellorrs_Madak = Filters.title(Title.Ellorrs_Madak);
     public static final Filter Emergency_Deployment = Filters.title(Title.Emergency_Deployment);
-    public static final Filter Emperor = Filters.persona(Persona.EMPEROR);
+    public static final Filter Emperor = Filters.and(Filters.persona(Persona.SIDIOUS), Filters.titleContains("Emperor"));
     public static final Filter Emperors_Power = Filters.title(Title.Emperors_Power);
     public static final Filter Empires_New_Order = Filters.title(Title.Empires_New_Order);
     public static final Filter Empires_Sinister_Agents = Filters.title(Title.Empires_Sinister_Agents);
@@ -18224,7 +18224,7 @@ public class Filters {
     public static final Filter Padme = Filters.title(Title.Padme);
     public static final Filter Paige = Filters.title(Title.Paige);
     public static final Filter Palace_Raider = Filters.title(Title.Palace_Raider);
-    public static final Filter Palpatine = Filters.persona(Persona.PALPATINE);
+    public static final Filter Palpatine = Filters.and(Filters.persona(Persona.SIDIOUS), Filters.titleContains("Palpatine"));
     public static final Filter Panaka = Filters.persona(Persona.PANAKA);
     public static final Filter Panic = Filters.title(Title.Panic);
     public static final Filter Paploo = Filters.persona(Persona.PAPLOO);
