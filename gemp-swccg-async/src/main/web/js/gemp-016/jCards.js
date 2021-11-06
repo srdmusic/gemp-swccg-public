@@ -3416,6 +3416,8 @@ var fixedImages = {
 "501_99":"/gemp-swccg/images/cards/SpecialEdition-Light/r3a2.gif",
 "501_100":"/gemp-swccg/images/cards/Dagobah-Light/sonofskywalker.gif",
 "501_101":"/gemp-swccg/images/cards/Dagobah-Light/dagobah.gif",
+"501_105":"/gemp-swccg/images/cards/Premiere-Dark/mse6mousedroid.gif",
+"501_106":"/gemp-swccg/images/cards/CloudCity-Light/heroofathousanddevices.gif",
 "501_107":"/gemp-swccg/images/cards/JabbasPalaceSealedDeck-Light/ouneeta.gif",
 "501_108":"/gemp-swccg/images/cards/CloudCity-Dark/landocalrissian.gif",
 "501_110":"/gemp-swccg/images/cards/SpecialEdition-Light/moisturefarmer.gif",
