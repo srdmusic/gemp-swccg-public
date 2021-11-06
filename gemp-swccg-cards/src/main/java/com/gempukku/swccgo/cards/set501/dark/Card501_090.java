@@ -36,7 +36,7 @@ public class Card501_090 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MayBeTargetedByModifier(self, Filters.or(Filters.Sidious, Filters.Emperor), new OnTableCondition(self, Filters.title(Title.Revenge_Of_The_Sith)), Title.Force_Lightning));
+        modifiers.add(new MayBeTargetedByModifier(self, Filters.Sidious, new OnTableCondition(self, Filters.title(Title.Revenge_Of_The_Sith)), Title.Force_Lightning));
         return modifiers;
     }
 
@@ -62,7 +62,7 @@ public class Card501_090 extends AbstractNormalEffect {
 
         gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGUEIS__RETRIEVE_CHARACTER_INTO_HAND_FROM_LOST_PILE;
 
-        if (GameConditions.canSpot(game, self, Filters.and(Filters.or(Filters.Sidious, Filters.Emperor), Filters.with(self, Filters.Dark_Jedi)))
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.Sidious, Filters.with(self, Filters.Dark_Jedi)))
                 && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
             TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
