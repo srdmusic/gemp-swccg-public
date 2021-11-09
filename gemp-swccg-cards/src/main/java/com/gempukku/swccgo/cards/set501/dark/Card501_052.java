@@ -43,8 +43,8 @@ public class Card501_052 extends AbstractNormalEffect {
         if(TriggerConditions.isStartOfYourTurn(game, effectResult, playerId)
                 && GameConditions.numCardsInHand(game, playerId)>=2
                 && GameConditions.hasReserveDeck(game, playerId)
-                && (GameConditions.canSpot(game, self, Filters.and(Filters.Sidious, Filters.on(Title.Coruscant))))
-                || GameConditions.canSpot(game, self, Filters.Insidious_Prisoner)){
+                && (GameConditions.canSpot(game, self, Filters.and(Filters.Sidious, Filters.on(Title.Coruscant)))
+                || GameConditions.canSpot(game, self, Filters.Insidious_Prisoner))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Draw cards from Reserve Deck");
