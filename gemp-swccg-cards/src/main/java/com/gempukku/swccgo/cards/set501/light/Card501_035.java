@@ -24,15 +24,10 @@ import java.util.List;
 public class Card501_035 extends AbstractNormalEffect {
     public Card501_035() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Kind, But Sad", Uniqueness.UNIQUE);
-        setGameText("If He Is The Chosen One on table, deploy on table. Amidala ignores [Set 8] objective deployment restrictions. Once per turn, if Amidala on table (or Leia with Prophecy Of The Force), may place a card from hand on Used Pile to draw top card of Reserve Deck. [Immune to Alter]");
+        setGameText("Deploy on table. Amidala ignores [Set 8] objective deployment restrictions. Once per turn, if Padmé on table (or Leia with Prophecy Of The Force), may place a card from hand on Used Pile to draw top card of Reserve Deck. [Immune to Alter]");
         addIcons(Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Kind, But Sad");
-    }
-
-    @Override
-    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.He_Is_The_Chosen_One);
     }
 
     @Override
@@ -52,7 +47,7 @@ public class Card501_035 extends AbstractNormalEffect {
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.hasHand(game, playerId)
                 && GameConditions.hasReserveDeck(game, playerId)
-                && (GameConditions.canSpot(game, self, Filters.Amidala)
+                && (GameConditions.canSpot(game, self, Filters.Padme)
                     || GameConditions.canSpot(game, self, Filters.and(Filters.Leia, Filters.at(Filters.hasAttached(Filters.Prophecy_Of_The_Force)))))) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
