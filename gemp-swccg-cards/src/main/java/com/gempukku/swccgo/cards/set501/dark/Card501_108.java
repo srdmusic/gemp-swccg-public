@@ -27,7 +27,7 @@ public class Card501_108 extends AbstractAlienImperial {
         super(Side.DARK, 1, 2, 3, 3, 3, "Lando Calrissian, Vader's Broker", Uniqueness.UNIQUE);
         setLore("Scoundrel and gambler. Petty administrator of a small Tibanna gas mining operation. Easily coerced. Has problems of his own. Had dealings with the Tonnika sisters - twice.");
         setGameText("Once during opponent's turn, if with an Imperial on Cloud City, may activate 1 Force. Once during your turn, if with an alien on Cloud City, may draw top card of Reserve Deck. Once per game, may place a non-[Immune to Alter] Effect in owner's Used Pile.");
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_17);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_17);
         addPersona(Persona.LANDO);
         addKeywords(Keyword.GAMBLER);
         setTestingText("Lando Calrissian, Vader's Broker");
