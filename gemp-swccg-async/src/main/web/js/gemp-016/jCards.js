@@ -3401,8 +3401,14 @@ var fixedImages = {
 "501_40":"/gemp-swccg/images/cards/Virtual0-Light/forluck.gif",
 "501_41":"/gemp-swccg/images/cards/Premiere-Dark/blastdoorcontrols.gif",
 "501_42":"/gemp-swccg/images/cards/Coruscant-Light/ricolie.gif",
+"501_43":"/gemp-swccg/images/cards/Premiere-Dark/prophetess.gif",
+"501_44":"/gemp-swccg/images/cards/EnhancedJabbasPalace-Dark/jodokast.gif",
 "501_45":"/gemp-swccg/images/cards/Virtual1-Dark/accordingtomydesign.gif",
 "501_46":"/gemp-swccg/images/cards/Premiere-Light/jedipresence.gif",
+"501_47":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/coruscantjeditemplemeditationroom.png",
+"501_48":"/gemp-swccg/images/cards/ReflectionsIII-Light/anotherpatheticlifeform.gif",
+"501_49":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/dindjarin.png",
+"501_50":"/gemp-swccg/images/cards/SpecialEdition-Light/tawsskhaa.gif",
 "501_52":"/gemp-swccg/images/cards/Coruscant-Dark/theywillbenomatchforyou.gif",
 "501_54":"/gemp-swccg/images/cards/ReflectionsIII-Dark/nomatchforasith.gif",
 "501_56":"/gemp-swccg/images/cards/Virtual7-Dark/directororsonkrennic.gif",
@@ -4076,6 +4082,7 @@ var Card = Class.extend({
             return (cardNo == 13) ||
                    (cardNo == 21) ||
                    (cardNo == 34) ||
+                   (cardNo == 47) ||
                    (cardNo == 95) ||
                    (cardNo == 96);
         }

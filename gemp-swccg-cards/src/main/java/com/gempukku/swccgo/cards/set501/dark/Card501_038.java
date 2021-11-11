@@ -29,7 +29,7 @@ public class Card501_038 extends AbstractRepublic {
         setPolitics(2);
         setVirtualSuffix(true);
         setLore("A senator known for his ability to deflect blame. It is rumored that Argente receives kickbacks from a few corporations to thwart other companies' developments.");
-        setGameText("Agendas: ambition, taxation. While in a senate majority, opponent's non-unique starships and non-unique vehicles are each deploy +2 and power -1. Argente is politics +X, where X = number of opponent's senators at same site.");
+        setGameText("Agendas: ambition, taxation. While in a senate majority, if you have exactly one [Coruscant] Political Effect on table (except This Is Outrageous!), it may not be canceled or suspended by opponent. Argente is politics +X, where X = number of opponent's characters at same site.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         addKeywords(Keyword.SENATOR);
         setTestingText("Passel Argente (V)");
@@ -49,9 +49,9 @@ public class Card501_038 extends AbstractRepublic {
         Filter yourCoruscantPoliticalEffectOnTable = Filters.and(Filters.your(self), Filters.onTable, Filters.Political_Effect, Icon.CORUSCANT);
         Condition exactlyOneOnTable = new OnTableCondition(self, 1, true, yourCoruscantPoliticalEffectOnTable);
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotBeSuspendedModifier(self, yourCoruscantPoliticalEffectOnTable,
+        modifiers.add(new MayNotBeSuspendedModifier(self, Filters.and(yourCoruscantPoliticalEffectOnTable, Filters.not(Filters.title(Title.This_Is_Outrageous))),
                 new AndCondition(inSenateMajority, exactlyOneOnTable)));
-        modifiers.add(new MayNotBeCanceledModifier(self, yourCoruscantPoliticalEffectOnTable,
+        modifiers.add(new MayNotBeCanceledModifier(self, Filters.and(yourCoruscantPoliticalEffectOnTable, Filters.not(Filters.title(Title.This_Is_Outrageous))),
                 new AndCondition(inSenateMajority, exactlyOneOnTable)));
 
         modifiers.add(new PoliticsModifier(self, new AtSameSiteEvaluator(self, Filters.and(Filters.opponents(self), Filters.character))));

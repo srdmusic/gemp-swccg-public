@@ -71,12 +71,12 @@ public class Card501_052 extends AbstractNormalEffect {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)) {
             Collection<PhysicalCard> toBeLost =
-                    Filters.filterActive(game, self, Filters.or(Filters.Emperor, Filters.Maul, Filters.and(Filters.your(self), Filters.species(Species.DATHOMIRIAN))));
+                    Filters.filterActive(game, self, Filters.or(Filters.Emperor, Filters.Maul));
             if (!toBeLost.isEmpty()) {
 
                 final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setSingletonTrigger(true);
-                action.setText("Emperor, Maul, and your Dathomirians lost");
+                action.setText("Emperor and Maul are lost");
                 action.setActionMsg("Make " + GameUtils.getAppendedNames(toBeLost) + " lost");
 
                 // Perform result(s)

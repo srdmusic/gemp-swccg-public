@@ -17,18 +17,18 @@ import java.util.List;
  * Set: Set 17
  * Type: Character
  * Subtype: Alien
- * Title: Boba Fett, Mandalorian Mercenary
+ * Title: Boba
  */
 public class Card501_029 extends AbstractAlien {
     public Card501_029() {
-        super(Side.LIGHT, 1, 4, 4, 3, 6, "Boba Fett, Mandalorian Mercenary", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, 4, 4, 3, 6, "Boba", Uniqueness.UNIQUE);
         setArmor(5);
-        setLore("");
+        setLore("Mandalorian.");
         setGameText("Adds 3 to power of anything he pilots. Deploys free to opponent's Audience Chamber. While opponent has more characters here than you, adds one battle destiny. Opponent's characters of lesser ability are power -1 here. Immune to Hidden Weapons.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_17);
         setSpecies(Species.MANDALORIAN);
         addPersona(Persona.BOBA_FETT);
-        setTestingText("Boba Fett, Mandalorian Mercenary");
+        setTestingText("Boba");
     }
 
     @Override
