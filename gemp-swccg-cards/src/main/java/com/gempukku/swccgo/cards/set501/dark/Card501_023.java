@@ -105,10 +105,10 @@ public class Card501_023 extends AbstractEpicEventPlayable {
                                                                     // 2) Maximum Firepower!
                                                                     gameState.sendMessage("Destiny: " + (totalDestiny != null ? GuiUtils.formatAsString(totalDestiny) : "Failed destiny draw"));
 
-                                                                    float valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, Filters.countActive(game, self, Filters.and(Filters.character, Filters.Imperial, Filters.on(Title.Hoth))));
+                                                                    float valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, Math.min(3, Filters.countActive(game, self, Filters.and(Filters.character, Filters.Imperial, Filters.on(Title.Hoth)))));
 
                                                                     float valueForY = modifiersQuerying.getVariableValue(gameState, self, Variable.Y, Filters.countTopLocationsOnTable(game,
-                                                                            Filters.and(Filters.Hoth_site, Filters.notIgnoredDuringEpicEventCalculation, Filters.controlsWith(playerId, self, Filters.and(Filters.piloted, Filters.AT_AT)))));
+                                                                            Filters.and(Filters.marker_site, Filters.notIgnoredDuringEpicEventCalculation, Filters.controlsWith(playerId, self, Filters.and(Filters.piloted, Filters.AT_AT)))));
 
                                                                     gameState.sendMessage("X: " + GuiUtils.formatAsString(valueForX));
                                                                     gameState.sendMessage("Y: " + GuiUtils.formatAsString(valueForY));

@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -70,6 +71,8 @@ public class Card501_012 extends AbstractNormalEffect {
             action.setText("Deploy a Hoth location from Reserve Deck");
             action.setActionMsg("Deploy a Hoth location from Reserve Deck");
 
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
             action.appendEffect(
                     new DeployCardFromReserveDeckEffect(action, Filters.Hoth_location, true));
 

@@ -32,7 +32,7 @@ public class Card501_011 extends AbstractStartingInterrupt {
 
     @Override
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        final Filter yourSiteEvenIfConverted = Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker, Filters.or(Filters.your(self), Filters.convertedLocationUnderTopLocation(Filters.your(self))));
+        final Filter yourSiteEvenIfConverted = Filters.and(Filters.Fourth_Marker, Filters.or(Filters.and(Icon.VIRTUAL_SET_17, Filters.your(self)), Filters.convertedLocationOnTopOfLocation(Filters.and(Icon.VIRTUAL_SET_17, Filters.your(self)))));
 
         // Check condition(s)
         if (GameConditions.canSpotLocation(game, yourSiteEvenIfConverted)) {

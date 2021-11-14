@@ -17489,6 +17489,7 @@ public class Filters {
     public static final Filter Dead_Ewok = Filters.title(Title.Dead_Ewok);
     public static final Filter Death_Mark = Filters.title(Title.Death_Mark);
     public static final Filter Death_Squadron = Filters.title(Title.Death_Squadron);
+    public static final Filter Death_Squadron_card = Filters.keyword(Keyword.DEATH_SQUADRON);
     public static final Filter Death_Squadron_starship = Filters.and(CardType.STARSHIP, Keyword.DEATH_SQUADRON);
     public static final Filter Death_Squadron_vehicle = Filters.and(CardType.VEHICLE, Keyword.DEATH_SQUADRON);
     public static final Filter Death_Star_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Death_Star));

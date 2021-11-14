@@ -36,7 +36,6 @@ public class Card501_026 extends AbstractImperial {
         addIcons(Icon.DAGOBAH, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_17);
         setMatchingStarshipFilter(Filters.Avenger);
         setTestingText("Captain Needa (V)");
-        hideFromDeckBuilder();
     }
 
     @Override
