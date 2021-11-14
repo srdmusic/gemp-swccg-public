@@ -53,8 +53,8 @@ public interface ProductPrice {
     int ENHANCED_JABBAS_PALACE_PACK = 1495;
 
     // Promotional Cards
-    int JEDI_PACK = 0;
-    int REBEL_LEADER_PACK = 0;
+    int JEDI_PACK = 1100;
+    int REBEL_LEADER_PACK = 200;
     int VIRTUAL_ALTERNATE_IMAGE_BOOSTER_PACK = 5000;
 
     // Anthology Boxes

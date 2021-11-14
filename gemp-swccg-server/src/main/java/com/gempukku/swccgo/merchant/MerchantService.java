@@ -149,6 +149,10 @@ public class MerchantService {
         // Add introductory 2-player games
         addFixedItem(ProductName.PREMIERE_INTRODUCTORY_TWO_PLAYER_GAME, ProductPrice.PREMIERE_INTRODUCTORY_TWO_PLAYER_GAME);
         addFixedItem(ProductName.EMPIRE_STRIKES_BACK_INTRODUCTORY_TWO_PLAYER_GAME, ProductPrice.EMPIRE_STRIKES_BACK_INTRODUCTORY_TWO_PLAYER_GAME);
+
+        // Add promotional card sets
+        addFixedItem(ProductName.JEDI_PACK, ProductPrice.JEDI_PACK);
+        addFixedItem(ProductName.REBEL_LEADER_PACK, ProductPrice.REBEL_LEADER_PACK);
     }
 
     /**

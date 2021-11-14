@@ -35,6 +35,7 @@ public class Card501_003 extends AbstractDevice {
         setGameText("Deploy on your interior site. In a battle opponent initiates here, may place this card in Lost Pile to exchange a card in your hand with the top card of your Reserve Deck. May be targeted by weapons like a character (defense value = 2). If 'hit', device lost.");
         addIcons(Icon.VIRTUAL_SET_17);
         setTestingText("Observation Holocam (V)");
+        hideFromDeckBuilder();
     }
 
     @Override
