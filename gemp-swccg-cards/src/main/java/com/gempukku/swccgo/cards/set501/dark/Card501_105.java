@@ -25,8 +25,8 @@ import java.util.List;
  */
 public class Card501_105 extends AbstractDroid {
     public Card501_105() {
-        super(Side.DARK, 0, 2, 2, 4, "BB-9E", Uniqueness.UNIQUE);
-        setAlternateDestiny(6);
+        super(Side.DARK, 0.5, 2, 2, 4, "BB-9E", Uniqueness.UNIQUE);
+        setAlternateDestiny(5.5);
         setGameText("If present with your First Order character or leader, may cancel game text of BB-8 or Rose at same or related location for remainder of turn. During your move phase, may use 1 Force to 'break cover' of opponent's Undercover spy at same site.");
         addIcons(Icon.EPISODE_VII, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_17);
         addModelType(ModelType.ASTROMECH);

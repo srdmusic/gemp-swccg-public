@@ -30,7 +30,7 @@ public class Card501_098 extends AbstractAlien {
     public Card501_098() {
         super(Side.DARK, 2, 4, 6, 2, 5, "Grummgar", Uniqueness.UNIQUE);
         setLore("Dowutin mercenary.");
-        setGameText("During battle with an information broker (or during an attack), adds one destiny to total power. Once per game, may deploy a blaster, rifle, or creature (or a non-[Permanent Weapon], non-weapon card with 'creature' in lore or game text) here from Reserve Deck; reshuffle.");
+        setGameText("During battle with an information broker (or during an attack), adds one destiny to total power. Once per game, may deploy a creature (or a blaster or rifle without 'lost' in game text) here from Reserve Deck; reshuffle.");
         setSpecies(Species.DOWUTIN);
         addIcons(Icon.WARRIOR, Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
         setTestingText("Grummgar");
@@ -48,16 +48,15 @@ public class Card501_098 extends AbstractAlien {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.GRUMMGAR__DEPLOY_CARD_HERE;
 
-        //Once per game, may deploy a non-[Permanent Weapon] non-weapon card with “creature” in lore or game text (or any blaster, rifle, or creature) here from Reserve Deck; reshuffle.
-        Filter filter = Filters.or(Filters.and(Filters.not(Icon.PERMANENT_WEAPON), Filters.not(Filters.weapon),
-                Filters.or(Filters.loreContains("creature"), Filters.loreContains("creatures"), Filters.gameTextContains("creature"), Filters.gameTextContains("creatures"))),
-                Filters.blaster, Filters.rifle, Filters.creature);
+        //Once per game, may deploy a creature (or a blaster or rifle without 'lost' in game text) here from Reserve Deck; reshuffle.
+        Filter filter = Filters.or(Filters.creature, Filters.and(Filters.or(Filters.blaster, Filters.rifle), Filters.not(Filters.gameTextContains("lost"))));
+
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
             && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card here from Reserve Deck");
-            action.setActionMsg("Deploy a blaster, rifle, or creature (or a non-[Permanent Weapon], non-weapon card with 'creature' in lore or game text) here from Reserve Deck");
+            action.setActionMsg("Deploy a creature (or a blaster or rifle without 'lost' in game text) here from Reserve Deck");
             action.appendUsage(
                     new OncePerGameEffect(action));
             action.appendEffect(

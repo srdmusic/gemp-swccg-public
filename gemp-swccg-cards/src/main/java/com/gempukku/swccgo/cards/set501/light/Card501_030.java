@@ -8,12 +8,15 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.*;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.CancelDestinyAndCauseRedrawEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.ModifyPowerUntilEndOfPlayersNextTurnEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeDestinyCardIntoHandEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ResetDeployCostModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -32,7 +35,7 @@ public class Card501_030 extends AbstractNormalEffect {
     public Card501_030() {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Your_Thoughts_Dwell_On_Your_Mother, Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on Slave Quarters. Anakin is deploy = 6. Once per turn, may deploy Anakin's Lightsaber from Reserve Deck; reshuffle (or lose 1 Force to deploy from Lost Pile). If Shmi just lost, Anakin is power +5 until end of your next turn. [Immune to Alter.]");
+        setGameText("Deploy on Slave Quarters. Anakin is deploy = 6. Once per turn, may deploy Anakin's Lightsaber from Reserve Deck; reshuffle (or lose 1 Force to deploy it from Lost Pile). If Anakin drawn for destiny, may take him into hand to cancel and cause a re-draw. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.CORUSCANT, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Your Thoughts Dwell On Your Mother");
@@ -49,22 +52,6 @@ public class Card501_030 extends AbstractNormalEffect {
         modifiers.add(new ResetDeployCostModifier(self, Filters.Anakin, 6));
         return modifiers;
     }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextLeavesTableRequiredTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.justLost(game, effectResult, Filters.Shmi)) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Make Anakin power +5");
-            // Perform result(s)
-            action.appendEffect(
-                    new ModifyPowerUntilEndOfPlayersNextTurnEffect(action, self.getOwner(), Filters.Anakin, 5, "Makes Anakin's power +5"));
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
@@ -103,5 +90,28 @@ public class Card501_030 extends AbstractNormalEffect {
             }
         }
         return actions;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.ANY_CARD__CANCEL_AND_REDRAW_A_DESTINY;
+
+        // Check condition(s)
+        if (GameConditions.isDestinyCardMatchTo(game, Filters.Anakin)
+                && GameConditions.canTakeDestinyCardIntoHand(game, playerId)
+                && GameConditions.canCancelDestinyAndCauseRedraw(game, playerId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take into hand and cause re-draw");
+            action.setActionMsg("Cancel destiny and cause re-draw");
+            // Pay cost(s)
+            action.appendEffect(
+                    new TakeDestinyCardIntoHandEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new CancelDestinyAndCauseRedrawEffect(action));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }
