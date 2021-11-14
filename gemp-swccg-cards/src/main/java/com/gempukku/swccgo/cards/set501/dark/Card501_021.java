@@ -1,8 +1,8 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
-import com.gempukku.swccgo.cards.conditions.ControlsWithCondition;
 import com.gempukku.swccgo.cards.conditions.DuringPlayersTurnNumberCondition;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -34,8 +34,8 @@ public class Card501_021 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MovesFreeToLocationModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.AT_AT), self));
-        modifiers.add(new MovesFreeFromLocationModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.AT_AT), self));
+        modifiers.add(new MovesFreeToLocationModifier(self, Filters.AT_AT, self));
+        modifiers.add(new MovesFreeFromLocationModifier(self, Filters.AT_AT, self));
         modifiers.add(new MayNotDeployToLocationModifier(self, Filters.AT_AT, new DuringPlayersTurnNumberCondition(self.getOwner(), 1), self));
         return modifiers;
     }
@@ -43,8 +43,8 @@ public class Card501_021 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.T_47, Filters.here(self)), 1));
-        modifiers.add(new ForceDrainModifier(self, new ControlsWithCondition(playerOnLightSideOfLocation, self, 2, Filters.T_47), 1, playerOnLightSideOfLocation));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.T_47, Filters.here(self)), 1));
+        modifiers.add(new ForceDrainModifier(self, new HereCondition(self, 2, Filters.T_47), 1, playerOnLightSideOfLocation));
         return modifiers;
     }
 }
