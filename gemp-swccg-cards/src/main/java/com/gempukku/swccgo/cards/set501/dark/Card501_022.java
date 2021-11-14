@@ -50,7 +50,7 @@ public class Card501_022 extends AbstractNormalEffect {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new IconModifier(self, Filters.hasAttached(self), new OnTableCondition(self, Filters.and(Filters.battleground, Filters.marker_site)), Icon.DARK_FORCE, 1));
         modifiers.add(new IconModifier(self, Filters.hasAttached(self), new OnTableCondition(self, Filters.and(Filters.battleground, Filters.marker_site)), Icon.LIGHT_FORCE, 1));
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self), Filters.or(Filters.Death_Squadron_starship, Filters.Death_Squadron_vehicle)), new CardMatchesEvaluator(-1, -5, Filters.Executor), here));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self), Filters.Death_Squadron_card), new CardMatchesEvaluator(-1, -5, Filters.Executor), here));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, Filters.and(Filters.your(self), Filters.Death_Squadron_card, here), 3));
         return modifiers;
     }
