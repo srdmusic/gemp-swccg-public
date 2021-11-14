@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
@@ -25,34 +26,34 @@ public class Card501_014 extends AbstractNormalEffect {
     public Card501_014() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "The Shield Will Be Down In Moments", Uniqueness.UNIQUE);
         setLore("Death Squadron.");
-        setGameText("Deploy on table. Force loss from Main Power Generators may not be reduced. If Main Power Generators 'blown away,' may retrieve any non-vehicle card without ability into hand whenever you deploy an AT-AT. [Immune to Alter.]");
+        setGameText("Deploy on table. If you just deployed an AT-AT, may peek at top two cards of reserve deck and take one into hand (if 1st marker 'blown away,' may retrieve a non-vehicle, non-droid card without ability into hand instead). [Immune to Alter.]");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("The Shield Will Be Down In Moments");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        //TODO force loss from MPG may not be reduced
-        return modifiers;
-    }
-
-    @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
-        if(GameConditions.isBlownAway(game, Filters.title(Title.Main_Power_Generators, true))
-            && TriggerConditions.justDeployed(game, effectResult, playerId, Filters.AT_AT)
-            && GameConditions.hasLostPile(game, playerId)) {
+        if(TriggerConditions.justDeployed(game, effectResult, playerId, Filters.AT_AT)) {
+            final OptionalGameTextTriggerAction action1 = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action1.setText("Peek at top two cards of reserve deck and take one into hand");
+            action1.appendEffect(
+                new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action1, playerId, 2, 1, 1));
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Retrieve card into hand");
-            action.setText("Retrieve any non-vehicle card without ability into hand");
-            action.appendEffect(
-                    new RetrieveCardIntoHandEffect(action, playerId, Filters.and(Filters.not(Filters.vehicle), Filters.not(Filters.hasAbilityOrHasPermanentPilotWithAbility))));
+            actions.add(action1);
+            
+            if (GameConditions.isBlownAway(game, Filters.title(Title.Main_Power_Generators, true)) && GameConditions.hasLostPile(game, playerId)) {
+                final OptionalGameTextTriggerAction action2 = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action2.setText("Retrieve any non-vehicle, non-droid card without ability into hand");
+                action2.appendEffect(
+                        new RetrieveCardIntoHandEffect(action2, playerId, Filters.and(Filters.not(Filters.vehicle), Filters.not(Filters.droid), Filters.not(Filters.hasAbilityOrHasPermanentPilotWithAbility))));
+                actions.add(action2);
+            }
 
-            return Collections.singletonList(action);
+            return actions;
         }
 
         return null;
