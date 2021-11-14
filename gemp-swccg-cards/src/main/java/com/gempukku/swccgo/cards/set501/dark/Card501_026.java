@@ -69,7 +69,7 @@ public class Card501_026 extends AbstractImperial {
     @Override
     public List<Modifier> getGameTextWhileOutOfPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new TotalBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self.getOwner()), Filters.captain)), 1, self.getOwner()));
+        modifiers.add(new TotalBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.captain)), 1, self.getOwner(), true));
         return modifiers;
     }
 

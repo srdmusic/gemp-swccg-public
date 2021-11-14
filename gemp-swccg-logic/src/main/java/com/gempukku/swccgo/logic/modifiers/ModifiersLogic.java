@@ -16575,4 +16575,14 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         return false;
     }
+
+    public boolean blownAwayForceLossMayNotBeReduced(GameState gameState) {
+        for (Modifier modifier : getModifiers(gameState, ModifierType.BLOWN_AWAY_FORCE_LOSS)) {
+            if (modifier.isForTopBlowAwayEffect(gameState)) {
+                if (((BlownAwayForceLossModifier)modifier).forceLossMayNotBeReduced())
+                    return true;
+            }
+        }
+        return false;
+    }
 }
