@@ -18,7 +18,11 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import java.util.*;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 
 /**
  * Set: Set 17
