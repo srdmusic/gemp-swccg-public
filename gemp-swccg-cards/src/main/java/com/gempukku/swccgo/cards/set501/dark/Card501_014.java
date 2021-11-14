@@ -38,16 +38,22 @@ public class Card501_014 extends AbstractNormalEffect {
         List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
         if(TriggerConditions.justDeployed(game, effectResult, playerId, Filters.AT_AT)) {
-            final OptionalGameTextTriggerAction action1 = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action1.setText("Peek at top two cards of reserve deck and take one into hand");
-            action1.appendEffect(
-                new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action1, playerId, 2, 1, 1));
+            if (GameConditions.hasReserveDeck(game, playerId)) {
 
-            actions.add(action1);
+                final OptionalGameTextTriggerAction action1 = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action1.setText("Peek at top two cards of Reserve Deck and take one into hand");
+                action1.appendEffect(
+                        new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action1, playerId, 2, 1, 1));
+
+                actions.add(action1);
+            }
             
-            if (GameConditions.isBlownAway(game, Filters.title(Title.Main_Power_Generators, true)) && GameConditions.hasLostPile(game, playerId)) {
+            if (GameConditions.isBlownAway(game, Filters.title(Title.Main_Power_Generators, true))
+                    && GameConditions.hasLostPile(game, playerId)) {
+
                 final OptionalGameTextTriggerAction action2 = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action2.setText("Retrieve any non-vehicle, non-droid card without ability into hand");
+                action2.setText("Retrieve a card into hand");
+                action2.setActionMsg("Retrieve any non-vehicle, non-droid card without ability into hand");
                 action2.appendEffect(
                         new RetrieveCardIntoHandEffect(action2, playerId, Filters.and(Filters.not(Filters.vehicle), Filters.not(Filters.droid), Filters.not(Filters.hasAbilityOrHasPermanentPilotWithAbility))));
                 actions.add(action2);

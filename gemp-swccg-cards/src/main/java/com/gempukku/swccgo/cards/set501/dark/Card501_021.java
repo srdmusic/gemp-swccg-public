@@ -41,36 +41,15 @@ public class Card501_021 extends AbstractSite {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MovesFreeToLocationModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.AT_AT), self));
         modifiers.add(new MovesFreeFromLocationModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.AT_AT), self));
-        modifiers.add(new MayNotDeployModifier(self, Filters.AT_AT, new DuringPlayersTurnNumberCondition(self.getOwner(), 1), self.getOwner()));
+        modifiers.add(new MayNotDeployToLocationModifier(self, Filters.AT_AT, new DuringPlayersTurnNumberCondition(self.getOwner(), 1), self));
         return modifiers;
     }
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
-
         modifiers.add(new PowerModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.T_47, Filters.here(self)), 1));
-        modifiers.add(new ForceDrainModifier(self, new ControlsWithCondition(opponent, self, 2, Filters.T_47), 1, opponent));
+        modifiers.add(new ForceDrainModifier(self, new ControlsWithCondition(playerOnLightSideOfLocation, self, 2, Filters.T_47), 1, playerOnLightSideOfLocation));
         return modifiers;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.HOTH_NORTH_RIDGE_V__DEPLOY_COMBAT_VEHICLE_FROM_RESERVE_DECK;
-
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId)) {
-            TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy a combat vehicle from Reserve Deck");
-            action.setActionMsg("Deploy a combat vehicle here from Reserve Deck");
-            action.appendUsage(new OncePerGameEffect(action));
-            action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.combat_vehicle, Filters.here(self), true));
-            return Collections.singletonList(action);
-        }
-
-        return null;
     }
 }

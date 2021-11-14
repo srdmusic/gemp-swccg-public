@@ -34,7 +34,7 @@ public class Card501_010 extends AbstractObjective {
         setVirtualSuffix(true);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy [Set 8] 5th marker and either Hoth system or [Set 17] 4th marker. \n" +
-                "For remainder of game, AT-AT Cannons are immune to sabotage. Sunsdown and your non-[17] epic events are canceled. Imperials (except snowtroopers) may not have their forfeit increased. Your non-[M] AT-ATs, snowtroopers, and Star Destroyers are destiny +1. \n" +
+                "For remainder of game, AT-AT Cannons are immune to Sabotage. Sunsdown and your non-[Set 17] Epic Events are canceled. Imperials (except snowtroopers) may not have their forfeit increased. Your non-[M] AT-ATs, snowtroopers, and Star Destroyers are destiny +1. \n" +
                 "Flip this card if Main Power Generators 'blown away' or if your AT-ATs control three Hoth sites and you occupy Hoth system (with Hoth Blockade there).");
         addIcons(Icon.SPECIAL_EDITION, Icon.HOTH, Icon.VIRTUAL_SET_17);
         setTestingText("Imperial Occupation (V)");
@@ -51,9 +51,10 @@ public class Card501_010 extends AbstractObjective {
                     }
                 });
         action.appendOptionalEffect(
-                new DeployCardsFromReserveDeckEffect(action, Filters.or(Filters.Hoth_system, Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker)), 0, 1, true, false) {
-                    public String getChoiceText(int numCardsToChoose) {
-                        return "Choose Hoth system to deploy";
+                new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Hoth_system, Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker)),  true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Hoth system or [Set 17] 4th marker to deploy";
                     }
                 });
         return action;
@@ -64,24 +65,11 @@ public class Card501_010 extends AbstractObjective {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.title(Title.AT_AT_Cannon), Title.Sabotage));
+        modifiers.add(new ImmuneToTitleModifier(self, Filters.AT_AT_Cannon, Title.Sabotage));
         modifiers.add(new DestinyModifier(self, Filters.and(Filters.your(self), Filters.or(Filters.and(Filters.not(Icon.MAINTENANCE), Filters.AT_AT), Filters.snowtrooper, Filters.Star_Destroyer)), 1));
         modifiers.add(new MayNotHaveForfeitValueIncreasedModifier(self, Filters.and(Filters.character, Filters.Imperial, Filters.except(Filters.snowtrooper))));
+        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Sunsdown, Filters.and(Filters.Epic_Event, Filters.except(Icon.VIRTUAL_SET_17))), playerId));
         return modifiers;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Sunsdown, Filters.and(Filters.Epic_Event, Filters.except(Icon.VIRTUAL_SET_17))))
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            return Collections.singletonList(action);
-        }
-        return null;
     }
 
     @Override
@@ -102,25 +90,6 @@ public class Card501_010 extends AbstractObjective {
             action.appendEffect(
                     new FlipCardEffect(action, self));
             actions.add(action);
-        }
-
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canSpot(game, self, Filters.or(Filters.Sunsdown, Filters.Rebel_Base_Occupation))) {
-            if (GameConditions.canTargetToCancel(game, self, Filters.Sunsdown)) {
-
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                // Build action using common utility
-                CancelCardActionBuilder.buildCancelCardAction(action, Filters.Sunsdown, Title.Sunsdown);
-                actions.add(action);
-            }
-            if (GameConditions.canTargetToCancel(game, self, Filters.Rebel_Base_Occupation)) {
-
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                // Build action using common utility
-                CancelCardActionBuilder.buildCancelCardAction(action, Filters.Rebel_Base_Occupation, Title.Rebel_Base_Occupation);
-                actions.add(action);
-            }
-
         }
 
         return actions;

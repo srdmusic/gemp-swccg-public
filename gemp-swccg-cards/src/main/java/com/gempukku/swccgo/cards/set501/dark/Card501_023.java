@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set3.dark;
+package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractEpicEventPlayable;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -31,9 +31,11 @@ import java.util.List;
  */
 public class Card501_023 extends AbstractEpicEventPlayable {
     public Card501_023() {
-        super(Side.DARK, Title.Target_The_Main_Generator.concat(" (v)"));
-        setGameText("At the end of your control phase, your AT-AT Cannon below 4th marker may fire (if in range) at 1st Marker. Prepare to Target the Main Generator: Draw destiny. Maximum Firepower: If (destiny + x + y) > 8, 1st Marker is 'blown away' and this card is lost. Otherwise, this card is used. X = number of Imperials on Hoth (may not exceed 3). Y = number of marker sites controlled by AT-ATs");
-        addIcons(Icon.VIRTUAL_SET_17);
+        super(Side.DARK, Title.Target_The_Main_Generator);
+        setVirtualSuffix(true);
+        setGameText("At the end of your control phase, your AT-AT Cannon below 4th marker may fire (if in range) at 1st Marker. Prepare to Target the Main Generator: Draw destiny. Maximum Firepower: If (destiny + X + Y) > 8, 1st Marker is 'blown away' and this card is lost. Otherwise, this card is used. X = number of Imperials on Hoth (may not exceed 3). Y = number of marker sites controlled by AT-ATs");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_17);
+        setTestingText("Target The Main Generator (V)");
     }
 
     @Override
@@ -43,7 +45,7 @@ public class Card501_023 extends AbstractEpicEventPlayable {
                 && GameConditions.canDrawDestiny(game, playerId)) {
             final PhysicalCard mainPowerGenerators = Filters.findFirstFromTopLocationsOnTable(game, Filters.Main_Power_Generators);
             if (mainPowerGenerators != null) {
-                Filter weaponToFireFilter = Filters.and(Filters.your(self), Filters.AT_AT_Cannon, Filters.attachedTo(Filters.and(Filters.AT_AT, Filters.piloted)), Filters.canBeFiredAtLocationInRange(mainPowerGenerators));
+                Filter weaponToFireFilter = Filters.and(Filters.your(self), Filters.AT_AT_Cannon, Filters.at(Filters.or(Filters.First_Marker, Filters.Second_Marker, Filters.Third_Marker)), Filters.attachedTo(Filters.and(Filters.AT_AT, Filters.piloted)), Filters.canBeFiredAtLocationInRange(mainPowerGenerators));
                 if (GameConditions.canSpot(game, self, weaponToFireFilter)) {
                     final TargetTheMainGeneratorState epicEventState = new TargetTheMainGeneratorState(self);
 
@@ -56,92 +58,76 @@ public class Card501_023 extends AbstractEpicEventPlayable {
                                 @Override
                                 protected void cardSelected(final PhysicalCard weapon) {
                                     final PhysicalCard atat = weapon.getAttachedTo();
-                                    Filter pilotFilter = Filters.or(Filters.and(atat, Filters.hasPermanentPilot), Filters.piloting(atat));
-                                    action.appendTargeting(
-                                            new ChooseCardOnTableEffect(action, playerId, "Choose AT-AT pilot", pilotFilter) {
+
+                                    action.appendUsage(
+                                            new UseWeaponEffect(action, atat, weapon));
+                                    action.addAnimationGroup(weapon);
+                                    action.addAnimationGroup(mainPowerGenerators);
+                                    // Update Epic Event State
+                                    epicEventState.setAtat(atat);
+                                    epicEventState.setAtatCannon(weapon);
+                                    String actionText = "Fire " + GameUtils.getCardLink(weapon) + " at " + GameUtils.getCardLink(mainPowerGenerators);
+                                    // Allow response(s)
+                                    action.allowResponses(actionText,
+                                            new RespondablePlayCardEffect(action) {
                                                 @Override
-                                                protected void cardSelected(final PhysicalCard pilot) {
-                                                    // Update usage limit(s)
-                                                    action.appendUsage(
-                                                            new UseWeaponEffect(action, atat, weapon));
-                                                    action.addAnimationGroup(pilot);
-                                                    action.addAnimationGroup(weapon);
-                                                    action.addAnimationGroup(mainPowerGenerators);
-                                                    // Update Epic Event State
-                                                    epicEventState.setAtat(atat);
-                                                    epicEventState.setAtatCannon(weapon);
-                                                    epicEventState.setAtatPilot(pilot);
-                                                    String actionText = "Have " + (Filters.character.accepts(game, pilot) ? "Permanent pilot" : GameUtils.getCardLink(pilot))
-                                                            + " aboard " + GameUtils.getCardLink(atat) + " fire " + GameUtils.getCardLink(weapon) + " at " + GameUtils.getCardLink(mainPowerGenerators);
-                                                    // Allow response(s)
-                                                    action.allowResponses(actionText,
-                                                            new RespondablePlayCardEffect(action) {
+                                                protected void performActionResults(Action targetingAction) {
+                                                    final GameState gameState = game.getGameState();
+                                                    final ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
+                                                    // Begin weapon firing
+                                                    action.appendEffect(
+                                                            new PassthruEffect(action) {
                                                                 @Override
-                                                                protected void performActionResults(Action targetingAction) {
-                                                                    final GameState gameState = game.getGameState();
-                                                                    final ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
-                                                                    // Begin weapon firing
-                                                                    action.appendEffect(
+                                                                protected void doPlayEffect(SwccgGame game) {
+                                                                    gameState.sendMessage(playerId + " fires " + GameUtils.getCardLink(weapon) + " at " + GameUtils.getCardLink(mainPowerGenerators));
+                                                                    gameState.activatedCard(playerId, weapon);
+                                                                    gameState.cardAffectsCard(playerId, weapon, mainPowerGenerators);
+                                                                    gameState.beginWeaponFiring(weapon, null);
+                                                                    gameState.getWeaponFiringState().setCardFiringWeapon(atat);
+                                                                    gameState.getWeaponFiringState().setTarget(mainPowerGenerators);
+                                                                    // Finish weapon firing
+                                                                    action.appendAfterEffect(
                                                                             new PassthruEffect(action) {
                                                                                 @Override
                                                                                 protected void doPlayEffect(SwccgGame game) {
-                                                                                    gameState.sendMessage((Filters.character.accepts(game, pilot) ? "Permanent pilot" : GameUtils.getCardLink(pilot))
-                                                                                            + " aboard " + GameUtils.getCardLink(atat) + " fires " + GameUtils.getCardLink(weapon) + " at " + GameUtils.getCardLink(mainPowerGenerators));
-                                                                                    gameState.activatedCard(playerId, weapon);
-                                                                                    gameState.cardAffectsCard(playerId, weapon, mainPowerGenerators);
-                                                                                    gameState.beginWeaponFiring(weapon, null);
-                                                                                    gameState.getWeaponFiringState().setCardFiringWeapon(atat);
-                                                                                    gameState.getWeaponFiringState().setTarget(mainPowerGenerators);
-                                                                                    // Finish weapon firing
-                                                                                    action.appendAfterEffect(
-                                                                                            new PassthruEffect(action) {
-                                                                                                @Override
-                                                                                                protected void doPlayEffect(SwccgGame game) {
-                                                                                                    gameState.finishWeaponFiring();
-                                                                                                }
-                                                                                            }
-                                                                                    );
+                                                                                    gameState.finishWeaponFiring();
                                                                                 }
                                                                             }
                                                                     );
-                                                                    // 1) Prepare To Target The Main Generator
-                                                                    action.appendEffect(
-                                                                            new DrawDestinyEffect(action, playerId, 1, DestinyType.EPIC_EVENT_AND_WEAPON_DESTINY) {
-                                                                                @Override
-                                                                                protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
-                                                                                    // 2) Maximum Firepower!
-                                                                                    gameState.sendMessage("Destiny: " + (totalDestiny != null ? GuiUtils.formatAsString(totalDestiny) : "Failed destiny draw"));
+                                                                }
+                                                            }
+                                                    );
+                                                    // 1) Prepare To Target The Main Generator
+                                                    action.appendEffect(
+                                                            new DrawDestinyEffect(action, playerId, 1, DestinyType.EPIC_EVENT_AND_WEAPON_DESTINY) {
+                                                                @Override
+                                                                protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
+                                                                    // 2) Maximum Firepower!
+                                                                    gameState.sendMessage("Destiny: " + (totalDestiny != null ? GuiUtils.formatAsString(totalDestiny) : "Failed destiny draw"));
 
-                                                                                    float valueForX;
-                                                                                    if (Filters.character.accepts(game, pilot))
-                                                                                        valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, modifiersQuerying.getAbility(gameState, pilot));
-                                                                                    else
-                                                                                        valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, modifiersQuerying.getHighestAbilityPiloting(gameState, pilot, true, false));
+                                                                    float valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, Filters.countActive(game, self, Filters.and(Filters.character, Filters.Imperial, Filters.on(Title.Hoth))));
 
-                                                                                    float valueForY = modifiersQuerying.getVariableValue(gameState, self, Variable.Y, Filters.countTopLocationsOnTable(game,
-                                                                                                    Filters.and(Filters.Hoth_site, Filters.notIgnoredDuringEpicEventCalculation, Filters.controls(playerId))));
+                                                                    float valueForY = modifiersQuerying.getVariableValue(gameState, self, Variable.Y, Filters.countTopLocationsOnTable(game,
+                                                                            Filters.and(Filters.Hoth_site, Filters.notIgnoredDuringEpicEventCalculation, Filters.controlsWith(playerId, self, Filters.and(Filters.piloted, Filters.AT_AT)))));
 
-                                                                                    gameState.sendMessage("X: " + GuiUtils.formatAsString(valueForX));
-                                                                                    gameState.sendMessage("Y: " + GuiUtils.formatAsString(valueForY));
+                                                                    gameState.sendMessage("X: " + GuiUtils.formatAsString(valueForX));
+                                                                    gameState.sendMessage("Y: " + GuiUtils.formatAsString(valueForY));
 
-                                                                                    float total = modifiersQuerying.getEpicEventCalculationTotal(gameState, self, (totalDestiny != null ? totalDestiny : 0) + valueForX + valueForY);
-                                                                                    gameState.sendMessage("Epic Event Total: " + GuiUtils.formatAsString(total));
+                                                                    float total = modifiersQuerying.getEpicEventCalculationTotal(gameState, self, (totalDestiny != null ? totalDestiny : 0) + valueForX + valueForY);
+                                                                    gameState.sendMessage("Epic Event Total: " + GuiUtils.formatAsString(total));
 
-                                                                                    if (total > 8) {
-                                                                                        gameState.sendMessage("Result: Succeeded");
-                                                                                        action.appendEffect(
-                                                                                                new BlowAwayEffect(action, mainPowerGenerators));
-                                                                                        action.appendEffect(
-                                                                                                new PutCardFromVoidInLostPileEffect(action, playerId, self));
-                                                                                    }
-                                                                                    else {
-                                                                                        gameState.sendMessage("Result: Failed");
-                                                                                        action.appendEffect(
-                                                                                                new PutCardFromVoidInUsedPileEffect(action, playerId, self));
-                                                                                    }
-                                                                                }
-                                                                            }
-                                                                    );
+                                                                    if (total > 8) {
+                                                                        gameState.sendMessage("Result: Succeeded");
+                                                                        action.appendEffect(
+                                                                                new BlowAwayEffect(action, mainPowerGenerators));
+                                                                        action.appendEffect(
+                                                                                new PutCardFromVoidInLostPileEffect(action, playerId, self));
+                                                                    }
+                                                                    else {
+                                                                        gameState.sendMessage("Result: Failed");
+                                                                        action.appendEffect(
+                                                                                new PutCardFromVoidInUsedPileEffect(action, playerId, self));
+                                                                    }
                                                                 }
                                                             }
                                                     );
@@ -149,6 +135,8 @@ public class Card501_023 extends AbstractEpicEventPlayable {
                                             }
                                     );
                                 }
+
+
                             }
                     );
                     return Collections.singletonList(action);

@@ -40,6 +40,13 @@ public class Card501_026 extends AbstractImperial {
     }
 
     @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, new CardMatchesEvaluator(2, 3, Filters.Avenger)));
+        return modifiers;
+    }
+
+    @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.CAPTAIN_NEEDA__UPLOAD_APOLOGY_ACCEPTED;
 
@@ -64,13 +71,6 @@ public class Card501_026 extends AbstractImperial {
     public List<Modifier> getGameTextWhileOutOfPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new TotalBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self.getOwner()), Filters.captain)), 1, self.getOwner()));
-        return modifiers;
-    }
-
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, new CardMatchesEvaluator(2, 3, Filters.Avenger)));
         return modifiers;
     }
 

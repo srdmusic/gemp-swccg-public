@@ -47,19 +47,18 @@ public class Card501_012 extends AbstractNormalEffect {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
-            int markerSitesWithAtat = Filters.countTopLocationsOnTable(game, Filters.and(Filters.marker_site, Filters.occupiesWith(playerId, self, Filters.and(Filters.piloted, Filters.AT_AT))));
-            if (markerSitesWithAtat > 0) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Make opponent lose one Force");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerPhaseEffect(action));
-                // Perform result(s)
-                action.appendEffect(
-                        new LoseForceEffect(action, opponent, 1));
-                actions.add(action);
-            }
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+                && GameConditions.occupiesWith(game, self, playerId, Filters.marker_site, Filters.and(Filters.piloted, Filters.AT_AT))) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Make opponent lose 1 Force");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerPhaseEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new LoseForceEffect(action, opponent, 1));
+            actions.add(action);
         }
 
         gameTextActionId = GameTextActionId.YOU_MAY_START_YOUR_LANDING_V__DOWNLOAD_CARD;
@@ -68,13 +67,13 @@ public class Card501_012 extends AbstractNormalEffect {
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy card from Reserve Deck");
+            action.setText("Deploy a Hoth location from Reserve Deck");
             action.setActionMsg("Deploy a Hoth location from Reserve Deck");
 
             action.appendEffect(
                     new DeployCardFromReserveDeckEffect(action, Filters.Hoth_location, true));
 
-            return Collections.singletonList(action);
+            actions.add(action);
         }
         return actions;
     }
@@ -90,17 +89,15 @@ public class Card501_012 extends AbstractNormalEffect {
         // Check condition(s)
         // Check if reached end of each control phase and action was not performed yet.
         if (TriggerConditions.isEndOfYourPhase(game, effectResult, Phase.CONTROL, playerId)
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
-                    
-            int markerSitesWithAtat = Filters.countTopLocationsOnTable(game, Filters.and(Filters.marker_site, Filters.occupiesWith(playerId, self, Filters.and(Filters.piloted, Filters.AT_AT))));
-            if (markerSitesWithAtat > 0) {
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Make opponent lose one Force");
-                // Perform result(s)
-                action.appendEffect(
+                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+                && GameConditions.occupiesWith(game, self, playerId, Filters.marker_site, Filters.and(Filters.piloted, Filters.AT_AT))) {
+
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Make opponent lose 1 Force");
+            // Perform result(s)
+            action.appendEffect(
                     new LoseForceEffect(action, opponent, 1));
-                actions.add(action);
-            }
+            actions.add(action);
         }
         return actions;
     }

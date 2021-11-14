@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
@@ -31,7 +32,7 @@ public class Card501_022 extends AbstractNormalEffect {
     public Card501_022() {
         super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, "Hoth Blockade", Uniqueness.UNIQUE);
         setLore("Death Squadron.");
-        setGameText("Deploy on Hoth system. If a battleground marker site on table, adds one [D] icon and one [L] icon here. Your Death Squadron cards deploy -1 here (-5 if Executor) and are immune to attrition < 3 here. Place in Used Pile if opponent Force drains here. [Immune to Alter.]");
+        setGameText("Deploy on Hoth system. While a battleground marker site on table, adds one [Dark Side] icon and one [Light Side] icon here. Your Death Squadron cards deploy -1 here (-5 if Executor) and are immune to attrition < 3 here. Place in Used Pile if opponent Force drains here. [Immune to Alter.]");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Hoth Blockade");
@@ -47,10 +48,8 @@ public class Card501_022 extends AbstractNormalEffect {
         Filter here = Filters.here(self);
 
         List<Modifier> modifiers = new LinkedList<>();
-        if (Filters.canSpot(game, self, Filters.and(Filters.battleground, Filters.marker_site))) {
-            modifiers.add(new IconModifier(self, Filters.hasAttached(self), Icon.DARK_FORCE, 1));
-            modifiers.add(new IconModifier(self, Filters.hasAttached(self), Icon.LIGHT_FORCE, 1));
-        }
+        modifiers.add(new IconModifier(self, Filters.hasAttached(self), new OnTableCondition(self, Filters.and(Filters.battleground, Filters.marker_site)), Icon.DARK_FORCE, 1));
+        modifiers.add(new IconModifier(self, Filters.hasAttached(self), new OnTableCondition(self, Filters.and(Filters.battleground, Filters.marker_site)), Icon.LIGHT_FORCE, 1));
         modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self), Filters.or(Filters.Death_Squadron_starship, Filters.Death_Squadron_vehicle)), new CardMatchesEvaluator(-1, -5, Filters.Executor), here));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, Filters.and(Filters.or(Filters.Death_Squadron_starship, Filters.Death_Squadron_vehicle), here), 3));
         return modifiers;

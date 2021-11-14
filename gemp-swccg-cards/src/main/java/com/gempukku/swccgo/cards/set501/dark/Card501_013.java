@@ -28,7 +28,7 @@ import java.util.List;
 public class Card501_013 extends AbstractSite {
     public Card501_013() {
         super(Side.DARK, Title.Main_Power_Generators, Title.Hoth);
-        setLocationDarkSideGameText("If 'Blown Away,' opponent loses 3 Force (may not be reduced).");
+        setLocationDarkSideGameText("If 'blown away,' opponent loses 3 Force (may not be reduced).");
         setLocationLightSideGameText("'Hoth Energy Shield Rules' in effect. Your artillery weapons on Hoth are powered.");
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.VIRTUAL_SET_17, Icon.EXTERIOR_SITE, Icon.PLANET);
