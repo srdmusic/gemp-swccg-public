@@ -34,9 +34,9 @@ import java.util.List;
 public class Card501_028 extends AbstractEpicEventDeployable {
     public Card501_028() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.The_Force_Is_Strong_In_My_Family);
-        setGameText("Deploy on table (only at start of game). Choose one: " +
-                "My Father Has It: Reveal Anakin (may also reveal Obi-Wan) from Reserve Deck. \n" +
-                "I Have It: Reveal Luke from Reserve Deck. \n" +
+        setGameText("Deploy on table (only at start of game) and choose one: " +
+                "My Father Has It: Reveal Anakin (may also reveal [Episode I] Obi-Wan) from Reserve Deck. \n" +
+                "I Have It: Reveal [Reflections II] Luke (may also reveal non-[Episode I] Obi-Wan) from Reserve Deck. \n" +
                 "You Have That Power Too: Reveal Rey (may also reveal [Episode VII] Luke) from Reserve Deck. \n" +
                 "Light Side goes first. During your first turn, you may not deploy cards with ability (except Shmi). You may not deploy Jedi (except Yoda and the revealed cards) or [Maintenance] cards. If Leia at a battleground site, flip Their Fire Has Gone Out Of The Universe (may not flip back).");
         addIcons(Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
@@ -72,17 +72,17 @@ public class Card501_028 extends AbstractEpicEventDeployable {
 
                             switch (result) {
                                 case MY_FATHER_HAS_IT:
-                                    //Reveal Anakin (may also reveal Obi-Wan) from Reserve Deck.
+                                    // Reveal Anakin (may also reveal [Episode I] Obi-Wan) from Reserve Deck.
                                     filter = Filters.Anakin;
-                                    alternateFilter = Filters.ObiWan;
+                                    alternateFilter = Filters.and(Icon.EPISODE_I, Filters.ObiWan);
                                     break;
                                 case I_HAVE_IT:
-                                    //Reveal Luke from Reserve Deck.
-                                    filter = Filters.Luke;
-                                    alternateFilter = Filters.none;
+                                    // Reveal [Reflections II] Luke (may also reveal non-[Episode I] Obi-Wan) from Reserve Deck.
+                                    filter = Filters.and(Icon.REFLECTIONS_II, Filters.Luke);
+                                    alternateFilter = Filters.and(Filters.not(Icon.EPISODE_I), Filters.ObiWan);
                                     break;
                                 case YOU_HAVE_THAT_POWER_TOO:
-                                    //Reveal Rey (may also reveal [Episode VII] Luke) from Reserve Deck.
+                                    // Reveal Rey (may also reveal [Episode VII] Luke) from Reserve Deck.
                                     filter = Filters.Rey;
                                     alternateFilter = Filters.and(Icon.EPISODE_VII, Filters.Luke);
                                     break;
@@ -178,6 +178,13 @@ public class Card501_028 extends AbstractEpicEventDeployable {
         if(self.getWhileInPlayData()==null)
             return null;
 
-        return "Chosen option: " + self.getWhileInPlayData().getTextValue();
+        String text = "Chosen option: " + self.getWhileInPlayData().getTextValue();
+
+        if (self.getWhileInPlayData().getPhysicalCards() != null
+                && !self.getWhileInPlayData().getPhysicalCards().isEmpty()) {
+            text += "; Revealed cards: " + GameUtils.getAppendedNames(self.getWhileInPlayData().getPhysicalCards());
+        }
+
+        return text;
     }
 }

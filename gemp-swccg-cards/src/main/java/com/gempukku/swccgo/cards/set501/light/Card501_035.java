@@ -24,7 +24,7 @@ import java.util.List;
 public class Card501_035 extends AbstractNormalEffect {
     public Card501_035() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Kind, But Sad", Uniqueness.UNIQUE);
-        setGameText("Deploy on table. Amidala ignores [Set 8] objective deployment restrictions. Once per turn, if Padmé on table (or Leia with Prophecy Of The Force), may place a card from hand on Used Pile to draw top card of Reserve Deck. [Immune to Alter]");
+        setGameText("Deploy on table. Amidala ignores [Set 8] objective deployment restrictions. Once per turn, if Padmé Naberrie on table (or Leia with Prophecy Of The Force), may place a card from hand on Used Pile to draw top card of Reserve Deck. [Immune to Alter]");
         addIcons(Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Kind, But Sad");

@@ -36,7 +36,7 @@ public class Card501_048 extends AbstractDefensiveShield {
         super(Side.LIGHT, "Another Pathetic Lifeform");
         setVirtualSuffix(true);
         setLore("Young Obi-Wan has much to learn about the living Force. Patience with others is also high on that list.");
-        setGameText("Plays on table. While opponent has a non-unique alien or non-unique starfighter in battle, opponent may not draw more than two battle destiny. If your Jedi about to be placed out of play by Sidious's game text, may lose 2 Force to make that character lost instead.");
+        setGameText("Plays on table. While opponent has a non-unique alien or non-unique starfighter in battle, opponent may not draw more than two battle destiny. If your Jedi about to be placed out of play by Sidious's game text, may lose 3 Force to make that character lost instead.");
         addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         setTestingText("Another Pathetic Lifeform (V)");
     }
@@ -74,7 +74,7 @@ public class Card501_048 extends AbstractDefensiveShield {
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Place Jedi in Lost Pile");
                 action.setActionMsg("Place " + GameUtils.getCardLink(card) + " in Lost Pile instead of being placed out of play");
-                action.appendCost(new LoseForceEffect(action, playerId, 2));
+                action.appendCost(new LoseForceEffect(action, playerId, 3));
 
                 action.allowResponses("Place " + GameUtils.getCardLink(card) + " in Lost Pile",
                         new RespondableEffect(action) {
@@ -103,7 +103,7 @@ public class Card501_048 extends AbstractDefensiveShield {
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Place Jedi in Lost Pile");
                 action.setActionMsg("Place " + GameUtils.getCardLink(card) + " in Lost Pile instead of being placed out of play");
-                action.appendCost(new LoseForceEffect(action, playerId, 2));
+                action.appendCost(new LoseForceEffect(action, playerId, 3));
 
                 action.allowResponses("Place " + GameUtils.getCardLink(card) + " in Lost Pile",
                         new RespondableEffect(action) {
