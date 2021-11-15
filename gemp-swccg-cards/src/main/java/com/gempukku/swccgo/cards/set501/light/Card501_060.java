@@ -42,7 +42,7 @@ public class Card501_060 extends AbstractAlienRepublic {
     public Card501_060() {
         super(Side.LIGHT, 2, 4, 5, 2, 6, "Grakchawwaa", Uniqueness.UNIQUE);
         setLore("Wookiee leader.");
-        setGameText("Once per turn, may deploy a bowcaster on your Wookiee at same or adjacent site from Reserve Deck; reshuffle. During your control phase, if armed with a bowcaster at a Kashyyyk battleground site, opponent loses 1 Force.");
+        setGameText("Once per turn, may deploy a bowcaster on your Wookiee at same or adjacent site from Reserve Deck; reshuffle. During your control phase, if present at a Kashyyyk battleground site and armed with a bowcaster, opponent loses 1 Force.");
         setSpecies(Species.WOOKIEE);
         addKeywords(Keyword.LEADER);
         addIcons(Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
@@ -85,7 +85,7 @@ public class Card501_060 extends AbstractAlienRepublic {
 
         String opponent = game.getOpponent(playerId);
         // Check condition(s)
-        if (GameConditions.isAtLocation(game, self, Filters.and(Filters.battleground, Filters.Kashyyyk_site))
+        if (GameConditions.isPresentAt(game, self, Filters.and(Filters.battleground, Filters.Kashyyyk_site))
                 && GameConditions.isArmedWith(game, self, Filters.bowcaster)
                 && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
 
@@ -113,7 +113,7 @@ public class Card501_060 extends AbstractAlienRepublic {
 
         // Check condition(s)
         // Check if reached end of each control phase and action was not performed yet.
-        if (GameConditions.isAtLocation(game, self, Filters.and(Filters.battleground, Filters.Kashyyyk_site))
+        if (GameConditions.isPresentAt(game, self, Filters.and(Filters.battleground, Filters.Kashyyyk_site))
                 && GameConditions.isArmedWith(game, self, Filters.bowcaster)
                 && TriggerConditions.isEndOfYourPhase(game, effectResult, Phase.CONTROL, playerId)
                 && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {

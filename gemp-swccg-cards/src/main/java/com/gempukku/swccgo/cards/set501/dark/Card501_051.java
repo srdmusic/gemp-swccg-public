@@ -36,7 +36,7 @@ public class Card501_051 extends AbstractNormalEffect {
     public Card501_051() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "At Last We Are Getting Results & Begin Landing Your Troops", Uniqueness.UNIQUE);
         addComboCardTitles("At Last We Are Getting Results", "Begin Landing Your Troops");
-        setGameText("Deploy on table. Your unique (•) Republic characters of ability < 4 and droid starfighters are forfeit +2. Nabrun Leids and Elis Helrot are limited to owner’s move phase and exterior sites only. Once per turn, may deploy an [Episode I] (or Coruscant) docking bay from Reserve Deck; reshuffle. [Immune to Alter.]");
+        setGameText("Deploy on table. Your unique (•) Republic characters of ability < 4 and your droid starfighters are forfeit +2. Nabrun Leids and Elis Helrot are limited to owner's move phase and exterior sites only. Once per turn, may deploy an [Episode I] (or Coruscant) docking bay from Reserve Deck; reshuffle. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("At Last We Are Getting Results & Begin Landing Your Troops");
