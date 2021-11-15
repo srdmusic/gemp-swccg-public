@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
-import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -12,12 +11,10 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.*;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.modifiers.MayNotHaveForfeitValueIncreasedModifier;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,8 +29,8 @@ public class Card501_010 extends AbstractObjective {
         super(Side.DARK, 0, Title.Imperial_Occupation);
         setVirtualSuffix(true);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy [Set 8] 5th marker. May deploy Hoth system. \n" +
-                "For remainder of game, your AT-ATs deploy -1 on Hoth. Rebel Base Occupation and Sunsdown are canceled. Your non-[Maintenance] AT-ATs, snowtroopers, and Star Destroyers are destiny +1 (+2 if non-unique). When you play Target The Main Generator, X is limited to 3 and Y = number of AT-ATs on Hoth. \n" +
+        setGameText("Deploy [Set 8] 5th marker and either Hoth system or [Set 17] 4th marker. \n" +
+                "For remainder of game, AT-AT Cannons are immune to Sabotage. Sunsdown and your non-[Set 17] Epic Events are canceled. Imperials (except snowtroopers) may not have their forfeit increased. Your non-[M] AT-ATs, snowtroopers, and Star Destroyers are destiny +1. \n" +
                 "Flip this card if Main Power Generators 'blown away' or if your AT-ATs control three Hoth sites and you occupy Hoth system (with Hoth Blockade there).");
         addIcons(Icon.SPECIAL_EDITION, Icon.HOTH, Icon.VIRTUAL_SET_17);
         setTestingText("Imperial Occupation (V)");
@@ -50,9 +47,10 @@ public class Card501_010 extends AbstractObjective {
                     }
                 });
         action.appendOptionalEffect(
-                new DeployCardsFromReserveDeckEffect(action, Filters.Hoth_system, 0, 1, true, false) {
-                    public String getChoiceText(int numCardsToChoose) {
-                        return "Choose Hoth system to deploy";
+                new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Hoth_system, Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker)),  true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Hoth system or [Set 17] 4th marker to deploy";
                     }
                 });
         return action;
@@ -63,25 +61,11 @@ public class Card501_010 extends AbstractObjective {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeployCostToTargetModifier(self, Filters.and(Filters.your(self), Filters.AT_AT), -1, Filters.placeToBePresentOnPlanet(Title.Hoth)));
-        modifiers.add(new DestinyModifier(self, Filters.and(Filters.your(self), Filters.or(Filters.and(Filters.not(Icon.MAINTENANCE), Filters.AT_AT), Filters.snowtrooper, Filters.Star_Destroyer)),
-                new CardMatchesEvaluator(1, 2, Filters.non_unique)));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Target_The_Main_Generator, ModifyGameTextType.TARGET_THE_MAIN_GENERATOR__MODIFY_X_AND_Y));
+        modifiers.add(new ImmuneToTitleModifier(self, Filters.AT_AT_Cannon, Title.Sabotage));
+        modifiers.add(new DestinyModifier(self, Filters.and(Filters.your(self), Filters.or(Filters.and(Filters.not(Icon.MAINTENANCE), Filters.AT_AT), Filters.snowtrooper, Filters.Star_Destroyer)), 1));
+        modifiers.add(new MayNotHaveForfeitValueIncreasedModifier(self, Filters.and(Filters.character, Filters.Imperial, Filters.except(Filters.snowtrooper))));
+        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Sunsdown, Filters.and(Filters.Epic_Event, Filters.except(Icon.VIRTUAL_SET_17))), playerId));
         return modifiers;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Sunsdown, Filters.Rebel_Base_Occupation))
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            return Collections.singletonList(action);
-        }
-        return null;
     }
 
     @Override
@@ -102,25 +86,6 @@ public class Card501_010 extends AbstractObjective {
             action.appendEffect(
                     new FlipCardEffect(action, self));
             actions.add(action);
-        }
-
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canSpot(game, self, Filters.or(Filters.Sunsdown, Filters.Rebel_Base_Occupation))) {
-            if (GameConditions.canTargetToCancel(game, self, Filters.Sunsdown)) {
-
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                // Build action using common utility
-                CancelCardActionBuilder.buildCancelCardAction(action, Filters.Sunsdown, Title.Sunsdown);
-                actions.add(action);
-            }
-            if (GameConditions.canTargetToCancel(game, self, Filters.Rebel_Base_Occupation)) {
-
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                // Build action using common utility
-                CancelCardActionBuilder.buildCancelCardAction(action, Filters.Rebel_Base_Occupation, Title.Rebel_Base_Occupation);
-                actions.add(action);
-            }
-
         }
 
         return actions;

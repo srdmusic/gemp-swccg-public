@@ -1,7 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
-import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Side;
@@ -28,8 +27,8 @@ import java.util.List;
 public class Card501_013 extends AbstractSite {
     public Card501_013() {
         super(Side.DARK, Title.Main_Power_Generators, Title.Hoth);
-        setLocationDarkSideGameText("'Hoth Energy Shield Rules' in effect. If just 'blown away,' Light Side loses 3 Force.");
-        setLocationLightSideGameText("If you occupy a Hoth location, Target The Main Generator total is -1.");
+        setLocationDarkSideGameText("If 'blown away,' Light Side loses 3 Force (may not be reduced).");
+        setLocationLightSideGameText("'Hoth Energy Shield Rules' in effect. Your artillery weapons on Hoth are powered.");
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.VIRTUAL_SET_17, Icon.EXTERIOR_SITE, Icon.PLANET);
         addKeywords(Keyword.MARKER_1);
@@ -44,23 +43,16 @@ public class Card501_013 extends AbstractSite {
             action.skipInitialMessageAndAnimation();
             // Perform result(s)
             action.appendEffect(
-                    new AddToBlownAwayForceLossEffect(action, game.getLightPlayer(), 3));
+                    new AddToBlownAwayForceLossEffect(action, game.getLightPlayer(), 3, true));
             return Collections.singletonList(action);
         }
         return null;
     }
-
-    @Override
-    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new UnderHothEnergyShieldModifier(self, Filters.or(Filters.Echo_site, Filters.First_Marker, Filters.Second_Marker, Filters.Third_Marker)));
-        return modifiers;
-    }
-
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new TargetTheMainGeneratorTotalModifier(self, new OccupiesCondition(playerOnLightSideOfLocation, Filters.Hoth_location), -1));
+        modifiers.add(new IsPoweredModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.artillery_weapon, Filters.on(Title.Hoth))));
+        modifiers.add(new UnderHothEnergyShieldModifier(self, Filters.or(Filters.Echo_site, Filters.First_Marker, Filters.Second_Marker, Filters.Third_Marker)));
         return modifiers;
     }
 }

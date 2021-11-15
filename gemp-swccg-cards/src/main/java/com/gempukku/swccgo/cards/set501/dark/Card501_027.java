@@ -1,96 +1,151 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractVehicleWeapon;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.cards.AbstractLostInterrupt;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.CancelForceDrainEffect;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.AbstractActionProxy;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.FireWeaponAction;
-import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TriggerAction;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
+import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.GuiUtils;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
-import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Set: Set 17
- * Type: Weapon
- * Subtype: Vehicle
- * Title: Blizzard Force AT-AT Cannon
+ * Type: Interrupt
+ * Subtype: Lost
+ * Title: Ominous Approach
  */
-public class Card501_027 extends AbstractVehicleWeapon {
+public class Card501_027 extends AbstractLostInterrupt {
     public Card501_027() {
-        super(Side.DARK, 3, "Blizzard Force AT-AT Cannon", Uniqueness.UNIQUE);
-        setLore("Laser cannons mounted on the head of an Imperial walker provide devastating coordinated firepower. Effective against a wide variety of targets.");
-        setGameText("Deploy on your AT-AT. AT-AT may not be targeted by Under Attack or blaster rifles. May target a character or vehicle at same or adjacent site for free. Draw destiny. Target hit if destiny +1 > defense value. If about to leave table, may place weapon in Used Pile.");
+        super(Side.DARK, 4, "Ominous Approach");
+        setGameText("If your AT-AT is on Hoth or at opponent's site: Cancel Under Attack. (Immune to Sense) OR Return an Effect that deploys on related system to owner's hand. Opponent loses 2 force if they deploy a card with the same title this turn. OR Cancel a Force drain at a related site.");
         addIcons(Icon.VIRTUAL_SET_17);
-        addKeywords(Keyword.AT_AT_CANNON);
-        setTestingText("Blizzard Force AT-AT Cannon");
+        setTestingText("Ominous Approach");
     }
 
     @Override
-    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.and(Filters.your(self), Filters.AT_AT);
-    }
+    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(String playerId, SwccgGame game, Effect effect, PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
-    @Override
-    protected Filter getGameTextValidToUseWeaponFilter(final SwccgGame game, final PhysicalCard self) {
-        return Filters.AT_AT;
-    }
+        // Check condition(s)
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.AT_AT, Filters.or(Filters.on(Title.Hoth), Filters.at(Filters.and(Filters.opponents(self), Filters.site)))))
+                && TriggerConditions.isPlayingCard(game, effect, Filters.Under_Attack)
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
-    @Override
-    protected List<FireWeaponAction> getGameTextFireWeaponActions(String playerId, final SwccgGame game, final PhysicalCard self, boolean forFree, int extraForceRequired, PhysicalCard sourceCard, boolean repeatedFiring, Filter targetedAsCharacter, Float defenseValueAsCharacter, Filter fireAtTargetFilter, boolean ignorePerAttackOrBattleLimit) {
-        FireWeaponActionBuilder actionBuilder = FireWeaponActionBuilder.startBuildPrep(playerId, game, sourceCard, self, forFree, extraForceRequired, repeatedFiring, targetedAsCharacter, defenseValueAsCharacter, fireAtTargetFilter, ignorePerAttackOrBattleLimit)
-                .targetAtSameOrAdjacentSiteForFree(Filters.or(Filters.character, targetedAsCharacter, Filters.vehicle), TargetingReason.TO_BE_HIT).finishBuildPrep();
-        if (actionBuilder != null) {
-
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setImmuneTo(Title.Sense);
             // Build action using common utility
-            FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 1, Statistic.DEFENSE_VALUE);
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            actions.add(action);
+        }
+
+        return actions;
+    }
+
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
+        Filter filter = Filters.and(Filters.Effect, Filters.attachedTo(Filters.relatedSystemTo(self, Filters.and(Filters.your(self), Filters.AT_AT, Filters.or(Filters.on(Title.Hoth), Filters.at(Filters.and(Filters.opponents(self), Filters.site)))))));
+
+        final String opponent = game.getOpponent(playerId);
+        // Check condition(s)
+        if (GameConditions.canTarget(game, self, filter)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Return Effect to hand");
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose Effect", filter) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Return " + GameUtils.getCardLink(targetedCard) + " to hand",
+                                    new RespondablePlayCardEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Get the targeted card(s) from the action using the targetGroupId.
+                                            // This needs to be done in case the target(s) were changed during the responses.
+                                            final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+                                            action.appendEffect(
+                                                    new ReturnCardToHandFromTableEffect(action, finalTarget));
+
+                                            final int permCardId = self.getPermanentCardId();
+                                            final int gameTextSourceCardId = self.getCardId();
+                                            action.appendEffect(
+                                                    new AddUntilEndOfTurnActionProxyEffect(action, new AbstractActionProxy() {
+                                                        @Override
+                                                        public List<TriggerAction> getRequiredAfterTriggers(SwccgGame game, EffectResult effectResult) {
+                                                            List<TriggerAction> actions = new LinkedList<>();
+                                                            final PhysicalCard self = game.findCardByPermanentId(permCardId);
+
+                                                            if (TriggerConditions.justDeployed(game, effectResult, opponent, Filters.sameTitle(finalTarget))) {
+
+                                                                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                                                                action.setText("Lose 2 Force");
+                                                                action.appendEffect(
+                                                                        new LoseForceEffect(action, opponent, 2));
+                                                               actions.add(action);
+                                                            }
+
+                                                            return actions;
+                                                        }
+                                                    }));
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
             return Collections.singletonList(action);
         }
         return null;
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayTargetAdjacentSiteModifier(self));
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.hasAttached(self), Filters.AT_AT), Filters.or(Filters.Under_Attack, Filters.blaster_rifle)));
-        return modifiers;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
         // Check condition(s)
-        if (TriggerConditions.isAboutToLeaveTableExceptFromSourceCard(game, effectResult, self, self)) {
-            final AboutToLeaveTableResult result = (AboutToLeaveTableResult) effectResult;
-
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place in Used Pile");
-            action.setActionMsg("Place " + GameUtils.getCardLink(self) + " in Used Pile");
-            action.appendEffect(
-                    new PassthruEffect(action) {
+        if (TriggerConditions.forceDrainInitiatedAt(game, effectResult, Filters.relatedSiteTo(self, Filters.and(Filters.your(self), Filters.AT_AT, Filters.or(Filters.on(Title.Hoth), Filters.at(Filters.and(Filters.opponents(self), Filters.site))))))
+                && GameConditions.canCancelForceDrain(game, self)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Cancel Force drain");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
                         @Override
-                        protected void doPlayEffect(SwccgGame game) {
-                            result.getPreventableCardEffect().preventEffectOnCard(self);
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new CancelForceDrainEffect(action));
                         }
-                    });
-            action.appendEffect(
-                    new PlaceCardInUsedPileFromTableEffect(action, self));
+                    }
+            );
             return Collections.singletonList(action);
         }
-
         return null;
     }
 }

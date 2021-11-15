@@ -61,7 +61,6 @@ public enum ModifyGameTextType {
     SUPERLASER_IGNORES_DEPLOYMENT_RESTRICTIONS("Ignores deployment restrictions"),
     SURPRISE_ASSAULT__ADD_DESTINY_TO_TOTAL("Add one destiny to total"),
     TALLON_ROLL__OPPONENT_ADDS_MANEUVER_AND_ABILITY("Opponent adds maneuver and ability"),
-    TARGET_THE_MAIN_GENERATOR__MODIFY_X_AND_Y("X is limited to 3 and Y = number of AT-ATs on Hoth"),
     TARKIN__CANNOT_CANCEL_DESTINY("Cannot cancel destiny"),
     TIBANNA_GAS_MINER__DOUBLE_FORCE_ACTIVATED("Force activated doubled"),
     TRAP_DOOR__DO_NOT_DRAW_DESTINY("Do not draw destiny"),

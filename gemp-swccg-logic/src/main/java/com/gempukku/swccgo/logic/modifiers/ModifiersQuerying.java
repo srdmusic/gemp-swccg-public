@@ -4591,4 +4591,5 @@ public interface ModifiersQuerying {
     boolean isShieldGateBlownAway(GameState gameState);
     Collection<PhysicalCard> getCardsForPersonaChecking(String playerId);
     boolean mayNotCancelBattle(GameState gameState, String playerId);
+    boolean blownAwayForceLossMayNotBeReduced(GameState gameState);
 }

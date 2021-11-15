@@ -55,11 +55,11 @@ public class Card501_007 extends AbstractCombatVehicle {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
 
-        // targets Blizzard 1 hits are forfeit = 0
+        // targets Blizzard 1 hits at same site are forfeit = 0
 
         // Check condition(s)
         if (GameConditions.hasPiloting(game, self, Filters.Veers)
-                && TriggerConditions.justHitBy(game, effectResult, Filters.any, self)) {
+                && TriggerConditions.justHitBy(game, effectResult, Filters.atSameSite(self), self)) {
             PhysicalCard cardHit = ((HitResult) effectResult).getCardHit();
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
