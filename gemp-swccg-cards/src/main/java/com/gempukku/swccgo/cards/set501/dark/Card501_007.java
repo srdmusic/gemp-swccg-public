@@ -33,7 +33,7 @@ public class Card501_007 extends AbstractCombatVehicle {
         super(Side.DARK, 2, 6, 7, 7, null, 1, 7, Title.Blizzard_1, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("General Veers' AT-AT. Enclosed. Equipped with highly sophisticated communications gear. Employs an experimental targeting system.");
-        setGameText("Death Squadron. May add 2 pilots and 8 passengers. While Veers piloting, draws one battle destiny if unable to otherwise, and targets Blizzard 1 hits are forfeit = 0. Immune to attrition < 4.");
+        setGameText("Death Squadron. May add 2 pilots and 8 passengers. While Veers piloting, draws one battle destiny if unable to otherwise, and targets Blizzard 1 'hits' here are forfeit = 0. Immune to attrition < 4.");
         addModelType(ModelType.AT_AT);
         addIcons(Icon.HOTH, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_17);
         addKeywords(Keyword.ENCLOSED, Keyword.DEATH_SQUADRON);
@@ -59,7 +59,7 @@ public class Card501_007 extends AbstractCombatVehicle {
 
         // Check condition(s)
         if (GameConditions.hasPiloting(game, self, Filters.Veers)
-                && TriggerConditions.justHitBy(game, effectResult, Filters.atSameSite(self), self)) {
+                && TriggerConditions.justHitBy(game, effectResult, Filters.here(self), self)) {
             PhysicalCard cardHit = ((HitResult) effectResult).getCardHit();
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
