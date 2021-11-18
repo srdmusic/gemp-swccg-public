@@ -10,7 +10,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
@@ -35,7 +35,7 @@ public class Card501_026 extends AbstractImperial {
         super(Side.DARK, 1, 3, 3, 3, 5, "Captain Needa", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Able leader and captain of the Avenger. Was given his command by Admiral Ozzel. Treated with suspicion by Darth Vader and the Emperor, who distrust Ozzel's close advisors.");
-        setGameText("Adds 2 to power of anything he pilots (3 if Avenger). Once per game, may take Apology Accepted into hand from Reserve Deck; reshuffle. While out of play, your total battle destiny is +1 where you have a captain. If just lost, may place him out of play.");
+        setGameText("Adds 2 to power of anything he pilots (3 if Avenger). Once per game, may take Apology Accepted into hand from Reserve Deck; reshuffle. While out of play, your total battle destiny is +1 where you have an Imperial captain. If just lost, place him out of play.");
         addKeywords(Keyword.LEADER, Keyword.CAPTAIN);
         addIcons(Icon.DAGOBAH, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_17);
         setMatchingStarshipFilter(Filters.Avenger);
@@ -73,16 +73,18 @@ public class Card501_026 extends AbstractImperial {
     @Override
     public List<Modifier> getGameTextWhileOutOfPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new TotalBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.captain)), 1, self.getOwner(), true));
+        modifiers.add(new TotalBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.Imperial, Filters.captain)), 1, self.getOwner(), true));
         return modifiers;
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextLeavesTableOptionalTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextLeavesTableRequiredTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        String playerId = self.getOwner();
+
         // Check condition(s)
         if (TriggerConditions.justLost(game, effectResult, self)) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Place out of play");
             action.setActionMsg("Place " + GameUtils.getCardLink(self) + " out of play");
             // Perform result(s)
