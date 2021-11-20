@@ -92,7 +92,8 @@ public class Card501_043 extends AbstractAlien {
         }
 
         // Check condition(s)
-        if (TriggerConditions.isAboutToRetrieveForce(game, effectResult, opponent)) {
+        if (!GameConditions.occupies(game, opponent, Filters.battleground_site)
+                && TriggerConditions.isAboutToRetrieveForce(game, effectResult, opponent)) {
             AboutToRetrieveForceResult result = (AboutToRetrieveForceResult) effectResult;
 
             final float amountOfForce = result.getAmountOfForceToRetrieve();

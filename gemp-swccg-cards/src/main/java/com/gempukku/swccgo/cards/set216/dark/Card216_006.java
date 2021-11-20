@@ -35,6 +35,7 @@ public class Card216_006 extends AbstractSith {
         setGameText("[Pilot] 3. During battle, if a lightsaber swung by Vader just 'hit' a character, character's game text is canceled (and if Amidala, she is immediately lost). While on Coruscant, adds one [Dark Side] icon here. Immune to [Set 3] Amidala and attrition < 5.");
         addPersona(Persona.VADER);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
+        addKeywords(Keyword.LEADER);
     }
 
     @Override

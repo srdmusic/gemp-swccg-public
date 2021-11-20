@@ -61,7 +61,7 @@ public class Card501_007 extends AbstractCombatVehicle {
 
         // Check condition(s)
         if (GameConditions.hasPiloting(game, self, Filters.Veers)
-                && TriggerConditions.justHitBy(game, effectResult, Filters.atSameSite(self), self)) {
+                && TriggerConditions.justHitBy(game, effectResult, Filters.here(self), self)) {
             PhysicalCard cardHit = ((HitResult) effectResult).getCardHit();
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);

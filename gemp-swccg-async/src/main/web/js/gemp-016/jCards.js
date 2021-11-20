@@ -3586,6 +3586,19 @@ var fixedImages = {
 "601_146":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Light/large/watchyourstep.gif",
 "601_146_BACK":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Light/large/thisplacecanbealittlerough.gif",
 "601_147":"https://res.starwarsccg.org/cards/legacy/VirtualBlockDS-Light/large/planetarydefenses.gif",
+"601_148":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/shada.gif",
+"601_149":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/nobargain.gif",
+"601_150":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Dark/large/coruscantprivateplatformdockingbay.gif",
+"601_151":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Dark/large/gardullathehutt.gif",
+"601_152":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Dark/large/prophetess.gif",
+"601_153":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Dark/large/sysnootles.gif",
+"601_154":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Dark/large/darkjedilightsaber.gif",
+"601_155":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Dark/large/trophyofakill.gif",
+"601_156":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Dark/large/establishcontrol.gif",
+"601_157":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Dark/large/ivelostartoo.gif",
+"601_158":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Dark/large/jabbashaven.gif",
+"601_159":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Dark/large/ketmaliss.gif",
+"601_160":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/stunningleader.gif",
 
 "200_1ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/aaylasecura_ai.png",
 "203_22ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/agentkallus_ai.png",
@@ -4102,7 +4115,8 @@ var Card = Class.extend({
                     (cardNo == 118) ||
                     (cardNo == 119) ||
                     (cardNo == 120) ||
-                    (cardNo == 128);
+                    (cardNo == 128) ||
+                    (cardNo == 150);
        }
 
         return false;
