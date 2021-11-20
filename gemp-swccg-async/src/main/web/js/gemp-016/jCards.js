@@ -3382,7 +3382,7 @@ var fixedImages = {
 "501_21":"/gemp-swccg/images/cards/Virtual8-Dark/starkillerbaseforest.gif",
 "501_22":"/gemp-swccg/images/cards/Hoth-Dark/deathsquadron.gif",
 "501_23":"https://res.starwarsccg.org/cards/Hoth-Dark/large/targetthemaingenerator.gif",
-"501_24":"/gemp-swccg/images/cards/Hoth-Dark/walloffire.gif",
+"501_24":"https://res.starwarsccg.org/cards/Hoth-Dark/large/directhit.gif",
 "501_25":"/gemp-swccg/images/cards/Hoth-Dark/tyrant.gif",
 "501_26":"/gemp-swccg/images/cards/Dagobah-Dark/captainneeda.gif",
 "501_27":"https://res.starwarsccg.org/cards/EmpireStrikesBackIntroductoryTwoPlayerGame-Dark/large/walkergarrison.gif",
@@ -3417,6 +3417,8 @@ var fixedImages = {
 "501_59":"/gemp-swccg/images/cards/JediPack-Dark/eriadu.gif",
 "501_60":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/yarua.png",
 "501_61":"https://res.starwarsccg.org/cards/Coruscant-Light/large/securitycontrol.gif",
+"501_62":"https://res.starwarsccg.org/cards/Virtual10-Light/large/ahchtosaddle.gif",
+"501_63":"/gemp-swccg/images/cards/Tatooine-Light/tatooineslavequarters.gif",
 "501_90":"/gemp-swccg/images/cards/Virtual12-Dark/eviliseverywhere.gif",
 "501_91":"/gemp-swccg/images/cards/Premiere-Dark/darkjedilightsaber.gif",
 "501_95":"/gemp-swccg/images/cards/Tatooine-Light/tatooineslavequarters.gif",
@@ -4087,6 +4089,8 @@ var Card = Class.extend({
                    (cardNo == 21) ||
                    (cardNo == 34) ||
                    (cardNo == 47) ||
+                   (cardNo == 62) ||
+                   (cardNo == 63) ||
                    (cardNo == 95) ||
                    (cardNo == 96);
         }
