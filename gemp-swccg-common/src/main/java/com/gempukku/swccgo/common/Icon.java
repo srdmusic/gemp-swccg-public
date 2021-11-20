@@ -112,6 +112,7 @@ public enum Icon implements Filterable {
     SEPARATIST("Separatist"),
     SETUP("Setup"),
     SIDIOUS("Sidious"),
+    SKYWALKER("Skywalker"),
     TRADE_FEDERATION("Trade Federation"),
     ;
 

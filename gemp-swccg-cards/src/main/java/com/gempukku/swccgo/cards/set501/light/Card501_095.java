@@ -25,13 +25,13 @@ public class Card501_095 extends AbstractSite {
         setLocationDarkSideGameText("Deploys only as a starting location (or by He Is The Chosen One instead of Jedi Council Chamber).");
         setLocationLightSideGameText("Once during opponent's turn, unless Anakin on table, may activate 1 Force.");
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
+        addIcons(Icon.SKYWALKER, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
         setTestingText("Endor: Anakin's Funeral Pyre");
     }
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self) {
-        return game.getGameState().getCurrentPhase() == Phase.PLAY_STARTING_CARDS
+        return GameConditions.isDuringStartOfGame(game)
                 && ((game.getModifiersQuerying().getStartingLocation(playerId) == null
                     && game.getGameState().getObjectivePlayed(playerId) == null) //as starting location
                 || (game.getGameState().getObjectivePlayed(playerId) != null

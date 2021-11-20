@@ -18483,7 +18483,7 @@ public class Filters {
     public static final Filter skiff = Filters.keyword(Keyword.SKIFF);
     public static final Filter Skrilling = Filters.species(Species.SKRILLING);
     public static final Filter Skyhook_Platform = Filters.title(Title.Skyhook_Platform);
-    public static final Filter Skywalker = Filters.or(Persona.ANAKIN, Persona.LUKE, Persona.LEIA, Persona.MARA_SKYWALKER, Filters.title(Title.Shmi));
+    public static final Filter Skywalker = Filters.or(Persona.ANAKIN, Persona.LUKE, Persona.LEIA, Persona.MARA_SKYWALKER, Filters.title(Title.Shmi), Keyword.SKYWALKER);
     public static final Filter Skywalkers = Filters.title(Title.Skywalkers);
     public static final Filter Slave_I = Filters.persona(Persona.SLAVE_I);
     public static final Filter Slave_Quarters = Filters.title(Title.Slave_Quarters);

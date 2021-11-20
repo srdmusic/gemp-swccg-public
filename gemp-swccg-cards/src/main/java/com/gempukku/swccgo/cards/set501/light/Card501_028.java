@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
-import com.gempukku.swccgo.cards.conditions.DuringPlayersTurnNumberCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -13,11 +12,11 @@ import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardsFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardCombinationFromCardPileEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -34,12 +33,12 @@ import java.util.List;
 public class Card501_028 extends AbstractEpicEventDeployable {
     public Card501_028() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.The_Force_Is_Strong_In_My_Family);
-        setGameText("Deploy on table (only at start of game) and choose one: " +
-                "My Father Has It: Reveal Anakin (may also reveal [Episode I] Obi-Wan) from Reserve Deck. \n" +
-                "I Have It: Reveal [Reflections II] Luke (may also reveal non-[Episode I] Obi-Wan) from Reserve Deck. \n" +
-                "You Have That Power Too: Reveal Rey (may also reveal [Episode VII] Luke) from Reserve Deck. \n" +
-                "Light Side goes first. During your first turn, you may not deploy cards with ability (except Shmi). You may not deploy Jedi (except Yoda and the revealed cards) or [Maintenance] cards. If Leia at a battleground site, flip Their Fire Has Gone Out Of The Universe (may not flip back).");
-        addIcons(Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
+        setGameText("Deploy on table (only at start of game) and choose one (reveal selections from Reserve Deck): " +
+                "My Father Has It: Anakin and [Episode I] Obi-Wan. \n" +
+                "I Have It: [Reflections II] Luke and [Set 1] Obi-Wan. \n" +
+                "You Have That Power, Too: Rey and [Episode VII] Luke. \n" +
+                "Rey is a Skywalker. You may not deploy Jedi except Yoda and the revealed cards. While Leia at a battleground site, Their Fire Has Gone Out Of The Universe flips and may not flip back. If you just deployed a Skywalker (or Sidious just lost from table), may retrieve bottom card of Lost Pile.");
+        addIcons(Icon.SKYWALKER, Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
         setTestingText("The Force Is Strong In My Family");
     }
 
@@ -49,7 +48,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
         final String playerId = self.getOwner();
@@ -61,65 +60,111 @@ public class Card501_028 extends AbstractEpicEventDeployable {
             final String I_HAVE_IT = "I Have It";
             final String YOU_HAVE_THAT_POWER_TOO = "You Have That Power Too";
 
-            String[] possibleResults = new String[]{MY_FATHER_HAS_IT, I_HAVE_IT, YOU_HAVE_THAT_POWER_TOO};
+            final Filter myFatherHasIt_Anakin = Filters.Anakin;
+            final Filter myFatherHasIt_ObiWan = Filters.and(Icon.EPISODE_I, Filters.ObiWan);
+            final Filter iHaveIt_Luke = Filters.and(Icon.REFLECTIONS_II, Filters.Luke);
+            final Filter iHaveIt_ObiWan = Filters.and(Icon.VIRTUAL_SET_1, Filters.ObiWan);
+            final Filter youHaveThatPowerToo_Rey = Filters.Rey;
+            final Filter youHaveThatPowerToo_Luke = Filters.and(Icon.EPISODE_VII, Filters.Luke);
+
+            List<PhysicalCard> reserveDeck = game.getGameState().getReserveDeck(self.getOwner());
+            List<String> possible = new LinkedList<>();
+            if (!Filters.filter(reserveDeck, game, myFatherHasIt_Anakin).isEmpty()
+                    && !Filters.filter(reserveDeck, game, myFatherHasIt_ObiWan).isEmpty()) {
+                possible.add(MY_FATHER_HAS_IT);
+            }
+            if (!Filters.filter(reserveDeck, game, iHaveIt_Luke).isEmpty()
+                    && !Filters.filter(reserveDeck, game, iHaveIt_ObiWan).isEmpty()) {
+                possible.add(I_HAVE_IT);
+            }
+            if (!Filters.filter(reserveDeck, game, youHaveThatPowerToo_Rey).isEmpty()
+                    && !Filters.filter(reserveDeck, game, youHaveThatPowerToo_Luke).isEmpty()) {
+                possible.add(YOU_HAVE_THAT_POWER_TOO);
+            }
+
+            String[] possibleResults = possible.toArray(new String[0]);
 
             action.appendEffect(
                     new PlayoutDecisionEffect(action, self.getOwner(), new MultipleChoiceAwaitingDecision("Choose an option", possibleResults) {
                         @Override
                         protected void validDecisionMade(int index, final String result) {
-                            Filter filter = null;
+                            Filter skywalkerFilter = null;
                             Filter alternateFilter = null;
 
                             switch (result) {
                                 case MY_FATHER_HAS_IT:
-                                    // Reveal Anakin (may also reveal [Episode I] Obi-Wan) from Reserve Deck.
-                                    filter = Filters.Anakin;
-                                    alternateFilter = Filters.and(Icon.EPISODE_I, Filters.ObiWan);
+                                    // Anakin and [Episode I] Obi-Wan.
+                                    skywalkerFilter = myFatherHasIt_Anakin;
+                                    alternateFilter = myFatherHasIt_ObiWan;
                                     break;
                                 case I_HAVE_IT:
-                                    // Reveal [Reflections II] Luke (may also reveal non-[Episode I] Obi-Wan) from Reserve Deck.
-                                    filter = Filters.and(Icon.REFLECTIONS_II, Filters.Luke);
-                                    alternateFilter = Filters.and(Filters.not(Icon.EPISODE_I), Filters.ObiWan);
+                                    // [Reflections II] Luke and [Set 1] Obi-Wan.
+                                    skywalkerFilter = iHaveIt_Luke;
+                                    alternateFilter = iHaveIt_ObiWan;
                                     break;
                                 case YOU_HAVE_THAT_POWER_TOO:
-                                    // Reveal Rey (may also reveal [Episode VII] Luke) from Reserve Deck.
-                                    filter = Filters.Rey;
-                                    alternateFilter = Filters.and(Icon.EPISODE_VII, Filters.Luke);
+                                    // Rey and [Episode VII] Luke.
+                                    skywalkerFilter = youHaveThatPowerToo_Rey;
+                                    alternateFilter = youHaveThatPowerToo_Luke;
                                     break;
                             }
-                            action.appendEffect(
-                                    new ChooseCardFromReserveDeckEffect(action, playerId, filter) {
-                                        @Override
-                                        protected void cardSelected(SwccgGame game, PhysicalCard selectedCard) {
-                                            action.appendEffect(new ShowCardOnScreenEffect(action, selectedCard));
-                                            action.appendEffect(new SendMessageEffect(action, self.getOwner() + " revealed " + GameUtils.getCardLink(selectedCard)
+
+                            final Filter skywalker = Filters.and(skywalkerFilter);
+                            final Filter friend = Filters.and(alternateFilter);
+
+                            action.appendEffect(new ChooseCardCombinationFromCardPileEffect(action, playerId, Zone.RESERVE_DECK) {
+                                @Override
+                                public String getChoiceText(SwccgGame game, Collection<PhysicalCard> cardsSelected) {
+                                    return "Choose characters to reveal";
+                                }
+
+                                @Override
+                                public Filter getValidToSelectFilter(SwccgGame game, Collection<PhysicalCard> cardsSelected) {
+                                    Filter filter = Filters.none;
+                                    if (cardsSelected.isEmpty()) {
+                                        filter = Filters.or(skywalker, friend);
+                                    }
+                                    else if (cardsSelected.size() == 1) {
+                                        if (!Filters.filterCount(cardsSelected, game, 1, skywalker).isEmpty()) {
+                                            filter = Filters.or(friend, filter);
+                                        }
+                                        else if (!Filters.filterCount(cardsSelected, game, 1, friend).isEmpty()) {
+                                            filter = Filters.or(skywalker, filter);
+                                        }
+                                    }
+                                    return filter;
+                                }
+
+                                @Override
+                                public boolean isSelectionValid(SwccgGame game, Collection<PhysicalCard> cardsSelected) {
+                                    if (cardsSelected.size() == 2
+                                            && Filters.filter(cardsSelected, game, skywalker).size() == 1
+                                            && Filters.filter(cardsSelected, game, friend).size() == 1) {
+                                        return true;
+                                    }
+                                    return false;
+                                }
+
+                                @Override
+                                protected void cardsChosen(List<PhysicalCard> cardsChosen) {
+
+                                    Collection<PhysicalCard> theSkywalker = Filters.filter(cardsChosen, game, skywalker);
+                                    Collection<PhysicalCard> theFriend = Filters.filter(cardsChosen, game, friend);
+
+                                    for(PhysicalCard card:theSkywalker) {
+                                        action.appendEffect(new ShowCardOnScreenEffect(action, card));
+                                        action.appendEffect(new SendMessageEffect(action, self.getOwner() + " revealed " + GameUtils.getCardLink(card)
                                                 + " with " + GameUtils.getCardLink(self)));
-
-                                            self.setWhileInPlayData(new WhileInPlayData(result, Collections.singletonList(selectedCard)));
-                                        }
                                     }
-                            );
-                            action.appendEffect(
-                                    new ChooseCardsFromReserveDeckEffect(action, playerId, playerId, 0, 1, alternateFilter) {
-                                        @Override
-                                        protected void cardsSelected(SwccgGame game, Collection<PhysicalCard> selectedCards) {
-                                            if(selectedCards.size()>0) {
-                                                for(PhysicalCard c:selectedCards) {
-                                                    action.appendEffect(new ShowCardOnScreenEffect(action, c));
-                                                    action.appendEffect(new SendMessageEffect(action, self.getOwner() + " revealed " + GameUtils.getCardLink(c)
-                                                            + " with " + GameUtils.getCardLink(self)));
-                                                }
-                                                List<PhysicalCard> cards = new LinkedList<>();
-                                                cards.addAll(self.getWhileInPlayData().getPhysicalCards());
-                                                cards.addAll(selectedCards);
-
-                                                self.setWhileInPlayData(new WhileInPlayData(result, cards));
-                                            }
-                                        }
+                                    for(PhysicalCard card:theFriend) {
+                                        action.appendEffect(new ShowCardOnScreenEffect(action, card));
+                                        action.appendEffect(new SendMessageEffect(action, self.getOwner() + " revealed " + GameUtils.getCardLink(card)
+                                                + " with " + GameUtils.getCardLink(self)));
                                     }
-                            );
-                            action.appendEffect(
-                                    new LightSideGoesFirstEffect(action));
+
+                                    self.setWhileInPlayData(new WhileInPlayData(result, cardsChosen));
+                                }
+                            });
                         }
                     })
             );
@@ -149,6 +194,24 @@ public class Card501_028 extends AbstractEpicEventDeployable {
     }
 
     @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+
+        if (GameConditions.hasLostPile(game, playerId)
+                && (TriggerConditions.justDeployed(game, effectResult, playerId, Filters.Skywalker)
+                || TriggerConditions.justLost(game, effectResult, Filters.Sidious))) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Retrieve bottom card of Lost Pile");
+            // Perform result(s)
+            action.appendEffect(
+                    new RetrieveCardEffect(action, playerId, Filters.bottomOfLostPile(playerId)));
+            return Collections.singletonList(action);
+        }
+
+        return null;
+    }
+
+    @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Filter revealedCardsFilter = new Filter() {
             @Override
@@ -165,10 +228,8 @@ public class Card501_028 extends AbstractEpicEventDeployable {
         };
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.except(Filters.Shmi)), new DuringPlayersTurnNumberCondition(self.getOwner(), 1), self.getOwner()));
-        modifiers.add(new MayNotDeployModifier(self,
-                Filters.or(Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, revealedCardsFilter))),
-                        Filters.icon(Icon.MAINTENANCE)), self.getOwner()));
+        modifiers.add(new KeywordModifier(self, Filters.Rey, Keyword.SKYWALKER));
+        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, revealedCardsFilter))), self.getOwner()));
         modifiers.add(new MayNotBeFlippedModifier(self, new AtCondition(self, Filters.Leia, Filters.battleground_site), Filters.Hunt_Down_And_Destroy_The_Jedi));
         return modifiers;
     }
@@ -182,7 +243,8 @@ public class Card501_028 extends AbstractEpicEventDeployable {
 
         if (self.getWhileInPlayData().getPhysicalCards() != null
                 && !self.getWhileInPlayData().getPhysicalCards().isEmpty()) {
-            text += "; Revealed cards: " + GameUtils.getAppendedNames(self.getWhileInPlayData().getPhysicalCards());
+            text += "; Revealed card" + GameUtils.s(self.getWhileInPlayData().getPhysicalCards().size())
+                    + ": " + GameUtils.getAppendedNames(self.getWhileInPlayData().getPhysicalCards());
         }
 
         return text;

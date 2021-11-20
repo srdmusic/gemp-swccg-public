@@ -1,6 +1,5 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.CancelWeaponTargetingEffect;
@@ -14,15 +13,11 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyUnlessRedrawnModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotModifyBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -90,7 +85,7 @@ public class Card501_024 extends AbstractUsedOrLostInterrupt {
             actions.add(action);
         }
 
-        if (TriggerConditions.isPlayingCardTargeting(game, effect, Filters.Blizzard_1, Filters.Under_Attack)
+        if (TriggerConditions.isPlayingCardTargeting(game, effect, Filters.Under_Attack, Filters.Blizzard_1)
             && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
