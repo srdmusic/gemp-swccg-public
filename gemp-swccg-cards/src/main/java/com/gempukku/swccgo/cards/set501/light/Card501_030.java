@@ -97,7 +97,8 @@ public class Card501_030 extends AbstractNormalEffect {
         GameTextActionId gameTextActionId = GameTextActionId.ANY_CARD__CANCEL_AND_REDRAW_A_DESTINY;
 
         // Check condition(s)
-        if (GameConditions.isDestinyCardMatchTo(game, Filters.Anakin)
+        if (TriggerConditions.isDestinyJustDrawn(game, effectResult)
+                && GameConditions.isDestinyCardMatchTo(game, Filters.Anakin)
                 && GameConditions.canTakeDestinyCardIntoHand(game, playerId)
                 && GameConditions.canCancelDestinyAndCauseRedraw(game, playerId)) {
 

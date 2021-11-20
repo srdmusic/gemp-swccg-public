@@ -26,7 +26,7 @@ public class Card501_010_BACK extends AbstractObjective {
     public Card501_010_BACK() {
         super(Side.DARK, 7, Title.Imperial_Control);
         setVirtualSuffix(true);
-        setGameText("While this side up, Rebel Leadership and We're Doomed are Lost Interrupts. Attrition against opponent is +1 for each Imperial leader in battle. Your Force drains are +1 at opponent's sites (or Echo sites) where your snowtrooper or non-unique AT-AT is present. Adds one [DS] icon and one [LS] icon at 'blown away' and 'collapsed' Hoth sites.  \n" +
+        setGameText("While this side up, Rebel Leadership and We're Doomed are Lost Interrupts. Attrition against opponent is +1 for each Imperial leader in battle. Your Force drains are +1 at opponent's sites (or Echo sites) where your snowtrooper or non-unique AT-AT is present. Adds one [Dark Side] icon and one [Light Side] icon at 'blown away' and 'collapsed' Hoth sites.  \n" +
                 "Flip this card (unless 1st marker 'blown away') if you do not occupy Hoth system and two Hoth sites.");
         addIcons(Icon.SPECIAL_EDITION, Icon.HOTH, Icon.VIRTUAL_SET_17);
         setTestingText("Imperial Control (V)");
