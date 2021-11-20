@@ -17559,6 +17559,7 @@ public class Filters {
     public static final Filter Detention_Block_Corridor = Filters.title(Title.Detention_Block_Corridor);
     public static final Filter Devastator = Filters.title(Title.Devastator);
     public static final Filter device = Filters.type(CardType.DEVICE);
+    public static final Filter deploys_on_characters = Filters.keyword(Keyword.DEPLOYS_ON_CHARACTERS);
     public static final Filter device_that_deploys_on_droids = Filters.keyword(Keyword.DEVICE_THAT_DEPLOYS_ON_DROIDS);
     public static final Filter Dewback = Filters.keyword(Keyword.DEWBACK);
     public static final Filter DH17_blaster = Filters.keyword(Keyword.DH17_BLASTER);
@@ -18106,6 +18107,7 @@ public class Filters {
     public static final Filter mining_droid = Filters.modelType(ModelType.MINING);
     public static final Filter Mirax = Filters.title(Title.Mirax);
     public static final Filter missile = Filters.keyword(Keyword.MISSILE);
+    public static final Filter Mistryl = Filters.keyword(Keyword.MISTRYL);
     public static final Filter Mobile_Effect = Filters.and(CardType.EFFECT, Filters.subtype(CardSubtype.MOBILE));
     public static final Filter mobile_site = Filters.and(Icon.MOBILE, CardSubtype.SITE);
     public static final Filter mobile_sector = Filters.and(Icon.MOBILE, CardSubtype.SECTOR);
