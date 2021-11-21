@@ -30,7 +30,7 @@ public class Card501_045 extends AbstractLostOrStartingInterrupt {
     public Card501_045() {
         super(Side.DARK, 5, "Rise Of The Sith", Uniqueness.RESTRICTED_2);
         setGameText("LOST: Raise your converted location to the top. " +
-                "STARTING: If your starting location was a battleground, deploy Revenge Of The Sith and up to two Effects that are always immune to Alter. Place Interrupt in hand.");
+                "STARTING: If your starting location was a battleground, deploy Revenge Of The Sith and up to three Effects that deploy for free and are always immune to Alter. Place Interrupt in hand.");
         addIcons(Icon.VIRTUAL_SET_17);
         setTestingText("Rise Of The Sith");
     }
@@ -79,7 +79,7 @@ public class Card501_045 extends AbstractLostOrStartingInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
             action.setText("Deploy Revenge Of The Sith and Effects from Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Deploy Revenge Of The Sith and up to two Effects from Reserve Deck",
+            action.allowResponses("Deploy Revenge Of The Sith and up to three Effects from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
@@ -87,7 +87,7 @@ public class Card501_045 extends AbstractLostOrStartingInterrupt {
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Revenge_Of_The_Sith), true, false));
                             action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter), 1, 2, true, false));
+                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.deploysForFree, Filters.always_immune_to_Alter), 1, 3, true, false));
                             action.appendEffect(
                                     new TakeCardFromVoidIntoHandEffect(action, playerId, self));
                         }

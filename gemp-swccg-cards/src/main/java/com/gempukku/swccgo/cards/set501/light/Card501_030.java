@@ -36,7 +36,7 @@ public class Card501_030 extends AbstractNormalEffect {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Your_Thoughts_Dwell_On_Your_Mother, Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy on Slave Quarters. Anakin is deploy = 6. Once per turn, may deploy Anakin's Lightsaber from Reserve Deck; reshuffle (or lose 1 Force to deploy it from Lost Pile). If Anakin drawn for destiny, may take him into hand to cancel and cause a re-draw. [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.CORUSCANT, Icon.VIRTUAL_SET_17);
+        addIcons(Icon.SKYWALKER, Icon.EPISODE_I, Icon.CORUSCANT, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Your Thoughts Dwell On Your Mother");
     }

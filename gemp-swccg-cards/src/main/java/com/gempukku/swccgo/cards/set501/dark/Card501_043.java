@@ -34,11 +34,11 @@ import java.util.List;
 public class Card501_043 extends AbstractAlien {
     public Card501_043() {
         super(Side.DARK, 2, 3, 3, 4, 4, "Qi'ra, Top Lieutenant", Uniqueness.UNIQUE);
-        setLore("Female Crimson Dawn leader. Corellian.");
+        setLore("Female Crimson Dawn leader. Corellian gangster.");
         setGameText("When forfeited at same location as Han or Vos, may satisfy all remaining battle damage against you. Unless opponent occupies a battleground site, cancels It Could Be Worse and when opponent retrieves X cards, opponent must first use X Force or that retrieval is canceled.");
         addPersona(Persona.QIRA);
         setSpecies(Species.CORELLIAN);
-        addKeywords(Keyword.FEMALE, Keyword.LEADER);
+        addKeywords(Keyword.FEMALE, Keyword.LEADER, Keyword.GANGSTER);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_17);
         setTestingText("Qi'ra, Top Lieutenant");
     }

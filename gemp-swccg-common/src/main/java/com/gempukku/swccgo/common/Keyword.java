@@ -157,6 +157,7 @@ public enum Keyword implements Filterable {
     SHIP_DOCKING_CAPABILITY("Ship-docking Capability", false),
     SITH_APPRENTICE("Sith Apprentice", true),
     SKIFF("Skiff", false),
+    SKYWALKER("Skywalker", false),
     SLAVER("Slaver", true),
     SMUGGLER("Smuggler", true),
     SNOWSPEEDER("Snowspeeder", false),

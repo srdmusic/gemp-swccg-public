@@ -20,6 +20,7 @@ import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -31,13 +32,13 @@ public class Card501_008 extends AbstractEpicEventDeployable {
     public Card501_008() {
         super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Revenge_Of_The_Sith);
         setGameText("Deploy on table (only at start of game) and choose an apprentice: " +
-                "Maul: Deploy Desert Landing Site and They Will Be No Match For You. " +
-                "Dooku: Deploy Invisible Hand: Bridge and Evil Is Everywhere. " +
-                "Vader: Deploy Vader's Castle and I Am Your Father. " +
+                "Maul: Deploy Desert Landing Site. " +
+                "Dooku: Deploy Invisible Hand: Bridge. " +
+                "Vader: Deploy Vader's Castle. " +
                 "You may not deploy Dark Jedi except [Episode I] Sidious and the chosen apprentice. Sidious and the chosen apprentice gain [Sith]. " +
                 "A Sith Legend, Always Two There Are, and Sith are destiny +2. " +
                 "If a Jedi was just lost from same location as your Dark Jedi, opponent loses 1 Force.");
-        addIcon(Icon.VIRTUAL_SET_17);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         setTestingText("Revenge Of The Sith");
     }
 
@@ -58,38 +59,44 @@ public class Card501_008 extends AbstractEpicEventDeployable {
             final String DOOKU = "Dooku";
             final String VADER = "Vader";
 
-            String[] possibleResults = new String[]{MAUL, DOOKU, VADER};
+            List<PhysicalCard> reserveDeck = game.getGameState().getReserveDeck(self.getOwner());
+            List<String> possible = new LinkedList<>();
+            if (!Filters.filter(reserveDeck, game, Filters.Desert_Landing_Site).isEmpty()) {
+                possible.add(MAUL);
+            }
+            if (!Filters.filter(reserveDeck, game, Filters.Invisible_Hand_Bridge).isEmpty()) {
+                possible.add(DOOKU);
+            }
+            if (!Filters.filter(reserveDeck, game, Filters.Vaders_Castle).isEmpty()) {
+                possible.add(VADER);
+            }
+
+
+            String[] possibleResults = possible.toArray(new String[0]);
 
             action.appendTargeting(
                     new PlayoutDecisionEffect(action, self.getOwner(), new MultipleChoiceAwaitingDecision("Choose an apprentice", possibleResults) {
                         @Override
                         protected void validDecisionMade(int index, String result) {
                             Filter siteFilter = null;
-                            Filter effectFilter = null;
                             Filter apprenticeFilter = null;
 
                             switch (result) {
                                 case MAUL:
                                     siteFilter = Filters.Desert_Landing_Site;
-                                    effectFilter = Filters.They_Will_Be_No_Match_For_You;
                                     apprenticeFilter = Filters.Maul;
                                     break;
                                 case DOOKU:
                                     siteFilter = Filters.Invisible_Hand_Bridge;
-                                    effectFilter = Filters.Evil_Is_Everywhere;
                                     apprenticeFilter = Filters.Dooku;
                                     break;
                                 case VADER:
                                     siteFilter = Filters.Vaders_Castle;
-                                    effectFilter = Filters.I_Am_Your_Father;
                                     apprenticeFilter = Filters.Vader;
                                     break;
                             }
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, siteFilter, false)
-                            );
-                            action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, effectFilter, false)
                             );
                             action.appendEffect(
                                     new AddUntilEndOfGameModifierEffect(action,
