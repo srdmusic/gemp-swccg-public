@@ -3602,7 +3602,7 @@ var fixedImages = {
 "601_161":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Light/large/obiwankenobijediknight.gif",
 "601_162":"https://res.starwarsccg.org/cards/legacy/VirtualBlock3-Light/large/strikeforce.gif",
 "601_163":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Light/large/macewindu.gif",
-"601_164":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Light/large/darklighterspin.gif",
+"601_164":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Light/large/elegantlightsaber.gif",
 "601_165":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Light/large/kiadimundi.gif",
 "601_166":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Light/large/jedilightsaber.gif",
 "601_167":"https://res.starwarsccg.org/cards/legacy/VirtualBlock2-Light/large/impressivemostimpressive.gif",
