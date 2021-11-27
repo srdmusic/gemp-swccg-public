@@ -28,7 +28,7 @@ public class Card501_033 extends AbstractAlien {
         addKeywords(Keyword.FEMALE, Keyword.GAMBLER, Keyword.TROOPER);
         setSpecies(Species.ALDERAANIAN);
         addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_17);
-        setTestingText("Cara Dune With Heavy Blaster Rifle");
+        setTestingText("[Set 18] Cara Dune With Heavy Blaster Rifle");
         hideFromDeckBuilder();
     }
 

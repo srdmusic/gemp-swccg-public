@@ -8,13 +8,17 @@ import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.TakeFirstBattleWeaponsSegmentActionEffect;
 import com.gempukku.swccgo.logic.modifiers.MayBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,7 +31,7 @@ public class Card501_090 extends AbstractNormalEffect {
     public Card501_090() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Tragedy Of Plagueis", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on table. May deploy Sidious's Lightsaber from Reserve Deck; reshuffle. Once per game, If Sidious with a Dark Jedi, may retrieve a character into hand. If Revenge Of The Sith on table, Sidious may be targeted by Force Lightning. [Immune to Alter.]");
+        setGameText("Deploy on table. Once per game, if Sidious with a Dark Jedi, may retrieve a character into hand. If Revenge Of The Sith on table, Sidious may be targeted by Force Lightning. If Sidious alone in battle, you take the first weapon phase action. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Tragedy Of Plagueis ");
@@ -41,26 +45,28 @@ public class Card501_090 extends AbstractNormalEffect {
     }
 
     @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        if (TriggerConditions.battleInitiated(game, effectResult)
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.Sidious, Filters.alone))) {
+
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take first weapons segment action");
+            action.appendEffect(
+                    new TakeFirstBattleWeaponsSegmentActionEffect(action, self.getOwner()));
+
+            return Collections.singletonList(action);
+        }
+
+        return null;
+    }
+
+    @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGUEIS__DOWNLOAD_LIGHTSABER_ON_SIDIOUS;
-
-        // Check condition(s)
-        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, "Sidious's Lightsaber")) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Sidious's Lightsaber");
-            action.setActionMsg("Deploy Sidious's Lightsaber from Reserve Deck");
-
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.title("Sidious's Lightsaber"), true));
-
-            actions.add(action);
-        }
-
-        gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGUEIS__RETRIEVE_CHARACTER_INTO_HAND_FROM_LOST_PILE;
+        GameTextActionId gameTextActionId = GameTextActionId.TRAGEDY_OF_PLAGUEIS__RETRIEVE_CHARACTER_INTO_HAND_FROM_LOST_PILE;
 
         if (GameConditions.canSpot(game, self, Filters.and(Filters.Sidious, Filters.with(self, Filters.Dark_Jedi)))
                 && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)

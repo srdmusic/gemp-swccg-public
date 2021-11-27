@@ -36,7 +36,7 @@ public class Card501_031 extends AbstractNormalEffect {
     public Card501_031() {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.My_Parents_Were_Strong, Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on Training Course. When deployed, stack [Set 4] Falcon face up here from outside your deck; it may deploy from here as if from hand. Once per turn, may lose 1 Force to target a card with Rey; target is defense value -4 for remainder of turn. [Immune to Alter.]");
+        setGameText("Deploy on Training Course. When deployed, stack [Set 4] Falcon face up here from outside your deck; it may deploy from here as if from hand. Once per turn, if Rey alone, may target a card with Rey; target is defense value -4 for remainder of turn. [Immune to Alter.]");
         addIcons(Icon.SKYWALKER, Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("My Parents Were Strong");
@@ -90,7 +90,7 @@ public class Card501_031 extends AbstractNormalEffect {
         Filter targetFilter = Filters.and(Filters.with(self, Filters.Rey), hasDefenseValue);
 
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canTarget(game, self, Filters.Rey)
+                && GameConditions.canTarget(game, self, Filters.and(Filters.Rey, Filters.alone))
                 && GameConditions.canTarget(game, self, targetFilter)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
@@ -102,8 +102,6 @@ public class Card501_031 extends AbstractNormalEffect {
             action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose target to reduce its defense value by 4 this turn", targetFilter) {
                 @Override
                 protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                    action.appendCost(
-                            new LoseForceEffect(action, playerId, 1));
                     action.allowResponses(new RespondableEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {

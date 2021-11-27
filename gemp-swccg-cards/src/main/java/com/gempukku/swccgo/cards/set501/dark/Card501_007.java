@@ -11,10 +11,7 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.ResetForfeitEffect;
-import com.gempukku.swccgo.logic.modifiers.ArmorModifier;
-import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.HitResult;
 
@@ -34,10 +31,10 @@ public class Card501_007 extends AbstractCombatVehicle {
         super(Side.DARK, 2, 6, 7, 7, null, 1, 7, Title.Blizzard_1, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("General Veers' AT-AT. Enclosed. Equipped with highly sophisticated communications gear. Employs an experimental targeting system.");
-        setGameText("Death Squadron. May add 2 pilots and 8 passengers. While Veers piloting, armor +1, draws one battle destiny if unable to otherwise, and targets Blizzard 1 hits are forfeit = 0. Immune to attrition < 4.");
+        setGameText("May add 2 pilots and 8 passengers. While Veers piloting: armor +1, draws one battle destiny if unable to otherwise, and targets Blizzard 1 'hits' here are forfeit = 0. Immune to Under Attack and attrition < 4.");
         addModelType(ModelType.AT_AT);
         addIcons(Icon.HOTH, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_17);
-        addKeywords(Keyword.ENCLOSED, Keyword.DEATH_SQUADRON);
+        addKeywords(Keyword.ENCLOSED);
         setPilotCapacity(2);
         setPassengerCapacity(8);
         addPersona(Persona.BLIZZARD_1);
@@ -48,6 +45,7 @@ public class Card501_007 extends AbstractCombatVehicle {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new ImmuneToTitleModifier(self, Title.Under_Attack));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
         modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, new HasPilotingCondition(self, Filters.Veers), 1));
         modifiers.add(new ArmorModifier(self, self, new HasPilotingCondition(self, Filters.Veers), 1));

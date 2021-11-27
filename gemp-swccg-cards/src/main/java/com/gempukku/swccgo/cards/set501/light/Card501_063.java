@@ -8,6 +8,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -25,7 +26,7 @@ public class Card501_063 extends AbstractSite {
         super(Side.LIGHT, Title.Slave_Quarters, Title.Tatooine);
         setVirtualSuffix(true);
         setLocationDarkSideGameText("Deploys only as a starting location.");
-        setLocationLightSideGameText("If you just deployed a [Skywalker] Epic Event, deploy a [Skywalker] Effect here from Reserve Deck; reshuffle.");
+        setLocationLightSideGameText("If you just deployed a [Skywalker] Epic Event, deploy Your Thoughts Dwell On Your Mother here from Reserve Deck; reshuffle.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.SKYWALKER, Icon.TATOOINE, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         setTestingText("Tatooine: Slave Quarters (V)");
@@ -48,10 +49,9 @@ public class Card501_063 extends AbstractSite {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setPerformingPlayer(playerOnLightSideOfLocation);
-            action.setText("Deploy a [Skywalker] Effect here");
-            action.setActionMsg("Deploy a [Skywalker] Effect here from Reserve Deck");
+            action.setText("Deploy Your Thoughts Dwell On Your Mother");
             action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Icon.SKYWALKER, Filters.Effect), Filters.here(self), !GameConditions.isDuringStartOfGame(game)));
+                    new DeployCardFromReserveDeckEffect(action, Filters.title("Your Thoughts Dwell On Your Mother"), GameConditions.isDuringStartOfGame(game), !GameConditions.isDuringStartOfGame(game)));
             return Collections.singletonList(action);
         }
         return null;

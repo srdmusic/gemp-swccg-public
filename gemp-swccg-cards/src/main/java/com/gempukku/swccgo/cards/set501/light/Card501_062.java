@@ -8,6 +8,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -24,7 +25,7 @@ public class Card501_062 extends AbstractSite {
     public Card501_062() {
         super(Side.LIGHT, "Ajan Kloss: Training Course", Title.Ajan_Kloss);
         setLocationDarkSideGameText("Deploys only as a starting location.");
-        setLocationLightSideGameText("If you just deployed a [Skywalker] Epic Event, deploy a [Skywalker] Effect here from Reserve Deck; reshuffle.");
+        setLocationLightSideGameText("If you just deployed a [Skywalker] Epic Event, deploy My Parents Were Strong from Reserve Deck; reshuffle.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.SKYWALKER, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
         setTestingText("Ajan Kloss: Training Course");
@@ -47,10 +48,9 @@ public class Card501_062 extends AbstractSite {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setPerformingPlayer(playerOnLightSideOfLocation);
-            action.setText("Deploy a [Skywalker] Effect here");
-            action.setActionMsg("Deploy a [Skywalker] Effect here from Reserve Deck");
+            action.setText("Deploy My Parents Were Strong");
             action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Icon.SKYWALKER, Filters.Effect), Filters.here(self), !GameConditions.isDuringStartOfGame(game)));
+                    new DeployCardFromReserveDeckEffect(action, Filters.title("My Parents Were Strong"), GameConditions.isDuringStartOfGame(game), !GameConditions.isDuringStartOfGame(game)));
             return Collections.singletonList(action);
         }
         return null;

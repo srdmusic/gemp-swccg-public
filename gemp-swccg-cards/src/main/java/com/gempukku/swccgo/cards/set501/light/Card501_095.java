@@ -7,9 +7,14 @@ import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,8 +27,8 @@ import java.util.List;
 public class Card501_095 extends AbstractSite {
     public Card501_095() {
         super(Side.LIGHT, Title.Anakins_Funeral_Pyre, Title.Endor);
-        setLocationDarkSideGameText("Deploys only as a starting location (or by He Is The Chosen One instead of Jedi Council Chamber).");
-        setLocationLightSideGameText("Once during opponent's turn, unless Anakin on table, may activate 1 Force.");
+        setLocationDarkSideGameText("Deploys only as a starting location.");
+        setLocationLightSideGameText("If you just deployed a [Skywalker] Epic Event, deploy Like My Father Before Me from Reserve Deck; reshuffle.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.SKYWALKER, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
         setTestingText("Endor: Anakin's Funeral Pyre");
@@ -31,46 +36,26 @@ public class Card501_095 extends AbstractSite {
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self) {
+        // Deploys only as a starting location.
         return GameConditions.isDuringStartOfGame(game)
-                && ((game.getModifiersQuerying().getStartingLocation(playerId) == null
-                    && game.getGameState().getObjectivePlayed(playerId) == null) //as starting location
-                || (game.getGameState().getObjectivePlayed(playerId) != null
-                    && Filters.He_Is_The_Chosen_One.accepts(game, game.getGameState().getObjectivePlayed(playerId))
-                    && !GameConditions.canSpot(game, self, Filters.Jedi_Council_Chamber)) // this is definitely not the best way to do this
-            );
+                && game.getModifiersQuerying().getStartingLocation(playerId) == null
+                && game.getGameState().getObjectivePlayed(playerId) == null;
     }
 
-    // NOTE: The "May be deployed instead of Jedi Council Chamber by He Is The Chosen One." portion of the text has been
-    // implemented on the HITCO objective.
-
     @Override
-    protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+    protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.ANAKINS_FUNERAL_PYRE__DEPLOY_EFFECT;
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        if (TriggerConditions.justDeployed(game, effectResult, playerOnLightSideOfLocation, Filters.and(Icon.SKYWALKER, Filters.Epic_Event))
+                && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, true, false)) {
 
-        // Once during opponent's turn, unless Anakin on table, may activate 1 Force.
-
-        // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.isOpponentsTurn(game, playerOnLightSideOfLocation)
-                && GameConditions.canActivateForce(game, playerOnLightSideOfLocation)
-                && !GameConditions.canSpot(game, self, Filters.Anakin)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
-            action.setText("Activate 1 Force");
-
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-
-            // Perform result(s)
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setPerformingPlayer(playerOnLightSideOfLocation);
+            action.setText("Deploy Like My Father Before Me");
             action.appendEffect(
-                    new ActivateForceEffect(action, playerOnLightSideOfLocation, 1));
-
-            actions.add(action);
+                    new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Like_My_Father_Before_Me), GameConditions.isDuringStartOfGame(game), !GameConditions.isDuringStartOfGame(game)));
+            return Collections.singletonList(action);
         }
-
-        return actions;
+        return null;
     }
 }

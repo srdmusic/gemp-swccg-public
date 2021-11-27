@@ -37,7 +37,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
                 "My Father Has It: Anakin and [Episode I] Obi-Wan. \n" +
                 "I Have It: [Reflections II] Luke and [Set 1] Obi-Wan. \n" +
                 "You Have That Power, Too: Rey and [Episode VII] Luke. \n" +
-                "Rey is a Skywalker. You may not deploy Jedi except Yoda and the revealed cards. While Leia at a battleground site, Their Fire Has Gone Out Of The Universe flips and may not flip back. If you just deployed a Skywalker (or Sidious just lost from table), may retrieve bottom card of Lost Pile.");
+                "Your total Force generation is +1. Rey is a Skywalker. You may not deploy Jedi except Yoda and the revealed cards. While a Skywalker of ability > 3 at a battleground site, Their Fire Has Gone Out Of The Universe flips and may not flip back. If a Skywalker just initiated battle (or Sidious just lost from table), may retrieve 1 Force.");
         addIcons(Icon.SKYWALKER, Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
         setTestingText("The Force Is Strong In My Family");
     }
@@ -174,7 +174,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
 
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.Leia, Filters.presentAt(Filters.battleground)))) {
+                && GameConditions.canSpot(game, self, Filters.and(Filters.and(Filters.Skywalker, Filters.abilityMoreThan(3)), Filters.at(Filters.battleground)))) {
             PhysicalCard theirFireHasGoneOutOfTheUniverse = Filters.findFirstActive(game, self, Filters.Their_Fire_Has_Gone_Out_Of_The_Universe);
             if (theirFireHasGoneOutOfTheUniverse != null
                     && GameConditions.canBeFlipped(game, theirFireHasGoneOutOfTheUniverse)) {
@@ -197,14 +197,16 @@ public class Card501_028 extends AbstractEpicEventDeployable {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
 
         if (GameConditions.hasLostPile(game, playerId)
-                && (TriggerConditions.justDeployed(game, effectResult, playerId, Filters.Skywalker)
-                || TriggerConditions.justLost(game, effectResult, Filters.Sidious))) {
+                && (TriggerConditions.justLost(game, effectResult, Filters.Sidious)
+                    || TriggerConditions.justForfeitedToLostPileFromLocation(game, effectResult, Filters.Sidious, Filters.any)
+                    || (TriggerConditions.battleInitiated(game, effectResult)
+                        && GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker)))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Retrieve bottom card of Lost Pile");
+            action.setText("Retrieve 1 Force");
             // Perform result(s)
             action.appendEffect(
-                    new RetrieveCardEffect(action, playerId, Filters.bottomOfLostPile(playerId)));
+                    new RetrieveForceEffect(action, playerId, 1));
             return Collections.singletonList(action);
         }
 
@@ -230,7 +232,8 @@ public class Card501_028 extends AbstractEpicEventDeployable {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new KeywordModifier(self, Filters.Rey, Keyword.SKYWALKER));
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, revealedCardsFilter))), self.getOwner()));
-        modifiers.add(new MayNotBeFlippedModifier(self, new AtCondition(self, Filters.Leia, Filters.battleground_site), Filters.Hunt_Down_And_Destroy_The_Jedi));
+        modifiers.add(new MayNotBeFlippedModifier(self, new AtCondition(self, Filters.and(Filters.Skywalker, Filters.abilityMoreThan(3)), Filters.battleground_site), Filters.Hunt_Down_And_Destroy_The_Jedi));
+        modifiers.add(new TotalForceGenerationModifier(self, 1, self.getOwner()));
         return modifiers;
     }
 
