@@ -23,6 +23,7 @@ import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.MovedResult;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -67,7 +68,7 @@ public class Card501_068 extends AbstractUsedInterrupt {
                     }
                 });
 
-
+                return Collections.singletonList(action);
             }
 
         }
