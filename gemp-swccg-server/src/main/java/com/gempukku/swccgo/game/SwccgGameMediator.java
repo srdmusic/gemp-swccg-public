@@ -1235,7 +1235,7 @@ public class SwccgGameMediator {
                 if(Filters.title("The Rise Of Skywalker").accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null) {
                     // The Force Is Strong In My Family
-                    return "Skywalker Saga";
+                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Skywalker Saga";
                 }
                 if(Filters.title("Rise Of The Sith").accepts(_swccgoGame, startingInterrupt)
                         && startingLocation.getBlueprint().getTitle() != null) {

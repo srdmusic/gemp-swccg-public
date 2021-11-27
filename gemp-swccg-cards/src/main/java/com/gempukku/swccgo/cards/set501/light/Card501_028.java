@@ -19,6 +19,9 @@ import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardCombinationFromCardPileEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.PassthruEffect;
+import com.gempukku.swccgo.logic.timing.results.ChoiceMadeResult;
+import com.gempukku.swccgo.logic.timing.results.DoubleSidedCardFlippedResult;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -37,7 +40,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
                 "My Father Has It: Anakin and [Episode I] Obi-Wan. \n" +
                 "I Have It: [Reflections II] Luke and [Set 1] Obi-Wan. \n" +
                 "You Have That Power, Too: Rey and [Episode VII] Luke. \n" +
-                "Your total Force generation is +1. Rey is a Skywalker. You may not deploy Jedi except Yoda and the revealed cards. While a Skywalker of ability > 3 at a battleground site, Their Fire Has Gone Out Of The Universe flips and may not flip back. If a Skywalker just initiated battle (or Sidious just lost from table), may retrieve 1 Force.");
+                "Your total Force generation is +1. Rey is a Skywalker. You may not deploy Jedi except Yoda and the revealed cards. While a Skywalker of ability > 3 at a battleground site, Their Fire Has Gone Out Of The Universe flips and may not flip back. If a Skywalker just initiated battle (or opponent's Sidious just lost from table), may retrieve 1 Force.");
         addIcons(Icon.SKYWALKER, Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
         setTestingText("The Force Is Strong In My Family");
     }
@@ -58,7 +61,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
 
             final String MY_FATHER_HAS_IT = "My Father Has It";
             final String I_HAVE_IT = "I Have It";
-            final String YOU_HAVE_THAT_POWER_TOO = "You Have That Power Too";
+            final String YOU_HAVE_THAT_POWER_TOO = "You Have That Power, Too";
 
             final Filter myFatherHasIt_Anakin = Filters.Anakin;
             final Filter myFatherHasIt_ObiWan = Filters.and(Icon.EPISODE_I, Filters.ObiWan);
@@ -85,7 +88,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
             String[] possibleResults = possible.toArray(new String[0]);
 
             action.appendEffect(
-                    new PlayoutDecisionEffect(action, self.getOwner(), new MultipleChoiceAwaitingDecision("Choose an option", possibleResults) {
+                    new PlayoutDecisionEffect(action, playerId, new MultipleChoiceAwaitingDecision("Choose an option", possibleResults) {
                         @Override
                         protected void validDecisionMade(int index, final String result) {
                             Filter skywalkerFilter = null;
@@ -153,16 +156,23 @@ public class Card501_028 extends AbstractEpicEventDeployable {
 
                                     for(PhysicalCard card:theSkywalker) {
                                         action.appendEffect(new ShowCardOnScreenEffect(action, card));
-                                        action.appendEffect(new SendMessageEffect(action, self.getOwner() + " revealed " + GameUtils.getCardLink(card)
+                                        action.appendEffect(new SendMessageEffect(action, playerId + " revealed " + GameUtils.getCardLink(card)
                                                 + " with " + GameUtils.getCardLink(self)));
                                     }
                                     for(PhysicalCard card:theFriend) {
                                         action.appendEffect(new ShowCardOnScreenEffect(action, card));
-                                        action.appendEffect(new SendMessageEffect(action, self.getOwner() + " revealed " + GameUtils.getCardLink(card)
+                                        action.appendEffect(new SendMessageEffect(action, playerId + " revealed " + GameUtils.getCardLink(card)
                                                 + " with " + GameUtils.getCardLink(self)));
                                     }
 
                                     self.setWhileInPlayData(new WhileInPlayData(result, cardsChosen));
+
+                                    action.appendEffect(new PassthruEffect(action) {
+                                        @Override
+                                        protected void doPlayEffect(SwccgGame game) {
+                                            game.getActionsEnvironment().emitEffectResult(new ChoiceMadeResult(playerId, self, result));
+                                        }
+                                    });
                                 }
                             });
                         }
@@ -197,8 +207,8 @@ public class Card501_028 extends AbstractEpicEventDeployable {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
 
         if (GameConditions.hasLostPile(game, playerId)
-                && (TriggerConditions.justLost(game, effectResult, Filters.Sidious)
-                    || TriggerConditions.justForfeitedToLostPileFromLocation(game, effectResult, Filters.Sidious, Filters.any)
+                && (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious))
+                    || TriggerConditions.justForfeitedToLostPileFromLocation(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious), Filters.any)
                     || (TriggerConditions.battleInitiated(game, effectResult)
                         && GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker)))) {
 

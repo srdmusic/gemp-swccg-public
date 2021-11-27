@@ -6,11 +6,13 @@ import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.ChoiceMadeResult;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,8 +27,8 @@ public class Card501_063 extends AbstractSite {
     public Card501_063() {
         super(Side.LIGHT, Title.Slave_Quarters, Title.Tatooine);
         setVirtualSuffix(true);
-        setLocationDarkSideGameText("Deploys only as a starting location.");
-        setLocationLightSideGameText("If you just deployed a [Skywalker] Epic Event, deploy Your Thoughts Dwell On Your Mother here from Reserve Deck; reshuffle.");
+        setLocationDarkSideGameText("");
+        setLocationLightSideGameText("If you just chose My Father Has It on your [Skywalker] Epic Event, [download] Your Thoughts Dwell On Your Mother. Deploys only as a starting location.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.SKYWALKER, Icon.TATOOINE, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         setTestingText("Tatooine: Slave Quarters (V)");
@@ -44,8 +46,9 @@ public class Card501_063 extends AbstractSite {
     protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.TATOOINE_SLAVE_QUARTERS_V__DEPLOY_EFFECT;
 
-        if (TriggerConditions.justDeployed(game, effectResult, playerOnLightSideOfLocation, Filters.and(Icon.SKYWALKER, Filters.Epic_Event))
-                && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, true, false)) {
+        if (TriggerConditions.justMadeChoice(game, effectResult, playerOnLightSideOfLocation, Filters.and(Icon.SKYWALKER, Filters.Epic_Event))
+                && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, true, false)
+                && "My Father Has It".equals(((ChoiceMadeResult)effectResult).getChoice())) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setPerformingPlayer(playerOnLightSideOfLocation);

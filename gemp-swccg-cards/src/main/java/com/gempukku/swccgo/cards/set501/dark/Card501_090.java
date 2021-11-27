@@ -31,7 +31,7 @@ public class Card501_090 extends AbstractNormalEffect {
     public Card501_090() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Tragedy Of Plagueis", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on table. Once per game, if Sidious with a Dark Jedi, may retrieve a character into hand. If Revenge Of The Sith on table, Sidious may be targeted by Force Lightning. If Sidious alone in battle, you take the first weapon phase action. [Immune to Alter.]");
+        setGameText("Deploy on table. Once per game, if Sidious with a Dark Jedi, may retrieve a character into hand. If Revenge Of The Sith on table, your Sidious may be targeted by Force Lightning. If Sidious alone in battle, you take the first weapon phase action. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Tragedy Of Plagueis ");
@@ -40,7 +40,7 @@ public class Card501_090 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MayBeTargetedByModifier(self, Filters.Sidious, new OnTableCondition(self, Filters.title(Title.Revenge_Of_The_Sith)), Title.Force_Lightning));
+        modifiers.add(new MayBeTargetedByModifier(self, Filters.and(Filters.your(self), Filters.Sidious), new OnTableCondition(self, Filters.title(Title.Revenge_Of_The_Sith)), Title.Force_Lightning));
         return modifiers;
     }
 
