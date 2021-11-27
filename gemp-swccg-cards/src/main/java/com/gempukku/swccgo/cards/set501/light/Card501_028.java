@@ -174,7 +174,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
 
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.and(Filters.Skywalker, Filters.abilityMoreThan(3)), Filters.at(Filters.battleground)))) {
+                && GameConditions.canSpot(game, self, Filters.and(Filters.and(Filters.Skywalker, Filters.abilityMoreThan(3)), Filters.at(Filters.battleground_site)))) {
             PhysicalCard theirFireHasGoneOutOfTheUniverse = Filters.findFirstActive(game, self, Filters.Their_Fire_Has_Gone_Out_Of_The_Universe);
             if (theirFireHasGoneOutOfTheUniverse != null
                     && GameConditions.canBeFlipped(game, theirFireHasGoneOutOfTheUniverse)) {
