@@ -18,7 +18,7 @@ public class Card501_018 extends AbstractUsedOrLostInterrupt {
         setLore("Despite being alone, trapped and desperately outmatched, Luke continued his battle with the Dark Lord of the Sith.");
         setGameText("USED: Peek at the top 2 cards (3 if Luke on table) of your Reserve Deck and take one into hand; reshuffle. LOST: Once per game, at the start of any battle phase, initiate a battle between Luke and opponent's character present. Loser takes no battle damage.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_17);
-        setTestingText("Courage Of A Skywalker (V)");
+        setTestingText("[Set 18] Courage Of A Skywalker (V)");
         hideFromDeckBuilder();
     }
 }

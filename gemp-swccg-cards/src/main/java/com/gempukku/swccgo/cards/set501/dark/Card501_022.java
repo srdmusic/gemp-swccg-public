@@ -34,7 +34,7 @@ public class Card501_022 extends AbstractNormalEffect {
         setGameText("Deploy on Hoth system. While a battleground marker site on table, adds one [Dark Side] icon and one [Light Side] icon here. Your Death Squadron cards deploy -1 here (-5 if Executor) and are immune to attrition < 3 here. Place in Used Pile if opponent Force drains here. [Immune to Alter.]");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Hoth Blockade");
+        setTestingText("[Set 18] Hoth Blockade");
     }
 
     @Override

@@ -30,7 +30,7 @@ public class Card501_059 extends AbstractSystem {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.PREMIUM, Icon.PLANET, Icon.VIRTUAL_SET_17);
-        setTestingText("Eriadu (V)");
+        setTestingText("[Set 18] Eriadu (V)");
     }
 
     @Override

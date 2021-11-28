@@ -32,7 +32,7 @@ public class Card501_013 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.VIRTUAL_SET_17, Icon.EXTERIOR_SITE, Icon.PLANET);
         addKeywords(Keyword.MARKER_1);
-        setTestingText("Hoth: Main Power Generators (1st Marker)");
+        setTestingText("[Set 18] Hoth: Main Power Generators (1st Marker)");
     }
 
     @Override

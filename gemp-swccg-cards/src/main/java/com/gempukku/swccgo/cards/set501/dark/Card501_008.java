@@ -35,7 +35,7 @@ public class Card501_008 extends AbstractEpicEventDeployable {
                 "Maul: Deploy Desert Landing Site. " +
                 "Dooku: Deploy Invisible Hand: Bridge. " +
                 "Vader: Deploy Vader's Castle. " +
-                "You may not deploy Dark Jedi except [Episode I] Sidious and the chosen apprentice. Sidious and the chosen apprentice gain [Sith]. " +
+                "You may not deploy Dark Jedi except [Episode I] Sidious and the chosen apprentice. Your [Episode I] Sidious and the chosen apprentice gain [Sith]. " +
                 "A Sith Legend, Always Two There Are, and Sith are destiny +2. " +
                 "If a Jedi was just lost from same location as your Dark Jedi, opponent loses 1 Force.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
@@ -132,7 +132,7 @@ public class Card501_008 extends AbstractEpicEventDeployable {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new MayNotPlayModifier(self, Filters.and(Filters.Dark_Jedi, Filters.except(Filters.and(Icon.EPISODE_I, Filters.Sidious)), Filters.except(Filters.Sith_Apprentice)), self.getOwner()));
-        modifiers.add(new AddCardTypeModifier(self, Filters.or(Filters.Sidious, Filters.Sith_Apprentice), CardType.SITH));
+        modifiers.add(new AddCardTypeModifier(self, Filters.or(Filters.and(Filters.your(self), Icon.EPISODE_I, Filters.Sidious), Filters.Sith_Apprentice), CardType.SITH));
         modifiers.add(new DestinyModifier(self, Filters.or(Filters.A_Sith_Legend, Filters.Always_Two_There_Are, Filters.Sith), 2));
         return modifiers;
     }

@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set210.light;
+package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -13,7 +13,10 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.DeployForFreeForSimultaneouslyDeployingPilotModifier;
+import com.gempukku.swccgo.logic.modifiers.DeploysFreeAboardModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -27,17 +30,18 @@ import java.util.List;
  * Title: Blue Squadron 1
  */
 
-public class Card210_005 extends AbstractStarfighter {
-    public Card210_005() {
+public class Card501_066 extends AbstractStarfighter {
+    public Card501_066() {
         super(Side.LIGHT, 2, 3, 3, null, 5, 5, 5, "Blue Squadron 1", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("May add 1 pilot. Snap deploys free aboard. While Snap piloting, immune to attrition < 5 and, once per turn, may use 1 Force to cancel a Force drain at another system within 1 parsec of Snap.");
+        setGameText("May add 1 pilot. Snap deploys free aboard. While Snap piloting, immune to attrition < 5 and, once per turn, may use 1 Force to cancel a Force drain at opponent's system within 1 parsec of Snap.");
         addPersonas(Persona.BLUE_SQUADRON_1);
         addIcons(Icon.RESISTANCE, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.VIRTUAL_SET_10);
         addKeywords(Keyword.BLUE_SQUADRON);
         addModelType(ModelType.X_WING);
         setPilotCapacity(1);
         setMatchingPilotFilter(Filters.Snap);
+        setTestingText("Blue Squadron 1 (V) (ERRATA)");
     }
 
     @Override
@@ -65,18 +69,21 @@ public class Card210_005 extends AbstractStarfighter {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         Filter systemsWithinOneParsec = Filters.withinParsecsOf(self, 1);
         Filter notSystemPresent = Filters.not(Filters.sameSystem(self));
-        Filter validSystems = Filters.and(systemsWithinOneParsec, notSystemPresent);
+        Filter validSystems = Filters.and(systemsWithinOneParsec, notSystemPresent, Filters.opponents(self));
 
         if (TriggerConditions.forceDrainInitiatedAt(game, effectResult, validSystems)
                 && GameConditions.canCancelForceDrain(game, self)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId)
-                && GameConditions.hasPiloting(game, self, Filters.Snap))
-        {
+                && GameConditions.hasPiloting(game, self, Filters.Snap)) {
+
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Cancel Force Drain");
-            action.appendUsage(new OncePerTurnEffect(action));
-            action.appendCost(new UseForceEffect(action, playerId, 1));
-            action.appendEffect(new CancelForceDrainEffect(action));
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            action.appendCost(
+                    new UseForceEffect(action, playerId, 1));
+            action.appendEffect(
+                    new CancelForceDrainEffect(action));
             return Collections.singletonList(action);
         }
         return null;

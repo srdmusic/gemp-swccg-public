@@ -30,7 +30,7 @@ public class Card501_058 extends AbstractLostOrStartingInterrupt {
         setLore("A ruthless ruler of Outer Rim Territories. Grand Moff Tarkin used the Death Star to destroy Alderaan, creating the doctrine of rule by fear.");
         setGameText("LOST: Deploy Eriadu from Reserve Deck; reshuffle. STARTING: If Ralltiir Operations on table, deploy Insignificant Rebellion and up to two Effects that deploy on table and are always immune to Alter. Place Interrupt in hand.");
         addIcon(Icon.VIRTUAL_SET_17);
-        setTestingText("Moment Of Triumph (V)");
+        setTestingText("[Set 18] Moment Of Triumph (V)");
     }
 
     @Override

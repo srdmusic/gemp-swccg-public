@@ -32,7 +32,7 @@ public class Card501_047 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 0);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EPISODE_I, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
-        setTestingText("Coruscant: Jedi Temple Entrance");
+        setTestingText("[Set 18] Coruscant: Jedi Temple Entrance");
     }
 
     @Override

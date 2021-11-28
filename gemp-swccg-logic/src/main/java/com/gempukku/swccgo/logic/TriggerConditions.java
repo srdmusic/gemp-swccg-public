@@ -5424,4 +5424,17 @@ public class TriggerConditions {
         }
         return false;
     }
+
+    /**
+     * Determines if a player just made a choice required by a card accepted by the filter
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @param filter the filter
+     */
+    public static boolean justMadeChoice(SwccgGame game, EffectResult effectResult, String playerId, Filterable filter) {
+        if (effectResult.getType() == EffectResult.Type.CHOICE_MADE) {
+            return playerId.equals(effectResult.getPerformingPlayerId()) && Filters.and(filter).accepts(game, ((ChoiceMadeResult)effectResult).getCard());
+        }
+        return false;
+    }
 }
