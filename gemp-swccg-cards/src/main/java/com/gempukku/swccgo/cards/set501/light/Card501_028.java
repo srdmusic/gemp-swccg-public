@@ -209,7 +209,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
         if (GameConditions.hasLostPile(game, playerId)
                 && (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious))
                     || TriggerConditions.justForfeitedToLostPileFromLocation(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious), Filters.any)
-                    || (TriggerConditions.battleInitiated(game, effectResult)
+                    || (TriggerConditions.battleInitiated(game, effectResult, playerId)
                         && GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker)))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
