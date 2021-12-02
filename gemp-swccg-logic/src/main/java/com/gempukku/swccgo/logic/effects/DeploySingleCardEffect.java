@@ -239,10 +239,10 @@ public class DeploySingleCardEffect extends AbstractSubActionEffect implements P
 
                                                 if (_deployAsCaptiveOption != null && _deployAsCaptiveOption.getCaptureOption() == CaptureOption.IMPRISONMENT) {
                                                     if (_deployAsCaptiveOption.isFrozenCaptive()) {
-                                                        playCardText.append(GameUtils.getCardLink(_cardToPlay)).append(asReactText).append(" from ").append(fromText).append(" into ").append(GameUtils.getCardLink(destinationCard)).append(" as an 'imprisioned' and 'frozen' captive");
+                                                        playCardText.append(GameUtils.getCardLink(_cardToPlay)).append(asReactText).append(" from ").append(fromText).append(" into ").append(GameUtils.getCardLink(destinationCard)).append(" as an 'imprisoned' and 'frozen' captive");
                                                     }
                                                     else {
-                                                        playCardText.append(GameUtils.getCardLink(_cardToPlay)).append(asReactText).append(" from ").append(fromText).append(" into ").append(GameUtils.getCardLink(destinationCard)).append(" as an 'imprisioned' captive");
+                                                        playCardText.append(GameUtils.getCardLink(_cardToPlay)).append(asReactText).append(" from ").append(fromText).append(" into ").append(GameUtils.getCardLink(destinationCard)).append(" as an 'imprisoned' captive");
                                                     }
                                                 }
                                                 else if (_deployAsCaptiveOption != null && _deployAsCaptiveOption.getCaptureOption() == CaptureOption.LEAVE_UNATTENDED) {
@@ -399,10 +399,10 @@ public class DeploySingleCardEffect extends AbstractSubActionEffect implements P
                                                                 gameState.attachCard(_cardToPlay, destinationCard);
                                                                 playCardText.append(GameUtils.getCardLink(_cardToPlay)).append(asReactText).append(" from ").append(fromText).append(" into ").append(GameUtils.getCardLink(destinationCard));
                                                                 if (_deployAsCaptiveOption.isFrozenCaptive()) {
-                                                                    playCardText.append(" as an 'imprisioned' and 'frozen' captive");
+                                                                    playCardText.append(" as an 'imprisoned' and 'frozen' captive");
                                                                 }
                                                                 else {
-                                                                    playCardText.append(" as an 'imprisioned' captive");
+                                                                    playCardText.append(" as an 'imprisoned' captive");
                                                                 }
                                                             }
                                                             else if (_deployAsCaptiveOption != null && _deployAsCaptiveOption.getCaptureOption() == CaptureOption.LEAVE_UNATTENDED) {
