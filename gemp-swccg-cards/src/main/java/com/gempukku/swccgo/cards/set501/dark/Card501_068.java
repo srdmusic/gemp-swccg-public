@@ -37,7 +37,7 @@ public class Card501_068 extends AbstractUsedInterrupt {
     public Card501_068() {
         super(Side.DARK, 5, "Vader's Anger", Uniqueness.UNIQUE);
         setLore("Anger and aggression fuel the dark side of the Force.");
-        setGameText("If Vader in battle, cancel It's A Trap!, Keep Your Eyes Open, or Obi-Wan’s Journal. OR If Vader in battle alone, your total battle destiny is +1 for each character in battle. OR If opponent's character just moved away from Vader, he follows (for free) using his landspeed.");
+        setGameText("Vader follows (using landspeed for free) an opponent's character that just moved from same site. OR If Vader in battle alone, your total battle destiny is +1 for each character in battle. OR If Vader in battle, cancel Dodge, It's A Trap!, or Obi-Wan's Journal.");
         addIcons(Icon.TATOOINE, Icon.VIRTUAL_SET_11);
         setVirtualSuffix(true);
         setTestingText("Vader's Anger (V) (ERRATA)");
@@ -91,12 +91,12 @@ public class Card501_068 extends AbstractUsedInterrupt {
         }
 
         // Check condition(s)
-        if (GameConditions.canTargetToCancel(game, self, Filters.Keep_Your_Eyes_Open)
+        if (GameConditions.canTargetToCancel(game, self, Filters.Dodge)
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.Vader)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Keep_Your_Eyes_Open, Title.Keep_Your_Eyes_Open);
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Dodge, Title.Dodge);
             actions.add(action);
         }
 
@@ -140,7 +140,7 @@ public class Card501_068 extends AbstractUsedInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Its_A_Trap, Filters.Keep_Your_Eyes_Open, Filters.ObiWans_Journal))
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Its_A_Trap, Filters.Dodge, Filters.ObiWans_Journal))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.Vader)) {
 

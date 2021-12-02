@@ -30,7 +30,7 @@ import java.util.List;
 public class Card501_070 extends AbstractUsedInterrupt {
     public Card501_070() {
         super(Side.LIGHT, 4, "Everything We Need", Uniqueness.UNIQUE);
-        setGameText("During battle, add X to your total power, where X = number of your cards that are out of play. OR If My Parents Were Strong or Be With Me on table, take Saddle or a Kef Bir site into hand from Reserve Deck; reshuffle.");
+        setGameText("If My Parents Were Strong on table: During battle, add X to your total power, where X = number of your cards out of play. OR Take Saddle or a Kef Bir site into hand from Reserve Deck; reshuffle.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
         setTestingText("Everything We Need");
     }
@@ -41,40 +41,42 @@ public class Card501_070 extends AbstractUsedInterrupt {
 
         GameTextActionId gameTextActionId = GameTextActionId.EVERYTHING_WE_NEED__UPLOAD_SITE;
 
-        if (GameConditions.canSpot(game, self, Filters.or(Filters.title("My Parents Were Strong"), Filters.title("Be With Me")))
-                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Take site into hand from Reserve Deck");
-            // Allow response(s)
-            action.allowResponses("Take Saddle or a Kef Bir site into hand from Reserve Deck",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.title(Title.Saddle), Filters.Kef_Bir_site), true));
+        if (GameConditions.canSpot(game, self, Filters.title("My Parents Were Strong"))) {
+            if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+                action.setText("Take site into hand from Reserve Deck");
+                // Allow response(s)
+                action.allowResponses("Take Saddle or a Kef Bir site into hand from Reserve Deck",
+                        new RespondablePlayCardEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                // Perform result(s)
+                                action.appendEffect(
+                                        new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.title(Title.Saddle), Filters.Kef_Bir_site), true));
+                            }
                         }
+                );
+                actions.add(action);
+            }
+
+            if (GameConditions.isDuringBattle(game)) {
+
+                final int outOfPlay = Filters.filter(game.getGameState().getAllOutOfPlayCards(), game, Filters.your(self)).size();
+
+                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                action.setText("Add " + outOfPlay + " to power");
+
+                action.allowResponses(new RespondablePlayCardEffect(action) {
+                    @Override
+                    protected void performActionResults(Action targetingAction) {
+                        action.appendEffect(
+                                new ModifyTotalPowerUntilEndOfBattleEffect(action, outOfPlay, playerId, "Adds " + outOfPlay + " to total power"));
                     }
-            );
-            actions.add(action);
-        }
+                });
 
-        if (GameConditions.isDuringBattle(game)) {
+                actions.add(action);
 
-            final int outOfPlay = Filters.filter(game.getGameState().getAllOutOfPlayCards(), game, Filters.your(self)).size();
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Add " + outOfPlay + " to power");
-
-            action.allowResponses(new RespondablePlayCardEffect(action) {
-                @Override
-                protected void performActionResults(Action targetingAction) {
-                    action.appendEffect(
-                            new ModifyTotalPowerUntilEndOfBattleEffect(action, outOfPlay, playerId, "Adds "+outOfPlay+ " to total power"));
-                }});
-
-            actions.add(action);
-
+            }
         }
         return actions;
     }

@@ -37,7 +37,8 @@ public class Card501_008 extends AbstractEpicEventDeployable {
                 "Vader: Deploy Vader's Castle. " +
                 "You may not deploy Dark Jedi except [Episode I] Sidious and the chosen apprentice. Your [Episode I] Sidious and the chosen apprentice gain [Sith]. " +
                 "A Sith Legend, Always Two There Are, and Sith are destiny +2. " +
-                "If a Jedi was just lost from same location as your Dark Jedi, opponent loses 1 Force.");
+                "If a Jedi was just lost from same location as your Dark Jedi, opponent loses 1 Force. " +
+                "Opponent may not cancel or reduce Force drains at their battlegrounds where you have a Dark Jedi.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         setTestingText("Revenge Of The Sith");
     }
@@ -130,10 +131,15 @@ public class Card501_008 extends AbstractEpicEventDeployable {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new MayNotPlayModifier(self, Filters.and(Filters.Dark_Jedi, Filters.except(Filters.and(Icon.EPISODE_I, Filters.Sidious)), Filters.except(Filters.Sith_Apprentice)), self.getOwner()));
         modifiers.add(new AddCardTypeModifier(self, Filters.or(Filters.and(Filters.your(self), Icon.EPISODE_I, Filters.Sidious), Filters.Sith_Apprentice), CardType.SITH));
         modifiers.add(new DestinyModifier(self, Filters.or(Filters.A_Sith_Legend, Filters.Always_Two_There_Are, Filters.Sith), 2));
+        modifiers.add(new ForceDrainsMayNotBeReducedModifier(self, Filters.and(Filters.opponents(self), Filters.battleground, Filters.occupiesWith(playerId, self, Filters.Dark_Jedi)), opponent, playerId));
+        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.and(Filters.opponents(self), Filters.battleground, Filters.occupiesWith(playerId, self, Filters.Dark_Jedi)), opponent, playerId));
         return modifiers;
     }
 
