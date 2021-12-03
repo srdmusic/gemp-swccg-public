@@ -3406,7 +3406,7 @@ var fixedImages = {
 "501_45":"/gemp-swccg/images/cards/Virtual1-Dark/accordingtomydesign.gif",
 "501_46":"/gemp-swccg/images/cards/Premiere-Light/jedipresence.gif",
 "501_47":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/coruscantjeditemplemeditationroom.png",
-"501_48":"/gemp-swccg/images/cards/ReflectionsIII-Light/anotherpatheticlifeform.gif",
+"501_48":"https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/ouneeta.gif",
 "501_49":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/dindjarin.png",
 "501_50":"/gemp-swccg/images/cards/SpecialEdition-Light/tawsskhaa.gif",
 "501_51":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/beginlandingyourtroops.gif",

@@ -6,20 +6,14 @@ import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.AttachCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,10 +25,10 @@ import java.util.List;
  */
 public class Card501_069 extends AbstractUsedInterrupt {
     public Card501_069() {
-        super(Side.LIGHT, 4, "Aggressive Negotiations", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 4, "Go Back To Your Drinks", Uniqueness.UNIQUE);
         setGameText("During battle add 1 to opponent's just drawn destiny (or to your just drawn weapon destiny). OR If Your Thoughts Dwell On Your Mother on table, take Skywalker Hut or Nightclub into hand from Reserve Deck; reshuffle.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
-        setTestingText("Aggressive Negotiations");
+        setTestingText("Go Back To Your Drinks");
     }
 
     @Override
@@ -69,7 +63,7 @@ public class Card501_069 extends AbstractUsedInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.AGGRESSIVE_NEGOTIATIONS__UPLOAD_SITE;
+        GameTextActionId gameTextActionId = GameTextActionId.GO_BACK_TO_YOUR_DRINKS__UPLOAD_SITE;
 
         if (GameConditions.canSpot(game, self, Filters.title("Your Thoughts Dwell On Your Mother"))
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {

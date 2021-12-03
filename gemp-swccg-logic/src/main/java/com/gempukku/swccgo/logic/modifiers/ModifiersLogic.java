@@ -12720,7 +12720,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         // Check if card has may not deploy restriction that is only ignored at certain locations and check if the restrictions should be ignored at this location
         if (location != null
-            && !getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY, playedCard).isEmpty()) {
+            && !getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY, playedCard).isEmpty()
+            && !getModifiersAffectingCard(gameState, ModifierType.IGNORES_DEPLOYMENT_RESTRICTIONS_FROM_CARD_WHEN_DEPLOYING_TO_LOCATION, playedCard).isEmpty()) {
 
             for (Modifier mayNotPlayModifier : getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY, playedCard)) {
                 boolean mayNotPlay = true;
