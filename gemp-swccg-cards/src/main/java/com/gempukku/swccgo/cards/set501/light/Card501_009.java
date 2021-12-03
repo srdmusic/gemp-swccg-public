@@ -21,7 +21,7 @@ public class Card501_009 extends AbstractEpicEventDeployable {
     public Card501_009() {
         super(Side.LIGHT, PlayCardZoneOption.ATTACHED, "Be With Me", Uniqueness.UNIQUE);
         setGameText("Deploy on an Ahch-To location. Opponent generates no Force here. \n" +
-                "A thousand generations live in you now: Rey is power and immunity to attrition +1 for each Jedi out of play \n" +
+                "A thousand generations live in you now: Rey is power and forfeit +1 for each Jedi out of play \n" +
                 "Bring back the balance, Rey, as I did: [Set 14] Rey's battle and weapon destiny draws are +1. \n" +
                 "Feel the Force Flowing Through You: At same location as [Set 14] Rey, characters may not add battle destinies. \n" +
                 "Rey, the Force will be with you. Always: [Set 14] Rey ignores your Objective deployment restrictions.");
@@ -41,7 +41,7 @@ public class Card501_009 extends AbstractEpicEventDeployable {
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new GenerateNoForceModifier(self, Filters.hasAttached(self), game.getOpponent(self.getOwner())));
         modifiers.add(new PowerModifier(self, Filters.Rey, new OutOfPlayEvaluator(self, Filters.Jedi)));
-        modifiers.add(new ImmunityToAttritionChangeModifier(self, Filters.Rey, new OutOfPlayEvaluator(self, Filters.Jedi)));
+        modifiers.add(new ForfeitModifier(self, Filters.Rey, new OutOfPlayEvaluator(self, Filters.Jedi)));
         modifiers.add(new EachBattleDestinyModifier(self, Filters.sameLocationAs(self, set14Rey), 1, self.getOwner()));
         modifiers.add(new EachWeaponDestinyModifier(self, Filters.any, set14Rey, 1));
         modifiers.add(new MayNotAddBattleDestinyDrawsModifier(self, Filters.and(Filters.character, Filters.at(Filters.sameLocationAs(self, set14Rey)))));

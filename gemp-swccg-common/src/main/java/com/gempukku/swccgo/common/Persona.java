@@ -15,6 +15,7 @@ public enum Persona implements Filterable {
     BEAUMONT("Beaumont"),
     BECKETT("Beckett"),
     BEEDO("Beedo"),
+    BEN_SOLO("Ben Solo"),
     BLIZZARD_1("Blizzard 1"),
     BOBA_FETT("Boba Fett"),
     BO_KATAN("Bo-Katan"),
@@ -220,6 +221,8 @@ public enum Persona implements Filterable {
         if (equals(MARA_SKYWALKER)) return MARA_JADE;
         if (equals(SON_OF_VADER)) return LUKE;
         if (equals(VADER)) return ANAKIN;
+        if (equals(BEN_SOLO)) return KYLO;
+        if (equals(KYLO)) return BEN_SOLO;
         if (equals(ANAKINS_LIGHTSABER)) return VADERS_LIGHTSABER;
         if (equals(LADY_VADERS_BLASTER_RIFLE)) return LEIAS_BLASTER_RIFLE;
         if (equals(LEIAS_BLASTER_RIFLE)) return LADY_VADERS_BLASTER_RIFLE;

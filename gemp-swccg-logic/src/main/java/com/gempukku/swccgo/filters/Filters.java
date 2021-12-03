@@ -17988,6 +17988,7 @@ public class Filters {
     public static final Filter Kashyyyk_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Kashyyyk));
     public static final Filter Kowakian = Filters.species(Species.KOWAKIAN);
     public static final Filter Keep_Your_Eyes_Open = Filters.title(Title.Keep_Your_Eyes_Open);
+    public static final Filter Kef_Bir_site = Filters.and(Filters.partOfSystem(Title.Kef_Bir), CardSubtype.SITE);
     public static final Filter Kessel_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Kessel));
     public static final Filter Kessel_Run = Filters.title(Title.Kessel_Run);
     public static final Filter Kessel_site = Filters.and(Filters.partOfSystem(Title.Kessel), CardSubtype.SITE);

@@ -37,10 +37,10 @@ public class Card501_028 extends AbstractEpicEventDeployable {
     public Card501_028() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.The_Force_Is_Strong_In_My_Family);
         setGameText("Deploy on table (only at start of game) and choose one (reveal selections from Reserve Deck): " +
-                "My Father Has It: Anakin and [Episode I] Obi-Wan. \n" +
-                "I Have It: [Reflections II] Luke and [Set 1] Obi-Wan. \n" +
-                "You Have That Power, Too: Rey and [Episode VII] Luke. \n" +
-                "Your total Force generation is +1. Rey is a Skywalker. You may not deploy Jedi except Yoda and the revealed cards. While a Skywalker of ability > 3 at a battleground site, Their Fire Has Gone Out Of The Universe flips and may not flip back. If a Skywalker just initiated battle (or opponent's Sidious just lost from table), may retrieve 1 Force.");
+                "My Father Has It: Anakin (and [Episode I] Obi-Wan). \n" +
+                "I Have It: [Reflections II] Luke (and [Set 1] Obi-Wan). \n" +
+                "You Have That Power, Too: Rey (and [Episode VII] Luke). \n" +
+                "Your total Force generation is +1. You may not deploy non-battlegrounds (except Saddle and huts) or Jedi (except Yoda and the revealed cards). If you just initiated a battle involving a Skywalker (or opponent's Sidious just lost from table), may retrieve 1 Force.");
         addIcons(Icon.SKYWALKER, Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
         setTestingText("The Force Is Strong In My Family");
     }
@@ -182,24 +182,6 @@ public class Card501_028 extends AbstractEpicEventDeployable {
             actions.add(action);
         }
 
-        // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.and(Filters.Skywalker, Filters.abilityMoreThan(3)), Filters.at(Filters.battleground_site)))) {
-            PhysicalCard theirFireHasGoneOutOfTheUniverse = Filters.findFirstActive(game, self, Filters.Their_Fire_Has_Gone_Out_Of_The_Universe);
-            if (theirFireHasGoneOutOfTheUniverse != null
-                    && GameConditions.canBeFlipped(game, theirFireHasGoneOutOfTheUniverse)) {
-
-                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                action.setSingletonTrigger(true);
-                action.setText("Flip " + GameUtils.getFullName(theirFireHasGoneOutOfTheUniverse));
-                action.setActionMsg("Flip " + GameUtils.getCardLink(theirFireHasGoneOutOfTheUniverse));
-                // Perform result(s)
-                action.appendEffect(
-                        new FlipCardEffect(action, theirFireHasGoneOutOfTheUniverse));
-                actions.add(action);
-            }
-        }
-
         return actions;
     }
 
@@ -209,7 +191,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
         if (GameConditions.hasLostPile(game, playerId)
                 && (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious))
                     || TriggerConditions.justForfeitedToLostPileFromLocation(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious), Filters.any)
-                    || (TriggerConditions.battleInitiated(game, effectResult)
+                    || (TriggerConditions.battleInitiated(game, effectResult, playerId)
                         && GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker)))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
@@ -240,10 +222,9 @@ public class Card501_028 extends AbstractEpicEventDeployable {
         };
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new KeywordModifier(self, Filters.Rey, Keyword.SKYWALKER));
-        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, revealedCardsFilter))), self.getOwner()));
-        modifiers.add(new MayNotBeFlippedModifier(self, new AtCondition(self, Filters.and(Filters.Skywalker, Filters.abilityMoreThan(3)), Filters.battleground_site), Filters.Hunt_Down_And_Destroy_The_Jedi));
         modifiers.add(new TotalForceGenerationModifier(self, 1, self.getOwner()));
+        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.non_battleground_location, Filters.except(Filters.or(Filters.title(Title.Saddle), Filters.titleContains("hut")))), self.getOwner()));
+        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, revealedCardsFilter))), self.getOwner()));
         return modifiers;
     }
 

@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractDefensiveShield;
 import com.gempukku.swccgo.cards.conditions.GameTextModificationCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -14,9 +15,7 @@ import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
 import com.gempukku.swccgo.logic.conditions.*;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.modifiers.MayNotDrawMoreThanBattleDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
+import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.AboutToPlaceCardOutOfPlayFromOffTableResult;
@@ -29,29 +28,26 @@ import java.util.List;
 /**
  * Set: Set 17
  * Type: Defensive Shield
- * Title: Another Pathetic Lifeform (V)
+ * Title: Ounee Ta (V)
  */
 public class Card501_048 extends AbstractDefensiveShield {
     public Card501_048() {
-        super(Side.LIGHT, "Another Pathetic Lifeform");
+        super(Side.LIGHT, Title.Ounee_Ta);
         setVirtualSuffix(true);
-        setLore("Young Obi-Wan has much to learn about the living Force. Patience with others is also high on that list.");
-        setGameText("Plays on table. While opponent has a non-unique alien or non-unique starfighter in battle, opponent may not draw more than two battle destiny. If your Jedi about to be placed out of play by Sidious's game text, may lose 3 Force to make that character lost instead.");
-        addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
-        setTestingText("Another Pathetic Lifeform (V)");
+        setLore("Jabba's decadent behavior makes him susceptible to deception. Leia and Lando exploited this weakness, posing as Jabba's kind of scum.");
+        setGameText("Plays on table. At each opponent's <> site, your Rebels are each deploy -2 and your Force generation is +1. If [Theed Palace] Sidious is about to place your Jedi out of play, may lose 3 Force to place that character in your Lost Pile instead.");
+        addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_DEFENSIVE_SHIELD);
+        setTestingText("Ounee Ta (V)");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        String opponent = game.getOpponent(self.getOwner());
+        String playerId = self.getOwner();
+        Filter opponentsGenericSite = Filters.and(Filters.opponents(self), Filters.generic_site, Filters.canBeTargetedBy(self));
 
-        Condition modified = new GameTextModificationCondition(self, ModifyGameTextType.LEGACY__REF_III_ANOTHER_PATHETIC_LIFEFORM__IGNORES_YOUR_NONUNIQUE_ALIENS);
-
-        Condition condition = new OrCondition(new AndCondition(new NotCondition(modified),
-                new InBattleCondition(self, Filters.and(Filters.opponents(self), Filters.non_unique, Filters.or(Filters.alien, Filters.starfighter)))),
-                new InBattleCondition(self, Filters.and(Filters.opponents(self), Filters.non_unique, Filters.starfighter)));
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, condition, 2, opponent));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self), Filters.Rebel), -2, opponentsGenericSite));
+        modifiers.add(new ForceGenerationModifier(self, opponentsGenericSite, 1, playerId));
         return modifiers;
     }
 

@@ -3406,7 +3406,7 @@ var fixedImages = {
 "501_45":"/gemp-swccg/images/cards/Virtual1-Dark/accordingtomydesign.gif",
 "501_46":"/gemp-swccg/images/cards/Premiere-Light/jedipresence.gif",
 "501_47":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/coruscantjeditemplemeditationroom.png",
-"501_48":"/gemp-swccg/images/cards/ReflectionsIII-Light/anotherpatheticlifeform.gif",
+"501_48":"https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/ouneeta.gif",
 "501_49":"https://res.starwarsccg.org/cards/Virtual14-Light/hires/dindjarin.png",
 "501_50":"/gemp-swccg/images/cards/SpecialEdition-Light/tawsskhaa.gif",
 "501_51":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/beginlandingyourtroops.gif",
@@ -3424,6 +3424,10 @@ var fixedImages = {
 "501_66":"https://res.starwarsccg.org/cards/Virtual10-Light/large/bluesquadron1.gif",
 "501_67":"https://res.starwarsccg.org/cards/Virtual4-Dark/large/bowtothefirstorder.gif",
 "501_68":"https://res.starwarsccg.org/cards/Virtual11-Dark/large/vadersanger.gif",
+"501_69":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/thisiswherethefunbegins.png",
+"501_70":"https://res.starwarsccg.org/cards/Virtual4-Light/large/areyouokay.gif",
+"501_71":"https://res.starwarsccg.org/cards/Virtual13-Light/large/deathstariichasmwalkway.gif",
+"501_72":"https://res.starwarsccg.org/cards/Premiere-Light/large/tatooineobiwanshut.gif",
 "501_90":"/gemp-swccg/images/cards/Virtual12-Dark/eviliseverywhere.gif",
 "501_91":"/gemp-swccg/images/cards/Premiere-Dark/darkjedilightsaber.gif",
 "501_95":"/gemp-swccg/images/cards/Tatooine-Light/tatooineslavequarters.gif",
@@ -4109,6 +4113,8 @@ var Card = Class.extend({
                    (cardNo == 47) ||
                    (cardNo == 62) ||
                    (cardNo == 63) ||
+                   (cardNo == 71) ||
+                   (cardNo == 72) ||
                    (cardNo == 95) ||
                    (cardNo == 96);
         }
