@@ -21,7 +21,7 @@ import java.util.List;
  * Set: Set 17
  * Type: Interrupt
  * Subtype: Used
- * Title: Aggressive Negotiations
+ * Title: Go Back To Your Drinks
  */
 public class Card501_069 extends AbstractUsedInterrupt {
     public Card501_069() {
