@@ -48,9 +48,8 @@ public class Card601_176 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-//        modifiers.add(new IgnoresLocationDeploymentRestrictionsWhenDeployingToLocationModifier(self, Filters.and(Filters.your(self), Filters.Republic_character), null, Filters.hasAttached(self), true));
-        //TODO needs to only be at Filters.hasAttached(self)
-        modifiers.add(new IgnoresDeploymentRestrictionsFromCardModifier(self, Filters.and(Filters.your(self), Filters.Republic_character), new TrueCondition(), self.getOwner(), Filters.Objective));
+        modifiers.add(new IgnoresLocationDeploymentRestrictionsFromCardWhenDeployingToLocationModifier(self, Filters.and(Filters.your(self), Filters.Republic_character), Filters.Objective, Filters.hasAttached(self)));
+        modifiers.add(new IgnoresDeploymentRestrictionsFromCardWhenDeployingToLocationModifier(self, Filters.and(Filters.your(self), Filters.Republic_character), null, self.getOwner(), Filters.Objective, Filters.hasAttached(self)));
         return modifiers;
     }
 
