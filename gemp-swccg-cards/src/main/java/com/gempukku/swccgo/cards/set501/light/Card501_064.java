@@ -30,7 +30,7 @@ public class Card501_064 extends AbstractUsedInterrupt {
     public Card501_064() {
         super(Side.LIGHT, 4, Title.Our_Only_Hope, Uniqueness.UNIQUE);
         setLore("'The Emperor knew, as I did, if Anakin were to have any offspring, they would be a threat to him.'");
-        setGameText("Relocate Prophecy Of The Force to a site. OR If He Is The Chosen One, He Will Bring Balance, or a [Skywalker] location on table, [upload] Yoda's Hut or a Death Star II site.");
+        setGameText("Relocate Prophecy Of The Force to a site. OR If Like My Father Before Me on table, [upload] Yoda's Hut or a Death Star II site.");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_14);
         setVirtualSuffix(true);
         setTestingText("Our Only Hope (V) (ERRATA)");
@@ -42,7 +42,7 @@ public class Card501_064 extends AbstractUsedInterrupt {
 
         GameTextActionId gameTextActionId = GameTextActionId.OUR_ONLY_HOPE_V__UPLOAD_SITE;
 
-        if (GameConditions.canSpot(game, self, Filters.or(Filters.He_Is_The_Chosen_One, Filters.He_Will_Bring_Balance, Filters.and(Icon.SKYWALKER, Filters.site)))
+        if (GameConditions.canSpot(game, self, Filters.title(Title.Like_My_Father_Before_Me))
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setText("Take site into hand from Reserve Deck");
