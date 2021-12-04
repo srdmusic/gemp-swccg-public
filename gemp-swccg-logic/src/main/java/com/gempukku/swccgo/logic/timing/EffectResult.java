@@ -365,7 +365,9 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
         // Enslave character
         CHARACTER_ENSLAVED,
 
-        IMMUNITY_GRANTED
+        IMMUNITY_GRANTED,
+
+        CHOICE_MADE,
     }
 
     private Type _type;

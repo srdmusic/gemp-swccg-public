@@ -28,7 +28,7 @@ public class Card501_006 extends AbstractNormalEffect {
         setGameText("Deploy on Bespin: Cloud City if you occupy two other Bespin locations (with an alien/Imperial pair at each). Your aliens and TIEs deploy -1 to Bespin locations. Once per game, may take a [Cloud City] Imperial or [Cloud City] TIE into hand from Reserve Deck; reshuffle. [Immune to Alter.]");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Dark Deal (V)");
+        setTestingText("[Set 18] Dark Deal (V)");
     }
 
     @Override

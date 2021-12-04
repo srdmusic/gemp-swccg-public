@@ -19,6 +19,9 @@ import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardCombinationFromCardPileEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.PassthruEffect;
+import com.gempukku.swccgo.logic.timing.results.ChoiceMadeResult;
+import com.gempukku.swccgo.logic.timing.results.DoubleSidedCardFlippedResult;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -34,10 +37,10 @@ public class Card501_028 extends AbstractEpicEventDeployable {
     public Card501_028() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.The_Force_Is_Strong_In_My_Family);
         setGameText("Deploy on table (only at start of game) and choose one (reveal selections from Reserve Deck): " +
-                "My Father Has It: Anakin and [Episode I] Obi-Wan. \n" +
-                "I Have It: [Reflections II] Luke and [Set 1] Obi-Wan. \n" +
-                "You Have That Power, Too: Rey and [Episode VII] Luke. \n" +
-                "Rey is a Skywalker. You may not deploy Jedi except Yoda and the revealed cards. While Leia at a battleground site, Their Fire Has Gone Out Of The Universe flips and may not flip back. If you just deployed a Skywalker (or Sidious just lost from table), may retrieve bottom card of Lost Pile.");
+                "My Father Has It: Anakin (and [Episode I] Obi-Wan). \n" +
+                "I Have It: [Reflections II] Luke (and [Set 1] Obi-Wan). \n" +
+                "You Have That Power, Too: Rey (and [Episode VII] Luke). \n" +
+                "Your total Force generation is +1. You may not deploy non-battlegrounds (except Saddle and huts) or Jedi (except Yoda and the revealed cards). If you just initiated a battle involving a Skywalker (or opponent's Sidious just lost from table), may retrieve 1 Force.");
         addIcons(Icon.SKYWALKER, Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
         setTestingText("The Force Is Strong In My Family");
     }
@@ -58,7 +61,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
 
             final String MY_FATHER_HAS_IT = "My Father Has It";
             final String I_HAVE_IT = "I Have It";
-            final String YOU_HAVE_THAT_POWER_TOO = "You Have That Power Too";
+            final String YOU_HAVE_THAT_POWER_TOO = "You Have That Power, Too";
 
             final Filter myFatherHasIt_Anakin = Filters.Anakin;
             final Filter myFatherHasIt_ObiWan = Filters.and(Icon.EPISODE_I, Filters.ObiWan);
@@ -85,7 +88,7 @@ public class Card501_028 extends AbstractEpicEventDeployable {
             String[] possibleResults = possible.toArray(new String[0]);
 
             action.appendEffect(
-                    new PlayoutDecisionEffect(action, self.getOwner(), new MultipleChoiceAwaitingDecision("Choose an option", possibleResults) {
+                    new PlayoutDecisionEffect(action, playerId, new MultipleChoiceAwaitingDecision("Choose an option", possibleResults) {
                         @Override
                         protected void validDecisionMade(int index, final String result) {
                             Filter skywalkerFilter = null;
@@ -153,16 +156,23 @@ public class Card501_028 extends AbstractEpicEventDeployable {
 
                                     for(PhysicalCard card:theSkywalker) {
                                         action.appendEffect(new ShowCardOnScreenEffect(action, card));
-                                        action.appendEffect(new SendMessageEffect(action, self.getOwner() + " revealed " + GameUtils.getCardLink(card)
+                                        action.appendEffect(new SendMessageEffect(action, playerId + " revealed " + GameUtils.getCardLink(card)
                                                 + " with " + GameUtils.getCardLink(self)));
                                     }
                                     for(PhysicalCard card:theFriend) {
                                         action.appendEffect(new ShowCardOnScreenEffect(action, card));
-                                        action.appendEffect(new SendMessageEffect(action, self.getOwner() + " revealed " + GameUtils.getCardLink(card)
+                                        action.appendEffect(new SendMessageEffect(action, playerId + " revealed " + GameUtils.getCardLink(card)
                                                 + " with " + GameUtils.getCardLink(self)));
                                     }
 
                                     self.setWhileInPlayData(new WhileInPlayData(result, cardsChosen));
+
+                                    action.appendEffect(new PassthruEffect(action) {
+                                        @Override
+                                        protected void doPlayEffect(SwccgGame game) {
+                                            game.getActionsEnvironment().emitEffectResult(new ChoiceMadeResult(playerId, self, result));
+                                        }
+                                    });
                                 }
                             });
                         }
@@ -172,24 +182,6 @@ public class Card501_028 extends AbstractEpicEventDeployable {
             actions.add(action);
         }
 
-        // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.Leia, Filters.presentAt(Filters.battleground)))) {
-            PhysicalCard theirFireHasGoneOutOfTheUniverse = Filters.findFirstActive(game, self, Filters.Their_Fire_Has_Gone_Out_Of_The_Universe);
-            if (theirFireHasGoneOutOfTheUniverse != null
-                    && GameConditions.canBeFlipped(game, theirFireHasGoneOutOfTheUniverse)) {
-
-                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                action.setSingletonTrigger(true);
-                action.setText("Flip " + GameUtils.getFullName(theirFireHasGoneOutOfTheUniverse));
-                action.setActionMsg("Flip " + GameUtils.getCardLink(theirFireHasGoneOutOfTheUniverse));
-                // Perform result(s)
-                action.appendEffect(
-                        new FlipCardEffect(action, theirFireHasGoneOutOfTheUniverse));
-                actions.add(action);
-            }
-        }
-
         return actions;
     }
 
@@ -197,14 +189,16 @@ public class Card501_028 extends AbstractEpicEventDeployable {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
 
         if (GameConditions.hasLostPile(game, playerId)
-                && (TriggerConditions.justDeployed(game, effectResult, playerId, Filters.Skywalker)
-                || TriggerConditions.justLost(game, effectResult, Filters.Sidious))) {
+                && (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious))
+                    || TriggerConditions.justForfeitedToLostPileFromLocation(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious), Filters.any)
+                    || (TriggerConditions.battleInitiated(game, effectResult, playerId)
+                        && GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker)))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Retrieve bottom card of Lost Pile");
+            action.setText("Retrieve 1 Force");
             // Perform result(s)
             action.appendEffect(
-                    new RetrieveCardEffect(action, playerId, Filters.bottomOfLostPile(playerId)));
+                    new RetrieveForceEffect(action, playerId, 1));
             return Collections.singletonList(action);
         }
 
@@ -228,9 +222,9 @@ public class Card501_028 extends AbstractEpicEventDeployable {
         };
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new KeywordModifier(self, Filters.Rey, Keyword.SKYWALKER));
+        modifiers.add(new TotalForceGenerationModifier(self, 1, self.getOwner()));
+        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.non_battleground_location, Filters.except(Filters.or(Filters.title(Title.Saddle), Filters.titleContains("hut")))), self.getOwner()));
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, revealedCardsFilter))), self.getOwner()));
-        modifiers.add(new MayNotBeFlippedModifier(self, new AtCondition(self, Filters.Leia, Filters.battleground_site), Filters.Hunt_Down_And_Destroy_The_Jedi));
         return modifiers;
     }
 

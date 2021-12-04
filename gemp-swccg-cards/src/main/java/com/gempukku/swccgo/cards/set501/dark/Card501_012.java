@@ -31,7 +31,7 @@ public class Card501_012 extends AbstractNormalEffect {
         setGameText("If 1st marker on table, deploy on table. During your control phase, if you occupy a marker site with an AT-AT, opponent loses 1 Force. Once per turn, may deploy a Hoth location from Reserve Deck; reshuffle. [Immune to Alter.]");
         addIcons(Icon.TATOOINE, Icon.HOTH, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("You May Start Your Landing (V)");
+        setTestingText("[Set 18] You May Start Your Landing (V)");
     }
 
     @Override

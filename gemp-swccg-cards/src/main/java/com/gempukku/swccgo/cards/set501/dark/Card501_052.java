@@ -32,7 +32,7 @@ public class Card501_052 extends AbstractNormalEffect {
     public Card501_052() {
         super(Side.DARK, 1, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Unlimited Power!", Uniqueness.UNIQUE);
         setLore("Eliciting fear from the opponent gives the dark side a powerful advantage.");
-        setGameText("Deploy on table.  Emperor, Maul, and your Dathomirians are lost. At the start of your turn, if Sidious on Coruscant (or Insidious Prisoner on table), may place two cards from hand on Reserve Deck, reshuffle, and draw two cards from Reserve Deck. [Immune to Alter.]");
+        setGameText("Deploy on table. Emperor and Maul are lost. At the start of your turn, if Sidious on Coruscant (or Insidious Prisoner on table), may place two cards from hand on Reserve Deck, reshuffle, and draw two cards from Reserve Deck. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.SIDIOUS, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Unlimited Power!");

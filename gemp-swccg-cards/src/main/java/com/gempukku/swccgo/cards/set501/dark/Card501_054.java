@@ -36,7 +36,7 @@ public class Card501_054 extends AbstractUsedOrLostInterrupt {
         setLore("");
         setGameText("USED: Unless your non-[Episode I] objective on table, take The Works into hand from Reserve deck; reshuffle. OR Cancel an opponent's attempt to target [Set 13] Dooku with a weapon; opponent loses 1 Force. LOST: If lightsaber combat was just initiated, add one destiny to your total.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
-        setTestingText("Surely You Can Do Better");
+        setTestingText("[Set 18] Surely You Can Do Better");
     }
 
 

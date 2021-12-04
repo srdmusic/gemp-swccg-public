@@ -4592,4 +4592,6 @@ public interface ModifiersQuerying {
     Collection<PhysicalCard> getCardsForPersonaChecking(String playerId);
     boolean mayNotCancelBattle(GameState gameState, String playerId);
     boolean blownAwayForceLossMayNotBeReduced(GameState gameState);
+    boolean onlyDeploysAdjacentToSpecificLocations(GameState gameState, PhysicalCard card);
+    Filter getFilterForOnlyDeploysAdjacentToSpecificLocations(GameState gameState, PhysicalCard card);
 }

@@ -2,13 +2,16 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.*;
 import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
@@ -16,12 +19,11 @@ import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.StackCardsFromOutsideDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
-import com.gempukku.swccgo.logic.modifiers.MayDeployAsIfFromHandModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.effects.choose.TakeDestinyCardIntoHandEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.DestinyDrawnResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -36,7 +38,7 @@ public class Card501_031 extends AbstractNormalEffect {
     public Card501_031() {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.My_Parents_Were_Strong, Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on Training Course. When deployed, stack [Set 4] Falcon face up here from outside your deck; it may deploy from here as if from hand. Once per turn, may lose 1 Force to target a card with Rey; target is defense value -4 for remainder of turn. [Immune to Alter.]");
+        setGameText("Deploy on Training Course. When deployed, stack [Set 4] Falcon face up here from outside your deck. Falcon may deploy from here as if from hand. Rey is a Skywalker. Once per battle involving Rey, may take your just drawn destiny into hand. [Immune to Alter.]");
         addIcons(Icon.SKYWALKER, Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("My Parents Were Strong");
@@ -67,57 +69,31 @@ public class Card501_031 extends AbstractNormalEffect {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayDeployAsIfFromHandModifier(self, Filters.and(Filters.stackedOn(self), Filters.Falcon)));
+        modifiers.add(new KeywordModifier(self, Filters.Rey, Keyword.SKYWALKER));
         return modifiers;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<>();
-
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        Filter hasDefenseValue = new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                return physicalCard.getBlueprint().hasAbilityAttribute()
-                        || physicalCard.getBlueprint().hasArmorAttribute()
-                        || physicalCard.getBlueprint().hasManeuverAttribute()
-                        || physicalCard.getBlueprint().hasSpecialDefenseValueAttribute()
-                        ;
-            }
-        };
+        // Check condition(s)
+        if (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, playerId)
+                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.Rey)
+                && GameConditions.canTakeDestinyCardIntoHand(game, playerId)) {
 
-        Filter targetFilter = Filters.and(Filters.with(self, Filters.Rey), hasDefenseValue);
-
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canTarget(game, self, Filters.Rey)
-                && GameConditions.canTarget(game, self, targetFilter)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Reduce defense value by 4");
-
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take destiny card into hand");
+            action.setActionMsg("Take just drawn destiny card, " + GameUtils.getCardLink(((DestinyDrawnResult) effectResult).getCard()) + ", into hand");
+            // Update usage limit(s)
             action.appendUsage(
-                    new OncePerTurnEffect(action));
-
-            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose target to reduce its defense value by 4 this turn", targetFilter) {
-                @Override
-                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                    action.appendCost(
-                            new LoseForceEffect(action, playerId, 1));
-                    action.allowResponses(new RespondableEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
-                            action.appendEffect(
-                                    new AddUntilEndOfTurnModifierEffect(action, new DefenseValueModifier(self, finalTarget, -4), "Reduce defense value by 4"));
-                        }
-                    });
-                }
-            });
-
-            actions.add(action);
+                    new OncePerBattleEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new TakeDestinyCardIntoHandEffect(action));
+            return Collections.singletonList(action);
         }
-
-        return actions;
+        return null;
     }
 }

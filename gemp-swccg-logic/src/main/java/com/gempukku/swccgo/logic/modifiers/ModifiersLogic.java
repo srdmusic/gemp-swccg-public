@@ -12426,6 +12426,15 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                     }
                 }
             }
+
+            if(!getModifiersAffectingCard(gameState, ModifierType.IGNORES_DEPLOYMENT_RESTRICTIONS_FROM_CARD_WHEN_DEPLOYING_TO_LOCATION, card).isEmpty()) {
+                for (Modifier mayNotPlayModifier : getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY, card)) {
+                    for (Modifier ignoresDeploymentRestrictionsFromCardWhenDeployingToLocationModifier : getModifiersAffectingCard(gameState, ModifierType.IGNORES_DEPLOYMENT_RESTRICTIONS_FROM_CARD_WHEN_DEPLOYING_TO_LOCATION, card)) {
+                        Filter cardFilter = ((IgnoresDeploymentRestrictionsFromCardWhenDeployingToLocationModifier) ignoresDeploymentRestrictionsFromCardWhenDeployingToLocationModifier).getCardFilter();
+                        return !cardFilter.accepts(gameState.getGame(), mayNotPlayModifier.getSource(gameState));
+                    }
+                }
+            }
             return true;
         }
         if (isDejarikRules && !getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY_USING_DEJARIK_RULES, card).isEmpty()) {
@@ -12707,6 +12716,33 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 || isSithProbeDroidPreventedFromDeployingToOrMovingToLocation(gameState, playedCard, location))) {
             return true;
         }
+
+
+        // Check if card has may not deploy restriction that is only ignored at certain locations and check if the restrictions should be ignored at this location
+        if (location != null
+            && !getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY, playedCard).isEmpty()
+            && !getModifiersAffectingCard(gameState, ModifierType.IGNORES_DEPLOYMENT_RESTRICTIONS_FROM_CARD_WHEN_DEPLOYING_TO_LOCATION, playedCard).isEmpty()) {
+
+            for (Modifier mayNotPlayModifier : getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_PLAY, playedCard)) {
+                boolean mayNotPlay = true;
+
+                if (mayNotPlayModifier.getSource(gameState) != null) {
+                    for (Modifier ignoreModifier : getModifiersAffectingCard(gameState, ModifierType.IGNORES_DEPLOYMENT_RESTRICTIONS_FROM_CARD_WHEN_DEPLOYING_TO_LOCATION, playedCard)) {
+                        Filter cardFilter = ((IgnoresDeploymentRestrictionsFromCardWhenDeployingToLocationModifier) ignoreModifier).getCardFilter();
+                        Filter locationFilter = ((IgnoresDeploymentRestrictionsFromCardWhenDeployingToLocationModifier) ignoreModifier).getLocationFilter();
+
+                        if (locationFilter.accepts(gameState.getGame(), location)
+                                && cardFilter.accepts(gameState.getGame(), mayNotPlayModifier.getSource(gameState))) {
+                            mayNotPlay = false;
+                        }
+                    }
+                }
+
+                if (mayNotPlay)
+                    return true;
+            }
+        }
+
 
         // Check if location deployment restrictions are ignored when deploying to specified target
         boolean ignoresLocationDeploymentRestrictions = ignoresLocationDeploymentRestrictions(gameState, playedCard, target, deploymentRestrictionsOption, false);
@@ -16584,5 +16620,40 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             }
         }
         return false;
+    }
+
+    public boolean onlyDeploysAdjacentToSpecificLocations(GameState gameState, PhysicalCard card) {
+        if (card.getBlueprint().getCardSubtype() != CardSubtype.SITE && card.getBlueprint().getCardSubtype() != CardSubtype.SECTOR)
+            return false;
+
+        if (!getModifiersAffectingCard(gameState, ModifierType.DEPLOYS_ADJACENT_TO_SPECIFIC_LOCATION, card).isEmpty()) {
+            for (Modifier modifier: getModifiersAffectingCard(gameState, ModifierType.DEPLOYS_ADJACENT_TO_SPECIFIC_LOCATION, card)) {
+                DeploysAdjacentToLocationModifier m = (DeploysAdjacentToLocationModifier)modifier;
+
+                if (Filters.canSpot(gameState.getGame(), card, m.getAdjacentToFilter()))
+                    return true;
+
+                // can't spot a valid location and it doesn't say "if possible"
+                if (!m.onlyIfPossible())
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    public Filter getFilterForOnlyDeploysAdjacentToSpecificLocations(GameState gameState, PhysicalCard card) {
+        Filter filter = Filters.any;
+        if (!getModifiersAffectingCard(gameState, ModifierType.DEPLOYS_ADJACENT_TO_SPECIFIC_LOCATION, card).isEmpty()) {
+            for (Modifier modifier: getModifiersAffectingCard(gameState, ModifierType.DEPLOYS_ADJACENT_TO_SPECIFIC_LOCATION, card)) {
+                DeploysAdjacentToLocationModifier m = (DeploysAdjacentToLocationModifier)modifier;
+
+                if (Filters.canSpot(gameState.getGame(), card, m.getAdjacentToFilter()) || !m.onlyIfPossible()) {
+                    filter = Filters.and(filter, m.getAdjacentToFilter());
+                }
+            }
+        }
+
+        return filter;
     }
 }

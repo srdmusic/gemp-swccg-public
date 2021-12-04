@@ -33,7 +33,7 @@ public class Card501_010 extends AbstractObjective {
                 "For remainder of game, AT-AT Cannons are immune to Sabotage. Sunsdown and your non-[Set 17] Epic Events are canceled. Imperials (except snowtroopers) may not have their forfeit increased. Your non-[M] AT-ATs, snowtroopers, and Star Destroyers are destiny +1. \n" +
                 "Flip this card if Main Power Generators 'blown away' or if your AT-ATs control three Hoth sites and you occupy Hoth system (with Hoth Blockade there).");
         addIcons(Icon.SPECIAL_EDITION, Icon.HOTH, Icon.VIRTUAL_SET_17);
-        setTestingText("Imperial Occupation (V)");
+        setTestingText("[Set 18] Imperial Occupation (V)");
     }
 
     @Override
