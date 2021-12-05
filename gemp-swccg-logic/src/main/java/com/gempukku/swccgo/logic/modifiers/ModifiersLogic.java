@@ -12753,6 +12753,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             if ((modifier.isAlwaysInEffect() || sourceCard == null
                     || ((!ignoresLocationDeploymentRestrictionsInGameText || !playedCard.equals(sourceCard))
                     && !ignoresLocationDeploymentRestrictionsFromSource(gameState, playedCard, sourceCard)))
+                    && (location == null || !ignoresLocationDeploymentRestrictionsFromSourceWhenDeployingToTarget(gameState, playedCard, sourceCard, location))
                     && modifier.isAffectedTarget(gameState, this, target)) {
                 return true;
             }
@@ -13006,6 +13007,30 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         String playerId = cardToDeploy.getOwner();
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.IGNORES_LOCATION_DEPLOYMENT_RESTRICTIONS_FROM_CARD, sourceCard)) {
             if (modifier.isForPlayer(playerId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Determines if the specified card ignores location deployment restrictions from the source card.
+     * @param gameState the game state
+     * @param cardToDeploy the card to deploy
+     * @param sourceCard the source card of the location deployment restriction
+     * @param target the target it is deploying to
+     * @return true if card ignores location deployment restrictions in its game text
+     */
+    @Override
+    public boolean ignoresLocationDeploymentRestrictionsFromSourceWhenDeployingToTarget(GameState gameState, PhysicalCard cardToDeploy, PhysicalCard sourceCard, PhysicalCard target) {
+        String playerId = cardToDeploy.getOwner();
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.IGNORES_LOCATION_DEPLOYMENT_RESTRICTIONS_FROM_CARD_WHEN_DEPLOYING_TO_LOCATION, cardToDeploy)) {
+            Filter cardFilter = ((IgnoresLocationDeploymentRestrictionsFromCardWhenDeployingToLocationModifier)modifier).getCardFilter();
+
+            if (target != null
+                && cardFilter.accepts(gameState.getGame(), sourceCard)
+                && modifier.isAffectedTarget(gameState, this, target)
+                && modifier.isForPlayer(playerId)) {
                 return true;
             }
         }

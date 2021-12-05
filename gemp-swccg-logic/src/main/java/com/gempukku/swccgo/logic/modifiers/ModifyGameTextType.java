@@ -89,6 +89,7 @@ public enum ModifyGameTextType {
     LEGACY__THE_EMPIRES_BACK__VADER_MAY_BE_TREATED_AS_GALEN("'Vader' may be treated as 'Galen'"),
     LEGACY__PALEJO_RESHAD__TREAT_AUDIENCE_CHAMBER_AS_CORELLIA("Treat 'Audience Chamber' as 'Corellia'"),
     LEGACY__TREAT_XIZOR_AS_SHADA("Treat 'Xizor' as 'Shada'"),
+    LEGACY__CORUSCANT_ICON_SITES__MAY_NOT_CANCEL_FORCE_DRAIN_BONUSES("May not cancel Force drain bonuses"),
 
     ;
 

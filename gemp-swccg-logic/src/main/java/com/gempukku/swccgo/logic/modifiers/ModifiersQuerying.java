@@ -2687,6 +2687,16 @@ public interface ModifiersQuerying {
     boolean ignoresLocationDeploymentRestrictionsFromSource(GameState gameState, PhysicalCard cardToDeploy, PhysicalCard sourceCard);
 
     /**
+     * Determines if the specified card ignores location deployment restrictions from the source card.
+     * @param gameState the game state
+     * @param cardToDeploy the card to deploy
+     * @param sourceCard the source card of the location deployment restriction
+     * @param target the target it is deploying to
+     * @return true if card ignores location deployment restrictions in its game text
+     */
+    boolean ignoresLocationDeploymentRestrictionsFromSourceWhenDeployingToTarget(GameState gameState, PhysicalCard cardToDeploy, PhysicalCard sourceCard, PhysicalCard target);
+
+    /**
      * Determines if the specified card ignores location deployment restrictions in its game text.
      * @param gameState the game state
      * @param card the card

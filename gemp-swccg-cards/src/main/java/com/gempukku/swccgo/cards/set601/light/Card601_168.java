@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set3.light;
+package com.gempukku.swccgo.cards.set601.light;
 
 import com.gempukku.swccgo.cards.AbstractDroid;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -21,24 +21,26 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Hoth
+ * Set: Block 2
  * Type: Character
  * Subtype: Droid
  * Title: 2-1B (Too-Onebee)
  */
-public class Card3_001 extends AbstractDroid {
-    public Card3_001() {
+public class Card601_168 extends AbstractDroid {
+    public Card601_168() {
         super(Side.LIGHT, 1, 2, 0, 5, Title._21B, Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
         setLore("Made by Genetech. Unusually independent for a droid. Forced to serve a Moff on Firro, but was liberated by Tiree. Now dedicated to serving the Alliance.");
-        setGameText("Once per turn, one of your non-droid characters lost from same site may go to your Used Pile rather than your Lost Pile. Subtracts 2 from X on your Bacta Tank.");
-        addIcons(Icon.HOTH);
+        setGameText("Once per turn, may place your non-droid character just lost at same or related site in Used Pile instead of Lost Pile. X on Bacta Tank is -2.");
+        addIcons(Icon.HOTH, Icon.LEGACY_BLOCK_2);
         addModelType(ModelType.MEDICAL);
+        setAsLegacy(true);
     }
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.justLostFromLocation(game, effectResult, Filters.and(Filters.your(self), Filters.non_droid_character), Filters.sameSite(self))
+        if (TriggerConditions.justLostFromLocation(game, effectResult, Filters.and(Filters.your(self), Filters.non_droid_character), Filters.sameOrRelatedSite(self))
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId)) {
             PhysicalCard justLostCard = ((LostFromTableResult) effectResult).getCard();
 
@@ -59,7 +61,7 @@ public class Card3_001 extends AbstractDroid {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new CalculationVariableModifier(self, Filters.and(Filters.your(self), Filters.Bacta_Tank), -2, Variable.X));
+        modifiers.add(new CalculationVariableModifier(self, Filters.Bacta_Tank, -2, Variable.X));
         return modifiers;
     }
 }
