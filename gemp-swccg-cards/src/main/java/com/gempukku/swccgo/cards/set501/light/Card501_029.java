@@ -24,7 +24,7 @@ public class Card501_029 extends AbstractAlien {
         super(Side.LIGHT, 1, 4, 4, 3, 6, "Boba", Uniqueness.UNIQUE);
         setArmor(5);
         setLore("Mandalorian.");
-        setGameText("[Pilot] 3. Deploys free to opponent's Audience Chamber. Draws one battle destiny if unable to otherwise. Opponent's characters of lesser ability are power -1 here. Immune to Hidden Weapons.");
+        setGameText("[Pilot] 3. Deploys free to opponent's Audience Chamber. While opponent has more characters here than you, adds one battle destiny. Opponent's characters of lesser ability are power -1 here. Immune to Hidden Weapons.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_17);
         setSpecies(Species.MANDALORIAN);
         addPersona(Persona.BOBA_FETT);
@@ -47,9 +47,17 @@ public class Card501_029 extends AbstractAlien {
             }
         };
 
+        Condition opponentHasMoreCharactersThanYouCondition = new Condition() {
+            @Override
+            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
+                return (Filters.countActive(game, self, Filters.and(Filters.opponents(self), Filters.character, Filters.here(self)))
+                        > Filters.countActive(game, self, Filters.and(Filters.your(self), Filters.character, Filters.here(self))));
+            }
+        };
+
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
-        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, 1));
+        modifiers.add(new AddsBattleDestinyModifier(self, opponentHasMoreCharactersThanYouCondition, 1, self.getOwner()));
         modifiers.add(new PowerModifier(self, Filters.and(Filters.opponents(self), Filters.character, Filters.here(self), abilityLessThanSelf), -1));
         modifiers.add(new ImmuneToTitleModifier(self, Title.Hidden_Weapons));
         return modifiers;
