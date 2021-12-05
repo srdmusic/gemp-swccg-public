@@ -15,6 +15,8 @@ import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.ModifyDuelTotalEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -51,7 +53,8 @@ public class Card601_166 extends AbstractCharacterWeapon {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        // [Coruscant] sites may not cancel Force drain bonuses.
+        // should really create a new modifier that will stop the bonus canceling from working but this is easier and will work
+        modifiers.add(new ModifyGameTextModifier(self, Filters.and(Icon.CORUSCANT, Filters.site), ModifyGameTextType.LEGACY__CORUSCANT_ICON_SITES__MAY_NOT_CANCEL_FORCE_DRAIN_BONUSES));
         return modifiers;
     }
 
