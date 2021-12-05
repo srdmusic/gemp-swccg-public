@@ -28,9 +28,9 @@ public class Card501_058 extends AbstractLostOrStartingInterrupt {
         super(Side.DARK, 4, "Moment Of Triumph", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("A ruthless ruler of Outer Rim Territories. Grand Moff Tarkin used the Death Star to destroy Alderaan, creating the doctrine of rule by fear.");
-        setGameText("LOST: Deploy Eriadu from Reserve Deck; reshuffle. STARTING: If Ralltiir Operations on table, deploy Insignificant Rebellion and up to two Effects that deploy on table and are always immune to Alter. Place Interrupt in hand.");
+        setGameText("LOST: Deploy Carida or Eriadu from Reserve Deck; reshuffle. STARTING: If Ralltiir Operations on table, deploy Insignificant Rebellion and up to two Effects that deploy on table and are always immune to Alter. Place Interrupt in hand.");
         addIcon(Icon.VIRTUAL_SET_17);
-        setTestingText("[Set 18] Moment Of Triumph (V)");
+        setTestingText("Moment Of Triumph (V)");
     }
 
     @Override
@@ -43,15 +43,15 @@ public class Card501_058 extends AbstractLostOrStartingInterrupt {
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
-            action.setText("Deploy Eriadu from Reserve Deck");
+            action.setText("Deploy Carida or Eriadu");
             // Allow response(s)
-            action.allowResponses("Deploy Eriadu from Reserve Deck",
+            action.allowResponses("Deploy Carida or Eriadu from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Eriadu)), true));
+                                    new DeployCardFromReserveDeckEffect(action, Filters.and(CardSubtype.SYSTEM, Filters.or(Filters.Carida_system, Filters.title(Title.Eriadu))), true));
                         }
                     }
             );
