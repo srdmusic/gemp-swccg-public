@@ -22,7 +22,7 @@ import java.util.List;
 /**
  * Set: Block 6
  * Type: Interrupt
- * Subtype: Used
+ * Subtype: Used or Lost
  * Title: Ascension Guns (V)
  */
 public class Card601_172 extends AbstractUsedOrLostInterrupt {

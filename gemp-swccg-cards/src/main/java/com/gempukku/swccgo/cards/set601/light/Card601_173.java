@@ -23,7 +23,7 @@ import java.util.List;
  * Set: Block 4
  * Type: Character
  * Subtype: Republic
- * Title: Ahsoka Tano
+ * Title: Maris Brood, Fallen Jedi
  */
 
 public class Card601_173 extends AbstractRepublic {

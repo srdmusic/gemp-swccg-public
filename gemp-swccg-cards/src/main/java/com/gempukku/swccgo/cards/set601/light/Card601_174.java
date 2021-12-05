@@ -9,31 +9,29 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardAndCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 
 /**
- * Set: Death Star II
+ * Set: Block 6
  * Type: Interrupt
  * Subtype: Used Or Starting
- * Title: Operational As Planned
+ * Title: Scomp Link Access (V)
  */
 public class Card601_174 extends AbstractUsedOrStartingInterrupt {
     public Card601_174() {
         super(Side.LIGHT, 3, Title.Scomp_Link_Access);
         setVirtualSuffix(true);
         setLore("A computer connection access port used mainly by droids to plug into database networks and locate information, evaluate threats, execute diagnostics or perform maintenance.");
-        setGameText("USED: Take a non-[Episode I] droid (except IL-19) into hand from Reserve Deck; reshuffle. OR Place a card from hand on Used Pile. \n" +
+        setGameText("USED: Take a non-[Episode I] droid (except IL-19) into hand from Reserve Deck; reshuffle. OR Place a card from hand on Used Pile. " +
                 "STARTING: Deploy from Reserve Deck two always [Immune to Alter] Effects. If you have only one location (with less than 3 [Light Side Force]) (except Massassi Throne Room) on table, may deploy a [Cloud City] site. Place this Interrupt in hand.");
-        addIcons(Icon.DEATH_STAR_II);
+        addIcons(Icon.LEGACY_BLOCK_6);
         setAsLegacy(true);
     }
 
