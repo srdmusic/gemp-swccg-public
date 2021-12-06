@@ -24,7 +24,7 @@ public class Card501_029 extends AbstractAlien {
         super(Side.LIGHT, 1, 4, 4, 3, 6, "Boba", Uniqueness.UNIQUE);
         setArmor(5);
         setLore("Mandalorian.");
-        setGameText("Adds 3 to power of anything he pilots. Deploys free to opponent's Audience Chamber. While opponent has more characters here than you, adds one battle destiny. Opponent's characters of lesser ability are power -1 here. Immune to Hidden Weapons.");
+        setGameText("[Pilot] 3. Deploys free to opponent's Audience Chamber. While opponent has more characters here than you, adds one battle destiny. Opponent's characters of lesser ability are power -1 here. Immune to Hidden Weapons.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_17);
         setSpecies(Species.MANDALORIAN);
         addPersona(Persona.BOBA_FETT);
