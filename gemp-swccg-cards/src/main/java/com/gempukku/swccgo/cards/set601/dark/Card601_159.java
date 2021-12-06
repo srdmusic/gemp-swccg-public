@@ -38,8 +38,8 @@ public class Card601_159 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DefenseValueModifier(self, Filters.Black_Sun_agent, new NotCondition(new OnTableCondition(self, Filters.title("Emperor Palpatine"))), 2));
-        modifiers.add(new ForfeitModifier(self, Filters.Black_Sun_agent, new NotCondition(new OnTableCondition(self, Filters.title("Emperor Palpatine"))), 1));
+        modifiers.add(new DefenseValueModifier(self, Filters.Black_Sun_agent, new NotCondition(new OnTableCondition(self, Filters.title("Emperor Palpatine"))), 1));
+        modifiers.add(new ForfeitModifier(self, Filters.Black_Sun_agent, new NotCondition(new OnTableCondition(self, Filters.title("Emperor Palpatine"))), 2));
         return modifiers;
     }
 
