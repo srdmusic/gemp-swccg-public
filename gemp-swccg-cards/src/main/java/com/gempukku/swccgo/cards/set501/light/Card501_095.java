@@ -2,16 +2,16 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ChoiceMadeResult;
 
@@ -29,7 +29,7 @@ public class Card501_095 extends AbstractSite {
     public Card501_095() {
         super(Side.LIGHT, Title.Anakins_Funeral_Pyre, Title.Endor);
         setLocationDarkSideGameText("");
-        setLocationLightSideGameText("If you just chose I Have It on your [Skywalker] Epic Event, [download] Like My Father Before Me. Deploys only as a starting location.");
+        setLocationLightSideGameText("Deploys only as a starting location. There Is Another does not cause [Reflections II] Luke to be lost. If you just chose I Have It on your [Skywalker] Epic Event, [download] Like My Father Before Me.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.SKYWALKER, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
         setTestingText("Endor: Anakin's Funeral Pyre");
@@ -59,5 +59,12 @@ public class Card501_095 extends AbstractSite {
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ModifyGameTextModifier(self, Filters.title(Title.There_Is_Another), ModifyGameTextType.THERE_IS_ANOTHER__DOES_NOT_MAKE_REFII_LUKE_LOST));
+        return modifiers;
     }
 }
