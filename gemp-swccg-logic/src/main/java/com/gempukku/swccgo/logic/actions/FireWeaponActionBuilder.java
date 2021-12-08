@@ -2267,7 +2267,18 @@ public class FireWeaponActionBuilder {
                                                                         gameState.sendMessage("Target's power: " + GuiUtils.formatAsString(opponentsValueToAdd));
                                                                         gameState.sendMessage("Opponent's total destiny: " + (opponentsTotalDestiny != null ? GuiUtils.formatAsString(opponentsTotalDestiny) : "Failed destiny draw"));
 
-                                                                        if (((playersTotalDestiny != null ? playersTotalDestiny : 0) + playersValueToAdd) > ((opponentsTotalDestiny != null ? opponentsTotalDestiny : 0) + opponentsValueToAdd)) {
+                                                                        if (playersTotalDestiny == null && opponentsTotalDestiny == null) {
+                                                                            gameState.sendMessage("Both players failed due to failed destiny draws");
+                                                                            gameState.sendMessage("Result: No result");
+                                                                        } else if (playersTotalDestiny == null) {
+                                                                            gameState.sendMessage("Warrior's total failed due to failed destiny draw");
+                                                                            gameState.sendMessage("Result: No result");
+                                                                        } else if (opponentsTotalDestiny == null) {
+                                                                            gameState.sendMessage("Opponents's total failed due to failed destiny draw");
+                                                                            gameState.sendMessage("Result: Succeeded");
+                                                                            action.appendEffect(
+                                                                                    new ExcludeFromBattleEffect(action, cardFiredAt, _permanentWeapon, action.getCardFiringWeapon()));
+                                                                        } else if (((playersTotalDestiny != null ? playersTotalDestiny : 0) + playersValueToAdd) > ((opponentsTotalDestiny != null ? opponentsTotalDestiny : 0) + opponentsValueToAdd)) {
                                                                             gameState.sendMessage("Result: Succeeded");
                                                                             action.appendEffect(
                                                                                     new ExcludeFromBattleEffect(action, cardFiredAt, _permanentWeapon, action.getCardFiringWeapon()));
