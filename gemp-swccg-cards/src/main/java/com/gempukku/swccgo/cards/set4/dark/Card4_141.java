@@ -51,10 +51,14 @@ public class Card4_141 extends AbstractLostInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             List<StandardEffect> possibleEffects = new LinkedList<StandardEffect>();
-                            possibleEffects.add(
-                                    new LoseForceFromHandEffect(action, opponent, 2));
-                            possibleEffects.add(
-                                    new LoseForceFromReserveDeckEffect(action, opponent, 1));
+                            if (GameConditions.numCardsInHand(game, opponent) >= 2) {
+                                possibleEffects.add(
+                                        new LoseForceFromHandEffect(action, opponent, 2));
+                            }
+                            if (GameConditions.hasReserveDeck(game, opponent)) {
+                                possibleEffects.add(
+                                        new LoseForceFromReserveDeckEffect(action, opponent, 1));
+                            }
                             // Perform result(s)
                             action.appendEffect(
                                     new ChooseEffectEffect(action, opponent, possibleEffects));

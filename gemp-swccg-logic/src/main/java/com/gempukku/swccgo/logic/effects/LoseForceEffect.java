@@ -429,6 +429,9 @@ public class LoseForceEffect extends AbstractSubActionEffect {
                             PhysicalCard topOfReserveDeck = game.getGameState().getTopOfReserveDeck(_playerToLoseForce);
                             PhysicalCard topOfForcePile = game.getGameState().getTopOfForcePile(_playerToLoseForce);
 
+                            // check if all of the places that force loss "must come from" are empty
+                            boolean allowForceLossFromAnywhereAvailable = !((_fromReserveDeckOnly && topOfReserveDeck != null) || (_fromForcePileOnly && topOfForcePile != null) || (_fromHandOnly && !game.getGameState().getHand(_playerToLoseForce).isEmpty()));
+
                             // Check if Force loss from Force drain must come certain places, if possible
                             if (_isFromForceDrain) {
                                 boolean mustComeFromReserveDeck = topOfReserveDeck != null && game.getModifiersQuerying().hasFlagActive(game.getGameState(), ModifierFlag.FORCE_DRAIN_LOST_FROM_RESERVE_DECK, _playerToLoseForce);
@@ -437,27 +440,29 @@ public class LoseForceEffect extends AbstractSubActionEffect {
                                     _fromHand = _fromSabaccHand = _fromUsedPile = false;
                                     _fromReserveDeck = mustComeFromReserveDeck;
                                     _fromForcePile = mustComeFromForcePile;
+                                    allowForceLossFromAnywhereAvailable = false;
                                 }
                             }
 
-                            if (topOfReserveDeck != null && _fromReserveDeck)
+
+                            if (topOfReserveDeck != null && (_fromReserveDeck || allowForceLossFromAnywhereAvailable))
                                 selectableCards.add(topOfReserveDeck);
 
-                            if (topOfForcePile != null && _fromForcePile)
+                            if (topOfForcePile != null && (_fromForcePile || allowForceLossFromAnywhereAvailable))
                                 selectableCards.add(topOfForcePile);
 
                             PhysicalCard topOfUsedPile = game.getGameState().getTopOfUsedPile(_playerToLoseForce);
-                            if (topOfUsedPile != null && _fromUsedPile)
+                            if (topOfUsedPile != null && (_fromUsedPile || allowForceLossFromAnywhereAvailable))
                                 selectableCards.add(topOfUsedPile);
 
                             PhysicalCard topOfUnresolvedDestinyDraws = game.getGameState().getTopOfUnresolvedDestinyDraws(_playerToLoseForce);
-                            if (topOfUnresolvedDestinyDraws != null && _fromDrawnDestiny)
+                            if (topOfUnresolvedDestinyDraws != null && (_fromDrawnDestiny || allowForceLossFromAnywhereAvailable))
                                 selectableCards.add(topOfUnresolvedDestinyDraws);
 
-                            if (_fromHand)
+                            if (_fromHand || allowForceLossFromAnywhereAvailable)
                                 selectableCards.addAll(game.getGameState().getHand(_playerToLoseForce));
 
-                            if (_fromSabaccHand)
+                            if (_fromSabaccHand || allowForceLossFromAnywhereAvailable)
                                 selectableCards.addAll(game.getGameState().getSabaccHand(_playerToLoseForce));
 
                             // If an action is losing Force as part of the cost, and that action is from a card, exclude that card from being an eligible card to be lost.

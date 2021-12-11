@@ -35,9 +35,4 @@ public class LoseForceFromHandEffect extends LoseForceEffect {
     public String getText(SwccgGame game) {
         return "Lose " + GuiUtils.formatAsString(_initialAmount) + " Force from hand";
     }
-
-    @Override
-    public boolean isPlayableInFull(SwccgGame game) {
-        return super.isPlayableInFull(game) && game.getGameState().getHand(_playerToLoseForce).size() >= _initialAmount;
-    }
 }

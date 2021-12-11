@@ -35,10 +35,5 @@ public class LoseForceFromReserveDeckEffect extends LoseForceEffect {
     public String getText(SwccgGame game) {
         return "Lose " + GuiUtils.formatAsString(_initialAmount) + " Force from Reserve Deck";
     }
-
-    @Override
-    public boolean isPlayableInFull(SwccgGame game) {
-        return super.isPlayableInFull(game) && game.getGameState().getReserveDeckSize(_playerToLoseForce) >= _initialAmount;
-    }
 }
 
