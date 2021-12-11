@@ -3546,6 +3546,7 @@ var fixedImages = {
 "601_99":"https://res.starwarsccg.org/cards/legacy/VirtualBlockDS-Dark/large/youcannothideforever.gif",
 "601_100":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/infiltration.gif",
 "601_100_BACK":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/unlikelyallies.gif",
+"601_101":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Light/large/rycarryjerd.gif",
 "601_102":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/antillesmaneuver&rebelreinforcements.gif",
 "601_103":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Light/large/tatooineutilitybelt.gif",
 "601_104":"https://res.starwarsccg.org/cards/legacy/VirtualBlock3-Light/large/corellianretort.gif",
@@ -3573,6 +3574,7 @@ var fixedImages = {
 "601_126":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/scoundrelsingenuity.gif",
 "601_127":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/scoundrelsluck.gif",
 "601_128":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/spaceportscoundrelsguild.gif",
+"601_129":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Light/large/cell2187.gif",
 "601_130":"https://res.starwarsccg.org/cards/legacy/VirtualBlock3-Light/large/tanusspijek.gif",
 "601_131":"https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/thisismorelikeit.gif",
 "601_132":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/jabbasprizefront.gif",
@@ -3700,7 +3702,12 @@ var fixedImages = {
 "601_252":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Light/large/red8.gif",
 "601_253":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/wedgeinredsquadron1.gif",
 "601_254":"https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/blasterrifle.gif",
+"601_255":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Light/large/dantooineengineeringcorps.gif",
+"601_256":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Light/large/dantooinebasedockingbay.gif",
+"601_257":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Light/large/dantooinebaseoperationscenter.gif",
+"601_258":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/dontunderestimateourchances.gif",
 
+// Virtual Alternate Images
 "200_1ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/aaylasecura_ai.png",
 "203_22ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/agentkallus_ai.png",
 "200_2ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/anakinskywalkerpadawanlearner_ai.png",
@@ -4221,7 +4228,9 @@ var Card = Class.extend({
                     (cardNo == 128) ||
                     (cardNo == 150) ||
                     (cardNo == 202) ||
-                    (cardNo == 245);
+                    (cardNo == 245) ||
+                    (cardNo == 256) ||
+                    (cardNo == 257);
        }
 
         return false;

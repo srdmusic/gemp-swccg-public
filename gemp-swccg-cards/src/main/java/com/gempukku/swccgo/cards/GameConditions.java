@@ -4675,6 +4675,18 @@ public class GameConditions {
      * @return true or false
      */
     public static boolean canInitiateBattleAtLocation(String player, SwccgGame game, PhysicalCard location) {
+        return canInitiateBattleAtLocation(player, game, location, false);
+    }
+
+    /**
+     * Determines if the specified player can initiate battle at the location.
+     * @param player the player
+     * @param game the game
+     * @param location the location
+     * @param forFree if the battle would be initiated for free
+     * @return true or false
+     */
+    public static boolean canInitiateBattleAtLocation(String player, SwccgGame game, PhysicalCard location, boolean forFree) {
         GameState gameState = game.getGameState();
         ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
 
@@ -4687,10 +4699,12 @@ public class GameConditions {
             return false;
 
         // Check if player can use force to initiate battle
-        float battleCost = modifiersQuerying.getInitiateBattleCost(gameState, location, player);
-        int forceAvailableToUse = forceAvailableToUse(gameState.getGame(), player);
-        if (forceAvailableToUse < battleCost)
-            return false;
+        if (!forFree) {
+            float battleCost = modifiersQuerying.getInitiateBattleCost(gameState, location, player);
+            int forceAvailableToUse = forceAvailableToUse(gameState.getGame(), player);
+            if (forceAvailableToUse < battleCost)
+                return false;
+        }
 
         // Check that a battle has not already happened at this location this turn
         if (modifiersQuerying.isBattleOccurredAtLocationThisTurn(location))
