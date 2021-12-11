@@ -21,14 +21,14 @@ import java.util.List;
  * Set: Set 17
  * Type: Interrupt
  * Subtype: Used
- * Title: Go Back To Your Drinks
+ * Title: Now, This Is Podracing!
  */
 public class Card501_069 extends AbstractUsedInterrupt {
     public Card501_069() {
-        super(Side.LIGHT, 4, "Go Back To Your Drinks", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 4, "Now, This Is Podracing!", Uniqueness.UNIQUE);
         setGameText("During battle add 1 to opponent's just drawn destiny (or to your just drawn weapon destiny). OR If Your Thoughts Dwell On Your Mother on table, take Skywalker Hut or Nightclub into hand from Reserve Deck; reshuffle.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
-        setTestingText("Go Back To Your Drinks");
+        setTestingText("Now, This Is Podracing!");
     }
 
     @Override
