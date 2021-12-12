@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.AloneCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
@@ -13,8 +14,10 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.effects.TakeFirstBattleWeaponsSegmentActionEffect;
+import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
 import com.gempukku.swccgo.logic.modifiers.MayBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
@@ -31,7 +34,7 @@ public class Card501_090 extends AbstractNormalEffect {
     public Card501_090() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Tragedy Of Plagueis", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on table. Once per game, if Sidious with a Dark Jedi, may retrieve a character into hand. If Revenge Of The Sith on table, your Sidious may be targeted by Force Lightning. If Sidious alone in battle, you take the first weapon phase action. [Immune to Alter.]");
+        setGameText("Deploy on table. While Sidious alone, Jedi with him are power and defense value -1. If Revenge Of The Sith on table, your Sidious may be targeted by Force Lightning. Once per game, if Sidious with a Dark Jedi, may retrieve a character into hand. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Tragedy Of Plagueis ");
@@ -40,26 +43,10 @@ public class Card501_090 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.Jedi, Filters.with(self, Filters.Sidious)), new OnTableCondition(self, Filters.and(Filters.Sidious, Filters.alone)), -1));
+        modifiers.add(new DefenseValueModifier(self, Filters.and(Filters.Jedi, Filters.with(self, Filters.Sidious)), new OnTableCondition(self, Filters.and(Filters.Sidious, Filters.alone)), -1));
         modifiers.add(new MayBeTargetedByModifier(self, Filters.and(Filters.your(self), Filters.Sidious), new OnTableCondition(self, Filters.title(Title.Revenge_Of_The_Sith)), Title.Force_Lightning));
         return modifiers;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        if (TriggerConditions.battleInitiated(game, effectResult)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.Sidious, Filters.alone))) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take first weapons segment action");
-            action.appendEffect(
-                    new TakeFirstBattleWeaponsSegmentActionEffect(action, self.getOwner()));
-
-            return Collections.singletonList(action);
-        }
-
-        return null;
     }
 
     @Override

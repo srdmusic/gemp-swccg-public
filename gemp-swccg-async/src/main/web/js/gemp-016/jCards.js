@@ -3399,7 +3399,7 @@ var fixedImages = {
 "501_38":"/gemp-swccg/images/cards/Coruscant-Dark/passelargente.gif",
 "501_39":"/gemp-swccg/images/cards/Coruscant-Dark/coruscantguard.gif",
 "501_40":"/gemp-swccg/images/cards/Virtual0-Light/forluck.gif",
-"501_41":"/gemp-swccg/images/cards/Premiere-Dark/blastdoorcontrols.gif",
+"501_41":"https://res.starwarsccg.org/cards/Premiere-Dark/large/wrongturn.gif",
 "501_42":"/gemp-swccg/images/cards/Coruscant-Light/ricolie.gif",
 "501_43":"/gemp-swccg/images/cards/Premiere-Dark/prophetess.gif",
 "501_44":"/gemp-swccg/images/cards/EnhancedJabbasPalace-Dark/jodokast.gif",

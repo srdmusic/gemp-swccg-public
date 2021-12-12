@@ -25,7 +25,7 @@ public class Card501_032 extends AbstractUsedOrLostInterrupt {
     public Card501_032() {
         super(Side.LIGHT, 3, Title.Return_Of_A_Jedi);
         setLore("'Where did you dig up that old fossil?' 'I don't think he exists anymore.' 'Surely he must be dead by now.' 'I can't believe he's gone.' 'Oh, he's not dead, not yet.' Obi's back!");
-        setGameText("USED: Take Obi-Wan's Hut, Obi-Wan's Journal or a card with 'Mentor' in title into hand from Reserve Deck; reshuffle. LOST: During battle, if non-[Episode I] Obi-Wan with a Dark Jedi (or 'communing'), add one battle destiny.");
+        setGameText("Unless a Jedi Master 'communing': USED: [upload] Obi-Wan's Hut, Obi-Wan's Journal or a card with 'mentor' in title. LOST: During battle, if non-[Episode I] Obi-Wan with a Dark Jedi (or 'communing'), add one battle destiny.");
         addIcon(Icon.VIRTUAL_SET_17);
         setVirtualSuffix(true);
         setTestingText("Return Of A Jedi (V)");
@@ -38,7 +38,8 @@ public class Card501_032 extends AbstractUsedOrLostInterrupt {
         GameTextActionId gameTextActionId = GameTextActionId.RETURN_OF_A_JEDI__UPLOAD_CARD_WITH_OBIWAN_IN_TITLE;
 
         // Check condition(s)
-        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (!game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.Jedi_Master)
+                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
             action.setText("Take a card into hand from Reserve Deck");
@@ -58,8 +59,9 @@ public class Card501_032 extends AbstractUsedOrLostInterrupt {
             actions.add(action);
         }
 
-        if (GameConditions.isDuringBattle(game)
-            && (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.not(Icon.EPISODE_I), Filters.ObiWan, Filters.with(self, Filters.Dark_Jedi)))
+        if (!game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.Jedi_Master)
+                && GameConditions.isDuringBattle(game)
+                && (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.not(Icon.EPISODE_I), Filters.ObiWan, Filters.with(self, Filters.Dark_Jedi)))
                 || game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.and(Filters.not(Icon.EPISODE_I), Filters.ObiWan)))) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
             action.setText("Add one battle destiny");

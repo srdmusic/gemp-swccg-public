@@ -3,35 +3,35 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
 import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Set: Set 17
  * Type: Effect
- * Title: Blast Door Controls (V)
+ * Title: Lock The Door
  */
 public class Card501_041 extends AbstractNormalEffect {
     public Card501_041() {
-        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Blast Door Controls", Uniqueness.UNIQUE);
-        setVirtualSuffix(true);
-        setLore("Panels control blast doors and key security lock-downs during alerts. Luke destroyed one, locking Imperial forces out of Hangar Bay 327.");
-        setGameText("Deploy on table. Cancels Blast The Door, Kid!. Rebel Barrier is a Lost Interrupt. If opponent just moved a character, starship, or vehicle away from (or just canceled) a battle, opponent must lose 1 Force.");
+        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Lock The Door", Uniqueness.UNIQUE);
+        setLore("");
+        setGameText("Deploy on table. Rebel Barrier is a Lost Interrupt. If opponent just canceled a battle (or just moved a character, starship, or vehicle away from a battle), opponent loses 1 Force. If Landing Claw is lost from table, it is placed out of play.");
         addIcons(Icon.VIRTUAL_SET_17);
-        setTestingText("Blast Door Controls (V)");
+        setTestingText("Lock The Door");
     }
 
     @Override
@@ -42,41 +42,36 @@ public class Card501_041 extends AbstractNormalEffect {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Blast_The_Door_Kid))
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
 
-        if (GameConditions.canTargetToCancel(game, self, Filters.Blast_The_Door_Kid)) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Blast_The_Door_Kid, Title.Blast_The_Door_Kid);
-            actions.add(action);
-        }
+        Filter filter = Filters.and(Filters.canBeTargetedBy(self), Filters.or(Filters.character, Filters.starship, Filters.vehicle));
 
         if (TriggerConditions.battleCanceledAt(game, effectResult, game.getOpponent(self.getOwner()), Filters.any)
-             || (GameConditions.isDuringBattle(game)
-                && TriggerConditions.moved(game, effectResult, game.getOpponent(self.getOwner()), Filters.or(Filters.character, Filters.starship, Filters.vehicle))
-                && TriggerConditions.movedFromLocation(game, effectResult, Filters.or(Filters.character, Filters.starship, Filters.vehicle), game.getGameState().getBattleLocation()))) {
+                || (GameConditions.isDuringBattle(game)
+                && TriggerConditions.moved(game, effectResult, game.getOpponent(self.getOwner()), filter)
+                && TriggerConditions.movedFromLocation(game, effectResult, filter, game.getGameState().getBattleLocation()))) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Opponent loses 1 Force");
             action.appendEffect(new LoseForceEffect(action, game.getOpponent(self.getOwner()), 1));
 
             actions.add(action);
+        }
+
+        if (TriggerConditions.justLost(game, effectResult, Filters.Landing_Claw)) {
+            final PhysicalCard landingClaw = ((LostFromTableResult) effectResult).getCard();
+
+            if (landingClaw != null) {
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setText("Place " + GameUtils.getCardLink(landingClaw) + " out of play");
+
+                // Perform result(s)
+                action.appendEffect(
+                        new PlaceCardOutOfPlayFromOffTableEffect(action, landingClaw));
+
+                actions.add(action);
+            }
         }
 
         return actions;

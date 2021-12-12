@@ -2,7 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
+import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
 import com.gempukku.swccgo.cards.effects.SatisfyAllBattleDamageEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
@@ -12,14 +12,12 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.decisions.YesNoDecision;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.ForfeitCardFromTableEffect;
-import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.VariableMultiplierModifier;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.GuiUtils;
-import com.gempukku.swccgo.logic.timing.results.AboutToRetrieveForceResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -35,7 +33,7 @@ public class Card501_043 extends AbstractAlien {
     public Card501_043() {
         super(Side.DARK, 2, 3, 3, 4, 4, "Qi'ra, Top Lieutenant", Uniqueness.UNIQUE);
         setLore("Female Crimson Dawn leader. Corellian gangster.");
-        setGameText("When forfeited at same location as Han or Vos, may satisfy all remaining battle damage against you. Unless opponent occupies a battleground site, cancels It Could Be Worse and when opponent retrieves X cards, opponent must first use X Force or that retrieval is canceled.");
+        setGameText("When forfeited at same location as Han or Vos, may satisfy all remaining battle damage against you. Unless opponent occupies a battleground site, doubles X on Secret Plans and cancels It Could Be Worse.");
         addPersona(Persona.QIRA);
         setSpecies(Species.CORELLIAN);
         addKeywords(Keyword.FEMALE, Keyword.LEADER, Keyword.GANGSTER);
@@ -51,6 +49,13 @@ public class Card501_043 extends AbstractAlien {
     @Override
     public final float getSpecialDefenseValue() {
         return 5;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new VariableMultiplierModifier(self, Filters.Secret_Plans, new UnlessCondition(new OccupiesCondition(game.getOpponent(self.getOwner()), Filters.battleground_site)),2, Variable.X));
+        return modifiers;
     }
 
     @Override
@@ -88,42 +93,6 @@ public class Card501_043 extends AbstractAlien {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             // Build action using common utility
             CancelCardActionBuilder.buildCancelCardAction(action, Filters.It_Could_Be_Worse, Title.It_Could_Be_Worse);
-            actions.add(action);
-        }
-
-        // Check condition(s)
-        if (!GameConditions.occupies(game, opponent, Filters.battleground_site)
-                && TriggerConditions.isAboutToRetrieveForce(game, effectResult, opponent)) {
-            AboutToRetrieveForceResult result = (AboutToRetrieveForceResult) effectResult;
-
-            final float amountOfForce = result.getAmountOfForceToRetrieve();
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Use Force or cancel retrieval");
-            action.setActionMsg("Make " + opponent + " use " + GuiUtils.formatAsString(amountOfForce) + " Force or Force retrieval is cancel");
-            if (GameConditions.canUseForce(game, opponent, amountOfForce)) {
-                // Ask player to Use Force or retrieval is canceled
-                action.appendEffect(
-                        new PlayoutDecisionEffect(action, opponent,
-                                new YesNoDecision("Do you want to use " + GuiUtils.formatAsString(amountOfForce) + " Force to proceed with Force retrieval?") {
-                                    @Override
-                                    protected void yes() {
-                                        action.appendEffect(
-                                                new UseForceEffect(action, opponent, amountOfForce));
-                                    }
-
-                                    @Override
-                                    protected void no() {
-                                        action.appendEffect(
-                                                new CancelForceRetrievalEffect(action));
-                                    }
-                                }
-                        )
-                );
-            } else {
-                action.appendEffect(
-                        new CancelForceRetrievalEffect(action));
-            }
             actions.add(action);
         }
 
