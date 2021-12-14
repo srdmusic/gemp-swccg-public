@@ -42,7 +42,7 @@ public class Card501_060 extends AbstractAlienRepublic {
     public Card501_060() {
         super(Side.LIGHT, 2, 4, 5, 2, 6, "Grakchawwaa", Uniqueness.UNIQUE);
         setLore("Wookiee leader.");
-        setGameText("Once per turn, may deploy a bowcaster on your Wookiee at same or adjacent site from Reserve Deck; reshuffle. During your control phase, if present at a Kashyyyk battleground site and armed with a bowcaster, opponent loses 1 Force.");
+        setGameText("Once per turn, may [download] a bowcaster on your Wookiee at same or adjacent site. During your control phase, if present at a Kashyyyk battleground site and armed with a bowcaster, opponent loses 1 Force.");
         setSpecies(Species.WOOKIEE);
         addKeywords(Keyword.LEADER);
         addIcons(Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);

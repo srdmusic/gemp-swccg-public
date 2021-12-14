@@ -48,9 +48,12 @@ public class Card501_002 extends AbstractAlien {
                 && GameConditions.canSpot(game, self, Filters.title("Burg"))) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Make Burg power +2");
-            action.appendUsage(new OncePerBattleEffect(action));
-            action.appendCost(new UseForceEffect(action, playerId, 1));
-            action.appendEffect(new AddUntilEndOfTurnModifierEffect(action, new PowerModifier(self, Filters.title("Burg"), 2), "make Burg power +2 until end of turn"));
+            action.appendUsage(
+                    new OncePerBattleEffect(action));
+            action.appendCost(
+                    new UseForceEffect(action, playerId, 1));
+            action.appendEffect(
+                    new AddUntilEndOfTurnModifierEffect(action, new PowerModifier(self, Filters.title("Burg"), 2), "make Burg power +2 until end of turn"));
 
             return Collections.singletonList(action);
         }
@@ -67,9 +70,12 @@ public class Card501_002 extends AbstractAlien {
                 && GameConditions.canSpot(game, self, Filters.title("Burg"))) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Make Burg power -2");
-            action.appendUsage(new OncePerBattleEffect(action));
-            action.appendCost(new UseForceEffect(action, playerId, 1));
-            action.appendEffect(new AddUntilEndOfTurnModifierEffect(action, new PowerModifier(self, Filters.title("Burg"), -2), "make Burg power -2 until end of turn"));
+            action.appendUsage(
+                    new OncePerBattleEffect(action));
+            action.appendCost(
+                    new UseForceEffect(action, playerId, 1));
+            action.appendEffect(
+                    new AddUntilEndOfTurnModifierEffect(action, new PowerModifier(self, Filters.title("Burg"), -2), "make Burg power -2 until end of turn"));
 
             return Collections.singletonList(action);
         }

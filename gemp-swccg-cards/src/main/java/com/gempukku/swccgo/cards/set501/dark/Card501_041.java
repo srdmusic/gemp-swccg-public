@@ -29,7 +29,7 @@ public class Card501_041 extends AbstractNormalEffect {
     public Card501_041() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Lock The Door", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on table. Rebel Barrier is a Lost Interrupt. If opponent just canceled a battle (or just moved a character, starship, or vehicle away from a battle), opponent loses 1 Force. If Landing Claw is lost from table, it is placed out of play.");
+        setGameText("Deploy on table. Rebel Barrier is a Lost Interrupt. If opponent just canceled a battle (or just moved a character, starship, or vehicle away from a battle), opponent loses 1 Force. If Landing Claw just lost, place it out of play.");
         addIcons(Icon.VIRTUAL_SET_17);
         setTestingText("Lock The Door");
     }

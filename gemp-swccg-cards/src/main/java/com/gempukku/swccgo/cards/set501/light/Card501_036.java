@@ -29,7 +29,7 @@ import java.util.List;
 public class Card501_036 extends AbstractUsedOrStartingInterrupt {
     public Card501_036() {
         super(Side.LIGHT, 3, "The Destiny Of A Jedi");
-        setGameText("USED: Move your [Episode VII] Jedi as a 'react.' STARTNG: If your [Set 11] objective on table, deploy Be With Me and up to two Effects that deploy for free on table and are always [Immune to Alter]. Place Interrupt in Lost Pile.");
+        setGameText("USED: Move your [Episode VII] Jedi as a 'react.' STARTING: If The Galaxy May Need A Legend on table, deploy Be With Me and up to two Effects that deploy on table, deploy for free, and are always immune to Alter. Place Interrupt in Lost Pile.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
         setTestingText("The Destiny Of A Jedi");
     }
@@ -38,12 +38,12 @@ public class Card501_036 extends AbstractUsedOrStartingInterrupt {
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
         // Check condition(s)
 
-        if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Icon.VIRTUAL_SET_11, Filters.Objective))) {
+        if (GameConditions.canSpot(game, self, Filters.The_Galaxy_May_Need_A_Legend)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
             action.setText("Deploy Be With Me and Effects from Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Deploy Be With Me and up to two Effects that deploy for free on table and are always immune to Alter from Reserve Deck",
+            action.allowResponses("Deploy Be With Me and up to two Effects that deploy on table, deploy for free, and are always immune to Alter from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {

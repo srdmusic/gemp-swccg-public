@@ -28,7 +28,7 @@ public class Card501_063 extends AbstractSite {
         super(Side.LIGHT, Title.Slave_Quarters, Title.Tatooine);
         setVirtualSuffix(true);
         setLocationDarkSideGameText("");
-        setLocationLightSideGameText("If you just chose My Father Has It on your [Skywalker] Epic Event, [download] Your Thoughts Dwell On Your Mother. Deploys only as a starting location.");
+        setLocationLightSideGameText("Deploys only as a starting location. If you just chose My Father Has It on your [Skywalker] Epic Event, [download] Your Thoughts Dwell On Your Mother.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.SKYWALKER, Icon.TATOOINE, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         setTestingText("Tatooine: Slave Quarters (V)");

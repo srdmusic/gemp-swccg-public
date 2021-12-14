@@ -31,7 +31,7 @@ import java.util.List;
 public class Card501_072 extends AbstractSite {
     public Card501_072() {
         super(Side.LIGHT, "Tatooine: Skywalker Hut", Title.Tatooine);
-        setLocationDarkSideGameText("Deploys adjacent to (and sites may not deploy between) Slave Quarters (if possible).");
+        setLocationDarkSideGameText("May not be separated from Slave Quarters.");
         setLocationLightSideGameText("Once per turn, may deploy Shmi or [Tatooine] C-3PO here from Reserve Deck; reshuffle.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EPISODE_I, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
@@ -42,12 +42,7 @@ public class Card501_072 extends AbstractSite {
     public List<Modifier> getAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeploysAdjacentToLocationModifier(self, self, Filters.Slave_Quarters, true));
-        return modifiers;
-    }
-
-    @Override
-    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DeploysAdjacentToLocationModifier(self, Filters.Slave_Quarters, self, true));
         modifiers.add(new MayNotDeploySitesBetweenSitesModifier(self, self, Filters.Slave_Quarters));
         return modifiers;
     }
