@@ -31,8 +31,8 @@ import java.util.List;
 public class Card501_110 extends AbstractAlien {
     public Card501_110() {
         super(Side.LIGHT, 3, 2, 3, 2, 4, "Cliegg Lars", Uniqueness.UNIQUE);
-        setLore("");
-        setGameText("While present with Shmi, Vader may not fire weapons here. Once per game, may deploy Owen or a device that deploys on a site here from Reserve Deck; reshuffle. If with Shmi or a Vaporator, Force drain +1 here.");
+        setLore("Moisture farmer.");
+        setGameText("While present with Shmi, Vader may not fire weapons here. Once per game, may [download] Owen (or a device that deploys on a site) here. If with Shmi or a Vaporator, Force drain +1 here.");
         addIcons(Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         setTestingText("Cliegg Lars");
     }

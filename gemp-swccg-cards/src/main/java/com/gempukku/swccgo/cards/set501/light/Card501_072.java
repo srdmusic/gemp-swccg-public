@@ -42,6 +42,12 @@ public class Card501_072 extends AbstractSite {
     public List<Modifier> getAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeploysAdjacentToLocationModifier(self, self, Filters.Slave_Quarters, true));
+        return modifiers;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeploysAdjacentToLocationModifier(self, Filters.Slave_Quarters, self, true));
         modifiers.add(new MayNotDeploySitesBetweenSitesModifier(self, self, Filters.Slave_Quarters));
         return modifiers;

@@ -44,6 +44,7 @@ public class Card501_064 extends AbstractUsedInterrupt {
 
         if (GameConditions.canSpot(game, self, Filters.title(Title.Like_My_Father_Before_Me))
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setText("Take site into hand from Reserve Deck");
             // Allow response(s)
@@ -68,7 +69,9 @@ public class Card501_064 extends AbstractUsedInterrupt {
                 if (m.getModifyGameTextType(game.getGameState(), game.getModifiersQuerying(), prophecyOfTheForce) == ModifyGameTextType.PROPHECY_OF_THE_FORCE__MAY_NOT_BE_RELOCATED)
                     canRelocate = false;
             }
+            
             if (canRelocate) {
+
                 final PlayInterruptAction action = new PlayInterruptAction(game, self);
                 action.setText("Relocate " + GameUtils.getCardLink(prophecyOfTheForce) + " to a site");
                 action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose site", Filters.canRelocateEffectTo(playerId, prophecyOfTheForce)) {

@@ -31,7 +31,7 @@ public class Card501_056 extends AbstractImperial {
     public Card501_056() {
         super(Side.DARK, 2, 3, 3, 3, 5, "Officer Valin Hess", Uniqueness.UNIQUE);
         setLore("Leader.");
-        setGameText("During battle, may place an Imperial of ability < 4 from your Lost Pile out of play to add X to attrition against opponent, where X = that character's ability. Except during battle, may lose Valin Hess to place one opponent's Undercover spy here in Lost Pile.");
+        setGameText("During battle, may place an Imperial of ability < 4 from your Lost Pile out of play to add X to attrition against opponent, where X = that character's ability. Except during battle, may lose Valin Hess to target an opponent's Undercover spy here; target is lost.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_17);
         addKeywords(Keyword.LEADER);
         setTestingText("Officer Valin Hess");
@@ -75,24 +75,25 @@ public class Card501_056 extends AbstractImperial {
         Filter targetFilter = Filters.and(Filters.opponents(self), Filters.undercover_spy, Filters.here(self));
 
         if (!GameConditions.isInBattle(game, self)
-                && GameConditions.canTarget(game, self, SpotOverride.INCLUDE_UNDERCOVER, targetFilter)) {
+                && GameConditions.canTarget(game, self, SpotOverride.INCLUDE_UNDERCOVER, TargetingReason.TO_BE_LOST, targetFilter)) {
+
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
-            action.setText("Place opponent's undercover spy in lost pile");
+            action.setText("Target opponent's undercover spy to be lost");
             // Choose target(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Target undercover spy", SpotOverride.INCLUDE_UNDERCOVER, targetFilter) {
+                    new TargetCardOnTableEffect(action, playerId, "Target undercover spy", SpotOverride.INCLUDE_UNDERCOVER, TargetingReason.TO_BE_LOST, targetFilter) {
                         @Override
                         protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
                             action.appendCost(
                                     new LoseCardFromTableEffect(action, self));
                             // Allow response(s)
-                            action.allowResponses("Place " + GameUtils.getCardLink(targetedCard) + " in lost pile",
-                                    new UnrespondableEffect(action) {
+                            action.allowResponses(GameUtils.getCardLink(targetedCard) + " is lost",
+                                    new RespondableEffect(action) {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
                                             // Perform result(s)
                                             action.appendEffect(
-                                                    new PlaceCardInLostPileFromTableEffect(action, targetedCard));
+                                                    new LoseCardFromTableEffect(action, targetedCard));
                                         }
                                     }
                             );

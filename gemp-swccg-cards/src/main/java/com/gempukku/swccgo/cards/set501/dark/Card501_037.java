@@ -25,10 +25,11 @@ import java.util.List;
 public class Card501_037 extends AbstractRepublic {
     public Card501_037() {
         super(Side.DARK, 2, 3, 3, 4, 5, "Wat Tambor", Uniqueness.UNIQUE);
-        setLore("Leader. Trade Federation. Techno Union.");
-        setGameText("Your Republic characters may not be targeted by opponent's weapons unless all your [Presence] droids present with them are 'hit'. Where Are Those Droidekas?! ignores Wat Tambor. Once per game, may draw two cards from Reserve Deck.");
+        setLore("Skakoan leader. Trade Federation. Techno Union.");
+        setGameText("Opponent may not target your Republic characters with weapons unless each of your [Presence] droids present with them are 'hit.' [Set 8] Where Are Those Droidekas?! ignores Wat Tambor. Once per game, may draw two cards from Reserve Deck.");
         addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         addKeywords(Keyword.LEADER);
+        setSpecies(Species.SKAKOAN);
         setTestingText("Wat Tambor");
     }
 
@@ -36,7 +37,7 @@ public class Card501_037 extends AbstractRepublic {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotBeTargetedByWeaponsModifier(self, Filters.and(Filters.your(self), Filters.Republic_character, Filters.presentWith(self, Filters.and(Filters.not(Filters.hit), Filters.and(Icon.PRESENCE, Filters.droid))))));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Where_Are_Those_Droidekas, ModifyGameTextType.WAT_TAMBOR__IGNORED_BY_WHERE_ARE_THOSE_DROIDEKAS));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.and(Icon.VIRTUAL_SET_8, Filters.Where_Are_Those_Droidekas), ModifyGameTextType.WAT_TAMBOR__IGNORED_BY_WHERE_ARE_THOSE_DROIDEKAS));
         return modifiers;
     }
 
