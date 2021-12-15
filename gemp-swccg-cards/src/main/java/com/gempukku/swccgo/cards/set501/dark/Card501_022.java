@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Collections;
 
 /**
- * Set: Hoth
+ * Set: Set 18
  * Type: Effect
  * Title: Hoth Blockade
  */
@@ -32,9 +32,9 @@ public class Card501_022 extends AbstractNormalEffect {
         super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, "Hoth Blockade", Uniqueness.UNIQUE);
         setLore("Death Squadron.");
         setGameText("Deploy on Hoth system. While a battleground marker site on table, adds one [Dark Side] icon and one [Light Side] icon here. Your Death Squadron cards deploy -1 here (-5 if Executor) and are immune to attrition < 3 here. Place in Used Pile if opponent Force drains here. [Immune to Alter.]");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_17);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 18] Hoth Blockade");
+        setTestingText("Hoth Blockade");
     }
 
     @Override

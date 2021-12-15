@@ -26,7 +26,7 @@ import java.util.List;
 
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Epic Event
  * Title: Target The Main Generator (v)
  */
@@ -35,8 +35,8 @@ public class Card501_023 extends AbstractEpicEventPlayable {
         super(Side.DARK, Title.Target_The_Main_Generator);
         setVirtualSuffix(true);
         setGameText("At the end of your control phase, your AT-AT Cannon below 4th marker may fire (if in range) at 1st Marker. Prepare to Target the Main Generator: Draw destiny. Maximum Firepower: If (destiny + X + Y) > 8, 1st Marker is 'blown away' and this card is lost. Otherwise, this card is used. X = number of Imperials on Hoth (may not exceed 3). Y = number of marker sites controlled by AT-ATs");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_17);
-        setTestingText("[Set 18] Target The Main Generator (V)");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
+        setTestingText("Target The Main Generator (V)");
     }
 
     @Override

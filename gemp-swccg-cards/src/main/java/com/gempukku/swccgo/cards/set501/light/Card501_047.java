@@ -19,7 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Location
  * Subtype: Site
  * Title: Coruscant: Jedi Temple Entrance
@@ -31,8 +31,8 @@ public class Card501_047 extends AbstractSite {
         setLocationLightSideGameText("During your move phase, Jedi Council members may move between here and any battleground (or Coruscant) site. While a Jedi here, opponent's characters deploy +2 here and opponent may not Force drain at Jedi Council Chamber.");
         addIcon(Icon.DARK_FORCE, 0);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.EPISODE_I, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
-        setTestingText("[Set 18] Coruscant: Jedi Temple Entrance");
+        addIcons(Icon.EPISODE_I, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_18);
+        setTestingText("Coruscant: Jedi Temple Entrance");
     }
 
     @Override

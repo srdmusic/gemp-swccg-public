@@ -21,7 +21,7 @@ import java.util.List;
 
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Starship
  * Subtype: Capital
  * Title: Tyrant (V)
@@ -32,14 +32,14 @@ public class Card501_025 extends AbstractCapitalStarship {
         setVirtualSuffix(true);
         setLore("Assigned to Admiral Ozzel's Death Squadron. Attempted to capture Rebel starships fleeing the Hoth system.");
         setGameText("May add 6 pilots, 8 passengers, 2 vehicles, and 4 TIEs. Permanent pilot provides ability of 2. If Tyrant just moved to a system, may relocate an AT-AT aboard to a related site.");
-        addIcons(Icon.HOTH, Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_17);
+        addIcons(Icon.HOTH, Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
         addModelType(ModelType.IMPERIAL_CLASS_STAR_DESTROYER);
         addKeywords(Keyword.DEATH_SQUADRON);
         setPilotCapacity(6);
         setPassengerCapacity(8);
         setVehicleCapacity(2);
         setTIECapacity(4);
-        setTestingText("[Set 18] Tyrant (V)");
+        setTestingText("Tyrant (V)");
     }
 
     @Override

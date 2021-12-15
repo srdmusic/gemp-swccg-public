@@ -16,7 +16,7 @@ import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckE
 import com.gempukku.swccgo.logic.timing.Action;
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Interrupt
  * Subtype: Lost or Starting
  * Title: That's It, The Rebels Are There! (V)
@@ -26,8 +26,8 @@ public class Card501_011 extends AbstractStartingInterrupt {
         super(Side.DARK, 4, "That's It, The Rebels Are There!");
         setVirtualSuffix(true);
         setGameText("If you have deployed [Set 17] 4th marker, take [Set 6] Veers into hand from Reserve Deck. Deploy 1st marker, [Set 9] Prepare For A Surface Attack, and up to two Effects that deploy for free and are always immune to Alter. Place Interrupt in Lost Pile.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_17);
-        setTestingText("[Set 18] That's It, The Rebels Are There! (V)");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
+        setTestingText("That's It, The Rebels Are There! (V)");
     }
 
     @Override

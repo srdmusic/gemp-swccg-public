@@ -15,7 +15,7 @@ import java.util.List;
 
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Character
  * Subtype: Alien
  * Title: Cara Dune With Heavy Blaster Rifle
@@ -27,8 +27,8 @@ public class Card501_033 extends AbstractAlien {
         setGameText("Permanent weapon is •Cara's Heavy Blaster Rifle (may target a character for free; draw destiny; target hit and cumulatively forfeit -3 if destiny +1 > defense value; may fire repeatedly for 2 Force each time).");
         addKeywords(Keyword.FEMALE, Keyword.GAMBLER, Keyword.TROOPER);
         setSpecies(Species.ALDERAANIAN);
-        addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_17);
-        setTestingText("[Set 18] Cara Dune With Heavy Blaster Rifle");
+        addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_18);
+        setTestingText("Cara Dune With Heavy Blaster Rifle");
         hideFromDeckBuilder();
     }
 

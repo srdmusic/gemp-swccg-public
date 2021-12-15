@@ -23,7 +23,7 @@ import java.util.List;
 
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: That Armor's Too Strong For Blasters
@@ -33,8 +33,8 @@ public class Card501_024 extends AbstractUsedOrLostInterrupt {
         super(Side.DARK, 4, "That Armor's Too Strong For Blasters", Uniqueness.UNIQUE);
         setGameText("USED: Cancel an attempt to target your AT-AT with a blaster or a rifle. OR If a Hoth site has been 'blown away,' subtract 1 from a just drawn destiny. \n" +
                 "LOST: Cancel Under Attack if targeting Blizzard 1.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_17);
-        setTestingText("[Set 18] That Armor's Too Strong For Blasters");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
+        setTestingText("That Armor's Too Strong For Blasters");
     }
 
     @Override
