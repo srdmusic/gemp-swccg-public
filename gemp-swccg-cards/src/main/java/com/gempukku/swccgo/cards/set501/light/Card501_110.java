@@ -52,14 +52,13 @@ public class Card501_110 extends AbstractAlien {
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
             && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
             TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Owen or a device here from Reserve Deck");
-            action.setActionMsg("Deploy Owen or a device that deploys on a site here from Reserve Deck");
-            action.appendUsage(new OncePerGameEffect(action));
-            //TODO if this still deploys a "device that deploys on a site" closer to release, the logic should probably be changed to be similar to
-            //Filters.device_that_deploys_on_a_droid using a new Keyword.DEVICE_THAT_DEPLOYS_ON_A_SITE
-            //at the time I'm writing this that would go on at least Carbonite Chamber Console [both versions], Death Star Tractor Beam, Droid Detector, Hydroponics Station, Interrogation Array, Observation Holocam, Vaporator
+            action.setText("Deploy Owen or a device here");
+            action.setActionMsg("Deploy Owen (or a device that deploys on a site) here from Reserve Deck");
+            action.appendUsage(
+                    new OncePerGameEffect(action));
 
-            action.appendEffect(new DeployCardToLocationFromReserveDeckEffect(action, Filters.or(Filters.Owen, Filters.Vaporator, Filters.Hydroponics_Station), Filters.here(self), true));
+            action.appendEffect(
+                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.or(Filters.Owen, Filters.and(Filters.device, Filters.deploys_on_site)), Filters.here(self), true));
             return Collections.singletonList(action);
         }
 

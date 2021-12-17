@@ -17560,6 +17560,7 @@ public class Filters {
     public static final Filter Devastator = Filters.title(Title.Devastator);
     public static final Filter device = Filters.type(CardType.DEVICE);
     public static final Filter deploys_on_characters = Filters.keyword(Keyword.DEPLOYS_ON_CHARACTERS);
+    public static final Filter deploys_on_site = Filters.keyword(Keyword.DEPLOYS_ON_SITE);
     public static final Filter device_that_deploys_on_droids = Filters.keyword(Keyword.DEVICE_THAT_DEPLOYS_ON_DROIDS);
     public static final Filter Dewback = Filters.keyword(Keyword.DEWBACK);
     public static final Filter DH17_blaster = Filters.keyword(Keyword.DH17_BLASTER);
