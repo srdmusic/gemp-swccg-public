@@ -7732,6 +7732,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     @Override
     public Collection<PhysicalCard> getCardsMarkingCardSuspended(GameState gameState, PhysicalCard card, ModifierCollector modifierCollector) {
         Set<PhysicalCard> cards = new HashSet<PhysicalCard>();
+        if (isProhibitedFromBeingSuspended(gameState, card))
+            return cards;
 
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.SUSPEND_CARD, card)) {
             cards.add(modifier.getSource(gameState));
@@ -15067,6 +15069,10 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 }
             }
         }
+
+        if (targetingReasons.contains(TargetingReason.TO_BE_SUSPENDED)
+                && !getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_BE_SUSPENDED, cardToTarget).isEmpty())
+            return false;
 
         if (targetingReasons.contains(TargetingReason.TO_BE_CHOKED)
                 && !getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_BE_CHOKED, cardToTarget).isEmpty())
