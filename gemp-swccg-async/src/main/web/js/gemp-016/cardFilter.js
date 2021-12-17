@@ -159,6 +159,7 @@ var CardFilter = Class.extend({
             + "<option value='classic'>Classic</option>"
             + "<option value='classic_no_virtual'>Classic (no virtual cards)</option>"
             + "<option value='premiere_ref2'>Premiere - Reflections II</option>"
+            + "<option value='premiere_jpsd'>Premiere - JPSD</option>"
             + "<option value='premiere_ds2'>Premiere - Death Star II</option>"
             + "<option value='premiere_endor'>Premiere - Endor</option>"
             + "<option value='premiere_se'>Premiere - Special Edition</option>"
