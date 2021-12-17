@@ -45,17 +45,17 @@ public class Card501_007 extends AbstractCombatVehicle {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new ArmorModifier(self, self, new HasPilotingCondition(self, Filters.Veers), 1));
+        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, new HasPilotingCondition(self, Filters.Veers), 1));
         modifiers.add(new ImmuneToTitleModifier(self, Title.Under_Attack));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
-        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, new HasPilotingCondition(self, Filters.Veers), 1));
-        modifiers.add(new ArmorModifier(self, self, new HasPilotingCondition(self, Filters.Veers), 1));
         return modifiers;
     }
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
 
-        // targets Blizzard 1 hits at same site are forfeit = 0
+        // targets Blizzard 1 hits here are forfeit = 0
 
         // Check condition(s)
         if (GameConditions.hasPiloting(game, self, Filters.Veers)

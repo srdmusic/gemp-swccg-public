@@ -2,13 +2,17 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LookAtUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromUsedPileEffect;
@@ -31,7 +35,7 @@ public class Card501_015 extends AbstractRebel {
         super(Side.LIGHT, 2, 5, 4, 6, 6, "Kanan Jarrus, Jedi Knight", Uniqueness.UNIQUE);
         setLore("");
         setGameText("Whenever you deploy Chopper, Ezra, Hera, Kanan, Sabine, or Zeb, may draw top card of your Used Pile. " +
-                "Once during your draw phase, if Kanan present at a battleground and he did not move this turn, may peek at your Used Pile. " +
+                "Once during your draw phase, if Kanan at a battleground and he did not move this turn, may peek at cards in your Used Pile. " +
                 "Immune to attrition < 5.");
         addPersona(Persona.KANAN);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_17);
@@ -47,13 +51,19 @@ public class Card501_015 extends AbstractRebel {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        if (GameConditions.isDuringYourPhase(game, playerId, Phase.DRAW)
-                && GameConditions.isPresentAt(game, self, Filters.battleground)
-                && !GameConditions.hasPerformedRegularMoveThisTurn(game, self)
-                && GameConditions.hasUsedPile(game, playerId)) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-            TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)
+                && GameConditions.isAtLocation(game, self, Filters.battleground)
+                && GameConditions.hasUsedPile(game, playerId)
+                && !GameConditions.hasPerformedRegularMoveThisTurn(game, self)
+                && !GameConditions.cardHasWhileInPlayDataEquals(self, true)) {
+
+            TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Peek at your Used Pile");
+
+            action.appendUsage(
+                    new OncePerPhaseEffect(action));
             action.appendEffect(
                     new LookAtUsedPileEffect(action, playerId, playerId)
             );
@@ -67,7 +77,8 @@ public class Card501_015 extends AbstractRebel {
         // Check condition(s)
         Filter filter = Filters.or(Filters.Chopper, Filters.Ezra, Filters.Hera, Filters.Kanan, Filters.Sabine, Filters.Zeb);
 
-        if (TriggerConditions.justDeployed(game, effectResult, playerId, filter)) {
+        if (TriggerConditions.justDeployed(game, effectResult, playerId, filter)
+                && GameConditions.hasUsedPile(game, playerId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Draw top card of Used Pile");
@@ -77,5 +88,21 @@ public class Card501_015 extends AbstractRebel {
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
+
+        // Track if he moved this turn
+        if (TriggerConditions.moved(game, effectResult, self)) {
+            self.setWhileInPlayData(new WhileInPlayData(true));
+        }
+
+        // Reset at the end of each turn
+        if (TriggerConditions.isEndOfEachTurn(game, effectResult)) {
+            self.setWhileInPlayData(null);
+        }
+        return actions;
     }
 }

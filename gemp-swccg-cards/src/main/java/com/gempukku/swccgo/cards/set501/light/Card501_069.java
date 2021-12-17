@@ -26,7 +26,7 @@ import java.util.List;
 public class Card501_069 extends AbstractUsedInterrupt {
     public Card501_069() {
         super(Side.LIGHT, 4, "Now, This Is Podracing!", Uniqueness.UNIQUE);
-        setGameText("During battle add 1 to opponent's just drawn destiny (or to your just drawn weapon destiny). OR If Your Thoughts Dwell On Your Mother on table, take Skywalker Hut or Nightclub into hand from Reserve Deck; reshuffle.");
+        setGameText("During battle, add 1 to opponent's just drawn destiny (or to your just drawn weapon destiny). OR If Your Thoughts Dwell On Your Mother on table, [upload] Night Club or Skywalker Hut.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         setTestingText("Now, This Is Podracing!");
     }
@@ -41,7 +41,7 @@ public class Card501_069 extends AbstractUsedInterrupt {
                 && (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, opponent)
                 || TriggerConditions.isWeaponDestinyJustDrawnBy(game, effectResult, playerId))) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Add 1 to destiny");
             // Allow response(s)
             action.allowResponses(
@@ -67,6 +67,7 @@ public class Card501_069 extends AbstractUsedInterrupt {
 
         if (GameConditions.canSpot(game, self, Filters.title("Your Thoughts Dwell On Your Mother"))
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setText("Take site into hand from Reserve Deck");
             // Allow response(s)

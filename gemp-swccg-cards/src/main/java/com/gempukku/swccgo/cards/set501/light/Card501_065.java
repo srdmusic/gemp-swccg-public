@@ -61,8 +61,7 @@ public class Card501_065 extends AbstractLostInterrupt {
             actions.add(action);
         }
 
-        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Icon.DEATH_STAR_II, Filters.Luke, Filters.at(Filters.site)))
-        ) {
+        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Icon.DEATH_STAR_II, Filters.Luke, Filters.at(Filters.site)))) {
 
             if (GameConditions.canAddDestinyDrawsToAttrition(game, playerId)) {
                 final PlayInterruptAction action = new PlayInterruptAction(game, self);
@@ -79,7 +78,7 @@ public class Card501_065 extends AbstractLostInterrupt {
                 actions.add(action);
             }
 
-            Filter characterAbilityLessThanFour = Filters.and(Filters.character, Filters.abilityLessThan(4));
+            Filter characterAbilityLessThanFour = Filters.and(Filters.canBeTargetedBy(self), Filters.character, Filters.abilityLessThan(4));
 
             if (GameConditions.isDuringBattleWithParticipant(game, characterAbilityLessThanFour)) {
                 final PlayInterruptAction action = new PlayInterruptAction(game, self);

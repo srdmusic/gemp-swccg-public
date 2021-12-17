@@ -36,11 +36,11 @@ import java.util.List;
 public class Card501_028 extends AbstractEpicEventDeployable {
     public Card501_028() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.The_Force_Is_Strong_In_My_Family);
-        setGameText("Deploy on table (only at start of game) and choose one (reveal selections from Reserve Deck): " +
+        setGameText("Deploy on table (only at start of game) and choose (reveal corresponding characters from Reserve Deck): " +
                 "My Father Has It: Anakin (and [Episode I] Obi-Wan). \n" +
                 "I Have It: [Reflections II] Luke (and [Set 1] Obi-Wan). \n" +
                 "You Have That Power, Too: Rey (and [Episode VII] Luke). \n" +
-                "Your total Force generation is +1. You may not deploy non-battlegrounds (except Saddle and huts) or Jedi (except Yoda and the revealed cards). If you just initiated a battle involving a Skywalker (or opponent's Sidious just lost from table), may retrieve 1 Force.");
+                "Your total Force generation is +1. You may not deploy non-battleground locations (except Saddle and huts) or Jedi (except Yoda and the revealed cards). If you just initiated battle involving a Skywalker (or if opponent's Sidious just lost from table), may retrieve 1 Force.");
         addIcons(Icon.SKYWALKER, Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
         setTestingText("The Force Is Strong In My Family");
     }
@@ -190,7 +190,6 @@ public class Card501_028 extends AbstractEpicEventDeployable {
 
         if (GameConditions.hasLostPile(game, playerId)
                 && (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious))
-                    || TriggerConditions.justForfeitedToLostPileFromLocation(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious), Filters.any)
                     || (TriggerConditions.battleInitiated(game, effectResult, playerId)
                         && GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker)))) {
 

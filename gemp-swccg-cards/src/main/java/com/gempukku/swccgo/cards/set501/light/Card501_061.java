@@ -28,7 +28,7 @@ public class Card501_061 extends AbstractNormalEffect {
     public Card501_061() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Another Pathetic Lifeform & Security Control", Uniqueness.UNIQUE);
         addComboCardTitles("Another Pathetic Lifeform", "Security Control");
-        setGameText("Deploy on table. Your unique (•) Gungans and Republic characters of ability < 4 are forfeit +1. Nabrun Leids and Elis Helrot are limited to owner’s move phase and exterior sites only. Once per turn, may deploy a docking bay from Reserve Deck; reshuffle. Once during opponent's turn, If your [Episode 1] Leader or Jar Jar occupies an [Episode 1] battleground, may activate 1 Force. [Immune to Alter.]");
+        setGameText("Deploy on table. Your unique (•) Republic characters (and your unique (•) Gungans) of ability < 4 are forfeit +1. Nabrun Leids and Elis Helrot are limited to owner's move phase and exterior sites only. Once per turn, may [download] a docking bay. Once during opponent's turn, if Jar Jar or your [Episode I] leader occupies an [Episode I] battleground, may activate 1 Force. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Another Pathetic Lifeform & Security Control");
