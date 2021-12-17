@@ -52,21 +52,19 @@ public class Card501_105 extends AbstractDroid {
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place in Used Pile");
-            action.setActionMsg("'Break cover' of all undercover spies here (if any)");
-
-            //TODO this should really let you choose the order
             Collection<PhysicalCard> undercoverSpies = Filters.filterAllOnTable(game, Filters.and(targetFilter, Filters.canBeTargetedBy(self)));
+            if (!undercoverSpies.isEmpty()) {
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Place in Used Pile");
+                action.setActionMsg("'Break cover' of all undercover spies here (if any)");
 
-            action.appendCost(
-                    new PlaceCardInUsedPileFromTableEffect(action, self));
+                action.appendCost(
+                        new PlaceCardInUsedPileFromTableEffect(action, self));
 
-            for(PhysicalCard spy:undercoverSpies) {
                 action.appendEffect(
-                        new BreakCoverEffect(action, spy));
+                        new BreakCoversEffect(action, undercoverSpies));
+                actions.add(action);
             }
-            actions.add(action);
         }
 
         return actions;
