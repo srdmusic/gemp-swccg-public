@@ -3,15 +3,14 @@ package com.gempukku.swccgo.cards.set601.light;
 import com.gempukku.swccgo.cards.AbstractUsedOrStartingInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Collection;
@@ -52,18 +51,19 @@ public class Card601_258 extends AbstractUsedOrStartingInterrupt {
             }
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-            action.setText("Initiate a battle for free");
+            action.setText("Target a location");
             // Allow response(s)
-            action.appendTargeting(new ChooseCardOnTableEffect(action, playerId, "Choose a location to initiate battle at", Filters.in(possibleBattleLocations)) {
+            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a location to make battles free for remainder of turn", Filters.in(possibleBattleLocations)) {
                 @Override
-                protected void cardSelected(final PhysicalCard selectedCard) {
-                    action.allowResponses("Initiate a battle for free",
+                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                    action.allowResponses("Target a location to make battles free there for remainder of turn",
                             new RespondablePlayCardEffect(action) {
                                 @Override
                                 protected void performActionResults(Action targetingAction) {
                                     // Perform result(s)
+                                    final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
                                     action.appendEffect(
-                                            new BattleEffect(action, selectedCard, false, null));
+                                            new AddUntilEndOfTurnModifierEffect(action, new InitiateBattlesForFreeModifier(self, finalTarget, playerId), "makes battles free here"));
                                 }
                             }
                     );

@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set601.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
@@ -35,6 +36,7 @@ public class Card601_129 extends AbstractNormalEffect {
         setLore("'Aren't you a little short for a stormtrooper?'");
         setGameText("Deploy on table. Once per game, may deploy spy R2-D2 (for free) from Reserve Deck; reshuffle. During your control phase, if R2-D2 is with captive Leia, may use 1 Force to release her. While Sometimes I Amaze Even Myself on table, where Leia present, ignore Battle Order. May not be canceled. (Immune to Alter.)");
         addIcons(Icon.A_NEW_HOPE, Icon.LEGACY_BLOCK_1);
+        addKeyword(Keyword.CAN_RELEASE_CAPTIVES);
         addImmuneToCardTitle(Title.Alter);
         setAsLegacy(true);
     }
@@ -49,7 +51,7 @@ public class Card601_129 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        //TODO While Sometimes I Amaze Even Myself on table, where Leia present, ignore Battle Order.
+        modifiers.add(new ImmuneToTitleModifier(self, Filters.wherePresent(self, Filters.Leia), new OnTableCondition(self, Filters.Sometimes_I_Amaze_Even_Myself), Title.Battle_Order));
         return modifiers;
     }
 
