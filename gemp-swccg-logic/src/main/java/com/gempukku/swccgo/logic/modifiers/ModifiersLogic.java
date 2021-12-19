@@ -15553,6 +15553,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             removeModifiers(list);
             list.clear();
         }
+        _untilEndOfEffectResultModifiers.remove(effectResult);
     }
 
     /**
