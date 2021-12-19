@@ -3605,7 +3605,6 @@ var fixedImages = {
 "601_155":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Dark/large/trophyofakill.gif",
 "601_156":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Dark/large/establishcontrol.gif",
 "601_157":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Dark/large/ivelostartoo.gif",
-"601_158":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Dark/large/jabbashaven.gif",
 "601_159":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Dark/large/ketmaliss.gif",
 "601_160":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/stunningleader.gif",
 "601_161":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Light/large/obiwankenobijediknight.gif",

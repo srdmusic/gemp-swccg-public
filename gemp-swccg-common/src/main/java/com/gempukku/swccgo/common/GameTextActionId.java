@@ -829,6 +829,7 @@ public enum GameTextActionId {
     LEGACY__GARDULLA_THE_HUTT_V__RELOCATE_CHARACTERS(false, true),
     LEGACY__KI_ADI_MUNDI__EXCHANGE_CARDS_FROM_HAND_WITH_CARD_IN_LOST_PILE(false, true),
     LEGACY__CELL_2187_V__DEPLOY_R2D2(true, true),
+    LEGACY__RYCAR_RYJERD_V__UPLOAD_CARD(true, true),
 
     ;
 
