@@ -3357,7 +3357,7 @@ var fixedImages = {
 "217_11":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/grummgar.png",
 "217_12":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/hothnorthridge.png",
 "217_13":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/landocalrissianvadersbroker.png",
-"217_14":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/lockthedoor.png",
+"217_14":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/closetheblastdoors.png",
 "217_15":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/malachorsithtemplegateway.png",
 "217_16":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/momentoftriumph.png",
 "217_17":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/officervalinhess.png",
