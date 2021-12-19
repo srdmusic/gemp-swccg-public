@@ -3546,9 +3546,9 @@ var fixedImages = {
 "601_99":"https://res.starwarsccg.org/cards/legacy/VirtualBlockDS-Dark/large/youcannothideforever.gif",
 "601_100":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/infiltration.gif",
 "601_100_BACK":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/unlikelyallies.gif",
-"601_101":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/agoodblasteratyourside.gif",
+"601_101":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Light/large/rycarryjerd.gif",
 "601_102":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/antillesmaneuver&rebelreinforcements.gif",
-"601_103":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Light/large/boosterinpulsarskate.gif",
+"601_103":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Light/large/tatooineutilitybelt.gif",
 "601_104":"https://res.starwarsccg.org/cards/legacy/VirtualBlock3-Light/large/corellianretort.gif",
 "601_105":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/darkapproach.gif",
 "601_106":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/errantventure.gif",
@@ -3562,11 +3562,11 @@ var fixedImages = {
 "601_114":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/landocalrissianscoundrel.gif",
 "601_115":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Light/large/leiassportingblaster.gif",
 "601_116":"https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/muchtolearnyoustillhave.gif",
-"601_117":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/narshaddaa.gif",
+"601_117":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/informationexchange.gif",
 "601_118":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/narshaddaascoundrelsrest.gif",
 "601_119":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/narshaddaaundercity.gif",
 "601_120":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/narshaddaaundercitystreet.gif",
-"601_121":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Light/large/obiwaninradiantvii.gif",
+"601_121":"https://res.starwarsccg.org/cards/legacy/VirtualBlock3-Dark/large/twilekadvisor.gif",
 "601_122":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/redeemedapprentice.gif",
 "601_123":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Light/large/sabotage.gif",
 "601_124":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/scoundrelsbravado.gif",
@@ -3574,7 +3574,7 @@ var fixedImages = {
 "601_126":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/scoundrelsingenuity.gif",
 "601_127":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Light/large/scoundrelsluck.gif",
 "601_128":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/spaceportscoundrelsguild.gif",
-"601_129":"https://res.starwarsccg.org/cards/legacy/VirtualBlock2-Light/large/starshiplevitation.gif",
+"601_129":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Light/large/cell2187.gif",
 "601_130":"https://res.starwarsccg.org/cards/legacy/VirtualBlock3-Light/large/tanusspijek.gif",
 "601_131":"https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/thisismorelikeit.gif",
 "601_132":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/jabbasprizefront.gif",
@@ -3605,7 +3605,6 @@ var fixedImages = {
 "601_155":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Dark/large/trophyofakill.gif",
 "601_156":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Dark/large/establishcontrol.gif",
 "601_157":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Dark/large/ivelostartoo.gif",
-"601_158":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Dark/large/jabbashaven.gif",
 "601_159":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Dark/large/ketmaliss.gif",
 "601_160":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/stunningleader.gif",
 "601_161":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Light/large/obiwankenobijediknight.gif",
@@ -3624,7 +3623,6 @@ var fixedImages = {
 "601_174":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/scomplinkaccess.gif",
 "601_175":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Light/large/bravofighter.gif",
 "601_176":"https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Light/large/welltakethelongway.gif",
-
 "601_177":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Dark/large/4lomwithconcussionrifle.gif",
 "601_178":"https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Dark/large/5d6ra7.gif",
 "601_179":"https://res.starwarsccg.org/cards/legacy/VirtualBlock1-Dark/large/admiralmotti.gif",
@@ -3703,7 +3701,12 @@ var fixedImages = {
 "601_252":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Light/large/red8.gif",
 "601_253":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/wedgeinredsquadron1.gif",
 "601_254":"https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/blasterrifle.gif",
+"601_255":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Light/large/dantooineengineeringcorps.gif",
+"601_256":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Light/large/dantooinebasedockingbay.gif",
+"601_257":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Light/large/dantooinebaseoperationscenter.gif",
+"601_258":"https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/dontunderestimateourchances.gif",
 
+// Virtual Alternate Images
 "200_1ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/aaylasecura_ai.png",
 "203_22ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/agentkallus_ai.png",
 "200_2ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/anakinskywalkerpadawanlearner_ai.png",
@@ -4224,7 +4227,9 @@ var Card = Class.extend({
                     (cardNo == 128) ||
                     (cardNo == 150) ||
                     (cardNo == 202) ||
-                    (cardNo == 245);
+                    (cardNo == 245) ||
+                    (cardNo == 256) ||
+                    (cardNo == 257);
        }
 
         return false;

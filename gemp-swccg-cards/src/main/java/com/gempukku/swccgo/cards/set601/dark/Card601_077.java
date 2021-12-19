@@ -29,6 +29,7 @@ public class Card601_077 extends AbstractNormalEffect {
         setLore("From his throne room aboard the second Death Star, Emperor Palpatine monitors activity throughout the galaxy.");
         setGameText("Deploy on Emperor. Jedi are power -1 and deploy +1. During your control phase, if Emperor present at a battleground site with Vader (or two Imperial Council Members), opponent loses 1 Force.");
         addIcons(Icon.DEATH_STAR_II, Icon.LEGACY_BLOCK_3);
+        addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
         setVirtualSuffix(true);
         setAsLegacy(true);
     }

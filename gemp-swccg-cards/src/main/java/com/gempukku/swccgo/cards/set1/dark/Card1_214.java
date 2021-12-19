@@ -30,7 +30,7 @@ public class Card1_214 extends AbstractNormalEffect {
         super(Side.DARK, 5, PlayCardZoneOption.ATTACHED, Title.Disarmed);
         setLore("C-3PO's arm was pulled off by attacking Tusken Raiders. 'I don't think I can make it. You go on, Master Luke...I'm done for.'");
         setGameText("If both players have a character with a weapon present at same site, deploy on that opponent's character during any control phase. Character loses all weapons, is power -1 and may no longer carry weapons. (Immune to Alter.)");
-        addKeywords(Keyword.DISARMING_CARD);
+        addKeywords(Keyword.DISARMING_CARD, Keyword.DEPLOYS_ON_CHARACTERS);
         addImmuneToCardTitle(Title.Alter);
     }
 
