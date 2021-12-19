@@ -4068,7 +4068,7 @@ public class GameConditions {
     public static boolean canReduceForceLoss(SwccgGame game) {
         ForceLossState forceLossState = game.getGameState().getTopForceLossState();
         if (forceLossState != null) {
-            return !forceLossState.getLoseForceEffect().isCannotBeReduced();
+            return !forceLossState.getLoseForceEffect().isCannotBeReduced(game);
         }
         BattleState battleState = game.getGameState().getBattleState();
         if (battleState != null) {

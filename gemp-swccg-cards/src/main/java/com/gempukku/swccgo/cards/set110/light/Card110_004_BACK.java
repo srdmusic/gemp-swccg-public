@@ -117,7 +117,7 @@ public class Card110_004_BACK extends AbstractObjective {
                 // Perform result(s)
                 if (game.getModifiersQuerying().hasGameTextModification(game.getGameState(), self, ModifyGameTextType.LEGACY__OR_BE_DESTROYED__FORCE_LOSS)) {
                     // Force loss from ...Or Be Destroyed must come from Reserve Deck (if possible) and may not be reduced below 2
-                    action.appendEffect(new LoseForceFromReserveDeckEffect(action, opponent, numForce));
+                    action.appendEffect(new LoseForceFromReserveDeckEffect(action, opponent, numForce, 2));
                 } else {
                     action.appendEffect(
                             new LoseForceEffect(action, opponent, numForce));
@@ -157,7 +157,7 @@ public class Card110_004_BACK extends AbstractObjective {
                 // Perform result(s)
                 if (game.getModifiersQuerying().hasGameTextModification(game.getGameState(), self, ModifyGameTextType.LEGACY__OR_BE_DESTROYED__FORCE_LOSS)) {
                     // Force loss from ...Or Be Destroyed must come from Reserve Deck (if possible) and may not be reduced below 2
-                    action.appendEffect(new LoseForceFromReserveDeckEffect(action, opponent, numForce));
+                    action.appendEffect(new LoseForceFromReserveDeckEffect(action, opponent, numForce, 2));
                 } else {
                     action.appendEffect(
                             new LoseForceEffect(action, opponent, numForce));
