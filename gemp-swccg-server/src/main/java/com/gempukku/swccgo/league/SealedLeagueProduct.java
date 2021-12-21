@@ -401,9 +401,9 @@ public class SealedLeagueProduct {
             case "LIGHTSPEED_DS_CRIMSON_DAWN":
                 collection.addItem("213_2",1); //Aemon Gremm With Percussive Cannon
                 collection.addItem("213_4",1); //Dryden Vos
-                collection.addItem("205_13",1); //Hondo Ohnaka
                 collection.addItem("213_7",1); //Hylobon Enforcer
                 collection.addItem("213_9",1); //Margo
+                collection.addItem("217_19",1); //Qi'ra, Top Lieutenant
                 collection.addItem("207_22",1); //Quiggold
                 collection.addItem("207_24",1); //Sidon Ithano
                 collection.addItem("9_126",1); //Inconsequential Losses
@@ -640,7 +640,7 @@ public class SealedLeagueProduct {
                 collection.addItem("200_6^",1); //Commander Cody
                 collection.addItem("209_6^",1); //General Kenobi
                 collection.addItem("211_53",1); //Cloning Cylinders
-                collection.addItem("12_47",1); //Security Control
+                collection.addItem("217_28",1); //Another Pathetic Lifeform & Security Control
                 collection.addItem("210_2",1); //Ambush (V)
                 collection.addItem("215_10",2); //For the Republic!
                 collection.addItem("12_62",1); //Mindful Of The Future
@@ -664,7 +664,7 @@ public class SealedLeagueProduct {
                 collection.addItem("6_77",1); //The Signal
                 collection.addItem("207_15",2); //This Is MY Ship!
                 collection.addItem("106_2",1); //Corulag
-                collection.addItem("9_57",1); //Home One: Docking Bay
+                collection.addItem("217_44",1); //Profundity: Docking Bay
                 collection.addItem("1_129",1); //Tatooine: Docking Bay 94
                 collection.addItem("207_17",1); //Ghost
                 collection.addItem("208_27",1); //Phantom
@@ -823,17 +823,17 @@ public class SealedLeagueProduct {
                 collection.addItem("108_3",1); //Luke With Lightsaber
                 collection.addItem("200_2^",2); //Anakin Skywalker, Padawan Learner
                 collection.addItem("203_36",1); //Padme Naberrie (V)
+                collection.addItem("217_32",1); //Cliegg Lars
                 collection.addItem("200_41",1); //I Must Be Allowed To Speak (V)
                 collection.addItem("6_56",1); //Projection Of A Skywalker
                 collection.addItem("208_14",1); //Prophecy Of The Force
-                collection.addItem("213_49",1); //Anakin Skywalker (V)
                 collection.addItem("6_61",1); //Blaster Deflection
                 collection.addItem("1_110",1); //Skywalkers
                 collection.addItem("203_18",1); //The Force Is Strong With This One (V)
                 collection.addItem("6_77",1); //The Signal
                 collection.addItem("208_23",1); //Endor: Ewok Village (V)
                 collection.addItem("205_6",1); //Tatooine: Lars' Moisture Farm (V)
-                collection.addItem("11_46",1); //Tatooine: Slave Quarters
+                collection.addItem("217_47",1); //Tatooine: Skywalker Hut
                 collection.addItem("201_19",1); //Tantive IV (V)
                 collection.addItem("3_71",1); //Anakin's Lightsaber
                 break;
@@ -842,11 +842,12 @@ public class SealedLeagueProduct {
                 collection.addItem("209_1",1); //Admiral Raddus
                 collection.addItem("9_12",1); //First Officer Thaneespi
                 collection.addItem("203_9",1); //Mon Calamari Admiral
+                collection.addItem("217_26",1); //Admiral Kilian
                 collection.addItem("9_36",1); //Launching The Assault
                 collection.addItem("200_44",1); //Mon Calamari Dockyards
                 collection.addItem("207_11",1); //Rebellions Are Built On Hope
                 collection.addItem("203_17",1); //Rebel Leadership (V)
-                collection.addItem("200_56",2); //Starship Levitation (V)
+                collection.addItem("200_56",1); //Starship Levitation (V)
                 collection.addItem("6_77",1); //The Signal
                 collection.addItem("12_72",1); //We Wish To Board At Once
                 collection.addItem("8_67",1); //Chandrila
@@ -882,8 +883,9 @@ public class SealedLeagueProduct {
                 break;
             case "LIGHTSPEED_LS_WOOKIEES":
                 collection.addItem("216_23",1); //Chewbacca, Defender Of Kashyyyk
+                collection.addItem("217_36", 1); //Grakchawwaa
                 collection.addItem("216_42",1); //Tarfful
-                collection.addItem("7_50",2); //Wookiee
+                collection.addItem("7_50",1); //Wookiee
                 collection.addItem("216_48",2); //Wookiee Warrior
                 collection.addItem("202_4",1); //Yoda, Keeper Of The Peace
                 collection.addItem("216_49",1); //Yarua (V)
