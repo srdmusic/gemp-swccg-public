@@ -73,7 +73,6 @@ public class Card217_008 extends AbstractImperial {
 
             return Collections.singletonList(action);
         }
-        // Check condition(s)
 
         return null;
     }
@@ -91,12 +90,12 @@ public class Card217_008 extends AbstractImperial {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make a regular move");
-            action.setActionMsg("Make a regular move with a unique Imperial of lesser ability here");
+            action.setActionMsg("Make a regular move with a unique Imperial of ability < 3 here");
 
             action.appendUsage(
                     new OncePerPhaseEffect(action));
 
-            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose a unique Imperial of lesser ability here to move as a regular move", filter) {
+            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose a unique Imperial of ability < 3 here to move as a regular move", filter) {
                 @Override
                 protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                     action.allowResponses(new RespondableEffect(action) {

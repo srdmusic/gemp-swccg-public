@@ -28,7 +28,7 @@ public class Card217_027 extends AbstractSite {
     public Card217_027() {
         super(Side.LIGHT, "Ajan Kloss: Training Course", Title.Ajan_Kloss);
         setLocationDarkSideGameText("");
-        setLocationLightSideGameText("If you just chose You Have That Power, Too on your [Skywalker] Epic Event, [download] My Parents Were Strong. Deploys only as a starting location.");
+        setLocationLightSideGameText("Deploys only as a starting location. If you just chose You Have That Power, Too on your [Skywalker] Epic Event, [download] My Parents Were Strong.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.SKYWALKER, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
     }
@@ -47,7 +47,7 @@ public class Card217_027 extends AbstractSite {
 
         if (TriggerConditions.justMadeChoice(game, effectResult, playerOnLightSideOfLocation, Filters.and(Icon.SKYWALKER, Filters.Epic_Event))
                 && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, true, false)
-                && "You Have That Power, Too".equals(((ChoiceMadeResult) effectResult).getChoice())) {
+                && "You Have That Power, Too".equals(((ChoiceMadeResult)effectResult).getChoice())) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setPerformingPlayer(playerOnLightSideOfLocation);
@@ -55,7 +55,6 @@ public class Card217_027 extends AbstractSite {
             action.appendEffect(
                     new DeployCardFromReserveDeckEffect(action, Filters.title("My Parents Were Strong"), GameConditions.isDuringStartOfGame(game), !GameConditions.isDuringStartOfGame(game)));
             return Collections.singletonList(action);
-
         }
         return null;
     }

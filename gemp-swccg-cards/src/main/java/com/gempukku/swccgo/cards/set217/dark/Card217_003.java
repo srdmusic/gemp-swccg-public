@@ -25,10 +25,10 @@ public class Card217_003 extends AbstractNormalEffect {
     public Card217_003() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Begin Landing Your Troops & Fighters Straight Ahead", Uniqueness.UNIQUE);
         addComboCardTitles("Begin Landing Your Troops", "Fighters Straight Ahead");
-        setGameText("Deploy on table. Your [Trade Federation] starships and unique (•) Republic characters of ability < 4 are forfeit +2. " +
+        setGameText("Deploy on table. Your unique (•) Republic characters of ability < 4 and your [Trade Federation] starships are forfeit +2. " +
                 "Nabrun Leids and Elis Helrot are limited to owner's move phase and exterior sites only. " +
                 "Once per turn, may deploy an [Episode I] (or Coruscant) docking bay from Reserve Deck; reshuffle. " +
-                "Your Force generation is +1 at Naboo system while you occupy with a [Trade Federation] starship. " +
+                "While you occupy Naboo system with a [Trade Federation] starship, your Force generation is +1 there. " +
                 "[Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);

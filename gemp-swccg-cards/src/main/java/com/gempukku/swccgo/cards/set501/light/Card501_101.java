@@ -46,7 +46,7 @@ public class Card501_101 extends AbstractSystem {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(final String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.DAGOBAH__UPLOAD_DAGOBAH_SITE_OR_JEDI_TEST;
+        GameTextActionId gameTextActionId = GameTextActionId.DAGOBAH_V__UPLOAD_DAGOBAH_SITE_OR_JEDI_TEST;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)

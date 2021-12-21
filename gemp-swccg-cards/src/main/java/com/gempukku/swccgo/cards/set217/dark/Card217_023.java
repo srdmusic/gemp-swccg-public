@@ -51,7 +51,8 @@ public class Card217_023 extends AbstractNormalEffect {
         if (GameConditions.canSpot(game, self, Filters.and(Filters.Sidious, Filters.with(self, Filters.Dark_Jedi)))
                 && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
-            TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Retrieve a character into hand");
             action.appendUsage(new OncePerGameEffect(action));
             action.appendEffect(

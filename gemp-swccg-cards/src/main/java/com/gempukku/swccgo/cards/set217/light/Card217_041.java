@@ -33,7 +33,7 @@ public class Card217_041 extends AbstractNormalEffect {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.My_Parents_Were_Strong, Uniqueness.UNIQUE);
         setLore("");
         setGameText("Deploy on Training Course. When deployed, stack [Set 4] Falcon face up here from outside your deck. Falcon may deploy from here as if from hand. Rey is a Skywalker. Once per battle involving Rey, may take your just drawn destiny into hand. [Immune to Alter.]");
-        addIcons(Icon.SKYWALKER, Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
+        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
     }
 

@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class Card217_022 extends AbstractCharacterWeapon {
     public Card217_022() {
-        super(Side.DARK, 0, "Sidious's Lightsaber", Uniqueness.UNIQUE);
+        super(Side.DARK, 0, "Sidious' Lightsaber", Uniqueness.UNIQUE);
         setGameText("When drawn for destiny, destiny +1 for each Dark Jedi or Jedi on table. Deploy on [Episode I] Sidious (even as a 'react'). May add 1 to Force drain where present. May target a character or creature for free. Draw two destiny. Target hit, and its forfeit = 0, if total destiny > defense value.");
         addKeywords(Keyword.LIGHTSABER);
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);

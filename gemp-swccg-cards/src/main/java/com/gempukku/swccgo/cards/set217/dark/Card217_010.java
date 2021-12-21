@@ -36,8 +36,8 @@ public class Card217_010 extends AbstractAlien {
     public Card217_010() {
         super(Side.DARK, 2, 3, 3, 3, 5, "Gar Saxon", Uniqueness.UNIQUE);
         setArmor(5);
-        setLore("Mandalorian. Leader. Assassin. Death Watch.");
-        setGameText("If just deployed to a site where opponent has more than four characters, opponent loses 2 Force. If Saxon armed (or with a Mandalorian), opponent may not move away from (or cancel) a battle here. Jedi here are defense value -1 for each Mandalorian here.");
+        setLore("Mandalorian leader. Death Watch assassin.");
+        setGameText("If deployed to a site where opponent has more than four characters, opponent loses 2 Force. Jedi here are defense value -1 for each of your Mandalorians here. While armed (or with a Mandalorian), opponent may not move away from (or cancel) battles here.");
         addKeywords(Keyword.LEADER, Keyword.ASSASSIN);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_17);
         setSpecies(Species.MANDALORIAN);
@@ -50,7 +50,7 @@ public class Card217_010 extends AbstractAlien {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotMoveAwayFromLocationModifier(self, Filters.and(Filters.opponents(self), Filters.here(self)), armedOrWithMandalorianInBattle, Filters.here(self)));
         modifiers.add(new MayNotCancelBattleModifier(self, armedOrWithMandalorianInBattle, game.getOpponent(self.getOwner())));
-        modifiers.add(new DefenseValueModifier(self, Filters.and(Filters.Jedi, Filters.here(self)), new NegativeEvaluator(new HereEvaluator(self, Filters.Mandalorian))));
+        modifiers.add(new DefenseValueModifier(self, Filters.and(Filters.Jedi, Filters.here(self)), new NegativeEvaluator(new HereEvaluator(self, Filters.and(Filters.your(self), Filters.Mandalorian)))));
         return modifiers;
     }
 
@@ -61,12 +61,13 @@ public class Card217_010 extends AbstractAlien {
         final String opponent = game.getOpponent(self.getOwner());
 
         // Check condition(s)
-        if (TriggerConditions.justDeployed(game, effectResult, self)
+        if (TriggerConditions.justDeployedToLocation(game, effectResult, self, Filters.site)
                 && GameConditions.canSpot(game, self, 5, Filters.and(Filters.opponents(self), Filters.character, Filters.here(self)))) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Opponent loses 2 Force");
-            action.appendEffect(new LoseForceEffect(action, opponent, 2));
+            action.appendEffect(
+                    new LoseForceEffect(action, opponent, 2));
 
             actions.add(action);
         }

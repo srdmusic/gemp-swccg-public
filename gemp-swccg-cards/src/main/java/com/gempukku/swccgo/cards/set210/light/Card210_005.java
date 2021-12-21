@@ -72,7 +72,7 @@ public class Card210_005 extends AbstractStarfighter {
                 && GameConditions.hasPiloting(game, self, Filters.Snap)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Cancel Force Drain");
+            action.setText("Cancel Force drain");
             action.appendUsage(
                     new OncePerTurnEffect(action));
             action.appendCost(

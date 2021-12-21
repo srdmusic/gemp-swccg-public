@@ -21,7 +21,7 @@ public class Card217_040 extends AbstractAlien {
     public Card217_040() {
         super(Side.LIGHT, 1, 5, 4, 5, 7, "Mara Jade", Uniqueness.UNIQUE);
         setLore("Female smuggler.");
-        setGameText("Adds 2 to power of anything she pilots. While Luke or Talon Karrde on table, power +1 and she moves for free. Anakin's Lightsaber may deploy on your Mara. Immune to attrition < 4.");
+        setGameText("[Pilot] 2. While Luke or Talon Karrde on table, power +1 and she moves for free. Anakin's Lightsaber may deploy on your Mara. Immune to attrition < 4.");
         addKeywords(Keyword.FEMALE, Keyword.SMUGGLER);
         addPersona(Persona.MARA_JADE);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_17);

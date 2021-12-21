@@ -9,7 +9,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.BreakCoverEffect;
+import com.gempukku.swccgo.logic.effects.BreakCoversEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -28,7 +28,7 @@ public class Card217_002 extends AbstractDroid {
     public Card217_002() {
         super(Side.DARK, 0.5, 2, 2, 4, "BB-9E", Uniqueness.UNIQUE);
         setAlternateDestiny(5.5);
-        setGameText("While present with your leader or First Order character, cancels BB-8's and Rose's game text at same or related locations. During your move phase, may place in Used Pile to 'break cover' of all Undercover spies here.");
+        setGameText("While present with your leader or First Order character, cancels BB-8's and/or Rose's game text at same and related sites. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any).");
         addIcons(Icon.EPISODE_VII, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_17);
         addModelType(ModelType.ASTROMECH);
     }
@@ -36,7 +36,7 @@ public class Card217_002 extends AbstractDroid {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.or(Filters.BB8, Filters.Rose), Filters.at(Filters.sameOrRelatedLocation(self))), new PresentWithCondition(self, Filters.and(Filters.your(self), Filters.or(Filters.leader, Filters.First_Order_character)))));
+        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.or(Filters.BB8, Filters.Rose), Filters.at(Filters.sameOrRelatedSite(self))), new PresentWithCondition(self, Filters.and(Filters.your(self), Filters.or(Filters.leader, Filters.First_Order_character)))));
         return modifiers;
     }
 
@@ -49,22 +49,21 @@ public class Card217_002 extends AbstractDroid {
         Filter targetFilter = Filters.and(Filters.undercover_spy, Filters.atSameSite(self));
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
-                && GameConditions.canTarget(game, self, SpotOverride.INCLUDE_UNDERCOVER, targetFilter)) {
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("'Break cover' of undercover spies");
-
-            action.appendCost(
-                    new PlaceCardInUsedPileFromTableEffect(action, self));
-
-            //TODO this should really let you choose the order
             Collection<PhysicalCard> undercoverSpies = Filters.filterAllOnTable(game, Filters.and(targetFilter, Filters.canBeTargetedBy(self)));
-            for (PhysicalCard spy : undercoverSpies) {
+            if (!undercoverSpies.isEmpty()) {
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Place in Used Pile");
+                action.setActionMsg("'Break cover' of all undercover spies here (if any)");
+
+                action.appendCost(
+                        new PlaceCardInUsedPileFromTableEffect(action, self));
+
                 action.appendEffect(
-                        new BreakCoverEffect(action, spy));
+                        new BreakCoversEffect(action, undercoverSpies));
+                actions.add(action);
             }
-            actions.add(action);
         }
 
         return actions;

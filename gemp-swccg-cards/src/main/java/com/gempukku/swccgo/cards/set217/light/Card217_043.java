@@ -11,19 +11,15 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.LoseCardsFromOffTableSimultaneouslyEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardInLostPileFromTableEffect;
-import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceGenerationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.PassthruEffect;
 import com.gempukku.swccgo.logic.timing.results.AboutToPlaceCardOutOfPlayFromOffTableResult;
 import com.gempukku.swccgo.logic.timing.results.AboutToPlaceCardOutOfPlayFromTableResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -37,7 +33,7 @@ public class Card217_043 extends AbstractDefensiveShield {
         super(Side.LIGHT, Title.Ounee_Ta);
         setVirtualSuffix(true);
         setLore("Jabba's decadent behavior makes him susceptible to deception. Leia and Lando exploited this weakness, posing as Jabba's kind of scum.");
-        setGameText("Plays on table. At each opponent's <> site, your Rebels are each deploy -2 and your Force generation is +1. If [Theed Palace] Sidious is about to place your Jedi out of play, may lose 3 Force to place that character in your Lost Pile instead.");
+        setGameText("Plays on table. At each opponent's <> site, your Rebels are each deploy -2 and your Force generation is +1. May lose 3 Force to cancel an attempt by [Theed Palace] Sidious to place your Jedi out of play.");
         addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_DEFENSIVE_SHIELD);
     }
 
@@ -53,7 +49,7 @@ public class Card217_043 extends AbstractDefensiveShield {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
         Filter yourJedi = Filters.and(Filters.your(self), Filters.Jedi);
@@ -66,24 +62,22 @@ public class Card217_043 extends AbstractDefensiveShield {
             final PhysicalCard source = result.getSourceCard();
 
             if (source != null
-                    && Filters.Sidious.accepts(game, source)) {
+                    && Filters.and(Icon.THEED_PALACE, Filters.Sidious).accepts(game, source)) {
 
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-                action.setText("Place Jedi in Lost Pile");
-                action.setActionMsg("Place " + GameUtils.getCardLink(card) + " in Lost Pile instead of being placed out of play");
+                action.setText("Cancel attempt to place Jedi out of play");
+                action.setActionMsg("Cancel attempt by " + GameUtils.getCardLink(source) + " to place " + GameUtils.getCardLink(card) + " out of play");
                 action.appendCost(new LoseForceEffect(action, playerId, 3));
 
-                action.allowResponses("Place " + GameUtils.getCardLink(card) + " in Lost Pile",
-                        new RespondableEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                result.getPreventableCardEffect().preventEffectOnCard(card);
-                                action.appendEffect(
-                                        new PlaceCardInLostPileFromTableEffect(action, card));
-                            }
-                        }
-                );
+                action.appendEffect(new PassthruEffect(action) {
+                    @Override
+                    protected void doPlayEffect(SwccgGame game) {
+                        // Perform result(s)
+                        action.addAnimationGroup(source);
+                        result.getPreventableCardEffect().preventEffectOnCard(card);
+                        game.getGameState().sendMessage(playerId +  " cancels attempt by " + GameUtils.getCardLink(source) + " to place " + GameUtils.getCardLink(card) + " out of play");
+                    }
+                });
                 actions.add(action);
             }
         }
@@ -95,24 +89,22 @@ public class Card217_043 extends AbstractDefensiveShield {
             final PhysicalCard source = result.getSourceCard();
 
             if (source != null
-                    && Filters.Sidious.accepts(game, source)) {
+                    && Filters.and(Icon.THEED_PALACE, Filters.Sidious).accepts(game, source)) {
 
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-                action.setText("Place Jedi in Lost Pile");
-                action.setActionMsg("Place " + GameUtils.getCardLink(card) + " in Lost Pile instead of being placed out of play");
+                action.setText("Cancel attempt to place Jedi out of play");
+                action.setActionMsg("Cancel attempt by " + GameUtils.getCardLink(source) + " to place " + GameUtils.getCardLink(card) + " out of play");
                 action.appendCost(new LoseForceEffect(action, playerId, 3));
 
-                action.allowResponses("Place " + GameUtils.getCardLink(card) + " in Lost Pile",
-                        new RespondableEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                result.getPreventableCardEffect().preventEffectOnCard(card);
-                                action.appendEffect(
-                                        new LoseCardsFromOffTableSimultaneouslyEffect(action, Collections.singleton(card), false));
-                            }
-                        }
-                );
+                action.appendEffect(new PassthruEffect(action) {
+                    @Override
+                    protected void doPlayEffect(SwccgGame game) {
+                        // Perform result(s)
+                        action.addAnimationGroup(source);
+                        result.getPreventableCardEffect().preventEffectOnCard(card);
+                        game.getGameState().sendMessage(playerId +  " cancels attempt by " + GameUtils.getCardLink(source) + " to place " + GameUtils.getCardLink(card) + " out of play");
+                    }
+                });
                 actions.add(action);
             }
         }
