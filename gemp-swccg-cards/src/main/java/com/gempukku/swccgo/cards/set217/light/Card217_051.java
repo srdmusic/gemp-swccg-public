@@ -25,8 +25,8 @@ import java.util.List;
  */
 public class Card217_051 extends AbstractLostOrStartingInterrupt {
     public Card217_051() {
-        super(Side.LIGHT, 5, "The Rise Of Skywalker", Uniqueness.UNIQUE);
-        setGameText("LOST: Peek at cards in your Force Pile. " +
+        super(Side.LIGHT, 5, Title.The_Rise_Of_Skywalker, Uniqueness.UNIQUE);
+        setGameText("LOST: Peek at the cards in your Force Pile. " +
                 "STARTING: If your starting location was a [Skywalker] site, " +
                 "deploy The Force Is Strong In My Family and two Effects that deploy for free and are always immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_17);
@@ -38,9 +38,9 @@ public class Card217_051 extends AbstractLostOrStartingInterrupt {
         if (GameConditions.hasForcePile(game, playerId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            action.setText("Peek at cards in your Force Pile");
+            action.setText("Peek at Force Pile");
             // Allow response(s)
-            action.allowResponses("Peek at cards in your Force Pile",
+            action.allowResponses("Peek at the cards in your Force Pile",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {

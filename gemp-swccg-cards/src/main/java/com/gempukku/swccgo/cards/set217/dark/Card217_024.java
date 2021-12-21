@@ -62,13 +62,12 @@ public class Card217_024 extends AbstractNormalEffect {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
 
-        // Emperor, Maul, and your Dathomirians are lost.
+        // Emperor and Maul are lost.
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)) {
-            Collection<PhysicalCard> toBeLost =
-                    Filters.filterActive(game, self, Filters.or(Filters.Emperor, Filters.Maul));
+            Collection<PhysicalCard> toBeLost = Filters.filterActive(game, self, Filters.or(Filters.Emperor, Filters.Maul));
             if (!toBeLost.isEmpty()) {
 
                 final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);

@@ -26,7 +26,7 @@ public class Card217_012 extends AbstractSite {
         super(Side.DARK, Title.North_Ridge, Title.Hoth);
         setVirtualSuffix(true);
         setLocationDarkSideGameText("AT-ATs move to and from here for free. During your first turn, AT-ATs may not deploy here.");
-        setLocationLightSideGameText("T-47s are power +1 here. If two T-47s here, Force drain +1 here.");
+        setLocationLightSideGameText("T-47s are power +1 here. If you have two piloted T-47s here, Force drain +1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.HOTH, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
@@ -46,7 +46,7 @@ public class Card217_012 extends AbstractSite {
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new PowerModifier(self, Filters.and(Filters.T_47, Filters.here(self)), 1));
-        modifiers.add(new ForceDrainModifier(self, new HereCondition(self, 2, Filters.T_47), 1, playerOnLightSideOfLocation));
+        modifiers.add(new ForceDrainModifier(self, new HereCondition(self, 2, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.piloted, Filters.T_47)), 1, playerOnLightSideOfLocation));
         return modifiers;
     }
 }

@@ -24,7 +24,7 @@ import java.util.List;
 public class Card217_035 extends AbstractUsedInterrupt {
     public Card217_035() {
         super(Side.LIGHT, 4, "Everything We Need", Uniqueness.UNIQUE);
-        setGameText("If My Parents Were Strong on table: During battle, add X to your total power, where X = number of your cards out of play. OR Take Saddle or a Kef Bir site into hand from Reserve Deck; reshuffle.");
+        setGameText("If My Parents Were Strong on table, choose: [upload] Saddle or a Kef Bir site. OR During battle, add X to your total power, where X = number of your cards out of play.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
     }
 

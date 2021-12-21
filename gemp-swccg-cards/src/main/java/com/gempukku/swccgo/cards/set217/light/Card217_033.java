@@ -30,7 +30,7 @@ public class Card217_033 extends AbstractSystem {
         super(Side.LIGHT, Title.Dagobah, 9);
         setVirtualSuffix(true);
         setLocationDarkSideGameText("No Force drains here.");
-        setLocationLightSideGameText("Once per turn, may take a Jedi Test or Dagobah site into hand from Reserve Deck; reshuffle.");
+        setLocationLightSideGameText("Once per turn, may [upload] a Jedi Test or Dagobah site.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.DAGOBAH, Icon.PLANET, Icon.VIRTUAL_SET_17);
@@ -45,7 +45,7 @@ public class Card217_033 extends AbstractSystem {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(final String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.DAGOBAH__DOWNLOAD_DAGOBAH_SITE;
+        GameTextActionId gameTextActionId = GameTextActionId.DAGOBAH_V__UPLOAD_DAGOBAH_SITE_OR_JEDI_TEST;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)

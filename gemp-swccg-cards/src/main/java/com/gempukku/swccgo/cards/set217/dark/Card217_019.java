@@ -53,7 +53,7 @@ public class Card217_019 extends AbstractAlien {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new VariableMultiplierModifier(self, Filters.Secret_Plans, new UnlessCondition(new OccupiesCondition(game.getOpponent(self.getOwner()), Filters.battleground_site)), 2, Variable.X));
+        modifiers.add(new VariableMultiplierModifier(self, Filters.Secret_Plans, new UnlessCondition(new OccupiesCondition(game.getOpponent(self.getOwner()), Filters.battleground_site)),2, Variable.X));
         return modifiers;
     }
 
@@ -64,8 +64,7 @@ public class Card217_019 extends AbstractAlien {
         // Check condition(s)
         if (!GameConditions.occupies(game, game.getOpponent(self.getOwner()), Filters.battleground_site)
                 && TriggerConditions.isPlayingCard(game, effect, Filters.It_Could_Be_Worse)
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)
-                && GameConditions.isDuringBattleAt(game, Filters.here(self))) {
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             // Build action using common utility
@@ -85,9 +84,7 @@ public class Card217_019 extends AbstractAlien {
         // Check condition(s)
         if (!GameConditions.occupies(game, opponent, Filters.battleground_site)
                 && TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canTargetToCancel(game, self, Filters.It_Could_Be_Worse)
-                && GameConditions.isDuringBattleAt(game, Filters.here(self))) {
-
+                && GameConditions.canTargetToCancel(game, self, Filters.It_Could_Be_Worse)) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             // Build action using common utility

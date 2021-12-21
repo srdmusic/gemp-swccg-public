@@ -30,8 +30,8 @@ public class Card217_052 extends AbstractNormalEffect {
     public Card217_052() {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Your_Thoughts_Dwell_On_Your_Mother, Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on Slave Quarters. Once per turn, may deploy Anakin's Lightsaber from Reserve Deck; reshuffle (or lose 1 Force to deploy it from Lost Pile). If Anakin drawn for destiny, may take him into hand to cancel and cause a re-draw. [Immune to Alter.]");
-        addIcons(Icon.SKYWALKER, Icon.EPISODE_I, Icon.CORUSCANT, Icon.VIRTUAL_SET_17);
+        setGameText("Deploy on Slave Quarters. Once per turn, may [download] Anakin's Lightsaber (or lose 1 Force to deploy it from Lost Pile). If Anakin just drawn for destiny, may take him into hand to cancel and cause a re-draw. [Immune to Alter.]");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
     }
 
@@ -63,8 +63,7 @@ public class Card217_052 extends AbstractNormalEffect {
             if (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId, Persona.ANAKINS_LIGHTSABER)) {
 
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Deploy card from Lost Pile");
-                action.setActionMsg("Deploy Anakin's Lightsaber or C-3PO from Lost Pile");
+                action.setText("Deploy Anakin's Lightsaber from Lost Pile");
                 // Update usage limit(s)
                 action.appendUsage(
                         new OncePerTurnEffect(action));

@@ -27,7 +27,7 @@ public class Card217_045 extends AbstractDroid {
         super(Side.LIGHT, 2, 2, 1, 3, "R3-A2 (Arthree-Aytoo)", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Special-purpose astromech capable of coordinating piloting coordinates and approach angles during combat.");
-        setGameText("Your starships here with an astromech character aboard are power +1 (+2 at Hoth), immune to Lateral Damage, and may move to systems or sectors as a 'react.'");
+        setGameText("Your starships here with an astromech character aboard are power +1 (or +2 if also at Hoth), immune to Lateral Damage, and may move to systems or sectors as a 'react.'");
         addIcons(Icon.SPECIAL_EDITION, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_17);
         addModelType(ModelType.ASTROMECH);
     }

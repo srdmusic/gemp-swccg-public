@@ -29,7 +29,7 @@ public class Card217_048 extends AbstractSite {
         super(Side.LIGHT, Title.Slave_Quarters, Title.Tatooine);
         setVirtualSuffix(true);
         setLocationDarkSideGameText("");
-        setLocationLightSideGameText("If you just chose My Father Has It on your [Skywalker] Epic Event, [download] Your Thoughts Dwell On Your Mother. Deploys only as a starting location.");
+        setLocationLightSideGameText("Deploys only as a starting location. If you just chose My Father Has It on your [Skywalker] Epic Event, [download] Your Thoughts Dwell On Your Mother.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.SKYWALKER, Icon.TATOOINE, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
     }
@@ -48,7 +48,7 @@ public class Card217_048 extends AbstractSite {
 
         if (TriggerConditions.justMadeChoice(game, effectResult, playerOnLightSideOfLocation, Filters.and(Icon.SKYWALKER, Filters.Epic_Event))
                 && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, true, false)
-                && "My Father Has It".equals(((ChoiceMadeResult) effectResult).getChoice())) {
+                && "My Father Has It".equals(((ChoiceMadeResult)effectResult).getChoice())) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setPerformingPlayer(playerOnLightSideOfLocation);

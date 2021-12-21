@@ -34,7 +34,7 @@ public class Card217_026 extends AbstractRepublic {
     public Card217_026() {
         super(Side.LIGHT, 2, 3, 2, 3, 5, "Admiral Kilian", Uniqueness.UNIQUE);
         setLore("Corellian leader.");
-        setGameText("Adds 2 to power of anything he pilots. Unless with Boba Fett, your total power is +2 here. While piloting a capital starship, it is immune to attrition < 4 and, once per game, if it is about to be lost, may relocate your characters aboard to a related exterior site.");
+        setGameText("[Pilot] 2. Unless with Boba Fett, your total power is +2 here. While piloting a capital starship, it is immune to attrition < 4 and, once per game, if it is about to be lost, may relocate your characters aboard to a related exterior site.");
         addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.WARRIOR, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_17);
         addKeywords(Keyword.LEADER, Keyword.ADMIRAL);
         setSpecies(Species.CORELLIAN);
