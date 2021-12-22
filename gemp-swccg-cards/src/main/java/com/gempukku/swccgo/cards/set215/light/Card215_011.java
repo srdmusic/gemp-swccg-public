@@ -26,7 +26,7 @@ public class Card215_011 extends AbstractRebel {
     public Card215_011() {
         super(Side.LIGHT, 1, 4, 4, 3, 6, "Han Solo, Optimistic General", Uniqueness.UNIQUE);
         setLore("Leader. Scout.");
-        setGameText("May be targeted instead of a Resistance character by I Want That Map. Adds 3 to power of anything he pilots. [Endor] scouts are destiny +1. Cancels Kylo's game text here. During battle with Chewie or [Endor] Leia, may add one destiny to total power.");
+        setGameText("May be targeted instead of a Resistance character by I Want That Map. Adds 3 to power of anything he pilots. Your [Endor] scouts are destiny +1. Cancels Kylo's game text here. During battle with Chewie or [Endor] Leia, may add one destiny to total power.");
         addPersona(Persona.HAN);
         addIcons(Icon.WARRIOR, Icon.PILOT, Icon.ENDOR, Icon.VIRTUAL_SET_15);
         addKeywords(Keyword.LEADER, Keyword.SCOUT, Keyword.GENERAL);
@@ -44,7 +44,7 @@ public class Card215_011 extends AbstractRebel {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
         modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.Kylo, Filters.here(self))));
-        modifiers.add(new DestinyModifier(self, Filters.and(Icon.ENDOR, Filters.scout), 1));
+        modifiers.add(new DestinyModifier(self, Filters.and(Filters.your(self), Icon.ENDOR, Filters.scout), 1));
         return modifiers;
     }
 

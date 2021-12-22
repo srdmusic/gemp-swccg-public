@@ -2,22 +2,31 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.*;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.CancelDestinyAndCauseRedrawEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.RespondableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.StackCardsFromOutsideDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeDestinyCardIntoHandEffect;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.DestinyDrawnResult;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -29,7 +38,7 @@ public class Card501_031 extends AbstractNormalEffect {
     public Card501_031() {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.My_Parents_Were_Strong, Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on Rey's Encampment. Once per turn, may deploy Hidden Recess or Jakku from Reserve Deck; reshuffle. If Rey drawn for destiny, may take her into hand to cancel and redraw that destiny. While alone (or with Kylo), Rey is immune to attrition. [Immune to Alter.]");
+        setGameText("Deploy on Training Course. When deployed, stack [Set 4] Falcon face up here from outside your deck. Falcon may deploy from here as if from hand. Rey is a Skywalker. Once per battle involving Rey, may take your just drawn destiny into hand. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("My Parents Were Strong");
@@ -37,57 +46,52 @@ public class Card501_031 extends AbstractNormalEffect {
 
     @Override
     protected Filter getValidDeployTargetFilter(String playerId, SwccgGame game, PhysicalCard self, PhysicalCard sourceCard, PlayCardOption playCardOption, boolean forFree, float changeInCost, DeploymentRestrictionsOption deploymentRestrictionsOption, DeployAsCaptiveOption deployAsCaptiveOption, ReactActionOption reactActionOption, boolean isSimDeployAttached, boolean ignorePresenceOrForceIcons) {
-        return Filters.Reys_Encampment;
+        return Filters.title("Ajan Kloss: Training Course");
     }
 
     @Override
-    public List<Modifier> getWhileInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new ImmuneToAttritionModifier(self, Filters.and(Filters.Rey, Filters.or(Filters.alone, Filters.with(self, Filters.Kylo)))));
-        return modifiers;
-    }
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
 
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.MY_PARENTS_WERE_STRONG__DOWNLOAD_LOCATION;
+        if (TriggerConditions.justDeployed(game, effectResult, self)) {
 
-        // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
-                && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Jakku)
-                    || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Hidden_Recess))) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy Hidden Recess or Jakku from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            // Perform result(s)
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Stack [Set 4] Falcon here");
+            action.setActionMsg("Stack [Set 4] Falcon here from outside your deck");
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Jakku_system, Filters.title(Title.Hidden_Recess)), true));
+                    new StackCardsFromOutsideDeckEffect(action, self.getOwner(), 1, 1, self, false, Filters.and(Icon.VIRTUAL_SET_4, Filters.Falcon)));
             return Collections.singletonList(action);
         }
+
         return null;
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.ANY_CARD__CANCEL_AND_REDRAW_A_DESTINY;
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new MayDeployAsIfFromHandModifier(self, Filters.and(Filters.stackedOn(self), Filters.Falcon)));
+        modifiers.add(new KeywordModifier(self, Filters.Rey, Keyword.SKYWALKER));
+        return modifiers;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (GameConditions.isDestinyCardMatchTo(game, Filters.Rey)
-                && GameConditions.canTakeDestinyCardIntoHand(game, playerId)
-                && GameConditions.canCancelDestinyAndCauseRedraw(game, playerId)) {
+        if (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, playerId)
+                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.Rey)
+                && GameConditions.canTakeDestinyCardIntoHand(game, playerId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take into hand and cause re-draw");
-            action.setActionMsg("Cancel destiny and cause re-draw");
-            // Pay cost(s)
-            action.appendEffect(
-                    new TakeDestinyCardIntoHandEffect(action));
+            action.setText("Take destiny card into hand");
+            action.setActionMsg("Take just drawn destiny card, " + GameUtils.getCardLink(((DestinyDrawnResult) effectResult).getCard()) + ", into hand");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerBattleEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new CancelDestinyAndCauseRedrawEffect(action));
+                    new TakeDestinyCardIntoHandEffect(action));
             return Collections.singletonList(action);
         }
         return null;

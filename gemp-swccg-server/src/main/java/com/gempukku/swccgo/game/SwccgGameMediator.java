@@ -1114,7 +1114,7 @@ public class SwccgGameMediator {
                 || player.hasType(Player.Type.PLAY_TESTER))) {
             throw new PrivateInformationException();
         }
-        
+
         _readLock.lock();
         try {
             int number = _channelNextIndex;
@@ -1232,15 +1232,15 @@ public class SwccgGameMediator {
                     // Communing (ignore the location)
                     return "Communing";
                 }
-                if(Filters.title("What Gives A Jedi His Power").accepts(_swccgoGame, startingInterrupt)
+                if(Filters.title(Title.The_Rise_Of_Skywalker).accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null) {
                     // The Force Is Strong In My Family
                     return "Skywalker Saga";
                 }
-                if(Filters.title("Rise Of The Sith").accepts(_swccgoGame, startingInterrupt)
+                if(Filters.title(Title.Rise_Of_The_Sith).accepts(_swccgoGame, startingInterrupt)
                         && startingLocation.getBlueprint().getTitle() != null) {
-                    // Rule Of Two
-                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Rule Of Two";
+                    // Revenge Of The Sith
+                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Revenge Of The Sith";
                 }
                 if (Filters.Communing.accepts(_swccgoGame, startingInterrupt)
                         && startingInterrupt.getBlueprint().isLegacy()) {
@@ -1378,10 +1378,18 @@ public class SwccgGameMediator {
             }
             if (Filters.or(Filters.Local_Uprising, Filters.Liberation, Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
                 // Operatives
-                objectiveLabel = "Operatives";
+                if (!objective.getBlueprint().hasVirtualSuffix()) {
+                    objectiveLabel = "Operatives";
+                }
+                // Imperial Occupation v
+                else if(Filters.or(Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
+                    objectiveLabel = "Imperial Occupation";
+                } else if(Filters.or(Filters.Local_Uprising, Filters.Liberation).accepts(_swccgoGame, objective)) {
+                    objectiveLabel = "Local Uprising";
+                }
             }
             if (Filters.or(Filters.You_Can_Either_Profit_By_This, Filters.Or_Be_Destroyed).accepts(_swccgoGame, objective)) {
-                // Your Can Either Profit By This...
+                // You Can Either Profit By This...
                 objectiveLabel = "Profit";
             }
             if (Filters.or(Filters.Quiet_Mining_Colony, Filters.Independent_Operation).accepts(_swccgoGame, objective)) {

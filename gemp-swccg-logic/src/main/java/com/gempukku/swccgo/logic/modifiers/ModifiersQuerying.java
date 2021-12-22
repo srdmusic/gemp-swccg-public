@@ -23,6 +23,8 @@ public interface ModifiersQuerying {
 
     LimitCounter getUntilEndOfBattleLimitCounter(PhysicalCard card, String playerId, int gameTextSourceCardId, GameTextActionId gameTextActionId);
 
+    LimitCounter getUntilEndOfAttackLimitCounter(PhysicalCard card, String playerId, int gameTextSourceCardId, GameTextActionId gameTextActionId);
+
     LimitCounter getUntilEndOfDuelLimitCounter(PhysicalCard card, String playerId, int gameTextSourceCardId, GameTextActionId gameTextActionId);
 
     LimitCounter getUntilEndOfTurnLimitCounter(PhysicalCard card, String playerId, int gameTextSourceCardId, GameTextActionId gameTextActionId);
@@ -1815,6 +1817,8 @@ public interface ModifiersQuerying {
      */
     int getNumDestinyDrawsToAttritionOnly(GameState gameState, String player, boolean isGetLimit, boolean isForGui);
 
+    int getNumAttackDestinyDraws(GameState gameState, String player, boolean isGetLimit, boolean isForGui);
+
     boolean mayInitiateBattle(GameState gameState, PhysicalCard physicalCard);
 
     boolean mayBeBattled(GameState gameState, PhysicalCard physicalCard);
@@ -1836,10 +1840,10 @@ public interface ModifiersQuerying {
     /**
      * Gets the total ability in the attack.
      * @param gameState the game state
-     * @param defender true if total for defender, otherwise total for attacker
+     * @param playerId which player
      * @return the total ability
      */
-    float getAttackTotalAbility(GameState gameState, boolean defender);
+    float getAttackTotalAbility(GameState gameState, String playerId);
 
     /**
      * Determines if a specified player's total ability at the specified location may not be reduced.
@@ -2681,6 +2685,16 @@ public interface ModifiersQuerying {
      * @return true if card ignores location deployment restrictions in its game text
      */
     boolean ignoresLocationDeploymentRestrictionsFromSource(GameState gameState, PhysicalCard cardToDeploy, PhysicalCard sourceCard);
+
+    /**
+     * Determines if the specified card ignores location deployment restrictions from the source card.
+     * @param gameState the game state
+     * @param cardToDeploy the card to deploy
+     * @param sourceCard the source card of the location deployment restriction
+     * @param target the target it is deploying to
+     * @return true if card ignores location deployment restrictions in its game text
+     */
+    boolean ignoresLocationDeploymentRestrictionsFromSourceWhenDeployingToTarget(GameState gameState, PhysicalCard cardToDeploy, PhysicalCard sourceCard, PhysicalCard target);
 
     /**
      * Determines if the specified card ignores location deployment restrictions in its game text.
@@ -3545,6 +3559,10 @@ public interface ModifiersQuerying {
      * @return the permanent weapons that have targeted the specified target this turn
      */
     List<SwccgBuiltInCardBlueprint> permanentWeaponsTargetedByThisTurn(PhysicalCard target);
+
+    void hitOrMadeLostByWeapon(PhysicalCard target, PhysicalCard weapon);
+    void clearHitOrMadeLostByWeapon(PhysicalCard card);
+    boolean wasHitOrMadeLostByWeapon(PhysicalCard target, Filter hitBy);
 
 
     boolean mayNotBeFired(GameState gameState, PhysicalCard weapon);
@@ -4575,9 +4593,15 @@ public interface ModifiersQuerying {
 
     boolean mindscannedCharacterGameTextWasCanceled(GameState gameState, PhysicalCard card);
     CardSubtype getModifiedSubtype(GameState gameState, PhysicalCard card);
+    Set<CardType> getCardTypes(GameState gameState, PhysicalCard card);
     boolean mayBeRevealedAsResistanceAgent(GameState gameState, PhysicalCard card);
     boolean isCommuning(GameState gameState, Filterable filter);
     Collection<PhysicalCard> getCardsConsideredOutOfPlay(GameState gameState);
     Collection<PhysicalCard> getActiveCardsAffectedByModifier(GameState gameState, ModifierType modifierType);
     boolean isShieldGateBlownAway(GameState gameState);
+    Collection<PhysicalCard> getCardsForPersonaChecking(String playerId);
+    boolean mayNotCancelBattle(GameState gameState, String playerId);
+    boolean blownAwayForceLossMayNotBeReduced(GameState gameState);
+    boolean onlyDeploysAdjacentToSpecificLocations(GameState gameState, PhysicalCard card);
+    Filter getFilterForOnlyDeploysAdjacentToSpecificLocations(GameState gameState, PhysicalCard card);
 }

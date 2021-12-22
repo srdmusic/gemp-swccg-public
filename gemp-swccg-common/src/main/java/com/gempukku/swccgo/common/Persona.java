@@ -15,8 +15,10 @@ public enum Persona implements Filterable {
     BEAUMONT("Beaumont"),
     BECKETT("Beckett"),
     BEEDO("Beedo"),
+    BEN_SOLO("Ben Solo"),
     BLIZZARD_1("Blizzard 1"),
     BOBA_FETT("Boba Fett"),
+    BO_KATAN("Bo-Katan"),
     BOOSTER("Booster"),
     BOSSK("Bossk"),
     C3PO("C-3PO"),
@@ -42,7 +44,6 @@ public enum Persona implements Filterable {
     DS_61_3("DS-61-3"),
     DUTCH("Dutch"),
     ELIS("Elis"),
-    EMPEROR("Emperor"),
     EZRA("Ezra"),
     GALEN("Galen"),
     FIGRIN_DAN("Figrin D'an"),
@@ -98,13 +99,13 @@ public enum Persona implements Filterable {
     OS_72_1("OS-72-1"),
     OS_72_2("OS-72-2"),
     OZZEL("Ozzel"),
-    PALPATINE("Palpatine"),
     PANAKA("Panaka"),
     PAPLOO("Paploo"),
     PEROSEI("Perosei"),
     PIETT("Piett"),
     PLO("Plo Koon"),
     PRE_VIZSLA("Pre Vizsla"),
+    PROFUNDITY("Profundity"),
     PROXIMA("Proxima"),
     PRYDE("Pryde"),
     PUCK("Puck"),
@@ -220,6 +221,8 @@ public enum Persona implements Filterable {
         if (equals(MARA_SKYWALKER)) return MARA_JADE;
         if (equals(SON_OF_VADER)) return LUKE;
         if (equals(VADER)) return ANAKIN;
+        if (equals(BEN_SOLO)) return KYLO;
+        if (equals(KYLO)) return BEN_SOLO;
         if (equals(ANAKINS_LIGHTSABER)) return VADERS_LIGHTSABER;
         if (equals(LADY_VADERS_BLASTER_RIFLE)) return LEIAS_BLASTER_RIFLE;
         if (equals(LEIAS_BLASTER_RIFLE)) return LADY_VADERS_BLASTER_RIFLE;

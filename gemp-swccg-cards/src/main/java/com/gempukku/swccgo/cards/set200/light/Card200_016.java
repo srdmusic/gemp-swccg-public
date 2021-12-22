@@ -37,7 +37,7 @@ public class Card200_016 extends AbstractRebel {
     public Card200_016() {
         super(Side.LIGHT, 0, 0, 0, 0, 0, Title.Jabbas_Prize, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
-        setGameText("Jabba's Prize is a Light Side card and does not count towards your deck limit. Reveal to opponent when deploying your Starting Effect. For remainder of game, you may not deploy [Maintenance] Falcon. Deploys only at start of game if Jabba's Prize is at Security Tower (replaces opponent's Jabba's Prize imprisioned in Security Tower); otherwise place out of play. May not be placed in Reserve Deck. Jabba's Prize is a persona of Corran Horn only while on table. If Jabba's Prize was just released or leaves table, place it out of play. While Jabba's Prize is at Audience Chamber, opponent's battle destiny draws there are +1.");
+        setGameText("Jabba's Prize is a Light Side card and does not count towards your deck limit. Reveal to opponent when deploying your Starting Effect. For remainder of game, you may not deploy [Maintenance] Falcon. Deploys only at start of game if Jabba's Prize is at Security Tower (replaces opponent's Jabba's Prize imprisoned in Security Tower); otherwise place out of play. May not be placed in Reserve Deck. Jabba's Prize is a persona of Corran Horn only while on table. If Jabba's Prize was just released or leaves table, place it out of play. While Jabba's Prize is at Audience Chamber, opponent's battle destiny draws there are +1.");
         setDoesNotCountTowardDeckLimit(true);
         addPersona(Persona.CORRAN_HORN);
         setCharacterPersonaOnlyWhileOnTable(true);

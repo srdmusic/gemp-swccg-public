@@ -1,25 +1,67 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
-import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.BlownAwayCondition;
+import com.gempukku.swccgo.cards.conditions.CommencePrimaryIgnitionTargetingCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Set 17
- * Type: Interrupt
- * Subtype: Used
- * Title: Shocking Revelation (V)
+ * Type: Effect
+ * Title: An Effective Demonstration
  */
-public class Card501_004 extends AbstractUsedInterrupt {
+public class Card501_004 extends AbstractNormalEffect {
     public Card501_004() {
-        super(Side.DARK, 5, Title.Shocking_Revelation, Uniqueness.UNIQUE);
-        setLore("'Well, don't blame me. I'm an interpreter. I'm not supposed to know a power socket from a computer terminal.'");
-        setGameText("Each player reveals the top 2 cards from their reserve deck. For every destiny = 5 revealed, choose one action: peek at opponent’s hand OR take one of your revealed cards into hand OR activate 1 Force. Return revealed cards to owners’ Reserve deck; reshuffle.");
-        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_17);
-        setVirtualSuffix(true);
-        setTestingText("Shocking Revelation (V)");
-        hideFromDeckBuilder();
+        super(Side.DARK, 2, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "An Effective Demonstration");
+        setLore("");
+        setGameText("Deploy on table. Attempts to 'blow away' Alderaan are +5. If Alderaan has been 'blown away,' adds one [Light Side] icon at Death Star system and opponent's total battle destiny is -1. Once per game, may [upload] Superlaser. [Immune to Alter.]");
+        addIcons(Icon.VIRTUAL_SET_17);
+        addImmuneToCardTitle(Title.Alter);
+        setTestingText("An Effective Demonstration");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new EpicEventCalculationTotalModifier(self, Filters.Commence_Primary_Ignition, new CommencePrimaryIgnitionTargetingCondition(Filters.Alderaan_system), 5));
+        modifiers.add(new IconModifier(self, Filters.Death_Star_system, new BlownAwayCondition(Filters.title(Title.Alderaan, true)), Icon.LIGHT_FORCE, 1));
+        modifiers.add(new TotalBattleDestinyModifier(self, new BlownAwayCondition(Filters.title(Title.Alderaan, true)), -1, game.getOpponent(self.getOwner())));
+        return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.AN_EFFECTIVE_DEMONSTRATION__UPLOAD_SUPERLASER;
+
+        // Check condition(s)
+
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take Superlaser into hand from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Superlaser, true));
+            actions.add(action);
+        }
+        return actions;
     }
 }
+

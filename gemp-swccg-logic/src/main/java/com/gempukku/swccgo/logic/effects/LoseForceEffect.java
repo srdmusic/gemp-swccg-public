@@ -43,6 +43,7 @@ public class LoseForceEffect extends AbstractSubActionEffect {
     private boolean _forceLossComplete;
     private PhysicalCard _stackFaceDownOn;
     private boolean _asLiberationCard;
+    private float _cannotBeReducedBelow;
     private LoseForceEffect _loseForceEffect;
 
     /**
@@ -64,6 +65,17 @@ public class LoseForceEffect extends AbstractSubActionEffect {
      */
     public LoseForceEffect(Action action, String playerToLoseForce, float amount, boolean cannotBeReduced) {
         this(action, playerToLoseForce, amount, cannotBeReduced, false, false, false, false, false, null, false);
+    }
+
+    /**
+     * Creates an effect that causes the specified player to lose a specified amount of Force.
+     * @param action the action performing this effect
+     * @param playerToLoseForce the player
+     * @param amount the amount of Force to lose
+     * @param cannotBeReducedBelow the amount below which the force loss cannot be reduced (if the initial amount is less than that then it will +)
+     */
+    public LoseForceEffect(Action action, String playerToLoseForce, float amount, float cannotBeReducedBelow) {
+        this(action, playerToLoseForce, amount, false, false, false, false, false, false, null, false, false, cannotBeReducedBelow);
     }
 
     /**
@@ -94,10 +106,10 @@ public class LoseForceEffect extends AbstractSubActionEffect {
      * @param asLiberationCard the card lost as Force is stacked as a liberation card
      */
     protected LoseForceEffect(Action action, String playerToLoseForce, float amount, boolean cannotBeReduced, boolean isFromForceDrain, boolean isFromInsertCard, boolean fromHandOnly, boolean fromReserveDeckOnly, boolean fromLifeForceOnly, PhysicalCard stackFaceDownOn, boolean asLiberationCard) {
-        this(action, playerToLoseForce, amount, cannotBeReduced, isFromForceDrain, isFromInsertCard, fromHandOnly, fromReserveDeckOnly, fromLifeForceOnly, stackFaceDownOn, asLiberationCard, false);
+        this(action, playerToLoseForce, amount, cannotBeReduced, isFromForceDrain, isFromInsertCard, fromHandOnly, fromReserveDeckOnly, fromLifeForceOnly, stackFaceDownOn, asLiberationCard, false, Float.MIN_VALUE);
     }
 
-    protected LoseForceEffect(Action action, String playerToLoseForce, float amount, boolean cannotBeReduced, boolean isFromForceDrain, boolean isFromInsertCard, boolean fromHandOnly, boolean fromReserveDeckOnly, boolean fromLifeForceOnly, PhysicalCard stackFaceDownOn, boolean asLiberationCard, boolean fromForcePileOnly) {
+    protected LoseForceEffect(Action action, String playerToLoseForce, float amount, boolean cannotBeReduced, boolean isFromForceDrain, boolean isFromInsertCard, boolean fromHandOnly, boolean fromReserveDeckOnly, boolean fromLifeForceOnly, PhysicalCard stackFaceDownOn, boolean asLiberationCard, boolean fromForcePileOnly, float cannotBeReducedBelow) {
         super(action);
         _playerToLoseForce = playerToLoseForce;
         _initialAmount = amount;
@@ -111,6 +123,7 @@ public class LoseForceEffect extends AbstractSubActionEffect {
         _stackFaceDownOn = stackFaceDownOn;
         _asLiberationCard = asLiberationCard;
         _loseForceEffect = this;
+        _cannotBeReducedBelow = cannotBeReducedBelow;
     }
 
     @Override
@@ -128,8 +141,8 @@ public class LoseForceEffect extends AbstractSubActionEffect {
      * Determines if the Force loss may not be reduced.
      * @return true or false
      */
-    public boolean isCannotBeReduced() {
-        return _isCannotBeReduced || (_stackFaceDownOn != null);
+    public boolean isCannotBeReduced(SwccgGame game) {
+        return _isCannotBeReduced || (_stackFaceDownOn != null) || (getForceLossRemaining(game) <= _cannotBeReducedBelow);
     }
 
     /**
@@ -180,6 +193,14 @@ public class LoseForceEffect extends AbstractSubActionEffect {
         // Get "Force loss amount" since there may be modifiers for it
         _currentAmountLeft = Math.max(0, game.getModifiersQuerying().getForceToLose(game.getGameState(), _playerToLoseForce, _isCannotBeReduced, _initialAmount) - _amountLostSoFar);
         return _currentAmountLeft;
+    }
+
+    /**
+     * If the value is being reduced, it cannot be reduced to a number below the returned value unless it was already below it
+     * @return minimum if being reduced
+     */
+    public float cannotBeReducedBelow() {
+        return _cannotBeReducedBelow;
     }
 
     /**
@@ -429,6 +450,9 @@ public class LoseForceEffect extends AbstractSubActionEffect {
                             PhysicalCard topOfReserveDeck = game.getGameState().getTopOfReserveDeck(_playerToLoseForce);
                             PhysicalCard topOfForcePile = game.getGameState().getTopOfForcePile(_playerToLoseForce);
 
+                            // check if all of the places that force loss "must come from" are empty
+                            boolean allowForceLossFromAnywhereAvailable = !((_fromReserveDeckOnly && topOfReserveDeck != null) || (_fromForcePileOnly && topOfForcePile != null) || (_fromHandOnly && !game.getGameState().getHand(_playerToLoseForce).isEmpty()));
+
                             // Check if Force loss from Force drain must come certain places, if possible
                             if (_isFromForceDrain) {
                                 boolean mustComeFromReserveDeck = topOfReserveDeck != null && game.getModifiersQuerying().hasFlagActive(game.getGameState(), ModifierFlag.FORCE_DRAIN_LOST_FROM_RESERVE_DECK, _playerToLoseForce);
@@ -437,27 +461,29 @@ public class LoseForceEffect extends AbstractSubActionEffect {
                                     _fromHand = _fromSabaccHand = _fromUsedPile = false;
                                     _fromReserveDeck = mustComeFromReserveDeck;
                                     _fromForcePile = mustComeFromForcePile;
+                                    allowForceLossFromAnywhereAvailable = false;
                                 }
                             }
 
-                            if (topOfReserveDeck != null && _fromReserveDeck)
+
+                            if (topOfReserveDeck != null && (_fromReserveDeck || allowForceLossFromAnywhereAvailable))
                                 selectableCards.add(topOfReserveDeck);
 
-                            if (topOfForcePile != null && _fromForcePile)
+                            if (topOfForcePile != null && (_fromForcePile || allowForceLossFromAnywhereAvailable))
                                 selectableCards.add(topOfForcePile);
 
                             PhysicalCard topOfUsedPile = game.getGameState().getTopOfUsedPile(_playerToLoseForce);
-                            if (topOfUsedPile != null && _fromUsedPile)
+                            if (topOfUsedPile != null && (_fromUsedPile || allowForceLossFromAnywhereAvailable))
                                 selectableCards.add(topOfUsedPile);
 
                             PhysicalCard topOfUnresolvedDestinyDraws = game.getGameState().getTopOfUnresolvedDestinyDraws(_playerToLoseForce);
-                            if (topOfUnresolvedDestinyDraws != null && _fromDrawnDestiny)
+                            if (topOfUnresolvedDestinyDraws != null && (_fromDrawnDestiny || allowForceLossFromAnywhereAvailable))
                                 selectableCards.add(topOfUnresolvedDestinyDraws);
 
-                            if (_fromHand)
+                            if (_fromHand || allowForceLossFromAnywhereAvailable)
                                 selectableCards.addAll(game.getGameState().getHand(_playerToLoseForce));
 
-                            if (_fromSabaccHand)
+                            if (_fromSabaccHand || allowForceLossFromAnywhereAvailable)
                                 selectableCards.addAll(game.getGameState().getSabaccHand(_playerToLoseForce));
 
                             // If an action is losing Force as part of the cost, and that action is from a card, exclude that card from being an eligible card to be lost.

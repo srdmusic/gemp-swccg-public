@@ -2731,6 +2731,22 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if an attack was just initiated by a creature
+     * @param game the game
+     * @param effectResult the effect result
+     * @return true or false
+     */
+    public static boolean attackInitiatedByCreature(SwccgGame game, EffectResult effectResult) {
+        if (effectResult.getType() == EffectResult.Type.ATTACK_INITIATED) {
+            AttackState attackState = game.getGameState().getAttackState();
+            return attackState != null
+                    && attackState.canContinue()
+                    && ((AttackInitiatedResult)effectResult).initiatedByCreature();
+        }
+        return false;
+    }
+
+    /**
      * Determines if an attack was just initiated by the specified player at a location accepted by the location filter.
      * @param game the game
      * @param effectResult the effect result
@@ -3108,6 +3124,21 @@ public class TriggerConditions {
             BattleResultDeterminedResult lostResult = (BattleResultDeterminedResult) effectResult;
             return lostResult.getLoser() != null && lostResult.getLoser().equals(playerId)
                     && Filters.and(locationFilter).accepts(game, lostResult.getLocation());
+        }
+        return false;
+    }
+
+    /**
+     * Determines if either player just initiated lightsaber combat.
+     *
+     * @param game         the game
+     * @param effectResult the effect result
+     * @return true or false
+     */
+    public static boolean lightsaberCombatInitiated(SwccgGame game, EffectResult effectResult) {
+        if (effectResult.getType() == EffectResult.Type.LIGHTSABER_COMBAT_INITIATED) {
+            LightsaberCombatInitiatedResult lightsaberCombatInitiatedResult = (LightsaberCombatInitiatedResult) effectResult;
+            return game.getGameState().getLightsaberCombatState().canContinue(game);
         }
         return false;
     }
@@ -5390,6 +5421,19 @@ public class TriggerConditions {
     public static boolean justRecirculated(EffectResult effectResult, String playerId) {
         if (effectResult.getType() == EffectResult.Type.RECIRCULATED) {
             return playerId.equals(effectResult.getPerformingPlayerId());
+        }
+        return false;
+    }
+
+    /**
+     * Determines if a player just made a choice required by a card accepted by the filter
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @param filter the filter
+     */
+    public static boolean justMadeChoice(SwccgGame game, EffectResult effectResult, String playerId, Filterable filter) {
+        if (effectResult.getType() == EffectResult.Type.CHOICE_MADE) {
+            return playerId.equals(effectResult.getPerformingPlayerId()) && Filters.and(filter).accepts(game, ((ChoiceMadeResult)effectResult).getCard());
         }
         return false;
     }

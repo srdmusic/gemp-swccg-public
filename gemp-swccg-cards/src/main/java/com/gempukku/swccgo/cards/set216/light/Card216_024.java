@@ -22,6 +22,7 @@ import com.gempukku.swccgo.logic.timing.PassthruEffect;
 import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
 import com.gempukku.swccgo.logic.timing.results.AboutToPlaceCardOutOfPlayFromTableResult;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -107,7 +108,9 @@ public class Card216_024 extends AbstractEpicEventDeployable {
                 jedi = result.getCardAboutToLeaveTable();
             }
 
-            if (jedi != null) {
+            if (jedi != null
+                && game.getModifiersQuerying().canBeTargetedBy(game.getGameState(), jedi, self, Collections.singleton(TargetingReason.TO_BE_PLACED_OUT_OF_PLAY))) {
+
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Stack " + GameUtils.getFullName(jedi) + " here");
                 action.setActionMsg("Stack " + GameUtils.getCardLink(jedi) + " on " + GameUtils.getCardLink(self));

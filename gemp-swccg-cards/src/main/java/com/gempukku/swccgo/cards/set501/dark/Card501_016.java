@@ -35,7 +35,7 @@ public class Card501_016 extends AbstractRepublic {
         addKeywords(Keyword.SENATOR);
         setSpecies(Species.NEIMOIDIAN);
         addPersona(Persona.LOTT);
-        setTestingText("Lott Dodd (V)");
+        setTestingText("[Set 18] Lott Dodd (V)");
     }
 
     @Override

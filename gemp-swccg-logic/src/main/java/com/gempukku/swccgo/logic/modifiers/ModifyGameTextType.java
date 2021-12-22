@@ -62,6 +62,7 @@ public enum ModifyGameTextType {
     SURPRISE_ASSAULT__ADD_DESTINY_TO_TOTAL("Add one destiny to total"),
     TALLON_ROLL__OPPONENT_ADDS_MANEUVER_AND_ABILITY("Opponent adds maneuver and ability"),
     TARKIN__CANNOT_CANCEL_DESTINY("Cannot cancel destiny"),
+    THERE_IS_ANOTHER__DOES_NOT_MAKE_REFII_LUKE_LOST("Does not cause [Reflections II] Luke to be lost"),
     TIBANNA_GAS_MINER__DOUBLE_FORCE_ACTIVATED("Force activated doubled"),
     TRAP_DOOR__DO_NOT_DRAW_DESTINY("Do not draw destiny"),
     TUSKEN_BREATH_MASK__MODIFIED_BY_SERGEANT_DOALLYN("Game text modified"),
@@ -69,6 +70,7 @@ public enum ModifyGameTextType {
     UGNAUGHT__DOUBLE_CARBON_FREEZING_DESTINY_BONUS("Carbon-Freezing destiny bonus doubled"),
     UNCERTAIN_IS_THE_FUTURE__MAY_NOT_BE_PLAYED_EXCEPT_TO_CANCEL_INTERRUPT("May not be played (except to cancel opponent's Interrupt)"),
     WALKER_GARRISON__ADDITIONAL_SITE_TO_GAIN_FORCE_DRAIN_BONUS("Additional site required for Force drain bonus"),
+    WAT_TAMBOR__IGNORED_BY_WHERE_ARE_THOSE_DROIDEKAS("Ignores Wat Tambor"),
     WATTOS_BOX__MAY_DEPLOY_REGARDLESS_OF_RACE_TOTAL("May deploy regardless of race total"),
     WELL_HANDLE_THIS__ONLY_TARGET_UNDERCOVER_SPIES_AND_5D6RA7("May target only Undercover spies and 5D6-RA-7"),
     VADER__DOES_NOT_ADD_1_TO_BATTLE_DESTINY("Does not add 1 to battle destiny"),
@@ -87,6 +89,10 @@ public enum ModifyGameTextType {
     LEGACY__IMPERIAL_DOMINATION_IGNORES_GARINDAN("Ignores Garindan"),
     LEGACY__THE_EMPIRES_BACK__VADER_MAY_BE_TREATED_AS_GALEN("'Vader' may be treated as 'Galen'"),
     LEGACY__PALEJO_RESHAD__TREAT_AUDIENCE_CHAMBER_AS_CORELLIA("Treat 'Audience Chamber' as 'Corellia'"),
+    LEGACY__TREAT_XIZOR_AS_SHADA("Treat 'Xizor' as 'Shada'"),
+    LEGACY__CORUSCANT_ICON_SITES__MAY_NOT_CANCEL_FORCE_DRAIN_BONUSES("May not cancel Force drain bonuses"),
+    LEGACY__OR_BE_DESTROYED__FORCE_LOSS("Force loss must come from Reserve Deck (if possible) and may not be reduced below 2"),
+    LEGACY__MORE_DANGEROUS_THAN_YOU_REALIZE__REQUIRES_THREE_SITES_TO_FLIP_BACK("Opponent must control three Dantooine locations to flip it back"),
 
     ;
 

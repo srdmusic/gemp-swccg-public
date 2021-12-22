@@ -11,6 +11,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.MayMoveOtherCardsAsReactToLocationForFreeModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.MoveCostToLocationModifier;
 
@@ -35,8 +36,7 @@ public class Card7_286 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        // TODO: Fix this modifiers.add(new MayMoveAsReactToBattleForFreeModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation),
-                // Filters.starship), new DuringBattleAtCondition(self)));
+        modifiers.add(new MayMoveOtherCardsAsReactToLocationForFreeModifier(self, "Move starship as a react", playerOnDarkSideOfLocation, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.starship), Filters.and(self, Filters.battleLocation)));
         return modifiers;
     }
 

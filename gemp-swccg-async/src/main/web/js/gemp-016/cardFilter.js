@@ -159,6 +159,7 @@ var CardFilter = Class.extend({
             + "<option value='classic'>Classic</option>"
             + "<option value='classic_no_virtual'>Classic (no virtual cards)</option>"
             + "<option value='premiere_ref2'>Premiere - Reflections II</option>"
+            + "<option value='premiere_jpsd'>Premiere - JPSD</option>"
             + "<option value='premiere_ds2'>Premiere - Death Star II</option>"
             + "<option value='premiere_endor'>Premiere - Endor</option>"
             + "<option value='premiere_se'>Premiere - Special Edition</option>"
@@ -219,6 +220,7 @@ var CardFilter = Class.extend({
             + "<option value='214'>Set 14</option>"
             + "<option value='215'>Set 15</option>"
             + "<option value='216'>Set 16</option>"
+            + "<option value='217'>Set 17</option>"
             + "<option value='301'>Virtual Premium Set</option>"
             + "<option value='601'>Legacy</option>"
             + "<option value='401'>Dream Cards</option>"
@@ -321,6 +323,7 @@ var CardFilter = Class.extend({
         this.sortLabel = $("<label for='sortSelect' class='filterLabel'>Sort&nbsp;by:</label>");
         this.sortSelect = $("<select id='sortSelect' class='filterInput'>"
             + "<option value='name,set,cardType' selected='selected'>Title</option>"
+            + "<option value='cardCategory,name,set'>Card category</option>"
             + "<option value='cardType,name,set'>Card type</option>"
             + "</select>");
 
@@ -385,6 +388,7 @@ var CardFilter = Class.extend({
             + "<option value='VIRTUAL_SET_14'>Set 14</option>"
             + "<option value='VIRTUAL_SET_15'>Set 15</option>"
             + "<option value='VIRTUAL_SET_16'>Set 16</option>"
+            + "<option value='VIRTUAL_SET_17'>Set 17</option>"
             + "<option value='VIRTUAL_SET_P'>Set P</option>"
             + "<option value='SPACE'>Space</option>"
             + "<option value='SPECIAL_EDITION'>Special Edition</option>"

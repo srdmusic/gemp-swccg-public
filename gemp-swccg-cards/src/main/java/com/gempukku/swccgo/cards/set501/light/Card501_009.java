@@ -1,60 +1,52 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.evaluators.OutOfPlayEvaluator;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.TakeFirstBattleWeaponsSegmentActionEffect;
-import com.gempukku.swccgo.logic.modifiers.IgnoresDeploymentRestrictionsFromCardModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmunityToAttritionChangeModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.conditions.InBattleCondition;
+import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
  * Set: Set 17
- * Type: Effect
+ * Type: Epic Event
  * Title: Be With Me
  */
-public class Card501_009 extends AbstractNormalEffect {
+public class Card501_009 extends AbstractEpicEventDeployable {
     public Card501_009() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Be With Me", Uniqueness.UNIQUE);
-        setLore("");
-        setGameText("Deploy on table. Rey is power and immunity to attrition +1 for each Jedi out of play and, " +
-                "while Luke on table, ignores deployment restrictions on your [Set 11] objective. If Rey in battle with " +
-                "Kylo or a Dark Jedi Master, you may take the first weapons phase action. [Immune to Alter.]");
+        super(Side.LIGHT, PlayCardZoneOption.ATTACHED, "Be With Me", Uniqueness.UNIQUE);
+        setGameText("Deploy on an Ahch-To location. Opponent generates no Force here. " +
+                "A Thousand Generations Live In You Now: Rey is power and forfeit +1 for each Jedi out of play. " +
+                "Bring Back The Balance, Rey, As I Did: While [Set 14] Rey in battle, your battle destiny draws and Rey's weapon destiny draws are +1. " +
+                "Feel The Force Flowing Through You: [Set 14] Rey and characters with her may not add battle destiny draws. " +
+                "Rey, The Force Will Be With You, Always: [Set 14] Rey ignores your [Episode VII] objective deployment restrictions.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
-        addImmuneToCardTitle(Title.Alter);
         setTestingText("Be With Me");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new PowerModifier(self, Filters.Rey, new OutOfPlayEvaluator(self, Filters.Jedi)));
-        modifiers.add(new ImmunityToAttritionChangeModifier(self, Filters.Rey, new OutOfPlayEvaluator(self, Filters.Jedi)));
-        modifiers.add(new IgnoresDeploymentRestrictionsFromCardModifier(self, Filters.Rey, new OnTableCondition(self, Filters.Luke), self.getOwner(), Filters.and(Filters.icon(Icon.VIRTUAL_SET_11), Filters.Objective)));
-        return modifiers;
+    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.AhchTo_location;
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.sameLocationAs(self, Filters.and(Filters.Rey, Filters.with(self, Filters.or(Filters.Kylo, Filters.Emperor)))))) {
-            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Take first weapons segment action");
-            action.appendEffect(
-                    new TakeFirstBattleWeaponsSegmentActionEffect(action, playerId));
-            return Collections.singletonList(action);
-        }
-        return null;
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        Filter set14Rey = Filters.and(Icon.VIRTUAL_SET_14, Filters.Rey);
+
+        List<Modifier> modifiers = new ArrayList<>();
+        modifiers.add(new GenerateNoForceModifier(self, Filters.hasAttached(self), game.getOpponent(self.getOwner())));
+        modifiers.add(new PowerModifier(self, Filters.Rey, new OutOfPlayEvaluator(self, Filters.Jedi)));
+        modifiers.add(new ForfeitModifier(self, Filters.Rey, new OutOfPlayEvaluator(self, Filters.Jedi)));
+        modifiers.add(new EachBattleDestinyModifier(self, new InBattleCondition(self, set14Rey), 1, self.getOwner()));
+        modifiers.add(new EachWeaponDestinyModifier(self, Filters.any, new InBattleCondition(self, set14Rey), set14Rey, 1));
+        modifiers.add(new MayNotAddBattleDestinyDrawsModifier(self, Filters.or(set14Rey, Filters.and(Filters.character, Filters.with(self, set14Rey)))));
+        modifiers.add(new IgnoresDeploymentRestrictionsFromCardModifier(self, set14Rey, null, self.getOwner(), Filters.and(Filters.your(self), Icon.EPISODE_VII, Filters.Objective)));
+        return modifiers;
     }
 }

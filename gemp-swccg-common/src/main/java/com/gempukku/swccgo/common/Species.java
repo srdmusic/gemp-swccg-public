@@ -86,6 +86,7 @@ public enum Species implements Filterable {
     SHISTAVANEN("Shistavanen", true),
     SICSIX("Sic-Six", true),
     SINITEEN("Siniteen", true),
+    SKAKOAN("Skakoan", true),
     SKRILLING("Skrilling", true),
     SNIVVIAN("Snivvian", true),
     SULLUSTAN("Sullustan", true),

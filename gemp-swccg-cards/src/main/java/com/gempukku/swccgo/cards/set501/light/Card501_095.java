@@ -2,21 +2,19 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.LoseCardsFromTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.ChoiceMadeResult;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,93 +23,48 @@ import java.util.List;
  * Set: Set 17
  * Type: Location
  * Subtype: Site
- * Title: Tatooine: Lars' Homestead
+ * Title: Endor: Anakin's Funeral Pyre
  */
 public class Card501_095 extends AbstractSite {
     public Card501_095() {
-        super(Side.LIGHT, Title.Lars_Homestead, Title.Tatooine);
-        setLocationDarkSideGameText("Sandwhirl and Tusken Raiders are lost here.");
-        setLocationLightSideGameText("May deploy Anakin's Lightsaber from Reserve Deck; reshuffle (or once per game, deploy it from Lost Pile).");
-        addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.DEATH_STAR_II, Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
-        setTestingText("Tatooine: Lars' Homestead");
+        super(Side.LIGHT, Title.Anakins_Funeral_Pyre, Title.Endor);
+        setLocationDarkSideGameText("");
+        setLocationLightSideGameText("Deploys only as a starting location. There Is Another does not cause [Reflections II] Luke to be lost. If you just chose I Have It on your [Skywalker] Epic Event, [download] Like My Father Before Me.");
+        addIcon(Icon.LIGHT_FORCE, 2);
+        addIcons(Icon.SKYWALKER, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
+        setTestingText("Endor: Anakin's Funeral Pyre");
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.isHere(game, self, Filters.or(Filters.Sandwhirl, Filters.Tusken_Raider))) {
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self) {
+        // Deploys only as a starting location.
+        return GameConditions.isDuringStartOfGame(game)
+                && game.getModifiersQuerying().getStartingLocation(playerId) == null
+                && game.getGameState().getObjectivePlayed(playerId) == null;
+    }
 
-            Collection<PhysicalCard> toBeLost = Filters.filterActive(game, self, Filters.and(Filters.here(self), Filters.or(Filters.Sandwhirl, Filters.Tusken_Raider)));
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.ANAKINS_FUNERAL_PYRE__DEPLOY_EFFECT;
 
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setSingletonTrigger(true);
-            action.setText("Make cards lost");
-            // Perform result(s)
+        if (TriggerConditions.justMadeChoice(game, effectResult, playerOnLightSideOfLocation, Filters.and(Icon.SKYWALKER, Filters.Epic_Event))
+                && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, true, false)
+                && "I Have It".equals(((ChoiceMadeResult)effectResult).getChoice())) {
+
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setPerformingPlayer(playerOnLightSideOfLocation);
+            action.setText("Deploy Like My Father Before Me");
             action.appendEffect(
-                    new LoseCardsFromTableEffect(action, toBeLost));
+                    new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Like_My_Father_Before_Me), GameConditions.isDuringStartOfGame(game), !GameConditions.isDuringStartOfGame(game)));
             return Collections.singletonList(action);
         }
         return null;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId)
-    {
-        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
-
-        // Using the same GameTextActionId for both actions since they are mutually exclusive per turn.
-        GameTextActionId gameTextActionId = GameTextActionId.TATOOINE_LARS_HOMESTEAD__DEPLOY_ANAKINS_LIGHTSABER;
-
-        // May deploy Anakin's Lightsaber from Reserve Deck; reshuffle (or once per game, deploy it from Lost Pile).
-
-        // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, Persona.ANAKINS_LIGHTSABER)) {
-
-            // May deploy Anakin's Lightsaber from Reserve Deck; reshuffle
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Anakin's Lightsaber from Reserve Deck");
-
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Anakins_Lightsaber), true));
-
-            actions.add(action);
-        }
-
-
-        // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.hasLostPile(game, playerOnLightSideOfLocation)
-                && GameConditions.canDeployCardFromLostPile(game, playerOnLightSideOfLocation, self, gameTextActionId, Persona.ANAKINS_LIGHTSABER)) {
-
-            // or once per game, deploy it from Lost Pile
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Anakin's Lightsaber from Lost Pile");
-
-            // Update usage limit(s)
-            // Note:  This case is a little unique because this action counts
-            // towards Once-per-game AND Once-per-turn limits
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardFromLostPileEffect(action, Filters.title(Title.Anakins_Lightsaber), false));
-            actions.add(action);
-        }
-
-        return actions;
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ModifyGameTextModifier(self, Filters.title(Title.There_Is_Another), ModifyGameTextType.THERE_IS_ANOTHER__DOES_NOT_MAKE_REFII_LUKE_LOST));
+        return modifiers;
     }
 }
