@@ -24,6 +24,7 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
 import com.gempukku.swccgo.logic.modifiers.TotalForceGenerationModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.FailCostEffect;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
 import com.gempukku.swccgo.logic.timing.results.ChoiceMadeResult;
 
@@ -65,6 +66,7 @@ public class Card217_050 extends AbstractEpicEventDeployable {
             final String MY_FATHER_HAS_IT = "My Father Has It";
             final String I_HAVE_IT = "I Have It";
             final String YOU_HAVE_THAT_POWER_TOO = "You Have That Power, Too";
+            final String NO_VALID_CHOICE = "No valid choice";
 
             final Filter myFatherHasIt_Anakin = Filters.Anakin;
             final Filter myFatherHasIt_ObiWan = Filters.and(Icon.EPISODE_I, Filters.ObiWan);
@@ -87,6 +89,9 @@ public class Card217_050 extends AbstractEpicEventDeployable {
                     && !Filters.filter(reserveDeck, game, youHaveThatPowerToo_Luke).isEmpty()) {
                 possible.add(YOU_HAVE_THAT_POWER_TOO);
             }
+            if (possible.size()==0)
+                possible.add(NO_VALID_CHOICE);
+
 
             String[] possibleResults = possible.toArray(new String[0]);
 
@@ -113,6 +118,9 @@ public class Card217_050 extends AbstractEpicEventDeployable {
                                     skywalkerFilter = youHaveThatPowerToo_Rey;
                                     alternateFilter = youHaveThatPowerToo_Luke;
                                     break;
+                                case NO_VALID_CHOICE:
+                                    action.appendEffect(new FailCostEffect(action));
+                                    return;
                             }
 
                             final Filter skywalker = Filters.and(skywalkerFilter);
