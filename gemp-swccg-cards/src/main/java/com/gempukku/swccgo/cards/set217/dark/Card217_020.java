@@ -18,6 +18,7 @@ import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.FailCostEffect;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -58,6 +59,7 @@ public class Card217_020 extends AbstractEpicEventDeployable {
             final String MAUL = "Maul";
             final String DOOKU = "Dooku";
             final String VADER = "Vader";
+            final String NO_VALID_CHOICE = "No valid choice";
 
             List<PhysicalCard> reserveDeck = game.getGameState().getReserveDeck(self.getOwner());
             List<String> possible = new LinkedList<>();
@@ -70,6 +72,8 @@ public class Card217_020 extends AbstractEpicEventDeployable {
             if (!Filters.filter(reserveDeck, game, Filters.Vaders_Castle).isEmpty()) {
                 possible.add(VADER);
             }
+            if (possible.size() == 0)
+                possible.add(NO_VALID_CHOICE);
 
 
             String[] possibleResults = possible.toArray(new String[0]);
@@ -94,6 +98,9 @@ public class Card217_020 extends AbstractEpicEventDeployable {
                                     siteFilter = Filters.Vaders_Castle;
                                     apprenticeFilter = Filters.Vader;
                                     break;
+                                case NO_VALID_CHOICE:
+                                    action.appendEffect(new FailCostEffect(action));
+                                    return;
                             }
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, siteFilter, false)
@@ -144,6 +151,9 @@ public class Card217_020 extends AbstractEpicEventDeployable {
 
     @Override
     public String getDisplayableInformation(SwccgGame game, PhysicalCard self) {
+        if (self.getWhileInPlayData() == null)
+            return null;
+
         return "Chosen Apprentice is " + self.getWhileInPlayData().getTextValue();
     }
 }
