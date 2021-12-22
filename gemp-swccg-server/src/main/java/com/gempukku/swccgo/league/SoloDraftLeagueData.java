@@ -53,6 +53,9 @@ public class SoloDraftLeagueData implements LeagueData {
     }
 
     @Override
+    public boolean isSealed() { return false; }
+
+    @Override
     public List<LeagueSeriesData> getSeries() {
         return Collections.singletonList(_serie);
     }

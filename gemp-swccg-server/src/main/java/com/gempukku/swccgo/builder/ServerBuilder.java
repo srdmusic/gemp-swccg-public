@@ -27,12 +27,10 @@ public class ServerBuilder {
         objectMap.put(SwccgoFormatLibrary.class,
                 new SwccgoFormatLibrary(
                         extract(objectMap, SwccgCardBlueprintLibrary.class)));
+
         objectMap.put(GameHistoryService.class,
                 new GameHistoryService(
                         extract(objectMap, GameHistoryDAO.class)));
-        objectMap.put(GameRecorder.class,
-                new GameRecorder(
-                        extract(objectMap, GameHistoryService.class)));
 
         objectMap.put(CollectionsManager.class,
                 new CollectionsManager(
@@ -46,6 +44,10 @@ public class ServerBuilder {
                         extract(objectMap, CollectionsManager.class),
                         extract(objectMap, SwccgCardBlueprintLibrary.class),
                         extract(objectMap, SwccgoFormatLibrary.class)));
+
+        objectMap.put(GameRecorder.class,
+                new GameRecorder(
+                        extract(objectMap, GameHistoryService.class), extract(objectMap, SoloDraftDefinitions.class)));
 
         objectMap.put(LeagueService.class,
                 new LeagueService(
