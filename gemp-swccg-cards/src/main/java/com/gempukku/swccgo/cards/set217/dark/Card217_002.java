@@ -51,19 +51,19 @@ public class Card217_002 extends AbstractDroid {
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)) {
 
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Place in Used Pile");
+            action.setActionMsg("'Break cover' of all undercover spies here (if any)");
+
+            action.appendCost(
+                    new PlaceCardInUsedPileFromTableEffect(action, self));
+
             Collection<PhysicalCard> undercoverSpies = Filters.filterAllOnTable(game, Filters.and(targetFilter, Filters.canBeTargetedBy(self)));
-            if (!undercoverSpies.isEmpty()) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action.setText("Place in Used Pile");
-                action.setActionMsg("'Break cover' of all undercover spies here (if any)");
+            action.appendEffect(
+                    new BreakCoversEffect(action, undercoverSpies));
 
-                action.appendCost(
-                        new PlaceCardInUsedPileFromTableEffect(action, self));
-
-                action.appendEffect(
-                        new BreakCoversEffect(action, undercoverSpies));
-                actions.add(action);
-            }
+            actions.add(action);
         }
 
         return actions;
