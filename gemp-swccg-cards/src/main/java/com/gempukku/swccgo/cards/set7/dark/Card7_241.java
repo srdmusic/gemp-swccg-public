@@ -36,6 +36,7 @@ public class Card7_241 extends AbstractNormalEffect {
         super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, Title.Sienar_Fleet_Systems, Uniqueness.UNIQUE);
         setLore("Industry leader in fighter production, but produces several other products. Constantly working on advancements on the baseline TIE design.");
         setGameText("Deploy on Wakeelmui system. Each time you deploy a TIE, retrieve 1 Force (or 3 if a TIE squadron). Also once per turn you may relocate a TIE just lost from table to Used Pile. (Immune to Alter while you occupy Wakeelmui.)");
+        addKeywords(Keyword.DEPLOYS_ON_LOCATION);
         addIcons(Icon.SPECIAL_EDITION);
     }
 
