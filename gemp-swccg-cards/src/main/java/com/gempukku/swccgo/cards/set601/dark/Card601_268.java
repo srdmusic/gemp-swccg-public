@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set601.light;
+package com.gempukku.swccgo.cards.set601.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrStartingInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -7,7 +7,10 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromVoidInLostPileEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
@@ -22,15 +25,15 @@ import java.util.List;
  * Set: Block 6
  * Type: Interrupt
  * Subtype: Used or Starting
- * Title: Don't Underestimate Our Chances (V)
+ * Title: You Overestimate Their Chances (V)
  */
-public class Card601_258 extends AbstractUsedOrStartingInterrupt {
-    public Card601_258() {
-        super(Side.LIGHT, 4, Title.Dont_Underestimate_Our_Chances);
+public class Card601_268 extends AbstractUsedOrStartingInterrupt {
+    public Card601_268() {
+        super(Side.DARK, 4, Title.You_Overestimate_Their_Chances);
         setVirtualSuffix(true);
-        setLore("'Stand-by alert. Death Star approaching. Estimated time to firing range, fifteen minutes.'");
+        setLore("'Evacuate? In our moment of triumph?'");
         setGameText("USED: Initiate a battle for free. " +
-                "STARTING: If Dantooine Operations on table, deploy from Reserve Deck Operations Center, Dantooine Engineering Corps, and up to two Effects which deploy on table (or your side of table), are always [Immune to Alter], and have no deploy cost. Place this Interrupt in Lost Pile.");
+                "STARTING: If Ralltiir Operations on table, deploy from Reserve Deck Supply Route, [Virtual] Insignificant Rebellion, and up to two Effects that are always (Immune to Alter), have no deploy cost, and do not deploy on locations.  Place Interrupt in Lost Pile.");
         addIcons(Icon.LEGACY_BLOCK_6);
         setAsLegacy(true);
     }
@@ -78,10 +81,10 @@ public class Card601_258 extends AbstractUsedOrStartingInterrupt {
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, SwccgGame game, final PhysicalCard self) {
 
         // Check condition(s)
-        if (GameConditions.canSpot(game, self, Filters.Dantooine_Base_Operations)) {
+        if (GameConditions.canSpot(game, self, Filters.Ralltiir_Operations)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Deploy Operations Center, Dantooine Engineering Corps, and up to two Effects that deploy on table, are always immune to Alter, and have no deploy cost");
+            action.setText("Deploy Supply Route, [Virtual] Insignificant Rebellion, and up to two Effects that are always (Immune to Alter), have no deploy cost, and do not deploy on locations");
             // Allow response(s)
             action.allowResponses(
                     new RespondablePlayCardEffect(action) {
@@ -89,12 +92,12 @@ public class Card601_258 extends AbstractUsedOrStartingInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.title("Dantooine: Base - Operations Center"),  true, false));
+                                    new DeployCardFromReserveDeckEffect(action, Filters.title("Ralltiir: Supply Route"),  true, false));
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.title("Dantooine Engineering Corps"),  true, false));
+                                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.Insignificant_Rebellion, Filters.or(Icon.LEGACY_BLOCK_1, Icon.LEGACY_BLOCK_2, Icon.LEGACY_BLOCK_3, Icon.LEGACY_BLOCK_4, Icon.LEGACY_BLOCK_5, Icon.LEGACY_BLOCK_6, Icon.LEGACY_BLOCK_7, Icon.LEGACY_BLOCK_8, Icon.LEGACY_BLOCK_9, Icon.LEGACY_BLOCK_D)),  true, false));
                             action.appendEffect(
                                     new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.immune_to_Alter, Filters.deploysForFree,
-                                            Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table"))), 1, 2, true, false));
+                                            Filters.not(Filters.deploys_on_location)), 1, 2, true, false));
                             action.appendEffect(
                                     new PutCardFromVoidInLostPileEffect(action, playerId, self));
                         }

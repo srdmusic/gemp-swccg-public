@@ -4308,7 +4308,14 @@ var Card = Class.extend({
                     (cardNo == 202) ||
                     (cardNo == 245) ||
                     (cardNo == 256) ||
-                    (cardNo == 257);
+                    (cardNo == 257) ||
+                    (cardNo == 270) ||
+                    (cardNo == 271) ||
+                    (cardNo == 280) ||
+                    (cardNo == 281) ||
+                    (cardNo == 282) ||
+                    (cardNo == 283) ||
+                    (cardNo == 284);
        }
 
         return false;
