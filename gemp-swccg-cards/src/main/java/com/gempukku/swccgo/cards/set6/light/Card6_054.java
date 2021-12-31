@@ -35,6 +35,7 @@ public class Card6_054 extends AbstractNormalEffect {
         setGameText("Deploy on Audience Chamber. If you have an alien here, no battles or Force drains may take place here and your aliens cannot be targeted by Trap Door. Effect canceled if opponent occupies this site without an alien. (Immune to Alter.)");
         addIcons(Icon.JABBAS_PALACE);
         addImmuneToCardTitle(Title.Alter);
+        addKeywords(Keyword.DEPLOYS_ON_SITE);
     }
 
     @Override
