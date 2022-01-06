@@ -16,7 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Effect
  * Title: Dark Deal (V)
  */
@@ -26,9 +26,9 @@ public class Card501_006 extends AbstractNormalEffect {
         setVirtualSuffix(true);
         setLore("'Perhaps you think you're being treated unfairly?' 'No.' 'Good. It would be unfortunate if I had to leave a garrison here.'");
         setGameText("Deploy on Bespin: Cloud City if you occupy two other Bespin locations (with an alien/Imperial pair at each). Your aliens and TIEs deploy -1 to Bespin locations. Once per game, may take a [Cloud City] Imperial or [Cloud City] TIE into hand from Reserve Deck; reshuffle. [Immune to Alter.]");
-        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_17);
+        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 18] Dark Deal (V)");
+        setTestingText("Dark Deal (V)");
     }
 
     @Override

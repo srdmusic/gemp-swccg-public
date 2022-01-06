@@ -25,7 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Surely You Can Do Better
@@ -35,8 +35,8 @@ public class Card501_054 extends AbstractUsedOrLostInterrupt {
         super(Side.DARK, 4, "Surely You Can Do Better", Uniqueness.UNIQUE);
         setLore("");
         setGameText("USED: Unless your non-[Episode I] objective on table, take The Works into hand from Reserve deck; reshuffle. OR Cancel an opponent's attempt to target [Set 13] Dooku with a weapon; opponent loses 1 Force. LOST: If lightsaber combat was just initiated, add one destiny to your total.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
-        setTestingText("[Set 18] Surely You Can Do Better");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
+        setTestingText("Surely You Can Do Better");
     }
 
 

@@ -18,7 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Objective
  * Title: Imperial Occupation (V) / Imperial Control (V)
  */
@@ -28,8 +28,8 @@ public class Card501_010_BACK extends AbstractObjective {
         setVirtualSuffix(true);
         setGameText("While this side up, Rebel Leadership and We're Doomed are Lost Interrupts. Attrition against opponent is +1 for each Imperial leader in battle. Your Force drains are +1 at opponent's sites (or Echo sites) where your snowtrooper or non-unique AT-AT is present. Adds one [Dark Side] icon and one [Light Side] icon at 'blown away' and 'collapsed' Hoth sites.  \n" +
                 "Flip this card (unless 1st marker 'blown away') if you do not occupy Hoth system and two Hoth sites.");
-        addIcons(Icon.SPECIAL_EDITION, Icon.HOTH, Icon.VIRTUAL_SET_17);
-        setTestingText("[Set 18] Imperial Control (V)");
+        addIcons(Icon.SPECIAL_EDITION, Icon.HOTH, Icon.VIRTUAL_SET_18);
+        setTestingText("Imperial Control (V)");
     }
 
     @Override

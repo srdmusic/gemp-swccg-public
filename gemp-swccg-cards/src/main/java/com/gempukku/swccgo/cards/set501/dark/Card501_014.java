@@ -16,7 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Effect
  * Title: The Shield Will Be Down In Moments
  */
@@ -25,9 +25,9 @@ public class Card501_014 extends AbstractNormalEffect {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "The Shield Will Be Down In Moments", Uniqueness.UNIQUE);
         setLore("Death Squadron.");
         setGameText("Deploy on table. If you just deployed an AT-AT, may peek at top two cards of reserve deck and take one into hand (if 1st marker 'blown away,' may retrieve a non-vehicle, non-droid card without ability into hand instead). [Immune to Alter.]");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_17);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 18] The Shield Will Be Down In Moments");
+        setTestingText("The Shield Will Be Down In Moments");
     }
 
     @Override

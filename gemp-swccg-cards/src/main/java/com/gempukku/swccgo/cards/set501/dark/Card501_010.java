@@ -20,7 +20,7 @@ import java.util.List;
 
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Objective
  * Title: Imperial Occupation (V) / Imperial Control (V)
  */
@@ -32,8 +32,8 @@ public class Card501_010 extends AbstractObjective {
         setGameText("Deploy [Set 8] 5th marker and either Hoth system or [Set 17] 4th marker. \n" +
                 "For remainder of game, AT-AT Cannons are immune to Sabotage. Sunsdown and your non-[Set 17] Epic Events are canceled. Imperials (except snowtroopers) may not have their forfeit increased. Your non-[M] AT-ATs, snowtroopers, and Star Destroyers are destiny +1. \n" +
                 "Flip this card if Main Power Generators 'blown away' or if your AT-ATs control three Hoth sites and you occupy Hoth system (with Hoth Blockade there).");
-        addIcons(Icon.SPECIAL_EDITION, Icon.HOTH, Icon.VIRTUAL_SET_17);
-        setTestingText("[Set 18] Imperial Occupation (V)");
+        addIcons(Icon.SPECIAL_EDITION, Icon.HOTH, Icon.VIRTUAL_SET_18);
+        setTestingText("Imperial Occupation (V)");
     }
 
     @Override

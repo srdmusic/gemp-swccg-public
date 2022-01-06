@@ -19,7 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Effect
  * Title: You May Start Your Landing (V)
  */
@@ -29,9 +29,9 @@ public class Card501_012 extends AbstractNormalEffect {
         setVirtualSuffix(true);
         setLore("Echo Base was no match for the Imperial war machine.");
         setGameText("If 1st marker on table, deploy on table. During your control phase, if you occupy a marker site with an AT-AT, opponent loses 1 Force. Once per turn, may deploy a Hoth location from Reserve Deck; reshuffle. [Immune to Alter.]");
-        addIcons(Icon.TATOOINE, Icon.HOTH, Icon.VIRTUAL_SET_17);
+        addIcons(Icon.TATOOINE, Icon.HOTH, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 18] You May Start Your Landing (V)");
+        setTestingText("You May Start Your Landing (V)");
     }
 
     @Override
