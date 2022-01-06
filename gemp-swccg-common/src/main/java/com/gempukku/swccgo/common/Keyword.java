@@ -41,6 +41,8 @@ public enum Keyword implements Filterable {
     DEATH_TROOPER("Death Trooper", true),
     DEJARIK("Dejarik", true),
     DEPLOYS_ON_CHARACTERS("Deploys on characters", false),
+    DEPLOYS_ON_LOCATION("Deploys on a location", false),
+    DEPLOYS_ON_SITE("Deploys on a site", false),
     DESERT("Desert", true),
     DEVICE_THAT_DEPLOYS_ON_DROIDS("Device that deploys on droids", false),
     DEWBACK("Dewback", true),

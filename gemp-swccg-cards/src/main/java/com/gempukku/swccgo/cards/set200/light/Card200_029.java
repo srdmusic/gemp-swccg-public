@@ -6,6 +6,7 @@ import com.gempukku.swccgo.cards.conditions.CardsInHandEqualToOrFewerThanConditi
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -55,7 +56,7 @@ public class Card200_029 extends AbstractDefensiveShield {
         // Check condition(s)
         if (TriggerConditions.isStartOfEachTurn(game, effectResult)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId)
-                && GameConditions.canTarget(game, self, filter)) {
+                && GameConditions.canTarget(game, self, TargetingReason.TO_BE_SUSPENDED, filter)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Suspend a Political Effect");
@@ -93,7 +94,7 @@ public class Card200_029 extends AbstractDefensiveShield {
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId)
-                && GameConditions.canTarget(game, self, filter)) {
+                && GameConditions.canTarget(game, self, TargetingReason.TO_BE_SUSPENDED, filter)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
             action.setText("Suspend a Political Effect");

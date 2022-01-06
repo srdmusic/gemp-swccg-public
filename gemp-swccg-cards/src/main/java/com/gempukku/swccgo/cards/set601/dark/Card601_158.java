@@ -1,103 +1,132 @@
 package com.gempukku.swccgo.cards.set601.dark;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
+import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
+import com.gempukku.swccgo.cards.effects.DrawsNoMoreThanBattleDestinyEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.ModifierFlag;
-import com.gempukku.swccgo.logic.modifiers.SpecialFlagModifier;
-import com.gempukku.swccgo.logic.timing.Effect;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
+import com.gempukku.swccgo.logic.timing.Action;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Set: Block 7
- * Type: Effect
- * Title: Jabba's Haven
+ * Set: Block 3
+ * Type: Interrupt
+ * Subtype: Used
+ * Title: Rebel Leadership (V)
  */
-public class Card601_158 extends AbstractNormalEffect {
+public class Card601_158 extends AbstractUsedInterrupt {
     public Card601_158() {
-        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Jabba's Haven", Uniqueness.UNIQUE);
-        setLore("Jabba has won the service of many of his guards and other henchbeings through games of chance.");
-        setGameText("Deploy on table. May deploy Nal Hutta from Reserve Deck; reshuffle. Once per game, may retrieve an alien or [Independent] starship into hand. While Fearless And Inventive on table, once per battle, may lose 1 force; your battle destiny modifiers affect your total battle destiny instead. (Immune to Alter.)");
-        addIcons(Icon.LEGACY_BLOCK_7);
-        addImmuneToCardTitle(Title.Alter);
+        super(Side.LIGHT, 4, "Rebel Leadership", Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
+        setLore("In times of greatest need, the Rebellion relies on the brilliant leadership provided by commanders fighting for freedom.");
+        setGameText("Take an admiral or a non-Jedi general into hand from Reserve Deck; reshuffle. OR Once per game, deploy a war room from Reserve Deck; reshuffle. OR If your admiral or non-[Episode I] general is in battle, may add one battle destiny or prevent opponent from drawing more than one battle destiny (their battle destiny draws may not be canceled).");
+        addIcons(Icon.DEATH_STAR_II, Icon.LEGACY_BLOCK_3);
         setAsLegacy(true);
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.JABBAS_HAVEN__DOWNLOAD_NAL_HUTTA;
+        GameTextActionId gameTextActionId = GameTextActionId.REBEL_LEADERSHIP__UPLOAD_ADMIRAL_OR_GENERAL;
 
         // Check condition(s)
-        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Nal_Hutta)) {
+        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Nal Hutta from Reserve Deck");
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Nal_Hutta_system, true));
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Take card into hand from Reserve Deck");
+            // Allow response(s)
+            action.allowResponses("Take an admiral or non-Jedi general into hand from Reserve Deck",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.admiral, Filters.and(Filters.not(Filters.Jedi), Filters.general)), true));
+                        }
+                    }
+            );
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-
-        // Check condition(s)
-        if (GameConditions.canSpot(game, self, Filters.Fearless_And_Inventive)
-                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Change your battle destiny modifiers");
-            action.setActionMsg("Make " + playerId + "'s battle destiny modifiers affect " + playerId + "'s total battle destiny instead");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerBattleEffect(action));
-            // Pay cost(s)
-            action.appendCost(
-                    new LoseForceEffect(action, playerId, 1, true));
-            // Perform result(s)
-            action.appendEffect(
-                    new AddUntilEndOfBattleModifierEffect(action,
-                            new SpecialFlagModifier(self, ModifierFlag.BATTLE_DESTINY_MODIFIERS_AFFECT_TOTAL_BATTLE_DESTINY_INSTEAD, playerId),
-                            "Makes " + playerId + "'s battle destiny modifiers affect " + playerId + "'s total battle destiny instead"));
-            actions.add(action);
-        }
-
-        gameTextActionId = GameTextActionId.JABBAS_HAVEN__RETRIEVE_CARD_INTO_HAND;
-
+        gameTextActionId = GameTextActionId.LEGACY__REBEL_LEADERSHIP_V__DEPLOY_WAR_ROOM;
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.hasLostPile(game, playerId)) {
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Retrieve card into hand");
-            action.setActionMsg("Retrieve an alien or [Independent] starship into hand. ");
-            // Update usage limit(s)
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Deploy a war room");
             action.appendUsage(
                     new OncePerGameEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new RetrieveCardIntoHandEffect(action, playerId, Filters.or(Filters.alien, Filters.and(Filters.starship, Icon.INDEPENDENT))));
+            // Allow response(s)
+            action.allowResponses("Deploy a war room from Reserve Deck",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new DeployCardFromReserveDeckEffect(action, Filters.war_room, true));
+                        }
+                    }
+            );
             actions.add(action);
         }
 
+        // Check condition(s)
+        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.admiral, Filters.at(Filters.system)))
+                || GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.and(Filters.not(Icon.EPISODE_I), Filters.general), Filters.at(Filters.site)))) {
+            final String opponent = game.getOpponent(playerId);
+            if (GameConditions.canAddBattleDestinyDraws(game, self)) {
+
+                final PlayInterruptAction action1 = new PlayInterruptAction(game, self);
+                action1.setText("Add one battle destiny");
+                // Allow response(s)
+                action1.allowResponses(
+                        new RespondablePlayCardEffect(action1) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                // Perform result(s)
+                                action1.appendEffect(
+                                        new AddBattleDestinyEffect(action1, 1));
+                            }
+                        }
+                );
+                actions.add(action1);
+            }
+
+            final PlayInterruptAction action2 = new PlayInterruptAction(game, self);
+            action2.setText("Limit opponent to one battle destiny");
+            // Allow response(s)
+            action2.allowResponses("Prevent opponent from drawing more than one battle destiny",
+                    new RespondablePlayCardEffect(action2) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action2.appendEffect(
+                                    new DrawsNoMoreThanBattleDestinyEffect(action2, opponent, 1));
+                            action2.appendEffect(
+                                    new AddUntilEndOfBattleModifierEffect(action2, new MayNotCancelBattleDestinyModifier(self, opponent), "battle destiny may not be canceled"));
+                        }
+                    }
+            );
+            actions.add(action2);
+        }
         return actions;
     }
 }

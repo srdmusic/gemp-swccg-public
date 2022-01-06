@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.effects.SetForRemainderOfGameDataEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.DeployAsCaptiveOption;
@@ -49,13 +50,17 @@ public class Card200_016 extends AbstractRebel {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredOutsideOfDeckBeforeTriggers(SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
         String playerId = self.getOwner();
 
+        GameTextActionId gameTextActionId = GameTextActionId.JABBAS_PRIZE_V__REVEAL;
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, playerId, Filters.Starting_Effect)) {
+        if (TriggerConditions.isPlayingCard(game, effect, playerId, Filters.Starting_Effect)
+            && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
 
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Reveal");
             action.skipInitialMessageAndAnimation();
             action.setActionMsg(null);
+            action.appendUsage(
+                    new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new SetForRemainderOfGameDataEffect(action, self, new ForRemainderOfGameData()));

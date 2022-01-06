@@ -83,13 +83,18 @@ public class ReduceForceLossEffect extends AbstractSuccessfulEffect {
             // Check if this is Force loss that is not from battle damage
             if (forceLossState != null) {
 
-                if (forceLossState.getLoseForceEffect().isCannotBeReduced()) {
+                if (forceLossState.getLoseForceEffect().isCannotBeReduced(game)) {
                     gameState.sendMessage(_playerId + "'s Force loss cannot be reduced");
                 } else {
                     if (_reduceToAmount) {
                         _amount = Math.max(0, forceLossState.getLoseForceEffect().getForceLossRemaining(game) - _amount);
                     }
                     if (_amount > 0) {
+                        float currentForceLoss = forceLossState.getLoseForceEffect().getForceLossRemaining(game);
+                        float cannotReduceBelow = forceLossState.getLoseForceEffect().cannotBeReducedBelow();
+                        if (currentForceLoss-_amount<cannotReduceBelow)
+                            _toMinimum = (int) Math.max(_toMinimum, cannotReduceBelow);
+
                         if (_toMinimum > 0) {
                             gameState.sendMessage(_playerId + "'s Force loss is reduced by " + GuiUtils.formatAsString(_amount) + " (to a minimum of " + _toMinimum + ")");
                             modifiersEnvironment.addUntilEndOfForceLossModifier(

@@ -851,6 +851,7 @@ public interface Title {
     String Rex = "Captain Rex, 501st Legion";
     String Rey = "Rey";
     String Reys_Encampment = "Jakku: Rey's Encampment";
+    String Rise_Of_The_Sith = "Rise Of The Sith";
     String Rite_Of_Passage = "Rite Of Passage";
     String Roche = "Roche";
     String Rogue_1 = "Rogue 1";
@@ -1015,6 +1016,7 @@ public interface Title {
     String The_Phantom_Menace = "The Phantom Menace";
     String The_Planet_That_Its_Farthest_From = "The Planet That It's Farthest From";
     String The_Professor = "The Professor";
+    String The_Rise_Of_Skywalker = "The Rise Of Skywalker";
     String The_Shield_Doors_Must_Be_Closed = "The Shield Doors Must Be Closed";
     String The_Time_To_Fight_Is_Now = "The Time To Fight Is Now";
     String The_Ultimate_Power_In_The_Universe = "The Ultimate Power In The Universe";

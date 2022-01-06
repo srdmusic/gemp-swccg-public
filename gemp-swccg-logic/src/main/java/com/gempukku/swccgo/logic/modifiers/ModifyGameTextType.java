@@ -91,6 +91,8 @@ public enum ModifyGameTextType {
     LEGACY__PALEJO_RESHAD__TREAT_AUDIENCE_CHAMBER_AS_CORELLIA("Treat 'Audience Chamber' as 'Corellia'"),
     LEGACY__TREAT_XIZOR_AS_SHADA("Treat 'Xizor' as 'Shada'"),
     LEGACY__CORUSCANT_ICON_SITES__MAY_NOT_CANCEL_FORCE_DRAIN_BONUSES("May not cancel Force drain bonuses"),
+    LEGACY__OR_BE_DESTROYED__FORCE_LOSS("Force loss must come from Reserve Deck (if possible) and may not be reduced below 2"),
+    LEGACY__MORE_DANGEROUS_THAN_YOU_REALIZE__REQUIRES_THREE_SITES_TO_FLIP_BACK("Opponent must control three Dantooine locations to flip it back"),
 
     ;
 

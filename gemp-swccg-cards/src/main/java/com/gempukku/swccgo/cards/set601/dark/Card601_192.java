@@ -26,7 +26,7 @@ public class Card601_192 extends AbstractNormalEffect {
         setLore("Vader's hologram exacts loyalty from his legions.");
         setGameText("Deploy on a planet site. Opponent's Force drains are -1 here (-2 if Vader controls an adjacent site).");
         addIcons(Icon.HOTH, Icon.LEGACY_BLOCK_2);
-        addKeywords(Keyword.HOLOGRAM);
+        addKeywords(Keyword.HOLOGRAM, Keyword.DEPLOYS_ON_SITE);
         setAsLegacy(true);
     }
 
