@@ -3829,6 +3829,22 @@ var fixedImages = {
 "209_10ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/reywithlightsaber_ai.png",
 "206_7ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/rogueone_ai.png",
 "209_39ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/supremeleadersnoke_ai.png",
+"200_71ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/4lomwithconcussionrifle_ai.png",
+"212_5ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/admiraltrenchholo_ai.png",
+"204_36ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/b2battledroid_ai.png",
+"200_133ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/conquest_ai.png",
+"200_76ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/countdooku_ai.png",
+"203_26ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/darthmaullonehunter_ai.png",
+"200_142ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/dookuslightsaber_ai.png",
+"211_28ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/bb8inblacksquadron1_ai.png",
+"204_4ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/chewiewithbowcaster_ai.png",
+"204_27ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/jakkuniimaoutpostshipyard_ai.png",
+"204_8ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/poedameron_ai.png",
+"209_25ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/scarifdatavault_ai.png",
+"204_11ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/solo_ai.png",
+"201_19ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/tantiveiv_ai.png",
+"204_35ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/thefalconjunkyardgarbagefront_ai.png",
+"204_35ai_BACK":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/thefalconjunkyardgarbageback_ai.png",
 
 
 };
@@ -3897,6 +3913,7 @@ var packBlueprints = {
     "Rebel Leader Pack":"https://res.starwarsccg.org/packs/rebel_leader_pack.png",
     "Virtual Alternate Image Booster Pack Series 1":"https://res.starwarsccg.org/packs/virtualalternateimageboosterpackseries1.png",
     "Virtual Alternate Image Booster Pack Series 2":"https://res.starwarsccg.org/packs/virtualalternateimageboosterpackseries2.jpg",
+    "Virtual Alternate Image Booster Pack Series 3":"https://res.starwarsccg.org/packs/virtualalternateimageboosterpackseries3.png",
 
     "First Anthology Box":"https://res.starwarsccg.org/packs/first_anthology_box.png",
     "Second Anthology Box":"https://res.starwarsccg.org/packs/second_anthology_box.png",
@@ -3967,6 +3984,8 @@ var Card = Class.extend({
             imageBlueprint = imageBlueprint.substring(0, len - 1);
              if (fixedImages[imageBlueprint+"ai"] != null)
                 imageBlueprint = imageBlueprint + "ai";
+             if (fixedImages[imageBlueprint+"ai_BACK"] != null)
+                backSideImageUrl = backSideImageUrl + "ai";
         }
 
         this.bareBlueprint = imageBlueprint;
