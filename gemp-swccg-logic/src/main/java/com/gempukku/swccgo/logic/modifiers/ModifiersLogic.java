@@ -25,6 +25,7 @@ import java.util.*;
 public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, Snapshotable<ModifiersLogic> {
     private SwccgGame _swccgGame;
     private Map<ModifierType, List<Modifier>> _modifiers = new HashMap<ModifierType, List<Modifier>>();
+    private Map<Integer, List<Modifier>> _alwaysOnModifiersMap = new HashMap<>();
     private Map<Modifier, Set<Integer>> _excludedFromBeingAffected = new HashMap<Modifier, Set<Integer>>();
 
     private List<Modifier> _untilEndOfTurnModifiers = new LinkedList<Modifier>();
@@ -140,6 +141,10 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         for (ModifierType modifierType : _modifiers.keySet()) {
             List<Modifier> snapshotList = new LinkedList<Modifier>(_modifiers.get(modifierType));
             snapshot._modifiers.put(modifierType, snapshotList);
+        }
+        for (Integer permanentCardId : _alwaysOnModifiersMap.keySet()) {
+            List<Modifier> snapshotList = new LinkedList<>(_alwaysOnModifiersMap.get(permanentCardId));
+            snapshot._alwaysOnModifiersMap.put(permanentCardId, snapshotList);
         }
         for (Modifier modifier : _excludedFromBeingAffected.keySet()) {
             Set<Integer> snapshotSet = new HashSet<Integer>(_excludedFromBeingAffected.get(modifier));
@@ -15154,6 +15159,12 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         return new ModifierHookImpl(this, modifier);
     }
 
+    @Override
+    public void addCardSpecificAlwaysOnModifiers(SwccgGame game, PhysicalCard card) {
+        if (card.getBlueprint().getAlwaysOnModifiers(game, card) != null)
+            _alwaysOnModifiersMap.put(card.getPermanentCardId(), card.getBlueprint().getAlwaysOnModifiers(game, card));
+    }
+
     private void addModifier(Modifier modifier) {
         ModifierType modifierType = modifier.getModifierType();
         getEffectModifiers(modifierType).add(modifier);
@@ -15286,8 +15297,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private List<Modifier> getKeywordModifiersAffectingCard(GameState gameState, ModifierType modifierType, Keyword keyword, PhysicalCard card) {
         // Get always on modifiers
         List<? extends Modifier> alwaysOnModifiers = null;
-        if (card != null) {
-            alwaysOnModifiers = card.getBlueprint().getAlwaysOnModifiers(gameState.getGame(), card);
+        if (card != null && _alwaysOnModifiersMap.containsKey(card.getPermanentCardId())) {
+            alwaysOnModifiers = _alwaysOnModifiersMap.get(card.getPermanentCardId());
         }
         List<Modifier> modifiers = _modifiers.get(modifierType);
         if (alwaysOnModifiers == null && modifiers == null)
@@ -16034,16 +16045,18 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             }
         }
 
-        List<Modifier> alwaysOnModifiers = card.getBlueprint().getAlwaysOnModifiers(gameState.getGame(), card);
-        if (alwaysOnModifiers != null) {
-            for (Modifier modifier : alwaysOnModifiers) {
-                Condition condition = modifier.getCondition();
-                Condition additionalCondition = modifier.getAdditionalCondition(gameState, this, card);
-                if ((condition == null || condition.isFulfilled(gameState, this)) && (additionalCondition == null || additionalCondition.isFulfilled(gameState, this)))
-                    if (affectsCardWithSkipSet(gameState, card, modifier))
-                        if (!foundCumulativeConflict(gameState, result, modifier))
-                            result.add(modifier);
+        if (_alwaysOnModifiersMap.containsKey(card.getPermanentCardId())) {
+            List<Modifier> alwaysOnModifiers = _alwaysOnModifiersMap.get(card.getPermanentCardId());
+            if (alwaysOnModifiers != null) {
+                for (Modifier modifier : alwaysOnModifiers) {
+                    Condition condition = modifier.getCondition();
+                    Condition additionalCondition = modifier.getAdditionalCondition(gameState, this, card);
+                    if ((condition == null || condition.isFulfilled(gameState, this)) && (additionalCondition == null || additionalCondition.isFulfilled(gameState, this)))
+                        if (affectsCardWithSkipSet(gameState, card, modifier))
+                            if (!foundCumulativeConflict(gameState, result, modifier))
+                                result.add(modifier);
 
+                }
             }
         }
 
