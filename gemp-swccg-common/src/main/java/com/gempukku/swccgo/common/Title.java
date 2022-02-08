@@ -480,6 +480,7 @@ public interface Title {
     String I_Did_It = "I Did It!";
     String I_Feel_The_Conflict = "I Feel The Conflict";
     String I_Have_You_Now = "I Have You Now";
+    String I_Hope_Shes_All_Right = "I Hope She's All Right";
     String I_Know = "I Know";
     String I_Shall_Enjoy_Watching_You_Die = "I Shall Enjoy Watching You Die";
     String I_Want_That_Ship = "I Want That Ship";
@@ -897,6 +898,7 @@ public interface Title {
     String Scruffy_Looking_Nerf_Herder = "Scruffy-Looking Nerf Herder";
     String Scum_And_Villainy = "Scum And Villainy";
     String Scythe_3 = "Scythe 3";
+    String Search_And_Destroy = "Search And Destroy";
     String Sebulba = "Sebulba";
     String Sebulbas_Podracer = "Sebulba's Podracer";
     String Secret_Plans = "Secret Plans";
@@ -1132,8 +1134,9 @@ public interface Title {
     String Wittin = "Wittin";
     String Wokling = "Wokling";
     String Womp_Rat = "Womp Rat";
-    String Wookiee_Slaving_Operation = "Wookiee Slaving Operation";
+    String Wookiee_Homestead = "Wookiee Homestead";
     String Wookiee_Roar = "Wookiee Roar";
+    String Wookiee_Slaving_Operation = "Wookiee Slaving Operation";
     String Wookiee_Strangle = "Wookiee Strangle";
     String Wounded_Wookiee = "Wounded Wookiee";
     String Wrong_Turn = "Wrong Turn";
