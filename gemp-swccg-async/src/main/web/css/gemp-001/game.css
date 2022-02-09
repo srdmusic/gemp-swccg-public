@@ -386,6 +386,7 @@ body {
 
 .ui-tabs .ui-tabs-panel.slimPanel {
     padding: 4px;
+    overflow: auto;
 }
 
 .ui-tabs .ui-tabs-nav li a.slimTab {
