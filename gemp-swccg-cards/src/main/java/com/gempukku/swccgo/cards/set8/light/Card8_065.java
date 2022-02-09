@@ -84,8 +84,7 @@ public class Card8_065 extends AbstractUsedInterrupt {
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.Han)
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.or(Filters.Leia, Filters.Chewie))) {
             final BattleState battleState = game.getGameState().getBattleState();
-            final float currentAttrition = battleState.getAttritionTotal(game, playerId);
-            if (currentAttrition > 0) {
+            if (battleState.hasAttritionTotal(game.getOpponent(playerId))) {
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self);
                 action.setText("Reduce opponent's attrition");
