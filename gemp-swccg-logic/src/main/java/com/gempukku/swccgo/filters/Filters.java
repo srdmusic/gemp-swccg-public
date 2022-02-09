@@ -17179,7 +17179,7 @@ public class Filters {
     public static final Filter AAT = Filters.modelType(ModelType.AAT);
     public static final Filter AAT_Laser_Cannon = Filters.title(Title.AAT_Laser_Cannon);
     public static final Filter accountant = Filters.keyword(Keyword.ACCOUNTANT);
-    public static final Filter Ackbar = Filters.title(Title.Ackbar);
+    public static final Filter Ackbar = Filters.persona(Persona.ACKBAR);
     public static final Filter AhchTo_site = Filters.and(Filters.partOfSystem(Title.Ahch_To), CardSubtype.SITE);
     public static final Filter Ahch_To_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Ahch_To));
     public static final Filter Activate_The_Droids = Filters.title(Title.Activate_The_Droids);
@@ -18802,8 +18802,9 @@ public class Filters {
     public static final Filter Wittin = Filters.title(Title.Wittin);
     public static final Filter womp_rat = Filters.title(Title.Womp_Rat);
     public static final Filter Wookiee = Filters.species(Species.WOOKIEE);
-    public static final Filter Wookiee_Slaving_Operation = Filters.title(Title.Wookiee_Slaving_Operation);
+    public static final Filter Wookiee_Homestead = Filters.title(Title.Wookiee_Homestead);
     public static final Filter Wookiee_Roar = Filters.title(Title.Wookiee_Roar);
+    public static final Filter Wookiee_Slaving_Operation = Filters.title(Title.Wookiee_Slaving_Operation);
     public static final Filter Wookiee_Strangle = Filters.title(Title.Wookiee_Strangle);
     public static final Filter Wounded_Wookiee = Filters.title(Title.Wounded_Wookiee);
     public static final Filter Wrong_Turn = Filters.title(Title.Wrong_Turn);

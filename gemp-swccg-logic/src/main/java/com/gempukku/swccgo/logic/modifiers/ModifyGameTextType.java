@@ -42,6 +42,7 @@ public enum ModifyGameTextType {
     NABRUN_LEIDS_ELIS_HELROT__LIMIT_USAGE("Limited to owner's move phase and exterior sites"),
     PLASTOID_ARMOR__CHANGE_DEPLOYMENT("Deploys on a Rebel or alien at same mobile site as Elom"),
     PROPHECY_OF_THE_FORCE__MAY_NOT_BE_RELOCATED("May not be relocated"),
+    PRYDE__DOES_NOT_ADD_ATTRITION_AT_JAKKU_SYSTEM("Does not add to attrition at Jakku system"),
     RADAR_SCANNER__JAWAS_TUSKEN_RAIDERS_AND_STORMTROOPERS_LOST("Jawas, Tusken Raiders, and stormtroopers lost"),
     REBEL_PLANNERS__APPLIES_TO_EVERY_SYSTEM("Applies to every system"),
     REBEL_TECH__DOUBLE_BONUS_TO_ATTACK_RUN("Attack Run bonus doubled"),
