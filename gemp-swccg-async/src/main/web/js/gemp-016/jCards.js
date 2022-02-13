@@ -3488,6 +3488,7 @@ var fixedImages = {
 "501_76":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/theriseofskywalker.png",
 "501_77":"https://res.starwarsccg.org/cards/Dagobah-Light/large/warsnotmakeonegreat.gif",
 "501_78":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
+"501_79":"https://res.starwarsccg.org/cards/Premiere-Dark/large/observationholocam.gif",
 "501_90":"/gemp-swccg/images/cards/Virtual12-Dark/eviliseverywhere.gif",
 "501_91":"/gemp-swccg/images/cards/Premiere-Dark/darkjedilightsaber.gif",
 "501_95":"/gemp-swccg/images/cards/Tatooine-Light/tatooineslavequarters.gif",
