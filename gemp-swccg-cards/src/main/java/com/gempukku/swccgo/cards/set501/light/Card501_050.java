@@ -33,7 +33,7 @@ public class Card501_050 extends AbstractNormalEffect {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Ounee_Ta, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Jabba's decadent behavior makes him susceptible to deception. Leia and Lando exploited this weakness, posing as Jabba's kind of scum.");
-        setGameText("Deploy on a site. When deployed, may take top card of Lost Pile into hand. Disarmed and None Shall Pass are canceled here. Once per game, may place any Interrupt (except Ghhhk) in opponent's Lost Pile out of play. [Immune to Alter.]");
+        setGameText("Deploy on a site. When deployed, may take top card of Lost Pile into hand. Disarmed, None Shall Pass, and Stunning Leader are canceled here. Once per game, may place any Interrupt (except Ghhhk) in opponent's Lost Pile out of play. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_18);
         addKeyword(Keyword.DEPLOYS_ON_SITE);
         addImmuneToCardTitle(Title.Alter);
@@ -88,7 +88,9 @@ public class Card501_050 extends AbstractNormalEffect {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.isPlayingCardTargeting(game, effect, Filters.or(Filters.title(Title.Disarmed), Filters.None_Shall_Pass), Filters.at(Filters.hasAttached(self)))
+        if ((TriggerConditions.isPlayingCardTargeting(game, effect, Filters.or(Filters.title(Title.Disarmed), Filters.None_Shall_Pass), Filters.at(Filters.here(self)))
+                || (TriggerConditions.isPlayingCard(game, effect, Filters.Stunning_Leader)
+                    && GameConditions.isDuringBattleAt(game, Filters.here(self))))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);

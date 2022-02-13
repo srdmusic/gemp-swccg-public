@@ -38,7 +38,7 @@ public class Card501_056 extends AbstractUsedInterrupt {
         super(Side.LIGHT, 6, "Insertion Planning", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("The Rebellion employees every advantage it has over Imperial machines. A corps of well-trained scouts can elude detection in proper terrain.");
-        setGameText("During opponent's deploy phase, deploy a spy from hand to a location you occupy. OR Move your spy (or [Endor] scout) of ability < 4 as a react. OR If your spy or scout is in battle, opponent's total battle destiny is -2.");
+        setGameText("During opponent's deploy phase, deploy a spy from hand to a location you occupy. OR Move your spy (or [Endor] scout) of ability < 3 as a react. OR If your spy or scout is in battle, opponent's total battle destiny is -2.");
         addIcons(Icon.DEATH_STAR_II);
         setTestingText("Insertion Planning (V)");
     }
@@ -107,7 +107,7 @@ public class Card501_056 extends AbstractUsedInterrupt {
         if (TriggerConditions.battleInitiated(game, effectResult, opponent)
             || TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent)) {
 
-            Filter characterFilter = Filters.and(Filters.your(self), Filters.or(Filters.spy, Filters.scout), Filters.abilityLessThan(4),
+            Filter characterFilter = Filters.and(Filters.your(self), Filters.or(Filters.spy, Filters.scout), Filters.abilityLessThan(3),
                     Filters.canMoveAsReactAsActionFromOtherCard(self, false, GameConditions.additionalForceUseRequiredToPlayInterrupt(game, playerId, self), false));
             if (GameConditions.canTarget(game, self, characterFilter)) {
 
@@ -115,7 +115,7 @@ public class Card501_056 extends AbstractUsedInterrupt {
                 action.setText("Move spy or scout as 'react'");
                 // Choose target(s)
                 action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Choose spy (or scout) of ability < 4", characterFilter) {
+                        new TargetCardOnTableEffect(action, playerId, "Choose spy (or scout) of ability < 3", characterFilter) {
                             @Override
                             protected void cardTargeted(final int targetGroupId1, final PhysicalCard targetedCharacter) {
                                 action.addAnimationGroup(targetedCharacter);

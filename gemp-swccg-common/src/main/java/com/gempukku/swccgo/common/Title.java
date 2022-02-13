@@ -628,6 +628,7 @@ public interface Title {
     String Lone_Pilot = "Lone Pilot";
     String Lone_Rogue = "Lone Rogue";
     String Look_Sir_Droids = "Look Sir, Droids";
+    String Lower_Corridor = "Cloud City: Lower Corridor";
     String Lower_Passages = "Jabba's Palace: Lower Passages";
     String Lor_San_Tekka = "Lor San Tekka";
     String Losing_Track = "Losing Track";
@@ -777,6 +778,7 @@ public interface Title {
     String Podracer_Bay = "Tatooine: Podracer Bay";
     String Podracer_Collision = "Podracer Collision";
     String Poe = "Poe Dameron";
+    String Polis_Massa = "Polis Massa";
     String Ponda_Baba = "Ponda Baba";
     String Portable_Fusion_Generator = "Portable Fusion Generator";
     String Power_Harpoon = "Power Harpoon";

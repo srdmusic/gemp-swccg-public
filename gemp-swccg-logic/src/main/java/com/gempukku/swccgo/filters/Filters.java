@@ -18136,6 +18136,7 @@ public class Filters {
     public static final Filter musician = Filters.keyword(Keyword.MUSICIAN);
     public static final Filter Mustafar_Location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Mustafar));
     public static final Filter Mustafar_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Mustafar));
+    public static final Filter Mustafar_system = Filters.and(CardSubtype.SYSTEM, Filters.partOfSystem(Title.Mustafar));
     public static final Filter My_Favorite_Decoration = Filters.title(Title.My_Favorite_Decoration);
     public static final Filter My_Kind_Of_Scum = Filters.title(Title.My_Kind_Of_Scum);
     public static final Filter My_Lord_Is_That_Legal = Filters.title(Title.My_Lord_Is_That_Legal);
@@ -18259,6 +18260,7 @@ public class Filters {
     public static final Filter Podracer_Bay = Filters.title(Title.Podracer_Bay);
     public static final Filter Podracer_Collision = Filters.title(Title.Podracer_Collision);
     public static final Filter Poe = Filters.title(Title.Poe);
+    public static final Filter Polis_Massa_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Polis_Massa));
     public static final Filter Political_Effect = Filters.and(CardType.EFFECT, CardSubtype.POLITICAL);
     public static final Filter Ponda_Baba = Filters.title(Title.Ponda_Baba);
     public static final Filter Portable_Fusion_Generator = Filters.title(Title.Portable_Fusion_Generator);
