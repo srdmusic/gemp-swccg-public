@@ -19,6 +19,7 @@ import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalWeaponDestinyModifier;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
 
@@ -50,8 +51,8 @@ public class Card501_079 extends AbstractDevice {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotReactToLocationModifier(self, game.getOpponent(self.getOwner())));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new MayNotReactToLocationModifier(self, Filters.here(self), game.getOpponent(self.getOwner())));
         return modifiers;
     }
 
@@ -89,11 +90,17 @@ public class Card501_079 extends AbstractDevice {
 
                 action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a character to relocate to ", Filters.in(canMove)) {
                     @Override
-                    protected void cardTargeted(int targetGroupId, PhysicalCard targetedCard) {
+                    protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                         action.appendCost(
                                 new LoseForceEffect(action, playerId, 1));
-                        action.appendEffect(
-                                new RelocateBetweenLocationsEffect(action, targetedCard, location, true));
+                        action.allowResponses(new RespondableEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+                                action.appendEffect(
+                                        new RelocateBetweenLocationsEffect(action, finalTarget, location, true));
+                            }
+                        });
                     }
                 });
                 return Collections.singletonList(action);

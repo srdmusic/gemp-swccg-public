@@ -69,12 +69,12 @@ public class Card501_075 extends AbstractEpicEventDeployable {
             final String YOU_HAVE_THAT_POWER_TOO = "You Have That Power, Too";
             final String NO_VALID_CHOICE = "No valid choice";
 
-            final Filter myFatherHasIt_Anakin = Filters.Anakin;
-            final Filter myFatherHasIt_ObiWan = Filters.and(Icon.EPISODE_I, Filters.ObiWan);
-            final Filter iHaveIt_Luke = Filters.Luke;
-            final Filter iHaveIt_ObiWan = Filters.and(Icon.VIRTUAL_SET_1, Filters.ObiWan);
-            final Filter youHaveThatPowerToo_Rey = Filters.Rey;
-            final Filter youHaveThatPowerToo_Luke = Filters.and(Icon.EPISODE_VII, Filters.Luke);
+            final Filter myFatherHasIt_Anakin = Filters.and(Filters.character, Filters.Anakin);
+            final Filter myFatherHasIt_ObiWan = Filters.and(Filters.character, Icon.EPISODE_I, Filters.ObiWan);
+            final Filter iHaveIt_Luke = Filters.and(Filters.character, Filters.Luke);
+            final Filter iHaveIt_ObiWan = Filters.and(Filters.character, Icon.VIRTUAL_SET_1, Filters.ObiWan);
+            final Filter youHaveThatPowerToo_Rey = Filters.and(Filters.character, Filters.Rey);
+            final Filter youHaveThatPowerToo_Luke = Filters.and(Filters.character, Icon.EPISODE_VII, Filters.Luke);
 
             List<PhysicalCard> reserveDeck = game.getGameState().getReserveDeck(self.getOwner());
             List<String> possible = new LinkedList<>();

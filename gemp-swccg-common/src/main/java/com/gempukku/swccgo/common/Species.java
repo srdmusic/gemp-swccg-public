@@ -13,6 +13,7 @@ public enum Species implements Filterable {
     AQUALISH("Aqualish", true),
     ARCONA("Arcona", true),
     ARDENNIAN("Ardennian", true),
+    BALOSAR("Balosar", true),
     BARAGWIN("Baragwin", true),
     BITH("Bith", true),
     BOTHAN("Bothan", true),
