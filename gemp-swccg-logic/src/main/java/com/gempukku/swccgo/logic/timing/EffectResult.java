@@ -333,6 +333,9 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
         // 'Insert' card revealed
         INSERT_CARD_REVEALED,
 
+        // 'Artwork' card revealed
+        ARTWORK_CARD_REVEALED,
+
         // Utinni Effect completed
         UTINNI_EFFECT_COMPLETED,
 

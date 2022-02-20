@@ -13,6 +13,7 @@ public interface Title {
     String _8D8 = "8D8";
     String A_Dangerous_Time = "A Dangerous Time";
     String A_Gift = "A Gift";
+    String A_Great_Tactician_Creates_Plans = "A Great Tactician Creates Plans";
     String A_Siths_Plans = "A Sith's Plans";
     String A_Power_Loss = "A Power Loss";
     String A_Sith_Legend = "A Sith Legend";
@@ -633,6 +634,7 @@ public interface Title {
     String Lor_San_Tekka = "Lor San Tekka";
     String Losing_Track = "Losing Track";
     String Lost_In_The_Wilderness = "Lost In The Wilderness";
+    String Lothal = "Lothal";
     String Lukes_Backpack = "Luke's Backpack";
     String Lukes_T16_Skyhopper = "Luke's T-16 Skyhopper";
     String Lukes_X34_Landspeeder = "Luke's X-34 Landspeeder";
@@ -1020,6 +1022,7 @@ public interface Title {
     String The_Phantom_Menace = "The Phantom Menace";
     String The_Planet_That_Its_Farthest_From = "The Planet That It's Farthest From";
     String The_Professor = "The Professor";
+    String The_Result_Is_Often_Resentment = "The Result Is Often Resentment";
     String The_Rise_Of_Skywalker = "The Rise Of Skywalker";
     String The_Shield_Doors_Must_Be_Closed = "The Shield Doors Must Be Closed";
     String The_Time_To_Fight_Is_Now = "The Time To Fight Is Now";
@@ -1047,6 +1050,7 @@ public interface Title {
     String This_Place_Can_Be_A_Little_Rough = "This Place Can Be A Little Rough";
     String Those_Rebels_Wont_Escape_Us = "Those Rebels Won't Escape Us";
     String Thrawn = "Grand Admiral Thrawn";
+    String Thrawns_Art_Collection = "Thrawn's Art Collection";
     String Throne_Room = "Death Star II: Throne Room";
     String Throw_Me_Another_Charge = "Throw Me Another Charge";
     String Thunderflare = "Thunderflare";

@@ -1263,6 +1263,10 @@ public class SwccgGameMediator {
         // Based on Objective
         if (objective != null) {
             String objectiveLabel = null;
+            if (Filters.or(Filters.title(Title.A_Great_Tactician_Creates_Plans), Filters.title(Title.The_Result_Is_Often_Resentment)).accepts(_swccgoGame, objective)) {
+                // A Great Tactician Creates Plans
+                objectiveLabel = "Thrawn";
+            }
             if (Filters.or(Filters.Agents_In_The_Court, Filters.No_Love_For_The_Empire).accepts(_swccgoGame, objective)) {
                 // Agents In The Court
                 objectiveLabel = "AITC";

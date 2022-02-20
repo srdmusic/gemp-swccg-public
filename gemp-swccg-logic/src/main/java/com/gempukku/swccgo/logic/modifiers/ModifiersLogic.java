@@ -7226,7 +7226,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         // Check if TIE, which can only land at docking bay (or starship site that may be landed at instead of embarking on related starship).
         if (Filters.TIE.accepts(gameState, this, card)
                 && !Filters.docking_bay.accepts(gameState, this, toLocation)
-                && !Filters.starshipSiteToShuttleTransferLandAndTakeOffAtForFreeInsteadOfRelatedStarship(card.getOwner()).accepts(gameState, this, card)) {
+                && !Filters.starshipSiteToShuttleTransferLandAndTakeOffAtForFreeInsteadOfRelatedStarship(card.getOwner()).accepts(gameState, this, card)
+                && !tieAllowedToLand(gameState, card, toLocation)) {
             return true;
         }
 
@@ -12539,7 +12540,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 filterForUniqueness = Filters.and(filterForUniqueness, Filters.owner(card.getOwner()), Filters.not(Filters.collapsed), Filters.not(Filters.perSystemUniqueness));
             }
             else {
-                filterForUniqueness = Filters.or(filterForUniqueness, Filters.hasPermanentAboard(filterForUniqueness), Filters.hasPermanentWeapon(filterForUniqueness));
+                filterForUniqueness = Filters.or(filterForUniqueness, Filters.and(Filters.your(card), Filters.hasPermanentAboard(filterForUniqueness)), Filters.and(Filters.your(card), Filters.hasPermanentWeapon(filterForUniqueness)));
             }
             int count = Filters.countForUniquenessChecking(gameState.getGame(), filterForUniqueness);
 
@@ -14351,12 +14352,14 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             if (vehicle == null && location1.getBlueprint().getRelatedStarshipOrVehiclePersona() != null) {
                 vehicle = Filters.findFirstFromAllOnTable(gameState.getGame(), location1.getBlueprint().getRelatedStarshipOrVehiclePersona());
             }
-            PhysicalCard locationVehicleIsAt = getLocationThatCardIsAt(gameState, vehicle);
-            if (locationVehicleIsAt != null && locationVehicleIsAt.getBlueprint().getCardSubtype() == CardSubtype.SITE) {
-                String partOfSystem = locationVehicleIsAt.getPartOfSystem();
+            if (vehicle != null) {
+                PhysicalCard locationVehicleIsAt = getLocationThatCardIsAt(gameState, vehicle);
+                if (locationVehicleIsAt != null && locationVehicleIsAt.getBlueprint().getCardSubtype() == CardSubtype.SITE) {
+                    String partOfSystem = locationVehicleIsAt.getPartOfSystem();
 
-                if (partOfSystem != null && partOfSystem.equals(location2.getPartOfSystem())) {
-                    return true;
+                    if (partOfSystem != null && partOfSystem.equals(location2.getPartOfSystem())) {
+                        return true;
+                    }
                 }
             }
 
@@ -16700,5 +16703,18 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
 
         return filter;
+    }
+
+    public boolean tieAllowedToLand(GameState gameState, PhysicalCard card, PhysicalCard toLocation) {
+        if (!Filters.exterior_site.accepts(gameState, this, toLocation))
+            return false;
+        if (Filters.docking_bay.accepts(gameState, this, toLocation))
+            return true;
+        for (Modifier modifier: getModifiersAffectingCard(gameState, ModifierType.TIE_MAY_LAND_AT_EXTERIOR_SITE, card)) {
+            if (((TIEsMayLandAtExteriorSiteModifier)modifier).allowedToLandAt(gameState, this, toLocation))
+                return true;
+        }
+
+        return false;
     }
 }

@@ -115,6 +115,7 @@ public enum Keyword implements Filterable {
     MAZS_CASTLE_LOCATION("Maz's Castle Location", false),
     MEDIUM_TRANSPORT("Medium Transport", false),
     MINE("Mine", true),
+    MINER("Miner", true),
     MISSILE("Missile", true),
     MISTRYL("Mistryl", true),
     MOFF("Moff", true),

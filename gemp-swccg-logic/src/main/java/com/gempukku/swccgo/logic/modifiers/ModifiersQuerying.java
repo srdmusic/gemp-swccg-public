@@ -4604,4 +4604,5 @@ public interface ModifiersQuerying {
     boolean blownAwayForceLossMayNotBeReduced(GameState gameState);
     boolean onlyDeploysAdjacentToSpecificLocations(GameState gameState, PhysicalCard card);
     Filter getFilterForOnlyDeploysAdjacentToSpecificLocations(GameState gameState, PhysicalCard card);
+    boolean tieAllowedToLand(GameState gameState, PhysicalCard card, PhysicalCard toLocation);
 }
