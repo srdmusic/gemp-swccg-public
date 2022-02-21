@@ -1,15 +1,19 @@
 package com.gempukku.swccgo.cards;
 
 import com.gempukku.swccgo.cards.actions.*;
+import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.*;
 import com.gempukku.swccgo.game.layout.LocationPlacement;
+import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.*;
+import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -909,15 +913,19 @@ public abstract class AbstractLocation extends AbstractSwccgCardBlueprint {
      * @param self this location
      * @return modifiers from 'bluff' cards
      */
-    private List<Modifier> getBluffRulesModifiers(SwccgGame game, PhysicalCard self) {
+    private List<Modifier> getBluffRulesModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
 
-        // If 'bluff rules' in effect, add cumulative Force drain modifier for each 'bluff card'
-        if (isSpecialRuleInEffectHere(SpecialRule.BLUFF_RULES, self)) {
-            Collection<PhysicalCard> bluffCards = Filters.filter(game.getGameState().getStackedCards(self), game, Filters.bluffCard);
-            for (PhysicalCard bluffCard : bluffCards) {
-                modifiers.add(new ForceDrainModifier(bluffCard, self, 1, bluffCard.getOwner(), true));
-            }
+        // This only ever applies to Tatooine: Bluffs
+        if (self.getBlueprint().getTitle().equals(Title.Bluffs)) {
+            Condition bluffRulesCondition = new Condition() {
+                @Override
+                public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
+                    return isSpecialRuleInEffectHere(SpecialRule.BLUFF_RULES, self);
+                }
+            };
+
+            modifiers.add(new ForceDrainModifier(self, bluffRulesCondition, new StackedEvaluator(self, Filters.Bluffs, Filters.bluffCard), game.getDarkPlayer()));
         }
 
         return modifiers;
