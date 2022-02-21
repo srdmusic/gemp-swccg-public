@@ -8632,6 +8632,24 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that are systems at or above the specified parsec number.
+     *
+     * @param parsec the parsec number
+     * @return Filter
+     */
+    public static Filter systemAtOrAboveParsec(final int parsec) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                if (physicalCard.getBlueprint().getCardSubtype() != CardSubtype.SYSTEM)
+                    return false;
+
+                return physicalCard.getParsec() >= parsec;
+            }
+        };
+    }
+
+    /**
      * Filter that accepts cards that are the systems orbited by the specified mobile system.
      *
      * @param card the mobile system
@@ -18052,6 +18070,9 @@ public class Filters {
     public static final Filter Lor_San_Tekka = Filters.title(Title.Lor_San_Tekka);
     public static final Filter Losing_Track = Filters.title(Title.Losing_Track);
     public static final Filter Lost_In_The_Wilderness = Filters.title(Title.Lost_In_The_Wilderness);
+    public static final Filter Lothal_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Lothal));
+    public static final Filter Lothal_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Lothal));
+    public static final Filter Lothal_system = Filters.and(CardSubtype.SYSTEM, Filters.partOfSystem(Title.Lothal));
     public static final Filter Lower_Passages = Filters.title(Title.Lower_Passages);
     public static final Filter Luke = Filters.persona(Persona.LUKE);
     public static final Filter Lukes_Backpack = Filters.title(Title.Lukes_Backpack);
@@ -18105,7 +18126,7 @@ public class Filters {
     public static final Filter Mianda = Filters.title(Title.Mianda);
     public static final Filter Miiyoom_Onith = Filters.title(Title.Miiyoom_Onith);
     public static final Filter mine = Filters.keyword(Keyword.MINE);
-    public static final Filter miner = Filters.keyword(Keyword.GAS_MINER);
+    public static final Filter miner = Filters.or(Filters.keyword(Keyword.MINER), Filters.keyword(Keyword.GAS_MINER));
     public static final Filter Mind_What_You_Have_Learned = Filters.title(Title.Mind_What_You_Have_Learned);
     public static final Filter mining_droid = Filters.modelType(ModelType.MINING);
     public static final Filter Mirax = Filters.title(Title.Mirax);
@@ -18134,7 +18155,7 @@ public class Filters {
     public static final Filter Momaw_Nadon = Filters.title(Title.Momaw_Nadon);
     public static final Filter MTT = Filters.modelType(ModelType.MTT);
     public static final Filter musician = Filters.keyword(Keyword.MUSICIAN);
-    public static final Filter Mustafar_Location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Mustafar));
+    public static final Filter Mustafar_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Mustafar));
     public static final Filter Mustafar_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Mustafar));
     public static final Filter Mustafar_system = Filters.and(CardSubtype.SYSTEM, Filters.partOfSystem(Title.Mustafar));
     public static final Filter My_Favorite_Decoration = Filters.title(Title.My_Favorite_Decoration);
@@ -18673,6 +18694,7 @@ public class Filters {
     public static final Filter This_Is_Still_Wrong = Filters.title(Title.This_Is_Still_Wrong);
     public static final Filter This_Place_Can_Be_A_Little_Rough = Filters.title(Title.This_Place_Can_Be_A_Little_Rough);
     public static final Filter Thrawn = Filters.persona(Persona.THRAWN);
+    public static final Filter Thrawns_Art_Collection = Filters.title(Title.Thrawns_Art_Collection);
     public static final Filter Throne_Room = Filters.title(Title.Throne_Room);
     public static final Filter Throw_Me_Another_Charge = Filters.title(Title.Throw_Me_Another_Charge);
     public static final Filter Thunderflare = Filters.title(Title.Thunderflare);

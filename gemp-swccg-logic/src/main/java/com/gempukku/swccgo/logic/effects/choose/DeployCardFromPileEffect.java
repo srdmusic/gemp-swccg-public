@@ -18,7 +18,7 @@ import com.gempukku.swccgo.logic.timing.PassthruEffect;
 /**
  * An effect that causes the player performing the action to deploy a card from the specified card pile.
  */
-class DeployCardFromPileEffect extends AbstractSubActionEffect {
+public class DeployCardFromPileEffect extends AbstractSubActionEffect {
     private String _playerId;
     private Zone _cardPile;
     private String _cardPileOwner;
@@ -100,7 +100,7 @@ class DeployCardFromPileEffect extends AbstractSubActionEffect {
      * @param asReact true if deploying as a react, otherwise false
      * @param reshuffle true if pile is reshuffled, otherwise false
      */
-    protected DeployCardFromPileEffect(Action action, String performingPlayerId, Zone zone, Filter cardFilter, Filter targetFilter, Filter ignoreTargetFilterCardFilter, String targetSystem, Filter specialLocationConditions, boolean forFree, Filter forFreeCardFilter, float changeInCost, Filter changeInCostCardFilter, DeploymentRestrictionsOption deploymentRestrictionsOption, DeployAsCaptiveOption deployAsCaptiveOption, boolean asReact, boolean reshuffle) {
+    public DeployCardFromPileEffect(Action action, String performingPlayerId, Zone zone, Filter cardFilter, Filter targetFilter, Filter ignoreTargetFilterCardFilter, String targetSystem, Filter specialLocationConditions, boolean forFree, Filter forFreeCardFilter, float changeInCost, Filter changeInCostCardFilter, DeploymentRestrictionsOption deploymentRestrictionsOption, DeployAsCaptiveOption deployAsCaptiveOption, boolean asReact, boolean reshuffle) {
         super(action);
         _playerId = performingPlayerId;
         _cardPile = zone;
@@ -272,7 +272,8 @@ class DeployCardFromPileEffect extends AbstractSubActionEffect {
 
                             float changeInCostToUse = (_changeInCostCardFilter == null || _changeInCostCardFilter.accepts(game, selectedCard)) ? _changeInCost : 0;
                             PlayCardAction playCardAction;
-                            if (_targetSystem != null && Filters.location.accepts(gameState, modifiersQuerying, selectedCard))
+                            if (_targetSystem != null && Filters.location.accepts(gameState, modifiersQuerying, selectedCard)
+                                    && (_ignoreTargetFilterCardFilter==null || !_ignoreTargetFilterCardFilter.accepts(game, selectedCard)))
                                 playCardAction = selectedCard.getBlueprint().getPlayLocationToSystemAction(subAction.getPerformingPlayer(), game, selectedCard, _action.getActionSource(), _targetSystem, _specialLocationConditions);
                             else
                                 playCardAction = selectedCard.getBlueprint().getPlayCardAction(subAction.getPerformingPlayer(), game, selectedCard, _action.getActionSource(), _forFree, changeInCostToUse, _deploymentOption, _deploymentRestrictionsOption, _deployAsCaptiveOption, reactActionOption, null, false, 0, _targetFilter, _specialLocationConditions);
