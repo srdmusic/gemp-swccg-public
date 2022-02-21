@@ -3,16 +3,23 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractPermanentWeapon;
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.conditions.FiredWeaponsInBattleCondition;
+import com.gempukku.swccgo.cards.conditions.InPlayDataSetCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.WhileInPlayData;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.FireWeaponAction;
 import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.NotCondition;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -35,13 +42,12 @@ public class Card501_078 extends AbstractRebel {
         addPersona(Persona.LUKE);
         addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_18);
         setTestingText("Luke With Lightsaber (V)");
-        hideFromDeckBuilder();
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-//TODO        modifiers.add(new ImmuneToAttritionModifier(self, new FiredWeaponThisTurnCondition(self)));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ImmuneToAttritionModifier(self, new NotCondition(new InPlayDataSetCondition(self))));
         return modifiers;
     }
 
@@ -64,6 +70,24 @@ public class Card501_078 extends AbstractRebel {
         };
         permanentWeapon.addKeyword(Keyword.LIGHTSABER);
         return permanentWeapon;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
+        // Track if he targeted with a weapon this turn
+        if (TriggerConditions.isFiringWeapon(game, effect, Filters.any, self)) {
+            self.setWhileInPlayData(new WhileInPlayData(true));
+        }
+        return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        // Reset at the end of each turn
+        if (TriggerConditions.isEndOfEachTurn(game, effectResult)) {
+            self.setWhileInPlayData(null);
+        }
+        return null;
     }
 }
 

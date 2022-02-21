@@ -3424,7 +3424,7 @@ var fixedImages = {
 "501_12":"/gemp-swccg/images/cards/Tatooine-Dark/youmaystartyourlanding.gif",
 "501_13":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Dark/large/hothmainpowergenerators.gif",
 "501_14":"/gemp-swccg/images/cards/Tatooine-Dark/amillionvoicescryingout.gif",
-"501_15":"/gemp-swccg/images/cards/Virtual3-Light/kananjarrus.gif",
+"501_15":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/coloneljendon.gif",
 "501_16":"/gemp-swccg/images/cards/Coruscant-Dark/lottdod.gif",
 "501_17":"/gemp-swccg/images/cards/TheedPalace-Dark/rollingrollingrolling.gif",
 "501_18":"/gemp-swccg/images/cards/CloudCity-Light/courageofaskywalker.gif",

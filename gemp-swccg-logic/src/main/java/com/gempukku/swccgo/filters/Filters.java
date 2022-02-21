@@ -8632,6 +8632,24 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that are systems at or above the specified parsec number.
+     *
+     * @param parsec the parsec number
+     * @return Filter
+     */
+    public static Filter systemAtOrAboveParsec(final int parsec) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                if (physicalCard.getBlueprint().getCardSubtype() != CardSubtype.SYSTEM)
+                    return false;
+
+                return physicalCard.getParsec() >= parsec;
+            }
+        };
+    }
+
+    /**
      * Filter that accepts cards that are the systems orbited by the specified mobile system.
      *
      * @param card the mobile system

@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
@@ -38,15 +39,8 @@ public class Card501_029 extends AbstractImperial {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        Condition atSystemWithHighParsec = new Condition(){
-            @Override
-            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
-                PhysicalCard system = modifiersQuerying.getLocationThatCardIsAt(gameState, self);
-                return system != null && Filters.system.accepts(gameState.getGame(), system) && modifiersQuerying.getParsecNumber(gameState, system) >= 5;
-            }
-        };
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, new ConditionEvaluator(2, 3, atSystemWithHighParsec), Filters.capital_starship));
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, new ConditionEvaluator(2, 3, new AtCondition(self, Filters.systemAtOrAboveParsec(6))), Filters.capital_starship));
         modifiers.add(new PowerModifier(self, Filters.and(Filters.your(self), Filters.starship, Filters.here(self)), new WithCondition(self, Filters.Thrawn), 1));
         modifiers.add(new HyperspeedModifier(self, Filters.and(Filters.your(self), Filters.starship, Filters.here(self)), new WithCondition(self, Filters.Thrawn), 1));
         return modifiers;
@@ -57,7 +51,7 @@ public class Card501_029 extends AbstractImperial {
         GameTextActionId gameTextActionId = GameTextActionId.ENSIGN_ELI_VANTO__UPLOAD_CARD;
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)
                 && GameConditions.canUseForce(game, playerId, 1)) {
 
