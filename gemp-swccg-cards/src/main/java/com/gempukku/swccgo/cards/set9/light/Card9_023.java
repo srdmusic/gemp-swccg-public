@@ -50,7 +50,7 @@ public class Card9_023 extends AbstractRebel {
             }
         };
 
-        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 1));
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new DeployCostToTargetModifier(self, Filters.and(Filters.your(self), Filters.unique, Filters.Y_wing),
             new AndCondition(new AtCondition(self, Filters.or(Filters.system, Filters.sector, Filters.docking_bay)), new PhaseCondition(Phase.DEPLOY, self.getOwner()), condition),
                 -2, Filters.here(self)));
