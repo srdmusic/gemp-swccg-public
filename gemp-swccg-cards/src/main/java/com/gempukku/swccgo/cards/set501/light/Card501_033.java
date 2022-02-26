@@ -9,8 +9,11 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.FireWeaponAction;
 import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
+import com.gempukku.swccgo.logic.modifiers.MayFireRepeatedlyModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -29,7 +32,6 @@ public class Card501_033 extends AbstractAlien {
         setSpecies(Species.ALDERAANIAN);
         addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_18);
         setTestingText("Cara Dune With Heavy Blaster Rifle");
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -50,5 +52,12 @@ public class Card501_033 extends AbstractAlien {
         };
         permanentWeapon.addKeyword(Keyword.BLASTER_RIFLE);
         return permanentWeapon;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new MayFireRepeatedlyModifier(self, 2));
+        return modifiers;
     }
 }
