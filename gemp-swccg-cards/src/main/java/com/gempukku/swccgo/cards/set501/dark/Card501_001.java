@@ -1,105 +1,73 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.AbstractSith;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.GameTextActionId;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.evaluators.*;
+import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.PlaceTopCardOfUsedPileOnTopOfForcePileEffect;
-import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.SpeciesModifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.choose.ExchangeCardInHandWithCardInLostPileEffect;
+import com.gempukku.swccgo.logic.evaluators.Evaluator;
+import com.gempukku.swccgo.logic.modifiers.*;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 16
+ * Set: Set 7
  * Type: Character
- * Subtype: Alien
- * Title: Alien Mob
+ * Subtype: Sith
+ * Title: Savage Opress
  */
-public class Card501_001 extends AbstractAlien {
+public class Card501_001 extends AbstractSith {
     public Card501_001() {
-        super(Side.DARK, 3, 4, 4, 2, 5, "Alien Mob", Uniqueness.DIAMOND_1);
-        setLore("");
-        setGameText("This card has your Rep’s species. When deployed, may retrieve a Rep or place a Rep stacked on your Objective in Used Pile. Once per turn, if Fearless And Inventive on table and you just retrieved Force, may place top card of Used Pile on Force Pile.");
-        addIcons(Icon.WARRIOR, Icon.WARRIOR, Icon.WARRIOR, Icon.VIRTUAL_SET_16);
-        setTestingText("Alien Mob");
+        super(Side.DARK, 1, 6, 8, 4, 5, "Savage Opress", Uniqueness.UNIQUE);
+        setLore("Dathomirian assassin.");
+        setGameText("Deploys -1 for each other Sith character on table (limit -4). Once per game, may exchange a card in hand with a Sith character in Lost Pile. Immune to attrition < 3.");
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.SEPARATIST, Icon.EPISODE_I, Icon.VIRTUAL_SET_7);
+        addKeywords(Keyword.ASSASSIN);
+        setSpecies(Species.DATHOMIRIAN);
+        setTestingText("Savage Opress (ERRATA)");
     }
 
     @Override
     protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
-        PhysicalCard rep = game.getGameState().getRep(self.getOwner());
         List<Modifier> modifiers = new LinkedList<>();
-        if (rep != null) {
-            modifiers.add(new SpeciesModifier(self, rep.getBlueprint().getSpecies()));
-        }
+        modifiers.add(new DeployCostModifier(self, new NegativeEvaluator(new MaxLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.other(self), Filters.Sith)), 4))));
         return modifiers;
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<OptionalGameTextTriggerAction> actions = new ArrayList<>();
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        PhysicalCard rep = game.getGameState().getRep(self.getOwner());
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.SAVAGE_OPRESS__EXCHANGE_CARD_IN_HAND_WITH_SITH_IN_LOST_PILE;
 
-        // Check condition(s)
-        if (TriggerConditions.justDeployed(game, effectResult, self)
-                && rep != null) {
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.hasHand(game, playerId)
+                && GameConditions.hasLostPile(game, playerId)) {
 
-            if (GameConditions.hasLostPile(game, playerId)) {
-                OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Retrieve " + GameUtils.getCardLink(rep));
-                action.setActionMsg("Retrieve " + GameUtils.getCardLink(rep));
-                // Perform result(s)
-                action.appendEffect(
-                        new RetrieveCardEffect(action, playerId, Filters.sameTitle(rep)));
-                actions.add(action);
-            }
-
-            if (GameConditions.canSpot(game, self, Filters.and(Filters.your(playerId), Filters.Objective, Filters.hasStacked(Filters.sameTitle(rep))))) {
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Place stacked " + GameUtils.getCardLink(rep) + " in Used Pile");
-                action.setActionMsg("Place stacked " + GameUtils.getCardLink(rep) + " in Used Pile");
-                // Perform result(s)
-                action.appendTargeting(
-                        new ChooseStackedCardEffect(action, playerId, Filters.and(Filters.your(playerId), Filters.Objective), Filters.sameTitle(rep)) {
-                            @Override
-                            protected void cardSelected(PhysicalCard selectedCard) {
-                                action.appendEffect(
-                                        new PutStackedCardInUsedPileEffect(action, playerId, selectedCard, false));
-                            }
-                        }
-                );
-                actions.add(action);
-            }
-        }
-
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-        if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canSpot(game, self, Filters.Fearless_And_Inventive)
-                && GameConditions.hasUsedPile(game, playerId)
-                && TriggerConditions.justRetrievedForce(game, effectResult, playerId)) {
-            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place top card of Used Pile on Force Pile");
-            action.setActionMsg("Place top card of Used Pile on Force Pile");
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Exchange card in hand with card in Lost Pile");
+            action.setActionMsg("Exchange a card in hand with a Sith character in Lost Pile");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new PlaceTopCardOfUsedPileOnTopOfForcePileEffect(action, playerId));
-            actions.add(action);
+                    new ExchangeCardInHandWithCardInLostPileEffect(action, playerId, Filters.any, Filters.Sith));
+            return Collections.singletonList(action);
         }
-        return actions;
+        return null;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
+        return modifiers;
     }
 }

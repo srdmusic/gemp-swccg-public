@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.effects.SetForRemainderOfGameDataEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.DeployAsCaptiveOption;
@@ -37,7 +38,7 @@ public class Card200_016 extends AbstractRebel {
     public Card200_016() {
         super(Side.LIGHT, 0, 0, 0, 0, 0, Title.Jabbas_Prize, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
-        setGameText("Jabba's Prize is a Light Side card and does not count towards your deck limit. Reveal to opponent when deploying your Starting Effect. For remainder of game, you may not deploy [Maintenance] Falcon. Deploys only at start of game if Jabba's Prize is at Security Tower (replaces opponent's Jabba's Prize imprisioned in Security Tower); otherwise place out of play. May not be placed in Reserve Deck. Jabba's Prize is a persona of Corran Horn only while on table. If Jabba's Prize was just released or leaves table, place it out of play. While Jabba's Prize is at Audience Chamber, opponent's battle destiny draws there are +1.");
+        setGameText("Jabba's Prize is a Light Side card and does not count towards your deck limit. Reveal to opponent when deploying your Starting Effect. For remainder of game, you may not deploy [Maintenance] Falcon. Deploys only at start of game if Jabba's Prize is at Security Tower (replaces opponent's Jabba's Prize imprisoned in Security Tower); otherwise place out of play. May not be placed in Reserve Deck. Jabba's Prize is a persona of Corran Horn only while on table. If Jabba's Prize was just released or leaves table, place it out of play. While Jabba's Prize is at Audience Chamber, opponent's battle destiny draws there are +1.");
         setDoesNotCountTowardDeckLimit(true);
         addPersona(Persona.CORRAN_HORN);
         setCharacterPersonaOnlyWhileOnTable(true);
@@ -49,13 +50,17 @@ public class Card200_016 extends AbstractRebel {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredOutsideOfDeckBeforeTriggers(SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
         String playerId = self.getOwner();
 
+        GameTextActionId gameTextActionId = GameTextActionId.JABBAS_PRIZE_V__REVEAL;
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, playerId, Filters.Starting_Effect)) {
+        if (TriggerConditions.isPlayingCard(game, effect, playerId, Filters.Starting_Effect)
+            && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
 
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Reveal");
             action.skipInitialMessageAndAnimation();
             action.setActionMsg(null);
+            action.appendUsage(
+                    new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new SetForRemainderOfGameDataEffect(action, self, new ForRemainderOfGameData()));

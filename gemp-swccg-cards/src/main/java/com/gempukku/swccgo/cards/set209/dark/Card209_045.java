@@ -60,7 +60,7 @@ public class Card209_045 extends AbstractEpicEventDeployable {
         final GameState gameState = game.getGameState();
         Filter systemFilter = Filters.and(Filters.system, Filters.isOrbitedBy(Filters.Death_Star_system), Filters.or(Filters.title(Title.Jedha), Filters.title(Title.Scarif)));
 
-        final Filter yourSiteEvenIfConverted = Filters.and(Filters.your(self), Filters.unique, Filters.battleground_site,
+        final Filter yourSiteEvenIfConverted = Filters.and(Filters.or(Filters.your(self), Filters.convertedLocationOnTopOfLocation(Filters.your(self))), Filters.unique, Filters.battleground_site,
                 Filters.relatedSiteTo(self, Filters.and(Filters.system, Filters.isOrbitedBy(Filters.Death_Star_system))));
 
         // Check condition(s)
@@ -130,7 +130,13 @@ public class Card209_045 extends AbstractEpicEventDeployable {
                                             int numDestinyDraws = 1;
                                             if (modifiersQuerying.hasGameTextModification(gameState, self, ModifyGameTextType.COMMENCE_PRIMARY_IGNITION__ADDS_A_DESTINY_TO_TOTAL)
                                                     && Filters.Scarif_site.accepts(game, targetedSite)) {
-                                                numDestinyDraws = 2;
+                                                //add destiny for each modifier (could be > 1 from Expand The Empire)
+                                                for(Modifier m: modifiersQuerying.getModifiersAffecting(gameState, self)) {
+                                                    if (m.getModifierType() == ModifierType.MODIFY_GAME_TEXT
+                                                            && m.getModifyGameTextType(gameState, modifiersQuerying, self) == ModifyGameTextType.COMMENCE_PRIMARY_IGNITION__ADDS_A_DESTINY_TO_TOTAL) {
+                                                        numDestinyDraws++;
+                                                    }
+                                                }
                                             }
                                             action.appendEffect(
                                                     new DrawDestinyEffect(action, playerId, numDestinyDraws, DestinyType.EPIC_EVENT_AND_WEAPON_DESTINY) {

@@ -13,6 +13,8 @@ public interface Title {
     String _8D8 = "8D8";
     String A_Dangerous_Time = "A Dangerous Time";
     String A_Gift = "A Gift";
+    String A_Great_Tactician_Creates_Plans = "A Great Tactician Creates Plans";
+    String A_Siths_Plans = "A Sith's Plans";
     String A_Power_Loss = "A Power Loss";
     String A_Sith_Legend = "A Sith Legend";
     String A_Stunning_Move = "A Stunning Move";
@@ -44,6 +46,7 @@ public interface Title {
     String Ambush = "Ambush";
     String An_Inkling_Of_Its_Destructive_Potential = "An Inkling Of Its Destructive Potential";
     String Anakin_Skywalker = "Anakin Skywalker";
+    String Anakins_Funeral_Pyre = "Endor: Anakin's Funeral Pyre";
     String Anakins_Lightsaber = "Anakin's Lightsaber";
     String Anakins_Podracer = "Anakin's Podracer";
     String Anchorhead = "Tatooine: Anchorhead";
@@ -52,6 +55,7 @@ public interface Title {
     String Anoat = "Anoat";
     String Antechamber = "Maz's Castle: Antechamber";
     String Any_Methods_Necessary = "Any Methods Necessary";
+    String Apology_Accepted = "Apology Accepted";
     String Ardon_Crell = "Ardon \"Vapor\" Crell";
     String Arleil = "Arleil Schous";
     String Arnet = "Lieutenant Arnet";
@@ -263,7 +267,6 @@ public interface Title {
     String Demotion = "Demotion";
     String Den_Of_Thieves = "Den Of Thieves";
     String Dengars_Blaster_Carbine =  "Dengar's Blaster Carbine";
-    String Deploy_The_Garrison = "Deploy The Garrison!";
     String Derlin = "Major Bren Derlin";
     String Desert_Heart = "Tatooine: Desert Heart";
     String Desert_Landing_Site = "Tatooine: Desert Landing Site";
@@ -371,6 +374,7 @@ public interface Title {
     String Feltipern_Trevagg = "Feltipern Trevagg";
     String Field_Promotion = "Field Promotion";
     String Fighters_Coming_In = "Fighters Coming In";
+    String Figrin_Dan = "Figrin D'an";
     String Finalizer = "Finalizer";
     String Finn = "Finn";
     String Fire_Extinguisher = "Fire Extinguisher";
@@ -477,6 +481,7 @@ public interface Title {
     String I_Did_It = "I Did It!";
     String I_Feel_The_Conflict = "I Feel The Conflict";
     String I_Have_You_Now = "I Have You Now";
+    String I_Hope_Shes_All_Right = "I Hope She's All Right";
     String I_Know = "I Know";
     String I_Shall_Enjoy_Watching_You_Die = "I Shall Enjoy Watching You Die";
     String I_Want_That_Ship = "I Want That Ship";
@@ -576,6 +581,7 @@ public interface Title {
     String Karie_Neth = "Karie Neth";
     String Kashyyyk = "Kashyyyk";
     String Keep_Your_Eyes_Open = "Keep Your Eyes Open";
+    String Kef_Bir = "Kef Bir";
     String Kessel = "Kessel";
     String Kessel_Run = "Kessel Run";
     String Ke_Chu_Ke_Kukuta = "Ke Chu Ke Kukuta?";
@@ -623,10 +629,12 @@ public interface Title {
     String Lone_Pilot = "Lone Pilot";
     String Lone_Rogue = "Lone Rogue";
     String Look_Sir_Droids = "Look Sir, Droids";
+    String Lower_Corridor = "Cloud City: Lower Corridor";
     String Lower_Passages = "Jabba's Palace: Lower Passages";
     String Lor_San_Tekka = "Lor San Tekka";
     String Losing_Track = "Losing Track";
     String Lost_In_The_Wilderness = "Lost In The Wilderness";
+    String Lothal = "Lothal";
     String Lukes_Backpack = "Luke's Backpack";
     String Lukes_T16_Skyhopper = "Luke's T-16 Skyhopper";
     String Lukes_X34_Landspeeder = "Luke's X-34 Landspeeder";
@@ -711,7 +719,6 @@ public interface Title {
     String None_Shall_Pass = "None Shall Pass";
     String NOOOOOOOOOOOO = "NOOOOOOOOOOOO!";
     String North_Ridge = "Hoth: North Ridge (4th Marker)";
-    String Now_It_Calls_To_You = "Now It Calls To You";
     String Nute_Gunray = "Nute Gunray";
     String ObiWans_Hut = "Tatooine: Obi-Wan's Hut";
     String ObiWans_Journal = "Obi-Wan's Journal";
@@ -773,6 +780,7 @@ public interface Title {
     String Podracer_Bay = "Tatooine: Podracer Bay";
     String Podracer_Collision = "Podracer Collision";
     String Poe = "Poe Dameron";
+    String Polis_Massa = "Polis Massa";
     String Ponda_Baba = "Ponda Baba";
     String Portable_Fusion_Generator = "Portable Fusion Generator";
     String Power_Harpoon = "Power Harpoon";
@@ -843,10 +851,12 @@ public interface Title {
     String Retract_The_Bridge = "Retract The Bridge";
     String Return_Of_A_Jedi = "Return Of A Jedi";
     String Revealed = "Revealed";
+    String Revenge_Of_The_Sith = "Revenge Of The Sith";
     String Revolution = "Revolution";
     String Rex = "Captain Rex, 501st Legion";
     String Rey = "Rey";
     String Reys_Encampment = "Jakku: Rey's Encampment";
+    String Rise_Of_The_Sith = "Rise Of The Sith";
     String Rite_Of_Passage = "Rite Of Passage";
     String Roche = "Roche";
     String Rogue_1 = "Rogue 1";
@@ -855,10 +865,10 @@ public interface Title {
     String Rogue_4 = "Rogue 4";
     String Rogue_Asteroid = "Rogue Asteroid";
     String Rogue_One = "Rogue One";
+    String Rogue_Shadow = "Rogue Shadow";
     String Rolling_Rolling_Rolling = "Rolling, Rolling, Rolling";
     String Rose = "Rose Tico";
     String Royal_Naboo_Security_Officer = "Royal Naboo Security Officer";
-    String Rule_Of_Two = "Rule Of Two";
     String Run_Luke_Run = "Run Luke, Run!";
     String Rya = "Lieutenant Rya Kirsch";
     String Rycar_Ryjerd = "Rycar Ryjerd";
@@ -892,6 +902,7 @@ public interface Title {
     String Scruffy_Looking_Nerf_Herder = "Scruffy-Looking Nerf Herder";
     String Scum_And_Villainy = "Scum And Villainy";
     String Scythe_3 = "Scythe 3";
+    String Search_And_Destroy = "Search And Destroy";
     String Sebulba = "Sebulba";
     String Sebulbas_Podracer = "Sebulba's Podracer";
     String Secret_Plans = "Secret Plans";
@@ -971,6 +982,7 @@ public interface Title {
     String Take_The_Initiative = "Take the Initiative";
     String Take_Them_Away = "Take Them Away";
     String Take_Your_Fathers_Place = "Take Your Father's Place";
+    String Taking_Control_Of_The_Weapon = "Taking Control Of The Weapon";
     String Takeel = "Takeel";
     String Takodana = "Takodana";
     String Tala_1 = "Tala 1";
@@ -998,6 +1010,7 @@ public interface Title {
     String That_Things_Operational = "That Thing's Operational";
     String Thats_One = "That's One";
     String They_Have_No_Idea_Were_Coming = "They Have No Idea We're Coming";
+    String They_Must_Never_Again_Leave_This_City = "They Must Never Again Leave This City";
     String Theyve_Shut_Down_The_Main_Reactor = "They've Shut Down The Main Reactor";
     String The_Camp = "The Camp";
     String The_Circle_Is_Now_Complete = "The Circle Is Now Complete";
@@ -1009,6 +1022,8 @@ public interface Title {
     String The_Phantom_Menace = "The Phantom Menace";
     String The_Planet_That_Its_Farthest_From = "The Planet That It's Farthest From";
     String The_Professor = "The Professor";
+    String The_Result_Is_Often_Resentment = "The Result Is Often Resentment";
+    String The_Rise_Of_Skywalker = "The Rise Of Skywalker";
     String The_Shield_Doors_Must_Be_Closed = "The Shield Doors Must Be Closed";
     String The_Time_To_Fight_Is_Now = "The Time To Fight Is Now";
     String The_Ultimate_Power_In_The_Universe = "The Ultimate Power In The Universe";
@@ -1029,11 +1044,13 @@ public interface Title {
     String This_Is_All_Your_Fault = "This Is All Your Fault";
     String This_Is_Just_Wrong = "This Is Just Wrong";
     String This_Is_More_Like_It = "This Is More Like It";
+    String This_Is_Outrageous = "This Is Outrageous!";
     String This_Is_Some_Rescue = "This Is Some Rescue!";
     String This_Is_Still_Wrong = "This Is Still Wrong";
     String This_Place_Can_Be_A_Little_Rough = "This Place Can Be A Little Rough";
     String Those_Rebels_Wont_Escape_Us = "Those Rebels Won't Escape Us";
     String Thrawn = "Grand Admiral Thrawn";
+    String Thrawns_Art_Collection = "Thrawn's Art Collection";
     String Throne_Room = "Death Star II: Throne Room";
     String Throw_Me_Another_Charge = "Throw Me Another Charge";
     String Thunderflare = "Thunderflare";
@@ -1123,8 +1140,9 @@ public interface Title {
     String Wittin = "Wittin";
     String Wokling = "Wokling";
     String Womp_Rat = "Womp Rat";
-    String Wookiee_Slaving_Operation = "Wookiee Slaving Operation";
+    String Wookiee_Homestead = "Wookiee Homestead";
     String Wookiee_Roar = "Wookiee Roar";
+    String Wookiee_Slaving_Operation = "Wookiee Slaving Operation";
     String Wookiee_Strangle = "Wookiee Strangle";
     String Wounded_Wookiee = "Wounded Wookiee";
     String Wrong_Turn = "Wrong Turn";
@@ -1154,6 +1172,7 @@ public interface Title {
     String You_Overestimate_Their_Chances = "You Overestimate Their Chances";
     String You_Rebel_Scum = "You Rebel Scum";
     String You_Truly_Belong_Here_With_Us = "You Truly Belong Here With Us";
+    String Youll_Be_Dead = "You'll Be Dead!";
     String Your_Destiny = "Your Destiny";
     String Your_Insight_Serves_You_Well = "Your Insight Serves You Well";
     String Your_Thoughts_Dwell_On_Your_Mother = "Your Thoughts Dwell On Your Mother";

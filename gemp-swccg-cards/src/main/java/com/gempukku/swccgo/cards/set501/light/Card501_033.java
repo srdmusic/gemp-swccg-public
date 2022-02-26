@@ -1,76 +1,54 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractRebelResistance;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.PilotingCondition;
-import com.gempukku.swccgo.cards.conditions.WithCondition;
-import com.gempukku.swccgo.cards.effects.RevealTopCardsOfCardPileAndTakeCardsIntoHandEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.AbstractPermanentWeapon;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.OrCondition;
-import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.AddsDestinyToPowerModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.actions.FireWeaponAction;
+import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 
+
 /**
- * Set: Set 16
+ * Set: Set 18
  * Type: Character
- * Subtype: Rebel
- * Title: Lando, Hero of the Rebellion
+ * Subtype: Alien
+ * Title: Cara Dune With Heavy Blaster Rifle
  */
-public class Card501_033 extends AbstractRebelResistance {
+public class Card501_033 extends AbstractAlien {
     public Card501_033() {
-        super(Side.LIGHT, 3, 3, 2, 3, 5, "Lando, Hero of the Rebellion", Uniqueness.UNIQUE);
-        setLore("Leader. Resistance Agent.");
-        setGameText("During your turn, may reveal the top three cards of your Reserve Deck, take one starship into hand with a deploy cost < 6 (if possible), and shuffle your Reserve Deck. Adds one destiny to total power, while piloting or with Chewie or Jannah.");
-        addPersona(Persona.LANDO);
-        addIcons(Icon.VIRTUAL_SET_16, Icon.PILOT, Icon.WARRIOR);
-        addKeywords(Keyword.LEADER, Keyword.RESISTANCE_AGENT);
-        setTestingText("Lando, Hero of the Rebellion");
+        super(Side.LIGHT, 2, 4, 4, 2, 5, "Cara Dune With Heavy Blaster Rifle", Uniqueness.UNIQUE);
+        setLore("Female Alderaanian. Gambler. Trooper.");
+        setGameText("Permanent weapon is •Cara's Heavy Blaster Rifle (may target a character for free; draw destiny; target hit and cumulatively forfeit -3 if destiny +1 > defense value; may fire repeatedly for 2 Force each time).");
+        addKeywords(Keyword.FEMALE, Keyword.GAMBLER, Keyword.TROOPER);
+        setSpecies(Species.ALDERAANIAN);
+        addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_18);
+        setTestingText("Cara Dune With Heavy Blaster Rifle");
+        hideFromDeckBuilder();
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        PilotingCondition pilotingCondition = new PilotingCondition(self);
-        WithCondition withJannahOrChewieCondition = new WithCondition(self, Filters.or(Filters.Chewie, Filters.Jannah));
-        List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new AddsDestinyToPowerModifier(self, new OrCondition(pilotingCondition, withJannahOrChewieCondition), 1));
-        return modifiers;
-    }
+    protected AbstractPermanentWeapon getGameTextPermanentWeapon() {
+        AbstractPermanentWeapon permanentWeapon = new AbstractPermanentWeapon("Cara's Heavy Blaster Rifle") {
+            @Override
+            public List<FireWeaponAction> getGameTextFireWeaponActions(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, int extraForceRequired, PhysicalCard sourceCard, boolean repeatedFiring, Filter targetedAsCharacter, Float defenseValueAsCharacter, Filter fireAtTargetFilter, boolean ignorePerAttackOrBattleLimit) {
+                FireWeaponActionBuilder actionBuilder = FireWeaponActionBuilder.startBuildPrep(playerId, game, sourceCard, self, this, forFree, extraForceRequired, repeatedFiring, targetedAsCharacter, defenseValueAsCharacter, fireAtTargetFilter, ignorePerAttackOrBattleLimit)
+                        .targetForFree(Filters.or(Filters.character, targetedAsCharacter, Filters.creature), TargetingReason.TO_BE_HIT).finishBuildPrep();
+                if (actionBuilder != null) {
 
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<>();
-
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        // Check condition(s)
-        if (GameConditions.isOnceDuringYourTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.hasReserveDeck(game, playerId)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Reveal the top three cards of your Reserve Deck.");
-
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new RevealTopCardsOfCardPileAndTakeCardsIntoHandEffect(action, playerId, playerId, Zone.RESERVE_DECK, Filters.and(Filters.starship, Filters.deployCostLessThanOrEqualTo(5)), 3));
-            action.appendEffect(
-                    new ShuffleReserveDeckEffect(action)
-            );
-            actions.add(action);
-        }
-
-        return actions;
+                    // Build action using common utility
+                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 1, Statistic.DEFENSE_VALUE, false, -3);
+                    return Collections.singletonList(action);
+                }
+                return null;
+            }
+        };
+        permanentWeapon.addKeyword(Keyword.BLASTER_RIFLE);
+        return permanentWeapon;
     }
 }

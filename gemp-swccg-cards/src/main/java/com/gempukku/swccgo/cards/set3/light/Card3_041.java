@@ -95,9 +95,7 @@ public class Card3_041 extends AbstractUsedOrLostInterrupt {
                 && GameConditions.canUseForceToPlayInterrupt(game, playerId, self, 2)
                 && GameConditions.canSpot(game, self, 2, Filters.and(Filters.Imperial, Filters.abilityMoreThan(2), Filters.participatingInBattle))) {
             final BattleState battleState = game.getGameState().getBattleState();
-            final float currentAttrition = battleState.getAttritionTotal(game, playerId);
-            final float currentPower = battleState.getTotalPower(game, game.getOpponent(playerId));
-            if (currentAttrition > 0 && currentPower > 0) {
+            if (battleState.hasAttritionTotal(game.getOpponent(playerId))) {
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
                 action.setText("Reduce opponent's attrition and total power");

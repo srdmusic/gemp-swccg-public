@@ -1,89 +1,44 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedOrStartingInterrupt;
-import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.AbstractJediMaster;
+import com.gempukku.swccgo.cards.conditions.DuringBattleCondition;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
+import com.gempukku.swccgo.cards.evaluators.HereEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
-import com.gempukku.swccgo.logic.effects.PutCardFromVoidInReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.modifiers.*;
 
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Set: Set 16
- * Type: Interrupt
- * Subtype: Starting
- * Title: What Gives A Jedi His Power
+ * Set: Set 18
+ * Type: Character
+ * Subtype: Jedi Master
+ * Title: Master Windu
  */
-public class Card501_046 extends AbstractUsedOrStartingInterrupt {
+public class Card501_046 extends AbstractJediMaster {
     public Card501_046() {
-        super(Side.LIGHT, 5, "What Gives A Jedi His Power", Uniqueness.UNIQUE);
-        setGameText("USED: Activate 1 Force if a Jedi on table. " +
-                "STARTING: If your starting location had exactly two [Light Side] icons, " +
-                "deploy The Force Is Strong In My Family and an Effect (except Wokling) that is always immune to Alter. " +
-                "Place Interrupt in Reserve Deck.");
-        addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("What Gives A Jedi His Power");
+        super(Side.LIGHT, 1, 7, 6, 7, 8, "Master Windu", Uniqueness.UNIQUE);
+        setLore("Jedi Council member.");
+        setGameText("During battle, may swing a lightsaber twice. Power +1 for each of opponent's character of ability < 2 here. Your clones are forfeit +1 here. Immune to attrition < 6.");
+        addPersona(Persona.MACE);
+        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.WARRIOR, Icon.VIRTUAL_SET_18);
+        addKeywords(Keyword.JEDI_COUNCIL_MEMBER);
+        setTestingText("Master Windu");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
-        // Check condition(s)
-        if (GameConditions.canActivateForce(game, playerId)
-                && GameConditions.canSpot(game, self, Filters.Jedi)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-            action.setText(" Activate 1 Force");
-            // Allow response(s)
-            action.allowResponses(" Activate 1 Force",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new ActivateForceEffect(action, playerId, 1));
-                        }
-                    }
-            );
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        // Check condition(s)
-        final PhysicalCard startingLocation = game.getModifiersQuerying().getStartingLocation(playerId);
-        if (startingLocation != null && Filters.iconCount(Icon.LIGHT_FORCE, 2).accepts(game, startingLocation)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
-            action.setText("Deploy The Force is Strong In My Family and an Effect from Reserve Deck");
-            // Allow response(s)
-            action.allowResponses("Deploy The Force is Strong In My Family and an Effect from Reserve Deck",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.title(Title.The_Force_Is_Strong_In_My_Family), true, false));
-                            action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter, Filters.not(Filters.title(Title.Wokling))), 1, 1, true, false));
-                            action.appendEffect(
-                                    new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
-                        }
-                    }
-            );
-            return action;
-        }
-
-        return null;
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new MayFireOneWeaponTwicePerBattleModifier(self, new DuringBattleCondition(), Filters.lightsaber));
+        modifiers.add(new PowerModifier(self, new HereEvaluator(self, Filters.and(Filters.opponents(self), Filters.character, Filters.abilityLessThan(2)))));
+        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.your(self), Filters.clone, Filters.here(self)), 1));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 6));
+        return modifiers;
     }
 }

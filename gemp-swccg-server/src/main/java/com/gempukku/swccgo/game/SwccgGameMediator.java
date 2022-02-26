@@ -5,6 +5,7 @@ import com.gempukku.swccgo.SubscriptionConflictException;
 import com.gempukku.swccgo.SubscriptionExpiredException;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.communication.GameStateListener;
+import com.gempukku.swccgo.db.vo.League;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.state.GameCommunicationChannel;
 import com.gempukku.swccgo.game.state.GameEvent;
@@ -44,6 +45,7 @@ public class SwccgGameMediator {
     private boolean _disablePlayerDecisionTimer;
     private int _secondsGameTimerExtended;
     private boolean _isPrivate;
+    private League _league;
 
     private ReentrantReadWriteLock _lock = new ReentrantReadWriteLock(true);
     private ReentrantReadWriteLock.ReadLock _readLock = _lock.readLock();
@@ -51,7 +53,7 @@ public class SwccgGameMediator {
     private int _channelNextIndex;
     private volatile boolean _destroyed;
 
-    public SwccgGameMediator(String gameId, SwccgFormat swccgFormat, SwccgGameParticipant[] participants, SwccgCardBlueprintLibrary library, int maxSecondsForGamePerPlayer,
+    public SwccgGameMediator(String gameId, SwccgFormat swccgFormat, League league, SwccgGameParticipant[] participants, SwccgCardBlueprintLibrary library, int maxSecondsForGamePerPlayer,
                              boolean allowSpectators, boolean cancelIfNoActions, boolean cancellable, boolean allowExtendGameTimer, int decisionTimeoutSeconds, boolean isPrivate) {
         _gameId = gameId;
         _maxSecondsForGamePerPlayer = maxSecondsForGamePerPlayer;
@@ -60,6 +62,7 @@ public class SwccgGameMediator {
         _cancellable = cancellable;
         _allowExtendGameTimer = allowExtendGameTimer;
         _playerDecisionTimeoutPeriod = decisionTimeoutSeconds * 1000;
+        _league = league;
         _isPrivate = isPrivate;
         if (participants.length < 1)
             throw new IllegalArgumentException("Game can't have less than one participant");
@@ -98,6 +101,10 @@ public class SwccgGameMediator {
 
     public SwccgFormat getFormat() {
         return _swccgoGame.getFormat();
+    }
+
+    public League getLeague() {
+        return _league;
     }
 
     public void setPlayerAutoPassSettings(String playerId, Set<Phase> phases) {
@@ -1107,7 +1114,7 @@ public class SwccgGameMediator {
                 || player.hasType(Player.Type.PLAY_TESTER))) {
             throw new PrivateInformationException();
         }
-        
+
         _readLock.lock();
         try {
             int number = _channelNextIndex;
@@ -1222,18 +1229,18 @@ public class SwccgGameMediator {
                 }
                 if(Filters.title("I Am Part Of The Living Force").accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null)  {
-                    // Communing
-                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Communing";
+                    // Communing (ignore the location)
+                    return "Communing";
                 }
-                if(Filters.title("What Gives A Jedi His Power").accepts(_swccgoGame, startingInterrupt)
+                if(Filters.title(Title.The_Rise_Of_Skywalker).accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null) {
                     // The Force Is Strong In My Family
-                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " TFISIMF";
+                    return "Skywalker Saga";
                 }
-                if(Filters.title("The Sith Will Rule The Galaxy").accepts(_swccgoGame, startingInterrupt)
+                if(Filters.title(Title.Rise_Of_The_Sith).accepts(_swccgoGame, startingInterrupt)
                         && startingLocation.getBlueprint().getTitle() != null) {
-                    // Rule Of Two
-                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Rule Of Two";
+                    // Revenge Of The Sith
+                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Revenge Of The Sith";
                 }
                 if (Filters.Communing.accepts(_swccgoGame, startingInterrupt)
                         && startingInterrupt.getBlueprint().isLegacy()) {
@@ -1256,6 +1263,10 @@ public class SwccgGameMediator {
         // Based on Objective
         if (objective != null) {
             String objectiveLabel = null;
+            if (Filters.or(Filters.title(Title.A_Great_Tactician_Creates_Plans), Filters.title(Title.The_Result_Is_Often_Resentment)).accepts(_swccgoGame, objective)) {
+                // A Great Tactician Creates Plans
+                objectiveLabel = "Thrawn";
+            }
             if (Filters.or(Filters.Agents_In_The_Court, Filters.No_Love_For_The_Empire).accepts(_swccgoGame, objective)) {
                 // Agents In The Court
                 objectiveLabel = "AITC";
@@ -1365,16 +1376,24 @@ public class SwccgGameMediator {
                 // Old Allies
                 objectiveLabel = "Old Allies";
             }
-            if (Filters.or(Filters.On_The_Verge_Of_Greatness, Filters.Deploy_The_Garrison).accepts(_swccgoGame, objective)) {
+            if (Filters.or(Filters.On_The_Verge_Of_Greatness, Filters.Taking_Control_Of_The_Weapon).accepts(_swccgoGame, objective)) {
                 // On The Verge Of Greatness
                 objectiveLabel = "On The Verge Of Greatness";
             }
             if (Filters.or(Filters.Local_Uprising, Filters.Liberation, Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
                 // Operatives
-                objectiveLabel = "Operatives";
+                if (!objective.getBlueprint().hasVirtualSuffix()) {
+                    objectiveLabel = "Operatives";
+                }
+                // Imperial Occupation v
+                else if(Filters.or(Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
+                    objectiveLabel = "Imperial Occupation";
+                } else if(Filters.or(Filters.Local_Uprising, Filters.Liberation).accepts(_swccgoGame, objective)) {
+                    objectiveLabel = "Local Uprising";
+                }
             }
             if (Filters.or(Filters.You_Can_Either_Profit_By_This, Filters.Or_Be_Destroyed).accepts(_swccgoGame, objective)) {
-                // Your Can Either Profit By This...
+                // You Can Either Profit By This...
                 objectiveLabel = "Profit";
             }
             if (Filters.or(Filters.Quiet_Mining_Colony, Filters.Independent_Operation).accepts(_swccgoGame, objective)) {

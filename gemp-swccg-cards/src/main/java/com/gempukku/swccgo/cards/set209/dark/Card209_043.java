@@ -44,8 +44,7 @@ public class Card209_043 extends AbstractNormalEffect {
         gameTextActionId = GameTextActionId.SHADOWS_OF_THE_EMPIRE__DOWNLOAD_IMPERIAL_SQUARE;
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canUseForce(game, playerId, 1)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
-                && !GameConditions.canSpot(game, self, Filters.Coruscant_Imperial_Square)) {
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Coruscant_Imperial_Square)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy Coruscant: Imperial Square from Reserve Deck");

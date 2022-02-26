@@ -1,110 +1,144 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.PeekAtRandomCardInOpponentsHandEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.CancelDestinyAndCauseRedrawEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromForcePileEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeDestinyCardIntoHandEffect;
-import com.gempukku.swccgo.logic.modifiers.AbilityRequiredForBattleDestinyModifier;
-import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 16
- * Type: Interrupt
- * Subtype: Used
- * Title: Projective Telepathy (V)
+ * Set: Set 18
+ * Type: Effect
+ * Title: Shadows Of The Empire & Information Exchange
  */
-public class Card501_003 extends AbstractUsedInterrupt {
+public class Card501_003 extends AbstractNormalEffect {
     public Card501_003() {
-        super(Side.DARK, 3, "Projective Telepathy", Uniqueness.UNIQUE);
-        setLore("'Luke.' 'Father.' 'Son, come with me.'");
-        setGameText("If drawn for destiny, may take into hand. \nDraw top card of Force Pile. OR During opponent's control phase, target a location. Total ability of 7 or more required for opponent to draw battle destiny there for remainder of turn.");
-        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_16);
-        setVirtualSuffix(true);
-        setTestingText("Projective Telepathy (V)");
+        super(Side.DARK, 0, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Shadows Of The Empire & Information Exchange", Uniqueness.UNIQUE);
+        addComboCardTitles("Shadows Of The Empire", Title.Information_Exchange);
+        setGameText("If your [Reflections II] objective on table, deploy on table. If you just deployed an information broker, may peek at a card (random selection) from opponent's hand. Once per turn, if [Reflections II] Emperor on Coruscant, may draw top card of Force Pile (if during your turn and you occupy three battlegrounds, opponent also loses 1 Force). Once per turn, may use 1 Force to deploy Imperial Square or [Reflections II] Emperor from Reserve Deck; reshuffle. If [Reflections II] Emperor drawn for destiny, may take him into hand to cancel that destiny and cause a re-draw. [Immune to Alter.]");
+        addIcons(Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_18);
+        addImmuneToCardTitle(Title.Alter);
+        setTestingText("Shadows Of The Empire & Information Exchange");
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalDrawnAsDestinyTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (GameConditions.isDestinyCardMatchTo(game, self)
-                && GameConditions.canTakeDestinyCardIntoHand(game, playerId)) {
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.canSpot(game, self, Filters.and(Filters.your(self), Icon.REFLECTIONS_II, Filters.Objective));
+    }
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Take into hand");
-            action.setActionMsg("Take into hand");
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.SHADOWS_OF_THE_EMPIRE_INFORMATION_EXCHANGE__DEPLOY_IMPERIAL_SQUARE_OR_EMPEROR;
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Icon.REFLECTIONS_II, Filters.Objective))
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canUseForce(game, playerId, 1)
+                && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Coruscant_Imperial_Square)
+                    || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.SIDIOUS))) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Imperial Square or Emperor");
+            action.setActionMsg("Deploy Imperial Square or [Reflections II] Emperor from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Pay cost(s)
+            action.appendCost(
+                    new UseForceEffect(action, playerId, 1));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Coruscant_Imperial_Square, Filters.and(Icon.REFLECTIONS_II, Filters.Emperor)), true));
+            actions.add(action);
+        }
+
+
+        // Check conditions for drawing top card of force pile
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.hasForcePile(game, playerId)
+                && GameConditions.canSpot(game, self, Filters.and(Icon.REFLECTIONS_II, Filters.Emperor, Filters.on(Title.Coruscant)))) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Draw top card of Force Pile");
+            action.setActionMsg("Draw top card of Force Pile");
+
+            // Update usage limits
+            action.appendUsage(new OncePerTurnEffect(action));
+
+            // Perform result(s)
+            action.appendEffect(new DrawCardIntoHandFromForcePileEffect(action, playerId));
+
+            if (GameConditions.occupies(game, playerId, 3, Filters.battleground) && GameConditions.isDuringYourTurn(game, self)) {
+                String opponent = game.getOpponent(playerId);
+                action.appendEffect(new LoseForceEffect(action, opponent, 1));
+            }
+
+            actions.add(action);
+        }
+
+        return actions;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.ANY_CARD__CANCEL_AND_REDRAW_A_DESTINY;
+
+        // Check condition(s)
+        if (TriggerConditions.isDestinyJustDrawn(game, effectResult)
+                && GameConditions.isDestinyCardMatchTo(game, Filters.and(Icon.REFLECTIONS_II, Filters.Emperor))
+                && GameConditions.canTakeDestinyCardIntoHand(game, playerId)
+                && GameConditions.canCancelDestinyAndCauseRedraw(game, playerId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take into hand and cause re-draw");
+            action.setActionMsg("Cancel destiny and cause re-draw");
             // Pay cost(s)
             action.appendEffect(
                     new TakeDestinyCardIntoHandEffect(action));
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
-
-        // Check condition(s)
-        if (GameConditions.hasForcePile(game, playerId)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Draw top card of Force Pile");
-            // Allow response(s)
-            action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new DrawOneCardFromForcePileEffect(action, playerId));
-                        }
-                    }
-            );
+            // Perform result(s)
+            action.appendEffect(
+                    new CancelDestinyAndCauseRedrawEffect(action));
             actions.add(action);
         }
 
-        if (GameConditions.isDuringOpponentsPhase(game, playerId, Phase.CONTROL)
-            && GameConditions.canTarget(game, self, Filters.location)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
 
-            action.setText("Target location");
-            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a location", Filters.location) {
-                @Override
-                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                    // Allow response(s)
-                    action.allowResponses("Require 7 or more ability for " + game.getOpponent(playerId) + " to draw battle destiny at " + GameUtils.getCardLink(targetedCard),
-                            new RespondablePlayCardEffect(action) {
-                                @Override
-                                protected void performActionResults(Action targetingAction) {
-                                    // Get the targeted card(s) from the action using the targetGroupId.
-                                    // This needs to be done in case the target(s) were changed during the responses.
-                                    PhysicalCard finalLocation = action.getPrimaryTargetCard(targetGroupId);
+        String opponent = game.getOpponent(playerId);
 
-                                    // Perform result(s)
-                                    action.appendEffect(new AddUntilEndOfTurnModifierEffect(action, new AbilityRequiredForBattleDestinyModifier(self, finalLocation, 7, game.getOpponent(playerId)), null));
-                                }
-                            }
-                    );
-                }
-            });
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
 
+        if (TriggerConditions.justDeployed(game, effectResult, playerId, Filters.information_broker)
+                && GameConditions.hasHand(game, opponent)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Peek at random card");
+            action.setActionMsg("Peek at one card (random selection) from "+opponent+"'s hand");
+
+            action.appendEffect(
+                    new PeekAtRandomCardInOpponentsHandEffect(action, playerId));
 
             actions.add(action);
         }
-
         return actions;
     }
 }

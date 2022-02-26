@@ -1372,6 +1372,34 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a card accepted by the card filter is being deployed as a 'react'.
+     * @param game the game
+     * @param effect the effect
+     * @param cardFilter the card filter
+     * @return true or false
+     */
+    public static boolean isDeployingAsReact(SwccgGame game, Effect effect, Filterable cardFilter) {
+        if (effect.isCanceled()) {
+            return false;
+        }
+
+        if (effect.getType() == Effect.Type.PLAYING_CARD_EFFECT) {
+            RespondablePlayingCardEffect respondableEffect = (RespondablePlayingCardEffect) effect;
+            if (respondableEffect.isAsReact()) {
+                return Filters.and(cardFilter).accepts(game, respondableEffect.getCard());
+            }
+        }
+        else if (effect.getType() == Effect.Type.PLAYING_CARDS_EFFECT) {
+            RespondableDeployMultipleCardsSimultaneouslyEffect respondableEffect = (RespondableDeployMultipleCardsSimultaneouslyEffect) effect;
+            if (respondableEffect.isAsReact()) {
+                return Filters.and(cardFilter).accepts(game, respondableEffect.getCard1())||Filters.and(cardFilter).accepts(game, respondableEffect.getCard2());
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Determines if a card accepted by the card filter is beginning to move as a 'react'.
      * @param game the game
      * @param effect the effect
@@ -1719,6 +1747,19 @@ public class TriggerConditions {
             return playerId.equals(result.getPerformingPlayerId())
                     && result.getZoneOwner().equals(game.getOpponent(playerId))
                     && result.getCardPile() == Zone.RESERVE_DECK;
+        }
+        return false;
+    }
+
+    /**
+     * Determines if Force loss was just initiated.
+     * @param game the game
+     * @param effectResult the effect result
+     * @return true or false
+     */
+    public static boolean forceLossInitiated(SwccgGame game, EffectResult effectResult) {
+        if (effectResult.getType() == EffectResult.Type.FORCE_LOSS_INITIATED) {
+            return true;
         }
         return false;
     }
@@ -2690,6 +2731,22 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if an attack was just initiated by a creature
+     * @param game the game
+     * @param effectResult the effect result
+     * @return true or false
+     */
+    public static boolean attackInitiatedByCreature(SwccgGame game, EffectResult effectResult) {
+        if (effectResult.getType() == EffectResult.Type.ATTACK_INITIATED) {
+            AttackState attackState = game.getGameState().getAttackState();
+            return attackState != null
+                    && attackState.canContinue()
+                    && ((AttackInitiatedResult)effectResult).initiatedByCreature();
+        }
+        return false;
+    }
+
+    /**
      * Determines if an attack was just initiated by the specified player at a location accepted by the location filter.
      * @param game the game
      * @param effectResult the effect result
@@ -3067,6 +3124,21 @@ public class TriggerConditions {
             BattleResultDeterminedResult lostResult = (BattleResultDeterminedResult) effectResult;
             return lostResult.getLoser() != null && lostResult.getLoser().equals(playerId)
                     && Filters.and(locationFilter).accepts(game, lostResult.getLocation());
+        }
+        return false;
+    }
+
+    /**
+     * Determines if either player just initiated lightsaber combat.
+     *
+     * @param game         the game
+     * @param effectResult the effect result
+     * @return true or false
+     */
+    public static boolean lightsaberCombatInitiated(SwccgGame game, EffectResult effectResult) {
+        if (effectResult.getType() == EffectResult.Type.LIGHTSABER_COMBAT_INITIATED) {
+            LightsaberCombatInitiatedResult lightsaberCombatInitiatedResult = (LightsaberCombatInitiatedResult) effectResult;
+            return game.getGameState().getLightsaberCombatState().canContinue(game);
         }
         return false;
     }
@@ -4548,6 +4620,21 @@ public class TriggerConditions {
         return false;
     }
 
+    public static boolean justLostForceFromForceDrainAt(SwccgGame game, EffectResult effectResult, String playerId, Filter locationFilter, boolean isFirstForceOnly) {
+        if (effectResult.getType() == EffectResult.Type.FORCE_LOST) {
+            LostForceResult lostForceResult = (LostForceResult) effectResult;
+            if (playerId.equals(lostForceResult.getPerformingPlayerId()) && lostForceResult.isFromForceDrain()) {
+                ForceDrainState forceDrainState = game.getGameState().getForceDrainState();
+                if (isFirstForceOnly) {
+                    return forceDrainState != null && locationFilter.accepts(game, forceDrainState.getLocation()) && lostForceResult.getAmountOfForceLost() == 1;
+                } else {
+                    return forceDrainState != null && locationFilter.accepts(game, forceDrainState.getLocation());
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * Determines if the specified player just lost more than a specified amount of Force from a Force drain.
      * @param game the game
@@ -5334,6 +5421,19 @@ public class TriggerConditions {
     public static boolean justRecirculated(EffectResult effectResult, String playerId) {
         if (effectResult.getType() == EffectResult.Type.RECIRCULATED) {
             return playerId.equals(effectResult.getPerformingPlayerId());
+        }
+        return false;
+    }
+
+    /**
+     * Determines if a player just made a choice required by a card accepted by the filter
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @param filter the filter
+     */
+    public static boolean justMadeChoice(SwccgGame game, EffectResult effectResult, String playerId, Filterable filter) {
+        if (effectResult.getType() == EffectResult.Type.CHOICE_MADE) {
+            return playerId.equals(effectResult.getPerformingPlayerId()) && Filters.and(filter).accepts(game, ((ChoiceMadeResult)effectResult).getCard());
         }
         return false;
     }

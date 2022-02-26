@@ -608,7 +608,7 @@ public class HallServer extends AbstractServer {
                 visitor.motd(_motd);
             }
             else {
-                visitor.motd("Check out the new UI: https://gemp.starwarsccg.org/gemp-swccg/newgui.html");
+                visitor.motd("Public beta of new interface <a href=\"https://gemp.starwarsccg.org/gemp-swccg/newgui.html\">https://gemp.starwarsccg.org/gemp-swccg/newgui.html</a>");
             }
 
             // Only show playtesting table details if player is a playtester or admin
@@ -859,7 +859,7 @@ public class HallServer extends AbstractServer {
     }
 
     private void createGame(League league, LeagueSeriesData leagueSerie, String tableId, SwccgGameParticipant[] participants, GameResultListener listener, SwccgFormat swccgFormat, String tournamentName, String tableDesc, boolean allowSpectators, boolean allowCancelling, boolean allowSpectatorsToViewChat, boolean allowSpectatorsToChat, boolean allowExtendGameTimer, int decisionTimeoutSeconds, int timePerPlayerMinutes, boolean isPrivate) {
-        SwccgGameMediator swccgGameMediator = _swccgoServer.createNewGame(swccgFormat, tournamentName, participants, allowSpectators, league == null, allowCancelling, allowSpectatorsToViewChat, allowSpectatorsToChat, allowExtendGameTimer, decisionTimeoutSeconds, timePerPlayerMinutes, isPrivate, _inGameStatisticsEnabled);
+        SwccgGameMediator swccgGameMediator = _swccgoServer.createNewGame(swccgFormat, league, tournamentName, participants, allowSpectators, league == null, allowCancelling, allowSpectatorsToViewChat, allowSpectatorsToChat, allowExtendGameTimer, decisionTimeoutSeconds, timePerPlayerMinutes, isPrivate, _inGameStatisticsEnabled);
         if (listener != null) {
             swccgGameMediator.addGameResultListener(listener);
         }

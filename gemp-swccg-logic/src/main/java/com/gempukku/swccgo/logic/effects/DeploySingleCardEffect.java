@@ -239,10 +239,10 @@ public class DeploySingleCardEffect extends AbstractSubActionEffect implements P
 
                                                 if (_deployAsCaptiveOption != null && _deployAsCaptiveOption.getCaptureOption() == CaptureOption.IMPRISONMENT) {
                                                     if (_deployAsCaptiveOption.isFrozenCaptive()) {
-                                                        playCardText.append(GameUtils.getCardLink(_cardToPlay)).append(asReactText).append(" from ").append(fromText).append(" into ").append(GameUtils.getCardLink(destinationCard)).append(" as an 'imprisioned' and 'frozen' captive");
+                                                        playCardText.append(GameUtils.getCardLink(_cardToPlay)).append(asReactText).append(" from ").append(fromText).append(" into ").append(GameUtils.getCardLink(destinationCard)).append(" as an 'imprisoned' and 'frozen' captive");
                                                     }
                                                     else {
-                                                        playCardText.append(GameUtils.getCardLink(_cardToPlay)).append(asReactText).append(" from ").append(fromText).append(" into ").append(GameUtils.getCardLink(destinationCard)).append(" as an 'imprisioned' captive");
+                                                        playCardText.append(GameUtils.getCardLink(_cardToPlay)).append(asReactText).append(" from ").append(fromText).append(" into ").append(GameUtils.getCardLink(destinationCard)).append(" as an 'imprisoned' captive");
                                                     }
                                                 }
                                                 else if (_deployAsCaptiveOption != null && _deployAsCaptiveOption.getCaptureOption() == CaptureOption.LEAVE_UNATTENDED) {
@@ -399,10 +399,10 @@ public class DeploySingleCardEffect extends AbstractSubActionEffect implements P
                                                                 gameState.attachCard(_cardToPlay, destinationCard);
                                                                 playCardText.append(GameUtils.getCardLink(_cardToPlay)).append(asReactText).append(" from ").append(fromText).append(" into ").append(GameUtils.getCardLink(destinationCard));
                                                                 if (_deployAsCaptiveOption.isFrozenCaptive()) {
-                                                                    playCardText.append(" as an 'imprisioned' and 'frozen' captive");
+                                                                    playCardText.append(" as an 'imprisoned' and 'frozen' captive");
                                                                 }
                                                                 else {
-                                                                    playCardText.append(" as an 'imprisioned' captive");
+                                                                    playCardText.append(" as an 'imprisoned' captive");
                                                                 }
                                                             }
                                                             else if (_deployAsCaptiveOption != null && _deployAsCaptiveOption.getCaptureOption() == CaptureOption.LEAVE_UNATTENDED) {
@@ -427,7 +427,7 @@ public class DeploySingleCardEffect extends AbstractSubActionEffect implements P
                                                             gameState.addCardToZone(_cardToPlay, _playedToZone, playedToZoneOwner);
                                                             gameState.cardAffectsCard(_performingPlayerId, _cardToPlay, gameState.getTopOfCardPile(playedToZoneOwner, _playedToZone));
                                                             gameState.shufflePile(playedToZoneOwner, _playedToZone);
-                                                            playCardText.append(GameUtils.getCardLink(_cardToPlay)).append(" from ").append(fromText).append(" into ").append(playedToZoneOwner).append("'s ").append(_playedToZone.getHumanReadable());
+                                                            playCardText.append(GameUtils.getCardLink(_cardToPlay)).append(" from ").append(fromText).append(" into ").append(playedToZoneOwner).append("'s ").append(_playedToZone.getHumanReadable()).append(" and shuffles ").append(playedToZoneOwner).append("'s ").append(_playedToZone.getHumanReadable());
                                                         }
                                                         // Played to other zone.
                                                         else {
