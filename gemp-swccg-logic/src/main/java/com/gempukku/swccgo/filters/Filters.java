@@ -18666,6 +18666,7 @@ public class Filters {
     public static final Filter The_Planet_That_Its_Farthest_From = Filters.title(Title.The_Planet_That_Its_Farthest_From);
     public static final Filter The_Professor = Filters.title(Title.The_Professor);
     public static final Filter The_Shield_Doors_Must_Be_Closed = Filters.title(Title.The_Shield_Doors_Must_Be_Closed);
+    public static final Filter The_Shield_Will_Be_Down_In_Moments = Filters.title(Title.The_Shield_Will_Be_Down_In_Moments);
     public static final Filter The_Time_To_Fight_Is_Now = Filters.title(Title.The_Time_To_Fight_Is_Now);
     public static final Filter The_Ultimate_Power_In_The_Universe = Filters.title(Title.The_Ultimate_Power_In_The_Universe);
     public static final Filter Thedit = Filters.persona(Persona.THEDIT);

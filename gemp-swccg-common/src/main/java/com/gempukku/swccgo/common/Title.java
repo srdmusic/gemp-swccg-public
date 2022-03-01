@@ -1025,6 +1025,7 @@ public interface Title {
     String The_Result_Is_Often_Resentment = "The Result Is Often Resentment";
     String The_Rise_Of_Skywalker = "The Rise Of Skywalker";
     String The_Shield_Doors_Must_Be_Closed = "The Shield Doors Must Be Closed";
+    String The_Shield_Will_Be_Down_In_Moments = "The Shield Will Be Down in Moments";
     String The_Time_To_Fight_Is_Now = "The Time To Fight Is Now";
     String The_Ultimate_Power_In_The_Universe = "The Ultimate Power In The Universe";
     String There_Is_Another = "There Is Another";
