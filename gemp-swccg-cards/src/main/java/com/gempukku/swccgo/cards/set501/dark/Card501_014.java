@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class Card501_014 extends AbstractNormalEffect {
     public Card501_014() {
-        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Make Ready To Land Our Troops", Uniqueness.UNIQUE);
+        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Make_Ready_To_Land_Our_Troops, Uniqueness.UNIQUE);
         setGameText("Deploy on table. Snowtroopers and AT-ATs are destiny +1. Once per turn, may lose 2 Force to add 1 to your just drawn AT-AT weapon destiny. If you just deployed an AT-AT, may peek at top two cards of Reserve deck and take one into hand. [Immune to Alter.]");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);

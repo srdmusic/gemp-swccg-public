@@ -152,6 +152,7 @@ public interface Title {
     String Cantina_Brawl = "Cantina Brawl";
     String Capacitors = "Death Star II: Capacitors";
     String Capital_Support = "Capital Support";
+    String Captain_Lenox = "Captain Lenox";
     String Captain_Tarpals = "Captain Tarpals";
     String Captive_Fury = "Captive Fury";
     String Captive_Pursuit = "Captive Pursuit";
@@ -645,6 +646,7 @@ public interface Title {
     String Main_Corridor = "Executor: Main Corridor";
     String Main_Power_Generators = "Hoth: Main Power Generators (1st Marker)";
     String Major_Panno = "Major Panno";
+    String Make_Ready_To_Land_Our_Troops = "Make Ready To Land Our Troops";
     String Malachor = "Malachor";
     String Malastare = "Malastare";
     String Mandalorian_Armor = "Mandalorian Armor";

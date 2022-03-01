@@ -6,6 +6,7 @@ import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.cards.effects.SubtractFromOpponentsTotalPowerAndAttritionEffect;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.DestinyType;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -54,7 +55,7 @@ public class Card7_091 extends AbstractUsedInterrupt {
                             protected void performActionResults(Action targetingAction) {
                                 // Perform result(s)
                                 action.appendEffect(
-                                        new DrawDestinyEffect(action, playerId, 1) {
+                                        new DrawDestinyEffect(action, playerId, 1, DestinyType.DESTINY_TO_REDUCE_ATTRITION_POWER) {
                                             @Override
                                             protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
                                                 if (totalDestiny != null && totalDestiny > 0) {
