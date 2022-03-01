@@ -869,6 +869,49 @@ public class SwccgGameMediator {
                         sb.append(lightLocationGametext);
                         sb.append("</div>");
                     }
+
+                    // location icons
+
+                    sb.append("<br>");
+                    sb.append("Icons: ");
+                    if (blueprint.hasIcon(Icon.PLANET))
+                        sb.append("Planet, ");
+                    if (blueprint.hasIcon(Icon.MOBILE))
+                        sb.append("Mobile, ");
+                    if (blueprint.hasIcon(Icon.SPACE))
+                        sb.append("Space, ");
+                    if (blueprint.hasIcon(Icon.STARSHIP_SITE))
+                        sb.append("Starship site, ");
+                    if (blueprint.hasIcon(Icon.VEHICLE_SITE))
+                        sb.append("Vehicle site, ");
+                    if (blueprint.hasIcon(Icon.EXTERIOR_SITE))
+                        sb.append("Exterior, ");
+                    if (blueprint.hasIcon(Icon.INTERIOR_SITE))
+                        sb.append("Interior, ");
+                    if (blueprint.hasIcon(Icon.SCOMP_LINK))
+                        sb.append("Scomp link, ");
+
+
+                    if (blueprint.getCardSubtype().equals(CardSubtype.SYSTEM)) {
+                        int parsec = blueprint.getParsec();
+                        sb.append("<br>");
+                        sb.append("Parsec: ");
+                        sb.append(parsec);
+                    }
+
+                }
+
+                if (blueprint.isCardTypeDeployed()
+                        && Filters.or(Filters.character, Filters.creature, Filters.starship, Filters.vehicle).accepts(_swccgoGame, card)) {
+
+                    Float deployCost = blueprint.getDeployCost();
+                    if (deployCost != null) {
+                        sb.append("<br>");
+                        sb.append("Deploy cost: ");
+                        sb.append("<div>");
+                        sb.append(deployCost);
+                        sb.append("</div>");
+                    }
                 }
 
             }

@@ -17792,6 +17792,7 @@ public class Filters {
     public static final Filter Gungan_Energy_Shield = Filters.title(Title.Gungan_Energy_Shield);
     public static final Filter gunner = Filters.keyword(Keyword.GUNNER);
     public static final Filter Gunray = Filters.persona(Persona.GUNRAY);
+    public static final Filter gunship = Filters.or(ModelType.AUZITUCK_GUNSHIP);
     public static final Filter Guri = Filters.title(Title.Guri);
     public static final Filter Haako = Filters.persona(Persona.HAAKO);
     public static final Filter Halt = Filters.title(Title.Halt);

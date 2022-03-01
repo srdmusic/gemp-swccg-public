@@ -1,8 +1,7 @@
-package com.gempukku.swccgo.cards.set215.light;
+package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractRebel;
+import com.gempukku.swccgo.cards.AbstractRebelResistance;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.AddDestinyToTotalPowerEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.*;
@@ -22,21 +21,16 @@ import java.util.List;
  * Subtype: Rebel
  * Title: Han Solo, Optimistic General
  */
-public class Card215_011 extends AbstractRebel {
-    public Card215_011() {
+public class Card501_088 extends AbstractRebelResistance {
+    public Card501_088() {
         super(Side.LIGHT, 1, 4, 4, 3, 6, "Han Solo, Optimistic General", Uniqueness.UNIQUE);
         setLore("Leader. Scout.");
-        setGameText("May be targeted instead of a Resistance character by I Want That Map. Adds 3 to power of anything he pilots. Your [Endor] scouts are destiny +1. Cancels Kylo's game text here. During battle with Chewie or [Endor] Leia, may add one destiny to total power.");
+        setGameText("Adds 3 to power of anything he pilots. Your [Endor] scouts are destiny +1. Kylo's game text is canceled here. During battle with Chewie or Leia (or while piloting Tydirium) adds one battle destiny.");
         addPersona(Persona.HAN);
         addIcons(Icon.WARRIOR, Icon.PILOT, Icon.ENDOR, Icon.VIRTUAL_SET_15);
         addKeywords(Keyword.LEADER, Keyword.SCOUT, Keyword.GENERAL);
-    }
-
-    @Override
-    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayBeRevealedAsResistanceAgentModifier(self, self));
-        return modifiers;
+        setMatchingStarshipFilter(Filters.Tydirium);
+        setTestingText("Han Solo, Optimistic General (ERRATA)");
     }
 
     @Override
@@ -54,12 +48,15 @@ public class Card215_011 extends AbstractRebel {
 
         if (GameConditions.isOncePerBattle(game, self, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.isDuringBattleWithParticipant(game, self)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.or(Filters.Chewie, Filters.and(Icon.ENDOR, Filters.Leia)))) {
+                && (GameConditions.isDuringBattleWithParticipant(game, Filters.or(Filters.Chewie, Filters.Leia))
+                    || GameConditions.isPiloting(game, self, Filters.Tydirium))) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Add one destiny to total power");
-            action.appendUsage(new OncePerBattleEffect(action));
-            action.appendEffect(new AddDestinyToTotalPowerEffect(action, 1, playerId));
+            action.appendUsage(
+                    new OncePerBattleEffect(action));
+            action.appendEffect(
+                    new AddDestinyToTotalPowerEffect(action, 1, playerId));
 
             return Collections.singletonList(action);
         }
