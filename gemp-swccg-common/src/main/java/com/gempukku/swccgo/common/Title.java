@@ -515,6 +515,7 @@ public interface Title {
     String Imperial_Propaganda = "Imperial Propaganda";
     String Imperial_Reinforcements = "Imperial Reinforcements";
     String Imperial_Supply = "Imperial Supply";
+    String Imperial_Troops_Have_Entered_The_Base = "Imperial Troops Have Entered The Base!";
     String Imperial_Tyranny = "Imperial Tyranny";
     String In_Complete_Control = "In Complete Control";
     String In_The_Hands_Of_The_Empire = "In The Hands Of The Empire";

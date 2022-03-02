@@ -1436,6 +1436,10 @@ public class SwccgGameMediator {
                 // There Is Good In Him
                 objectiveLabel = "TIGIH";
             }
+            if (Filters.or(Filters.The_Shield_Will_Be_Down_In_Moments, Filters.Imperial_Troops_Have_Entered_The_Base).accepts(_swccgoGame, objective)) {
+                // Walkers
+                objectiveLabel = "Walkers";
+            }
             if (Filters.or(Filters.No_Money_No_Parts_No_Deal, Filters.Youre_A_Slave).accepts(_swccgoGame, objective)) {
                 // Watto
                 objectiveLabel = "Watto";

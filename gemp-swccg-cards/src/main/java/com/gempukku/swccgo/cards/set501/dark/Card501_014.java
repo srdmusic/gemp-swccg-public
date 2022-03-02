@@ -28,7 +28,7 @@ import java.util.List;
 public class Card501_014 extends AbstractNormalEffect {
     public Card501_014() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Make_Ready_To_Land_Our_Troops, Uniqueness.UNIQUE);
-        setGameText("Deploy on table. Snowtroopers and AT-ATs are destiny +1. Once per turn, may lose 2 Force to add 1 to your just drawn AT-AT weapon destiny. If you just deployed an AT-AT, may peek at top two cards of Reserve deck and take one into hand. [Immune to Alter.]");
+        setGameText("Deploy on table. Your AT-ATs and snowtroopers are destiny +1. Once per turn, may lose 2 Force to add 1 to your just drawn AT-AT Cannon weapon destiny. If you just deployed an AT-AT, may peek at top two cards of Reserve deck and take one into hand. [Immune to Alter.]");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Make Ready To Land Our Troops");
@@ -46,6 +46,8 @@ public class Card501_014 extends AbstractNormalEffect {
     
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
+
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // AT-AT Cannon weapon destiny draw trigger
@@ -53,8 +55,8 @@ public class Card501_014 extends AbstractNormalEffect {
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Add one to weapon destiny");
-            action.setActionMsg("Lost 2 Force to add one to your just drawn AT-AT Weapon Destiny");
+            action.setText("Add 1 to weapon destiny");
+            action.setActionMsg("Lose 2 Force to add 1 to your just drawn AT-AT Cannon weapon destiny");
             
             // Update usage limit(s)
             action.appendUsage(
@@ -68,20 +70,22 @@ public class Card501_014 extends AbstractNormalEffect {
             action.appendEffect(
                 new ModifyDestinyEffect(action, 1));
 
-            return Collections.singletonList(action);
+            actions.add(action);
         }
 
         // Just deployed AT-AT trigger
 
-        if(TriggerConditions.justDeployed(game, effectResult, playerId, Filters.AT_AT) && GameConditions.hasReserveDeck(game, playerId)) {
+        if(TriggerConditions.justDeployed(game, effectResult, playerId, Filters.AT_AT)
+                && GameConditions.hasReserveDeck(game, playerId)) {
+
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Peek at top two cards of Reserve Deck and take one into hand");
             action.appendEffect(
                     new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, 2, 1, 1));
             
-            return Collections.singletonList(action);
+            actions.add(action);
         }
 
-        return null;
+        return actions;
     }
 }

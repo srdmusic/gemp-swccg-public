@@ -133,8 +133,8 @@ public class Card3_115 extends AbstractEpicEventPlayable {
                                                                                         } else if (Filters.Seventh_Marker.accepts(gameState, modifiersQuerying, location)) {
                                                                                             markerNumber = 7;
                                                                                         }
-                                                                                        
-                                                                                        valueForX = 6 - markerNumber;
+
+                                                                                        valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, 6 - markerNumber);
                                                                                     } else if (Filters.character.accepts(game, pilot))
                                                                                         valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, modifiersQuerying.getAbility(gameState, pilot));
                                                                                     else

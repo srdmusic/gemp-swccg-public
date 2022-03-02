@@ -32,10 +32,9 @@ public class Card501_011 extends AbstractStartingInterrupt {
 
     @Override
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        final Filter yourSiteEvenIfConverted = Filters.and(Filters.Fourth_Marker, Filters.or(Filters.and(Icon.VIRTUAL_SET_17, Filters.your(self)), Filters.convertedLocationOnTopOfLocation(Filters.and(Icon.VIRTUAL_SET_17, Filters.your(self)))));
 
         // Check condition(s)
-        if (GameConditions.canSpotLocation(game, yourSiteEvenIfConverted)) {
+        if (GameConditions.canSpotLocation(game, Filters.First_Marker)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
             action.setText("Take Veers into hand and deploy Effects");
             // Allow response(s)

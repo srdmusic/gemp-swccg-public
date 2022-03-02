@@ -5,6 +5,7 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -29,15 +30,14 @@ import java.util.List;
 /**
  * Set: Set 18
  * Type: Objective
- * Title: Imperial Occupation (V) / Imperial Control (V)
+ * Title: The Shield Will Be Down In Moments / Imperial Troops Have Entered The Base!
  */
 public class Card501_010_BACK extends AbstractObjective {
     public Card501_010_BACK() {
-        super(Side.DARK, 7, "Imperial Troops Have Entered the Base!");
-        setVirtualSuffix(true);
-        setGameText("While this side up, attrition against opponent is +1 for each Imperial leader in battle. Rebel Leadership and We’re Doomed are Lost Interrupts. Your Force drains are +1 at opponent’s sites (and Echo sites) where your snowtrooper or non-unique AT-AT is present. Unless opponent controls a Hoth location, your Force drain bonuses may not be canceled. Once per move phase, may place your AT-AT at 1st Marker (and your cards on it) in Used Pile to take top card of Lost Pile into hand. \n" +
+        super(Side.DARK, 7, Title.Imperial_Troops_Have_Entered_The_Base);
+        setGameText("While this side up, attrition against opponent is +1 for each Imperial leader in battle. Rebel Leadership and We’re Doomed are Lost Interrupts. Your Force drains are +1 at opponent’s sites (and Echo sites) where your snowtrooper or non-unique AT-AT is present. Unless opponent controls a Hoth location, your Force drain bonuses may not be canceled. Once per move phase, may place your AT-AT at 1st Marker (and your cards on it) in Used Pile to take top card of Lost Pile into hand. " +
                 "Place out of play if you do not occupy a Hoth location.");
-        addIcons(Icon.SPECIAL_EDITION, Icon.HOTH, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
         setTestingText("Imperial Troops Have Entered the Base!");
     }
 
@@ -45,7 +45,6 @@ public class Card501_010_BACK extends AbstractObjective {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
-    
 
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new LostInterruptModifier(self, Filters.or(Filters.title("Rebel Leadership"), Filters.Were_Doomed)));
@@ -58,10 +57,13 @@ public class Card501_010_BACK extends AbstractObjective {
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        Filterable atatAt1stMarkerFilter = Filters.and(Filters.AT_AT, Filters.at(Filters.First_Marker));
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, Phase.MOVE) && GameConditions.canSpot(game, self, atatAt1stMarkerFilter)) {
+        Filter atatAt1stMarkerFilter = Filters.and(Filters.your(self), Filters.AT_AT, Filters.at(Filters.First_Marker));
+
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, Phase.MOVE)
+                && GameConditions.canSpot(game, self, atatAt1stMarkerFilter)) {
+
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
-            action.setText("Select AT-AT at 1st Marker");
+            action.setText("Place AT-AT in Used Pile");
             action.setActionMsg("Place your AT-AT at 1st Marker (and your cards on it) in Used Pile to take top card of Lost Pile into hand");
             
             // Update usage limit(s)
@@ -99,7 +101,8 @@ public class Card501_010_BACK extends AbstractObjective {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         String playerId = self.getOwner();
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
-        if (TriggerConditions.isTableChanged(game, effectResult) && !GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(playerId), Filters.occupies(playerId), Filters.Hoth_location))) {
+        if (TriggerConditions.isTableChanged(game, effectResult)
+                && !GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.occupies(playerId), Filters.Hoth_location))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Place out of play");

@@ -34,7 +34,7 @@ import java.util.List;
 public class Card501_024 extends AbstractUsedOrLostInterrupt {
     public Card501_024() {
         super(Side.DARK, 4, "That Armor's Too Strong For Blasters", Uniqueness.UNIQUE);
-        setGameText("USED: If a Hoth site has been 'blown away,' subtract 1 from a just drawn destiny. \n" +
+        setGameText("USED: If a Hoth site has been 'blown away,' subtract 1 from a just drawn destiny. " +
                 "LOST: Cancel an attempt to target your AT-AT with a blaster or a rifle. OR If your piloted AT-AT is on Hoth (or opponent’s site), cancel a Force drain at a related site.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
         setTestingText("That Armor's Too Strong For Blasters");
@@ -65,7 +65,9 @@ public class Card501_024 extends AbstractUsedOrLostInterrupt {
 
         }
 
-        if (TriggerConditions.forceDrainInitiatedAt(game, effectResult, Filters.relatedSiteTo(self, Filters.and(Filters.your(self), Filters.AT_AT, Filters.or(Filters.on(Title.Hoth), Filters.at(Filters.and(Filters.opponents(self), Filters.site)))))) && GameConditions.canCancelForceDrain(game, self)) {
+        if (TriggerConditions.forceDrainInitiatedAt(game, effectResult, Filters.relatedSiteTo(self, Filters.and(Filters.your(self), Filters.AT_AT, Filters.or(Filters.on(Title.Hoth), Filters.at(Filters.and(Filters.opponents(self), Filters.site))))))
+                && GameConditions.canCancelForceDrain(game, self)) {
+
             final PlayInterruptAction action2 = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action2.setText("Cancel Force drain");
             // Allow response(s)
@@ -79,7 +81,7 @@ public class Card501_024 extends AbstractUsedOrLostInterrupt {
                         }
                     }
             );
-            return Collections.singletonList(action2);
+            actions.add(action2);
         }
         return actions;
     }

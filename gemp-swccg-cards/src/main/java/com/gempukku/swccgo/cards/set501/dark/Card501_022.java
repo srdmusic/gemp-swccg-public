@@ -32,7 +32,7 @@ public class Card501_022 extends AbstractNormalEffect {
     public Card501_022() {
         super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, "Hoth Blockade", Uniqueness.UNIQUE);
         setLore("Death Squadron.");
-        setGameText("Deploy on Hoth. Death Squadron Star Destroyers deploy -1 here (-5 if Executor). If your Star Destroyer here, your AT-ATs deploy -1 to related locations. While you control two Hoth sites, Haven suspended here. [Immune to Alter.]");
+        setGameText("Deploy on Hoth system. Death Squadron Star Destroyers deploy -1 here (-5 if Executor). If your Star Destroyer here, your AT-ATs deploy -1 to related locations. While you control two Hoth sites, Haven suspended here. [Immune to Alter.]");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Hoth Blockade");
@@ -49,9 +49,9 @@ public class Card501_022 extends AbstractNormalEffect {
         String playerId = self.getOwner();
         
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self), Filters.Death_Squadron_card), new CardMatchesEvaluator(-1, -5, Filters.Executor), here));
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self), Filters.AT_AT), new AtCondition(self, Filters.and(Filters.your(playerId), Filters.Star_Destroyer, Filters.at(here))), -1, Filters.relatedLocation(self)));
-        modifiers.add(new SuspendsCardModifier(self, Filters.Haven, new ControlsCondition(playerId, 2, Filters.relatedLocation(self))));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self), Filters.Death_Squadron_card, Filters.Star_Destroyer), new CardMatchesEvaluator(-1, -5, Filters.Executor), here));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self), Filters.AT_AT), new AtCondition(self, Filters.and(Filters.your(playerId), Filters.Star_Destroyer), here), -1, Filters.relatedLocation(self)));
+        modifiers.add(new SuspendsCardModifier(self, Filters.and(Filters.Haven, here), new ControlsCondition(playerId, 2, Filters.Hoth_site)));
         return modifiers;
     }
 }

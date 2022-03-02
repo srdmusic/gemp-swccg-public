@@ -24,17 +24,16 @@ import java.util.List;
 /**
  * Set: Set 18
  * Type: Objective
- * Title: Imperial Occupation (V) / Imperial Control (V)
+ * Title: The Shield Will Be Down In Moments / Imperial Troops Have Entered The Base!
  */
 public class Card501_010 extends AbstractObjective {
     public Card501_010() {
         super(Side.DARK, 0, Title.The_Shield_Will_Be_Down_In_Moments);
-        setVirtualSuffix(true);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Hoth, [Set 18] 4th marker, 1st Marker and [V] You May Start Your Landing. \n" +
-                "For remainder of game, you may not play Sunsdown. \n" +
+        setGameText("Deploy Hoth, [Set 17] 4th marker, 1st Marker and [Set 18] You May Start Your Landing. " +
+                "For remainder of game, you may not play Sunsdown. " +
                 "While this side up, Force loss from You May Start Your Landing is limited to 1. Once per turn, may deploy a snowtrooper or non-unique AT-AT to Hoth from Reserve Deck; reshuffle. When drawing for Target the Main Generator, X = 6 - the Marker Number from where you’re firing. Flip this card if Main Power Generators 'blown away.'");
-        addIcons(Icon.SPECIAL_EDITION, Icon.HOTH, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
         setTestingText("The Shield Will Be Down in Moments");
     }
 
@@ -68,7 +67,7 @@ public class Card501_010 extends AbstractObjective {
             new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_18, Filters.You_May_Start_Your_Landing), true, false) {
                 @Override
                 public String getChoiceText() {
-                    return "Choose [V] You May Start Your Landing to deploy";
+                    return "Choose [Set 18] You May Start Your Landing to deploy";
                 }
             });
         return action;
@@ -88,10 +87,12 @@ public class Card501_010 extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
 
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ModifyGameTextModifier(self, Filters.Target_The_Main_Generator, ModifyGameTextType.TARGET_THE_MAIN_GENERATOR__MODIFY_X));
-
+        modifiers.add(new LimitForceLossFromCardModifier(self, Filters.You_May_Start_Your_Landing, 1, opponent));
+        modifiers.add(new LimitForceLossFromCardModifier(self, Filters.You_May_Start_Your_Landing, 1, playerId));
         return modifiers;
     }
 
@@ -109,7 +110,7 @@ public class Card501_010 extends AbstractObjective {
                     new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Keyword.SNOWTROOPER, Filters.and(Filters.AT_AT, Filters.non_unique)), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.snowtrooper, Filters.and(Filters.AT_AT, Filters.non_unique)), true));
             return Collections.singletonList(action);
         }
 
@@ -122,16 +123,6 @@ public class Card501_010 extends AbstractObjective {
         String opponent = game.getOpponent(playerId);
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
-        // Check condition(s)
-        if (TriggerConditions.isAboutToLoseForceFromCard(game, effectResult, Filters.You_May_Start_Your_Landing)) {
-            final RequiredGameTextTriggerAction action1 = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action1.setText("Reduce Force loss to 1");
-            // Perform result(s)
-            action1.appendEffect(
-                    new ReduceForceLossToAmountEffect(action1, opponent, 1));
-            actions.add(action1);
-        }
-        
         // Check condition(s)
         if (GameConditions.canBeFlipped(game, self)
                 && TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Main_Power_Generators, true))) {
