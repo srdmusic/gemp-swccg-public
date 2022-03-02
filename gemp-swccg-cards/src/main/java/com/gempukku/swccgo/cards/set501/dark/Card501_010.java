@@ -49,10 +49,10 @@ public class Card501_010 extends AbstractObjective {
                 }
             });
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_18, Filters.Fourth_Marker), true, false) {
+                new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker), true, false) {
                     @Override
                     public String getChoiceText() {
-                        return "Choose [Set 18] 4th marker to deploy";
+                        return "Choose [Set 17] 4th marker to deploy";
                     }
                 });
         
@@ -119,19 +119,30 @@ public class Card501_010 extends AbstractObjective {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
+        // Check condition(s)
+        if (TriggerConditions.isAboutToLoseForceFromCard(game, effectResult, Filters.You_May_Start_Your_Landing)) {
+            final RequiredGameTextTriggerAction action1 = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action1.setText("Reduce Force loss to 1");
+            // Perform result(s)
+            action1.appendEffect(
+                    new ReduceForceLossToAmountEffect(action1, opponent, 1));
+            actions.add(action1);
+        }
+        
         // Check condition(s)
         if (GameConditions.canBeFlipped(game, self)
                 && TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Main_Power_Generators, true))) {
 
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Flip");
-            action.setActionMsg(null);
+            RequiredGameTextTriggerAction action2 = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action2.setText("Flip");
+            action2.setActionMsg(null);
             // Perform result(s)
-            action.appendEffect(
-                    new FlipCardEffect(action, self));
-            actions.add(action);
+            action2.appendEffect(
+                    new FlipCardEffect(action2, self));
+            actions.add(action2);
         }
 
         return actions;

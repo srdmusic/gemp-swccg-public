@@ -152,7 +152,7 @@ public interface Title {
     String Cantina_Brawl = "Cantina Brawl";
     String Capacitors = "Death Star II: Capacitors";
     String Capital_Support = "Capital Support";
-    String Captain_Lenox = "Captain Lenox";
+    String Captain_Lennox = "Captain Lennox";
     String Captain_Tarpals = "Captain Tarpals";
     String Captive_Fury = "Captive Fury";
     String Captive_Pursuit = "Captive Pursuit";

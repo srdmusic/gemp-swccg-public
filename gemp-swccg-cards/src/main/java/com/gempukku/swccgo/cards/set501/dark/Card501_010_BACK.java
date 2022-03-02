@@ -79,7 +79,7 @@ public class Card501_010_BACK extends AbstractObjective {
                                     action.addAnimationGroup(targetedAtat);
 
                                     // place cards in used pile
-                                    action.appendEffect(
+                                    action.appendCost(
                                             new PlaceCardInUsedPileFromTableEffect(action, targetedAtat, false, Zone.USED_PILE));
 
                                     // take top card of lost pile into hand
@@ -99,7 +99,7 @@ public class Card501_010_BACK extends AbstractObjective {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         String playerId = self.getOwner();
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
-        if (!GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(playerId), Filters.occupies(playerId), Filters.Hoth_location))) {
+        if (TriggerConditions.isTableChanged(game, effectResult) && !GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(playerId), Filters.occupies(playerId), Filters.Hoth_location))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Place out of play");

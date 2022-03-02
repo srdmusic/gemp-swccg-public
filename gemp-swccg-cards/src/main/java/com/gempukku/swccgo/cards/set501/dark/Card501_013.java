@@ -29,7 +29,6 @@ public class Card501_013 extends AbstractSite {
         super(Side.DARK, Title.Main_Power_Generators, Title.Hoth);
         setLocationDarkSideGameText("If 'blown away,' Light Side loses 4 Force (may not be reduced).");
         setLocationLightSideGameText("'Hoth Energy Shield Rules' in effect. Your artillery weapons on Hoth are 'powered'.");
-        addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.VIRTUAL_SET_18, Icon.EXTERIOR_SITE, Icon.PLANET);
         addKeywords(Keyword.MARKER_1);
         setTestingText("Hoth: Main Power Generators (1st Marker)");

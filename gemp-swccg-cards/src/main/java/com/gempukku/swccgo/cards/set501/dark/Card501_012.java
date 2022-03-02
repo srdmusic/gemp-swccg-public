@@ -49,16 +49,19 @@ public class Card501_012 extends AbstractNormalEffect {
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
                 && GameConditions.occupiesWith(game, self, playerId, Filters.marker_site, Filters.and(Filters.piloted, Filters.AT_AT))) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Make opponent lose 1 Force");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new LoseForceEffect(action, opponent, 1));
-            actions.add(action);
+            
+            int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.marker_site, Filters.occupiesWith(playerId, self, Filters.and(Filters.piloted, Filters.AT_AT))));
+            if (numForce > 0) {
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Make opponent lose " + numForce + " Force");
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerPhaseEffect(action));
+                // Perform result(s)
+                action.appendEffect(
+                        new LoseForceEffect(action, opponent, numForce));
+                actions.add(action);
+            }
         }
 
         gameTextActionId = GameTextActionId.YOU_MAY_START_YOUR_LANDING_V__DOWNLOAD_CARD;
