@@ -49,7 +49,9 @@ public class Card216_037 extends AbstractJediMaster {
 
         if (game.getModifiersQuerying().isCommuning(game.getGameState(), self)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.numCardsInForcePile(game, playerId) >= 1) {
+                && GameConditions.numCardsInForcePile(game, playerId) >= 1
+                && GameConditions.hasHand(game, playerId)) {
+
             TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
 
             action.setText("Place card from hand on Used Pile");

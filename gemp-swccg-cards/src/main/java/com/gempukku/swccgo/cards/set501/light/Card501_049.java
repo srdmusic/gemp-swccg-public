@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AttachedCondition;
+import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.*;
@@ -30,45 +31,45 @@ import java.util.List;
 /**
  * Set: Set 18
  * Type: Effect
- * Title: Leia Of Alderaan & I Hope She's All Right
+ * Title: For Luck & I Hope She's All Right
  */
 public class Card501_049 extends AbstractNormalEffect {
     public Card501_049() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, "Leia Of Alderaan & I Hope She's All Right", Uniqueness.UNIQUE);
-        addComboCardTitles(Title.Leia_Of_Alderaan, Title.I_Hope_Shes_All_Right);
+        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "For Luck & I Hope She's All Right", Uniqueness.UNIQUE);
+        addComboCardTitles("For Luck", Title.I_Hope_Shes_All_Right);
         setGameText("Deploy on Leia or your [Endor] leader. While at a battleground site, your Force drains here may not be canceled or reduced. During your draw phase, if you occupy two battleground sites and opponent does not occupy a battleground site, opponent loses 1 Force.");
-        addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
+        setGameText("Deploy on table. During your control phase, if opponent occupies a non-battleground location (or if Leia occupies opponent's location), may peek at top two cards of your Reserve Deck and take one into hand. During your draw phase, if you occupy two battleground sites and opponent does not occupy a battleground site, opponent loses 1 Force.");
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_18);
-        setTestingText("Leia Of Alderaan & I Hope She's All Right");
+        setTestingText("For Luck & I Hope She's All Right");
     }
-
-    @Override
-    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.or(Persona.LEIA, Filters.and(Filters.your(self), Icon.ENDOR, Filters.leader));
-    }
-
-    @Override
-    protected Filter getGameTextValidTargetFilterToRemainAttachedToAfterCrossingOver(final SwccgGame game, final PhysicalCard self, PlayCardOptionId playCardOptionId) {
-        return Filters.or(Persona.LEIA, Filters.and(Icon.ENDOR, Filters.leader));
-    }
-
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        String playerId = self.getOwner();
-        String opponent = game.getOpponent(self.getOwner());
-        Filter sameBattleground = Filters.and(Filters.sameSite(self), Filters.battleground);
-
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, sameBattleground, playerId));
-        modifiers.add(new ForceDrainsMayNotBeReducedModifier(self, sameBattleground, playerId));
-        return modifiers;
-    }
-
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
+
         String opponent = game.getOpponent(playerId);
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+        // Check condition(s)
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+                && GameConditions.hasReserveDeck(game, playerId)
+                && (GameConditions.canSpotLocation(game, Filters.and(Filters.non_battleground_location, Filters.occupies(opponent)))
+                || GameConditions.occupiesWith(game, self, playerId, Filters.opponents(self), Filters.Leia)
+                || GameConditions.occupiesWith(game, self, opponent, Filters.opponents(self), Filters.Leia))) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Peek at top two cards of Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerPhaseEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, 2, 1, 1));
+            actions.add(action);
+        }
+
+
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)
@@ -76,16 +77,16 @@ public class Card501_049 extends AbstractNormalEffect {
                 && !GameConditions.occupies(game, opponent, Filters.battleground_site)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Make " + opponent + " lose 1 Force");
+            action.setText("Make opponent lose 1 Force");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new LoseForceEffect(action, opponent, 1));
-            return Collections.singletonList(action);
+            actions.add(action);
         }
-        return null;
+        return actions;
     }
 
     @Override
@@ -99,11 +100,12 @@ public class Card501_049 extends AbstractNormalEffect {
         // Check condition(s)
         // Check if reached end of your draw phase and action was not performed yet.
         if (TriggerConditions.isEndOfYourPhase(game, effectResult, Phase.DRAW, self.getOwner())
+                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)
                 && GameConditions.occupies(game, playerId, 2, Filters.battleground_site)
                 && !GameConditions.occupies(game, opponent, Filters.battleground_site)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Make " + opponent + " lose 1 Force");
+            action.setText("Make opponent lose 1 Force");
             action.appendUsage(
                     new OncePerPhaseEffect(action));
             // Perform result(s)

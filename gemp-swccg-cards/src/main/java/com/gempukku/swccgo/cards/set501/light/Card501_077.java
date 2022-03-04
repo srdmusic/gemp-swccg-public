@@ -39,6 +39,7 @@ public class Card501_077 extends AbstractNormalEffect {
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("A Cunning Warrior");
+        hideFromDeckBuilder();
     }
 
     @Override

@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class Card501_059 extends AbstractResistance {
     public Card501_059() {
-        super(Side.LIGHT, 1, 3, 2, 3, 5, "Lando, Hero of the Rebellion", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, 3, 2, 3, 6, "Lando, Hero of the Rebellion", Uniqueness.UNIQUE);
         setLore("Leader. Resistance Agent.");
         setGameText("Deploys -1 aboard Falcon. Adds one destiny to total power with Chewie or Jannah (or while piloting). While piloting a freighter, adds 1 to maneuver and your starships at same system are immune to Lateral Damage and Overwhelmed.");
         addPersona(Persona.LANDO);

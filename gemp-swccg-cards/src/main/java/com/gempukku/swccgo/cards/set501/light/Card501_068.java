@@ -36,7 +36,7 @@ public class Card501_068 extends AbstractLostInterrupt {
         super(Side.LIGHT, 5, Title.Skywalkers, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Luke and Leia escaped to an unused portion of the Death Star, evading security checkpoints. At a retracted bridge, they swung across on a grappling line through enemy fire.");
-        setGameText("If your [Skywalker] Epic Event on table, add X to your just drawn weapon or battle destiny, where X = the number of Skywalkers on table. OR If targeting your Skywalker, cancel Dark Strike, Imperial Barrier, or You Are Beaten.");
+        setGameText("If your [Skywalker] Objective on table, add X to your just drawn weapon or battle destiny, where X = the number of Skywalkers on table. OR If targeting your Skywalker, cancel Dark Strike, Imperial Barrier, or You Are Beaten.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
         setTestingText("Skywalkers (V)");
     }
@@ -47,7 +47,7 @@ public class Card501_068 extends AbstractLostInterrupt {
         String opponent = game.getOpponent(playerId);
 
         // Check condition(s)
-        if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Epic_Event))
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Objective))
             && (TriggerConditions.isWeaponDestinyJustDrawnBy(game, effectResult, playerId)
                 || TriggerConditions.isBattleDestinyJustDrawnBy(game, effectResult, playerId))) {
 
