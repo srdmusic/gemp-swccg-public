@@ -472,6 +472,7 @@ var CardFilter = Class.extend({
             + "<option value='SIDIOUS'>Sidious</option>"
             + "<option value='SLAVE_I'>Slave I</option>"
             + "<option value='TARKIN'>Tarkin</option>"
+            + "<option value='THRAWN'>Thrawn</option>"
             + "<option value='TYCHO'>Tycho</option>"
             + "<option value='VADER'>Vader</option>"
             + "<option value='VADERS_CUSTOM_TIE'>Vader's Custom TIE</option>"
