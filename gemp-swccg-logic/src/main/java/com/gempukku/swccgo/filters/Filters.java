@@ -17893,6 +17893,7 @@ public class Filters {
     public static final Filter Imperial_starship = Filters.and(Side.DARK, CardType.STARSHIP, Filters.not(Filters.or(Icon.INDEPENDENT, Icon.REPUBLIC, Icon.TRADE_FEDERATION, Icon.SEPARATIST, Icon.CLONE_ARMY, Icon.FIRST_ORDER, Icon.RESISTANCE)));
     public static final Filter Imperial_Supply = Filters.title(Title.Imperial_Supply);
     public static final Filter Imperial_Trooper_Guard = Filters.keyword(Keyword.IMPERIAL_TROOPER_GUARD);
+    public static final Filter Imperial_Troops_Have_Entered_The_Base = Filters.title(Title.Imperial_Troops_Have_Entered_The_Base);
     public static final Filter Imperial_Tyranny = Filters.title(Title.Imperial_Tyranny);
     public static final Filter Imperial_veteran = Filters.and(Icon.IMPERIAL, Filters.or(Keyword.LEADER, Filters.and(Filters.or(Keyword.TROOPER, Keyword.STORMTROOPER, Keyword.SNOWTROOPER, Keyword.SANDTROOPER, Keyword.CLOUD_CITY_TROOPER, Keyword.DEATH_STAR_TROOPER, Keyword.IMPERIAL_TROOPER_GUARD, Keyword.BIKER_SCOUT), Filters.not(Filters.keyword(Keyword.CADET)))));
     public static final Filter imprisoned_character = Filters.and(CardCategory.CHARACTER, Filters.imprisoned());
@@ -18090,6 +18091,7 @@ public class Filters {
     public static final Filter maintenance_droid = Filters.modelType(ModelType.MAINTENANCE);
     public static final Filter Major_Panno = Filters.title(Title.Major_Panno);
     public static final Filter Malakili = Filters.title(Title.Malakili);
+    public static final Filter Make_Ready_To_Land_Our_Troops = Filters.title(Title.Make_Ready_To_Land_Our_Troops);
     public static final Filter Malachor_location = Filters.partOfSystem(Title.Malachor);
     public static final Filter Malastare = Filters.title(Title.Malastare);
     public static final Filter male = Filters.and(CardCategory.CHARACTER, Filters.or(Keyword.MALE, Filters.not(Filters.keyword(Keyword.FEMALE))));
@@ -18669,6 +18671,7 @@ public class Filters {
     public static final Filter The_Planet_That_Its_Farthest_From = Filters.title(Title.The_Planet_That_Its_Farthest_From);
     public static final Filter The_Professor = Filters.title(Title.The_Professor);
     public static final Filter The_Shield_Doors_Must_Be_Closed = Filters.title(Title.The_Shield_Doors_Must_Be_Closed);
+    public static final Filter The_Shield_Will_Be_Down_In_Moments = Filters.title(Title.The_Shield_Will_Be_Down_In_Moments);
     public static final Filter The_Time_To_Fight_Is_Now = Filters.title(Title.The_Time_To_Fight_Is_Now);
     public static final Filter The_Ultimate_Power_In_The_Universe = Filters.title(Title.The_Ultimate_Power_In_The_Universe);
     public static final Filter Thedit = Filters.persona(Persona.THEDIT);

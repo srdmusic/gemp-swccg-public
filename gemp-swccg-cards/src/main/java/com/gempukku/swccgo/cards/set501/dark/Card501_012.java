@@ -28,7 +28,7 @@ public class Card501_012 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.You_May_Start_Your_Landing, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Echo Base was no match for the Imperial war machine.");
-        setGameText("If 1st marker on table, deploy on table. During your control phase, if you occupy a marker site with an AT-AT, opponent loses 1 Force. Once per turn, may deploy a Hoth location from Reserve Deck; reshuffle. [Immune to Alter.]");
+        setGameText("If The Shield Will Be Down In Moments on table, deploy on table. Once per turn, may deploy a Hoth site from Reserve Deck; reshuffle. During your control phase, opponent loses 1 Force for each marker site you control with a piloted AT-AT. [Immune to Alter.]");
         addIcons(Icon.TATOOINE, Icon.HOTH, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("You May Start Your Landing (V)");
@@ -36,7 +36,7 @@ public class Card501_012 extends AbstractNormalEffect {
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.First_Marker);
+        return Filters.canSpot(game, self, Filters.The_Shield_Will_Be_Down_In_Moments);
     }
 
     @Override
@@ -48,17 +48,20 @@ public class Card501_012 extends AbstractNormalEffect {
 
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.occupiesWith(game, self, playerId, Filters.marker_site, Filters.and(Filters.piloted, Filters.AT_AT))) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Make opponent lose 1 Force");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new LoseForceEffect(action, opponent, 1));
-            actions.add(action);
+                && GameConditions.controlsWith(game, self, playerId, Filters.marker_site, Filters.and(Filters.piloted, Filters.AT_AT))) {
+            
+            int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.marker_site, Filters.controlsWith(playerId, self, Filters.and(Filters.piloted, Filters.AT_AT))));
+            if (numForce > 0) {
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Make opponent lose " + numForce + " Force");
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerPhaseEffect(action));
+                // Perform result(s)
+                action.appendEffect(
+                        new LoseForceEffect(action, opponent, numForce));
+                actions.add(action);
+            }
         }
 
         gameTextActionId = GameTextActionId.YOU_MAY_START_YOUR_LANDING_V__DOWNLOAD_CARD;
@@ -67,13 +70,13 @@ public class Card501_012 extends AbstractNormalEffect {
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy a Hoth location from Reserve Deck");
-            action.setActionMsg("Deploy a Hoth location from Reserve Deck");
+            action.setText("Deploy a Hoth site from Reserve Deck");
+            action.setActionMsg("Deploy a Hoth site from Reserve Deck");
 
             action.appendUsage(
                     new OncePerTurnEffect(action));
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Hoth_location, true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.Hoth_site, true));
 
             actions.add(action);
         }
@@ -92,14 +95,18 @@ public class Card501_012 extends AbstractNormalEffect {
         // Check if reached end of each control phase and action was not performed yet.
         if (TriggerConditions.isEndOfYourPhase(game, effectResult, Phase.CONTROL, playerId)
                 && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.occupiesWith(game, self, playerId, Filters.marker_site, Filters.and(Filters.piloted, Filters.AT_AT))) {
+                && GameConditions.controlsWith(game, self, playerId, Filters.marker_site, Filters.and(Filters.piloted, Filters.AT_AT))) {
 
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Make opponent lose 1 Force");
-            // Perform result(s)
-            action.appendEffect(
-                    new LoseForceEffect(action, opponent, 1));
-            actions.add(action);
+            int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.marker_site, Filters.controlsWith(playerId, self, Filters.and(Filters.piloted, Filters.AT_AT))));
+
+            if (numForce > 0) {
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Make opponent lose " + numForce + " Force");
+                // Perform result(s)
+                action.appendEffect(
+                        new LoseForceEffect(action, opponent, numForce));
+                actions.add(action);
+            }
         }
         return actions;
     }

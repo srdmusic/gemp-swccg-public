@@ -152,6 +152,7 @@ public interface Title {
     String Cantina_Brawl = "Cantina Brawl";
     String Capacitors = "Death Star II: Capacitors";
     String Capital_Support = "Capital Support";
+    String Captain_Lennox = "Captain Lennox";
     String Captain_Tarpals = "Captain Tarpals";
     String Captive_Fury = "Captive Fury";
     String Captive_Pursuit = "Captive Pursuit";
@@ -514,6 +515,7 @@ public interface Title {
     String Imperial_Propaganda = "Imperial Propaganda";
     String Imperial_Reinforcements = "Imperial Reinforcements";
     String Imperial_Supply = "Imperial Supply";
+    String Imperial_Troops_Have_Entered_The_Base = "Imperial Troops Have Entered The Base!";
     String Imperial_Tyranny = "Imperial Tyranny";
     String In_Complete_Control = "In Complete Control";
     String In_The_Hands_Of_The_Empire = "In The Hands Of The Empire";
@@ -645,6 +647,7 @@ public interface Title {
     String Main_Corridor = "Executor: Main Corridor";
     String Main_Power_Generators = "Hoth: Main Power Generators (1st Marker)";
     String Major_Panno = "Major Panno";
+    String Make_Ready_To_Land_Our_Troops = "Make Ready To Land Our Troops";
     String Malachor = "Malachor";
     String Malastare = "Malastare";
     String Mandalorian_Armor = "Mandalorian Armor";
@@ -1026,6 +1029,7 @@ public interface Title {
     String The_Result_Is_Often_Resentment = "The Result Is Often Resentment";
     String The_Rise_Of_Skywalker = "The Rise Of Skywalker";
     String The_Shield_Doors_Must_Be_Closed = "The Shield Doors Must Be Closed";
+    String The_Shield_Will_Be_Down_In_Moments = "The Shield Will Be Down in Moments";
     String The_Time_To_Fight_Is_Now = "The Time To Fight Is Now";
     String The_Ultimate_Power_In_The_Universe = "The Ultimate Power In The Universe";
     String There_Is_Another = "There Is Another";

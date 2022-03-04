@@ -25,21 +25,20 @@ public class Card501_011 extends AbstractStartingInterrupt {
     public Card501_011() {
         super(Side.DARK, 4, "That's It, The Rebels Are There!");
         setVirtualSuffix(true);
-        setGameText("If you have deployed [Set 17] 4th marker, take [Set 6] Veers into hand from Reserve Deck. Deploy 1st marker, [Set 9] Prepare For A Surface Attack, and up to two Effects that deploy for free and are always immune to Alter. Place Interrupt in Lost Pile.");
+        setGameText("If 1st Marker on table, take [Set 6] Veers into hand and deploy Make Ready To Land Our Troops and up to two Effects that deploy for free and are always [Immune to Alter]. Place Interrupt in Lost Pile.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
         setTestingText("That's It, The Rebels Are There! (V)");
     }
 
     @Override
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        final Filter yourSiteEvenIfConverted = Filters.and(Filters.Fourth_Marker, Filters.or(Filters.and(Icon.VIRTUAL_SET_17, Filters.your(self)), Filters.convertedLocationOnTopOfLocation(Filters.and(Icon.VIRTUAL_SET_17, Filters.your(self)))));
 
         // Check condition(s)
-        if (GameConditions.canSpotLocation(game, yourSiteEvenIfConverted)) {
+        if (GameConditions.canSpotLocation(game, Filters.First_Marker)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
-            action.setText("Take Veers into hand and deploy 1st marker and Effects from Reserve Deck");
+            action.setText("Take Veers into hand and deploy Effects");
             // Allow response(s)
-            action.allowResponses("Take [Set 6] Veers into hand. Deploy 1st marker, [Set 9] Prepare For A Surface Attack, and up to two Effects from Reserve Deck",
+            action.allowResponses("Take [Set 6] Veers into hand and deploy Make Ready To Land Our Troops and up to two Effects that deploy for free and are always [Immune to Alter]",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
@@ -47,9 +46,7 @@ public class Card501_011 extends AbstractStartingInterrupt {
                             action.appendEffect(
                                     new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.and(Icon.VIRTUAL_SET_6, Filters.Veers), false));
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.First_Marker, true, false));
-                            action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_9, Filters.Prepare_For_A_Surface_Attack), true, false));
+                                    new DeployCardFromReserveDeckEffect(action, Filters.Make_Ready_To_Land_Our_Troops, true, false));
                             action.appendEffect(
                                     new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.deploysForFree, Filters.always_immune_to_Alter), 1, 2, true, false));
                             action.appendEffect(

@@ -65,6 +65,7 @@ public enum ModifyGameTextType {
     SURPRISE_ASSAULT__ADD_DESTINY_TO_TOTAL("Add one destiny to total"),
     TALLON_ROLL__OPPONENT_ADDS_MANEUVER_AND_ABILITY("Opponent adds maneuver and ability"),
     TARKIN__CANNOT_CANCEL_DESTINY("Cannot cancel destiny"),
+    TARGET_THE_MAIN_GENERATOR__MODIFY_X("X = 6 - the Marker Number from where you’re firing"),
     THERE_IS_ANOTHER__DOES_NOT_MAKE_REFII_LUKE_LOST("Does not cause [Reflections II] Luke to be lost"),
     THERE_IS_ANOTHER__DOES_NOT_MAKE_LUKE_LOST("Does not cause Luke to be lost"),
     TIBANNA_GAS_MINER__DOUBLE_FORCE_ACTIVATED("Force activated doubled"),

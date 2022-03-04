@@ -3589,6 +3589,23 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a destiny to reduce attrition was just drawn by the specified player (and was not canceled).
+     * @param game the game
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @return true or false
+     */
+    public static boolean isDestinyToReduceAttritionJustDrawnBy(SwccgGame game, EffectResult effectResult, String playerId) {
+        if (effectResult.getType() == EffectResult.Type.DESTINY_DRAWN) {
+            DestinyDrawnResult destinyDrawnResult = (DestinyDrawnResult) effectResult;
+            return !destinyDrawnResult.isCanceled()
+                    && (destinyDrawnResult.getDestinyType() == DestinyType.DESTINY_TO_REDUCE_ATTRITION || destinyDrawnResult.getDestinyType() == DestinyType.DESTINY_TO_REDUCE_ATTRITION_POWER)
+                    && playerId.equals(effectResult.getPerformingPlayerId());
+        }
+        return false;
+    }
+
+    /**
      * Determines if a carbon-freezing destiny was just drawn (and was not canceled).
      * @param game the game
      * @param effectResult the effect result
