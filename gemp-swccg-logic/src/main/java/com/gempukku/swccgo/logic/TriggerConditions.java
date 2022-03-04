@@ -3993,6 +3993,21 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a destiny draw was just completed during a weapon destiny draw by the specified player.
+     * @param game the game
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @return true or false
+     */
+    public static boolean isWeaponDestinyDrawComplete(SwccgGame game, EffectResult effectResult) {
+        if (effectResult.getType() == EffectResult.Type.COMPLETE_DESTINY_DRAW) {
+            DestinyDrawCompleteResult destinyDrawCompleteResult = (DestinyDrawCompleteResult) effectResult;
+            return destinyDrawCompleteResult.getDestinyType() == DestinyType.WEAPON_DESTINY;
+        }
+        return false;
+    }
+
+    /**
      * Determines if a search party destiny was just drawn by the specified player (and was not canceled).
      * @param game the game
      * @param effectResult the effect result
