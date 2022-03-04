@@ -34,6 +34,7 @@ public class Card501_064 extends AbstractNormalEffect {
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Best Starpilot In The Galaxy");
+        hideFromDeckBuilder();
     }
 
     @Override

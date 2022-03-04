@@ -14,6 +14,7 @@ public enum ModelType implements Filterable {
     AT_AT("AT-AT"),
     AT_ST("AT-ST"),
     AUTOMATION("Automation"),
+    AUZITUCK_GUNSHIP("Auzituck Gunship"),
     AVIAN("Avian"),
     B_WING("B-wing"),
     BATTLE("Battle"),

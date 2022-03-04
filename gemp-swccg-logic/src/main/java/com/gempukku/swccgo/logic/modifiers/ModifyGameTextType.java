@@ -67,6 +67,7 @@ public enum ModifyGameTextType {
     TARKIN__CANNOT_CANCEL_DESTINY("Cannot cancel destiny"),
     TARGET_THE_MAIN_GENERATOR__MODIFY_X("X = 6 - the Marker Number from where you’re firing"),
     THERE_IS_ANOTHER__DOES_NOT_MAKE_REFII_LUKE_LOST("Does not cause [Reflections II] Luke to be lost"),
+    THERE_IS_ANOTHER__DOES_NOT_MAKE_LUKE_LOST("Does not cause Luke to be lost"),
     TIBANNA_GAS_MINER__DOUBLE_FORCE_ACTIVATED("Force activated doubled"),
     TRAP_DOOR__DO_NOT_DRAW_DESTINY("Do not draw destiny"),
     TUSKEN_BREATH_MASK__MODIFIED_BY_SERGEANT_DOALLYN("Game text modified"),

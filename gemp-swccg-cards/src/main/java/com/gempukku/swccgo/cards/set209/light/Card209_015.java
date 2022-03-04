@@ -97,6 +97,8 @@ public class Card209_015 extends AbstractDefensiveShield {
         Filter toBeLost = Filters.or(Filters.Were_The_Bait, Filters.and(Filters.Luke, Icon.DEATH_STAR_II));
         if (game.getModifiersQuerying().hasGameTextModification(game.getGameState(), self, ModifyGameTextType.THERE_IS_ANOTHER__DOES_NOT_MAKE_REFII_LUKE_LOST))
             toBeLost = Filters.and(toBeLost, Filters.not(Filters.and(Icon.REFLECTIONS_II, Filters.Luke)));
+        if (game.getModifiersQuerying().hasGameTextModification(game.getGameState(), self, ModifyGameTextType.THERE_IS_ANOTHER__DOES_NOT_MAKE_LUKE_LOST))
+            toBeLost = Filters.and(toBeLost, Filters.not(Filters.Luke));
 
         if (TriggerConditions.isTableChanged(game, effectResult)) {
             Collection<PhysicalCard> lostCards = Filters.filterActive(game, self, toBeLost);
