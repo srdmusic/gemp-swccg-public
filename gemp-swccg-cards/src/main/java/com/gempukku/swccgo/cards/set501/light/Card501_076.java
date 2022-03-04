@@ -31,6 +31,7 @@ public class Card501_076 extends AbstractLostOrStartingInterrupt {
                 "deploy The Force Is Strong In My Family, a [Skywalker] Effect, and an Effect that deploys for free and is always immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_17);
         setTestingText("The Rise Of Skywalker (ERRATA)");
+        hideFromDeckBuilder();
     }
 
     @Override

@@ -31,7 +31,7 @@ public class Card501_066 extends AbstractLostInterrupt {
         super(Side.LIGHT, 4, "Full Throttle", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Rebel pilots use visual scanning to supplement sensors for an edge against Imperial fighter pilots. Natural instincts allow lone Rebels to overcome superior numbers.");
-        setGameText("If your Skywalker piloting a starfighter alone in battle, that starfighter is immune to attrition. If opponent has two or more starships there (or your [Skywalker] Epic Event on table), add that starfighter's maneuver to your total power.");
+        setGameText("During battle, target your lone starfighter piloted by a Skywalker. For remainder of turn, starfighter is immune to attrition. If opponent has two or more starships there (or your [Skywalker] Objective on table), add your starfighter's maneuver (if any) to your total power.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
         setTestingText("Full Throttle (V)");
     }
@@ -71,7 +71,7 @@ public class Card501_066 extends AbstractLostInterrupt {
                                                             new ImmuneToAttritionModifier(self, finalTarget),
                                                             "Makes " + GameUtils.getCardLink(finalTarget) + " immune to attrition"));
                                             
-                                            if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Epic_Event))
+                                            if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Objective))
                                                     || GameConditions.canSpot(game, self, 2, Filters.and(Filters.opponents(self), Filters.starship, Filters.participatingInBattle))) {
                                                 float maneuver = game.getModifiersQuerying().getManeuver(game.getGameState(), finalTarget);
                                                 action.appendEffect(

@@ -857,6 +857,7 @@ public interface Title {
     String Rey = "Rey";
     String Reys_Encampment = "Jakku: Rey's Encampment";
     String Rise_Of_The_Sith = "Rise Of The Sith";
+    String Rise_Of_Skywalker = "Rise Of Skywalker";
     String Rite_Of_Passage = "Rite Of Passage";
     String Roche = "Roche";
     String Rogue_1 = "Rogue 1";

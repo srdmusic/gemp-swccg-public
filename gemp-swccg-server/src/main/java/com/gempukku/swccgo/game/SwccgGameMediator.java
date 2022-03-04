@@ -1459,6 +1459,10 @@ public class SwccgGameMediator {
                 // Senate
                 objectiveLabel = "Senate";
             }
+            if (Filters.or(Filters.The_Force_Is_Strong_In_My_Family, Filters.Rise_Of_Skywalker).accepts(_swccgoGame, objective)) {
+                // The Force Is Strong In My Family
+                return "Skywalker Saga";
+            }
             if (Filters.or(Filters.Wookiee_Slaving_Operation, Filters.Indentured_To_The_Empire).accepts(_swccgoGame, objective)) {
                 //Wookiee Slaving Operation
                 objectiveLabel = "Slavers";

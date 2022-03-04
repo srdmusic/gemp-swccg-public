@@ -27,7 +27,7 @@ import java.util.List;
 public class Card501_071 extends AbstractSystem {
     public Card501_071() {
         super(Side.LIGHT, Title.Polis_Massa, 8);
-        setLocationDarkSideGameText("If a [Skywalker] Epic Event on table, Force drain -1 here. To move or deploy your starship here requires +1 Force.");
+        setLocationDarkSideGameText("If a [Skywalker] Objective on table, Force drain -1 here. To move or deploy your starship here requires +1 Force.");
         setLocationLightSideGameText("Skywalkers and Obi-Wan deploy -1 here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
@@ -39,7 +39,7 @@ public class Card501_071 extends AbstractSystem {
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         Filter yourStarships = Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.starship);
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, new OnTableCondition(self, Filters.and(Icon.SKYWALKER, CardType.EPIC_EVENT)),-1, playerOnDarkSideOfLocation));
+        modifiers.add(new ForceDrainModifier(self, new OnTableCondition(self, Filters.and(Icon.SKYWALKER, Filters.Objective)),-1, playerOnDarkSideOfLocation));
         modifiers.add(new DeployCostToLocationModifier(self, yourStarships, 1, self));
         modifiers.add(new MoveCostToLocationModifier(self, yourStarships, 1, self));
         return modifiers;

@@ -453,7 +453,7 @@ var fixedImages = {
 "2_124":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/programtrap.gif",
 "2_125":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/spiceminesofkessel.gif",
 "2_126":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/swillacorey.gif",
-"2_127":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/tentacle.gif",
+"2_127":"https://res.starwarsccg.org/cards/ANewHope-Dark/hires/tentacle.png",
 "2_128":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/therellbehelltopay.gif",
 "2_129":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/undercover.gif",
 "2_130":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/commenceprimaryignition.gif",
@@ -3486,6 +3486,7 @@ var fixedImages = {
 "501_73":"https://res.starwarsccg.org/cards/ReflectionsII-Light/large/outrider.gif",
 "501_74":"https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/aimhigh.gif",
 "501_75":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/theforceisstronginmyfamily.png",
+"501_75_BACK":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/youtrulybelongherewithus.gif",
 "501_76":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/theriseofskywalker.png",
 "501_77":"https://res.starwarsccg.org/cards/Dagobah-Light/large/warsnotmakeonegreat.gif",
 "501_78":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
@@ -4341,7 +4342,10 @@ var Card = Class.extend({
                    (cardNo == 47) ||
                    (cardNo == 57) ||
                    (cardNo == 69) ||
-                   (cardNo == 70);
+                   (cardNo == 70) ||
+                   (cardNo == 84) ||
+                   (cardNo == 85) ||
+                   (cardNo == 86);
         }
         if (setNo == 601) {
              return (cardNo == 14) ||

@@ -33,7 +33,7 @@ import java.util.List;
 public class Card501_067 extends AbstractUsedOrLostInterrupt {
     public Card501_067() {
         super(Side.LIGHT, 5, "My Sister Has It", Uniqueness.UNIQUE);
-        setGameText("USED: If your [Skywalker] Epic Event on table, take [Set 14] Chief Chirpa's Hut or [Cloud City] Leia into hand from Reserve Deck; reshuffle. LOST: If you are about to draw a card for battle destiny, may instead use Leia's ability number.");
+        setGameText("USED: If your [Skywalker] Objective on table, take [Set 14] Chief Chirpa's Hut or [Cloud City] Leia into hand from Reserve Deck; reshuffle. LOST: If you are about to draw a card for battle destiny, may instead use ability number of your Leia involved in that battle.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
         setTestingText("My Sister Has It");
     }
@@ -44,7 +44,7 @@ public class Card501_067 extends AbstractUsedOrLostInterrupt {
 
         GameTextActionId gameTextActionId = GameTextActionId.MY_SISTER_HAS_IT__UPLOAD_CARD;
 
-        if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Epic_Event))
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Objective))
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);

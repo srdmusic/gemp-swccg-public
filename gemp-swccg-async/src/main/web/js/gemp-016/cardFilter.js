@@ -371,6 +371,7 @@ var CardFilter = Class.extend({
             + "<option value='SCOMP_LINK'>Scomp Link</option>"
             + "<option value='SELECTIVE_CREATURE'>Selective Creature</option>"
             + "<option value='SEPARATIST'>Separatist</option>"
+            + "<option value='SKYWALKER'>Skywalker</option>"
             + "<option value='VIRTUAL_SET_0'>Set 0</option>"
             + "<option value='VIRTUAL_SET_1'>Set 1</option>"
             + "<option value='VIRTUAL_SET_2'>Set 2</option>"

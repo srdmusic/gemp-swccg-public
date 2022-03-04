@@ -18403,6 +18403,7 @@ public class Filters {
     public static final Filter Ric = Filters.persona(Persona.RIC);
     public static final Filter rifle = Filters.or(Keyword.RIFLE, Keyword.BLASTER_RIFLE);
     public static final Filter Rio = Filters.persona(Persona.RIO);
+    public static final Filter Rise_Of_Skywalker = Filters.title(Title.Rise_Of_Skywalker);
     public static final Filter Rite_Of_Passage = Filters.title(Title.Rite_Of_Passage);
     public static final Filter Roche_system = Filters.title(Title.Roche);
     public static final Filter Rodian = Filters.species(Species.RODIAN);
@@ -18660,6 +18661,7 @@ public class Filters {
     public static final Filter The_Camp = Filters.title(Title.The_Camp);
     public static final Filter The_Circle_Is_Now_Complete = Filters.title(Title.The_Circle_Is_Now_Complete);
     public static final Filter The_First_Transport_Is_Away = Filters.title(Title.The_First_Transport_Is_Away);
+    public static final Filter The_Force_Is_Strong_In_My_Family = Filters.title(Title.The_Force_Is_Strong_In_My_Family);
     public static final Filter The_Force_Is_Strong_With_This_One = Filters.title(Title.The_Force_Is_Strong_With_This_One);
     public static final Filter The_Galaxy_May_Need_A_Legend = Filters.title(Title.The_Galaxy_May_Need_A_Legend);
     public static final Filter The_Hyperdrive_Generators_Gone = Filters.title(Title.The_Hyperdrive_Generators_Gone);

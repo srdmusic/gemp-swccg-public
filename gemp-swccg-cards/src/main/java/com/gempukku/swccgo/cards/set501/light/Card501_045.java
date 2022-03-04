@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class Card501_045 extends AbstractJediMaster {
     public Card501_045() {
-        super(Side.LIGHT, 1, 6, 6, 7, 6, "Master Qui-Gon With Lightsaber", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, 6, 6, 7, 7, "Master Qui-Gon With Lightsaber", Uniqueness.UNIQUE);
         setLore("");
         setGameText("Permanent weapon is •Qui-Gon Jinn's Lightsaber (may target a character or creature for free; draw two destiny; target hit, and its forfeit = 0, if total destiny > defense value).");
         addPersona(Persona.QUIGON);

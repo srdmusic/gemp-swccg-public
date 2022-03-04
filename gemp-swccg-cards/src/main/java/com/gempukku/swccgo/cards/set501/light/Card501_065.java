@@ -37,7 +37,7 @@ public class Card501_065 extends AbstractNormalEffect {
         super(Side.LIGHT, 3, PlayCardZoneOption.ATTACHED, Title.Reflection, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("It was hard to imagine the enormous losses the Alliance suffered during the Battle of Hoth. Leia contemplated what she could do to help the Rebellion recover.");
-        setGameText("Deploy on [Cloud City] Leia. If at Guest Quarters (or a [Skywalker] Epic Event on table): your total power is +2 here and, once per turn, may add 1 to a just drawn weapon or battle destiny (and once per turn, may subtract 1 from a just drawn weapon or battle destiny) at another location.");
+        setGameText("Deploy on [Cloud City] Leia. If at Guest Quarters (or a [Skywalker] Objective on table): your total power is +2 here and, once per turn, may add 1 to a just drawn weapon or battle destiny (and once per turn, may subtract 1 from a just drawn weapon or battle destiny) at another location.");
         addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_18);
         setTestingText("Reflection (V)");
@@ -56,7 +56,7 @@ public class Card501_065 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new TotalPowerModifier(self, Filters.here(self),new OrCondition(new AtCondition(self, Filters.title("Cloud City: Guest Quarters")), new OnTableCondition(self, Filters.and(Icon.SKYWALKER, Filters.Epic_Event))), 2, self.getOwner()));
+        modifiers.add(new TotalPowerModifier(self, Filters.here(self),new OrCondition(new AtCondition(self, Filters.title("Cloud City: Guest Quarters")), new OnTableCondition(self, Filters.and(Icon.SKYWALKER, Filters.Objective))), 2, self.getOwner()));
         return modifiers;
     }
 
@@ -65,7 +65,7 @@ public class Card501_065 extends AbstractNormalEffect {
         List<OptionalGameTextTriggerAction> actions = new LinkedList<OptionalGameTextTriggerAction>();
 
         if (GameConditions.isAtLocation(game, self, Filters.title("Cloud City: Guest Quarters"))
-            || GameConditions.canSpot(game, self, Filters.and(Icon.SKYWALKER, Filters.Epic_Event))) {
+            || GameConditions.canSpot(game, self, Filters.and(Icon.SKYWALKER, Filters.Objective))) {
 
             GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
