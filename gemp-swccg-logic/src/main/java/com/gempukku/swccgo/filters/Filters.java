@@ -413,6 +413,25 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that have the specified characteristic.
+     *
+     * @param characteristic the characteristic
+     * @return Filter
+     */
+    public static Filter characteristic(final Keyword characteristic) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                return characteristic.isCharacteristic() && modifiersQuerying.hasKeyword(gameState, physicalCard, characteristic);
+            }
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
+                return characteristic.isCharacteristic() && builtInCardBlueprint.hasKeyword(characteristic);
+            }
+        };
+    }
+
+    /**
      * Filter that accepts cards that have the specified icon.
      *
      * @param icon the icon
