@@ -2,21 +2,24 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.CancelCardResultEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.BattleState;
 import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.ExchangeCardFromLostPileWithStackedCardEffect;
-import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,45 +37,69 @@ public class Card501_039 extends AbstractUsedOrLostInterrupt {
         setGameText("USED: If opponent is about to cancel and redraw a destiny, it is canceled instead. LOST: Once per game, if your objective just canceled a battle, none of the opponent's cards participating in that battle may move for remainder of turn.");
         addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("Do You Stand By Your Work?");
-        hideFromDeckBuilder();
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(String playerId, SwccgGame game, final Effect effect, PhysicalCard self) {
+        String opponent = game.getOpponent(playerId);
+        if (TriggerConditions.isPlayingCardForReason(game, effect, Filters.any, PlayCardActionReason.ATTEMPTING_TO_CANCEL_AND_REDRAW_A_DESTINY)
+                && TriggerConditions.isPlayingCard(game, effect, opponent, Filters.any)
+                && GameConditions.canCancelDestiny(game, playerId)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Cancel destiny");
+            action.allowResponses(new RespondablePlayCardEffect(action) {
+                @Override
+                protected void performActionResults(Action targetingAction) {
+                    // cancel the redrawing
+                    action.appendEffect(
+                            new CancelCardResultEffect(action, effect));
+                    // and then cancel the destiny`
+                    action.appendEffect(
+                            new CancelDestinyEffect(action));
+                }
+            });
+
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
-        GameTextActionId gameTextActionId = GameTextActionId.THRAWN_PINCER__RELOCATE_STAR_DESTROYER;
+        GameTextActionId gameTextActionId = GameTextActionId.DO_YOU_STAND_BY_YOUR_WORK__PREVENT_MOVEMENT;
 
-        if (effectResult.getType() == EffectResult.Type.ARTWORK_CARD_REVEALED
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.isDuringBattleAt(game, Filters.system)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.Star_Destroyer, Filters.canBeTargetedBy(self), Filters.canBeRelocatedToLocation(Filters.battleLocation, true, 0)))) {
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && TriggerConditions.battleCanceledBy(game, effectResult, playerId, Filters.and(Filters.your(self), Filters.Objective))) {
 
-            PhysicalCard artwork = ((ArtworkCardRevealedResult) effectResult).getCard();
+            final PhysicalCard battleLocation = Filters.findFirstFromTopLocationsOnTable(game, Filters.battleLocation);
 
-            if (artwork != null
-                    && Filters.starship.accepts(game, artwork)) {
+            if (battleLocation != null) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+                action.setText("Prevent cards from moving");
 
-                final PhysicalCard battleLocation = Filters.findFirstFromTopLocationsOnTable(game, Filters.battleLocation);
-                if (battleLocation != null) {
-                    final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
-                    action.setText("Relocate Star Destroyer");
+                action.appendUsage(
+                        new OncePerGameEffect(action));
+                action.appendTargeting(new TargetAllCardsAtSameLocationEffect(action, playerId, "Prevent opponent's cards from moving", Filters.and(Filters.opponents(self), Filters.participatingInBattle)) {
+                    @Override
+                    protected void cardsTargeted(int targetGroupId, final Collection<PhysicalCard> targetedCards) {
+                        action.allowResponses(new RespondablePlayCardEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                action.appendEffect(
+                                        new AddUntilEndOfTurnModifierEffect(action, new MayNotMoveModifier(self, Filters.in(targetedCards)), "Prevents "+GameUtils.getAppendedNames(targetedCards)+" from moving"));
+                            }
+                        });
+                    }
 
-                    action.appendUsage(
-                            new OncePerGameEffect(action));
-                    action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a Star Destroyer to relocate to " + GameUtils.getCardLink(battleLocation), Filters.and(Filters.your(self), Filters.Star_Destroyer, Filters.canBeRelocatedToLocation(battleLocation, true, 0))) {
-                        @Override
-                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                            action.allowResponses(new RespondablePlayCardEffect(action) {
-                                @Override
-                                protected void performActionResults(Action targetingAction) {
-                                    PhysicalCard starDestroyer = action.getPrimaryTargetCard(targetGroupId);
-                                    action.appendEffect(new RelocateBetweenLocationsEffect(action, starDestroyer, battleLocation));
-                                }
-                            });
-                        }
-                    });
+                    @Override
+                    protected boolean getUseShortcut() {
+                        return true;
+                    }
+                });
 
-                    return Collections.singletonList(action);
-                }
+                return Collections.singletonList(action);
+
             }
         }
 

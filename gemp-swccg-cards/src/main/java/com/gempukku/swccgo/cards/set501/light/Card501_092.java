@@ -37,7 +37,7 @@ public class Card501_092 extends AbstractStarfighter {
         super(Side.LIGHT, 3, 3, 2, null, 5, 3, 4, Title.Tydirium, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Stolen Imperial Lambda-class shuttle. Supposedly carried parts and technical crew. Delivered General Solo's crack team of Rebel scouts to the forest moon of Endor.");
-        setGameText("May add 2 pilots and 6 passengers. If an [Endor] scout aboard, immune to attrition and Overwhelmed (and if Chewie or Han, defense value +3). Once per game, may retrieve Fly Casual. Han deploys free aboard.");
+        setGameText("May add 2 pilots and 6 passengers. Han deploys free aboard. Once per game, may retrieve Fly Casual. If an [Endor] scout aboard, immune to attrition (and if Chewie or Han, defense value +3). ");
         addIcons(Icon.ENDOR, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
         addModelType(ModelType.LAMBDA_CLASS_SHUTTLE);
         setPilotCapacity(2);
@@ -67,7 +67,6 @@ public class Card501_092 extends AbstractStarfighter {
         Condition endorScoutHanOrChewie = new HasAboardCondition(self, Filters.and(Icon.ENDOR, Filters.scout, Filters.or(Filters.Chewie, Filters.Han)));
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ImmuneToAttritionModifier(self, endorScoutAboard));
-        modifiers.add(new ImmuneToTitleModifier(self, endorScoutAboard, Title.Overwhelmed));
         modifiers.add(new DefenseValueModifier(self, self, endorScoutHanOrChewie, 3));
         return modifiers;
     }
