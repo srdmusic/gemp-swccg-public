@@ -13,7 +13,6 @@ import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,25 +20,22 @@ import java.util.List;
 /**
  * Set: Set 18
  * Type: Interrupt
- * Subtype: Used Or Starting
- * Title: Neimoidian Advisor (V)
+ * Subtype: Used
+ * Title: Seal Off The Bridge
  */
 public class Card501_008 extends AbstractUsedInterrupt {
     public Card501_008() {
-        super(Side.DARK, 5, "Neimoidian Advisor", Uniqueness.UNIQUE);
-        setVirtualSuffix(true);
-        setLore("'We must move quickly to disrupt all communication down there.'");
+        super(Side.DARK, 5, "Seal Off The Bridge", Uniqueness.UNIQUE);
         setGameText("Use 3 Force to take a Neimoidian or an Effect of any kind into hand from Reserve Deck; reshuffle. OR Deploy Blockade Flagship: Bridge from Reserve Deck; reshuffle.");
-        addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
-        setTestingText("Neimoidian Advisor (V)");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
+        setTestingText("Seal Off The Bridge");
     }
-
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.NEIMOIDIAN_ADVISOR_V__UPLOAD_CARD;
+        GameTextActionId gameTextActionId = GameTextActionId.SEAL_OFF_THE_BRIDGE__UPLOAD_CARD;
 
         // Check condition(s)
         if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)
@@ -64,7 +60,7 @@ public class Card501_008 extends AbstractUsedInterrupt {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.NEIMOIDIAN_ADVISOR_V__DOWNLOAD_BRIDGE;
+        gameTextActionId = GameTextActionId.SEAL_OFF_THE_BRIDGE__DOWNLOAD_BRIDGE;
 
         // Check condition(s)
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.BlockadeFlagshipBridge)) {

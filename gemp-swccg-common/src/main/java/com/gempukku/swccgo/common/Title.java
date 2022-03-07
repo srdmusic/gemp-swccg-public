@@ -68,6 +68,7 @@ public interface Title {
     String Asteroids_Do_Not_Concern_Me = "Asteroids Do Not Concern Me";
     String Astromech_Shortage = "Astromech Shortage";
     String AT_AT_Cannon = "AT-AT Cannon";
+    String At_Last_The_Jedi_Are_No_More = "At Last The Jedi Are No More";
     String At_Last_We_Will_Have_Revenge = "At Last We Will Have Revenge";
     String At_Peace = "At Peace";
     String AT_ST_Dual_Cannon = "AT-ST Dual Cannon";

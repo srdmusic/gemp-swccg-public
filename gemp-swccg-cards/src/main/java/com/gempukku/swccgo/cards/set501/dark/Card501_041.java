@@ -48,7 +48,7 @@ public class Card501_041 extends AbstractUsedOrLostInterrupt {
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
                 action.setText("Add "+num+" to total battle destiny");
                 // Choose target(s)
-                action.allowResponses(new RespondablePlayCardEffect(action) {
+                action.allowResponses("Add "+num+" to total battle destiny", new RespondablePlayCardEffect(action) {
                     @Override
                     protected void performActionResults(Action targetingAction) {
                         action.appendEffect(new ModifyTotalBattleDestinyEffect(action, playerId, num));
@@ -78,12 +78,11 @@ public class Card501_041 extends AbstractUsedOrLostInterrupt {
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
                 action.setText("Prevent Interrupts and weapons");
-                action.setActionMsg("Prevent opponent from firing weapons and playing Interrupts unless they are immune to Sense for remainder of battle");
 
                 action.appendUsage(
                         new OncePerGameEffect(action));
 
-                action.allowResponses(new RespondablePlayCardEffect(action) {
+                action.allowResponses("Prevent opponent from firing weapons and playing Interrupts unless they are immune to Sense for remainder of battle", new RespondablePlayCardEffect(action) {
                     @Override
                     protected void performActionResults(Action targetingAction) {
                         action.appendEffect(

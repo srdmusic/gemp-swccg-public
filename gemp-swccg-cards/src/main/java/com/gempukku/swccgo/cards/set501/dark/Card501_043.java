@@ -30,7 +30,6 @@ public class Card501_043 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Ni Chuba Na??", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("'Your buddy here was about to be turned into orange goo. He picked a fight with a Dug. An especially dangerous Dug called Sebulba.'");
-        setGameText("Deploy on table. Once per turn may use 1 Force to look through opponent's Lost Pile and place all docking bays you find there out of play. Once per game may deploy Sebulba from Reserve Deck; reshuffle. (Immune to Alter.)");
         setGameText("Deploy on table. Once per game, may deploy Sebulba from Reserve Deck; reshuffle. Once per turn, may deploy Malastare or Podrace Arena from Reserve Deck; reshuffle. While present with Sebulba, Jar Jar’s game text is canceled. [Immune to Alter.]");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);

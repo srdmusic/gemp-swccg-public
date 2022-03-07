@@ -59,7 +59,8 @@ public class Card501_038 extends AbstractUsedOrLostInterrupt {
             action.allowResponses(new RespondablePlayCardEffect(action) {
                 @Override
                 protected void performActionResults(Action targetingAction) {
-                    action.appendEffect(new ExchangeCardFromLostPileWithStackedCardEffect(action, opponent, Filters.any, Filters.Thrawns_Art_Collection, Filters.any, true));
+                    action.appendEffect(
+                            new ExchangeCardFromLostPileWithStackedCardEffect(action, opponent, Filters.any, Filters.Thrawns_Art_Collection, Filters.any, true));
                 }
             });
             actions.add(action);
@@ -93,7 +94,7 @@ public class Card501_038 extends AbstractUsedOrLostInterrupt {
                     action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a Star Destroyer to relocate to " + GameUtils.getCardLink(battleLocation), Filters.and(Filters.your(self), Filters.Star_Destroyer, Filters.canBeRelocatedToLocation(battleLocation, true, 0))) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                            action.allowResponses(new RespondablePlayCardEffect(action) {
+                            action.allowResponses("Relocate "+GameUtils.getCardLink(targetedCard)+" to "+GameUtils.getCardLink(battleLocation), new RespondablePlayCardEffect(action) {
                                 @Override
                                 protected void performActionResults(Action targetingAction) {
                                     PhysicalCard starDestroyer = action.getPrimaryTargetCard(targetGroupId);

@@ -2,18 +2,23 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,10 +33,9 @@ import java.util.List;
 public class Card501_040 extends AbstractUsedOrLostInterrupt {
     public Card501_040() {
         super(Side.DARK, 4, "Understand Art, Understand A Species", Uniqueness.UNIQUE);
-        setGameText("USED: Target a character in battle. Target and characters with a shared characteristic as target are power and forfeit -1. LOST: Once per game, during battle, If you just revealed a character as 'artwork' add one battle destiny (two if its species is participating in battle).");
+        setGameText("USED: Target a character in battle. Target and characters that share a characteristic with target are power and forfeit -1. LOST: Once per game, during battle, if you just revealed a character as 'artwork,' add one battle destiny (two if its species is participating in battle).");
         addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("Understand Art, Understand A Species");
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -40,22 +44,45 @@ public class Card501_040 extends AbstractUsedOrLostInterrupt {
         final String opponent = game.getOpponent(playerId);
 
         // Check condition(s)
-        if (GameConditions.canSpot(game, self, Filters.and(Filters.Thrawns_Art_Collection, Filters.hasStacked(Filters.any)))
-                && GameConditions.isDuringBattle(game)) {
+        if (GameConditions.isDuringBattle(game)
+                && GameConditions.canTarget(game, self, Filters.and(Filters.character, Filters.participatingInBattle))) {
 
-            final int num = Filters.countStacked(game, Filters.stackedOn(self, Filters.Thrawns_Art_Collection));
-            if (num>0) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-                action.setText("Add "+num+" to total battle destiny");
-                // Choose target(s)
-                action.allowResponses(new RespondablePlayCardEffect(action) {
-                    @Override
-                    protected void performActionResults(Action targetingAction) {
-                        action.appendEffect(new ModifyTotalBattleDestinyEffect(action, playerId, num));
-                    }
-                });
-                actions.add(action);
-            }
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Reduce power and forfeit");
+            // Choose target(s)
+            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a character in battle", Filters.and(Filters.character, Filters.participatingInBattle)) {
+                @Override
+                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                    action.allowResponses("Reduce power and forfeit of "+GameUtils.getCardLink(targetedCard)+" and characters that share a characteristic",new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+
+                            Filter toReduce = Filters.none;
+                            for(Keyword keyword: Keyword.values()) {
+                                if (keyword.isCharacteristic()
+                                        && game.getModifiersQuerying().hasKeyword(game.getGameState(), finalTarget, keyword)) {
+                                    toReduce = Filters.or(toReduce, Filters.characteristic(keyword));
+                                }
+                            }
+                            for(Species species: Species.values()) {
+                                if (game.getModifiersQuerying().isSpecies(game.getGameState(), finalTarget, species)) {
+                                    toReduce = Filters.or(toReduce, Filters.species(species));
+                                }
+                            }
+
+                            Collection<PhysicalCard> characters = Filters.filterActive(game, self, Filters.and(Filters.canBeTargetedBy(self), Filters.character, Filters.participatingInBattle, toReduce));
+                            action.appendEffect(
+                                    new AddUntilEndOfBattleModifierEffect(action, new PowerModifier(self, Filters.in(characters), -1), "Makes "+GameUtils.getAppendedNames(characters)+" power -1"));
+                            action.appendEffect(
+                                    new AddUntilEndOfBattleModifierEffect(action, new ForfeitModifier(self, Filters.in(characters), -1), "Makes "+GameUtils.getAppendedNames(characters)+" forfeit -1"));
+                        }
+                    });
+                }
+            });
+
+            actions.add(action);
+
         }
 
         return actions;
@@ -63,40 +90,40 @@ public class Card501_040 extends AbstractUsedOrLostInterrupt {
 
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
-        GameTextActionId gameTextActionId = GameTextActionId.THRAWN_PINCER__RELOCATE_STAR_DESTROYER;
+        GameTextActionId gameTextActionId = GameTextActionId.UNDERSTAND_ART_UNDERSTAND_A_SPECIES__ADD_BATTLE_DESTINY;
 
         if (effectResult.getType() == EffectResult.Type.ARTWORK_CARD_REVEALED
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.isDuringBattleAt(game, Filters.system)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.Star_Destroyer, Filters.canBeTargetedBy(self), Filters.canBeRelocatedToLocation(Filters.battleLocation, true, 0)))) {
+                && GameConditions.isDuringBattle(game)
+                && GameConditions.canAddBattleDestinyDraws(game, self)) {
 
             PhysicalCard artwork = ((ArtworkCardRevealedResult) effectResult).getCard();
 
             if (artwork != null
-                    && Filters.starship.accepts(game, artwork)) {
+                    && Filters.character.accepts(game, artwork)) {
 
-                final PhysicalCard battleLocation = Filters.findFirstFromTopLocationsOnTable(game, Filters.battleLocation);
-                if (battleLocation != null) {
-                    final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
-                    action.setText("Relocate Star Destroyer");
+                final int destiniesToAdd = ((artwork.getBlueprint().hasSpeciesAttribute()
+                        && artwork.getBlueprint().getSpecies() != null
+                        && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.character, Filters.species(artwork.getBlueprint().getSpecies()))))?2:1);
 
-                    action.appendUsage(
-                            new OncePerGameEffect(action));
-                    action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a Star Destroyer to relocate to " + GameUtils.getCardLink(battleLocation), Filters.and(Filters.your(self), Filters.Star_Destroyer, Filters.canBeRelocatedToLocation(battleLocation, true, 0))) {
-                        @Override
-                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                            action.allowResponses(new RespondablePlayCardEffect(action) {
-                                @Override
-                                protected void performActionResults(Action targetingAction) {
-                                    PhysicalCard starDestroyer = action.getPrimaryTargetCard(targetGroupId);
-                                    action.appendEffect(new RelocateBetweenLocationsEffect(action, starDestroyer, battleLocation));
-                                }
-                            });
-                        }
-                    });
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+                if (destiniesToAdd==1)
+                    action.setText("Add one battle destiny");
+                else
+                    action.setText("Add "+destiniesToAdd+" battle destinies");
 
-                    return Collections.singletonList(action);
-                }
+                action.appendUsage(
+                        new OncePerGameEffect(action));
+
+                action.allowResponses("Add "+destiniesToAdd+" battle "+(destiniesToAdd==1?"destiny":"destinies"), new RespondablePlayCardEffect(action) {
+                    @Override
+                    protected void performActionResults(Action targetingAction) {
+                        action.appendEffect(
+                                new AddBattleDestinyEffect(action, destiniesToAdd, playerId));
+                    }
+                });
+
+                return Collections.singletonList(action);
             }
         }
 

@@ -1443,6 +1443,10 @@ public class SwccgGameMediator {
                 // Quiet Mining Colony
                 objectiveLabel = "QMC";
             }
+            if (Filters.or(Filters.At_Last_The_Jedi_Are_No_More, Filters.Revenge_Of_The_Sith).accepts(_swccgoGame, objective)) {
+                // Revenge Of The Sith
+                objectiveLabel = "Revenge Of The Sith";
+            }
             if (Filters.or(Filters.Ralltiir_Operations, Filters.In_The_Hands_Of_The_Empire).accepts(_swccgoGame, objective)) {
                 // Ralltiir Operations
                 objectiveLabel = "ROps";

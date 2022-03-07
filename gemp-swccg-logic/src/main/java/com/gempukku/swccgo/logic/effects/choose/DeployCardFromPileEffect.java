@@ -50,6 +50,25 @@ public class DeployCardFromPileEffect extends AbstractSubActionEffect {
      * @param specialLocationConditions a filter for special conditions that deployed location must satisfy, or null
      * @param forFree true if deploying for free, otherwise false
      * @param changeInCost change in amount of Force (can be positive or negative) required
+     * @param changeInCostCardFilter the card filter for cards that should have the changeInCost applied
+     * @param forFreeCardFilter the card filter for cards that deploy for free, or null
+     * @param asReact true if deploying as a react, otherwise false
+     * @param reshuffle true if pile is reshuffled, otherwise false
+     */
+    protected DeployCardFromPileEffect(Action action, Zone zone, Filter cardFilter, Filter ignoreTargetFilterCardFilter, Filter specialLocationConditions, boolean forFree, float changeInCost, Filter changeInCostCardFilter, Filter forFreeCardFilter, boolean asReact, boolean reshuffle) {
+        this(action, action.getPerformingPlayer(), zone, cardFilter, null, ignoreTargetFilterCardFilter, null, specialLocationConditions, forFree, forFreeCardFilter, changeInCost, changeInCostCardFilter, null, null, asReact, reshuffle);
+    }
+
+    /**
+     * Creates an effect that causes the player performing the action to choose and deploy a card accepted by the card filter
+     * from the specified card pile.
+     * @param action the action performing this effect
+     * @param zone the card pile
+     * @param cardFilter the card filter
+     * @param ignoreTargetFilterCardFilter the card filter for cards that ignore the target filter
+     * @param specialLocationConditions a filter for special conditions that deployed location must satisfy, or null
+     * @param forFree true if deploying for free, otherwise false
+     * @param changeInCost change in amount of Force (can be positive or negative) required
      * @param forFreeCardFilter the card filter for cards that deploy for free, or null
      * @param asReact true if deploying as a react, otherwise false
      * @param reshuffle true if pile is reshuffled, otherwise false

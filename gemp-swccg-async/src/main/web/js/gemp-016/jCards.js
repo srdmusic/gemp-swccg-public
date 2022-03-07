@@ -3507,6 +3507,7 @@ var fixedImages = {
 "501_93":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/lasergate.gif",
 "501_94":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/masterfulmove&endoroccupation.gif",
 "501_95":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/revengeofthesith.png",
+"501_95_BACK":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/takeyourfathersplace.gif",
 "501_96":"https://res.starwarsccg.org/cards/Premiere-Dark/large/ihaveyounow.gif",
 "501_97":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/nomatchforasith.gif",
 "501_98":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/tragedyofplagueis.png",
@@ -3516,6 +3517,7 @@ var fixedImages = {
 "501_101":"https://res.starwarsccg.org/cards/Hoth-Dark/large/captainlennox.gif",
 "501_102":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/localuprising.gif",
 "501_102_BACK":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/liberation.gif",
+"501_103":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/bb9e.png",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",

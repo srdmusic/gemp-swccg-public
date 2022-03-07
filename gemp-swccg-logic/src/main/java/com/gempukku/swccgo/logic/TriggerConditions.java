@@ -2859,6 +2859,24 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a battle was just canceled by the specified player with a source matching the given filter.
+     * @param game the game
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @param canceledByFilter the filter for the card that canceled the battle
+     * @return true or false
+     */
+    public static boolean battleCanceledBy(SwccgGame game, EffectResult effectResult, String playerId, Filterable canceledByFilter) {
+        if (effectResult.getType() == EffectResult.Type.BATTLE_CANCELED) {
+            CancelBattleResult cancelBattleResult = (CancelBattleResult) effectResult;
+            return playerId.equals(cancelBattleResult.getPerformingPlayerId())
+                    && cancelBattleResult.canceledBy() != null
+                    && Filters.and(canceledByFilter).accepts(game.getGameState(), game.getModifiersQuerying(), cancelBattleResult.canceledBy());
+        }
+        return false;
+    }
+
+    /**
      * Determines if a battle is ending.
      * @param game the game
      * @param effectResult the effect result

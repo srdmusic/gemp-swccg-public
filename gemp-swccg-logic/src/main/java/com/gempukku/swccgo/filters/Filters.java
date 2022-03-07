@@ -413,6 +413,25 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that have the specified characteristic.
+     *
+     * @param characteristic the characteristic
+     * @return Filter
+     */
+    public static Filter characteristic(final Keyword characteristic) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                return characteristic.isCharacteristic() && modifiersQuerying.hasKeyword(gameState, physicalCard, characteristic);
+            }
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
+                return characteristic.isCharacteristic() && builtInCardBlueprint.hasKeyword(characteristic);
+            }
+        };
+    }
+
+    /**
      * Filter that accepts cards that have the specified icon.
      *
      * @param icon the icon
@@ -17254,6 +17273,7 @@ public class Filters {
     public static final Filter Astromech_Shortage = Filters.title(Title.Astromech_Shortage);
     public static final Filter AT_AT = Filters.modelType(ModelType.AT_AT);
     public static final Filter AT_AT_Cannon = Filters.keyword(Keyword.AT_AT_CANNON);
+    public static final Filter At_Last_The_Jedi_Are_No_More = Filters.title(Title.At_Last_The_Jedi_Are_No_More);
     public static final Filter At_Last_We_Will_Have_Revenge = Filters.title(Title.At_Last_We_Will_Have_Revenge);
     public static final Filter At_Peace = Filters.title(Title.At_Peace);
     public static final Filter AT_ST = Filters.modelType(ModelType.AT_ST);
@@ -18117,7 +18137,6 @@ public class Filters {
     public static final Filter Maz = Filters.persona(Persona.MAZ);
     public static final Filter Mazs_Castle = Filters.title(Title.Mazs_Castle);
     public static final Filter Mazs_Castle_Location = Filters.keyword(Keyword.MAZS_CASTLE_LOCATION);
-    //public static final Filter Mazs_Castle_Site= Filters.and(Filters.keyword(Keyword.MAZS_CASTLE_LOCATION), Filters.site);
     public static final Filter McQuarrie = Filters.persona(Persona.MCQUARRIE);
     public static final Filter Mechanical_Failure = Filters.title(Title.Mechanical_Failure);
     public static final Filter medical_droid = Filters.modelType(ModelType.MEDICAL);
@@ -18398,6 +18417,7 @@ public class Filters {
     public static final Filter Restricted_Deployment = Filters.title(Title.Restricted_Deployment);
     public static final Filter Retract_The_Bridge = Filters.title(Title.Retract_The_Bridge);
     public static final Filter Return_Of_A_Jedi = Filters.title(Title.Return_Of_A_Jedi);
+    public static final Filter Revenge_Of_The_Sith = Filters.title(Title.Revenge_Of_The_Sith);
     public static final Filter Revolution = Filters.title(Title.Revolution);
     public static final Filter Rex = Filters.title(Title.Rex);
     public static final Filter Rey = Filters.persona(Persona.REY);

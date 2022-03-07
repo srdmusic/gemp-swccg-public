@@ -36,7 +36,7 @@ public class Card501_028 extends AbstractImperial {
         setLore("Female miner. Leader.");
         setGameText("If you just captured a Rebel here (or stacked a card as 'artwork') you may take a card without ability into hand from Reserve Deck; reshuffle. If you just lost a battle here, Pryce may not be forfeited unless 'hit' or no other Imperials present. Immune to attrition < 4.");
         addKeywords(Keyword.FEMALE, Keyword.MINER, Keyword.LEADER);
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("Arihnda Pryce");
     }
 
