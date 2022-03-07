@@ -83,7 +83,7 @@ public class Card501_039 extends AbstractUsedOrLostInterrupt {
                 action.appendTargeting(new TargetAllCardsAtSameLocationEffect(action, playerId, "Prevent opponent's cards from moving", Filters.and(Filters.opponents(self), Filters.participatingInBattle)) {
                     @Override
                     protected void cardsTargeted(int targetGroupId, final Collection<PhysicalCard> targetedCards) {
-                        action.allowResponses(new RespondablePlayCardEffect(action) {
+                        action.allowResponses("Prevent "+GameUtils.getAppendedNames(targetedCards)+" from moving", new RespondablePlayCardEffect(action) {
                             @Override
                             protected void performActionResults(Action targetingAction) {
                                 action.appendEffect(

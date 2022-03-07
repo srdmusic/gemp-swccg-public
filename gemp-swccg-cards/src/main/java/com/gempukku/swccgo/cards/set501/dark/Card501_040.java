@@ -53,7 +53,7 @@ public class Card501_040 extends AbstractUsedOrLostInterrupt {
             action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a character in battle", Filters.and(Filters.character, Filters.participatingInBattle)) {
                 @Override
                 protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                    action.allowResponses(new RespondablePlayCardEffect(action) {
+                    action.allowResponses("Reduce power and forfeit of "+GameUtils.getCardLink(targetedCard)+" and characters that share a characteristic",new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
@@ -102,21 +102,20 @@ public class Card501_040 extends AbstractUsedOrLostInterrupt {
             if (artwork != null
                     && Filters.character.accepts(game, artwork)) {
 
-
                 final int destiniesToAdd = ((artwork.getBlueprint().hasSpeciesAttribute()
                         && artwork.getBlueprint().getSpecies() != null
                         && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.character, Filters.species(artwork.getBlueprint().getSpecies()))))?2:1);
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
                 if (destiniesToAdd==1)
-                    action.setText("Add 1 battle destiny");
+                    action.setText("Add one battle destiny");
                 else
                     action.setText("Add "+destiniesToAdd+" battle destinies");
 
                 action.appendUsage(
                         new OncePerGameEffect(action));
 
-                action.allowResponses(new RespondablePlayCardEffect(action) {
+                action.allowResponses("Add "+destiniesToAdd+" battle "+(destiniesToAdd==1?"destiny":"destinies"), new RespondablePlayCardEffect(action) {
                     @Override
                     protected void performActionResults(Action targetingAction) {
                         action.appendEffect(

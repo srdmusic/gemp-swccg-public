@@ -60,7 +60,7 @@ public class Card501_042 extends AbstractLostInterrupt {
                     action.appendCost(
                             new PlaceCardInUsedPileFromTableEffect(action, targetedCard));
                     // Allow response(s)
-                    action.allowResponses(
+                    action.allowResponses("Cancel all remaining battle damage and attrition",
                             new RespondablePlayCardEffect(action) {
                                 @Override
                                 protected void performActionResults(Action targetingAction) {
@@ -90,7 +90,7 @@ public class Card501_042 extends AbstractLostInterrupt {
                 @Override
                 protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                     // Allow response(s)
-                    action.allowResponses(
+                    action.allowResponses("Take "+GameUtils.getCardLink(targetedCard)+" to hand and put cards on it in owner's Used Pile",
                             new RespondablePlayCardEffect(action) {
                                 @Override
                                 protected void performActionResults(Action targetingAction) {
