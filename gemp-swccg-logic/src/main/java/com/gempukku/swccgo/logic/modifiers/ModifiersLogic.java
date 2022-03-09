@@ -3395,7 +3395,12 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             }
         }
         List<List<PhysicalCard>> allPermutations = new ArrayList<List<PhysicalCard>>();
-        generateCardListPermutations(allPermutations, new ArrayList<PhysicalCard>(), new ArrayList<PhysicalCard>(expandedCardList));
+        //this next line breaks the server when expandedCardList.size() >= 10
+        //generateCardListPermutations(allPermutations, new ArrayList<PhysicalCard>(), new ArrayList<PhysicalCard>(expandedCardList));
+        //I added this next line as a temporary fix to only add the expandedCardList instead of recursively generating all permutations of the list
+        allPermutations.add(expandedCardList);
+        //I don't actually know what is lost by making this change. From my testing, Beggar and R'tic H'weei they work as expected
+
         return allPermutations;
     }
 
