@@ -3396,6 +3396,13 @@ var fixedImages = {
 "217_50":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/theforceisstronginmyfamily.png",
 "217_51":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/theriseofskywalker.png",
 "217_52":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/yourthoughtsdwellonyourmother.png",
+"218_1":"https://res.starwarsccg.org/cards/Virtual18-Dark/hires/imperialcommandinrange.png",
+"218_2":"https://res.starwarsccg.org/cards/Virtual18-Dark/hires/sealoffthebridge.png",
+"218_3":"https://res.starwarsccg.org/cards/Virtual18-Light/hires/masterquigonwithlightsaber.png",
+"218_4":"https://res.starwarsccg.org/cards/Virtual18-Light/hires/masterwindu.png",
+"218_5":"https://res.starwarsccg.org/cards/Virtual18-Light/hires/rebelleadershipcriticalerrorrevealed.png",
+"218_6":"https://res.starwarsccg.org/cards/Virtual18-Light/hires/takeaseatyoungskywalker.png",
+
 
 "301_1":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/ahsokatanowithlightsabers.gif",
 "301_2":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/cityintheclouds.gif",

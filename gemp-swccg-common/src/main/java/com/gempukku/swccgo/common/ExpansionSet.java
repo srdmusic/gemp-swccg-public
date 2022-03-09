@@ -51,6 +51,7 @@ public enum ExpansionSet {
     SET_15("Set 15", 215),
     SET_16("Set 16", 216),
     SET_17("Set 17", 217),
+    SET_18("Set 18", 218),
 
     DEMO_DECK("Virtual Premium Set", 301),
 
