@@ -21,12 +21,12 @@ import java.util.List;
 /**
  * Set: Block 6
  * Type: Interrupt
- * Subtype: Lost
+ * Subtype: Used or Starting
  * Title: Don't Underestimate Our Chances (V)
  */
 public class Card601_258 extends AbstractUsedOrStartingInterrupt {
     public Card601_258() {
-        super(Side.LIGHT, 4, "Don't Underestimate Our Chances");
+        super(Side.LIGHT, 4, Title.Dont_Underestimate_Our_Chances);
         setVirtualSuffix(true);
         setLore("'Stand-by alert. Death Star approaching. Estimated time to firing range, fifteen minutes.'");
         setGameText("USED: Initiate a battle for free. " +

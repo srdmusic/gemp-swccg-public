@@ -1,74 +1,115 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractCombatVehicle;
+import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
+import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.HasPilotingCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.game.state.WeaponFiringState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.ResetForfeitEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.HitResult;
+import com.gempukku.swccgo.logic.timing.GuiUtils;
+import com.gempukku.swccgo.logic.timing.results.EnhanceForceDrainResult;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 17
- * Type: Vehicle
- * Subtype: Combat
- * Title: Blizzard 1 (V)
+ * Set: Set 18
+ * Type: Interrupt
+ * Subtype: Used or Lost
+ * Title: Lightsaber Deficiency (V)
  */
-public class Card501_007 extends AbstractCombatVehicle {
+public class Card501_007 extends AbstractUsedOrLostInterrupt {
     public Card501_007() {
-        super(Side.DARK, 2, 6, 7, 7, null, 1, 7, Title.Blizzard_1, Uniqueness.UNIQUE);
+        super(Side.DARK, 5, "Lightsaber Deficiency");
         setVirtualSuffix(true);
-        setLore("General Veers' AT-AT. Enclosed. Equipped with highly sophisticated communications gear. Employs an experimental targeting system.");
-        setGameText("May add 2 pilots and 8 passengers. While Veers piloting: armor +1, draws one battle destiny if unable to otherwise, and targets Blizzard 1 'hits' here are forfeit = 0. Immune to Under Attack and attrition < 4.");
-        addModelType(ModelType.AT_AT);
-        addIcons(Icon.HOTH, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_17);
-        addKeywords(Keyword.ENCLOSED);
-        setPilotCapacity(2);
-        setPassengerCapacity(8);
-        addPersona(Persona.BLIZZARD_1);
-        setMatchingPilotFilter(Filters.Veers);
-        setTestingText("Blizzard 1 (V)");
+        setLore("'Ah...Uh...'");
+        setGameText("USED: If your character of ability < 5 was just targeted by opponent's lightsaber, subtract 1 from each weapon destiny draw. LOST: Lose 1 Force to cancel Clash Of Sabers (unless canceling Presence Of The Force) or Blaster Proficiency (if targeting a lightsaber or while swinging a lightsaber).");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
+        setTestingText("Lightsaber Deficiency (V)");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ArmorModifier(self, self, new HasPilotingCondition(self, Filters.Veers), 1));
-        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, new HasPilotingCondition(self, Filters.Veers), 1));
-        modifiers.add(new ImmuneToTitleModifier(self, Title.Under_Attack));
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
-        return modifiers;
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
+        // Check condition(s)
+        if (GameConditions.canTargetToCancel(game, self, Filters.Clash_Of_Sabers)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Clash_Of_Sabers, Title.Clash_Of_Sabers);
+            actions.add(action);
+        }
+        if (GameConditions.canTargetToCancel(game, self, Filters.Blaster_Proficiency)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Blaster_Proficiency, Title.Blaster_Proficiency);
+            actions.add(action);
+        }
+        return actions;
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(String playerId, SwccgGame game, Effect effect, PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
 
-        // targets Blizzard 1 hits here are forfeit = 0
+        if (TriggerConditions.isTargetedByWeapon(game, effect, Filters.and(Filters.your(self), Filters.character, Filters.abilityLessThan(5)), Filters.lightsaber)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Subtract 1 from each weapon destiny draw");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new ModifyEachWeaponDestinyBeforeDrawingDestinyEffect(action, -1));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
 
         // Check condition(s)
-        if (GameConditions.hasPiloting(game, self, Filters.Veers)
-                && TriggerConditions.justHitBy(game, effectResult, Filters.here(self), self)) {
-            PhysicalCard cardHit = ((HitResult) effectResult).getCardHit();
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.Clash_Of_Sabers)
+                && !TriggerConditions.isPlayingCardTargeting(game, effect, Filters.Clash_Of_Sabers, TargetingReason.TO_BE_CANCELED, Filters.Presence_Of_The_Force)
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Reset " + GameUtils.getFullName(cardHit) + "'s forfeit to 0");
-            // Perform result(s)
-            action.appendEffect(
-                    new ResetForfeitEffect(action, cardHit, 0));
-            return Collections.singletonList(action);
+            PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            action.appendCost(new LoseForceEffect(action, playerId, 1, true));
+            actions.add(action);
         }
-        return null;
+        // Check condition(s)
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.Blaster_Proficiency)
+                && (TriggerConditions.isPlayingCardTargeting(game, effect, Filters.Blaster_Proficiency, Filters.or(Filters.lightsaber, Filters.hasPermanentWeapon(Filters.lightsaber)))
+                    || GameConditions.isDuringWeaponFiringAtTarget(game, Filters.lightsaber, Filters.any))
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
+
+            PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            action.appendCost(new LoseForceEffect(action, playerId, 1, true));
+            actions.add(action);
+        }
+
+
+        return actions;
     }
 }

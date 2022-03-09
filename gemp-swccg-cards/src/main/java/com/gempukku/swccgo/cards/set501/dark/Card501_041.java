@@ -1,79 +1,104 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
-import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeFiredModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotPlayUnlessImmuneToSpecificTitleModifier;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
+import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Set: Set 17
- * Type: Effect
- * Title: Close The Blast Doors!
+ * Set: Set 18
+ * Type: Interrupt
+ * Subtype: Used or Lost
+ * Title: History, Philosophy, And Art
  */
-public class Card501_041 extends AbstractNormalEffect {
+public class Card501_041 extends AbstractUsedOrLostInterrupt {
     public Card501_041() {
-        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Close The Blast Doors!", Uniqueness.UNIQUE);
-        setLore("Imperial stormtroopers adopt strict security measures. Excellent communications and sheer numbers can hinder Rebel movement across entire territories.");
-        setGameText("Deploy on table. Rebel Barrier is a Lost Interrupt. If opponent just canceled a battle (or just moved a character, starship, or vehicle away from a battle), opponent loses 1 Force. If Landing Claw just lost, place it out of play.");
-        addIcons(Icon.VIRTUAL_SET_17);
-        setTestingText("Close The Blast Doors!");
+        super(Side.DARK, 5, "History, Philosophy, And Art", Uniqueness.UNIQUE);
+        setGameText("USED: During battle, add 1 to your total battle destiny for each card stacked on Thrawn's Art Collection. LOST: Once per game, if you just revealed an Interrupt as 'artwork' opponent may not play non-[Immune to Sense] Interrupts or fire weapons for remainder of battle.");
+        addIcons(Icon.VIRTUAL_SET_18);
+        setTestingText("History, Philosophy, And Art");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new LostInterruptModifier(self, Filters.Rebel_Barrier));
-        return modifiers;
-    }
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
 
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
+        // Check condition(s)
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.Thrawns_Art_Collection, Filters.hasStacked(Filters.any)))
+                && GameConditions.isDuringBattle(game)) {
 
-        Filter filter = Filters.and(Filters.canBeTargetedBy(self), Filters.or(Filters.character, Filters.starship, Filters.vehicle));
-
-        if (TriggerConditions.battleCanceledAt(game, effectResult, game.getOpponent(self.getOwner()), Filters.any)
-                || (GameConditions.isDuringBattle(game)
-                && TriggerConditions.moved(game, effectResult, game.getOpponent(self.getOwner()), filter)
-                && TriggerConditions.movedFromLocation(game, effectResult, filter, game.getGameState().getBattleLocation()))) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Opponent loses 1 Force");
-            action.appendEffect(new LoseForceEffect(action, game.getOpponent(self.getOwner()), 1));
-
-            actions.add(action);
-        }
-
-        if (TriggerConditions.justLost(game, effectResult, Filters.Landing_Claw)) {
-            final PhysicalCard landingClaw = ((LostFromTableResult) effectResult).getCard();
-
-            if (landingClaw != null) {
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                action.setText("Place " + GameUtils.getCardLink(landingClaw) + " out of play");
-
-                // Perform result(s)
-                action.appendEffect(
-                        new PlaceCardOutOfPlayFromOffTableEffect(action, landingClaw));
-
+            final int num = Filters.countStacked(game, Filters.stackedOn(self, Filters.Thrawns_Art_Collection));
+            if (num>0) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+                action.setText("Add "+num+" to total battle destiny");
+                // Choose target(s)
+                action.allowResponses("Add "+num+" to total battle destiny", new RespondablePlayCardEffect(action) {
+                    @Override
+                    protected void performActionResults(Action targetingAction) {
+                        action.appendEffect(new ModifyTotalBattleDestinyEffect(action, playerId, num));
+                    }
+                });
                 actions.add(action);
             }
         }
 
         return actions;
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
+        final String opponent = game.getOpponent(playerId);
+
+        GameTextActionId gameTextActionId = GameTextActionId.HISTORY_PHILOSOPHY_AND_ART__STOP_INTERRUPTS_AND_WEAPONS;
+
+        if (effectResult.getType() == EffectResult.Type.ARTWORK_CARD_REVEALED
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.isDuringBattle(game)) {
+
+            PhysicalCard artwork = ((ArtworkCardRevealedResult) effectResult).getCard();
+
+            if (artwork != null
+                    && Filters.Interrupt.accepts(game, artwork)) {
+
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+                action.setText("Prevent Interrupts and weapons");
+
+                action.appendUsage(
+                        new OncePerGameEffect(action));
+
+                action.allowResponses("Prevent opponent from firing weapons and playing Interrupts unless they are immune to Sense for remainder of battle", new RespondablePlayCardEffect(action) {
+                    @Override
+                    protected void performActionResults(Action targetingAction) {
+                        action.appendEffect(
+                                new AddUntilEndOfBattleModifierEffect(action,
+                                        new MayNotPlayUnlessImmuneToSpecificTitleModifier(self, Filters.and(Filters.opponents(self), Filters.Interrupt), Title.Sense), "Prevent opponent from playing Interrupts unless they are immune to Sense"));
+                        action.appendEffect(
+                                new AddUntilEndOfBattleModifierEffect(action,
+                                        new MayNotBeFiredModifier(self, Filters.and(Filters.opponents(playerId), Filters.any)), "Prevents opponent's weapons from being fired")
+                        );
+                    }
+                });
+
+                return Collections.singletonList(action);
+            }
+        }
+
+        return null;
     }
 }

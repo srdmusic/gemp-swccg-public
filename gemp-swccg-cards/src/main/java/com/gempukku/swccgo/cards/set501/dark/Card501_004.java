@@ -1,67 +1,121 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.BlownAwayCondition;
-import com.gempukku.swccgo.cards.conditions.CommencePrimaryIgnitionTargetingCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
+import com.gempukku.swccgo.cards.effects.ConvertLocationByRaisingToTopEffect;
+import com.gempukku.swccgo.cards.effects.DrawsNoMoreThanBattleDestinyEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.ModifyTotalBattleDestinyEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.Action;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Set: Set 17
- * Type: Effect
- * Title: An Effective Demonstration
+ * Set: Set 18
+ * Type: Interrupt
+ * Subtype: Used
+ * Title: Imperial Command & In Range
  */
-public class Card501_004 extends AbstractNormalEffect {
+public class Card501_004 extends AbstractUsedInterrupt {
     public Card501_004() {
-        super(Side.DARK, 2, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "An Effective Demonstration");
-        setLore("");
-        setGameText("Deploy on table. Attempts to 'blow away' Alderaan are +5. If Alderaan has been 'blown away,' adds one [Light Side] icon at Death Star system and opponent's total battle destiny is -1. Once per game, may [upload] Superlaser. [Immune to Alter.]");
-        addIcons(Icon.VIRTUAL_SET_17);
-        addImmuneToCardTitle(Title.Alter);
-        setTestingText("An Effective Demonstration");
+        super(Side.DARK, 4, "Imperial Command & In Range", Uniqueness.UNIQUE);
+        addComboCardTitles(Title.Imperial_Command, "In Range");
+        setGameText("Take an admiral or general into hand from Reserve Deck; reshuffle. OR If your admiral is in battle at a system (or your general is in battle at a site), prevent opponent from drawing more than one battle destiny (your total battle destiny is +1 if a moff in battle). OR Raise your converted location to the top.");
+        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_18);
+        setTestingText("Imperial Command & In Range");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new EpicEventCalculationTotalModifier(self, Filters.Commence_Primary_Ignition, new CommencePrimaryIgnitionTargetingCondition(Filters.Alderaan_system), 5));
-        modifiers.add(new IconModifier(self, Filters.Death_Star_system, new BlownAwayCondition(Filters.title(Title.Alderaan, true)), Icon.LIGHT_FORCE, 1));
-        modifiers.add(new TotalBattleDestinyModifier(self, new BlownAwayCondition(Filters.title(Title.Alderaan, true)), -1, game.getOpponent(self.getOwner())));
-        return modifiers;
-    }
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
-
-        GameTextActionId gameTextActionId = GameTextActionId.AN_EFFECTIVE_DEMONSTRATION__UPLOAD_SUPERLASER;
+        GameTextActionId gameTextActionId = GameTextActionId.IMPERIAL_COMMAND_IN_RANGE__UPLOAD_ADMIRAL_OR_GENERAL;
 
         // Check condition(s)
+        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Take card into hand from Reserve Deck");
+            // Allow response(s)
+            action.allowResponses("Take an admiral or general into hand from Reserve Deck",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.admiral, Filters.general, Filters.grantedMayBeTargetedBy(self)), true));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take Superlaser into hand from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Superlaser, true));
+        // Check condition(s)
+        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.or(Filters.admiral, Filters.grantedMayBeTargetedBy(self)), Filters.at(Filters.system)))
+                || GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.general, Filters.at(Filters.site)))) {
+            final String opponent = game.getOpponent(playerId);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Limit opponent to one battle destiny");
+            // Allow response(s)
+            action.allowResponses("Prevent opponent from drawing more than one battle destiny",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new DrawsNoMoreThanBattleDestinyEffect(action, opponent, 1));
+                            if (GameConditions.isDuringBattleWithParticipant(game, Filters.moff)) {
+                                action.appendEffect(
+                                        new ModifyTotalBattleDestinyEffect(action, playerId, 1));
+                            }
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
+        Filter yourConvertedLocationFilter = Filters.and(Filters.location, Filters.canBeConvertedByRaisingYourLocationToTop(playerId));
+
+        // Check condition(s)
+        if (GameConditions.canTarget(game, self, yourConvertedLocationFilter)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            action.setText("Raise a converted location");
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose location to convert", yourConvertedLocationFilter) {
+                        @Override
+                        protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Convert " + GameUtils.getCardLink(targetedCard),
+                                    new RespondablePlayCardEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new ConvertLocationByRaisingToTopEffect(action, targetedCard, true));
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
             actions.add(action);
         }
         return actions;
     }
 }
-

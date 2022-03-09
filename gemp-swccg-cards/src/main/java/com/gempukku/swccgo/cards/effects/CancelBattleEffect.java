@@ -31,7 +31,7 @@ public class CancelBattleEffect extends PassthruEffect {
                 else
                     game.getGameState().sendMessage(GameUtils.getCardLink(_action.getActionSource()) + " cancels battle at " + GameUtils.getCardLink(battleState.getBattleLocation()));
 
-                game.getActionsEnvironment().emitEffectResult(new CancelBattleResult(_action.getPerformingPlayer(), battleState.getBattleLocation()));
+                game.getActionsEnvironment().emitEffectResult(new CancelBattleResult(_action.getPerformingPlayer(), _action.getActionSource(), battleState.getBattleLocation()));
             }
         }
     }

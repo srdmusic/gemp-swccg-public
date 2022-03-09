@@ -32,6 +32,7 @@ public class Card601_117 extends AbstractNormalEffect {
         setVirtualSuffix(true);
         setLore("Chisa nyooda ishaley. Kun Jabba neguda len Malta.' 'Ikkit ui! Yobbit, yobbiy. Nelan tui ke bada.'");
         setGameText("Deploy on Imperial City.  While your [Reflections II] Objective on table, Scum And Villainy may deploy here and, if a Black Sun agent present, may not be canceled.  Once per turn, may use 1 Force to deploy a non-weapon card with 'Black Sun' or 'Xizor' in lore (except Emperor) from Reserve Deck; reshuffle.");
+        addKeywords(Keyword.DEPLOYS_ON_SITE);
         addIcons(Icon.JABBAS_PALACE, Icon.LEGACY_BLOCK_4);
         setAsLegacy(true);
     }

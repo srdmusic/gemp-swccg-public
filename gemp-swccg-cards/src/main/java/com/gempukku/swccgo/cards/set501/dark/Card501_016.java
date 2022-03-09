@@ -20,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Character
  * Subtype: Republic
  * Title: Lott Dod (V)
@@ -31,11 +31,11 @@ public class Card501_016 extends AbstractRepublic {
         setPolitics(4);
         setLore("Primary Neimoidian senator who represents the Trade Federation in the Galactic Senate. Thwarted attempts by Amidala to end the blockade of Naboo.");
         setGameText("While present at Theed Palace Throne Room, during your deploy phase, may search your Force pile to reveal a [Presence] droid; if you do, may take that card (or another) into hand; reshuffle.");
-        addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
+        addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
         addKeywords(Keyword.SENATOR);
         setSpecies(Species.NEIMOIDIAN);
         addPersona(Persona.LOTT);
-        setTestingText("[Set 18] Lott Dodd (V)");
+        setTestingText("Lott Dodd (V)");
     }
 
     @Override

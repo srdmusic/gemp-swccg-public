@@ -1,60 +1,81 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.ChoiceMadeResult;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
- * Type: Location
- * Subtype: Site
- * Title: Ajan Kloss: Training Course
+ * Set: Set 18
+ * Type: Character
+ * Subtype: Rebel
+ * Title: Kanan, Rebel Infiltrator
  */
-public class Card501_062 extends AbstractSite {
+public class Card501_062 extends AbstractRebel {
     public Card501_062() {
-        super(Side.LIGHT, "Ajan Kloss: Training Course", Title.Ajan_Kloss);
-        setLocationDarkSideGameText("");
-        setLocationLightSideGameText("Deploys only as a starting location. If you just chose You Have That Power, Too on your [Skywalker] Epic Event, [download] My Parents Were Strong.");
-        addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.SKYWALKER, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
-        setTestingText("Ajan Kloss: Training Course");
+        super(Side.LIGHT, 1, 6, 4, 5, 6, "Kanan, Rebel Infiltrator", Uniqueness.UNIQUE);
+        setArmor(5);
+        setLore("Stormtrooper.");
+        setGameText("Unless Luke has been deployed this game, may be targeted instead of Luke by Bring Him Before Me (opponent's [Death Star II] objective, Insignificant Rebellion, and Your Destiny target Kanan instead of Luke for remainder of game). Ezra moves to here for free.");
+        addPersona(Persona.KANAN);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_18);
+        addKeywords(Keyword.STORMTROOPER);
+        setTestingText("Kanan, Rebel Infiltrator");
     }
 
     @Override
-    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self) {
-        // Deploys only as a starting location.
-        return GameConditions.isDuringStartOfGame(game)
-                && game.getModifiersQuerying().getStartingLocation(playerId) == null
-                && game.getGameState().getObjectivePlayed(playerId) == null;
+    protected List<Modifier> getGameTextAlwaysOnModifiers(final SwccgGame game, PhysicalCard self) {
+        final String playerId = self.getOwner();
+        final String opponent = game.getOpponent(playerId);
+        Condition lukeHasBeenDeployedCondition = new Condition() {
+            @Override
+            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
+                return GameConditions.hasDeployedAtLeastXCardsThisGame(game, playerId, 1, Filters.Luke)
+                        || GameConditions.hasDeployedAtLeastXCardsThisGame(game, opponent, 1, Filters.Luke);
+            }
+        };
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new MayBeTargetedByModifier(self, self, new UnlessCondition(lukeHasBeenDeployedCondition), Title.Bring_Him_Before_Me));
+        return modifiers;
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.AJAN_KLOSS_TRAINING_GROUND__DEPLOY_EFFECT;
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.Bring_Him_Before_Me, Filters.not(Filters.hasGameTextModification(ModifyGameTextType.BRING_HIM_BEFORE_ME__TARGETS_KANAN_INSTEAD_OF_LUKE))))
+            && !(GameConditions.hasDeployedAtLeastXCardsThisGame(game, playerId, 1, Filters.Luke)
+                || GameConditions.hasDeployedAtLeastXCardsThisGame(game, game.getOpponent(playerId), 1, Filters.Luke))) {
 
-        if (TriggerConditions.justMadeChoice(game, effectResult, playerOnLightSideOfLocation, Filters.and(Icon.SKYWALKER, Filters.Epic_Event))
-                && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, true, false)
-                && "You Have That Power, Too".equals(((ChoiceMadeResult)effectResult).getChoice())) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setPerformingPlayer(playerOnLightSideOfLocation);
-            action.setText("Deploy My Parents Were Strong");
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+            action.setText("Make Bring Him Before Me target Kanan");
+            action.setActionMsg("Make Insignificant Rebellion, Your Destiny, and opponent's [Death Star II] objective target Kanan instead of Luke for remainder of game");
+            // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.title("My Parents Were Strong"), GameConditions.isDuringStartOfGame(game), !GameConditions.isDuringStartOfGame(game)));
+                    new AddUntilEndOfGameModifierEffect(action, new ModifyGameTextModifier(self,
+                            Filters.or(Filters.and(Filters.opponents(self), Icon.DEATH_STAR_II, Filters.Objective), Filters.Insignificant_Rebellion, Filters.Your_Destiny), ModifyGameTextType.BRING_HIM_BEFORE_ME__TARGETS_KANAN_INSTEAD_OF_LUKE),
+                            "Makes Insignificant Rebellion, Your Destiny, and opponent's [Death Star II] objective target Kanan instead of Luke for remainder of game"));
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new MovesFreeToLocationModifier(self, Filters.Ezra, Filters.here(self)));
+        return modifiers;
     }
 }

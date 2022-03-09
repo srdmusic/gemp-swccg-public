@@ -22,6 +22,7 @@ public class Card601_257 extends AbstractSite {
         super(Side.LIGHT, "Dantooine: Base - Operations Center", Title.Dantooine);
         setLocationDarkSideGameText("While More Dangerous Than You Realize on table, you must control three Dantooine locations to flip it back, and Dantooine system gains one [Dark Side Force].");
         setLocationLightSideGameText("Your T-47s may move as a 'react' to Dantooine sites. Immune to Revolution.");
+        addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.LEGACY_BLOCK_4);
         setAsLegacy(true);

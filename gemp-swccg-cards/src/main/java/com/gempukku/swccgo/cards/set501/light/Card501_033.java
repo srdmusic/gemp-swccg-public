@@ -9,13 +9,16 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.FireWeaponAction;
 import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
+import com.gempukku.swccgo.logic.modifiers.MayFireRepeatedlyModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Character
  * Subtype: Alien
  * Title: Cara Dune With Heavy Blaster Rifle
@@ -27,9 +30,8 @@ public class Card501_033 extends AbstractAlien {
         setGameText("Permanent weapon is •Cara's Heavy Blaster Rifle (may target a character for free; draw destiny; target hit and cumulatively forfeit -3 if destiny +1 > defense value; may fire repeatedly for 2 Force each time).");
         addKeywords(Keyword.FEMALE, Keyword.GAMBLER, Keyword.TROOPER);
         setSpecies(Species.ALDERAANIAN);
-        addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_17);
-        setTestingText("[Set 18] Cara Dune With Heavy Blaster Rifle");
-        hideFromDeckBuilder();
+        addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_18);
+        setTestingText("Cara Dune With Heavy Blaster Rifle");
     }
 
     @Override
@@ -50,5 +52,12 @@ public class Card501_033 extends AbstractAlien {
         };
         permanentWeapon.addKeyword(Keyword.BLASTER_RIFLE);
         return permanentWeapon;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new MayFireRepeatedlyModifier(self, 2));
+        return modifiers;
     }
 }

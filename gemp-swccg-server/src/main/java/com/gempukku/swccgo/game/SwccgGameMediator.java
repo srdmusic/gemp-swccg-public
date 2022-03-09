@@ -869,6 +869,49 @@ public class SwccgGameMediator {
                         sb.append(lightLocationGametext);
                         sb.append("</div>");
                     }
+
+                    // location icons
+
+                    sb.append("<br>");
+                    sb.append("Icons: ");
+                    if (blueprint.hasIcon(Icon.PLANET))
+                        sb.append("Planet, ");
+                    if (blueprint.hasIcon(Icon.MOBILE))
+                        sb.append("Mobile, ");
+                    if (blueprint.hasIcon(Icon.SPACE))
+                        sb.append("Space, ");
+                    if (blueprint.hasIcon(Icon.STARSHIP_SITE))
+                        sb.append("Starship site, ");
+                    if (blueprint.hasIcon(Icon.VEHICLE_SITE))
+                        sb.append("Vehicle site, ");
+                    if (blueprint.hasIcon(Icon.EXTERIOR_SITE))
+                        sb.append("Exterior, ");
+                    if (blueprint.hasIcon(Icon.INTERIOR_SITE))
+                        sb.append("Interior, ");
+                    if (blueprint.hasIcon(Icon.SCOMP_LINK))
+                        sb.append("Scomp link, ");
+
+
+                    if (blueprint.getCardSubtype().equals(CardSubtype.SYSTEM)) {
+                        int parsec = blueprint.getParsec();
+                        sb.append("<br>");
+                        sb.append("Parsec: ");
+                        sb.append(parsec);
+                    }
+
+                }
+
+                if (blueprint.isCardTypeDeployed()
+                        && Filters.or(Filters.character, Filters.creature, Filters.starship, Filters.vehicle).accepts(_swccgoGame, card)) {
+
+                    Float deployCost = blueprint.getDeployCost();
+                    if (deployCost != null) {
+                        sb.append("<br>");
+                        sb.append("Deploy cost: ");
+                        sb.append("<div>");
+                        sb.append(deployCost);
+                        sb.append("</div>");
+                    }
                 }
 
             }
@@ -1263,6 +1306,10 @@ public class SwccgGameMediator {
         // Based on Objective
         if (objective != null) {
             String objectiveLabel = null;
+            if (Filters.or(Filters.title(Title.A_Great_Tactician_Creates_Plans), Filters.title(Title.The_Result_Is_Often_Resentment)).accepts(_swccgoGame, objective)) {
+                // A Great Tactician Creates Plans
+                objectiveLabel = "Thrawn";
+            }
             if (Filters.or(Filters.Agents_In_The_Court, Filters.No_Love_For_The_Empire).accepts(_swccgoGame, objective)) {
                 // Agents In The Court
                 objectiveLabel = "AITC";
@@ -1396,6 +1443,10 @@ public class SwccgGameMediator {
                 // Quiet Mining Colony
                 objectiveLabel = "QMC";
             }
+            if (Filters.or(Filters.At_Last_The_Jedi_Are_No_More, Filters.Revenge_Of_The_Sith).accepts(_swccgoGame, objective)) {
+                // Revenge Of The Sith
+                objectiveLabel = "Revenge Of The Sith";
+            }
             if (Filters.or(Filters.Ralltiir_Operations, Filters.In_The_Hands_Of_The_Empire).accepts(_swccgoGame, objective)) {
                 // Ralltiir Operations
                 objectiveLabel = "ROps";
@@ -1411,6 +1462,10 @@ public class SwccgGameMediator {
             if (Filters.or(Filters.Plead_My_Case_To_The_Senate, Filters.Sanity_And_Compassion, Filters.My_Lord_Is_That_Legal, Filters.I_Will_Make_It_Legal).accepts(_swccgoGame, objective)) {
                 // Senate
                 objectiveLabel = "Senate";
+            }
+            if (Filters.or(Filters.The_Force_Is_Strong_In_My_Family, Filters.Rise_Of_Skywalker).accepts(_swccgoGame, objective)) {
+                // The Force Is Strong In My Family
+                return "Skywalker Saga";
             }
             if (Filters.or(Filters.Wookiee_Slaving_Operation, Filters.Indentured_To_The_Empire).accepts(_swccgoGame, objective)) {
                 //Wookiee Slaving Operation
@@ -1431,6 +1486,10 @@ public class SwccgGameMediator {
             if (Filters.or(Filters.There_Is_Good_In_Him, Filters.I_Can_Save_Him).accepts(_swccgoGame, objective)) {
                 // There Is Good In Him
                 objectiveLabel = "TIGIH";
+            }
+            if (Filters.or(Filters.The_Shield_Will_Be_Down_In_Moments, Filters.Imperial_Troops_Have_Entered_The_Base).accepts(_swccgoGame, objective)) {
+                // Walkers
+                objectiveLabel = "Walkers";
             }
             if (Filters.or(Filters.No_Money_No_Parts_No_Deal, Filters.Youre_A_Slave).accepts(_swccgoGame, objective)) {
                 // Watto

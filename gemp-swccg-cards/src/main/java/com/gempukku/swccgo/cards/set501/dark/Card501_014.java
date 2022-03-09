@@ -3,6 +3,9 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -11,55 +14,78 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.modifiers.*;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Effect
- * Title: The Shield Will Be Down In Moments
+ * Title: Make Ready To Land Our Troops
  */
 public class Card501_014 extends AbstractNormalEffect {
     public Card501_014() {
-        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "The Shield Will Be Down In Moments", Uniqueness.UNIQUE);
-        setLore("Death Squadron.");
-        setGameText("Deploy on table. If you just deployed an AT-AT, may peek at top two cards of reserve deck and take one into hand (if 1st marker 'blown away,' may retrieve a non-vehicle, non-droid card without ability into hand instead). [Immune to Alter.]");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_17);
+        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Make_Ready_To_Land_Our_Troops, Uniqueness.UNIQUE);
+        setGameText("Deploy on table. Your AT-ATs and snowtroopers are destiny +1. Once per turn, may lose 2 Force to add 1 to your just drawn AT-AT Cannon weapon destiny. If you just deployed an AT-AT, may peek at top two cards of Reserve deck and take one into hand. [Immune to Alter.]");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 18] The Shield Will Be Down In Moments");
+        setTestingText("Make Ready To Land Our Troops");
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new DestinyModifier(self, Filters.and(Filters.your(self), Filters.or(Filters.AT_AT, Filters.snowtrooper)), 1));
+        return modifiers;
+    }
+    
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
-        if(TriggerConditions.justDeployed(game, effectResult, playerId, Filters.AT_AT)) {
-            if (GameConditions.hasReserveDeck(game, playerId)) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-                final OptionalGameTextTriggerAction action1 = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action1.setText("Peek at top two cards of Reserve Deck and take one into hand");
-                action1.appendEffect(
-                        new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action1, playerId, 2, 1, 1));
+        // AT-AT Cannon weapon destiny draw trigger
+        if (TriggerConditions.isWeaponDestinyJustDrawnBy(game, effectResult, playerId, Filters.AT_AT_Cannon)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
-                actions.add(action1);
-            }
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Add 1 to weapon destiny");
+            action.setActionMsg("Lose 2 Force to add 1 to your just drawn AT-AT Cannon weapon destiny");
             
-            if (GameConditions.isBlownAway(game, Filters.title(Title.Main_Power_Generators, true))
-                    && GameConditions.hasLostPile(game, playerId)) {
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
 
-                final OptionalGameTextTriggerAction action2 = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action2.setText("Retrieve a card into hand");
-                action2.setActionMsg("Retrieve any non-vehicle, non-droid card without ability into hand");
-                action2.appendEffect(
-                        new RetrieveCardIntoHandEffect(action2, playerId, Filters.and(Filters.not(Filters.vehicle), Filters.not(Filters.droid), Filters.not(Filters.hasAbilityOrHasPermanentPilotWithAbility))));
-                actions.add(action2);
-            }
+            // Pay Costs
+            action.appendCost(
+                    new LoseForceEffect(action, playerId, 2)
+            );
+            
+            action.appendEffect(
+                new ModifyDestinyEffect(action, 1));
 
-            return actions;
+            actions.add(action);
         }
 
-        return null;
+        // Just deployed AT-AT trigger
+
+        if(TriggerConditions.justDeployed(game, effectResult, playerId, Filters.AT_AT)
+                && GameConditions.hasReserveDeck(game, playerId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Peek at top two cards of Reserve Deck and take one into hand");
+            action.appendEffect(
+                    new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, 2, 1, 1));
+            
+            actions.add(action);
+        }
+
+        return actions;
     }
 }

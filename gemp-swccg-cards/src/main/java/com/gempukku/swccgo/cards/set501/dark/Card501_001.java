@@ -1,116 +1,73 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractImperial;
+import com.gempukku.swccgo.cards.AbstractSith;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.evaluators.*;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.MoveCardAsRegularMoveEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
-import com.gempukku.swccgo.logic.effects.RespondableEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromUsedPileEffect;
-import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.effects.choose.ExchangeCardInHandWithCardInLostPileEffect;
+import com.gempukku.swccgo.logic.evaluators.Evaluator;
+import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
+ * Set: Set 7
  * Type: Character
- * Subtype: Imperial
- * Title: Deputy Director Harus Ison
+ * Subtype: Sith
+ * Title: Savage Opress
  */
-public class Card501_001 extends AbstractImperial {
+public class Card501_001 extends AbstractSith {
     public Card501_001() {
-        super(Side.DARK, 2, 3, 3, 3, 4, "Deputy Director Harus Ison", Uniqueness.UNIQUE);
-        setLore("ISB leader.");
-        setGameText("During your deploy phase, a unique (•) Imperial of ability < 3 here may make a regular move. When deployed, may place a unique (•) ISB agent here in Used Pile to deploy (for free) a non-Tarkin ISB agent with a different title here from Used Pile; reshuffle.");
-        addKeywords(Keyword.LEADER);
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_17);
-        setTestingText("Deputy Director Harus Ison");
+        super(Side.DARK, 1, 6, 8, 4, 5, "Savage Opress", Uniqueness.UNIQUE);
+        setLore("Dathomirian assassin.");
+        setGameText("Deploys -1 for each other Sith character on table (limit -4). Once per game, may exchange a card in hand with a Sith character in Lost Pile. Immune to attrition < 3.");
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.SEPARATIST, Icon.EPISODE_I, Icon.VIRTUAL_SET_7);
+        addKeywords(Keyword.ASSASSIN);
+        setSpecies(Species.DATHOMIRIAN);
+        setTestingText("Savage Opress (ERRATA)");
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        // When deployed, may place a unique (•) ISB agent here in Used Pile to deploy (for free) a non-Tarkin ISB agent with a different title here from Used Pile; reshuffle.
-
-        GameTextActionId gameTextActionId = GameTextActionId.DEPUTY_DIRECTOR_HARUS_ISON__DEPLOY_ISB_AGENT_FROM_USED_PILE;
-
-        Filter isbAgentToPlaceInUsedPile = Filters.and(Filters.unique, Filters.ISB_agent, Filters.here(self));
-
-        if (TriggerConditions.justDeployed(game, effectResult, self)
-                && GameConditions.canSpot(game, self, isbAgentToPlaceInUsedPile)
-                && GameConditions.canSearchUsedPile(game, playerId, self, gameTextActionId)) {
-
-            final PhysicalCard here = Filters.findFirstFromTopLocationsOnTable(game, Filters.here(self));
-
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place ISB agent on Used Pile");
-            action.setActionMsg("Place a unique ISB agent here in Used Pile to deploy (for free) a non-Tarkin ISB agent with a different title here from Used Pile");
-
-            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose a unique ISB agent to place on Used Pile", isbAgentToPlaceInUsedPile) {
-                @Override
-                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                    action.allowResponses(new RespondableEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            PhysicalCard placeOnUsed = action.getPrimaryTargetCard(targetGroupId);
-                            action.appendCost(
-                                    new PlaceCardInUsedPileFromTableEffect(action, placeOnUsed));
-                            action.appendEffect(
-                                    new DeployCardToTargetFromUsedPileEffect(action, Filters.and(Filters.not(Filters.Tarkin), Filters.ISB_agent, Filters.not(Filters.sameTitle(placeOnUsed))), Filters.here(here), true, true));
-                        }
-                    });
-                }
-            });
-
-            return Collections.singletonList(action);
-        }
-
-        return null;
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DeployCostModifier(self, new NegativeEvaluator(new MaxLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.other(self), Filters.Sith)), 4))));
+        return modifiers;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        // During your deploy phase, a unique (•) Imperial of ability < 3 here may make a regular move.
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.SAVAGE_OPRESS__EXCHANGE_CARD_IN_HAND_WITH_SITH_IN_LOST_PILE;
 
-        Filter filter = Filters.and(Filters.unique, Filters.Imperial, Filters.abilityLessThan(3), Filters.here(self), Filters.movableAsRegularMove(playerId, false, 0, false, Filters.any));
-
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
-                && GameConditions.canTarget(game, self, filter)) {
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.hasHand(game, playerId)
+                && GameConditions.hasLostPile(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Make a regular move");
-            action.setActionMsg("Make a regular move with a unique Imperial of ability < 3 here");
-
+            action.setText("Exchange card in hand with card in Lost Pile");
+            action.setActionMsg("Exchange a card in hand with a Sith character in Lost Pile");
+            // Update usage limit(s)
             action.appendUsage(
-                    new OncePerPhaseEffect(action));
-
-            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose a unique Imperial of ability < 3 here to move as a regular move", filter) {
-                @Override
-                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                    action.allowResponses(new RespondableEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            PhysicalCard toMove = action.getPrimaryTargetCard(targetGroupId);
-                            action.appendEffect(new MoveCardAsRegularMoveEffect(action, playerId, toMove, false, false, Filters.any));
-                        }
-                    });
-                }
-            });
-
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new ExchangeCardInHandWithCardInLostPileEffect(action, playerId, Filters.any, Filters.Sith));
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
+        return modifiers;
     }
 }

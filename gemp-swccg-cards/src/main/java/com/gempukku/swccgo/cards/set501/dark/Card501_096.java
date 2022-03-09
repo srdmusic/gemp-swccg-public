@@ -1,47 +1,110 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractSite;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.cards.AbstractLostInterrupt;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
+import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
+import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.conditions.TrueCondition;
-import com.gempukku.swccgo.logic.modifiers.IgnoresDeploymentRestrictionsFromCardWhenDeployingToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
- * Type: Location
- * Subtype: Site
- * Title: Malachor: Sith Temple Gateway
+ * Set: Set 18
+ * Type: Interrupt
+ * Subtype: Lost
+ * Title: I Have You Now (V)
  */
-public class Card501_096 extends AbstractSite {
+public class Card501_096 extends AbstractLostInterrupt {
     public Card501_096() {
-        super(Side.DARK, "Malachor: Sith Temple Gateway", Title.Malachor);
-        setLocationDarkSideGameText("[Set 13] Maul ignores [Set 13] objective deployment restrictions here.");
-        setLocationLightSideGameText("Opponent may not target Ezra with weapons here.");
-        addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.UNDERGROUND, Icon.INTERIOR_SITE, Icon.PLANET, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_17);
-        setTestingText("Malachor: Sith Temple Gateway");
+        super(Side.DARK, 5, Title.I_Have_You_Now);
+        setVirtualSuffix(true);
+        setLore("'Several fighters have broken off from the main group. Come with me.' Darth Vader targets his TIE fighter's fire-linked blaster cannons at the Rebel pilots in the trench.");
+        setGameText("If a Dark Jedi is in battle with an opponent’s character of ability > 3, add one battle destiny. OR During your move phase, if Revenge Of The Sith on table, use 2 Force to relocate your apprentice at an [Episode I] site to another site.");
+        addIcons(Icon.VIRTUAL_SET_18);
+        setTestingText("I Have You Now (V)");
     }
 
     @Override
-    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new IgnoresDeploymentRestrictionsFromCardWhenDeployingToLocationModifier(self, Filters.and(Icon.VIRTUAL_SET_13, Filters.Maul), new TrueCondition(), playerOnDarkSideOfLocation, Filters.and(Icon.VIRTUAL_SET_13, Filters.Objective), self));
-        return modifiers;
-    }
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
-    @Override
-    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.Ezra, Filters.and(Filters.weapon, Filters.here(self))));
-        return modifiers;
+        // Check condition(s)
+        if (GameConditions.isDuringBattleWithParticipant(game, Filters.Dark_Jedi)
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.opponents(self), Filters.abilityMoreThan(3)))
+                && GameConditions.canAddBattleDestinyDraws(game, self)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Add one battle destiny");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new AddBattleDestinyEffect(action, 1));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
+        if (GameConditions.isDuringYourPhase(game, playerId, Phase.MOVE)
+                && GameConditions.canSpot(game, self, Filters.Revenge_Of_The_Sith)
+                && GameConditions.canTarget(game, self, Filters.and(Filters.Sith_Apprentice, Filters.at(Filters.and(Icon.EPISODE_I, Filters.site)), Filters.canBeRelocatedToLocation(Filters.any, true, 2)))
+                && GameConditions.canUseForceToPlayInterrupt(game, playerId, self, 2)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Relocate apprentice to another site");
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose apprentice", Filters.and(Filters.Sith_Apprentice, Filters.at(Filters.and(Icon.EPISODE_I, Filters.site)), Filters.canBeRelocatedToLocation(Filters.any, true, 2))) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, final PhysicalCard characterToRelocate) {
+                            action.appendTargeting(
+                                    new TargetCardOnTableEffect(action, playerId, "Choose site to relocate " + GameUtils.getCardLink(characterToRelocate) + " to", Filters.locationCanBeRelocatedTo(characterToRelocate, true, 2)) {
+                                        @Override
+                                        protected void cardTargeted(final int targetGroupId2, final PhysicalCard siteSelected) {
+                                            action.addAnimationGroup(characterToRelocate);
+                                            action.addAnimationGroup(siteSelected);
+                                            // Pay cost(s)
+                                            action.appendCost(
+                                                    new PayRelocateBetweenLocationsCostEffect(action, playerId, characterToRelocate, siteSelected, 2));
+                                            // Allow response(s)
+                                            action.allowResponses("Relocate " + GameUtils.getCardLink(characterToRelocate) + " to " + GameUtils.getCardLink(siteSelected),
+                                                    new RespondablePlayCardEffect(action) {
+                                                        @Override
+                                                        protected void performActionResults(Action targetingAction) {
+                                                            // Get the targeted card(s) from the action using the targetGroupId.
+                                                            // This needs to be done in case the target(s) were changed during the responses.
+                                                            PhysicalCard finalCharacter = action.getPrimaryTargetCard(targetGroupId);
+                                                            PhysicalCard finalSite = action.getPrimaryTargetCard(targetGroupId2);
+
+                                                            // Perform result(s)
+                                                            action.appendEffect(
+                                                                    new RelocateBetweenLocationsEffect(action, finalCharacter, finalSite));
+                                                        }
+                                                    }
+                                            );
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
+        return actions;
     }
 }

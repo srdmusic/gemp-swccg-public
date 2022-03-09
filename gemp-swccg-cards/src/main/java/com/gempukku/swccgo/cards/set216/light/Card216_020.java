@@ -42,11 +42,8 @@ public class Card216_020 extends AbstractAlien {
 
     @Override
     protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
-        PhysicalCard rep = game.getGameState().getRep(self.getOwner());
         List<Modifier> modifiers = new LinkedList<>();
-        if (rep != null) {
-            modifiers.add(new SpeciesModifier(self, rep.getBlueprint().getSpecies()));
-        }
+        modifiers.add(new SpeciesModifier(self, true));
         return modifiers;
     }
 
@@ -89,11 +86,11 @@ public class Card216_020 extends AbstractAlien {
         }
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-        if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canSpot(game, self, Filters.No_Love_For_The_Empire)
                 && GameConditions.hasUsedPile(game, playerId)
                 && TriggerConditions.justRetrievedForce(game, effectResult, playerId)) {
-            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Place top card of Used Pile on Force Pile");
             action.setActionMsg("Place top card of Used Pile on Force Pile");
             // Perform result(s)

@@ -2859,6 +2859,24 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a battle was just canceled by the specified player with a source matching the given filter.
+     * @param game the game
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @param canceledByFilter the filter for the card that canceled the battle
+     * @return true or false
+     */
+    public static boolean battleCanceledBy(SwccgGame game, EffectResult effectResult, String playerId, Filterable canceledByFilter) {
+        if (effectResult.getType() == EffectResult.Type.BATTLE_CANCELED) {
+            CancelBattleResult cancelBattleResult = (CancelBattleResult) effectResult;
+            return playerId.equals(cancelBattleResult.getPerformingPlayerId())
+                    && cancelBattleResult.canceledBy() != null
+                    && Filters.and(canceledByFilter).accepts(game.getGameState(), game.getModifiersQuerying(), cancelBattleResult.canceledBy());
+        }
+        return false;
+    }
+
+    /**
      * Determines if a battle is ending.
      * @param game the game
      * @param effectResult the effect result
@@ -3589,6 +3607,23 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a destiny to reduce attrition was just drawn by the specified player (and was not canceled).
+     * @param game the game
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @return true or false
+     */
+    public static boolean isDestinyToReduceAttritionJustDrawnBy(SwccgGame game, EffectResult effectResult, String playerId) {
+        if (effectResult.getType() == EffectResult.Type.DESTINY_DRAWN) {
+            DestinyDrawnResult destinyDrawnResult = (DestinyDrawnResult) effectResult;
+            return !destinyDrawnResult.isCanceled()
+                    && (destinyDrawnResult.getDestinyType() == DestinyType.DESTINY_TO_REDUCE_ATTRITION || destinyDrawnResult.getDestinyType() == DestinyType.DESTINY_TO_REDUCE_ATTRITION_POWER)
+                    && playerId.equals(effectResult.getPerformingPlayerId());
+        }
+        return false;
+    }
+
+    /**
      * Determines if a carbon-freezing destiny was just drawn (and was not canceled).
      * @param game the game
      * @param effectResult the effect result
@@ -3988,6 +4023,21 @@ public class TriggerConditions {
                             && Filters.canSpot(targets, game, targetFilter);
                 }
             }
+        }
+        return false;
+    }
+
+    /**
+     * Determines if a destiny draw was just completed during a weapon destiny draw by the specified player.
+     * @param game the game
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @return true or false
+     */
+    public static boolean isWeaponDestinyDrawComplete(SwccgGame game, EffectResult effectResult) {
+        if (effectResult.getType() == EffectResult.Type.COMPLETE_DESTINY_DRAW) {
+            DestinyDrawCompleteResult destinyDrawCompleteResult = (DestinyDrawCompleteResult) effectResult;
+            return destinyDrawCompleteResult.getDestinyType() == DestinyType.WEAPON_DESTINY;
         }
         return false;
     }

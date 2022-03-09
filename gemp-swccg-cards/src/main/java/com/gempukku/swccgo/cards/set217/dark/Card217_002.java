@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set217.dark;
 
 import com.gempukku.swccgo.cards.AbstractDroid;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.PresentWithCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
@@ -9,6 +10,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.effects.BreakCoversEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
@@ -36,7 +38,8 @@ public class Card217_002 extends AbstractDroid {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.or(Filters.BB8, Filters.Rose), Filters.at(Filters.sameOrRelatedSite(self))), new PresentWithCondition(self, Filters.and(Filters.your(self), Filters.or(Filters.leader, Filters.First_Order_character)))));
+        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.or(Filters.BB8, Filters.Rose), Filters.at(Filters.sameOrRelatedSite(self))),
+                new AndCondition(new AtCondition(self, Filters.site), new PresentWithCondition(self, Filters.and(Filters.your(self), Filters.or(Filters.leader, Filters.First_Order_character))))));
         return modifiers;
     }
 
@@ -51,19 +54,19 @@ public class Card217_002 extends AbstractDroid {
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)) {
 
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Place in Used Pile");
+            action.setActionMsg("'Break cover' of all undercover spies here (if any)");
+
+            action.appendCost(
+                    new PlaceCardInUsedPileFromTableEffect(action, self));
+
             Collection<PhysicalCard> undercoverSpies = Filters.filterAllOnTable(game, Filters.and(targetFilter, Filters.canBeTargetedBy(self)));
-            if (!undercoverSpies.isEmpty()) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action.setText("Place in Used Pile");
-                action.setActionMsg("'Break cover' of all undercover spies here (if any)");
+            action.appendEffect(
+                    new BreakCoversEffect(action, undercoverSpies));
 
-                action.appendCost(
-                        new PlaceCardInUsedPileFromTableEffect(action, self));
-
-                action.appendEffect(
-                        new BreakCoversEffect(action, undercoverSpies));
-                actions.add(action);
-            }
+            actions.add(action);
         }
 
         return actions;

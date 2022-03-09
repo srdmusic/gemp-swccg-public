@@ -1,45 +1,108 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractRepublic;
-import com.gempukku.swccgo.cards.conditions.PresentAtCondition;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Keyword;
-import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.CancelCardResultEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.MayNotDrawMoreThanBattleDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ResetForfeitModifier;
+import com.gempukku.swccgo.game.state.BattleState;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
+import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 
 /**
- * Set: Set 17
- * Type: Character
- * Subtype: Republic
- * Title: Coruscant Guard (V)
+ * Set: Set 18
+ * Type: Interrupt
+ * Subtype: Used or Lost
+ * Title: Do You Stand By Your Work?
  */
-public class Card501_039 extends AbstractRepublic {
+public class Card501_039 extends AbstractUsedOrLostInterrupt {
     public Card501_039() {
-        super(Side.DARK, 3, 2, 2, 1, 4, "Coruscant Guard");
-        setVirtualSuffix(true);
-        setLore("Coruscant Guards are an elite force whose assignments include the protection of important political figures, as well as the policing of Coruscant's higher profile city districts.");
-        setGameText("While present at Galactic Senate, all characters without politics here are forfeit = 0 (except Coruscant Guards) and neither player may draw more than one battle destiny here.");
-        addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.WARRIOR, Icon.VIRTUAL_SET_17);
-        addKeywords(Keyword.CORUSCANT_GUARD);
-        setTestingText("Coruscant Guard (DARK) (V)");
+        super(Side.DARK, 4, "Do You Stand By Your Work?", Uniqueness.UNIQUE);
+        setGameText("USED: If opponent is about to cancel and redraw a destiny, it is canceled instead. LOST: Once per game, if your objective just canceled a battle, none of the opponent's cards participating in that battle may move for remainder of turn.");
+        addIcons(Icon.VIRTUAL_SET_18);
+        setTestingText("Do You Stand By Your Work?");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ResetForfeitModifier(self, Filters.and(Filters.character_without_politics, Filters.here(self),
-                Filters.except(Filters.Coruscant_Guard)), new PresentAtCondition(self, Filters.Galactic_Senate), 0));
-        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, Filters.here(self), new PresentAtCondition(self, Filters.Galactic_Senate), 1, self.getOwner()));
-        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, Filters.here(self), new PresentAtCondition(self, Filters.Galactic_Senate), 1, game.getOpponent(self.getOwner())));
-        return modifiers;
+    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(String playerId, SwccgGame game, final Effect effect, PhysicalCard self) {
+        String opponent = game.getOpponent(playerId);
+        if (TriggerConditions.isPlayingCardForReason(game, effect, Filters.any, PlayCardActionReason.ATTEMPTING_TO_CANCEL_AND_REDRAW_A_DESTINY)
+                && TriggerConditions.isPlayingCard(game, effect, opponent, Filters.any)
+                && GameConditions.canCancelDestiny(game, playerId)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Cancel destiny");
+            action.allowResponses(new RespondablePlayCardEffect(action) {
+                @Override
+                protected void performActionResults(Action targetingAction) {
+                    // cancel the redrawing
+                    action.appendEffect(
+                            new CancelCardResultEffect(action, effect));
+                    // and then cancel the destiny`
+                    action.appendEffect(
+                            new CancelDestinyEffect(action));
+                }
+            });
+
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
+        GameTextActionId gameTextActionId = GameTextActionId.DO_YOU_STAND_BY_YOUR_WORK__PREVENT_MOVEMENT;
+
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && TriggerConditions.battleCanceledBy(game, effectResult, playerId, Filters.and(Filters.your(self), Filters.Objective))) {
+
+            final PhysicalCard battleLocation = Filters.findFirstFromTopLocationsOnTable(game, Filters.battleLocation);
+
+            if (battleLocation != null) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+                action.setText("Prevent cards from moving");
+
+                action.appendUsage(
+                        new OncePerGameEffect(action));
+                action.appendTargeting(new TargetAllCardsAtSameLocationEffect(action, playerId, "Prevent opponent's cards from moving", Filters.and(Filters.opponents(self), Filters.participatingInBattle)) {
+                    @Override
+                    protected void cardsTargeted(int targetGroupId, final Collection<PhysicalCard> targetedCards) {
+                        action.allowResponses("Prevent "+GameUtils.getAppendedNames(targetedCards)+" from moving", new RespondablePlayCardEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                action.appendEffect(
+                                        new AddUntilEndOfTurnModifierEffect(action, new MayNotMoveModifier(self, Filters.in(targetedCards)), "Prevents "+GameUtils.getAppendedNames(targetedCards)+" from moving"));
+                            }
+                        });
+                    }
+
+                    @Override
+                    protected boolean getUseShortcut() {
+                        return true;
+                    }
+                });
+
+                return Collections.singletonList(action);
+
+            }
+        }
+
+        return null;
     }
 }

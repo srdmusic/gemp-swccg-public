@@ -1,76 +1,66 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.AbstractPermanentAboard;
+import com.gempukku.swccgo.cards.AbstractPermanentPilot;
+import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.HereCondition;
-import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.ForRemainderOfGameData;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.UnlessCondition;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Set: Set 17
- * Type: Location
- * Subtype: Site
- * Title: Tatooine: Skywalker Hut
+ * Set: Set 0
+ * Type: Starship
+ * Subtype: Starfighter
+ * Title: Obi-Wan In Jedi Starfighter
  */
-public class Card501_072 extends AbstractSite {
+public class Card501_072 extends AbstractStarfighter {
     public Card501_072() {
-        super(Side.LIGHT, "Tatooine: Skywalker Hut", Title.Tatooine);
-        setLocationDarkSideGameText("May not be separated from Slave Quarters.");
-        setLocationLightSideGameText("Once per turn, may deploy Shmi or [Tatooine] C-3PO here from Reserve Deck; reshuffle.");
-        addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.EPISODE_I, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
-        setTestingText("Tatooine: Skywalker Hut");
+        super(Side.LIGHT, 2, 4, 4, null, 4, 4, 6, "Obi-Wan In Jedi Starfighter", Uniqueness.UNIQUE);
+        setLore("Optimized for diplomatic missions with sensor-proof pods that have ejection capabilities. Easily identified by its red coloration.");
+        setGameText("Permanent pilot is •Obi-Wan, who provides ability of 6. Opponent's starships may not 'cloak.' Cancels Overwhelmed here. Your total ability here may not be reduced. Immune to attrition < 4.");
+        addIcons(Icon.EPISODE_I, Icon.REPUBLIC, Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_0);
+        addModelType(ModelType.JEDI_INTERCEPTOR);
+        setTestingText("Obi-Wan In Jedi Starfighter (ERRATA)");
     }
 
     @Override
-    public List<Modifier> getAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeploysAdjacentToLocationModifier(self, self, Filters.Slave_Quarters, true));
+    protected List<? extends AbstractPermanentAboard> getGameTextPermanentsAboard() {
+        return Collections.singletonList(new AbstractPermanentPilot(Persona.OBIWAN, 6) {});
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        String playerId = self.getOwner();
+
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new MayNotCloakModifier(self, Filters.and(Filters.opponents(self), Filters.starship)));
+        modifiers.add(new MayNotHaveTotalAbilityReducedModifier(self, Filters.here(self), playerId));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
         return modifiers;
     }
 
     @Override
-    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeploysAdjacentToLocationModifier(self, Filters.Slave_Quarters, self, true));
-        modifiers.add(new MayNotDeploySitesBetweenSitesModifier(self, self, Filters.Slave_Quarters));
-        return modifiers;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.SKYWALKER_HUT__DOWNLOAD_SHMI_OR_THREEPIO;
-
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
-                && (GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, Title.Shmi)
-                 || GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, Persona.C3PO))) {
+        if (TriggerConditions.isPlayingCardTargeting(game, effect, Filters.Overwhelmed, Filters.here(self))
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Shmi or C-3PO here");
-            action.setActionMsg("Deploy Shmi or [Tatooine] C-3PO here from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.or(Filters.Shmi, Filters.and(Icon.TATOOINE, Filters.C3PO)), Filters.here(self), true));
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
             return Collections.singletonList(action);
         }
         return null;

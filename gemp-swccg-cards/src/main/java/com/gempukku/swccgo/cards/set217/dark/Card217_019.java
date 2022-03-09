@@ -36,7 +36,7 @@ public class Card217_019 extends AbstractAlien {
         setGameText("When forfeited at same location as Han or Vos, may satisfy all remaining battle damage against you. Unless opponent occupies a battleground site, doubles X on Secret Plans and cancels It Could Be Worse.");
         addPersona(Persona.QIRA);
         setSpecies(Species.CORELLIAN);
-        addKeywords(Keyword.FEMALE, Keyword.LEADER, Keyword.GANGSTER);
+        addKeywords(Keyword.FEMALE, Keyword.LEADER, Keyword.GANGSTER, Keyword.CRIMSON_DAWN);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_17);
     }
 

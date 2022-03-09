@@ -1,89 +1,90 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractStarfighter;
+import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.HasPilotingCondition;
-import com.gempukku.swccgo.cards.effects.CancelForceDrainEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployForFreeForSimultaneouslyDeployingPilotModifier;
-import com.gempukku.swccgo.logic.modifiers.DeploysFreeAboardModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Set: Set 10
- * Type: Starship
- * Subtype: Starfighter
- * Title: Blue Squadron 1
+ * Set: Set 18
+ * Type: Interrupt
+ * Subtype: Lost
+ * Title: Full Throttle (V)
  */
-
-public class Card501_066 extends AbstractStarfighter {
+public class Card501_066 extends AbstractLostInterrupt {
     public Card501_066() {
-        super(Side.LIGHT, 2, 3, 3, null, 5, 5, 5, "Blue Squadron 1", Uniqueness.UNIQUE);
-        setLore("");
-        setGameText("May add 1 pilot. Snap deploys free aboard. While Snap piloting, immune to attrition < 5 and, once per turn, may use 1 Force to cancel a Force drain at opponent's system within 1 parsec of Snap.");
-        addPersonas(Persona.BLUE_SQUADRON_1);
-        addIcons(Icon.RESISTANCE, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.VIRTUAL_SET_10);
-        addKeywords(Keyword.BLUE_SQUADRON);
-        addModelType(ModelType.X_WING);
-        setPilotCapacity(1);
-        setMatchingPilotFilter(Filters.Snap);
-        setTestingText("Blue Squadron 1 (V) (ERRATA)");
+        super(Side.LIGHT, 4, "Full Throttle", Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
+        setLore("Rebel pilots use visual scanning to supplement sensors for an edge against Imperial fighter pilots. Natural instincts allow lone Rebels to overcome superior numbers.");
+        setGameText("During battle, target your lone starfighter piloted by a Skywalker. For remainder of turn, starfighter is immune to attrition. If opponent has two or more starships there (or your [Skywalker] Objective on table), add your starfighter's maneuver (if any) to your total power.");
+        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
+        setTestingText("Full Throttle (V)");
     }
 
     @Override
-    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployForFreeForSimultaneouslyDeployingPilotModifier(self, Filters.Snap));
-        return modifiers;
-    }
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        Filter filter = Filters.and(Filters.starfighter, Filters.alone, Filters.hasPiloting(self, Filters.and(Filters.your(self), Filters.Skywalker)), Filters.participatingInBattle, Filters.canBeTargetedBy(self));
 
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiersEvenIfUnpiloted(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeploysFreeAboardModifier(self, Filters.Snap, self));
-        return modifiers;
-    }
+        // Check condition(s)
+        if (GameConditions.isDuringBattleWithParticipant(game, filter)) {
 
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, self, new HasPilotingCondition(self, Filters.Snap), 5));
-        return modifiers;
-    }
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Target a starfighter");
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose starfighter", filter) {
+                        @Override
+                        protected boolean getUseShortcut() {
+                            return true;
+                        }
 
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        Filter systemsWithinOneParsec = Filters.withinParsecsOf(self, 1);
-        Filter notSystemPresent = Filters.not(Filters.sameSystem(self));
-        Filter validSystems = Filters.and(systemsWithinOneParsec, notSystemPresent, Filters.opponents(self));
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Target " + GameUtils.getCardLink(targetedCard),
+                                    new RespondablePlayCardEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Get the targeted card(s) from the action using the targetGroupId.
+                                            // This needs to be done in case the target(s) were changed during the responses.
+                                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
 
-        if (TriggerConditions.forceDrainInitiatedAt(game, effectResult, validSystems)
-                && GameConditions.canCancelForceDrain(game, self)
-                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId)
-                && GameConditions.hasPiloting(game, self, Filters.Snap)) {
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new AddUntilEndOfTurnModifierEffect(action,
+                                                            new ImmuneToAttritionModifier(self, finalTarget),
+                                                            "Makes " + GameUtils.getCardLink(finalTarget) + " immune to attrition"));
+                                            
+                                            if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Objective))
+                                                    || GameConditions.canSpot(game, self, 2, Filters.and(Filters.opponents(self), Filters.starship, Filters.participatingInBattle))) {
+                                                float maneuver = game.getModifiersQuerying().getManeuver(game.getGameState(), finalTarget);
+                                                action.appendEffect(
+                                                        new ModifyTotalPowerUntilEndOfBattleEffect(action, maneuver, playerId, "Adds "+maneuver+" to total power"));
+                                            }
+                                        }
+                                    }
+                            );
+                        }
+                    }
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Cancel Force drain");
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            action.appendCost(
-                    new UseForceEffect(action, playerId, 1));
-            action.appendEffect(
-                    new CancelForceDrainEffect(action));
+
+            );
             return Collections.singletonList(action);
         }
         return null;

@@ -52,7 +52,8 @@ public class Card215_011 extends AbstractRebel {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        if (GameConditions.isDuringBattleWithParticipant(game, self)
+        if (GameConditions.isOncePerBattle(game, self, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isDuringBattleWithParticipant(game, self)
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.or(Filters.Chewie, Filters.and(Icon.ENDOR, Filters.Leia)))) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);

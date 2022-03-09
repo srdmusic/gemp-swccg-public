@@ -1,108 +1,110 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractLostInterrupt;
-import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.AddDestinyToAttritionEffect;
+import com.gempukku.swccgo.cards.conditions.AtCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfBattleEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.OrCondition;
+import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
+import com.gempukku.swccgo.logic.modifiers.TotalTrainingDestinyModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 13
- * Type: Interrupt
- * Subtype: Lost
- * Title: Anakin Skywalker (V)
+ * Set: Set 18
+ * Type: Effect
+ * Title: Reflection (V)
  */
-public class Card501_065 extends AbstractLostInterrupt {
+public class Card501_065 extends AbstractNormalEffect {
     public Card501_065() {
-        super(Side.LIGHT, 4, Title.Anakin_Skywalker, Uniqueness.UNIQUE);
-        setLore("'You were right about me. Tell your sister ... you were right.'");
-        setGameText("If I Feel The Conflict on table, during any move phase, take [Endor] Leia or [Dagobah] Luke into hand from Reserve Deck; reshuffle. OR During a battle at a site involving [Death Star II] Luke, choose: Add one destiny to attrition. OR Cancel the game text of a character of ability < 4.");
-        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_13);
+        super(Side.LIGHT, 3, PlayCardZoneOption.ATTACHED, Title.Reflection, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
-        setTestingText("Anakin Skywalker (V) (ERRATA)");
+        setLore("It was hard to imagine the enormous losses the Alliance suffered during the Battle of Hoth. Leia contemplated what she could do to help the Rebellion recover.");
+        setGameText("Deploy on [Cloud City] Leia. If at Guest Quarters (or a [Skywalker] Objective on table): your total power is +2 here and, once per turn, may add 1 to a just drawn weapon or battle destiny (and once per turn, may subtract 1 from a just drawn weapon or battle destiny) at another location.");
+        addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
+        addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_18);
+        setTestingText("Reflection (V)");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
+    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.and(Icon.CLOUD_CITY, Filters.Leia);
+    }
 
+    @Override
+    protected Filter getGameTextValidTargetFilterToRemainAttachedToAfterCrossingOver(final SwccgGame game, final PhysicalCard self, PlayCardOptionId playCardOptionId) {
+        return Filters.Leia;
+    }
 
-        GameTextActionId gameTextActionId = GameTextActionId.ANAKIN_SKYWALKER_V__UPLOAD_LEIA_OR_LUKE;
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new TotalPowerModifier(self, Filters.here(self),new OrCondition(new AtCondition(self, Filters.title("Cloud City: Guest Quarters")), new OnTableCondition(self, Filters.and(Icon.SKYWALKER, Filters.Objective))), 2, self.getOwner()));
+        return modifiers;
+    }
 
-        if (GameConditions.canSpot(game, self, Filters.I_Feel_The_Conflict)
-                && GameConditions.isDuringEitherPlayersPhase(game, Phase.MOVE)
-                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Take Leia or Luke into hand from Reserve Deck");
-            // Allow response(s)
-            action.allowResponses("Take [Endor] Leia or [Dagobah] Luke into hand from Reserve Deck",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.and(Icon.ENDOR, Filters.Leia), Filters.and(Icon.DAGOBAH, Filters.Luke)), true));
-                        }
-                    }
-            );
-            actions.add(action);
-        }
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<OptionalGameTextTriggerAction>();
 
-        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Icon.DEATH_STAR_II, Filters.Luke, Filters.at(Filters.site)))) {
+        if (GameConditions.isAtLocation(game, self, Filters.title("Cloud City: Guest Quarters"))
+            || GameConditions.canSpot(game, self, Filters.and(Icon.SKYWALKER, Filters.Objective))) {
 
-            if (GameConditions.canAddDestinyDrawsToAttrition(game, playerId)) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                action.setText("Add destiny to attrition");
-                action.allowResponses(new RespondablePlayCardEffect(action) {
-                    @Override
-                    protected void performActionResults(Action targetingAction) {
-                        action.appendEffect(
-                                new AddDestinyToAttritionEffect(action, 1)
-                        );
-                    }
-                });
+            GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-                actions.add(action);
-            }
+            // Check condition(s)
+            if ((TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult, Filters.not(Filters.here(self)))
+                    || (TriggerConditions.isBattleDestinyJustDrawn(game, effectResult))
+                        && !GameConditions.isDuringBattleAt(game, Filters.here(self)))
+                    && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
-            Filter characterAbilityLessThanFour = Filters.and(Filters.canBeTargetedBy(self), Filters.character, Filters.abilityLessThan(4));
-
-            if (GameConditions.isDuringBattleWithParticipant(game, characterAbilityLessThanFour)) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                action.setText("Cancel game text of character ability less than 4");
-                action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Choose character of ability less than 4", characterAbilityLessThanFour) {
-                            @Override
-                            protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
-                                action.allowResponses(new RespondablePlayCardEffect(action) {
-                                    @Override
-                                    protected void performActionResults(Action targetingAction) {
-                                        final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
-                                        action.appendEffect(
-                                                new CancelGameTextUntilEndOfBattleEffect(action, finalTarget)
-                                        );
-                                    }
-                                });
-                            }
-                        }
+                OptionalGameTextTriggerAction action1 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action1.setText("Add 1 to destiny draw");
+                action1.appendUsage(
+                        new OncePerTurnEffect(action1)
                 );
-                actions.add(action);
+                // Perform result(s)
+                action1.appendEffect(
+                        new ModifyDestinyEffect(action1, 1));
+                actions.add(action1);
+            }
+
+            gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+
+            // Check condition(s)
+            if ((TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult, Filters.not(Filters.here(self)))
+                    || (TriggerConditions.isBattleDestinyJustDrawn(game, effectResult))
+                        && !GameConditions.isDuringBattleAt(game, Filters.here(self)))
+                    && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+
+                OptionalGameTextTriggerAction action2 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action2.setText("Subtract 1 from destiny draw");
+                action2.appendUsage(
+                        new OncePerTurnEffect(action2)
+                );
+                // Perform result(s)
+                action2.appendEffect(
+                        new ModifyDestinyEffect(action2, -1));
+                actions.add(action2);
             }
         }
-
         return actions;
     }
 }

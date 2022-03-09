@@ -25,6 +25,7 @@ import java.util.*;
 public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, Snapshotable<ModifiersLogic> {
     private SwccgGame _swccgGame;
     private Map<ModifierType, List<Modifier>> _modifiers = new HashMap<ModifierType, List<Modifier>>();
+    private Map<Integer, List<Modifier>> _alwaysOnModifiersMap = new HashMap<>();
     private Map<Modifier, Set<Integer>> _excludedFromBeingAffected = new HashMap<Modifier, Set<Integer>>();
 
     private List<Modifier> _untilEndOfTurnModifiers = new LinkedList<Modifier>();
@@ -140,6 +141,10 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         for (ModifierType modifierType : _modifiers.keySet()) {
             List<Modifier> snapshotList = new LinkedList<Modifier>(_modifiers.get(modifierType));
             snapshot._modifiers.put(modifierType, snapshotList);
+        }
+        for (Integer permanentCardId : _alwaysOnModifiersMap.keySet()) {
+            List<Modifier> snapshotList = new LinkedList<>(_alwaysOnModifiersMap.get(permanentCardId));
+            snapshot._alwaysOnModifiersMap.put(permanentCardId, snapshotList);
         }
         for (Modifier modifier : _excludedFromBeingAffected.keySet()) {
             Set<Integer> snapshotSet = new HashSet<Integer>(_excludedFromBeingAffected.get(modifier));
@@ -7221,7 +7226,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         // Check if TIE, which can only land at docking bay (or starship site that may be landed at instead of embarking on related starship).
         if (Filters.TIE.accepts(gameState, this, card)
                 && !Filters.docking_bay.accepts(gameState, this, toLocation)
-                && !Filters.starshipSiteToShuttleTransferLandAndTakeOffAtForFreeInsteadOfRelatedStarship(card.getOwner()).accepts(gameState, this, card)) {
+                && !Filters.starshipSiteToShuttleTransferLandAndTakeOffAtForFreeInsteadOfRelatedStarship(card.getOwner()).accepts(gameState, this, card)
+                && !tieAllowedToLand(gameState, card, toLocation)) {
             return true;
         }
 
@@ -12534,7 +12540,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 filterForUniqueness = Filters.and(filterForUniqueness, Filters.owner(card.getOwner()), Filters.not(Filters.collapsed), Filters.not(Filters.perSystemUniqueness));
             }
             else {
-                filterForUniqueness = Filters.or(filterForUniqueness, Filters.hasPermanentAboard(filterForUniqueness), Filters.hasPermanentWeapon(filterForUniqueness));
+                filterForUniqueness = Filters.or(filterForUniqueness, Filters.and(Filters.your(card), Filters.hasPermanentAboard(filterForUniqueness)), Filters.and(Filters.your(card), Filters.hasPermanentWeapon(filterForUniqueness)));
             }
             int count = Filters.countForUniquenessChecking(gameState.getGame(), filterForUniqueness);
 
@@ -14346,12 +14352,14 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             if (vehicle == null && location1.getBlueprint().getRelatedStarshipOrVehiclePersona() != null) {
                 vehicle = Filters.findFirstFromAllOnTable(gameState.getGame(), location1.getBlueprint().getRelatedStarshipOrVehiclePersona());
             }
-            PhysicalCard locationVehicleIsAt = getLocationThatCardIsAt(gameState, vehicle);
-            if (locationVehicleIsAt != null && locationVehicleIsAt.getBlueprint().getCardSubtype() == CardSubtype.SITE) {
-                String partOfSystem = locationVehicleIsAt.getPartOfSystem();
+            if (vehicle != null) {
+                PhysicalCard locationVehicleIsAt = getLocationThatCardIsAt(gameState, vehicle);
+                if (locationVehicleIsAt != null && locationVehicleIsAt.getBlueprint().getCardSubtype() == CardSubtype.SITE) {
+                    String partOfSystem = locationVehicleIsAt.getPartOfSystem();
 
-                if (partOfSystem != null && partOfSystem.equals(location2.getPartOfSystem())) {
-                    return true;
+                    if (partOfSystem != null && partOfSystem.equals(location2.getPartOfSystem())) {
+                        return true;
+                    }
                 }
             }
 
@@ -15154,6 +15162,12 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         return new ModifierHookImpl(this, modifier);
     }
 
+    @Override
+    public void addCardSpecificAlwaysOnModifiers(SwccgGame game, PhysicalCard card) {
+        if (card.getBlueprint().getAlwaysOnModifiers(game, card) != null)
+            _alwaysOnModifiersMap.put(card.getPermanentCardId(), card.getBlueprint().getAlwaysOnModifiers(game, card));
+    }
+
     private void addModifier(Modifier modifier) {
         ModifierType modifierType = modifier.getModifierType();
         getEffectModifiers(modifierType).add(modifier);
@@ -15286,8 +15300,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private List<Modifier> getKeywordModifiersAffectingCard(GameState gameState, ModifierType modifierType, Keyword keyword, PhysicalCard card) {
         // Get always on modifiers
         List<? extends Modifier> alwaysOnModifiers = null;
-        if (card != null) {
-            alwaysOnModifiers = card.getBlueprint().getAlwaysOnModifiers(gameState.getGame(), card);
+        if (card != null && _alwaysOnModifiersMap.containsKey(card.getPermanentCardId())) {
+            alwaysOnModifiers = _alwaysOnModifiersMap.get(card.getPermanentCardId());
         }
         List<Modifier> modifiers = _modifiers.get(modifierType);
         if (alwaysOnModifiers == null && modifiers == null)
@@ -16034,16 +16048,18 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             }
         }
 
-        List<Modifier> alwaysOnModifiers = card.getBlueprint().getAlwaysOnModifiers(gameState.getGame(), card);
-        if (alwaysOnModifiers != null) {
-            for (Modifier modifier : alwaysOnModifiers) {
-                Condition condition = modifier.getCondition();
-                Condition additionalCondition = modifier.getAdditionalCondition(gameState, this, card);
-                if ((condition == null || condition.isFulfilled(gameState, this)) && (additionalCondition == null || additionalCondition.isFulfilled(gameState, this)))
-                    if (affectsCardWithSkipSet(gameState, card, modifier))
-                        if (!foundCumulativeConflict(gameState, result, modifier))
-                            result.add(modifier);
+        if (_alwaysOnModifiersMap.containsKey(card.getPermanentCardId())) {
+            List<Modifier> alwaysOnModifiers = _alwaysOnModifiersMap.get(card.getPermanentCardId());
+            if (alwaysOnModifiers != null) {
+                for (Modifier modifier : alwaysOnModifiers) {
+                    Condition condition = modifier.getCondition();
+                    Condition additionalCondition = modifier.getAdditionalCondition(gameState, this, card);
+                    if ((condition == null || condition.isFulfilled(gameState, this)) && (additionalCondition == null || additionalCondition.isFulfilled(gameState, this)))
+                        if (affectsCardWithSkipSet(gameState, card, modifier))
+                            if (!foundCumulativeConflict(gameState, result, modifier))
+                                result.add(modifier);
 
+                }
             }
         }
 
@@ -16687,5 +16703,18 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
 
         return filter;
+    }
+
+    public boolean tieAllowedToLand(GameState gameState, PhysicalCard card, PhysicalCard toLocation) {
+        if (!Filters.exterior_site.accepts(gameState, this, toLocation))
+            return false;
+        if (Filters.docking_bay.accepts(gameState, this, toLocation))
+            return true;
+        for (Modifier modifier: getModifiersAffectingCard(gameState, ModifierType.TIE_MAY_LAND_AT_EXTERIOR_SITE, card)) {
+            if (((TIEsMayLandAtExteriorSiteModifier)modifier).allowedToLandAt(gameState, this, toLocation))
+                return true;
+        }
+
+        return false;
     }
 }

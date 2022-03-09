@@ -1,0 +1,53 @@
+package com.gempukku.swccgo.cards.set501.light;
+
+import com.gempukku.swccgo.cards.AbstractStarfighter;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.HasPilotingCondition;
+import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
+import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.UtinniEffectCompletedResult;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+
+/**
+ * Set: Set 18
+ * Type: Starship
+ * Subtype: Starfighter
+ * Title: Outrider (V)
+ */
+public class Card501_073 extends AbstractStarfighter {
+    public Card501_073() {
+        super(Side.LIGHT, 2, 2, 3, null, 4, 5, 5, Title.Outrider, Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
+        setLore("Highly modified Corellian Engineering Corporation YT-2400. KonGar KGDefender military grade ion engines. Griffyn/Y2TG hyperdrive. Never boarded by Imperial customs.");
+        setGameText("May add 2 pilots and 1 passenger. Power, maneuver, and immunity to attrition +1 for each card stacked on A Useless Gesture. While Dash or Leebo piloting, immune to attrition < 4.");
+        addIcons(Icon.REFLECTIONS_II, Icon.INDEPENDENT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
+        addModelType(ModelType.MODIFIED_LIGHT_FREIGHTER);
+        setPilotCapacity(2);
+        setPassengerCapacity(1);
+        setMatchingPilotFilter(Filters.or(Filters.Dash, Filters.Leebo));
+        setTestingText("Outrider (V)");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, new HasPilotingCondition(self, Filters.or(Filters.Dash, Filters.Leebo)), 4));
+        modifiers.add(new PowerModifier(self, new StackedEvaluator(self, Filters.A_Useless_Gesture)));
+        modifiers.add(new ManeuverModifier(self, new StackedEvaluator(self, Filters.A_Useless_Gesture)));
+        modifiers.add(new ImmunityToAttritionChangeModifier(self, self, new StackedEvaluator(self, Filters.A_Useless_Gesture)));
+        return modifiers;
+    }
+}

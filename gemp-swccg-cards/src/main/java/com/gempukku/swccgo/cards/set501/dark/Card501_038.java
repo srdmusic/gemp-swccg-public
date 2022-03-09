@@ -1,75 +1,114 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractRepublic;
-import com.gempukku.swccgo.cards.conditions.AtSameSiteAsCondition;
-import com.gempukku.swccgo.cards.conditions.InSenateMajorityCondition;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.cards.evaluators.AtSameSiteEvaluator;
+import com.gempukku.swccgo.cards.AbstractLostInterrupt;
+import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
-import com.gempukku.swccgo.game.SwccgBuiltInCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
-import com.gempukku.swccgo.logic.conditions.AndCondition;
-import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.ExchangeCardFromLostPileWithStackedCardEffect;
+import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
+import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 
 /**
- * Set: Set 17
- * Type: Character
- * Subtype: Republic
- * Title: Passel Argente (V)
+ * Set: Set 18
+ * Type: Interrupt
+ * Subtype: Used or Lost
+ * Title: Thrawn Pincer
  */
-public class Card501_038 extends AbstractRepublic {
+public class Card501_038 extends AbstractUsedOrLostInterrupt {
     public Card501_038() {
-        super(Side.DARK, 2, 3, 1, 2, 3, "Passel Argente", Uniqueness.UNIQUE);
-        setPolitics(2);
-        setVirtualSuffix(true);
-        setLore("A senator known for his ability to deflect blame. It is rumored that Argente receives kickbacks from a few corporations to thwart other companies' developments.");
-        setGameText("Agendas: ambition, taxation. While in a senate majority, if your only [Coruscant] Political Effect on table is not This Is Outrageous!, it may not be canceled or suspended. Argente is politics +X, where X = number of opponent's characters here.");
-        addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
-        addKeywords(Keyword.SENATOR);
-        setTestingText("Passel Argente (V)");
+        super(Side.DARK, 4, "Thrawn Pincer", Uniqueness.UNIQUE);
+        setGameText("USED: Exchange a card stacked on Thrawn's Art Collection with a card in opponent’s Lost Pile. LOST: Once per game, during battle at a system, if you just revealed a starship as ‘artwork’, relocate a Star Destroyer on table to that system.");
+        addIcons(Icon.VIRTUAL_SET_18);
+        setTestingText("Thrawn Pincer");
     }
 
     @Override
-    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new AgendaModifier(self, Agenda.AMBITION, Agenda.TAXATION));
-        return modifiers;
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
+        final String opponent = game.getOpponent(playerId);
+
+        GameTextActionId gameTextActionId = GameTextActionId.THRAWN_PINCER__EXCHANGE_CARD;
+
+        // Check condition(s)
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.Thrawns_Art_Collection, Filters.hasStacked(Filters.any)))
+                && GameConditions.hasLostPile(game, opponent)
+                && GameConditions.canSearchOpponentsLostPile(game, playerId, self, gameTextActionId)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
+            action.setText("Exchange card");
+            // Choose target(s)
+            action.allowResponses(new RespondablePlayCardEffect(action) {
+                @Override
+                protected void performActionResults(Action targetingAction) {
+                    action.appendEffect(
+                            new ExchangeCardFromLostPileWithStackedCardEffect(action, opponent, Filters.any, Filters.Thrawns_Art_Collection, Filters.any, true));
+                }
+            });
+            actions.add(action);
+
+        }
+
+        return actions;
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        Condition inSenateMajority = new InSenateMajorityCondition(self);
-        final Filter active = new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                return modifiersQuerying.getCardState(gameState, physicalCard, false, false, false,
-                        false, false, false, false, false) == CardState.ACTIVE;
-            }
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
-                return modifiersQuerying.getCardState(gameState, builtInCardBlueprint.getPhysicalCard(gameState.getGame()), false, false, false,
-                        false, false, false, false, false) == CardState.ACTIVE;
-            }
-        };
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
+        GameTextActionId gameTextActionId = GameTextActionId.THRAWN_PINCER__RELOCATE_STAR_DESTROYER;
 
-        Filter yourCoruscantPoliticalEffectOnTable = Filters.and(Filters.your(self), Filters.onTable, Filters.Political_Effect, Icon.CORUSCANT);
-        Condition exactlyOneOnTable = new OnTableCondition(self, 1, true, yourCoruscantPoliticalEffectOnTable);
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotBeSuspendedModifier(self, Filters.and(active, yourCoruscantPoliticalEffectOnTable, Filters.not(Filters.title(Title.This_Is_Outrageous))),
-                new AndCondition(inSenateMajority, exactlyOneOnTable)));
-        modifiers.add(new MayNotBeCanceledModifier(self, Filters.and(active, yourCoruscantPoliticalEffectOnTable, Filters.not(Filters.title(Title.This_Is_Outrageous))),
-                new AndCondition(inSenateMajority, exactlyOneOnTable)));
+        if (effectResult.getType() == EffectResult.Type.ARTWORK_CARD_REVEALED
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.isDuringBattleAt(game, Filters.system)
+                && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.Star_Destroyer, Filters.canBeTargetedBy(self), Filters.canBeRelocatedToLocation(Filters.battleLocation, true, 0)))) {
 
-        modifiers.add(new PoliticsModifier(self, new AtSameSiteAsCondition(self, Filters.and(Filters.opponents(self), Filters.character)), new AtSameSiteEvaluator(self, Filters.and(Filters.opponents(self), Filters.character))));
-        return modifiers;
+            PhysicalCard artwork = ((ArtworkCardRevealedResult) effectResult).getCard();
+
+            if (artwork != null
+                    && Filters.starship.accepts(game, artwork)) {
+
+                final PhysicalCard battleLocation = Filters.findFirstFromTopLocationsOnTable(game, Filters.battleLocation);
+                if (battleLocation != null) {
+                    final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+                    action.setText("Relocate Star Destroyer");
+
+                    action.appendUsage(
+                            new OncePerGameEffect(action));
+                    action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a Star Destroyer to relocate to " + GameUtils.getCardLink(battleLocation), Filters.and(Filters.your(self), Filters.Star_Destroyer, Filters.canBeRelocatedToLocation(battleLocation, true, 0))) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                            action.allowResponses("Relocate "+GameUtils.getCardLink(targetedCard)+" to "+GameUtils.getCardLink(battleLocation), new RespondablePlayCardEffect(action) {
+                                @Override
+                                protected void performActionResults(Action targetingAction) {
+                                    PhysicalCard starDestroyer = action.getPrimaryTargetCard(targetGroupId);
+                                    action.appendEffect(new RelocateBetweenLocationsEffect(action, starDestroyer, battleLocation));
+                                }
+                            });
+                        }
+                    });
+
+                    return Collections.singletonList(action);
+                }
+            }
+        }
+
+        return null;
     }
 }

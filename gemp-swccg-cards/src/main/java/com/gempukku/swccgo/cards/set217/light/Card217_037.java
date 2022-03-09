@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class Card217_037 extends AbstractNormalEffect {
     public Card217_037() {
-        super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Hero_Of_A_Thousand_Devices, Uniqueness.UNIQUE);
+        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Hero_Of_A_Thousand_Devices, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Left to his own devices, Artoo used his spunk and creativity to save his companions' lives time and time again.");
         setGameText("Deploy on table. Once per game, may [download] an R-unit droid. During a battle where your droid present with a Scomp link, your total power is +1 (+3 if your other droid present with a Scomp link at a related location). [Immune to Alter.]");

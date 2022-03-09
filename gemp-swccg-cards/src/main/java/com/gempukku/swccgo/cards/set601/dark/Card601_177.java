@@ -56,7 +56,6 @@ public class Card601_177 extends AbstractDroid {
                 return null;
             }
         };
-        permanentWeapon.addKeyword(Keyword.BLASTER_RIFLE);
         return permanentWeapon;
     }
 

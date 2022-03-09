@@ -25,7 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Rolling, Rolling, Rolling & There They Are!
@@ -38,8 +38,8 @@ public class Card501_017 extends AbstractUsedOrLostInterrupt {
         setGameText("USED: Take a non-unique battle droid or non-unique destroyer droid into hand from Reserve Deck; reshuffle. " +
                 "OR During a battle you initiated, your non-unique battle droids and non-unique destroyer droids present are each power +1." +
                 "LOST: Target a Jedi at a site where you have two battle droids and/or destroyer droids. Target's game text is canceled for remainder of turn.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
-        setTestingText("[Set 18] Rolling, Rolling, Rolling & There They Are!");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
+        setTestingText("Rolling, Rolling, Rolling & There They Are!");
     }
 
     @Override

@@ -1,150 +1,86 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
+import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.SetWhileInPlayDataEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.WhileInPlayData;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.timing.Action;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Set: Set 17
- * Type: Epic Event
- * Title: Revenge Of The Sith
+ * Set: Set 18
+ * Type: Interrupt
+ * Subtype: Used
+ * Title: Seal Off The Bridge
  */
-public class Card501_008 extends AbstractEpicEventDeployable {
+public class Card501_008 extends AbstractUsedInterrupt {
     public Card501_008() {
-        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Revenge_Of_The_Sith);
-        setGameText("Deploy on table (only at start of game) and choose an apprentice: " +
-                "Maul: Deploy Desert Landing Site. " +
-                "Dooku: Deploy Invisible Hand: Bridge. " +
-                "Vader: Deploy Vader's Castle. " +
-                "You may not deploy Dark Jedi except [Episode I] Sidious and the chosen apprentice. Your [Episode I] Sidious and the chosen apprentice gain [Sith]. " +
-                "A Sith Legend, Always Two There Are, and Sith are destiny +2. " +
-                "If a Jedi was just lost from same location as your Dark Jedi, opponent loses 1 Force. " +
-                "Opponent may not cancel or reduce Force drains at their battlegrounds where you have a Dark Jedi.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
-        setTestingText("Revenge Of The Sith");
+        super(Side.DARK, 5, "Seal Off The Bridge", Uniqueness.UNIQUE);
+        setGameText("Use 3 Force to take a Neimoidian or an Effect of any kind into hand from Reserve Deck; reshuffle. OR Deploy Blockade Flagship: Bridge from Reserve Deck; reshuffle.");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
+        setTestingText("Seal Off The Bridge");
     }
 
     @Override
-    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return GameConditions.isDuringStartOfGame(game);
-    }
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
 
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new ArrayList<>();
+        GameTextActionId gameTextActionId = GameTextActionId.SEAL_OFF_THE_BRIDGE__UPLOAD_CARD;
 
-        if (TriggerConditions.justDeployed(game, effectResult, self)) {
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setPerformingPlayer(self.getOwner());
+        // Check condition(s)
+        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)
+                && GameConditions.canUseForceToPlayInterrupt(game, playerId, self, 3)) {
 
-            final String MAUL = "Maul";
-            final String DOOKU = "Dooku";
-            final String VADER = "Vader";
-
-            List<PhysicalCard> reserveDeck = game.getGameState().getReserveDeck(self.getOwner());
-            List<String> possible = new LinkedList<>();
-            if (!Filters.filter(reserveDeck, game, Filters.Desert_Landing_Site).isEmpty()) {
-                possible.add(MAUL);
-            }
-            if (!Filters.filter(reserveDeck, game, Filters.Invisible_Hand_Bridge).isEmpty()) {
-                possible.add(DOOKU);
-            }
-            if (!Filters.filter(reserveDeck, game, Filters.Vaders_Castle).isEmpty()) {
-                possible.add(VADER);
-            }
-
-
-            String[] possibleResults = possible.toArray(new String[0]);
-
-            action.appendTargeting(
-                    new PlayoutDecisionEffect(action, self.getOwner(), new MultipleChoiceAwaitingDecision("Choose an apprentice", possibleResults) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Take a Neimoidian or Effect into hand");
+            // Pay cost(s)
+            action.appendCost(
+                    new UseForceEffect(action, playerId, 3));
+            // Allow response(s)
+            action.allowResponses("Take a Neimoidian or an Effect of any kind into hand from Reserve Deck",
+                    new RespondablePlayCardEffect(action) {
                         @Override
-                        protected void validDecisionMade(int index, String result) {
-                            Filter siteFilter = null;
-                            Filter apprenticeFilter = null;
-
-                            switch (result) {
-                                case MAUL:
-                                    siteFilter = Filters.Desert_Landing_Site;
-                                    apprenticeFilter = Filters.Maul;
-                                    break;
-                                case DOOKU:
-                                    siteFilter = Filters.Invisible_Hand_Bridge;
-                                    apprenticeFilter = Filters.Dooku;
-                                    break;
-                                case VADER:
-                                    siteFilter = Filters.Vaders_Castle;
-                                    apprenticeFilter = Filters.Vader;
-                                    break;
-                            }
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, siteFilter, false)
-                            );
-                            action.appendEffect(
-                                    new AddUntilEndOfGameModifierEffect(action,
-                                            new KeywordModifier(self, apprenticeFilter, Keyword.SITH_APPRENTICE), " chooses " + result + " as the apprentice")
-                            );
-                            action.appendEffect(
-                                    new SetWhileInPlayDataEffect(action, self, new WhileInPlayData(result))
-                            );
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.Neimoidian, Filters.Effect_of_any_Kind), true));
                         }
-                    })
+                    }
             );
-
             actions.add(action);
         }
 
-        String opponent = game.getOpponent(self.getOwner());
+        gameTextActionId = GameTextActionId.SEAL_OFF_THE_BRIDGE__DOWNLOAD_BRIDGE;
 
         // Check condition(s)
-        if (TriggerConditions.justLostFromLocation(game, effectResult, Filters.Jedi, Filters.sameSiteAs(self, Filters.Dark_Jedi))) {
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.BlockadeFlagshipBridge)) {
 
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Make opponent lose 1 Force");
-            // Perform result(s)
-            action.appendEffect(
-                    new LoseForceEffect(action, opponent, 1));
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Deploy Blockade Flagship: Bridge");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new DeployCardFromReserveDeckEffect(action, Filters.BlockadeFlagshipBridge, true));
+                        }
+                    }
+            );
             actions.add(action);
         }
 
         return actions;
-    }
-
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
-
-        List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MayNotPlayModifier(self, Filters.and(Filters.Dark_Jedi, Filters.except(Filters.and(Icon.EPISODE_I, Filters.Sidious)), Filters.except(Filters.Sith_Apprentice)), self.getOwner()));
-        modifiers.add(new AddCardTypeModifier(self, Filters.or(Filters.and(Filters.your(self), Icon.EPISODE_I, Filters.Sidious), Filters.Sith_Apprentice), CardType.SITH));
-        modifiers.add(new DestinyModifier(self, Filters.or(Filters.A_Sith_Legend, Filters.Always_Two_There_Are, Filters.Sith), 2));
-        modifiers.add(new ForceDrainsMayNotBeReducedModifier(self, Filters.and(Filters.opponents(self), Filters.battleground, Filters.occupiesWith(playerId, self, Filters.Dark_Jedi)), opponent, playerId));
-        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.and(Filters.opponents(self), Filters.battleground, Filters.occupiesWith(playerId, self, Filters.Dark_Jedi)), opponent, playerId));
-        return modifiers;
-    }
-
-    @Override
-    public String getDisplayableInformation(SwccgGame game, PhysicalCard self) {
-        return "Chosen Apprentice is " + self.getWhileInPlayData().getTextValue();
     }
 }

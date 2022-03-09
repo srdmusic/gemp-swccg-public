@@ -1,89 +1,101 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
+import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.cards.evaluators.NegativeEvaluator;
+import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.TargetingReason;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
+import com.gempukku.swccgo.logic.effects.RespondableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
- * Type: Interrupt
- * Subtype: Used
- * Title: Now, This Is Podracing!
+ * Set: Set 18
+ * Type: Location
+ * Subtype: Site
+ * Title: Death Star II: Core Shaft Generator
  */
-public class Card501_069 extends AbstractUsedInterrupt {
+public class Card501_069 extends AbstractSite {
     public Card501_069() {
-        super(Side.LIGHT, 4, "Now, This Is Podracing!", Uniqueness.UNIQUE);
-        setGameText("During battle, add 1 to opponent's just drawn destiny (or to your just drawn weapon destiny). OR If Your Thoughts Dwell On Your Mother on table, [upload] Night Club or Skywalker Hut.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
-        setTestingText("Now, This Is Podracing!");
+        super(Side.LIGHT, "Death Star II: Core Shaft Generator", Title.Death_Star_II);
+        setLocationDarkSideGameText("If you have more than two characters here, you must target one to be lost (cannot be prevented).");
+        setLocationLightSideGameText("If you have more than one character here, you must target one to be lost (cannot be prevented).");
+        addIcon(Icon.DARK_FORCE, 1);
+        addIcon(Icon.LIGHT_FORCE, 2);
+        addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
+        setTestingText("Death Star II: Core Shaft Generator");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
-        String opponent = game.getOpponent(playerId);
+    protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        if (TriggerConditions.isTableChanged(game, effectResult)
+                && GameConditions.canSpot(game, self, 3, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.character, Filters.here(self)))) {
 
-        // Check condition(s)
-        if (GameConditions.isDuringBattle(game)
-                && (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, opponent)
-                || TriggerConditions.isWeaponDestinyJustDrawnBy(game, effectResult, playerId))) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Add 1 to destiny");
-            // Allow response(s)
-            action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Choose a character to be lost");
+            action.setPerformingPlayer(playerOnDarkSideOfLocation);
+            action.appendTargeting(new TargetCardOnTableEffect(action, playerOnDarkSideOfLocation, "Choose a character to be lost (cannot be prevented)", TargetingReason.TO_BE_LOST, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.character, Filters.here(self))) {
+                @Override
+                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                    action.addAnimationGroup(self);
+                    action.allowResponses(new RespondableEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
+                            PhysicalCard toBeLost = action.getPrimaryTargetCard(targetGroupId);
                             action.appendEffect(
-                                    new ModifyDestinyEffect(action, 1));
+                                    new LoseCardFromTableEffect(action, toBeLost));
                         }
-                    }
-            );
-            actions.add(action);
+                    });
+                }
+            });
+
+            return Collections.singletonList(action);
         }
-        return actions;
+        return null;
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
+    protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        if (TriggerConditions.isTableChanged(game, effectResult)
+                && GameConditions.canSpot(game, self, 2, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.character, Filters.here(self)))) {
 
-        GameTextActionId gameTextActionId = GameTextActionId.GO_BACK_TO_YOUR_DRINKS__UPLOAD_SITE;
-
-        if (GameConditions.canSpot(game, self, Filters.title("Your Thoughts Dwell On Your Mother"))
-                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Take site into hand from Reserve Deck");
-            // Allow response(s)
-            action.allowResponses("Take Skywalker Hut or Nightclub into hand from Reserve Deck",
-                    new RespondablePlayCardEffect(action) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Choose a character to be lost");
+            action.setPerformingPlayer(playerOnLightSideOfLocation);
+            action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a character to be lost (cannot be prevented)", TargetingReason.TO_BE_LOST, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.character, Filters.here(self))) {
+                @Override
+                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                    action.addAnimationGroup(self);
+                    action.allowResponses(new RespondableEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
+                            PhysicalCard toBeLost = action.getPrimaryTargetCard(targetGroupId);
                             action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.title("Tatooine: Skywalker Hut"), Filters.Nightclub), true));
+                                    new LoseCardFromTableEffect(action, toBeLost));
                         }
-                    }
-            );
-            actions.add(action);
-        }
+                    });
+                }
+            });
 
-        return actions;
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }

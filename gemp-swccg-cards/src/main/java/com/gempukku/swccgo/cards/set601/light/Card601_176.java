@@ -35,6 +35,7 @@ public class Card601_176 extends AbstractNormalEffect {
         super(Side.LIGHT, 2, PlayCardZoneOption.ATTACHED, "We'll Take The Long Way", Uniqueness.UNIQUE);
         setLore("Actions borne of the love of one's planet can heavily outweigh those generated from simple battle orders.");
         setGameText("Deploy on a site. Your Republic characters may deploy here regardless of Objective deployment restrictions. Once per turn, if you just deployed a Republic character to an interior Naboo site, retrieve a non-character card into hand. (Immune to Alter.)");
+        addKeywords(Keyword.DEPLOYS_ON_SITE);
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.LEGACY_BLOCK_5);
         addImmuneToCardTitle(Title.Alter);
         setAsLegacy(true);

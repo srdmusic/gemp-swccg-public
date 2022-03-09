@@ -1,51 +1,55 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractSite;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.actions.MoveUsingLocationTextAction;
-import com.gempukku.swccgo.cards.conditions.HereCondition;
-import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.cards.AbstractSystem;
+import com.gempukku.swccgo.cards.conditions.CantSpotCondition;
+import com.gempukku.swccgo.cards.conditions.ControlsCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.evaluators.HereEvaluator;
+import com.gempukku.swccgo.common.CardType;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.UnlessCondition;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
+ * Set: Set 18
  * Type: Location
- * Subtype: Site
- * Title: Kef Bir: Oceanic Wreckage
+ * Subtype: System
+ * Title: Polis Massa
  */
-public class Card501_071 extends AbstractSite {
+public class Card501_071 extends AbstractSystem {
     public Card501_071() {
-        super(Side.LIGHT, "Kef Bir: Oceanic Wreckage", Title.Kef_Bir);
-        setLocationDarkSideGameText("Unless you occupy, Kylo and Sidious deploy -1 here.");
-        setLocationLightSideGameText("Unless Rey, Han, or Ben Solo here, Force drain -1 here.");
-        addIcon(Icon.DARK_FORCE, 2);
+        super(Side.LIGHT, Title.Polis_Massa, 8);
+        setLocationDarkSideGameText("If a [Skywalker] Objective on table, Force drain -1 here. To move or deploy your starship here requires +1 Force.");
+        setLocationLightSideGameText("Skywalkers and Obi-Wan deploy -1 here.");
+        addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.EPISODE_VII, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
-        setTestingText("Kef Bir: Oceanic Wreckage");
+        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_18);
+        setTestingText("Polis Massa");
     }
 
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        Filter yourStarships = Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.starship);
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.or(Filters.Kylo, Filters.Sidious), new UnlessCondition(new OccupiesCondition(playerOnDarkSideOfLocation, self)), -1, self));
+        modifiers.add(new ForceDrainModifier(self, new OnTableCondition(self, Filters.and(Icon.SKYWALKER, Filters.Objective)),-1, playerOnDarkSideOfLocation));
+        modifiers.add(new DeployCostToLocationModifier(self, yourStarships, 1, self));
+        modifiers.add(new MoveCostToLocationModifier(self, yourStarships, 1, self));
         return modifiers;
     }
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, new UnlessCondition(new HereCondition(self, Filters.or(Filters.Rey, Filters.Han, Filters.persona(Persona.BEN_SOLO)))), -1, playerOnLightSideOfLocation));
+
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.or(Filters.Skywalker, Filters.ObiWan), -1, self));
         return modifiers;
     }
 }

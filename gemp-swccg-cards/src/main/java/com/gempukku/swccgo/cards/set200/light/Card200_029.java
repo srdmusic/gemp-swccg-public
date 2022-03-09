@@ -35,7 +35,7 @@ import java.util.List;
 public class Card200_029 extends AbstractDefensiveShield {
     public Card200_029() {
         super(Side.LIGHT, "The Republic No Longer Functions");
-        setGameText("Plays on table. While your have 12 or fewer cards in hand, opponent may not remove cards from your hand (except with Monnok). Once per turn (even at start of turn), target a [Coruscant] Political Effect; it is suspended for the remainder of the turn.");
+        setGameText("Plays on table. While your have 12 or fewer cards in hand, opponent may not remove cards from your hand (except with Monnok). Once per turn (even at start of turn), may target a [Coruscant] Political Effect; it is suspended for the remainder of the turn.");
         addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_DEFENSIVE_SHIELD);
     }
 

@@ -111,9 +111,31 @@ public class Card3_115 extends AbstractEpicEventPlayable {
                                                                                 protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
                                                                                     // 2) Maximum Firepower!
                                                                                     gameState.sendMessage("Destiny: " + (totalDestiny != null ? GuiUtils.formatAsString(totalDestiny) : "Failed destiny draw"));
-
+                                                                                    
+                                                                                    boolean modifyX = modifiersQuerying.hasGameTextModification(gameState, self, ModifyGameTextType.TARGET_THE_MAIN_GENERATOR__MODIFY_X);
+                                                                                    
                                                                                     float valueForX;
-                                                                                    if (Filters.character.accepts(game, pilot))
+                                                                                    if (modifyX) {
+                                                                                        PhysicalCard location = modifiersQuerying.getLocationThatCardIsAt(gameState, weapon);
+                                                                                        int markerNumber = 0;
+                                                                                        if (Filters.First_Marker.accepts(gameState, modifiersQuerying, location)) {
+                                                                                            markerNumber = 1;
+                                                                                        } else if (Filters.Second_Marker.accepts(gameState, modifiersQuerying, location)) {
+                                                                                            markerNumber = 2;
+                                                                                        } else if (Filters.Third_Marker.accepts(gameState, modifiersQuerying, location)) {
+                                                                                            markerNumber = 3;
+                                                                                        } else if (Filters.Fourth_Marker.accepts(gameState, modifiersQuerying, location)) {
+                                                                                            markerNumber = 4;
+                                                                                        } else if (Filters.Fifth_Marker.accepts(gameState, modifiersQuerying, location)) {
+                                                                                            markerNumber = 5;
+                                                                                        } else if (Filters.Sixth_Marker.accepts(gameState, modifiersQuerying, location)) {
+                                                                                            markerNumber = 6;
+                                                                                        } else if (Filters.Seventh_Marker.accepts(gameState, modifiersQuerying, location)) {
+                                                                                            markerNumber = 7;
+                                                                                        }
+
+                                                                                        valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, 6 - markerNumber);
+                                                                                    } else if (Filters.character.accepts(game, pilot))
                                                                                         valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, modifiersQuerying.getAbility(gameState, pilot));
                                                                                     else
                                                                                         valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, modifiersQuerying.getHighestAbilityPiloting(gameState, pilot, true, false));

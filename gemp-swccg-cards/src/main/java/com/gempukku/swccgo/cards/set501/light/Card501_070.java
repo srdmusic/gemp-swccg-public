@@ -1,83 +1,88 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
+import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
+import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
+import com.gempukku.swccgo.cards.conditions.OccupiesWithCondition;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.AttachCardFromTableEffect;
-import com.gempukku.swccgo.logic.effects.ModifyTotalPowerUntilEndOfBattleEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.PlayStackedDefensiveShieldEffect;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromCardModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
-import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
- * Type: Interrupt
- * Subtype: Used
- * Title: Everything We Need
+ * Set: Set 18
+ * Type: Location
+ * Subtype: Site
+ * Title: Kef Bir: Oceanic Ruins
  */
-public class Card501_070 extends AbstractUsedInterrupt {
+public class Card501_070 extends AbstractSite {
     public Card501_070() {
-        super(Side.LIGHT, 4, "Everything We Need", Uniqueness.UNIQUE);
-        setGameText("If My Parents Were Strong on table, choose: [upload] Saddle or a Kef Bir site. OR During battle, add X to your total power, where X = number of your cards out of play.");
-        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
-        setTestingText("Everything We Need");
+        super(Side.LIGHT, "Kef Bir: Oceanic Ruins", Title.Kef_Bir);
+        setLocationDarkSideGameText("When deployed, may play a Defensive Shield from under your Starting Effect as if from hand.");
+        setLocationLightSideGameText("If you occupy with a Jedi, you lose no more than 1 Force to That Thing's Operational.");
+        addIcon(Icon.DARK_FORCE, 1);
+        addIcon(Icon.LIGHT_FORCE, 2);
+        addIcons(Icon.EPISODE_VII, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_18);
+        setTestingText("Kef Bir: Oceanic Ruins");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new LimitForceLossFromCardModifier(self, Filters.That_Things_Operational, new OccupiesWithCondition(playerOnLightSideOfLocation, self, Filters.Jedi), 1, playerOnLightSideOfLocation));
+        return modifiers;
+    }
 
-        GameTextActionId gameTextActionId = GameTextActionId.EVERYTHING_WE_NEED__UPLOAD_SITE;
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextDarkSideOptionalAfterTriggers(String playerOnDarkSideOfLocation, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
 
-        if (GameConditions.canSpot(game, self, Filters.title("My Parents Were Strong"))) {
-            if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-                action.setText("Take site into hand from Reserve Deck");
-                // Allow response(s)
-                action.allowResponses("Take Saddle or a Kef Bir site into hand from Reserve Deck",
-                        new RespondablePlayCardEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.title(Title.Saddle), Filters.Kef_Bir_site), true));
+        // When deployed, may play a Defensive Shield from under your Starting Effect as if from hand.
+
+        // Check condition(s)
+        if (TriggerConditions.justDeployed(game, effectResult, self)) {
+            PhysicalCard startingEffect = Filters.findFirstActive(game, self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.Starting_Effect));
+            if (startingEffect != null) {
+                Filter filter = Filters.and(Filters.Defensive_Shield, Filters.playable(self));
+                if (GameConditions.hasStackedCards(game, startingEffect, filter)) {
+
+                    final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId);
+                    action.setText("Play a Defensive Shield");
+                    // Choose target(s)
+                    action.appendTargeting(
+                            new ChooseStackedCardEffect(action, playerOnDarkSideOfLocation, startingEffect, filter) {
+                                @Override
+                                protected void cardSelected(PhysicalCard selectedCard) {
+                                    // Perform result(s)
+                                    action.appendEffect(
+                                            new PlayStackedDefensiveShieldEffect(action, self, selectedCard));
+                                }
                             }
-                        }
-                );
-                actions.add(action);
-            }
-
-            if (GameConditions.isDuringBattle(game)) {
-
-                final int outOfPlay = Filters.filter(game.getGameState().getAllOutOfPlayCards(), game, Filters.your(self)).size();
-
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                action.setText("Add " + outOfPlay + " to power");
-
-                action.allowResponses(new RespondablePlayCardEffect(action) {
-                    @Override
-                    protected void performActionResults(Action targetingAction) {
-                        action.appendEffect(
-                                new ModifyTotalPowerUntilEndOfBattleEffect(action, outOfPlay, playerId, "Adds " + outOfPlay + " to total power"));
-                    }
-                });
-
-                actions.add(action);
-
+                    );
+                    return Collections.singletonList(action);
+                }
             }
         }
-        return actions;
+
+        return null;
     }
+
 }

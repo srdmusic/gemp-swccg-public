@@ -1,22 +1,14 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractImperial;
+import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
-import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -25,73 +17,30 @@ import java.util.List;
 
 
 /**
- * Set: Set 17
- * Type: Character
- * Subtype: Imperial
- * Title: Captain Needa (V)
+ * Set: Set 18
+ * Type: Interrupt
+ * Subtype: Used or Lost
+ * Title: He's No Good To Me Dead
  */
-public class Card501_026 extends AbstractImperial {
+public class Card501_026 extends AbstractUsedOrLostInterrupt {
     public Card501_026() {
-        super(Side.DARK, 1, 3, 3, 3, 5, "Captain Needa", Uniqueness.UNIQUE);
-        setVirtualSuffix(true);
-        setLore("Able leader and captain of the Avenger. Was given his command by Admiral Ozzel. Treated with suspicion by Darth Vader and the Emperor, who distrust Ozzel's close advisors.");
-        setGameText("Adds 2 to power of anything he pilots (3 if Avenger). Once per game, may take Apology Accepted into hand from Reserve Deck; reshuffle. While out of play, your total battle destiny is +1 where you have an Imperial captain. If just lost, place him out of play.");
-        addKeywords(Keyword.LEADER, Keyword.CAPTAIN);
-        addIcons(Icon.DAGOBAH, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_17);
-        setMatchingStarshipFilter(Filters.Avenger);
-        setTestingText("Captain Needa (V)");
+        super(Side.DARK, 4, "He's No Good To Me Dead", Uniqueness.UNIQUE);
+        setGameText("For remainder of turn, Fett's weapon destinies are +1 and targets he 'hits' are forfeit = 0. OR Once per game, if a battle was just initiated where Fett is escorting Jabba's Prize, cancel that battle (opponent's characters there may move away for free). [Immune to Sense.]");
+        addIcons(Icon.VIRTUAL_SET_18);
+        setTestingText("He's No Good To Me Dead");
+        hideFromDeckBuilder();
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, new CardMatchesEvaluator(2, 3, Filters.Avenger)));
-        return modifiers;
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
+
+        return actions;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.CAPTAIN_NEEDA__UPLOAD_APOLOGY_ACCEPTED;
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
 
-        // Check condition(s)
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take Apology Accepted into hand from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.title(Title.Apology_Accepted), true));
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    public List<Modifier> getGameTextWhileOutOfPlayModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new TotalBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.Imperial, Filters.captain)), 1, self.getOwner(), true));
-        return modifiers;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextLeavesTableRequiredTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        String playerId = self.getOwner();
-
-        // Check condition(s)
-        if (TriggerConditions.justLost(game, effectResult, self)) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Place out of play");
-            action.setActionMsg("Place " + GameUtils.getCardLink(self) + " out of play");
-            // Perform result(s)
-            action.appendEffect(
-                    new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, playerId, self, false));
-            return Collections.singletonList(action);
-        }
         return null;
     }
 }
