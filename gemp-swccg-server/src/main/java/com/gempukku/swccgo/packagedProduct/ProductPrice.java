@@ -40,7 +40,7 @@ public interface ProductPrice {
     int THEED_PALACE_BOOSTER_BOX = 8000;
     int REFLECTIONS_BOOSTER_BOX = 13000;
     int REFLECTIONS_II_BOOSTER_BOX = 13000;
-    int REFLECTIONS_III_BOOSTER_BOX = 13000;
+    int REFLECTIONS_III_BOOSTER_BOX = 14000;
 
     // Starter set/deck prices
     int PREMIERE_STARTER_SET = 995;
