@@ -325,7 +325,7 @@ var GempSwccgMerchantUI = Class.extend({
                     var tradeFoilBut = $("<div class='tradeFoil'>Trade 4 for foil</div>").button();
                     tradeFoilBut.click(
                             function () {
-                                that.displayMerchantAction(card, "Do you want to trade 4 of this card and 15<img src='images/gold.png'/> in currency for a foil version of the card?",
+                                that.displayMerchantAction(card, "Do you want to trade 4 of this card and 5<img src='images/gold.png'/> in currency for a foil version of the card?",
                                         function () {
                                             that.comm.tradeInFoil(blueprintId, function () {
                                                 that.cardFilter.getCollection();
