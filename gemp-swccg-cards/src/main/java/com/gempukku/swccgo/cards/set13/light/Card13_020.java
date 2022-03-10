@@ -5,7 +5,6 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
-import com.gempukku.swccgo.game.PhysicalCardImpl;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
@@ -17,7 +16,6 @@ import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,7 +28,7 @@ import java.util.List;
  */
 public class Card13_020 extends AbstractLostInterrupt {
     public Card13_020() {
-        super(Side.LIGHT, 6, "Darth Maul's Demise", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 6, "Fall Of A Jedi", Uniqueness.UNIQUE);
         setLore("The blow, when it came, was lightning swift and fatal. But Qui-Gon's death gave new life to his former Padawan.");
         setGameText("If your Jedi was just defeated in lightsaber combat, you may either: Reveal a Dark Jedi's combat cards and place one in opponent's Lost Pile (return others). OR Place Qui-Gon out of play and take [Episode I] Obi-Wan into hand from Lost Pile or Reserve Deck; reshuffle.");
         addIcons(Icon.EPISODE_I, Icon.REFLECTIONS_III);
@@ -56,7 +54,7 @@ public class Card13_020 extends AbstractLostInterrupt {
                                 action.appendEffect(new ChooseStackedCardEffect(action, playerId, darkJedi, Filters.combatCard) {
                                     @Override
                                     protected void cardSelected(PhysicalCard selectedCard) {
-                                        action.appendEffect(new PlaceCardInLostPileFromTableEffect(action, selectedCard));
+                                        action.appendEffect(new PutStackedCardInLostPileEffect(action, playerId, selectedCard, false));
                                     }
                                 });
                             }
@@ -75,12 +73,12 @@ public class Card13_020 extends AbstractLostInterrupt {
                     || GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId))) {
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-                action.setText("Take Obi-Wan into hand from Reserve Deck or Lost Pile");
+                action.setText("Search Lost Pile or Reserve Deck");
 
                 action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose Qui-Gon to place out of play", TargetingReason.TO_BE_PLACED_OUT_OF_PLAY, Filters.QuiGon) {
                     @Override
                     protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
-                        action.allowResponses("Draw destiny", new RespondablePlayCardEffect(action) {
+                        action.allowResponses("Take [Episode I] Obi-Wan into hand from Lost Pile or Reserve Deck", new RespondablePlayCardEffect(action) {
                             @Override
                             protected void performActionResults(Action targetingAction) {
                                 action.appendCost(new PlaceCardOutOfPlayFromTableEffect(action, targetedCard));
@@ -98,12 +96,14 @@ public class Card13_020 extends AbstractLostInterrupt {
                                             action.appendEffect(new ChooseCardsFromMultiplePilesEffect(action, playerId, zones, playerId,1, 1, 1, false, false, Filters.and(Icon.EPISODE_I, Filters.ObiWan)) {
                                                 @Override
                                                 protected void cardsSelected(SwccgGame game, Collection<PhysicalCard> selectedCards) {
-                                                    action.appendEffect(new TakeOneCardIntoHandFromOffTableEffect(action, playerId, selectedCards.iterator().next(), "Take Obi-Wan into hand") {
-                                                        @Override
-                                                        protected void afterCardTakenIntoHand() {
+                                                    if (selectedCards.size()>0) {
+                                                        action.appendEffect(new TakeOneCardIntoHandFromOffTableEffect(action, playerId, selectedCards.iterator().next(), "Take Obi-Wan into hand") {
+                                                            @Override
+                                                            protected void afterCardTakenIntoHand() {
 
-                                                        }
-                                                    });
+                                                            }
+                                                        });
+                                                    }
                                                 }
                                             });
                                             action.appendEffect(

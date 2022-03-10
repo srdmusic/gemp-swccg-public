@@ -1,14 +1,11 @@
 package com.gempukku.swccgo.cards.set13.light;
 
-import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.decisions.YesNoDecision;
@@ -57,7 +54,7 @@ public class Card13_012 extends AbstractUsedInterrupt {
                                 @Override
                                 protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
                                     if (totalDestiny == null) {
-                                        game.getGameState().sendMessage("Result: failed due to failed destiny draw");
+                                        game.getGameState().sendMessage("Result: Failed due to failed destiny draw");
                                     } else {
                                         float destinyValue = totalDestiny;
                                         if (GameConditions.isOutOfPlay(game, Filters.QuiGon))
@@ -66,9 +63,9 @@ public class Card13_012 extends AbstractUsedInterrupt {
                                         game.getGameState().sendMessage("Total destiny: "+destinyValue);
                                         if (destinyValue > 6) {
                                             PhysicalCard maul = action.getPrimaryTargetCard(targetGroupId);
-                                            game.getGameState().sendMessage("Result: success");
+                                            game.getGameState().sendMessage("Result: Success");
                                             action.appendEffect(new PlaceCardOutOfPlayFromTableEffect(action, maul));
-                                            action.appendEffect(new PlayoutDecisionEffect(action, playerId,                                                     new YesNoDecision("Take any card into hand from Lost Pile?") {
+                                            action.appendEffect(new PlayoutDecisionEffect(action, playerId, new YesNoDecision("Take any card into hand from Lost Pile?") {
                                                         @Override
                                                         protected void yes() {
                                                             action.appendEffect(new TakeCardIntoHandFromLostPileEffect(action, playerId, Filters.any, false));
@@ -82,7 +79,7 @@ public class Card13_012 extends AbstractUsedInterrupt {
                                             );
 
                                         } else {
-                                            game.getGameState().sendMessage("Result: failed");
+                                            game.getGameState().sendMessage("Result: Failed");
                                         }
                                     }
                                 }

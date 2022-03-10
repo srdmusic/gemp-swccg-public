@@ -86,7 +86,7 @@ public abstract class ChooseCardsFromMultiplePilesEffect extends AbstractStandar
             sb.append(zone.getHumanReadable());
             sb.append(", ");
         }
-        sb.delete(sb.length()-2,2);
+        sb.setLength(sb.length()-2);
         return sb.toString();
     }
 
@@ -109,7 +109,7 @@ public abstract class ChooseCardsFromMultiplePilesEffect extends AbstractStandar
         // Determine the cards to choose from
         List<PhysicalCard> cardPile = new LinkedList<>();
         for (Zone zone:_zones) {
-            gameState.getCardPile(_zoneOwner, zone);
+            cardPile.addAll(gameState.getCardPile(_zoneOwner, zone));
         }
 
         Collection<PhysicalCard> selectableCards = cardPile;
@@ -188,7 +188,7 @@ public abstract class ChooseCardsFromMultiplePilesEffect extends AbstractStandar
                 sb.append(zone.getHumanReadable());
                 sb.append(", ");
             }
-            sb.delete(sb.length()-2,2);
+            sb.setLength(sb.length()-2); //take off the last command and space
             final String pileText = sb.toString();
 
             gameState.sendMessage(game.getOpponent(_playerId) + " verifies " + _zoneOwner + "'s " + pileText);
