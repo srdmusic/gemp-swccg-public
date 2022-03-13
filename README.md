@@ -4,7 +4,7 @@ GEMP-SWCCG - server/client for playing Star Wars CCG using a web browser. The pr
 ## TOC
 
 * <a href="#docker">Docker</a>
-* <a href="#vargant">Vagrant</a>
+* <a href="#vagrant">Vagrant</a>
 
 
 <a name="docker" />
