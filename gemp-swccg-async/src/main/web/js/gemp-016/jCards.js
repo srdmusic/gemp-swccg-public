@@ -3420,28 +3420,28 @@ var fixedImages = {
 "501_2":"https://res.starwarsccg.org/cards/Virtual5-Dark/large/overseeingitpersonally.gif",
 "501_3":"https://res.starwarsccg.org/cards/Virtual9-Dark/large/shadowsoftheempire.gif",
 "501_4":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/imperialcommand.gif",
-"501_5":"/gemp-swccg/images/cards/Hoth-Dark/idjustassoonkissawookiee.gif",
-"501_6":"/gemp-swccg/images/cards/CloudCity-Dark/darkdeal.gif",
+"501_5":"https://res.starwarsccg.org/cards/PlayTesting-Dark/idjustassoonkissawookiee.gif",
+"501_6":"https://res.starwarsccg.org/cards/PlayTesting-Dark/darkdeal.gif",
 "501_7":"https://res.starwarsccg.org/cards/Hoth-Dark/large/lightsaberdeficiency.gif",
 "501_8":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/neimoidianadvisor.gif",
 "501_9":"https://res.starwarsccg.org/cards/EnhancedCloudCity-Dark/large/crushtherebellion.gif",
 "501_10":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/imperialoccupation.gif",
 "501_10_BACK":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/imperialcontrol.gif",
-"501_11":"/gemp-swccg/images/cards/Hoth-Dark/thatsittherebelsarethere.gif",
-"501_12":"/gemp-swccg/images/cards/Tatooine-Dark/youmaystartyourlanding.gif",
+"501_11":"https://res.starwarsccg.org/cards/PlayTesting-Dark/thatsittherebelsarethere.gif",
+"501_12":"https://res.starwarsccg.org/cards/PlayTesting-Dark/youmaystartyourlanding.gif",
 "501_13":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Dark/large/hothmainpowergenerators.gif",
-"501_14":"/gemp-swccg/images/cards/Tatooine-Dark/amillionvoicescryingout.gif",
+"501_14":"https://res.starwarsccg.org/cards/PlayTesting-Dark/amillionvoicescryingout.gif",
 "501_15":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/coloneljendon.gif",
-"501_16":"/gemp-swccg/images/cards/Coruscant-Dark/lottdod.gif",
-"501_17":"/gemp-swccg/images/cards/TheedPalace-Dark/rollingrollingrolling.gif",
-"501_18":"/gemp-swccg/images/cards/CloudCity-Light/courageofaskywalker.gif",
-"501_19":"/gemp-swccg/images/cards/CloudCity-Light/glancingblow.gif",
-"501_20":"/gemp-swccg/images/cards/CloudCity-Light/darkapproach.gif",
+"501_16":"https://res.starwarsccg.org/cards/PlayTesting-Dark/lottdod.gif",
+"501_17":"https://res.starwarsccg.org/cards/PlayTesting-Dark/rollingrollingrolling.gif",
+"501_18":"https://res.starwarsccg.org/cards/PlayTesting-Light/courageofaskywalker.gif",
+"501_19":"https://res.starwarsccg.org/cards/PlayTesting-Light/glancingblow.gif",
+"501_20":"https://res.starwarsccg.org/cards/PlayTesting-Light/darkapproach.gif",
 "501_21":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/thok&thug.gif",
-"501_22":"/gemp-swccg/images/cards/Hoth-Dark/deathsquadron.gif",
+"501_22":"https://res.starwarsccg.org/cards/PlayTesting-Dark/deathsquadron.gif",
 "501_23":"https://res.starwarsccg.org/cards/Hoth-Dark/large/targetthemaingenerator.gif",
 "501_24":"https://res.starwarsccg.org/cards/Hoth-Dark/large/directhit.gif",
-"501_25":"/gemp-swccg/images/cards/Hoth-Dark/tyrant.gif",
+"501_25":"https://res.starwarsccg.org/cards/PlayTesting-Dark/tyrant.gif",
 "501_26":"https://res.starwarsccg.org/cards/CloudCity-Dark/large/hesallyoursbountyhunter.gif",
 "501_27":"https://res.starwarsccg.org/cards/EmpireStrikesBackIntroductoryTwoPlayerGame-Dark/large/walkergarrison.gif",
 "501_28":"https://res.starwarsccg.org/cards/Virtual13-Dark/large/seventhsister.gif",
@@ -3450,7 +3450,7 @@ var fixedImages = {
 "501_30_BACK":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/youreaslave.gif",
 "501_31":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/insignificantrebellion.gif",
 "501_32":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/blownclear.gif",
-"501_33":"/gemp-swccg/images/cards/Virtual13-Light/val.gif",
+"501_33":"https://res.starwarsccg.org/cards/PlayTesting-Light/val.gif",
 "501_34":"https://res.starwarsccg.org/cards/Dagobah-Dark/large/raithal.gif",
 "501_35":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/coruscantimperialsquare.gif",
 "501_36":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/cloudcitydowntownplaza.gif",
@@ -3471,7 +3471,7 @@ var fixedImages = {
 "501_51":"https://res.starwarsccg.org/cards/Virtual0-Light/large/carefulplanning.gif",
 "501_52":"https://res.starwarsccg.org/cards/CloudCity-Light/large/computerinterface.gif",
 "501_53":"https://res.starwarsccg.org/cards/Virtual3-Light/large/rebelleadership.gif",
-"501_54":"/gemp-swccg/images/cards/ReflectionsIII-Dark/nomatchforasith.gif",
+"501_54":"https://res.starwarsccg.org/cards/PlayTesting-Dark/nomatchforasith.gif",
 "501_55":"https://res.starwarsccg.org/cards/Coruscant-Light/large/speakwiththejedicouncil.gif",
 "501_56":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/insertionplanning.gif",
 "501_57":"https://res.starwarsccg.org/cards/Virtual13-Light/large/deathstariichasmwalkway.gif",
@@ -3840,8 +3840,8 @@ var fixedImages = {
 "201_40ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/slaveisymboloffear_ai.png",
 "203_14ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/stolendatatapes_ai.png",
 "203_21ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/wildkarrde_ai.png",
-"213_10ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Dark/maul_ai.png",
-"213_39ai":"/gemp-swccg/images/cards/VirtualAlternateImage-Light/qira_ai.png",
+"213_10ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/maul_ai.png",
+"213_39ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/qira_ai.png",
 "204_26ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/jakku_ai.png",
 "301_1ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/ahsokatanowithlightsabers_ai.png",
 "301_3ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/asajjventresswithlightsabers_ai.png",
@@ -3966,12 +3966,12 @@ var packBlueprints = {
     "Watto's Cube Fixed Pack (Light)":"https://res.starwarsccg.org/packs/wattos_cube_fixed_pack_light.png",
 
 
-    "(S)Booster Choice -- Non-Reflections":"/gemp-swccg/images/packs/booster_selection.png",
-    "(S)Booster Choice -- Reflections":"/gemp-swccg/images/packs/booster_selection.png",
-    "(S)Enhanced Cloud City Pack Choice":"/gemp-swccg/images/packs/booster_selection.png",
-    "(S)Enhanced Jabba's Palace Pack Choice":"/gemp-swccg/images/packs/booster_selection.png",
-    "(S)Enhanced Premiere Pack Choice -- Dark":"/gemp-swccg/images/packs/booster_selection.png",
-    "(S)Enhanced Premiere Pack Choice -- Light":"/gemp-swccg/images/packs/booster_selection.png",
+    "(S)Booster Choice -- Non-Reflections":"https://res.starwarsccg.org/packs/booster_selection.png",
+    "(S)Booster Choice -- Reflections":"https://res.starwarsccg.org/packs/booster_selection.png",
+    "(S)Enhanced Cloud City Pack Choice":"https://res.starwarsccg.org/packs/booster_selection.png",
+    "(S)Enhanced Jabba's Palace Pack Choice":"https://res.starwarsccg.org/packs/booster_selection.png",
+    "(S)Enhanced Premiere Pack Choice -- Dark":"https://res.starwarsccg.org/packs/booster_selection.png",
+    "(S)Enhanced Premiere Pack Choice -- Light":"https://res.starwarsccg.org/packs/booster_selection.png",
 
 };
 
@@ -4060,7 +4060,7 @@ var Card = Class.extend({
         }
         this.attachedCards = new Array();
         if (imageBlueprint == "rules") {
-            this.imageUrl = "/gemp-swccg/images/rules.png";
+            this.imageUrl = "https://res.starwarsccg.org/cards/rules.png";
         }
         else {
             this.horizontal = this.isHorizontal(this.bareBlueprint, this.zone);
@@ -4467,8 +4467,7 @@ var Card = Class.extend({
     },
 
     getMainLocation:function (setNo, cardNo) {
-
-        return "/gemp-swccg/images/cards/";
+        return "https://res.starwarsccg.org/cards/";
     },
 
     getHeightForWidth:function (width) {
@@ -4511,22 +4510,22 @@ function createCardDiv(image, testingText, text, foil, tokens, noBorder, incompl
     var cardDiv = $("<div class='card'><img src='" + image + "' width='100%' height='100%'>" + ((text != null) ? text : "") + "</div>");
 
     if (incomplete) {
-        var incompleteDiv = $("<div class='incompleteOverlay'><img src='/gemp-swccg/images/incompleteCard.png' width='100%' height='100%'></div>");
+        var incompleteDiv = $("<div class='incompleteOverlay'><img src='https://res.starwarsccg.org/gemp/incompleteCard.png' width='100%' height='100%'></div>");
         cardDiv.append(incompleteDiv);
     }
 
     if (foil) {
-        var foilDiv = $("<div class='foilOverlay'><img src='/gemp-swccg/images/holo.jpg' width='100%' height='100%'></div>");
+        var foilDiv = $("<div class='foilOverlay'><img src='https://res.starwarsccg.org/cards/holo.jpg' width='100%' height='100%'></div>");
         cardDiv.append(foilDiv);
     }
 
-    var frozenDiv = $("<div class='frozenOverlay'><img src='/gemp-swccg/images/carbonite.gif' width='100%' height='100%'></div>");
+    var frozenDiv = $("<div class='frozenOverlay'><img src='https://res.starwarsccg.org/cards/carbonite.gif' width='100%' height='100%'></div>");
     cardDiv.append(frozenDiv);
 
-    var suspendedDiv = $("<div class='suspendedOverlay'><img src='/gemp-swccg/images/gray.jpg' width='100%' height='100%'></div>");
+    var suspendedDiv = $("<div class='suspendedOverlay'><img src='https://res.starwarsccg.org/gemp/gray.jpg' width='100%' height='100%'></div>");
     cardDiv.append(suspendedDiv);
 
-    var collapsedDiv = $("<div class='collapsedOverlay'><img src='/gemp-swccg/images/collapsed.jpg' width='100%' height='100%'></div>");
+    var collapsedDiv = $("<div class='collapsedOverlay'><img src='https://res.starwarsccg.org/gemp/collapsed.jpg' width='100%' height='100%'></div>");
     cardDiv.append(collapsedDiv);
 
     if (tokens === undefined || tokens) {
@@ -4546,7 +4545,7 @@ function createCardDiv(image, testingText, text, foil, tokens, noBorder, incompl
         cardDiv.append(testingTextDiv);
     }
 
-    var borderDiv = $("<div class='borderOverlay'><img class='actionArea' src='/gemp-swccg/images/pixel.png' width='100%' height='100%'></div>");
+    var borderDiv = $("<div class='borderOverlay'><img class='actionArea' src='https://res.starwarsccg.org/gemp/pixel.png' width='100%' height='100%'></div>");
     if (noBorder)
         borderDiv.addClass("noBorder");
     cardDiv.append(borderDiv);
@@ -4563,7 +4562,7 @@ function createFullCardDiv(image, testingText, foil, horizontal, noBorder) {
         cardDiv.append("<div class='fullcard' style='position:absolute'><img src='" + image + "' width='497' height='357'></div>");
 
         if (foil) {
-            var foilDiv = $("<div class='foilOverlay' style='position:absolute;width:497px;height:357px'><img src='/gemp-swccg/images/holo.jpg' width='100%' height='100%'></div>");
+            var foilDiv = $("<div class='foilOverlay' style='position:absolute;width:497px;height:357px'><img src='https://res.starwarsccg.org/cards/holo.jpg' width='100%' height='100%'></div>");
             cardDiv.append(foilDiv);
         }
 
@@ -4574,10 +4573,10 @@ function createFullCardDiv(image, testingText, foil, horizontal, noBorder) {
         }
 
         if (noBorder) {
-            var borderDiv = $("<div class='borderOverlay,noBorder' style='position:absolute;width:497px;height:357px;border-width:0px'><img class='actionArea' src='/gemp-swccg/images/pixel.png' width='100%' height='100%'></div>");
+            var borderDiv = $("<div class='borderOverlay,noBorder' style='position:absolute;width:497px;height:357px;border-width:0px'><img class='actionArea' src='https://res.starwarsccg.org/gemp/pixel.png' width='100%' height='100%'></div>");
             cardDiv.append(borderDiv);
         } else {
-            var borderDiv = $("<div class='borderOverlay' style='position:absolute;width:465px;height:325px;border-width:16px'><img class='actionArea' src='/gemp-swccg/images/pixel.png' width='100%' height='100%'></div>");
+            var borderDiv = $("<div class='borderOverlay' style='position:absolute;width:465px;height:325px;border-width:16px'><img class='actionArea' src='https://res.starwarsccg.org/gemp/pixel.png' width='100%' height='100%'></div>");
             cardDiv.append(borderDiv);
         }
 
@@ -4586,7 +4585,7 @@ function createFullCardDiv(image, testingText, foil, horizontal, noBorder) {
         cardDiv.append("<div class='fullcard' style='position:absolute'><img src='" + image + "' width='357' height='497'></div>");
 
         if (foil) {
-            var foilDiv = $("<div class='foilOverlay' style='position:absolute;width:357px;height:497px'><img src='/gemp-swccg/images/holo.jpg' width='100%' height='100%'></div>");
+            var foilDiv = $("<div class='foilOverlay' style='position:absolute;width:357px;height:497px'><img src='https://res.starwarsccg.org/cards/holo.jpg' width='100%' height='100%'></div>");
             cardDiv.append(foilDiv);
         }
 
@@ -4597,10 +4596,10 @@ function createFullCardDiv(image, testingText, foil, horizontal, noBorder) {
         }
 
         if (noBorder) {
-            var borderDiv = $("<div class='borderOverlay,noBorder' style='position:absolute;width:357px;height:497px;border-width:0px'><img class='actionArea' src='/gemp-swccg/images/pixel.png' width='100%' height='100%'></div>");
+            var borderDiv = $("<div class='borderOverlay,noBorder' style='position:absolute;width:357px;height:497px;border-width:0px'><img class='actionArea' src='https://res.starwarsccg.org/gemp/pixel.png' width='100%' height='100%'></div>");
             cardDiv.append(borderDiv);
         } else {
-            var borderDiv = $("<div class='borderOverlay' style='position:absolute;width:325px;height:465px;border-width:16px'><img class='actionArea' src='/gemp-swccg/images/pixel.png' width='100%' height='100%'></div>");
+            var borderDiv = $("<div class='borderOverlay' style='position:absolute;width:325px;height:465px;border-width:16px'><img class='actionArea' src='https://res.starwarsccg.org/gemp/pixel.png' width='100%' height='100%'></div>");
             cardDiv.append(borderDiv);
         }
     }
@@ -4612,12 +4611,12 @@ function createSimpleCardDiv(image, testingText, foil, incomplete, borderWidth) 
     var cardDiv = $("<div class='card'><img src='" + image + "' width='100%' height='100%'></div>");
 
     if (incomplete) {
-        var incompleteDiv = $("<div class='incompleteOverlay' style='position:absolute;left:0px;top:0px;width:100%;height:100%'><img src='/gemp-swccg/images/incompleteCard.png' width='100%' height='100%'></div>");
+        var incompleteDiv = $("<div class='incompleteOverlay' style='position:absolute;left:0px;top:0px;width:100%;height:100%'><img src='https://res.starwarsccg.org/gemp/incompleteCard.png' width='100%' height='100%'></div>");
         cardDiv.append(incompleteDiv);
     }
 
     if (foil) {
-        var foilDiv = $("<div class='foilOverlay' style='position:absolute;left:0px;top:0px;width:100%;height:100%'><img src='/gemp-swccg/images/holo.jpg' width='100%' height='100%'></div>");
+        var foilDiv = $("<div class='foilOverlay' style='position:absolute;left:0px;top:0px;width:100%;height:100%'><img src='https://res.starwarsccg.org/gemp/holo.jpg' width='100%' height='100%'></div>");
         cardDiv.append(foilDiv);
     }
 
@@ -4627,7 +4626,7 @@ function createSimpleCardDiv(image, testingText, foil, incomplete, borderWidth) 
         cardDiv.append(testingTextDiv);
     }
 
-    var borderDiv = $("<div class='borderOverlay' style='position:absolute;left:0px;top:0px;width:100%;height:100%;border-width:" + borderWidth + "px;box-sizing:border-box'><img class='actionArea' src='/gemp-swccg/images/pixel.png' width='100%' height='100%'></div>");
+    var borderDiv = $("<div class='borderOverlay' style='position:absolute;left:0px;top:0px;width:100%;height:100%;border-width:" + borderWidth + "px;box-sizing:border-box'><img class='actionArea' src='https://res.starwarsccg.org/gemp/pixel.png' width='100%' height='100%'></div>");
     cardDiv.append(borderDiv);
 
     return cardDiv;

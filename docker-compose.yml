@@ -1,0 +1,47 @@
+---
+
+version: "3"
+
+
+services:
+
+  gemp:
+    container_name: gemp
+    hostname: gemp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gemp
+    expose:
+      - "8080/tcp"
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    labels:
+      - "app=gemp"
+      - "traefik.enable=true"
+    tty: true
+    depends_on:
+      - db
+
+  db:
+    container_name: gempdb
+    hostname: gemp
+    build:
+      context: .
+      dockerfile: db.Dockerfile
+    environment:
+      - "MYSQL_ROOT_PASSWORD=gempukku"
+      - "MYSQL_DATABASE=gemp-swccg"
+      - "MYSQL_USER=gemp"
+      - "MYSQL_PASSWORD=Four_mason8pirate"
+    image: gempdb
+    expose:
+      - "3306/tcp"
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+    labels:
+      - "app=gempdb"
+      - "traefik.enable=false"
+
