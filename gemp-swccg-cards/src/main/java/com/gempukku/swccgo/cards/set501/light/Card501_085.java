@@ -32,6 +32,7 @@ public class Card501_085 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.SKYWALKER, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
         setTestingText("Ajan Kloss: Training Course (ERRATA)");
+        hideFromDeckBuilder();
     }
 
     @Override

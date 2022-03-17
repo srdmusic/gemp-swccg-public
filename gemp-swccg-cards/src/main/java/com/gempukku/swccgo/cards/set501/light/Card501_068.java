@@ -39,6 +39,7 @@ public class Card501_068 extends AbstractLostInterrupt {
         setGameText("If your [Skywalker] Objective on table, add X to your just drawn weapon or battle destiny, where X = the number of Skywalkers on table. OR If targeting your Skywalker, cancel Dark Strike, Imperial Barrier, or You Are Beaten.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
         setTestingText("Skywalkers (V)");
+        hideFromDeckBuilder();
     }
 
     @Override

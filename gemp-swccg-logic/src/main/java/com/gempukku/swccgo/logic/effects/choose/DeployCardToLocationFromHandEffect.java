@@ -53,6 +53,21 @@ public class DeployCardToLocationFromHandEffect extends DeployCardToTargetFromHa
     }
 
     /**
+     * Creates an effect that causes the player performing the action to choose and deploy a card accepted by the card filter
+     * to the specified location from hand.
+     * @param action the action performing this effect
+     * @param playerId the player
+     * @param cardFilter the card filter
+     * @param locationFilter the location filter
+     * @param forFree true if deploying for free, otherwise false
+     * @param asReact true if deploying as a react, otherwise false
+     */
+    public DeployCardToLocationFromHandEffect(Action action, String playerId, Filter cardFilter, Filter locationFilter, boolean forFree, boolean asReact) {
+        super(action, playerId, cardFilter, Filters.locationAndCardsAtLocation(locationFilter), forFree, asReact);
+
+    }
+
+    /**
      * Creates an effect that causes the card owner to deploy the specified card from hand to the specified location.
      * @param action the action performing this effect
      * @param cardToDeploy the card to deploy

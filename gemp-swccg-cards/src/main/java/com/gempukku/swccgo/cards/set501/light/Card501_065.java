@@ -41,6 +41,7 @@ public class Card501_065 extends AbstractNormalEffect {
         addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_18);
         setTestingText("Reflection (V)");
+        hideFromDeckBuilder();
     }
 
     @Override

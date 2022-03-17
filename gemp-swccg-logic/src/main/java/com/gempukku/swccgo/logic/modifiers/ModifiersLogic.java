@@ -5290,6 +5290,13 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 }
             }
 
+            // if the number of battle destiny draws for a player can't be limited, set curMaxLimit to MAX_VALUE
+            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.BATTLE_DESTINY_DRAWS_MAY_NOT_BE_LIMITED, battleState.getBattleLocation())) {
+                if (modifier.isForPlayer(player)) {
+                    curMaxLimit = Integer.MAX_VALUE;
+                }
+            }
+
             for (PhysicalCard battleParticipant : battleParticipants) {
                 for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MIN_BATTLE_DESTINY_DRAWS, battleParticipant)) {
                     int limit = modifier.getMinimumBattleDestinyDrawsModifier(gameState, this);
@@ -5314,9 +5321,19 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             // Do not check MAX_BATTLE_DESTINY_DRAWS if not checking drawing limit or not for showing on user interface
 
             if (isForGui) {
-                for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
+                boolean canLimit = true;
+                // if the number of battle destiny draws for a player can't be limited, set curMaxLimit to MAX_VALUE
+                for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.BATTLE_DESTINY_DRAWS_MAY_NOT_BE_LIMITED, battleState.getBattleLocation())) {
                     if (modifier.isForPlayer(player)) {
-                        result = Math.min(result, modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this));
+                        canLimit = false;
+                    }
+                }
+
+                if (canLimit) {
+                    for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
+                        if (modifier.isForPlayer(player)) {
+                            result = Math.min(result, modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this));
+                        }
                     }
                 }
             }
