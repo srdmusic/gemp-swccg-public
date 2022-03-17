@@ -38,6 +38,7 @@ public class Card501_086 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.SKYWALKER, Icon.TATOOINE, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         setTestingText("Tatooine: Slave Quarters (V) (ERRATA)");
+        hideFromDeckBuilder();
     }
 
     @Override

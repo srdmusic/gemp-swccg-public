@@ -36,6 +36,7 @@ public class Card501_067 extends AbstractUsedOrLostInterrupt {
         setGameText("USED: If your [Skywalker] Objective on table, take [Set 14] Chief Chirpa's Hut or [Cloud City] Leia into hand from Reserve Deck; reshuffle. LOST: If you are about to draw a card for battle destiny, may instead use ability number of your Leia involved in that battle.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
         setTestingText("My Sister Has It");
+        hideFromDeckBuilder();
     }
 
     @Override

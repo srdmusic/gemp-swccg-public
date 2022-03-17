@@ -34,6 +34,7 @@ public class Card501_087 extends AbstractNormalEffect {
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Your Thoughts Dwell On Your Mother (ERRATA)");
+        hideFromDeckBuilder();
     }
 
     @Override

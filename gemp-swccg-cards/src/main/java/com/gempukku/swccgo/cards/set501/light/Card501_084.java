@@ -37,6 +37,7 @@ public class Card501_084 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.SKYWALKER, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
         setTestingText("Endor: Anakin's Funeral Pyre (ERRATA)");
+        hideFromDeckBuilder();
     }
 
     @Override

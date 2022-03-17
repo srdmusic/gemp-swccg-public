@@ -1507,6 +1507,10 @@ public class SwccgGameMediator {
                 // Yavin 4 Operations
                 objectiveLabel = "Y4O";
             }
+            if (Filters.or(Filters.title("Zero Hour"), Filters.title("Liberation Of Lothal")).accepts(_swccgoGame, objective)) {
+                // Zero Hour
+                objectiveLabel = "Zero Hour";
+            }
             if (objectiveLabel != null) {
                 if (objective.getBlueprint().hasVirtualSuffix()) {
                     objectiveLabel = objectiveLabel + " v";
