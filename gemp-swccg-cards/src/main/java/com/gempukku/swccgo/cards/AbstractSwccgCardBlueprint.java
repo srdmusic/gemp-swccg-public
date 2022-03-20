@@ -1257,6 +1257,15 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
     }
 
     /**
+     * Determines if this creature's habitat includes aboard a starship.
+     * @return true if has attribute, otherwise false
+     */
+    @Override
+    public boolean habitatIncludesAboardStarship() {
+        throw new UnsupportedOperationException("This method, habitatIncludesAboardStarship(), should not be called on this card: " + _title);
+    }
+
+    /**
      * Gets the only play card zone option for this card. This is only set by cards that are only played to one zone.
      * @return the play card zone option, or null
      */

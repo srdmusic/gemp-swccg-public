@@ -3466,7 +3466,7 @@ var fixedImages = {
 "501_46":"https://res.starwarsccg.org/cards/TheedPalace-Light/large/macewindujedimaster.gif",
 "501_47":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/coruscantjeditemplemeditationroom.png",
 "501_48":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/kashyyykoperative.gif",
-"501_49":"https://res.starwarsccg.org/cards/Virtual5-Light/large/leiaofalderaan.gif",
+"501_49":"https://res.starwarsccg.org/cards/Endor-Light/large/ihopeshesallright.gif",
 "501_50":"https://res.starwarsccg.org/cards/JabbasPalaceSealedDeck-Light/large/ouneeta.gif",
 "501_51":"https://res.starwarsccg.org/cards/Virtual0-Light/large/carefulplanning.gif",
 "501_52":"https://res.starwarsccg.org/cards/CloudCity-Light/large/computerinterface.gif",
@@ -3537,6 +3537,11 @@ var fixedImages = {
 "501_112": "https://res.starwarsccg.org/cards/DeathStarII-Light/large/moncalamari.gif",
 "501_113": "https://res.starwarsccg.org/cards/OfficialTournamentSealedDeck-Light/large/corulag.gif",
 "501_114": "https://res.starwarsccg.org/cards/JabbasPalace-Light/large/kiffex.gif",
+"501_115": "https://res.starwarsccg.org/cards/ANewHope-Dark/large/kiffex.gif",
+"501_116":"https://res.starwarsccg.org/cards/Tatooine-Light/large/changingtheodds.gif",
+"501_117":"https://res.starwarsccg.org/cards/Virtual0-Light/large/imustbeallowedtospeak.gif",
+"501_118":"https://res.starwarsccg.org/cards/PremiereIntroductoryTwoPlayerGame-Light/large/deathstarlevel6coreshaftcorridor.gif",
+"501_119":"https://res.starwarsccg.org/cards/Dagobah-Light/large/movingtoattackposition.gif",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",
@@ -4370,7 +4375,8 @@ var Card = Class.extend({
                    (cardNo == 108) ||
                    (cardNo == 109) ||
                    (cardNo == 110) ||
-                   (cardNo == 111);
+                   (cardNo == 111) ||
+                   (cardNo == 118);
         }
         if (setNo == 601) {
              return (cardNo == 14) ||

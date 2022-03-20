@@ -3,32 +3,18 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.InPlayDataEqualsCondition;
-import com.gempukku.swccgo.cards.effects.MoveAsReactEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.game.state.WhileInPlayData;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.decisions.IntegerAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeOneCardIntoHandFromOffTableEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.RetrieveForceResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -43,8 +29,8 @@ import java.util.List;
 public class Card501_105_BACK extends AbstractObjective {
     public Card501_105_BACK() {
         super(Side.LIGHT, 7, "Liberation of Lothal");
-        setGameText("While this side up, if you have Force drained this turn, your other Force drains are +1. Once per turn, may add or subtract X from a just drawn battle destiny (or opponent's weapon destiny), where X = number of battlegrounds occupied by Chopper, Ezra, Hera, Kanan, Sabine, or Zeb. Your battle destinies may not be limited at Lothal system. " +
-                "Flip if opponent controls two Lothal locations.");
+        setGameText("While this side up, if you have Force drained this turn, your other Force drains are +1. Once per turn, may add or subtract X from a just drawn battle destiny (or opponent's weapon destiny), where X = number of battlegrounds occupied by Phoenix Squadron characters. If you just won a battle, may retrieve a Phoenix Squadron character. During battle at Lothal system, opponent may not limit the number of battle destinies you may draw. " +
+                "Flip this card if opponent controls two Lothal locations.");
         addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("Liberation of Lothal");
     }
@@ -53,7 +39,7 @@ public class Card501_105_BACK extends AbstractObjective {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ForceDrainModifier(self, Filters.location, new InPlayDataEqualsCondition(self, true), 1, self.getOwner()));
-        modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedModifier(self, Filters.Lothal_system, self.getOwner()));
+        modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier(self, Filters.Lothal_system, self.getOwner()));
         return modifiers;
     }
 
@@ -90,6 +76,17 @@ public class Card501_105_BACK extends AbstractObjective {
             action2.appendUsage(new OncePerTurnEffect(action2));
             action2.appendEffect(new ModifyDestinyEffect(action2, -amount));
             actions.add(action2);
+        }
+
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+
+        if (TriggerConditions.wonBattle(game, effectResult, playerId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Retrieve a Phoenix Squadron character");
+            action.appendEffect(
+                    new RetrieveCardEffect(action, playerId, Filters.and(Keyword.PHOENIX_SQUADRON, Filters.character)));
+            actions.add(action);
         }
 
         return actions;

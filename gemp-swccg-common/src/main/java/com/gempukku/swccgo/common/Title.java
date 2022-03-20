@@ -464,6 +464,7 @@ public interface Title {
     String Holotheatre = "Executor: Holotheatre";
     String Honor_Of_The_Jedi = "Honor Of The Jedi";
     String Hopping_Mad = "Hopping Mad";
+    String Hosnian_Prime = "Hosnian Prime";
     String Hoth = "Hoth";
     String Hoth_Sentry = "Hoth Sentry";
     String Houjix = "Houjix";

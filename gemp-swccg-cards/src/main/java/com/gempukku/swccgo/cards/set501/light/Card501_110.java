@@ -30,7 +30,7 @@ public class Card501_110 extends AbstractSite {
         setLocationLightSideGameText("Rebels may move for free to or from here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
         setTestingText("Lothal: Tarkintown");
     }
 

@@ -5281,19 +5281,22 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             Integer curMinLimit = null;
             Integer curMaxLimit = null;
 
-            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
+            boolean destiniesMayNotBeLimitedByOpponent = false;
+
+            // check if the number of battle destiny draws for a player can't be limited by the opponent
+            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.BATTLE_DESTINY_DRAWS_MAY_NOT_BE_LIMITED_BY_OPPONENT, battleState.getBattleLocation())) {
                 if (modifier.isForPlayer(player)) {
+                    destiniesMayNotBeLimitedByOpponent = true;
+                }
+            }
+
+            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
+                if (modifier.isForPlayer(player)
+                        && (!destiniesMayNotBeLimitedByOpponent || modifier.getSource(gameState) == null || player.equals(modifier.getSource(gameState).getOwner()))) {
                     int limit = modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this);
                     if (curMaxLimit == null || limit < curMaxLimit) {
                         curMaxLimit = limit;
                     }
-                }
-            }
-
-            // if the number of battle destiny draws for a player can't be limited, set curMaxLimit to MAX_VALUE
-            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.BATTLE_DESTINY_DRAWS_MAY_NOT_BE_LIMITED, battleState.getBattleLocation())) {
-                if (modifier.isForPlayer(player)) {
-                    curMaxLimit = Integer.MAX_VALUE;
                 }
             }
 
@@ -5321,19 +5324,19 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             // Do not check MAX_BATTLE_DESTINY_DRAWS if not checking drawing limit or not for showing on user interface
 
             if (isForGui) {
-                boolean canLimit = true;
-                // if the number of battle destiny draws for a player can't be limited, set curMaxLimit to MAX_VALUE
-                for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.BATTLE_DESTINY_DRAWS_MAY_NOT_BE_LIMITED, battleState.getBattleLocation())) {
+                boolean destiniesMayNotBeLimitedByOpponent = false;
+
+                // check if the number of battle destiny draws for a player can't be limited by the opponent
+                for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.BATTLE_DESTINY_DRAWS_MAY_NOT_BE_LIMITED_BY_OPPONENT, battleState.getBattleLocation())) {
                     if (modifier.isForPlayer(player)) {
-                        canLimit = false;
+                        destiniesMayNotBeLimitedByOpponent = true;
                     }
                 }
 
-                if (canLimit) {
-                    for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
-                        if (modifier.isForPlayer(player)) {
-                            result = Math.min(result, modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this));
-                        }
+                for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
+                    if (modifier.isForPlayer(player)
+                            && (!destiniesMayNotBeLimitedByOpponent || modifier.getSource(gameState) == null || player.equals(modifier.getSource(gameState).getOwner()))) {
+                        result = Math.min(result, modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this));
                     }
                 }
             }
