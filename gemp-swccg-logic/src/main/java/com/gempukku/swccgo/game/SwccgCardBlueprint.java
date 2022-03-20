@@ -784,6 +784,13 @@ public interface SwccgCardBlueprint {
     Filter getHabitatFilter(final SwccgGame game, final PhysicalCard self);
 
     /**
+     * Determines if this creature's habitat includes aboard a starship.
+     * @return true if has attribute, otherwise false
+     */
+    boolean habitatIncludesAboardStarship();
+
+
+    /**
      * Gets the default play card zone option for this card. This is only set by cards that are only played to one zone.
      * @return the play card zone option, or null
      */
