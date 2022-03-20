@@ -5,28 +5,9 @@ version: "3"
 
 services:
 
-  gemp:
-    container_name: gemp
-    hostname: gemp
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: gemp
-    expose:
-      - "8080/tcp"
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    labels:
-      - "app=gemp"
-      - "traefik.enable=true"
-    tty: true
-    depends_on:
-      - db
-
-  db:
+  gempdb:
     container_name: gempdb
-    hostname: gemp
+    hostname: gempdb
     build:
       context: .
       dockerfile: db.Dockerfile
@@ -45,3 +26,30 @@ services:
       - "app=gempdb"
       - "traefik.enable=false"
 
+  gemp:
+    container_name: gemp
+    hostname: gemp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gemp
+    expose:
+      - "8080/tcp"
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    labels:
+      - "app=gemp"
+      - "traefik.enable=true"
+    tty: true
+    depends_on:
+      - gempdb
+    environment:
+      - "db_hostname=gempdb"
+    command: ["/usr/bin/wait-for-it.sh", "gempdb:3306", "--",
+              "/usr/bin/java",
+              "-Xmx4g",
+              "-Dlog4j.debug",
+              "-Dlog4j.configuration=prod-log4j.xml",
+              "-cp", "web.jar",
+              "com.gempukku.swccgo.async.SwccgoAsyncServer"]
