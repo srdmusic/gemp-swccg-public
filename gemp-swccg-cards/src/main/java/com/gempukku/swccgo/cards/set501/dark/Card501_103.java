@@ -14,6 +14,7 @@ import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.effects.BreakCoversEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -31,18 +32,25 @@ public class Card501_103 extends AbstractDroid {
     public Card501_103() {
         super(Side.DARK, 0.5, 2, 2, 4, "BB-9E", Uniqueness.UNIQUE);
         setAlternateDestiny(5.5);
-        setGameText("While present with your leader or First Order character, cancels BB-8's and/or Rose's game text at same and related sites. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any).");
-        setGameText("Cancels game text of BB-8 and/or Rose characters at same and related locations. During your move phase, may place in Used Pile; “break cover” of all Undercover spies here (if any). Immune to Restraining Bolt.");
+        setGameText("Deploy -1 to same site as BB-8. Cancels game text of BB-8 and/or Rose characters at same site. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any). Immune to Restraining Bolt and Sorry About The Mess.");
         addIcons(Icon.EPISODE_VII, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_17);
         addModelType(ModelType.ASTROMECH);
         setTestingText("BB-9E (ERRATA)");
     }
 
     @Override
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DeployCostToLocationModifier(self, -1, Filters.sameSiteAs(self, Filters.BB8)));
+        return modifiers;
+    }
+
+    @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.or(Filters.BB8, Filters.Rose), Filters.at(Filters.sameOrRelatedLocation(self)))));
+        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.or(Filters.BB8, Filters.Rose), Filters.character, Filters.atSameSite(self))));
         modifiers.add(new ImmuneToTitleModifier(self, Title.Restraining_Bolt));
+        modifiers.add(new ImmuneToTitleModifier(self, Title.Sorry_About_The_Mess));
         return modifiers;
     }
 

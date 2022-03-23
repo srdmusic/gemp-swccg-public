@@ -2,25 +2,23 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.ShowCardOnScreenEffect;
+import com.gempukku.swccgo.logic.decisions.YesNoDecision;
+import com.gempukku.swccgo.logic.effects.DeployCardsSimultaneouslyEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardCombinationFromHandAndOrReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckSimultaneouslyWithCardEffect;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.StandardEffect;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Set: Set 18
@@ -29,90 +27,161 @@ import java.util.List;
  */
 public class Card501_064 extends AbstractNormalEffect {
     public Card501_064() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.ATTACHED, "Best Starpilot In The Galaxy", Uniqueness.UNIQUE);
-        setGameText("Deploy on your [Skywalker] Epic Event; may deploy Polis Massa. During your deploy phase, may reveal Azure Angel, Falcon, or Red 5 from hand; take its matching pilot into hand (or vice versa) from Reserve Deck and deploy both simultaneously; reshuffle. [Immune to Alter.]");
+        super(Side.LIGHT, 0, PlayCardZoneOption.ATTACHED, "Best Starpilot In The Galaxy", Uniqueness.UNIQUE);
+        setGameText("Deploy on a [Skywalker] Epic Event. May deploy Polis Massa from Reserve Deck; reshuffle. Once per game, may simultaneously deploy Azure Angel, Falcon, or Red 5 with matching non-[Maintenance] pilot from hand and/or Reserve Deck (reshuffle). [Immune to Alter.]");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Best Starpilot In The Galaxy");
-        hideFromDeckBuilder();
     }
 
     @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Epic_Event);
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.BEST_STARPILOT_IN_THE_GALAXY__DEPLOY_POLIS_MASSA;
-        if (TriggerConditions.justDeployed(game, effectResult, self)
-            && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Polis_Massa, true)) {
-
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Polis Massa from Reserve Deck");
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Polis_Massa_system, true));
-            return Collections.singletonList(action);
-
-        }
-
-        return null;
+        return Filters.and(Icon.SKYWALKER, Filters.Epic_Event);
     }
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.BEST_STARPILOT_IN_THE_GALAXY__REVEAL_SHIP_OR_PILOT;
+        GameTextActionId gameTextActionId = GameTextActionId.BEST_STARPILOT_IN_THE_GALAXY__DEPLOY_POLIS_MASSA;
 
-        final Filter starshipFilter = Filters.or(
-                Filters.Azure_Angel,
-                Filters.Falcon,
-                Filters.Red_5);
-
-        Filter filter = Filters.and(Filters.or(Filters.pilot, starshipFilter), Filters.isUniquenessOnTableNotReached);
-
-
-        // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
-                && GameConditions.hasInHand(game, playerId, filter)
-                && GameConditions.canSearchReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Polis_Massa)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Reveal pilot or starship from hand");
-            action.setActionMsg("Reveal a pilot or a starship from hand");
-
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
-
-            // Choose target(s)
-            action.appendTargeting(
-                    new ChooseCardFromHandEffect(action, playerId, filter) {
-                        @Override
-                        protected void cardSelected(SwccgGame game, final PhysicalCard selectedCard) {
-                            final Filter searchFilter;
-                            if (Filters.character.accepts(game, selectedCard)) {
-                                action.setActionMsg("Take " + GameUtils.getCardLink(selectedCard) + "'s matching Azure Angel, Falcon, or Red 5 from Reserve Deck and deploy both simultaneously");
-
-                                Filter matchingStarship = Filters.and(starshipFilter, Filters.matchingStarship(selectedCard));
-                                searchFilter = Filters.and(matchingStarship);
-                            }
-                            else {
-                                action.setActionMsg("Take " + GameUtils.getCardLink(selectedCard) + "'s matching pilot from Reserve Deck and deploy both simultaneously");
-                                searchFilter = Filters.matchingPilot(selectedCard);
-                            }
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new ShowCardOnScreenEffect(action, selectedCard));
-                            action.appendEffect(
-                                    new DeployCardFromReserveDeckSimultaneouslyWithCardEffect(action, selectedCard, searchFilter, true));
-                        }
-                    });
+            action.setText("Deploy Polis Massa from Reserve Deck");
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.Polis_Massa_system, true));
             actions.add(action);
         }
 
+
+        gameTextActionId = GameTextActionId.BEST_STARPILOT_IN_THE_GALAXY__DEPLOY_STARSHIP_AND_PILOT;
+
+        // Check condition(s)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.isDuringYourPhase(game, self, Phase.DEPLOY)) {
+            boolean canDeployCardFromReserveDeck = GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Azure_Angel)
+                    || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.FALCON)
+                    || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.RED_5);
+            final List<PhysicalCard> cardsInHand = game.getGameState().getHand(playerId);
+            final List<PhysicalCard> validStarfighters = new ArrayList<PhysicalCard>();
+            Collection<PhysicalCard> starfighters = Filters.filter(cardsInHand, game, Filters.or(Filters.Azure_Angel, Filters.Falcon, Filters.Red_5));
+            for (PhysicalCard starfighter : starfighters) {
+                if (Filters.canSpot(cardsInHand, game, Filters.and(Filters.matchingPilot(starfighter), Filters.deployableSimultaneouslyWith(self, starfighter, false, 0, false, 0)))) {
+                    validStarfighters.add(starfighter);
+                }
+            }
+
+            if (!validStarfighters.isEmpty() || canDeployCardFromReserveDeck) {
+
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Deploy starship and pilot");
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerGameEffect(action));
+                if (!validStarfighters.isEmpty() && canDeployCardFromReserveDeck) {
+                    action.appendTargeting(
+                            new PlayoutDecisionEffect(action, playerId,
+                                    new YesNoDecision("You have valid starship and pilot combinations in hand. Do you want to search Reserve Deck as well?") {
+                                        @Override
+                                        protected void yes() {
+                                            action.setActionMsg("Deploy Azure Angel, Falcon, or Red 5 and a matching pilot from hand and/or Reserve Deck");
+                                            // Perform result(s)
+                                            action.appendEffect(getChooseCardsEffect(action));
+                                        }
+                                        @Override
+                                        protected void no() {
+                                            action.setActionMsg("Deploy Azure Angel, Falcon, or Red 5 and a matching pilot from hand");
+                                            action.appendTargeting(
+                                                    new ChooseCardFromHandEffect(action, playerId, Filters.in(validStarfighters)) {
+                                                        @Override
+                                                        public String getChoiceText(int numCardsToChoose) {
+                                                            return "Choose Azure Angel, Falcon, or Red 5";
+                                                        }
+                                                        @Override
+                                                        protected void cardSelected(SwccgGame game, final PhysicalCard starfighter) {
+                                                            Collection<PhysicalCard> pilots = Filters.filter(cardsInHand, game, Filters.and(Filters.matchingPilot(starfighter), Filters.not(Icon.MAINTENANCE),
+                                                                    Filters.deployableSimultaneouslyWith(self, starfighter, false, 0, false, 0)));
+                                                            action.appendTargeting(
+                                                                    new ChooseCardFromHandEffect(action, playerId, Filters.in(pilots)) {
+                                                                        @Override
+                                                                        public String getChoiceText(int numCardsToChoose) {
+                                                                            return "Choose matching pilot";
+                                                                        }
+                                                                        @Override
+                                                                        protected void cardSelected(SwccgGame game, PhysicalCard pilot) {
+                                                                            // Perform result(s)
+                                                                            action.appendEffect(
+                                                                                    new DeployCardsSimultaneouslyEffect(action, starfighter, false, 0, pilot, false, 0));
+                                                                        }
+                                                                    }
+                                                            );
+                                                        }
+                                                    }
+                                            );
+                                        }
+                                    }
+                            )
+                    );
+                }
+                else {
+                    action.setActionMsg("Deploy Azure Angel, Falcon, or Red 5 and a matching pilot from hand and/or Reserve Deck");
+                    // Perform result(s)
+                    action.appendEffect(getChooseCardsEffect(action));
+                }
+                actions.add(action);
+            }
+        }
+
         return actions;
+    }
+
+
+    private StandardEffect getChooseCardsEffect(final TopLevelGameTextAction action) {
+        return new ChooseCardCombinationFromHandAndOrReserveDeckEffect(action) {
+            @Override
+            public String getChoiceText(SwccgGame game, Collection<PhysicalCard> cardsSelected) {
+                return "Choose Azure Angel, Falcon, or Red 5 and a matching pilot from hand and/or Reserve Deck";
+            }
+
+            @Override
+            public Filter getValidToSelectFilter(SwccgGame game, Collection<PhysicalCard> cardsSelected) {
+                String playerId = action.getPerformingPlayer();
+                GameState gameState = game.getGameState();
+                Collection<PhysicalCard> cardsToChooseFrom = new LinkedList<PhysicalCard>(gameState.getHand(playerId));
+                cardsToChooseFrom.addAll(gameState.getCardPile(playerId, Zone.RESERVE_DECK));
+
+                if (cardsSelected.isEmpty()) {
+                    final List<PhysicalCard> validStarfighters = new ArrayList<PhysicalCard>();
+                    Collection<PhysicalCard> starfighters = Filters.filter(cardsToChooseFrom, game, Filters.or(Filters.Azure_Angel, Filters.Falcon, Filters.Red_5));
+                    for (PhysicalCard starfighter : starfighters) {
+                        if (Filters.canSpot(cardsToChooseFrom, game, Filters.and(Filters.matchingPilot(starfighter), Filters.not(Icon.MAINTENANCE), Filters.deployableSimultaneouslyWith(action.getActionSource(), starfighter, false, 0, false, 0)))) {
+                            validStarfighters.add(starfighter);
+                        }
+                    }
+                    return Filters.in(validStarfighters);
+                } else if (cardsSelected.size() == 1) {
+                    PhysicalCard starfighter = cardsSelected.iterator().next();
+                    return Filters.and(Filters.matchingPilot(starfighter), Filters.not(Icon.MAINTENANCE), Filters.deployableSimultaneouslyWith(action.getActionSource(), starfighter, false, 0, false, 0));
+                }
+                return Filters.none;
+            }
+
+            @Override
+            public boolean isSelectionValid(SwccgGame game, Collection<PhysicalCard> cardsSelected) {
+                return (cardsSelected.size() == 2);
+            }
+
+            @Override
+            protected void cardsChosen(List<PhysicalCard> cardsChosen) {
+                PhysicalCard starfighter = cardsChosen.get(0);
+                PhysicalCard pilot = cardsChosen.get(1);
+
+                // Perform result(s)
+                action.appendEffect(
+                        new DeployCardsSimultaneouslyEffect(action, starfighter, false, 0, pilot, false, 0));
+            }
+        };
     }
 }

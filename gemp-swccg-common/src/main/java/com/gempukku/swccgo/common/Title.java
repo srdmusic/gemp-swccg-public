@@ -241,6 +241,7 @@ public interface Title {
     String Dark_Strike = "Dark Strike";
     String Dark_Waters = "Dark Waters";
     String Darklighter_Spin = "Darklighter Spin";
+    String Darksaber = "Darksaber";
     String Darth_Vader_Dark_Lord_of_the_Sith = "Darth Vader, Dark Lord Of The Sith";
     String DataVault = "Scarif: Data Vault";
     String Dathcha = "Dathcha";
@@ -651,6 +652,7 @@ public interface Title {
     String Make_Ready_To_Land_Our_Troops = "Make Ready To Land Our Troops";
     String Malachor = "Malachor";
     String Malastare = "Malastare";
+    String Mandalore = "Mandalore";
     String Mandalorian_Armor = "Mandalorian Armor";
     String Maneuvering_Flaps = "Maneuvering Flaps";
     String Mantellian_Savrip = "Mantellian Savrip";
@@ -914,6 +916,7 @@ public interface Title {
     String Security_Precautions = "Security Precautions";
     String Security_Tower = "Cloud City: Security Tower";
     String Seeking_An_Audience = "Seeking An Audience";
+    String Seelos = "Seelos";
     String Sei_Taria = "Sei Taria";
     String Sense = "Sense";
     String Set_For_Stun = "Set For Stun";

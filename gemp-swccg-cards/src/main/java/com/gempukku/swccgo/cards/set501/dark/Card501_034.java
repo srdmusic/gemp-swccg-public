@@ -37,7 +37,7 @@ public class Card501_034 extends AbstractSystem {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.PLANET, Icon.VIRTUAL_SET_18);
-        setTestingText("Lothal");
+        setTestingText("Lothal (DARK)");
     }
 
     @Override

@@ -34,6 +34,7 @@ public class Card501_066 extends AbstractLostInterrupt {
         setGameText("During battle, target your lone starfighter piloted by a Skywalker. For remainder of turn, starfighter is immune to attrition. If opponent has two or more starships there (or your [Skywalker] Objective on table), add your starfighter's maneuver (if any) to your total power.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
         setTestingText("Full Throttle (V)");
+        hideFromDeckBuilder();
     }
 
     @Override

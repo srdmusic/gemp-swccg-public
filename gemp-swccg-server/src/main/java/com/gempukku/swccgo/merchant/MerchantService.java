@@ -22,6 +22,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Provides the implementation of the merchant service for buying and selling cards.
  */
 public class MerchantService {
+    public static final int TRADE_FOIL_COST = 500;
     private Merchant _merchant;
     private long _priceGuaranteeExpire = 1000 * 60 * 5;
     private Map<String, PriceGuarantee> _priceGuarantees = Collections.synchronizedMap(new LRUMap(100));
@@ -318,7 +319,7 @@ public class MerchantService {
         Lock lock = _lock.writeLock();
         lock.lock();
         try {
-            boolean success = _collectionsManager.tradeCards(player, _permanentCollection, blueprintId, 4, blueprintId + "*", 1, 1500);
+            boolean success = _collectionsManager.tradeCards(player, _permanentCollection, blueprintId, 4, blueprintId + "*", 1, TRADE_FOIL_COST);
             if (!success)
                 throw new MerchantException("Unable to remove the required cards or currency from your collection");
         }

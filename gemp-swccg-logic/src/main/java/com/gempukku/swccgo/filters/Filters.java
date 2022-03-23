@@ -17519,6 +17519,7 @@ public class Filters {
     public static final Filter Dark_Strike = Filters.title(Title.Dark_Strike);
     public static final Filter Dark_Waters = Filters.title(Title.Dark_Waters);
     public static final Filter Darklighter_Spin = Filters.title(Title.Darklighter_Spin);
+    public static final Filter Darksaber = Filters.title(Title.Darksaber);
     public static final Filter Dash = Filters.persona(Persona.DASH);
     public static final Filter Dathcha = Filters.title(Title.Dathcha);
     public static final Filter DataVault = Filters.title(Title.DataVault);
@@ -18110,11 +18111,13 @@ public class Filters {
     public static final Filter Main_Power_Generators = Filters.title(Title.Main_Power_Generators);
     public static final Filter maintenance_droid = Filters.modelType(ModelType.MAINTENANCE);
     public static final Filter Major_Panno = Filters.title(Title.Major_Panno);
+    public static final Filter Malachor_location = Filters.partOfSystem(Title.Malachor);
+    public static final Filter Malachor_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Malachor));
     public static final Filter Malakili = Filters.title(Title.Malakili);
     public static final Filter Make_Ready_To_Land_Our_Troops = Filters.title(Title.Make_Ready_To_Land_Our_Troops);
-    public static final Filter Malachor_location = Filters.partOfSystem(Title.Malachor);
     public static final Filter Malastare = Filters.title(Title.Malastare);
     public static final Filter male = Filters.and(CardCategory.CHARACTER, Filters.or(Keyword.MALE, Filters.not(Filters.keyword(Keyword.FEMALE))));
+    public static final Filter Mandalore_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Mandalore));
     public static final Filter Mandalorian = Filters.species(Species.MANDALORIAN);
     public static final Filter Mandalorian_Armor = Filters.title(Title.Mandalorian_Armor);
     public static final Filter Maneuvering_Flaps = Filters.title(Title.Maneuvering_Flaps);
@@ -18499,6 +18502,7 @@ public class Filters {
     public static final Filter Security_Precautions = Filters.title(Title.Security_Precautions);
     public static final Filter Security_Tower = Filters.title(Title.Security_Tower);
     public static final Filter seeker = Filters.keyword(Keyword.SEEKER);
+    public static final Filter Seelos_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Seelos));
     public static final Filter Sefla = Filters.persona(Persona.SEFLA);
     public static final Filter Sei_Taria = Filters.title(Title.Sei_Taria);
     public static final Filter senator = Filters.keyword(Keyword.SENATOR);

@@ -3396,6 +3396,13 @@ var fixedImages = {
 "217_50":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/theforceisstronginmyfamily.png",
 "217_51":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/theriseofskywalker.png",
 "217_52":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/yourthoughtsdwellonyourmother.png",
+"218_1":"https://res.starwarsccg.org/cards/Virtual18-Dark/hires/imperialcommandinrange.png",
+"218_2":"https://res.starwarsccg.org/cards/Virtual18-Dark/hires/sealoffthebridge.png",
+"218_3":"https://res.starwarsccg.org/cards/Virtual18-Light/hires/masterquigonwithlightsaber.png",
+"218_4":"https://res.starwarsccg.org/cards/Virtual18-Light/hires/masterwindu.png",
+"218_5":"https://res.starwarsccg.org/cards/Virtual18-Light/hires/rebelleadershipcriticalerrorrevealed.png",
+"218_6":"https://res.starwarsccg.org/cards/Virtual18-Light/hires/takeaseatyoungskywalker.png",
+
 
 "301_1":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/ahsokatanowithlightsabers.gif",
 "301_2":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/cityintheclouds.gif",
@@ -3518,6 +3525,18 @@ var fixedImages = {
 "501_102":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/localuprising.gif",
 "501_102_BACK":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/liberation.gif",
 "501_103":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/bb9e.png",
+"501_104": "https://res.starwarsccg.org/cards/EnhancedJabbasPalace-Light/large/masterluke.gif",
+"501_105": "https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/centeroftyranny.gif",
+"501_105_BACK": "https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/aliberatedworld.gif",
+"501_106": "https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/roguesquadrontactics.gif",
+"501_107": "https://res.starwarsccg.org/cards/Dagobah-Light/large/raithal.gif",
+"501_108": "https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/nabootheedpalacegeneratorcore.gif",
+"501_109": "https://res.starwarsccg.org/cards/SpecialEdition-Light/large/cloudcitydowntownplaza.gif",
+"501_110": "https://res.starwarsccg.org/cards/Tatooine-Light/large/tatooinemosespa.gif",
+"501_111": "https://res.starwarsccg.org/cards/Virtual5-Light/large/tatooinelarsmoisturefarm.gif",
+"501_112": "https://res.starwarsccg.org/cards/DeathStarII-Light/large/moncalamari.gif",
+"501_113": "https://res.starwarsccg.org/cards/OfficialTournamentSealedDeck-Light/large/corulag.gif",
+"501_114": "https://res.starwarsccg.org/cards/JabbasPalace-Light/large/kiffex.gif",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",
@@ -4347,7 +4366,11 @@ var Card = Class.extend({
                    (cardNo == 70) ||
                    (cardNo == 84) ||
                    (cardNo == 85) ||
-                   (cardNo == 86);
+                   (cardNo == 86) ||
+                   (cardNo == 108) ||
+                   (cardNo == 109) ||
+                   (cardNo == 110) ||
+                   (cardNo == 111);
         }
         if (setNo == 601) {
              return (cardNo == 14) ||

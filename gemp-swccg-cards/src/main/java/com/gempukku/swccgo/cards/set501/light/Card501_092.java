@@ -37,13 +37,13 @@ public class Card501_092 extends AbstractStarfighter {
         super(Side.LIGHT, 3, 3, 2, null, 5, 3, 4, Title.Tydirium, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Stolen Imperial Lambda-class shuttle. Supposedly carried parts and technical crew. Delivered General Solo's crack team of Rebel scouts to the forest moon of Endor.");
-        setGameText("May add 2 pilots and 6 passengers. Han deploys free aboard. Once per game, may retrieve Fly Casual. If an [Endor] scout aboard, immune to attrition (and if Chewie or Han, defense value +3). ");
+        setGameText("May add 2 pilots and 6 passengers. Han deploys aboard for free. While an [Endor] scout aboard, adds one battle destiny, defense value +3, and immune to attrition. Once per game, may retrieve Fly Casual.");
         addIcons(Icon.ENDOR, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
         addModelType(ModelType.LAMBDA_CLASS_SHUTTLE);
         setPilotCapacity(2);
         setPassengerCapacity(6);
         setAlwaysStolen(true);
-        setMatchingPilotFilter(Filters.or(Filters.Han, Filters.Chewie));
+        setMatchingPilotFilter(Filters.Han);
         setTestingText("Tydirium (V)");
     }
 
@@ -64,10 +64,11 @@ public class Card501_092 extends AbstractStarfighter {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Condition endorScoutAboard = new HasAboardCondition(self, Filters.and(Icon.ENDOR, Filters.scout));
-        Condition endorScoutHanOrChewie = new HasAboardCondition(self, Filters.and(Icon.ENDOR, Filters.scout, Filters.or(Filters.Chewie, Filters.Han)));
+
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ImmuneToAttritionModifier(self, endorScoutAboard));
-        modifiers.add(new DefenseValueModifier(self, self, endorScoutHanOrChewie, 3));
+        modifiers.add(new DefenseValueModifier(self, self, endorScoutAboard, 3));
+        modifiers.add(new AddsBattleDestinyModifier(self, endorScoutAboard, 1));
         return modifiers;
     }
 

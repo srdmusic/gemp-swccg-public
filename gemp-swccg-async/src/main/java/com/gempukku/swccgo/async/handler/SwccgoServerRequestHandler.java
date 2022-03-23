@@ -29,6 +29,7 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.COOKIE;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
 
 public class SwccgoServerRequestHandler {
+    public static final int WEEKLY_GOLD = 1500;
     protected PlayerDAO _playerDao;
     protected LoggedUserHolder _loggedUserHolder;
     private TransferDAO _transferDAO;
@@ -69,7 +70,7 @@ public class SwccgoServerRequestHandler {
                 else {
                     if (latestMonday != lastReward) {
                         if (_playerDao.updateLastReward(player, lastReward, latestMonday)) {
-                            _collectionManager.addCurrencyToPlayerCollection(true, "Weekly reward", player, CollectionType.MY_CARDS, 500);
+                            _collectionManager.addCurrencyToPlayerCollection(true, "Weekly reward", player, CollectionType.MY_CARDS, WEEKLY_GOLD);
                         }
                     }
                 }
