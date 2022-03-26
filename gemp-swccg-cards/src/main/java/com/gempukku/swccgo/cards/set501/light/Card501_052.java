@@ -20,6 +20,7 @@ import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromUsedPileEffe
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,7 +36,7 @@ public class Card501_052 extends AbstractLostOrStartingInterrupt {
         super(Side.LIGHT, 3, Title.Computer_Interface);
         setVirtualSuffix(true);
         setLore("Lobot's direct link with the Cloud City central computer allowed him to efficiently manipulate the floating city's resources.");
-        setGameText("LOST: Retrieve a card with 'Scomp link' in game text. OR Draw top card of Used Pile. STARTING: Deploy a site with exactly one [Light Side] with a Scomp link. Deploy up to two Effects that deploy for free and are always immune to Alter. Place Interrupt in Reserve Deck.");
+        setGameText("LOST: Retrieve Lobot or a droid. OR Draw top card of Used Pile. STARTING: Deploy a site with a Scomp link and exactly one [Light Side] that is related to a location on table. Deploy two Effects that deploy for free and are always immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_18);
         setTestingText("Computer Interface (V)");
     }
@@ -46,12 +47,11 @@ public class Card501_052 extends AbstractLostOrStartingInterrupt {
 
         GameTextActionId gameTextActionId = GameTextActionId.COMPUTER_INTERFACE_V__RETRIEVE_CARD;
 
-        // Retrieve a card with 'Scomp link' in game text
+        // Retrieve Lobot or a droid.
         if (GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
-            action.setText("Retrieve a card");
-            action.setActionMsg("Retrieve a card with 'Scomp link' in game text");
+            action.setText("Retrieve Lobot or a droid");
 
             // Allow response(s)
             action.allowResponses(
@@ -60,7 +60,7 @@ public class Card501_052 extends AbstractLostOrStartingInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new RetrieveCardEffect(action, playerId, Filters.or(Filters.gameTextContains("Scomp link"), Filters.gameTextContains("Scomp links"))));
+                                    new RetrieveCardEffect(action, playerId, Filters.or(Filters.Lobot, Filters.droid)));
                         }
                     }
             );
@@ -100,13 +100,20 @@ public class Card501_052 extends AbstractLostOrStartingInterrupt {
         final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
         action.setText("Deploy site and Effects from Reserve Deck");
         // Allow response(s)
-        action.allowResponses("Deploy a site with exactly one [Light Side] with a Scomp link and up to two Effects from Reserve Deck",
+        action.allowResponses("Deploy a site with a Scomp link and exactly one [Light Side] that is related to a location on table and two Effects from Reserve Deck",
                 new RespondablePlayCardEffect(action) {
                     @Override
                     protected void performActionResults(Action targetingAction) {
+                        Collection<PhysicalCard> locationsOnTable = Filters.filterTopLocationsOnTable(game, Filters.any);
+                        Collection<PhysicalCard> reserveDeck = game.getGameState().getReserveDeck(playerId);
+                        Collection<PhysicalCard> locationsToDeployFromReserveDeck = new LinkedList<>();
+                        for (PhysicalCard c : locationsOnTable) {
+                            locationsToDeployFromReserveDeck.addAll(Filters.filter(reserveDeck, game, Filters.relatedLocationEvenWhenNotInPlay(c)));
+                        }
+
                         // Perform result(s)
                         action.appendEffect(
-                                new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.site, Filters.iconCount(Icon.LIGHT_FORCE, 1), Filters.has_Scomp_link), true, false));
+                                new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.site, Filters.iconCount(Icon.LIGHT_FORCE, 1), Filters.has_Scomp_link, Filters.in(locationsToDeployFromReserveDeck)), true, false));
                         action.appendEffect(
                                 new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.deploysForFree, Filters.always_immune_to_Alter), 1, 2, true, false));
                         action.appendEffect(

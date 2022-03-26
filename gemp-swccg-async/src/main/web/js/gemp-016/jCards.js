@@ -3542,6 +3542,12 @@ var fixedImages = {
 "501_117":"https://res.starwarsccg.org/cards/Virtual0-Light/large/imustbeallowedtospeak.gif",
 "501_118":"https://res.starwarsccg.org/cards/PremiereIntroductoryTwoPlayerGame-Light/large/deathstarlevel6coreshaftcorridor.gif",
 "501_119":"https://res.starwarsccg.org/cards/Dagobah-Light/large/movingtoattackposition.gif",
+"501_120":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/daultaydofine.gif",
+"501_121":"https://res.starwarsccg.org/cards/ReflectionsII-Dark/large/ommnibox&itsworse.gif",
+"501_122":"https://res.starwarsccg.org/cards/Virtual12-Dark/large/slipslidingaway.gif",
+"501_123":"https://res.starwarsccg.org/cards/Virtual0-Light/large/narshaddaa.gif",
+"501_124":"https://res.starwarsccg.org/cards/Virtual0-Light/large/jabbasprizefront.gif",
+"501_124_BACK":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/maxrebo.gif",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",
