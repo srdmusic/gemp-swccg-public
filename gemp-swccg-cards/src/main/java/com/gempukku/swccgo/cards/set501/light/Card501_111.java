@@ -28,8 +28,8 @@ public class Card501_111 extends AbstractSite {
         super(Side.LIGHT, "Lothal: Comm Tower E-272 (Ezra's Roost)", Title.Lothal);
         setLocationDarkSideGameText("");
         setLocationLightSideGameText("Ezra deploys -2 and is immune to attrition here.");
-        addIcon(Icon.DARK_FORCE, 2);
-        addIcon(Icon.LIGHT_FORCE, 1);
+        addIcon(Icon.DARK_FORCE, 1);
+        addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
         setTestingText("Lothal: Comm Tower E-272 (Ezra's Roost)");
     }

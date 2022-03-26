@@ -11,6 +11,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -27,7 +28,7 @@ public class Card501_009 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Crush The Rebellion", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("After dueling his son and seizing control of a city in the clouds, Vader resumed his quest to destroy the Alliance.");
-        setGameText("If your Executor (or Scarif) site on table, deploy on table. Once per turn, may deploy Devastator, Mustafar, or a private platform from Reserve Deck; reshuffle. While Devastator at Mustafar or Scarif, it is immune to attrition < 6. [Immune to Alter.]");
+        setGameText("If Visage Of The Emperor on table, deploy on table. Devastator is deploy -3 and immune to attrition < 6 at Mustafar. Once per turn, may deploy Mustafar, a private Platform or Devastator from Reserve Deck; reshuffle. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Crush The Rebellion (V)");
@@ -35,13 +36,14 @@ public class Card501_009 extends AbstractNormalEffect {
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.and(Filters.your(self), Filters.or(Filters.Executor_site, Filters.Scarif_site)));
+        return Filters.canSpot(game, self, Filters.Visage_Of_The_Emperor);
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, Filters.and(Filters.Devastator, Filters.at(Filters.or(Filters.Mustafar_system, Filters.Scarif_system))), 6));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.Devastator, -3, Filters.Mustafar_system));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, Filters.and(Filters.Devastator, Filters.at(Filters.Mustafar_system)), 6));
         return modifiers;
     }
 

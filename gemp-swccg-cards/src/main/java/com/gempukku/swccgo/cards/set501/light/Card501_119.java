@@ -62,8 +62,9 @@ public class Card501_119 extends AbstractUsedOrLostInterrupt {
         );
         actions.add(action1);
 
+        final Filter starshipFilter = Filters.and(Filters.your(self), Filters.starship, Filters.piloted, Filters.participatingInBattle);
         if (GameConditions.isDuringBattleAt(game, Filters.system)
-            && GameConditions.canTarget(game, self, 2, Filters.and(Filters.your(self), Filters.starship, Filters.piloted, Filters.participatingInBattle))) {
+            && GameConditions.canTarget(game, self, Filters.and(starshipFilter, Filters.with(self, starshipFilter)))) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setText("Draw two battle destiny if unable to otherwise");
@@ -74,8 +75,8 @@ public class Card501_119 extends AbstractUsedOrLostInterrupt {
                             // Perform result(s)
                             action.appendEffect(
                                     new AddUntilEndOfBattleModifierEffect(action,
-                                            new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, Filters.and(Filters.your(self), Filters.starship, Filters.piloted, Filters.participatingInBattle), 2),
-                                            "Draw two battle destiny if unable to otherwise"));
+                                            new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, starshipFilter, 2),
+                                            "Draws two battle destiny if unable to otherwise"));
 
                         }
                     }

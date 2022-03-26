@@ -27,10 +27,9 @@ import java.util.List;
 public class Card501_001 extends AbstractSith {
     public Card501_001() {
         super(Side.DARK, 1, 6, 8, 4, 5, "Savage Opress", Uniqueness.UNIQUE);
-        setLore("Dathomirian assassin.");
+        setLore("Dathomirian.");
         setGameText("Deploys -1 for each other Sith character on table (limit -4). Once per game, may exchange a card in hand with a Sith character in Lost Pile. Immune to attrition < 3.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.SEPARATIST, Icon.EPISODE_I, Icon.VIRTUAL_SET_7);
-        addKeywords(Keyword.ASSASSIN);
         setSpecies(Species.DATHOMIRIAN);
         setTestingText("Savage Opress (ERRATA)");
     }
