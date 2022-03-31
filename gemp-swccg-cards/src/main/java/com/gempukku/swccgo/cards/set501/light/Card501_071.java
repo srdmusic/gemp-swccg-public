@@ -29,7 +29,7 @@ public class Card501_071 extends AbstractSystem {
     public Card501_071() {
         super(Side.LIGHT, Title.Polis_Massa, 8);
         setLocationDarkSideGameText("If a [Skywalker] Epic Event on table, Force drain -1 here. To move or deploy your starship to here requires +1 Force.");
-        setLocationLightSideGameText("If your Skywalker here, Force drain +1 here.");
+        setLocationLightSideGameText("If your Skywalker here, opponent may not draw more than two battle destiny here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.PLANET, Icon.VIRTUAL_SET_18);
@@ -48,9 +48,8 @@ public class Card501_071 extends AbstractSystem {
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
-
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceDrainModifier(self, new HereCondition(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.Skywalker)), 1, playerOnLightSideOfLocation));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, self, new HereCondition(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.Skywalker)), 2, game.getOpponent(playerOnLightSideOfLocation)));
         return modifiers;
     }
 }

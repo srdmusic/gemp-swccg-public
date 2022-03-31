@@ -3548,6 +3548,8 @@ var fixedImages = {
 "501_123":"https://res.starwarsccg.org/cards/Virtual0-Light/large/narshaddaa.gif",
 "501_124":"https://res.starwarsccg.org/cards/Virtual0-Light/large/jabbasprizefront.gif",
 "501_124_BACK":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/maxrebo.gif",
+"501_125":"https://res.starwarsccg.org/cards/Premiere-Light/hires/solohan.png",
+"501_126":"https://res.starwarsccg.org/cards/Premiere-Light/large/tatooinemoseisley.gif",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",
@@ -4382,7 +4384,8 @@ var Card = Class.extend({
                    (cardNo == 109) ||
                    (cardNo == 110) ||
                    (cardNo == 111) ||
-                   (cardNo == 118);
+                   (cardNo == 118) ||
+                   (cardNo == 126);
         }
         if (setNo == 601) {
              return (cardNo == 14) ||

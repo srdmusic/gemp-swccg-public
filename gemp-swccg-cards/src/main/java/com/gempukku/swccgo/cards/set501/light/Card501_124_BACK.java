@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 0
  * Type: Character
  * Subtype: Alien
  * Title: The Mythrol
@@ -30,6 +30,7 @@ import java.util.List;
 public class Card501_124_BACK extends AbstractAlien {
     public Card501_124_BACK() {
         super(Side.LIGHT, 7, 0, 2, 1, 2, "The Mythrol", Uniqueness.UNIQUE);
+        setLore("Accountant.");
         setGameText("If either player just deployed a card with ability here, you may use 1 Force to place The Mythrol out of play (if character was Din Djarin or a bounty hunter, you may activate 2 Force).");
         setDoesNotCountTowardDeckLimit(true);
         addKeyword(Keyword.ACCOUNTANT);

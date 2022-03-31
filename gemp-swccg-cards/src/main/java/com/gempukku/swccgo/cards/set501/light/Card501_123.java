@@ -30,11 +30,11 @@ import java.util.List;
 public class Card501_123 extends AbstractSystem {
     public Card501_123() {
         super(Side.LIGHT, Title.Cyrkon, 8);
-        setLocationDarkSideGameText("Your ships piloted by bounty hunters move to and from here for free.");
-        setLocationLightSideGameText("During your control phase, if you control with two smugglers, may retrieve 1 force.");
+        setLocationDarkSideGameText("Your starships piloted by bounty hunters move to and from here for free.");
+        setLocationLightSideGameText("During your control phase, if you control with two smugglers, may retrieve 1 Force.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.PLANET, Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_18);
         setTestingText("Cyrkon");
     }
 
