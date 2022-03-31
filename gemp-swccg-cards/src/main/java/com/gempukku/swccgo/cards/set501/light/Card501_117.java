@@ -29,7 +29,7 @@ public class Card501_117 extends AbstractNormalEffect {
     public Card501_117() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "I Must Be Allowed To Speak & Smuggler's Blues", Uniqueness.UNIQUE);
         addComboCardTitles("I Must Be Allowed To Speak", "Smuggler's Blues");
-        setGameText("Deploy on table if Watch Your Step on table. Corran is a smuggler. Boba deploys free to Cantina. Once per character, when you deploy Boba, Corran, Mara, or Talon Karrde to a Tatooine location, may take any one card from Used Pile into hand; reshuffle. Once per game, may deploy Cyrkon or City Outskirts from Reserve Deck; reshuffle. Opponent may not cancel or modify Force drains at battlegrounds where you have two smugglers. [Immune to Alter]");
+        setGameText("If Watch Your Step on table, deploy on table. Corran is a smuggler. Once per character, when you deploy Corran, Mara, Mirax, or Talon Karrde to a Tatooine location, may take any one card into hand from Used Pile; reshuffle. Once per game, may deploy a [Reflections II] location from Reserve Deck; reshuffle. Opponent may not cancel or modify Force drains at battlegrounds where you have two smugglers. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("I Must Be Allowed To Speak & Smuggler's Blues");
@@ -45,7 +45,7 @@ public class Card501_117 extends AbstractNormalEffect {
         GameTextActionId gameTextActionId = GameTextActionId.I_MUST_BE_ALLOWED_TO_SPEAK_SMUGGLERS_BLUES__UPLOAD_CARD_FROM_USED_PILE;
 
         // Check condition(s)
-        if (TriggerConditions.justDeployedTo(game, effectResult, playerId, Filters.and(Filters.character, Filters.or(Filters.Corran_Horn, Filters.Mara_Jade, Filters.Boba_Fett, Filters.title("Talon Karrde"))), Filters.Tatooine_location)
+        if (TriggerConditions.justDeployedTo(game, effectResult, playerId, Filters.and(Filters.character, Filters.or(Filters.Corran_Horn, Filters.Mara_Jade, Filters.Mirax, Filters.title("Talon Karrde"))), Filters.Tatooine_location)
                 && GameConditions.canTakeCardsIntoHandFromUsedPile(game, playerId, self, gameTextActionId)) {
             Set<String> characterNamesAlreadyUsed = self.getWhileInPlayData() != null ? self.getWhileInPlayData().getTextValues() : null;
             if (characterNamesAlreadyUsed == null) {
@@ -60,8 +60,8 @@ public class Card501_117 extends AbstractNormalEffect {
             if (isActive && Filters.Mara_Jade.accepts(game, cardDeployed) && !characterNamesAlreadyUsed.contains("Mara")) {
                 characterNamesToUse.add("Mara");
             }
-            if (isActive && Filters.Boba_Fett.accepts(game, cardDeployed) && !characterNamesAlreadyUsed.contains("Boba")) {
-                characterNamesToUse.add("Boba");
+            if (isActive && Filters.Mirax.accepts(game, cardDeployed) && !characterNamesAlreadyUsed.contains("Mirax")) {
+                characterNamesToUse.add("Mirax");
             }
             if (isActive && Filters.title("Talon Karrde").accepts(game, cardDeployed) && !characterNamesAlreadyUsed.contains("Talon Karrde")) {
                 characterNamesToUse.add("Talon Karrde");
@@ -113,18 +113,17 @@ public class Card501_117 extends AbstractNormalEffect {
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Cyrkon)
-                    || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.City_Outskirts))) {
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy Cyrkon or City Outskirts from Reserve Deck");
+            action.setActionMsg("Deploy a [Reflections II] location from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.title(Title.Cyrkon), Filters.City_Outskirts), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.REFLECTIONS_II, Filters.location), true));
             return Collections.singletonList(action);
         }
         return null;
@@ -135,7 +134,6 @@ public class Card501_117 extends AbstractNormalEffect {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeploysFreeToLocationModifier(self, Filters.Boba_Fett, Filters.Cantina));
         modifiers.add(new KeywordModifier(self, Filters.and(Filters.Corran_Horn, Filters.character), Keyword.SMUGGLER));
         modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.and(Filters.smuggler, Filters.with(self, Filters.smuggler)))), opponent, playerId));
         modifiers.add(new ForceDrainsMayNotBeModifiedModifier(self, Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.and(Filters.smuggler, Filters.with(self, Filters.smuggler)))), opponent, playerId));

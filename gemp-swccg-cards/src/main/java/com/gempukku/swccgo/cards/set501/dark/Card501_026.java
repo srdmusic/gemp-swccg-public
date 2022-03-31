@@ -1,8 +1,9 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
-import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.CancelBattleEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.AbstractActionProxy;
@@ -13,15 +14,14 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TriggerAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnActionProxyEffect;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
-import com.gempukku.swccgo.logic.effects.ResetForfeitEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.choose.MoveCardsAwayEffect;
 import com.gempukku.swccgo.logic.modifiers.EachWeaponDestinyModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.HitResult;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -36,10 +36,9 @@ import java.util.List;
 public class Card501_026 extends AbstractUsedInterrupt {
     public Card501_026() {
         super(Side.DARK, 4, "He's No Good To Me Dead", Uniqueness.UNIQUE);
-        setGameText("For remainder of turn, your Fetts add 1 to their weapon destinies and targets they ‘hit’ are forfeit = 0. OR Once per game, cancel a battle just initiated where a Fett is escorting Jabba’s Prize (opponent’s cards there may move away for free). [Immune to Sense.]");
+        setGameText("For remainder of turn, your Fetts add 1 to their weapon destinies and targets they ‘hit’ are forfeit = 0. OR Once per game, cancel a battle just initiated where a Fett is escorting a frozen captive; each of opponent’s cards there may move away for free. [Immune to Sense.]");
         addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("He's No Good To Me Dead");
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -82,9 +81,37 @@ public class Card501_026 extends AbstractUsedInterrupt {
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
+        final String opponent = game.getOpponent(playerId);
+        GameTextActionId gameTextActionId = GameTextActionId.HES_NO_GOOD_TO_ME_DEAD__CANCEL_BATTLE;
 
-        return actions;
+        // Check condition(s)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && TriggerConditions.battleInitiatedAt(game, effectResult, Filters.sameLocationAs(self, Filters.and(Filters.Fett, Filters.escorting(Filters.frozenCaptive))))) {
+
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+                action.setText("Cancel battle");
+
+                action.appendUsage(
+                        new OncePerGameEffect(action));
+                // Pay cost(s)
+                action.appendCost(
+                        new UseForceEffect(action, playerId, 1));
+                // Allow response(s)
+                action.allowResponses("Cancel battle",
+                        new RespondablePlayCardEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                // Perform result(s)
+                                action.appendEffect(
+                                        new MoveCardsAwayEffect(action, opponent, Filters.and(Filters.opponents(playerId), Filters.participatingInBattle), Filters.any, false, true, false));
+                                action.appendEffect(
+                                        new CancelBattleEffect(action));
+                            }
+                        }
+                );
+                return Collections.singletonList(action);
+        }
+        return null;
     }
 }

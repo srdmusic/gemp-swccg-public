@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.DuringBattleAtCondition;
 import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
@@ -16,6 +17,8 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotCancelDestinyDrawsModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -38,13 +41,15 @@ public class Card501_121 extends AbstractUsedInterrupt {
         super(Side.DARK, 5, "Ommni Box & It's Worse");
         addComboCardTitles(Title.Ommni_Box, Title.Its_Worse);
         setVirtualSuffix(true);
-        setGameText("For remainder of turn, opponent may not retrieve Force from Resistance characters’ game text. OR Cancel It Could Be Worse. OR Place Projection Of A Skywalker in owner’s Used Pile. OR If you occupy more battlegrounds than opponent, suspend Menace Fades for remainder of turn. OR Search opponent's Lost Pile; place one device you find there out of play. (Immune to It's A Hit!)");
+        setGameText("For remainder of turn, opponent may not retrieve Force from Resistance characters’ game text. OR Cancel It Could Be Worse. OR Cancel Projection Of A Skywalker if on opponent's planet site. OR For remainder of turn, opponent may not cancel your battle destiny draws. OR Search opponent's Lost Pile; place one device you find there out of play. (Immune to It's A Hit!)");
         addIcons(Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_18);
         setTestingText("Ommni Box & It's Worse (V)");
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
+        final String opponent = game.getOpponent(playerId);
+
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         // Check condition(s)
@@ -98,61 +103,37 @@ public class Card501_121 extends AbstractUsedInterrupt {
         }
 
 
-        if (GameConditions.canTarget(game, self, Filters.title(Title.Projection_Of_A_Skywalker))) {
+        if (GameConditions.canTarget(game, self, TargetingReason.TO_BE_CANCELED, Filters.and(Filters.title(Title.Projection_Of_A_Skywalker), Filters.attachedTo(Filters.and(Filters.opponents(self), Filters.planet_site))))) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Place Projection Of A Skywalker in Used Pile");
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.and(Filters.title(Title.Projection_Of_A_Skywalker), Filters.attachedTo(Filters.and(Filters.opponents(self), Filters.planet_site))), Title.Projection_Of_A_Skywalker);
             action.setImmuneTo(Title.Its_A_Hit);
-            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target Projection Of A Skywalker to place in Used Pile", Filters.title(Title.Projection_Of_A_Skywalker)) {
-
-                @Override
-                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                    action.allowResponses("Place " + GameUtils.getCardLink(targetedCard) + " in Used Pile", new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            PhysicalCard projection = action.getPrimaryTargetCard(targetGroupId);
-                            action.appendEffect(new PlaceCardInUsedPileFromTableEffect(action, projection));
-                        }
-                    });
-                }
-            });
             actions.add(action);
         }
 
-        if (GameConditions.canTarget(game, self, TargetingReason.TO_BE_SUSPENDED, Filters.title("Menace Fades"))) {
-            int selfBattlegrounds = Filters.countTopLocationsOnTable(game, Filters.and(Filters.battleground, Filters.occupies(playerId)));
-            int oppBattlegrounds = Filters.countTopLocationsOnTable(game, Filters.and(Filters.battleground, Filters.occupies(game.getOpponent(playerId))));
-            if (selfBattlegrounds > oppBattlegrounds) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                action.setText("Suspend Menace Fades");
 
-                action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target Menace Fades to suspend", TargetingReason.TO_BE_SUSPENDED, Filters.title("Menace Fades")) {
+        final PlayInterruptAction protectBattleDestinyDrawsAction = new PlayInterruptAction(game, self);
+        protectBattleDestinyDrawsAction.setText("Affect battle destiny draws");
+        protectBattleDestinyDrawsAction.setActionMsg("Prevent opponent from canceling your battle destiny draws for remainder of turn");
+        protectBattleDestinyDrawsAction.setImmuneTo(Title.Its_A_Hit);
+
+        // Allow response(s)
+        protectBattleDestinyDrawsAction.allowResponses(
+                new RespondablePlayCardEffect(protectBattleDestinyDrawsAction) {
                     @Override
-                    protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                        // Allow response(s)
-                        action.allowResponses("Suspend "+ GameUtils.getCardLink(targetedCard) +" for remainder of turn",
-                                new RespondablePlayCardEffect(action) {
-                                    @Override
-                                    protected void performActionResults(Action targetingAction) {
-                                        PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
-                                        // Perform result(s)
-                                        action.appendEffect(
-                                                new SuspendCardUntilEndOfTurnEffect(action, finalTarget));
-                                    }
-                                }
+                    protected void performActionResults(Action targetingAction) {
+                        protectBattleDestinyDrawsAction.appendEffect(
+                                new AddUntilEndOfTurnModifierEffect(protectBattleDestinyDrawsAction,
+                                        new MayNotCancelBattleDestinyModifier(self, playerId, opponent),
+                                        "Prevent "+opponent+" from canceling "+playerId+"'s battle destiny draws")
                         );
                     }
+                }
+        );
+        actions.add(protectBattleDestinyDrawsAction);
 
-                    @Override
-                    protected boolean getUseShortcut() {
-                        return true;
-                    }
-                });
-                actions.add(action);
-            }
-        }
 
         GameTextActionId gameTextActionId = GameTextActionId.OMMNI_BOX_ITS_WORSE_V__SEARCH_LOST_PILE;
-        final String opponent = game.getOpponent(playerId);
 
         if (GameConditions.canSearchOpponentsLostPile(game, playerId, self, gameTextActionId)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);

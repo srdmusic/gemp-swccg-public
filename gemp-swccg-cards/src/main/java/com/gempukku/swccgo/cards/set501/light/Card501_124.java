@@ -9,6 +9,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
@@ -34,10 +35,9 @@ public class Card501_124 extends AbstractAlien {
     public Card501_124() {
         super(Side.LIGHT, 0, 0, 0, 0, 0, "The Mythrol", Uniqueness.UNIQUE);
         setFrontOfDoubleSidedCard(true);
-        setGameText("The Mythrol is a Light Side card, does not count towards your deck limit, and his game text may never be canceled. " +
-                "During start of game, if opponent just deployed Jabba's Prize to Security Tower, may reveal this card and deploy it (replaces Jabba's Prize imprisoned in Security Tower). If not revealed during start of game, place this card under your Starting Effect. " +
-                "[Set 1] Despair targets The Mythrol instead of Jabba's Prize. " +
-                "If just released, either flip this card or place it out of play.");
+        setGameText("The Mythrol is a Light Side card. The Mythrol's game text may never be canceled. " +
+                "During start of game, if opponent just deployed Jabba's Prize, may reveal this card from outside your deck and deploy it (replaces Jabba's Prize imprisoned in Security Tower). If not revealed during start of game, place this card under your Starting Effect. " +
+                "[Set 1] Despair targets The Mythrol instead of Jabba's Prize. Cancels Stunning Leader here. If just released, either flip this card or place it out of play.");
         setDoesNotCountTowardDeckLimit(true);
         addIcons(Icon.VIRTUAL_SET_0);
         setSpecies(Species.MYTHROL);
@@ -153,6 +153,22 @@ public class Card501_124 extends AbstractAlien {
             return Collections.singletonList(action);
         }
 
+        return null;
+    }
+
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggersWhenInactiveInPlay(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.Stunning_Leader)
+                && GameConditions.isDuringBattleAt(game, Filters.here(self))
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
+
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            return Collections.singletonList(action);
+        }
         return null;
     }
 
