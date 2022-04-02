@@ -3441,7 +3441,7 @@ var fixedImages = {
 "501_22":"https://res.starwarsccg.org/cards/Hoth-Dark/large/deathsquadron.gif",
 "501_23":"https://res.starwarsccg.org/cards/Hoth-Dark/large/targetthemaingenerator.gif",
 "501_24":"https://res.starwarsccg.org/cards/Hoth-Dark/large/directhit.gif",
-"501_25":"https://res.starwarsccg.org/cards/Hoth-dark/large/tyrant.gif",
+"501_25":"https://res.starwarsccg.org/cards/Hoth-Dark/large/tyrant.gif",
 "501_26":"https://res.starwarsccg.org/cards/CloudCity-Dark/large/hesallyoursbountyhunter.gif",
 "501_27":"https://res.starwarsccg.org/cards/EmpireStrikesBackIntroductoryTwoPlayerGame-Dark/large/walkergarrison.gif",
 "501_28":"https://res.starwarsccg.org/cards/Virtual13-Dark/large/seventhsister.gif",
