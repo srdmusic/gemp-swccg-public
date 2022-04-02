@@ -3432,7 +3432,7 @@ var fixedImages = {
 "501_13":"https://res.starwarsccg.org/cards/legacy/VirtualBlock8-Dark/large/hothmainpowergenerators.gif",
 "501_14":"https://res.starwarsccg.org/cards/Tatooine-Dark/large/amillionvoicescryingout.gif",
 "501_15":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/coloneljendon.gif",
-"501_16":"https://res.starwarsccg.org/cards/Coruscant-Dark/lottdod.gif",
+"501_16":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/lottdod.gif",
 "501_17":"https://res.starwarsccg.org/cards/TheedPalace-Dark/large/rollingrollingrolling.gif",
 "501_18":"https://res.starwarsccg.org/cards/CloudCity-Light/large/courageofaskywalker.gif",
 "501_19":"https://res.starwarsccg.org/cards/CloudCity-Light/large/glancingblow.gif",
