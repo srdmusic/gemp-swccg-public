@@ -35,7 +35,7 @@ public class Card501_040 extends AbstractUsedOrLostInterrupt {
         super(Side.DARK, 4, "Understand Art, Understand A Species", Uniqueness.UNIQUE);
         setGameText("USED: Target a character in battle. Target and characters that share a characteristic with target are power and forfeit -1. LOST: Once per game, during battle, if you just revealed a character as 'artwork,' add one battle destiny (two if its species is participating in battle).");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("Understand Art, Understand A Species");
+        setTestingText("[Set 19] Understand Art, Understand A Species");
     }
 
     @Override

@@ -34,7 +34,7 @@ public class Card501_029 extends AbstractImperial {
         setPolitics(1);
         setGameText("Adds 2 to power of any capital starship he pilots (3 if beyond parsec 5). If with Thrawn, your starships here are power and hyperspeed +1. During your control phase, may use 1 Force to take a card with 'artwork' in game text into hand from Reserve Deck; reshuffle.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_18);
-        setTestingText("Ensign Eli Vanto");
+        setTestingText("[Set 19] Ensign Eli Vanto");
     }
 
     @Override

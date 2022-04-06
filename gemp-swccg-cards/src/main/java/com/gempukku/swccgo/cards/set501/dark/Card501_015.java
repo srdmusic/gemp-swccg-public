@@ -35,7 +35,7 @@ public class Card501_015 extends AbstractImperial {
         addPersona(Persona.JENDON);
         addIcons(Icon.DEATH_STAR_II, Icon.PILOT, Icon.VIRTUAL_SET_18);
         setMatchingStarshipFilter(Filters.title("Vader's Personal Shuttle"));
-        setTestingText("Colonel Jendon (V)");
+        setTestingText("[Set 19] Colonel Jendon (V)");
     }
 
     @Override

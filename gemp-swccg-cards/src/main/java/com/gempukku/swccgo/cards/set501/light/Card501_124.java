@@ -13,6 +13,7 @@ import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
+import com.gempukku.swccgo.logic.decisions.YesNoDecision;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.StackCardFromOutsideDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
@@ -35,8 +36,8 @@ public class Card501_124 extends AbstractAlien {
     public Card501_124() {
         super(Side.LIGHT, 0, 0, 0, 0, 0, "The Mythrol", Uniqueness.UNIQUE);
         setFrontOfDoubleSidedCard(true);
-        setGameText("The Mythrol is a Light Side card. The Mythrol's game text may never be canceled. " +
-                "During start of game, if opponent just deployed Jabba's Prize, may reveal this card from outside your deck and deploy it (replaces Jabba's Prize imprisoned in Security Tower). If not revealed during start of game, place this card under your Starting Effect. " +
+        setGameText("The Mythrol's game text may not be canceled. If about to leave table, place out of play. " +
+                "During start of game, may reveal this card from outside your deck to replace a just-deployed Jabba's Prize imprisoned in Security Tower. If not revealed during start of game, place this card under your Starting Effect. " +
                 "[Set 1] Despair targets The Mythrol instead of Jabba's Prize. Cancels Stunning Leader here. If just released, either flip this card or place it out of play.");
         setDoesNotCountTowardDeckLimit(true);
         addIcons(Icon.VIRTUAL_SET_0);
@@ -71,25 +72,31 @@ public class Card501_124 extends AbstractAlien {
         if (TriggerConditions.justDeployed(game, effectResult, opponent, Filters.Jabbas_Prize)) {
             final PhysicalCard securityTower = Filters.findFirstFromTopLocationsOnTable(game, Filters.Security_Tower);
             if (securityTower != null) {
-                PhysicalCard opponentsJabbasPrize = Filters.findFirstFromAllOnTable(game, Filters.and(Filters.opponents(self), Filters.Jabbas_Prize, Filters.at(securityTower)));
+                final PhysicalCard opponentsJabbasPrize = Filters.findFirstFromAllOnTable(game, Filters.and(Filters.opponents(self), Filters.Jabbas_Prize, Filters.at(securityTower)));
                 if (opponentsJabbasPrize != null) {
 
                     final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                     action.setText("Deploy The Mythrol");
                     // Perform result(s)
-                    action.appendEffect(
-                            new PlaceCardOutOfPlayFromTableEffect(action, opponentsJabbasPrize));
-                    action.appendEffect(
-                            new PassthruEffect(action) {
-                                @Override
-                                protected void doPlayEffect(SwccgGame game) {
-                                    PlayCardAction deployAction = self.getBlueprint().getPlayCardAction(playerId, game, self, self, true, 0, null, null,
-                                            DeployAsCaptiveOption.deployAsImprisonedFrozenCaptive(), null, null, false, 0, Filters.sameLocationId(securityTower), null);
-                                    action.appendEffect(
-                                            new StackActionEffect(action, deployAction));
-                                }
-                            }
-                    );
+                    action.appendEffect(new PlayoutDecisionEffect(action, playerId, new YesNoDecision("Deploy The Mythrol?"){
+                        @Override
+                        protected void yes() {
+                            action.appendEffect(
+                                    new PlaceCardOutOfPlayFromTableEffect(action, opponentsJabbasPrize));
+                            action.appendEffect(
+                                    new PassthruEffect(action) {
+                                        @Override
+                                        protected void doPlayEffect(SwccgGame game) {
+                                            PlayCardAction deployAction = self.getBlueprint().getPlayCardAction(playerId, game, self, self, true, 0, null, null,
+                                                    DeployAsCaptiveOption.deployAsImprisonedFrozenCaptive(), null, null, false, 0, Filters.sameLocationId(securityTower), null);
+                                            action.appendEffect(
+                                                    new StackActionEffect(action, deployAction));
+                                        }
+                                    }
+                            );
+                        }
+                    }));
+
                     return Collections.singletonList(action);
                 }
             }

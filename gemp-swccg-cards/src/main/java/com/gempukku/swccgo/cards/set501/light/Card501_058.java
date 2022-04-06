@@ -2,10 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractResistance;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.AtCondition;
-import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.CancelBattleEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -15,13 +12,11 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.PlayCardResult;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -38,7 +33,7 @@ public class Card501_058 extends AbstractResistance {
     public Card501_058() {
         super(Side.LIGHT, 1, 2, 2, 3, 6, "Fleet Admiral Gial Ackbar", Uniqueness.UNIQUE);
         setLore("Mon Calamari leader.");
-        setGameText("Your starships are power +1 here. If opponent just initiated battle here with a First Order starship, may played Ackbar out of play to cancel the battle. Overwhelmed and Lateral Damage is cancelled at same system.");
+        setGameText("Your starships here are power +1. If opponent just initiated battle here with a [First Order] starship, may place Ackbar out of play to cancel that battle. Cancels Lateral Damage (or Overwhelmed) targeting a starship at same system.");
         addIcons(Icon.PILOT, Icon.EPISODE_VII, Icon.VIRTUAL_SET_18);
         addKeywords(Keyword.ADMIRAL, Keyword.LEADER);
         addPersona(Persona.ACKBAR);
@@ -92,7 +87,7 @@ public class Card501_058 extends AbstractResistance {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        Filter filter = Filters.and(Filters.Lateral_Damage, Filters.atSameSystem(self));
+        Filter filter = Filters.and(Filters.Lateral_Damage, Filters.cardTargeting(self, Filters.and(Filters.starship, Filters.atSameSystem(self))));
 
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
@@ -109,7 +104,7 @@ public class Card501_058 extends AbstractResistance {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.isPlayingCardTargeting(game, effect, Filters.or(Filters.Lateral_Damage, Filters.Overwhelmed), Filters.atSameSystem(self))
+        if (TriggerConditions.isPlayingCardTargeting(game, effect, Filters.or(Filters.Lateral_Damage, Filters.Overwhelmed), Filters.and(Filters.starship, Filters.atSameSystem(self)))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);

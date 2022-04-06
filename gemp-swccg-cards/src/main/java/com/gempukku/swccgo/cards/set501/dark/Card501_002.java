@@ -30,7 +30,7 @@ public class Card501_002 extends AbstractNormalEffect {
         addComboCardTitles("Blast Door Controls", Title.Search_And_Destroy);
         setGameText("Deploy on table. Blast The Door, Kid!, Into The Garbage Chute, Flyboy, and Rebel Barrier are canceled. During your draw phase, if you occupy two battleground sites and opponent does not occupy a battleground site, opponent loses 1 Force.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("Blast Door Controls & Search And Destroy");
+        setTestingText("[Set 19] Blast Door Controls & Search And Destroy");
     }
 
 

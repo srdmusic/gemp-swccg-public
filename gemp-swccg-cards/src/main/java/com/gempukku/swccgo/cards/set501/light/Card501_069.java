@@ -2,8 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.evaluators.NegativeEvaluator;
-import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.TargetingReason;
@@ -16,9 +14,6 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
-import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -30,17 +25,17 @@ import java.util.List;
  * Set: Set 18
  * Type: Location
  * Subtype: Site
- * Title: Death Star II: Core Shaft Generator
+ * Title: Death Star II: Turbolift Walkway
  */
 public class Card501_069 extends AbstractSite {
     public Card501_069() {
-        super(Side.LIGHT, "Death Star II: Core Shaft Generator", Title.Death_Star_II);
+        super(Side.LIGHT, "Death Star II: Turbolift Walkway", Title.Death_Star_II);
         setLocationDarkSideGameText("If you have more than two characters here, you must target one to be lost (cannot be prevented).");
         setLocationLightSideGameText("If you have more than one character here, you must target one to be lost (cannot be prevented).");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
-        setTestingText("Death Star II: Core Shaft Generator");
+        setTestingText("Death Star II: Turbolift Walkway");
     }
 
     @Override

@@ -40,7 +40,7 @@ public class Card501_037 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.UNDERGROUND, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
-        setTestingText("Lothal: Imperial Strip Mines");
+        setTestingText("[Set 19] Lothal: Imperial Strip Mines");
     }
 
     @Override

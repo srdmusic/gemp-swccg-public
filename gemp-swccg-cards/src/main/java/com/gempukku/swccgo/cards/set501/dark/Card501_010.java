@@ -34,7 +34,7 @@ public class Card501_010 extends AbstractObjective {
                 "For remainder of game, you may not play Sunsdown. " +
                 "While this side up, Force loss from You May Start Your Landing is limited to 1. Once per turn, may deploy a snowtrooper or non-unique AT-AT to Hoth from Reserve Deck; reshuffle. When drawing for Target the Main Generator, X = 6 - the Marker Number from where you’re firing. Flip this card if Main Power Generators 'blown away.'");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
-        setTestingText("The Shield Will Be Down in Moments");
+        setTestingText("[Set 19] The Shield Will Be Down in Moments");
     }
 
     @Override

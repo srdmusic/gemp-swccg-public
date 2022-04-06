@@ -41,7 +41,7 @@ public class Card501_079 extends AbstractDevice {
         setGameText("Deploy on your interior site. If opponent just deployed a character or vehicle here, may lose 1 Force to relocate your character to here from an adjacent site as a regular move. Opponent may not 'react' to here. May place out of play to draw top card of Reserve Deck.");
         addKeywords(Keyword.DEPLOYS_ON_SITE);
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("Observation Holocam (V)");
+        setTestingText("[Set 19] Observation Holocam (V)");
     }
 
     @Override

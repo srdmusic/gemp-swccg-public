@@ -2,14 +2,12 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.DuringBattleAtCondition;
 import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.AbstractActionProxy;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
@@ -18,7 +16,6 @@ import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotCancelDestinyDrawsModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -34,16 +31,15 @@ import java.util.List;
  * Set: Set 18
  * Type: Interrupt
  * Subtype: Used
- * Title: Ommni Box & It's Worse (V)
+ * Title: A Dark Time For The Rebellion & Tarkin's Orders
  */
 public class Card501_121 extends AbstractUsedInterrupt {
     public Card501_121() {
-        super(Side.DARK, 5, "Ommni Box & It's Worse");
-        addComboCardTitles(Title.Ommni_Box, Title.Its_Worse);
-        setVirtualSuffix(true);
-        setGameText("For remainder of turn, opponent may not retrieve Force from Resistance characters’ game text. OR Cancel It Could Be Worse. OR Cancel Projection Of A Skywalker if on opponent's planet site. OR For remainder of turn, opponent may not cancel your battle destiny draws. OR Search opponent's Lost Pile; place one device you find there out of play. (Immune to It's A Hit!)");
-        addIcons(Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_18);
-        setTestingText("Ommni Box & It's Worse (V)");
+        super(Side.DARK, 5, "A Dark Time For The Rebellion & Tarkin's Orders", Uniqueness.UNIQUE);
+        addComboCardTitles("A Dark Time For The Rebellion", "Tarkin's Orders");
+        setGameText("For remainder of turn, opponent may not retrieve Force using Resistance characters' game text. OR For remainder of turn, opponent may not cancel your battle destiny draws. OR Search opponent's Lost Pile; place one device you find there out of play. OR Cancel It Could Be Worse. OR Cancel Projection Of A Skywalker at an opponent's planet site.");
+        addIcons(Icon.VIRTUAL_SET_18);
+        setTestingText("A Dark Time For The Rebellion & Tarkin's Orders");
     }
 
     @Override
@@ -55,7 +51,6 @@ public class Card501_121 extends AbstractUsedInterrupt {
         // Check condition(s)
         final PlayInterruptAction action1 = new PlayInterruptAction(game, self);
         action1.setText("Prevent retrieval by Resistance characters");
-        action1.setImmuneTo(Title.Its_A_Hit);
         // Allow response(s)
         action1.allowResponses("Prevent retrieval from game text of Resistance characters for remainder of turn",
                 new RespondablePlayCardEffect(action1) {
@@ -92,30 +87,9 @@ public class Card501_121 extends AbstractUsedInterrupt {
         actions.add(action1);
 
 
-        // Check condition(s)
-        if (GameConditions.canTargetToCancel(game, self, Filters.It_Could_Be_Worse)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.It_Could_Be_Worse, Title.It_Could_Be_Worse);
-            action.setImmuneTo(Title.Its_A_Hit);
-            actions.add(action);
-        }
-
-
-        if (GameConditions.canTarget(game, self, TargetingReason.TO_BE_CANCELED, Filters.and(Filters.title(Title.Projection_Of_A_Skywalker), Filters.attachedTo(Filters.and(Filters.opponents(self), Filters.planet_site))))) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.and(Filters.title(Title.Projection_Of_A_Skywalker), Filters.attachedTo(Filters.and(Filters.opponents(self), Filters.planet_site))), Title.Projection_Of_A_Skywalker);
-            action.setImmuneTo(Title.Its_A_Hit);
-            actions.add(action);
-        }
-
-
         final PlayInterruptAction protectBattleDestinyDrawsAction = new PlayInterruptAction(game, self);
         protectBattleDestinyDrawsAction.setText("Affect battle destiny draws");
         protectBattleDestinyDrawsAction.setActionMsg("Prevent opponent from canceling your battle destiny draws for remainder of turn");
-        protectBattleDestinyDrawsAction.setImmuneTo(Title.Its_A_Hit);
 
         // Allow response(s)
         protectBattleDestinyDrawsAction.allowResponses(
@@ -138,7 +112,6 @@ public class Card501_121 extends AbstractUsedInterrupt {
         if (GameConditions.canSearchOpponentsLostPile(game, playerId, self, gameTextActionId)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setText("Search opponent's Lost Pile");
-            action.setImmuneTo(Title.Its_A_Hit);
             action.allowResponses("Place a device out of play from opponent's Lost Pile", new RespondablePlayCardEffect(action) {
                 @Override
                 protected void performActionResults(Action targetingAction) {
@@ -149,12 +122,29 @@ public class Card501_121 extends AbstractUsedInterrupt {
             actions.add(action);
         }
 
+        // Check condition(s)
+        if (GameConditions.canTargetToCancel(game, self, Filters.It_Could_Be_Worse)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.It_Could_Be_Worse, Title.It_Could_Be_Worse);
+            actions.add(action);
+        }
+
+
+        if (GameConditions.canTarget(game, self, TargetingReason.TO_BE_CANCELED, Filters.and(Filters.title(Title.Projection_Of_A_Skywalker), Filters.attachedTo(Filters.and(Filters.opponents(self), Filters.planet_site))))) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.and(Filters.title(Title.Projection_Of_A_Skywalker), Filters.attachedTo(Filters.and(Filters.opponents(self), Filters.planet_site))), Title.Projection_Of_A_Skywalker);
+            actions.add(action);
+        }
+
         return actions;
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(String playerId, SwccgGame game, Effect effect, PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+        List<PlayInterruptAction> actions = new LinkedList<>();
 
         // Check condition(s)
         if (TriggerConditions.isPlayingCard(game, effect, Filters.It_Could_Be_Worse)
@@ -163,7 +153,6 @@ public class Card501_121 extends AbstractUsedInterrupt {
             PlayInterruptAction action = new PlayInterruptAction(game, self);
             // Build action using common utility
             CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            action.setImmuneTo(Title.Its_A_Hit);
             actions.add(action);
         }
 

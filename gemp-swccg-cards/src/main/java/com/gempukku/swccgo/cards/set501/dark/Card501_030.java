@@ -46,7 +46,7 @@ public class Card501_030 extends AbstractObjective {
                 "While this side up, Imperial Star Destroyers deploy -1 (-3 if Chimaera). Once per turn, may deploy a battleground system (or a site to Lothal) from Reserve Deck; reshuffle. " +
                 "Flip this card if Thrawn at a system and you have three cards stacked on Thrawn's Art Collection.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("A Great Tactician Creates Plans");
+        setTestingText("[Set 19] A Great Tactician Creates Plans");
     }
 
     @Override

@@ -38,7 +38,7 @@ public class Card501_038 extends AbstractUsedOrLostInterrupt {
         super(Side.DARK, 4, "Thrawn Pincer", Uniqueness.UNIQUE);
         setGameText("USED: Exchange a card stacked on Thrawn's Art Collection with a card in opponent’s Lost Pile. LOST: Once per game, during battle at a system, if you just revealed a starship as ‘artwork’, relocate a Star Destroyer on table to that system.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("Thrawn Pincer");
+        setTestingText("[Set 19] Thrawn Pincer");
     }
 
     @Override

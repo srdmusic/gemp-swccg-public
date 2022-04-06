@@ -48,7 +48,7 @@ public class Card501_025 extends AbstractCapitalStarship {
         setPassengerCapacity(8);
         setVehicleCapacity(2);
         setTIECapacity(4);
-        setTestingText("Tyrant (V)");
+        setTestingText("[Set 19] Tyrant (V)");
     }
 
     @Override

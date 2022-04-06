@@ -32,7 +32,7 @@ public class Card501_105_BACK extends AbstractObjective {
         setGameText("While this side up, if you have Force drained this turn, your other Force drains are +1. Once per turn, may add or subtract X from a just drawn battle destiny (or opponent's weapon destiny), where X = number of battlegrounds occupied by Phoenix Squadron characters. If you just won a battle, may retrieve a Phoenix Squadron character. During battle at Lothal system, opponent may not limit the number of battle destinies you may draw. " +
                 "Flip this card if opponent controls two Lothal locations.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("Liberation of Lothal");
+        setTestingText("[Set 19] Liberation of Lothal");
     }
 
     @Override

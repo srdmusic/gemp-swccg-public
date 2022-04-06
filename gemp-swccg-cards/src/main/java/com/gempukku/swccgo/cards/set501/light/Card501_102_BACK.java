@@ -45,7 +45,7 @@ public class Card501_102_BACK extends AbstractObjective {
                 "Once during your control phase, may place a card from hand on top of your Reserve Deck to take one Interrupt into hand from Reserve Deck; reshuffle. Once per turn, may move your character as a 'react' to a battle or Force drain at a site related to the subjugated planet. " +
                 "Flip this card if opponent controls more sites on the subjugated planet than you.");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_18);
-        setTestingText("Liberation (V)");
+        setTestingText("[Set 19] Liberation (V)");
     }
 
     @Override

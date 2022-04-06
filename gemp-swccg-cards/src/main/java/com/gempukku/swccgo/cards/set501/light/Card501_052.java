@@ -36,7 +36,7 @@ public class Card501_052 extends AbstractLostOrStartingInterrupt {
         super(Side.LIGHT, 3, Title.Computer_Interface);
         setVirtualSuffix(true);
         setLore("Lobot's direct link with the Cloud City central computer allowed him to efficiently manipulate the floating city's resources.");
-        setGameText("LOST: Retrieve Lobot or a droid. OR Draw top card of Used Pile. STARTING: Deploy a site with a Scomp link and exactly one [Light Side] that is related to a location on table. Deploy two Effects that deploy for free and are always immune to Alter. Place Interrupt in Reserve Deck.");
+        setGameText("LOST: Retrieve Lobot or a droid. OR Draw top card of Used Pile. STARTING: Deploy a site that has a Scomp link and exactly one [Light Side] and is related to a site on table. Deploy two Effects that deploy for free and are always immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_18);
         setTestingText("Computer Interface (V)");
     }
@@ -100,14 +100,14 @@ public class Card501_052 extends AbstractLostOrStartingInterrupt {
         final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
         action.setText("Deploy site and Effects from Reserve Deck");
         // Allow response(s)
-        action.allowResponses("Deploy a site with a Scomp link and exactly one [Light Side] that is related to a location on table and two Effects from Reserve Deck",
+        action.allowResponses("Deploy a site with a Scomp link and exactly one [Light Side] that is related to a site on table and two Effects from Reserve Deck",
                 new RespondablePlayCardEffect(action) {
                     @Override
                     protected void performActionResults(Action targetingAction) {
-                        Collection<PhysicalCard> locationsOnTable = Filters.filterTopLocationsOnTable(game, Filters.any);
+                        Collection<PhysicalCard> sitesOnTable = Filters.filterTopLocationsOnTable(game, Filters.site);
                         Collection<PhysicalCard> reserveDeck = game.getGameState().getReserveDeck(playerId);
                         Collection<PhysicalCard> locationsToDeployFromReserveDeck = new LinkedList<>();
-                        for (PhysicalCard c : locationsOnTable) {
+                        for (PhysicalCard c : sitesOnTable) {
                             locationsToDeployFromReserveDeck.addAll(Filters.filter(reserveDeck, game, Filters.relatedLocationEvenWhenNotInPlay(c)));
                         }
 

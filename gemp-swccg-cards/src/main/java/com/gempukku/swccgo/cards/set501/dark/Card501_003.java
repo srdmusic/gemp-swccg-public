@@ -36,7 +36,7 @@ public class Card501_003 extends AbstractNormalEffect {
         setGameText("If your [Reflections II] objective on table, deploy on table. If you just deployed an information broker, may peek at a card (random selection) from opponent's hand. Once per turn, if [Reflections II] Emperor on Coruscant, may draw top card of Force Pile (if during your turn and you occupy three battlegrounds, opponent also loses 1 Force). Once per turn, may use 1 Force to deploy Imperial Square or [Reflections II] Emperor from Reserve Deck; reshuffle. If [Reflections II] Emperor drawn for destiny, may take him into hand to cancel that destiny and cause a re-draw. [Immune to Alter.]");
         addIcons(Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Shadows Of The Empire & Information Exchange");
+        setTestingText("[Set 19] Shadows Of The Empire & Information Exchange");
     }
 
     @Override

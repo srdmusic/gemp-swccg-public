@@ -28,7 +28,7 @@ public class Card501_031 extends AbstractNormalEffect {
         setGameText("Use 4 Force to deploy on table. Cards stacked here are 'artwork.' If you just initiated a Force drain (or won a battle) at the same battleground as Thrawn, opponent loses 1 Force (cannot be reduced) and stacks it here face down. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Thrawn's Art Collection");
+        setTestingText("[Set 19] Thrawn's Art Collection");
     }
 
     @Override

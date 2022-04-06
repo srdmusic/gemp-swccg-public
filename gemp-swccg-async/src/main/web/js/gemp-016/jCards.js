@@ -3538,7 +3538,7 @@ var fixedImages = {
 "501_113": "https://res.starwarsccg.org/cards/OfficialTournamentSealedDeck-Light/large/corulag.gif",
 "501_114": "https://res.starwarsccg.org/cards/JabbasPalace-Light/large/kiffex.gif",
 "501_115": "https://res.starwarsccg.org/cards/ANewHope-Dark/large/kiffex.gif",
-"501_116":"https://res.starwarsccg.org/cards/Tatooine-Light/large/changingtheodds.gif",
+"501_116":"https://res.starwarsccg.org/cards/CloudCity-Light/large/fallofthelegend.gif",
 "501_117":"https://res.starwarsccg.org/cards/Virtual0-Light/large/imustbeallowedtospeak.gif",
 "501_118":"https://res.starwarsccg.org/cards/PremiereIntroductoryTwoPlayerGame-Light/large/deathstarlevel6coreshaftcorridor.gif",
 "501_119":"https://res.starwarsccg.org/cards/Dagobah-Light/large/movingtoattackposition.gif",
@@ -3550,6 +3550,7 @@ var fixedImages = {
 "501_124_BACK":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/maxrebo.gif",
 "501_125":"https://res.starwarsccg.org/cards/Premiere-Light/hires/solohan.png",
 "501_126":"https://res.starwarsccg.org/cards/Premiere-Light/large/tatooinemoseisley.gif",
+"501_127":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/tiedefendermarki.gif",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",

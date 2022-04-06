@@ -1,12 +1,8 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
-import com.gempukku.swccgo.cards.conditions.CantSpotCondition;
-import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.cards.evaluators.HereEvaluator;
-import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -32,7 +28,7 @@ public class Card501_071 extends AbstractSystem {
         setLocationLightSideGameText("If your Skywalker here, opponent may not draw more than two battle destiny here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
         setTestingText("Polis Massa");
     }
 

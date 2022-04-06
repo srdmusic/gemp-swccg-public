@@ -33,7 +33,7 @@ public class Card501_062 extends AbstractRebel {
         addPersona(Persona.KANAN);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_18);
         addKeywords(Keyword.STORMTROOPER);
-        setTestingText("Kanan, Rebel Infiltrator");
+        setTestingText("[Set 19] Kanan, Rebel Infiltrator");
     }
 
     @Override
