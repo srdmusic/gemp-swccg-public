@@ -39,7 +39,7 @@ public class Card501_005 extends AbstractUsedInterrupt {
         setLore("'I can arrange that. You could USE a good kiss!'");
         setGameText("If opponent just deployed a character (except as a driver, pilot, or passenger), use 1 Force (free if a Wookiee on table and target is Leia). Opponent chooses: move target away to an adjacent site as a regular move for free, or return target to hand.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
-        setTestingText("I'd Just As Soon Kiss A Wookiee (V)");
+        setTestingText("[Set 19] I'd Just As Soon Kiss A Wookiee (V)");
     }
 
     @Override

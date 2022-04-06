@@ -38,7 +38,7 @@ public class Card501_007 extends AbstractUsedOrLostInterrupt {
         setLore("'Ah...Uh...'");
         setGameText("USED: If your character of ability < 5 was just targeted by opponent's lightsaber, subtract 1 from each weapon destiny draw. LOST: Lose 1 Force to cancel Clash Of Sabers (unless canceling Presence Of The Force) or Blaster Proficiency (if targeting a lightsaber or while swinging a lightsaber).");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
-        setTestingText("Lightsaber Deficiency (V)");
+        setTestingText("[Set 19] Lightsaber Deficiency (V)");
     }
 
     @Override

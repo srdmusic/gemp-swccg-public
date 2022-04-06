@@ -31,7 +31,7 @@ public class Card501_012 extends AbstractNormalEffect {
         setGameText("If The Shield Will Be Down In Moments on table, deploy on table. Once per turn, may deploy a Hoth site from Reserve Deck; reshuffle. During your control phase, opponent loses 1 Force for each marker site you control with a piloted AT-AT. [Immune to Alter.]");
         addIcons(Icon.TATOOINE, Icon.HOTH, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("You May Start Your Landing (V)");
+        setTestingText("[Set 19] You May Start Your Landing (V)");
     }
 
     @Override

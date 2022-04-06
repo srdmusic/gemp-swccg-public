@@ -44,7 +44,7 @@ public class Card501_027 extends AbstractLostInterrupt {
         super(Side.DARK, 4, "Ominous Approach");
         setGameText("If your AT-AT is on Hoth or at opponent's site: Cancel Under Attack. (Immune to Sense) OR Return an Effect that deploys on related system to owner's hand. Opponent loses 2 force if they deploy a card with the same title this turn. OR Cancel a Force drain at a related site.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("Ominous Approach");
+        setTestingText("[Set 19] Ominous Approach");
         hideFromDeckBuilder();
     }
 

@@ -41,7 +41,7 @@ public class Card501_074 extends AbstractDefensiveShield {
         setLore("The destruction of a command vehicle negatively impacts Imperial battle efficiency.");
         setGameText("Plays on table. Whenever opponent retrieves X cards, opponent must first use X Force or that retrieval is canceled. Court Of The Vile Gangster may not deploy starships unless opponent deployed a battleground system this game.");
         addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_SET_18);
-        setTestingText("Aim High (V)");
+        setTestingText("[Set 19] Aim High (V)");
     }
 
     @Override

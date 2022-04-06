@@ -34,7 +34,7 @@ public class Card501_119 extends AbstractUsedOrLostInterrupt {
         setGameText("USED: For remainder of turn, opponent must first use 1 force to fire a weapon (and their weapon destiny draws targeting your starships are -1). " +
                 "LOST: During battle at a system where you have two or more starships, draw two battle destiny if unable to otherwise. OR During battle your snub fighter is immune to attrition and draws battle destiny if unable to otherwise.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("Antilles Maneuver & Moving To Attack Position");
+        setTestingText("[Set 19] Antilles Maneuver & Moving To Attack Position");
     }
 
     @Override

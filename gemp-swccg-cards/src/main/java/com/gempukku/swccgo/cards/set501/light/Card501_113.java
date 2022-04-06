@@ -32,7 +32,7 @@ public class Card501_113 extends AbstractSystem {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.PLANET, Icon.VIRTUAL_SET_18);
-        setTestingText("Mandalore");
+        setTestingText("[Set 19] Mandalore");
     }
 
     @Override

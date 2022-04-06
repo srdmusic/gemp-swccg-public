@@ -48,7 +48,7 @@ public class Card501_099_BACK extends AbstractObjective {
         setGameText("While this side up, once per game, may deploy any Effect (or starship, at deploy -4) from your Reserve Deck; reshuffle. Once during your control phase, may place a card from hand on top of your Reserve Deck to take one Interrupt into hand from Reserve Deck; reshuffle. Once per turn, may move your character as a 'react' to a battle or Force drain at a site related to the renegade planet. " +
                 "Flip this card if opponent controls more sites on the renegade planet than you.");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_18);
-        setTestingText("Imperial Control (V)");
+        setTestingText("[Set 19] Imperial Control (V)");
     }
 
     @Override

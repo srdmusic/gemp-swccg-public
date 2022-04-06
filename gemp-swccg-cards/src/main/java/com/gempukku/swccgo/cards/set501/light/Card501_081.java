@@ -31,7 +31,7 @@ public class Card501_081 extends AbstractNormalEffect {
         setLore("The metal rods extending from the bottom of Cloud City are part of the city's flotation system. Sensors detect the velocity of wind and the content of local clouds.");
         setGameText("Deploy on table. Unless this card upright, characters here are lost. If you just Force drained or initiated battle, rotate this card 90° clockwise; if now upright, retrieve any one card. If opponent just initiated battle, unless this card upright, rotate it 90° counterclockwise.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_18);
-        setTestingText("Weather Vane (V)");
+        setTestingText("[Set 19] Weather Vane (V)");
     }
 
     @Override

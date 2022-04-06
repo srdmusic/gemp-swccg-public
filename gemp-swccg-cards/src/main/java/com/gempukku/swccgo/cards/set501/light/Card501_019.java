@@ -33,7 +33,7 @@ public class Card501_019 extends AbstractUsedOrLostInterrupt {
         setLore("It had been decades since Vader had felt the sting of an enemy's blade.");
         setGameText("USED: If a lightsaber swung by your non-[Permanent Weapon] character just hit an opponent's character of equal or greater ability, opponent's character may not fire weapons this turn (if 'hit' by Luke, character is also power -3). LOST: Cancel the game text of a 'hit' character.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_18);
-        setTestingText("Glancing Blow (V)");
+        setTestingText("[Set 19] Glancing Blow (V)");
     }
 
 

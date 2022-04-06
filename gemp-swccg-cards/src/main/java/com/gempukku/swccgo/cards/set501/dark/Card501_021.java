@@ -43,7 +43,7 @@ public class Card501_021 extends AbstractAlien {
         addKeywords(Keyword.INFORMATION_BROKER);
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
         setSpecies(Species.BALOSAR);
-        setTestingText("Elan Sleazebaggano");
+        setTestingText("[Set 19] Elan Sleazebaggano");
     }
 
     @Override

@@ -35,7 +35,7 @@ public class Card501_099 extends AbstractObjective {
                 "While this side up, once per turn, may use 1 Force to deploy a site to the renegade planet from Reserve Deck; reshuffle. " +
                 "Flip this card if you control two sites related to the renegade planet and occupy the renegade system (and opponent controls fewer sites related to the renegade planet than you).");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_18);
-        setTestingText("Imperial Occupation (V)");
+        setTestingText("[Set 19] Imperial Occupation (V)");
     }
 
     @Override

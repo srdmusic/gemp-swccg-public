@@ -28,7 +28,7 @@ public class Card501_083 extends AbstractCreature {
         setGameText("Habitat: Ahch-To sites, either player’s starship (uses no capacity). Does not attack. Characters present (or starship aboard) are cumulatively power and defense value -1 (+1 if yours). Adds one [Light Side] icon here.");
         addModelType(ModelType.SEADWELLING);
         addIcons(Icon.SELECTIVE_CREATURE, Icon.VIRTUAL_SET_18);
-        setTestingText("Porg");
+        setTestingText("[Set 19] Porg");
     }
 
     @Override

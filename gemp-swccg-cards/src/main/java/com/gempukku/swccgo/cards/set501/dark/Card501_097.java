@@ -30,7 +30,7 @@ public class Card501_097 extends AbstractUsedInterrupt {
         super(Side.DARK, 4, "Show No Mercy", Uniqueness.UNIQUE);
         setGameText("If Insidious Prisoner or your [Set 17] Epic Event on table: Take The Works or a Coruscant battleground site into hand from Reserve Deck; reshuffle. OR If your Dark Jedi controls opponent’s battleground site, cancel a Force drain at the related system.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
-        setTestingText("Show No Mercy");
+        setTestingText("[Set 19] Show No Mercy");
     }
 
 

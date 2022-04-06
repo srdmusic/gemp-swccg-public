@@ -31,7 +31,7 @@ public class Card501_111 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
-        setTestingText("Lothal: Comm Tower E-272 (Ezra's Roost)");
+        setTestingText("[Set 19] Lothal: Comm Tower E-272 (Ezra's Roost)");
     }
 
     @Override

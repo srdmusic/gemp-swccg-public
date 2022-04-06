@@ -27,7 +27,7 @@ public class Card501_106 extends AbstractNormalEffect {
         setGameText("Deploy on table. Chopper, Ezra, Hera, Kanan, Sabine, and Zeb are Phoenix Squadron members. Once per turn, may deploy Hobbie, Wedge or an A-wing to a Lothal location from Reserve Deck; reshuffle. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Phoenix Squadron");
+        setTestingText("[Set 19] Phoenix Squadron");
     }
 
     @Override

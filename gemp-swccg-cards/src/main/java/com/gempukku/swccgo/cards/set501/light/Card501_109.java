@@ -38,7 +38,7 @@ public class Card501_109 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
-        setTestingText("Lothal: Capital City (LIGHT)");
+        setTestingText("[Set 19] Lothal: Capital City (LIGHT)");
     }
 
     @Override

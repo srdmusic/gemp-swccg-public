@@ -35,7 +35,7 @@ public class Card501_089 extends AbstractAlienRepublic {
         setGameText("When drawn for destiny, may play an Interrupt with 'Wookiee' in title from Lost Pile as if from hand (then place that card out of play). Adds 2 to power of anything he pilots (3 if a gunship). Forfeit +2 at a Kashyyyk location.");
         setSpecies(Species.WOOKIEE);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
-        setTestingText("Wullffwarro");
+        setTestingText("[Set 19] Wullffwarro");
     }
 
     @Override

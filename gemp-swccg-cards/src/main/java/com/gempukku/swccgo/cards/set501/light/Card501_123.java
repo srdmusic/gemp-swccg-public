@@ -35,7 +35,7 @@ public class Card501_123 extends AbstractSystem {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.PLANET, Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_18);
-        setTestingText("Cyrkon");
+        setTestingText("[Set 19] Cyrkon");
     }
 
     @Override

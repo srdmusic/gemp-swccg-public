@@ -28,7 +28,7 @@ public class Card501_114 extends AbstractSystem {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 2);
         addIcons(Icon.PLANET, Icon.VIRTUAL_SET_18);
-        setTestingText("Malachor");
+        setTestingText("[Set 19] Malachor");
     }
 
     @Override

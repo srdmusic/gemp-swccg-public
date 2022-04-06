@@ -45,7 +45,7 @@ public class Card501_105 extends AbstractObjective {
                 "While this side up, once per turn, may deploy a Lothal site, Malachor, Mandalore, or Seelos from Reserve Deck; reshuffle. " +
                 "Flip this card if you control three Lothal locations (or occupy three Lothal locations with Phoenix Squadron characters) and opponent control no Lothal locations.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("Zero Hour");
+        setTestingText("[Set 19] Zero Hour");
     }
 
     @Override

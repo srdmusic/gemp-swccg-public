@@ -34,7 +34,7 @@ public class Card501_030_BACK extends AbstractObjective {
         setGameText("While this side up, Rebels are destiny -1. If a battle was just initiated involving an Imperial leader or occupied TIE defender, may peek at cards stacked on Thrawn's Art Collection and reveal one 'artwork' card. If a weapon, cancel battle. Otherwise, if artwork's printed destiny number is: (0-2), opponent's immunity to attrition (if any) is canceled during battle (3-4): Exclude one character (if any) from battle (5+): Add destiny value to your total power. Place 'artwork' in owner's Lost Pile. " +
                 "Flip this card (except during battle) if no 'artwork' stacked on Thrawn's Art Collection.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("The Result Is Often Resentment");
+        setTestingText("[Set 19] The Result Is Often Resentment");
     }
 
     @Override

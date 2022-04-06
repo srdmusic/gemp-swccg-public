@@ -38,7 +38,7 @@ public class Card501_102 extends AbstractObjective {
                 "While this side up, once per turn, may use 1 Force to deploy a site to the subjugated planet from Reserve Deck; reshuffle. " +
                 "Flip this card if you control two sites related to the subjugated planet and occupy the subjugated system (and opponent controls fewer sites related to the subjugated planet than you).");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_18);
-        setTestingText("Local Uprising (V)");
+        setTestingText("[Set 19] Local Uprising (V)");
     }
 
     @Override
