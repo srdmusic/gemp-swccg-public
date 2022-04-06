@@ -31,7 +31,7 @@ public class Card501_124_BACK extends AbstractAlien {
     public Card501_124_BACK() {
         super(Side.LIGHT, 7, 0, 2, 1, 2, "The Mythrol", Uniqueness.UNIQUE);
         setLore("Accountant.");
-        setGameText("If either player just deployed a card with ability here, you may use 1 Force to place The Mythrol out of play (if character was Din Djarin or a bounty hunter, you may activate 2 Force).");
+        setGameText("If either player just deployed a card with ability here, you may use 1 Force to place The Mythrol out of play; if card was Din Djarin or a bounty hunter, you may activate 2 Force. If about to leave table, place out of play.");
         setDoesNotCountTowardDeckLimit(true);
         addKeyword(Keyword.ACCOUNTANT);
         setSpecies(Species.MYTHROL);

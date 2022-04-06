@@ -17,6 +17,7 @@ import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeStolenModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -28,25 +29,26 @@ import java.util.List;
 /**
  * Set: Set 18
  * Type: Effect
- * Title: A Good Blaster At Your Side & Quick Draw
+ * Title: A Good Blaster At Your Side & Restricted Deployment
  */
 public class Card501_061 extends AbstractNormalEffect {
     public Card501_061() {
-        super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Good Blaster At Your Side & Quick Draw", Uniqueness.UNIQUE);
-        addComboCardTitles("A Good Blaster At Your Side", "Quick Draw");
-        setGameText("Deploy on table. Non-lightsaber weapons carried by your non-Jedi characters may not be stolen. During your control phase, if you control a battleground site with a non-unique, non-[Permanent Weapon] blaster present, opponent loses 1 Force. Rebel Artillery is a Lost Interrupt. During your deploy phase, may deploy from Reserve Deck (or use 2 Force to deploy from Lost Pile) a non-unique blaster on your character; reshuffle. [Immune to Alter.]");
+        super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Good Blaster At Your Side & Restricted Deployment", Uniqueness.UNIQUE);
+        addComboCardTitles("A Good Blaster At Your Side", Title.Restricted_Deployment);
+        setGameText("Deploy on table. Non-lightsaber weapons carried by your non-Jedi characters may not be stolen. During your control phase, if you control a battleground site with a non-unique, non-[Permanent Weapon] blaster present, opponent loses 1 Force. Rebel Artillery is a Lost Interrupt. During your deploy phase, may [download] a blaster (or use 2 Force to deploy a non-unique blaster from Lost Pile) on your character at a Death Star site. May not be canceled. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("A Good Blaster At Your Side & Quick Draw");
+        setTestingText("A Good Blaster At Your Side & Restricted Deployment");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Filter weapons = Filters.and(Filters.weapon, Filters.not(Filters.lightsaber), Filters.attachedTo(Filters.and(Filters.your(self), Filters.character, Filters.not(Filters.Jedi))));
 
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotBeStolenModifier(self, weapons));
         modifiers.add(new LostInterruptModifier(self, Filters.Rebel_Artillery));
+        modifiers.add(new MayNotBeCanceledModifier(self, self));
         return modifiers;
     }
 
@@ -77,18 +79,18 @@ public class Card501_061 extends AbstractNormalEffect {
 
         gameTextActionId = GameTextActionId.A_GOOD_BLASTER_AT_YOUR_SIDE_COMBO__DEPLOY_BLASTER;
         if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
-            && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.character))) {
+            && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.character, Filters.at(Filters.Death_Star_site)))) {
 
             if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Deploy blaster from Reserve Deck");
-                action.setActionMsg("Deploy a non-unique blaster from Reserve Deck on your character");
+                action.setActionMsg("Deploy a non-unique blaster from Reserve Deck on your character at a Death Star site");
 
                 action.appendUsage(
                         new OncePerTurnEffect(action));
                 action.appendEffect(
-                        new DeployCardToTargetFromReserveDeckEffect(action, Filters.and(Filters.non_unique, Filters.blaster), Filters.and(Filters.your(self), Filters.character), true));
+                        new DeployCardToTargetFromReserveDeckEffect(action, Filters.and(Filters.non_unique, Filters.blaster), Filters.and(Filters.your(self), Filters.character, Filters.at(Filters.Death_Star_site)), true));
 
                 actions.add(action);
             }
@@ -98,14 +100,14 @@ public class Card501_061 extends AbstractNormalEffect {
 
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Deploy blaster from Lost Pile");
-                action.setActionMsg("Deploy a non-unique blaster from Lost Pile on your character");
+                action.setActionMsg("Deploy a non-unique blaster from Lost Pile on your character at a Death Star site");
 
                 action.appendUsage(
                         new OncePerTurnEffect(action));
                 action.appendCost(
                         new UseForceEffect(action, playerId, 2));
                 action.appendEffect(
-                        new DeployCardToTargetFromLostPileEffect(action, Filters.and(Filters.non_unique, Filters.blaster), Filters.and(Filters.your(self), Filters.character), false, false));
+                        new DeployCardToTargetFromLostPileEffect(action, Filters.and(Filters.non_unique, Filters.blaster), Filters.and(Filters.your(self), Filters.character, Filters.at(Filters.Death_Star_site)), false, false));
 
                 actions.add(action);
             }

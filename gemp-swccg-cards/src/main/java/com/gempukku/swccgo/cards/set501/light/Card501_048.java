@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.AbstractRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
@@ -31,9 +32,11 @@ import java.util.List;
 public class Card501_048 extends AbstractAlien {
     public Card501_048() {
         super(Side.LIGHT, 3, 3, 4, 2, 4, "Sagwa", Uniqueness.UNIQUE);
-        setLore("Wookiee. Slave.");
+        setLore("Wookiee slave.");
         setGameText("When drawn for destiny, your Wookiees are forfeit +1 for remainder of turn. While with Wookiee Homestead, opponent's spies may not deploy here, and once per turn when you win a battle with a Wookiee, may retrieve a Wookiee.");
+        setGameText("If drawn for destiny, each of your Wookiees is forfeit +1 for remainder of turn. While Wookiee Homestead here, opponent's spies may not deploy here and, once per turn, when your Wookiee wins a battle, may retrieve a Wookiee.");
         setSpecies(Species.WOOKIEE);
+        addKeyword(Keyword.SLAVE);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_18);
         setTestingText("Sagwa");
     }
@@ -57,14 +60,14 @@ public class Card501_048 extends AbstractAlien {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotDeployToLocationModifier(self, Filters.and(Filters.opponents(self), Filters.spy), new AtCondition(self, Filters.hasAttached(Filters.Wookiee_Homestead)), Filters.here(self)));
+        modifiers.add(new MayNotDeployToLocationModifier(self, Filters.and(Filters.opponents(self), Filters.spy), new HereCondition(self, Filters.Wookiee_Homestead), Filters.here(self)));
         return modifiers;
     }
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (GameConditions.isAtLocation(game, self, Filters.hasAttached(Filters.Wookiee_Homestead))
+        if (GameConditions.isHere(game, self, Filters.Wookiee_Homestead)
                 && TriggerConditions.wonBattle(game, effectResult, playerId)
                 && TriggerConditions.wonBattle(game, effectResult, Filters.Wookiee)
                 && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId)) {

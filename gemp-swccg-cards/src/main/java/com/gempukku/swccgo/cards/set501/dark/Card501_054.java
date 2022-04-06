@@ -2,8 +2,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.AddDuelDestinyEffect;
-import com.gempukku.swccgo.cards.effects.CancelWeaponTargetingEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -13,7 +11,6 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.NumLightsaberCombatDestinyDrawsModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
@@ -32,7 +29,7 @@ import java.util.List;
 public class Card501_054 extends AbstractUsedOrLostInterrupt {
     public Card501_054() {
         super(Side.DARK, 4, "Surely You Can Do Better", Uniqueness.UNIQUE);
-        setGameText("USED: During battle, target a character present with [Set 13] Dooku. Target is power -3. LOST: Cancel Clash Of Sabers or Projection Of A Skywalker. OR If lightsaber combat was just initiated, lose 1 force (free if involving [Set 13] Dooku) to add one destiny to your total.");
+        setGameText("USED: During battle, target a character present with [Set 13] Dooku. Target is power -3. LOST: Cancel Clash Of Sabers or Projection Of A Skywalker. OR If lightsaber combat was just initiated, lose 1 Force (free if involving [Set 13] Dooku) to add one destiny to your total.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
         setTestingText("Surely You Can Do Better");
     }
@@ -40,7 +37,7 @@ public class Card501_054 extends AbstractUsedOrLostInterrupt {
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+        List<PlayInterruptAction> actions = new LinkedList<>();
         Filter targetFilter = Filters.and(Filters.character, Filters.presentWith(self, Filters.and(Icon.VIRTUAL_SET_13, Filters.Dooku)), Filters.canBeTargetedBy(self));
         // Check condition(s)
         if (GameConditions.isDuringBattleWithParticipant(game, targetFilter)) {

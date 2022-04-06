@@ -29,7 +29,7 @@ public class Card501_117 extends AbstractNormalEffect {
     public Card501_117() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "I Must Be Allowed To Speak & Smuggler's Blues", Uniqueness.UNIQUE);
         addComboCardTitles("I Must Be Allowed To Speak", "Smuggler's Blues");
-        setGameText("If Watch Your Step on table, deploy on table. Corran is a smuggler. Once per character, when you deploy Corran, Mara, Mirax, or Talon Karrde to a Tatooine location, may take any one card into hand from Used Pile; reshuffle. Once per game, may deploy a [Reflections II] location from Reserve Deck; reshuffle. Opponent may not cancel or modify Force drains at battlegrounds where you have two smugglers. [Immune to Alter.]");
+        setGameText("If Watch Your Step on table, deploy on table. Corran is a smuggler. Once per character, when you deploy Corran, Mara, Mirax, or Talon Karrde to a Tatooine location, may take any one card from Used Pile into hand; reshuffle. Once per game, may [download] a [Reflections II] location. Opponent may not cancel or modify Force drains at battlegrounds where you have two smugglers. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("I Must Be Allowed To Speak & Smuggler's Blues");

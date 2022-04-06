@@ -29,7 +29,7 @@ public class Card501_122 extends AbstractStartingInterrupt {
         super(Side.DARK, 3, Title.Slip_Sliding_Away, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Luke got the shaft.");
-        setGameText("If you have deployed a site (except Imperial Square) with exactly two [Dark Side] (and no other locations), deploy a related (or a mobile) battleground site and up to three Effects that deploy for free and are always immune to Alter. Place Interrupt in Lost Pile.");
+        setGameText("If you have deployed a site (except Imperial Square) with exactly two [Dark Side] (and no other locations), deploy a related (or mobile) battleground site and up to three Effects that deploy for free and are always immune to Alter. Place Interrupt in Lost Pile.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_12);
         setTestingText("Slip Sliding Away (V) (ERRATA)");
     }

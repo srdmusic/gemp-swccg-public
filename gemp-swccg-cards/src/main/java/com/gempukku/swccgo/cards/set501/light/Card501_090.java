@@ -34,7 +34,7 @@ public class Card501_090 extends AbstractUsedInterrupt {
     public Card501_090() {
         super(Side.LIGHT, 4, "Local Defense & Put That Down", Uniqueness.UNIQUE);
         addComboCardTitles("Local Defense", "Put That Down");
-        setGameText("Take an [Independent] starship into hand from Reserve Deck; reshuffle. OR If your starship (or non-Jedi character) is about to be captured or lost during the weapons segment of a battle, it is hit instead and may not be captured or lost until the damage segment. OR If opponent just played an Interrupt during battle, activate 2 Force.");
+        setGameText("[upload] an [Independent] starship. OR If your starship (or non-Jedi character) is about to be captured or lost during the weapons segment of a battle, it is hit instead and may not be captured or lost until the damage segment. OR If opponent just played an Interrupt during battle, activate 2 Force.");
         addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("Local Defense & Put That Down");
     }

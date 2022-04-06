@@ -3378,7 +3378,7 @@ public class GameConditions {
     }
 
     /**
-     * Determines if the a card accepted by the filter is "here" (from perspective of the specified card).
+     * Determines if a card accepted by the filter is "here" (from perspective of the specified card).
      * @param game the game
      * @param card the card
      * @param filter the filter

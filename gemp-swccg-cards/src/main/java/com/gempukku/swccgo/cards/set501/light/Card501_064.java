@@ -28,7 +28,7 @@ import java.util.*;
 public class Card501_064 extends AbstractNormalEffect {
     public Card501_064() {
         super(Side.LIGHT, 0, PlayCardZoneOption.ATTACHED, "Best Starpilot In The Galaxy", Uniqueness.UNIQUE);
-        setGameText("Deploy on a [Skywalker] Epic Event. May deploy Polis Massa from Reserve Deck; reshuffle. Once per game, may simultaneously deploy Azure Angel, Falcon, or Red 5 with matching non-[Maintenance] pilot from hand and/or Reserve Deck (reshuffle). [Immune to Alter.]");
+        setGameText("Deploy on your [Skywalker] Epic Event. May [download] Polis Massa. Once per game, may simultaneously deploy an unpiloted Azure Angel, Falcon, or Red 5 and matching non-[Maintenance] pilot from hand and/or Reserve Deck; reshuffle. [Immune to Alter].");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Best Starpilot In The Galaxy");
@@ -66,7 +66,7 @@ public class Card501_064 extends AbstractNormalEffect {
                     || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.RED_5);
             final List<PhysicalCard> cardsInHand = game.getGameState().getHand(playerId);
             final List<PhysicalCard> validStarfighters = new ArrayList<PhysicalCard>();
-            Collection<PhysicalCard> starfighters = Filters.filter(cardsInHand, game, Filters.or(Filters.Azure_Angel, Filters.Falcon, Filters.Red_5));
+            Collection<PhysicalCard> starfighters = Filters.filter(cardsInHand, game, Filters.and(Filters.unpiloted, Filters.or(Filters.Azure_Angel, Filters.Falcon, Filters.Red_5)));
             for (PhysicalCard starfighter : starfighters) {
                 if (Filters.canSpot(cardsInHand, game, Filters.and(Filters.matchingPilot(starfighter), Filters.deployableSimultaneouslyWith(self, starfighter, false, 0, false, 0)))) {
                     validStarfighters.add(starfighter);
@@ -154,7 +154,7 @@ public class Card501_064 extends AbstractNormalEffect {
 
                 if (cardsSelected.isEmpty()) {
                     final List<PhysicalCard> validStarfighters = new ArrayList<PhysicalCard>();
-                    Collection<PhysicalCard> starfighters = Filters.filter(cardsToChooseFrom, game, Filters.or(Filters.Azure_Angel, Filters.Falcon, Filters.Red_5));
+                    Collection<PhysicalCard> starfighters = Filters.filter(cardsToChooseFrom, game, Filters.and(Filters.unpiloted, Filters.or(Filters.Azure_Angel, Filters.Falcon, Filters.Red_5)));
                     for (PhysicalCard starfighter : starfighters) {
                         if (Filters.canSpot(cardsToChooseFrom, game, Filters.and(Filters.matchingPilot(starfighter), Filters.not(Icon.MAINTENANCE), Filters.deployableSimultaneouslyWith(action.getActionSource(), starfighter, false, 0, false, 0)))) {
                             validStarfighters.add(starfighter);

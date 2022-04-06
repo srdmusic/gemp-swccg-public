@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
@@ -23,8 +24,8 @@ import java.util.List;
 public class Card501_115 extends AbstractSystem {
     public Card501_115() {
         super(Side.DARK, Title.Hosnian_Prime, 1);
-        setLocationDarkSideGameText("While you control, Menace Fades is suspended. Your [First Order] starships are power +1 here.");
-        setLocationLightSideGameText("While Starkiller Base on table, your Force generation is -1 here.");
+        setLocationDarkSideGameText("If your First Order leader here, Menace Fades is suspended.");
+        setLocationLightSideGameText("If Starkiller Base on table, your Force generation is -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EPISODE_VII, Icon.PLANET, Icon.VIRTUAL_SET_18);
@@ -33,15 +34,14 @@ public class Card501_115 extends AbstractSystem {
 
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new SuspendsCardModifier(self, Filters.title("Menace Fades"), new ControlsCondition(playerOnDarkSideOfLocation, self)));
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Icon.FIRST_ORDER, Filters.starship, Filters.here(self)), 1));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new SuspendsCardModifier(self, Filters.title("Menace Fades"), new HereCondition(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.First_Order_character, Filters.leader))));
         return modifiers;
     }
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ForceGenerationModifier(self, new OnTableCondition(self, Filters.Starkiller_Base_system), -1, playerOnLightSideOfLocation));
         return modifiers;
     }

@@ -38,7 +38,7 @@ public class Card501_044 extends AbstractSystem {
         setLocationLightSideGameText("If opponent controls Podrace Arena, Force drain -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_18);
         setTestingText("Malastare (V)");
     }
 
