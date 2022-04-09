@@ -58,11 +58,5 @@ mysql -u root gemp-swccg < /vagrant/sample_decks.sql
 
 
 echo
-echo "Download card images to /vagrant from holotable repo"
-echo
-cd /vagrant
-bash ./get-card-images.sh
-
-echo
 echo 'Done!'
 echo
