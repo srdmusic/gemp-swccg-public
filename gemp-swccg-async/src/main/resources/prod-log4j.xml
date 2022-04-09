@@ -7,14 +7,6 @@
             <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS} %5p %c{1}:%L - %m%n"/>
         </layout>
     </appender>
-    <appender name="R" class="org.apache.log4j.RollingFileAppender">
-        <param name="file" value="/logs/gemp-swccg.log"/>
-        <param name="MaxFileSize" value="10MB"/>
-        <param name="MaxBackupIndex" value="20"/>
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d{yyyy-MM-dd HH:mm:ss,SSS} %5p %c{1}:%L - %m%n"/>
-        </layout>
-    </appender>
 
     <appender name="chat" class="org.apache.log4j.RollingFileAppender">
         <param name="file" value="/logs/swccg_chat.log"/>
@@ -28,7 +20,6 @@
 
     <logger name="com.gempukku" additivity="false">
         <level value="debug"/>
-        <appender-ref ref="R"/>
         <appender-ref ref="stdout"/>
     </logger>
     <logger name="chat">
@@ -37,7 +28,6 @@
     </logger>
     <root>
         <level value="error"/>
-        <appender-ref ref="R"/>
         <appender-ref ref="stdout"/>
     </root>
 </log4j:configuration>

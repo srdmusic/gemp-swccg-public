@@ -176,7 +176,7 @@ var GempSwccgGameUI = Class.extend({
              replayDiv.append(fasterBut);
              replayDiv.append("<br/>");
 
-             var replayBut = $("<img id='replayButton' src='images/play.png' width='64' height='64'>").button();
+             var replayBut = $("<img id='replayButton' src='https://res.starwarsccg.org/gemp/play.png' width='64' height='64'>").button();
              replayDiv.append(replayBut);
 
              $("#main").append(replayDiv);
@@ -555,7 +555,7 @@ var GempSwccgGameUI = Class.extend({
                 });
 
         if (!this.gameUiInitialized && !this.spectatorMode && !this.replayMode) {
-            var soundPlay = $("<embed src='/gemp-swccg/coolsaber.wav' hidden='true' autostart='true' loop='false' height='0' width='0'>");
+            var soundPlay = $("<embed src='https://res.starwarsccg.org/gemp/coolsaber.wav' hidden='true' autostart='true' loop='false' height='0' width='0'>");
             this.gameStateElem.append(soundPlay);
             setTimeout(
                 function() {
@@ -2055,10 +2055,10 @@ var GempSwccgGameUI = Class.extend({
                     function() {
                         if (that.replayPlay) {
                             that.replayPlay = false;
-                            $("#replayButton").attr("src", "images/play.png");
+                            $("#replayButton").attr("src", "https://res.starwarsccg.org/gemp/play.png");
                         } else {
                             that.replayPlay = true;
-                            $("#replayButton").attr("src", "images/pause.png");
+                            $("#replayButton").attr("src", "https://res.starwarsccg.org/gemp/pause.png");
                             that.playNextReplayEvent();
                         }
                     });
