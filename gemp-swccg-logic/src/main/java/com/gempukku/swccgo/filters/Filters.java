@@ -12418,6 +12418,17 @@ public class Filters {
                 if (Filters.partOfSystem(location.getPartOfSystem()).accepts(gameState, modifiersQuerying, physicalCard))
                     return true;
 
+                // Check if locations are part of the same unique starship or vehicle
+                if (Filters.or(Filters.starship_site, Filters.vehicle_site).accepts(gameState, modifiersQuerying, physicalCard)
+                        && Filters.or(Filters.starship_site, Filters.vehicle_site).accepts(gameState, modifiersQuerying, location)) {
+
+                    Persona physicalCardPersona = physicalCard.getBlueprint().getRelatedStarshipOrVehiclePersona();
+                    Persona locationPersona = physicalCard.getBlueprint().getRelatedStarshipOrVehiclePersona();
+
+                    if (physicalCardPersona != null && locationPersona != null && physicalCardPersona.equals(locationPersona))
+                        return true;
+                }
+
                 return false;
             }
         };

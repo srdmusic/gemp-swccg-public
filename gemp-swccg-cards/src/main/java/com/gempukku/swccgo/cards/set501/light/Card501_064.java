@@ -27,16 +27,16 @@ import java.util.*;
  */
 public class Card501_064 extends AbstractNormalEffect {
     public Card501_064() {
-        super(Side.LIGHT, 0, PlayCardZoneOption.ATTACHED, "Best Starpilot In The Galaxy", Uniqueness.UNIQUE);
-        setGameText("Deploy on your [Skywalker] Epic Event. May [download] Polis Massa. Once per game, may simultaneously deploy an unpiloted Azure Angel, Falcon, or Red 5 and matching non-[Maintenance] pilot from hand and/or Reserve Deck; reshuffle. [Immune to Alter].");
+        super(Side.LIGHT, 0, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Best Starpilot In The Galaxy", Uniqueness.UNIQUE);
+        setGameText("If your [Skywalker] Epic Event on table, deploy on table. May [download] Polis Massa. Once per game, may simultaneously deploy an unpiloted Azure Angel, Falcon, or Red 5 and matching non-[Maintenance] pilot from hand and/or Reserve Deck; reshuffle. [Immune to Alter].");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Best Starpilot In The Galaxy");
     }
 
     @Override
-    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.and(Icon.SKYWALKER, Filters.Epic_Event);
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.canSpot(game, self, Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Epic_Event));
     }
 
     @Override
