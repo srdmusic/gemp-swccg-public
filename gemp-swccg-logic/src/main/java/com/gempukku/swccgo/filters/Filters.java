@@ -11224,7 +11224,7 @@ public class Filters {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                if (Filters.Podracer.accepts(gameState, modifiersQuerying, physicalCard)) {
+                if (!Filters.Podracer.accepts(gameState, modifiersQuerying, physicalCard)) {
                     return false;
                 }
                 float raceTotal = modifiersQuerying.getPodracerRaceTotal(gameState, physicalCard);
