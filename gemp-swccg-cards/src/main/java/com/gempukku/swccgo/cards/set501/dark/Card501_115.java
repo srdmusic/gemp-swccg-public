@@ -10,6 +10,7 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.LinkedList;
@@ -24,7 +25,7 @@ import java.util.List;
 public class Card501_115 extends AbstractSystem {
     public Card501_115() {
         super(Side.DARK, Title.Hosnian_Prime, 1);
-        setLocationDarkSideGameText("If your First Order leader here, Menace Fades is suspended.");
+        setLocationDarkSideGameText("While your [Episode VII] objective on table and your First Order leader here, Menace Fades is suspended.");
         setLocationLightSideGameText("If Starkiller Base on table, your Force generation is -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
@@ -35,7 +36,9 @@ public class Card501_115 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new SuspendsCardModifier(self, Filters.title("Menace Fades"), new HereCondition(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.First_Order_character, Filters.leader))));
+        modifiers.add(new SuspendsCardModifier(self, Filters.title("Menace Fades"),
+                new AndCondition(new OnTableCondition(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Icon.EPISODE_VII, Filters.Objective)),
+                                 new HereCondition(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.First_Order_character, Filters.leader)))));
         return modifiers;
     }
 

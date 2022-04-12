@@ -31,7 +31,7 @@ public class Card501_054 extends AbstractUsedOrLostInterrupt {
         super(Side.DARK, 4, "Surely You Can Do Better", Uniqueness.UNIQUE);
         setGameText("USED: During battle, target a character present with [Set 13] Dooku. Target is power -3. LOST: Cancel Clash Of Sabers or Projection Of A Skywalker. OR If lightsaber combat was just initiated, lose 1 Force (free if involving [Set 13] Dooku) to add one destiny to your total.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
-        setTestingText("Surely You Can Do Better");
+        setTestingText("[Set 19] Surely You Can Do Better");
     }
 
 
