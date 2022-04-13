@@ -393,6 +393,7 @@ public class DeploySingleCardEffect extends AbstractSubActionEffect implements P
                                                         // Played to location.
                                                         else if (_playedToLocation != null) {
                                                             destinationCard = _playedToLocation;
+                                                            _cardToPlay.setDejarikHologramAtHolosite(_playCardOptionId == PlayCardOptionId.PLAY_AS_DEJARIK);
 
                                                             if (_deployAsCaptiveOption != null && _deployAsCaptiveOption.getCaptureOption() == CaptureOption.IMPRISONMENT) {
                                                                 _cardToPlay.setCaptive(true);
