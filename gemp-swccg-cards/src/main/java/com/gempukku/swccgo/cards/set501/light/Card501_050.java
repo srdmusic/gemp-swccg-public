@@ -9,14 +9,11 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -33,7 +30,7 @@ public class Card501_050 extends AbstractNormalEffect {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Ounee_Ta, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Jabba's decadent behavior makes him susceptible to deception. Leia and Lando exploited this weakness, posing as Jabba's kind of scum.");
-        setGameText("Deploy on a site. When deployed, may take top card of Lost Pile into hand. Opponent may not modify the deploy cost of your characters deploying here. Once per game, may place an Interrupt (except Ghhhk) in opponent’s Lost Pile out of play. [Immune to Alter.]");
+        setGameText("Deploy on a battleground site. When deployed, may take top card of Lost Pile into hand. Opponent may not modify the deploy cost of your characters deploying here. Once per game, may place an Interrupt (except Ghhhk) from opponent's Lost Pile out of play. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_18);
         addKeyword(Keyword.DEPLOYS_ON_SITE);
         addImmuneToCardTitle(Title.Alter);
@@ -42,7 +39,7 @@ public class Card501_050 extends AbstractNormalEffect {
 
     @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.site;
+        return Filters.battleground_site;
     }
 
     @Override
@@ -72,7 +69,7 @@ public class Card501_050 extends AbstractNormalEffect {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Place Interrupt out of play");
-            action.setActionMsg("Place any Interrupt (except Ghhhk) in opponent's Lost Pile out of play");
+            action.setActionMsg("Place any Interrupt (except Ghhhk) from opponent's Lost Pile out of play");
 
             action.appendUsage(
                     new OncePerGameEffect(action));

@@ -33,7 +33,6 @@ public class Card501_048 extends AbstractAlien {
     public Card501_048() {
         super(Side.LIGHT, 3, 3, 4, 2, 4, "Sagwa", Uniqueness.UNIQUE);
         setLore("Wookiee slave.");
-        setGameText("When drawn for destiny, your Wookiees are forfeit +1 for remainder of turn. While with Wookiee Homestead, opponent's spies may not deploy here, and once per turn when you win a battle with a Wookiee, may retrieve a Wookiee.");
         setGameText("If drawn for destiny, each of your Wookiees is forfeit +1 for remainder of turn. While Wookiee Homestead here, opponent's spies may not deploy here and, once per turn, when your Wookiee wins a battle, may retrieve a Wookiee.");
         setSpecies(Species.WOOKIEE);
         addKeyword(Keyword.SLAVE);

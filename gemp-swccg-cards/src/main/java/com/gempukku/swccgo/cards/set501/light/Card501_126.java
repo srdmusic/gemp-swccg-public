@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.MoveUsingLocationTextAction;
-import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.conditions.ControlsWithCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
@@ -39,7 +38,7 @@ public class Card501_126 extends AbstractSite {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
 
         // Check condition(s)
         if (GameConditions.isDuringYourPhase(game, playerOnLightSideOfLocation, Phase.MOVE)

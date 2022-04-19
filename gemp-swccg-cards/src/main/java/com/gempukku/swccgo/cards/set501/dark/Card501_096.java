@@ -29,7 +29,7 @@ public class Card501_096 extends AbstractLostInterrupt {
         super(Side.DARK, 5, Title.I_Have_You_Now);
         setVirtualSuffix(true);
         setLore("'Several fighters have broken off from the main group. Come with me.' Darth Vader targets his TIE fighter's fire-linked blaster cannons at the Rebel pilots in the trench.");
-        setGameText("If Revenge Of The Sith on table, choose: If a Dark Jedi is in battle with an opponent’s character of ability > 3, add one battle destiny. OR During your move phase, use 2 Force to relocate your apprentice at an [Episode I] site to another site.");
+        setGameText("If Revenge Of The Sith on table, choose: If a Dark Jedi is in battle with an opponent's character of ability > 3, add one battle destiny. OR During your move phase, use 2 Force to relocate your apprentice from an [Episode I] site to another site.");
         addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("I Have You Now (V)");
     }

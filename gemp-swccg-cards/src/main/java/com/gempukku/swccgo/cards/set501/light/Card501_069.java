@@ -34,7 +34,7 @@ public class Card501_069 extends AbstractSite {
         setLocationLightSideGameText("If you have more than one character here, you must target one to be lost (cannot be prevented).");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_18);
         setTestingText("Death Star II: Turbolift Walkway");
     }
 

@@ -37,7 +37,7 @@ public class Card501_073 extends AbstractStarfighter {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, new HasPilotingCondition(self, Filters.or(Filters.Dash, Filters.Leebo)), 4));
         modifiers.add(new PowerModifier(self, new MaxLimitEvaluator(new StackedEvaluator(self, Filters.A_Useless_Gesture), 3)));
         modifiers.add(new ManeuverModifier(self, new MaxLimitEvaluator(new StackedEvaluator(self, Filters.A_Useless_Gesture), 3)));
