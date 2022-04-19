@@ -3551,6 +3551,7 @@ var fixedImages = {
 "501_125":"https://res.starwarsccg.org/cards/Premiere-Light/hires/solohan.png",
 "501_126":"https://res.starwarsccg.org/cards/Premiere-Light/large/tatooinemoseisley.gif",
 "501_127":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/tiedefendermarki.gif",
+"501_128":"https://res.starwarsccg.org/cards/Virtual0-Dark/hires/pondababa.png",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",

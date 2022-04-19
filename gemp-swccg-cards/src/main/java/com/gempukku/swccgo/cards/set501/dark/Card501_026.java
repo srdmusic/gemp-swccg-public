@@ -15,8 +15,8 @@ import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.MoveCardsAwayEffect;
 import com.gempukku.swccgo.logic.modifiers.EachWeaponDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.MovesForFreeModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.HitResult;
@@ -36,7 +36,7 @@ import java.util.List;
 public class Card501_026 extends AbstractUsedInterrupt {
     public Card501_026() {
         super(Side.DARK, 4, "He's No Good To Me Dead", Uniqueness.UNIQUE);
-        setGameText("For remainder of turn, your Fetts add 1 to their weapon destinies and targets they ‘hit’ are forfeit = 0. OR Once per game, cancel a battle just initiated where a Fett is escorting a frozen captive; each of opponent’s cards there may move away for free. [Immune to Sense.]");
+        setGameText("For remainder of turn, your Fetts add 1 to their weapon destiny draws and targets they 'hit' are forfeit = 0. OR Once per game, cancel a battle just initiated where a Fett is escorting a captive; opponent's cards there move for free this turn. [Immune to Sense.]");
         addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("He's No Good To Me Dead");
     }
@@ -48,6 +48,8 @@ public class Card501_026 extends AbstractUsedInterrupt {
         if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.Fett))) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Affect your Fetts using weapons");
+            action.setImmuneTo(Title.Sense);
+
             action.allowResponses("Add to Fett weapon destinies and make targets they hit forfeit = 0", new RespondablePlayCardEffect(action) {
                 @Override
                 protected void performActionResults(Action targetingAction) {
@@ -81,22 +83,22 @@ public class Card501_026 extends AbstractUsedInterrupt {
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
         final String opponent = game.getOpponent(playerId);
         GameTextActionId gameTextActionId = GameTextActionId.HES_NO_GOOD_TO_ME_DEAD__CANCEL_BATTLE;
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && TriggerConditions.battleInitiatedAt(game, effectResult, Filters.sameLocationAs(self, Filters.and(Filters.Fett, Filters.escorting(Filters.frozenCaptive))))) {
+                && TriggerConditions.battleInitiatedAt(game, effectResult, Filters.sameLocationAs(self, Filters.and(Filters.Fett, Filters.escorting(Filters.captive))))) {
+
+                final PhysicalCard battleLocation = Filters.findFirstFromTopLocationsOnTable(game, Filters.battleLocation);
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
                 action.setText("Cancel battle");
+                action.setImmuneTo(Title.Sense);
 
                 action.appendUsage(
                         new OncePerGameEffect(action));
-                // Pay cost(s)
-                action.appendCost(
-                        new UseForceEffect(action, playerId, 1));
                 // Allow response(s)
                 action.allowResponses("Cancel battle",
                         new RespondablePlayCardEffect(action) {
@@ -104,9 +106,10 @@ public class Card501_026 extends AbstractUsedInterrupt {
                             protected void performActionResults(Action targetingAction) {
                                 // Perform result(s)
                                 action.appendEffect(
-                                        new MoveCardsAwayEffect(action, opponent, Filters.and(Filters.opponents(playerId), Filters.participatingInBattle), Filters.any, false, true, false));
-                                action.appendEffect(
                                         new CancelBattleEffect(action));
+                                Collection<PhysicalCard> opponentsCardsThere = Filters.filterActive(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.opponents(self), Filters.at(battleLocation), Filters.canBeTargetedBy(self)));
+                                action.appendEffect(
+                                        new AddUntilEndOfTurnModifierEffect(action, new MovesForFreeModifier(self, Filters.in(opponentsCardsThere)), "makes "+opponent+"'s cards move for free"));
                             }
                         }
                 );

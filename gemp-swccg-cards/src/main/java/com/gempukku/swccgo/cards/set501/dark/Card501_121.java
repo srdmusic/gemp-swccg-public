@@ -37,7 +37,7 @@ public class Card501_121 extends AbstractUsedInterrupt {
     public Card501_121() {
         super(Side.DARK, 5, "A Dark Time For The Rebellion & Tarkin's Orders", Uniqueness.UNIQUE);
         addComboCardTitles("A Dark Time For The Rebellion", "Tarkin's Orders");
-        setGameText("For remainder of turn, opponent may not retrieve Force using Resistance characters' game text. OR For remainder of turn, opponent may not cancel your battle destiny draws. OR Search opponent's Lost Pile; place one device you find there out of play. OR Cancel It Could Be Worse. OR Cancel Projection Of A Skywalker at an opponent's planet site.");
+        setGameText("For remainder of turn, opponent's Force retrieval using Resistance characters' game text is canceled. OR For remainder of turn, opponent may not cancel your battle destiny draws. OR Search opponent's Lost Pile; place one device you find there out of play. OR Cancel It Could Be Worse. OR Cancel Projection Of A Skywalker at an opponent's planet site.");
         addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("A Dark Time For The Rebellion & Tarkin's Orders");
     }

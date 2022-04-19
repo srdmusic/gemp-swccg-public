@@ -4,8 +4,6 @@ import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.CancelDuelEffect;
 import com.gempukku.swccgo.cards.effects.CancelLightsaberCombatEffect;
-import com.gempukku.swccgo.cards.effects.complete.ChooseExistingCardPileEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -14,8 +12,6 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.StealCardIntoHandFromLostPileEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromUsedPileEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -37,7 +33,7 @@ public class Card501_116 extends AbstractUsedInterrupt {
     public Card501_116() {
         super(Side.LIGHT, 6, "Fall Of The Legend", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
-        setGameText("If opponent just lost a Dark Jedi or leader, you may take a card into hand from Used Pile; reshuffle. OR If opponent just retrieved a Force, they must lose 1 Force. OR Lose 2 Force to cancel a duel or lightsaber combat just initiated (3 if during your move phase).");
+        setGameText("If opponent just lost a Dark Jedi or leader, take a card into hand from Used Pile; reshuffle. OR If opponent just retrieved Force, opponent loses 1 Force. OR If lightsaber combat or a duel was just initiated, lose 2 Force (3 if during your move phase) to cancel it.");
         addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("Fall Of The Legend (V)");
     }
@@ -48,7 +44,8 @@ public class Card501_116 extends AbstractUsedInterrupt {
         final String opponent = game.getOpponent(playerId);
 
         final GameTextActionId gameTextActionId = GameTextActionId.FALL_OF_THE_LEGEND_V__SEARCH_USED_PILE;
-        if (TriggerConditions.justLost(game, effectResult, opponent, Filters.or(Filters.Dark_Jedi, Filters.leader))) {
+        if (TriggerConditions.justLost(game, effectResult, opponent, Filters.or(Filters.Dark_Jedi, Filters.leader))
+                && GameConditions.canTakeCardsIntoHandFromUsedPile(game, playerId, self, gameTextActionId)) {
 
             final PhysicalCard justLostCharacter = ((LostFromTableResult) effectResult).getCard();
 

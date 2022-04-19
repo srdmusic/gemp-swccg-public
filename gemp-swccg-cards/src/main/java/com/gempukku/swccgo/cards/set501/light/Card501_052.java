@@ -1,24 +1,17 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractLostOrStartingInterrupt;
-import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.PeekAtTopCardOfForcePileAndReserveDeckAndUsedPileAndReturnOneCardToEachEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToSystemFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromUsedPileEffect;
 import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.Effect;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -36,14 +29,14 @@ public class Card501_052 extends AbstractLostOrStartingInterrupt {
         super(Side.LIGHT, 3, Title.Computer_Interface);
         setVirtualSuffix(true);
         setLore("Lobot's direct link with the Cloud City central computer allowed him to efficiently manipulate the floating city's resources.");
-        setGameText("LOST: Retrieve Lobot or a droid. OR Draw top card of Used Pile. STARTING: Deploy a mobile site that has a Scomp link and exactly one [Light Side] and is related to a site on table. Deploy two Effects that deploy for free and are always immune to Alter. Place Interrupt in Reserve Deck.");
+        setGameText("LOST: Retrieve Lobot or a droid. OR Draw top card of Used Pile. STARTING: Deploy a mobile site that has a Scomp link, has exactly one [Light Side], and is related to a site on table. Deploy two Effects that deploy for free and are always immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_18);
         setTestingText("Computer Interface (V)");
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+        List<PlayInterruptAction> actions = new LinkedList<>();
 
         GameTextActionId gameTextActionId = GameTextActionId.COMPUTER_INTERFACE_V__RETRIEVE_CARD;
 
@@ -115,7 +108,7 @@ public class Card501_052 extends AbstractLostOrStartingInterrupt {
                         action.appendEffect(
                                 new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.mobile_site, Filters.iconCount(Icon.LIGHT_FORCE, 1), Filters.has_Scomp_link, Filters.in(locationsToDeployFromReserveDeck)), true, false));
                         action.appendEffect(
-                                new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.deploysForFree, Filters.always_immune_to_Alter), 1, 2, true, false));
+                                new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.deploysForFree, Filters.always_immune_to_Alter), 2, 2, true, false));
                         action.appendEffect(
                                 new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
                     }
