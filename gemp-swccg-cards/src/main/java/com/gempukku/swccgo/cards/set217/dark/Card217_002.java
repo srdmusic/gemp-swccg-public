@@ -2,18 +2,17 @@ package com.gempukku.swccgo.cards.set217.dark;
 
 import com.gempukku.swccgo.cards.AbstractDroid;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.AtCondition;
-import com.gempukku.swccgo.cards.conditions.PresentWithCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.effects.BreakCoversEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collection;
@@ -30,16 +29,24 @@ public class Card217_002 extends AbstractDroid {
     public Card217_002() {
         super(Side.DARK, 0.5, 2, 2, 4, "BB-9E", Uniqueness.UNIQUE);
         setAlternateDestiny(5.5);
-        setGameText("While present with your leader or First Order character, cancels BB-8's and/or Rose's game text at same and related sites. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any).");
+        setGameText("Deploys -1 to same site as BB-8. Cancels game text of BB-8 and/or Rose at same site. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any). Immune to Restraining Bolt and Sorry About The Mess.");
         addIcons(Icon.EPISODE_VII, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_17);
         addModelType(ModelType.ASTROMECH);
     }
 
     @Override
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DeployCostToLocationModifier(self, -1, Filters.sameSiteAs(self, Filters.BB8)));
+        return modifiers;
+    }
+
+    @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.or(Filters.BB8, Filters.Rose), Filters.at(Filters.sameOrRelatedSite(self))),
-                new AndCondition(new AtCondition(self, Filters.site), new PresentWithCondition(self, Filters.and(Filters.your(self), Filters.or(Filters.leader, Filters.First_Order_character))))));
+        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.or(Filters.BB8, Filters.Rose), Filters.atSameSite(self))));
+        modifiers.add(new ImmuneToTitleModifier(self, Title.Restraining_Bolt));
+        modifiers.add(new ImmuneToTitleModifier(self, Title.Sorry_About_The_Mess));
         return modifiers;
     }
 
@@ -53,7 +60,6 @@ public class Card217_002 extends AbstractDroid {
 
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)) {
-
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Place in Used Pile");
