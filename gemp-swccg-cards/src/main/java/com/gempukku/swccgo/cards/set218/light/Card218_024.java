@@ -35,7 +35,6 @@ public class Card218_024 extends AbstractUsedInterrupt {
         addComboCardTitles("Local Defense", "Put That Down");
         setGameText("[upload] an [Independent] starship. OR If your starship (or non-Jedi character) is about to be captured or lost during the weapons segment of a battle, it is hit instead and may not be captured or lost until the damage segment. OR If opponent just played an Interrupt during battle, activate 2 Force.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("Local Defense & Put That Down");
     }
 
     @Override

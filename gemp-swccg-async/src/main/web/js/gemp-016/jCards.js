@@ -201,7 +201,7 @@ var fixedImages = {
 "1_196":"https://res.starwarsccg.org/cards/Premiere-Dark/large/tuskenraider.gif",
 "1_197":"https://res.starwarsccg.org/cards/Premiere-Dark/large/wed151662treadwelldroid.gif",
 "1_198":"https://res.starwarsccg.org/cards/Premiere-Dark/large/wuher.gif",
-"1_199":"https://res.starwarsccg.org/cards/Premiere-Dark/large/blasterscope.gif",
+"1_199":"https://res.starwarsccg.org/cards/Premiere-Dark/hires/blasterscope.png",
 "1_200":"https://res.starwarsccg.org/cards/Premiere-Dark/large/caller.gif",
 "1_201":"https://res.starwarsccg.org/cards/Premiere-Dark/large/comlink.gif",
 "1_202":"https://res.starwarsccg.org/cards/Premiere-Dark/large/droiddetector.gif",
@@ -530,7 +530,7 @@ var fixedImages = {
 "3_39":"https://res.starwarsccg.org/cards/Hoth-Light/large/thefirsttransportisaway.gif",
 "3_40":"https://res.starwarsccg.org/cards/Hoth-Light/large/attackpatterndelta.gif",
 "3_41":"https://res.starwarsccg.org/cards/Hoth-Light/large/darkdissension.gif",
-"3_42":"https://res.starwarsccg.org/cards/Hoth-Light/large/fallback.gif",
+"3_42":"https://res.starwarsccg.org/cards/Hoth-Light/hires/fallback.png",
 "3_43":"https://res.starwarsccg.org/cards/Hoth-Light/large/ithoughttheysmelledbadontheoutside.gif",
 "3_44":"https://res.starwarsccg.org/cards/Hoth-Light/large/itcanwait.gif",
 "3_45":"https://res.starwarsccg.org/cards/Hoth-Light/large/luckyshot.gif",
@@ -2608,8 +2608,8 @@ var fixedImages = {
 "200_13":"https://res.starwarsccg.org/cards/Virtual0-Light/large/generalsolo.gif",
 "200_14":"https://res.starwarsccg.org/cards/Virtual0-Light/large/han.gif",
 "200_15":"https://res.starwarsccg.org/cards/Virtual0-Light/large/harcseff.gif",
-"200_16":"https://res.starwarsccg.org/cards/Virtual0-Light/large/themythrol.gif",
-"200_16_BACK":"https://res.starwarsccg.org/cards/Virtual0-Light/large/themythrolback.gif",
+"200_16":"https://res.starwarsccg.org/cards/Virtual0-Light/hires/themythrolfront.png",
+"200_16_BACK":"https://res.starwarsccg.org/cards/Virtual0-Light/hires/themythrolback.png",
 "200_17":"https://res.starwarsccg.org/cards/Virtual0-Light/large/leesubsirln.gif",
 "200_18":"https://res.starwarsccg.org/cards/Virtual0-Light/large/leia.gif",
 "200_19":"https://res.starwarsccg.org/cards/Virtual0-Light/large/lobot.gif",
@@ -2953,7 +2953,7 @@ var fixedImages = {
 "207_20":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/directororsonkrennic.gif",
 "207_21":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/grandadmiralthrawn.gif",
 "207_22":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/quiggold.gif",
-"207_23":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/savageopress.gif",
+"207_23":"https://res.starwarsccg.org/cards/Virtual7-Dark/hires/savageopress.png",
 "207_24":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/sidonithano.gif",
 "207_25":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/establishsecretbase.gif",
 "207_26":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/securityprecautions.gif",
@@ -3181,7 +3181,7 @@ var fixedImages = {
 "212_1":"https://res.starwarsccg.org/cards/Virtual12-Dark/large/eviliseverywhere.gif",
 "212_2":"https://res.starwarsccg.org/cards/Virtual12-Dark/large/moffgideon.gif",
 "212_3":"https://res.starwarsccg.org/cards/Virtual12-Dark/large/aurrasingwithblasterrifle.gif",
-"212_4":"https://res.starwarsccg.org/cards/Virtual12-Dark/large/slipslidingaway.gif",
+"212_4":"https://res.starwarsccg.org/cards/Virtual12-Dark/hires/slipslidingaway.png",
 "212_5":"https://res.starwarsccg.org/cards/Virtual12-Dark/large/admiraltrench.gif",
 "212_6":"https://res.starwarsccg.org/cards/Virtual12-Dark/hires/allegiantgeneralpryde.png",
 "213_1":"https://res.starwarsccg.org/cards/Virtual13-Dark/large/admiralozzel.gif",
@@ -4396,6 +4396,11 @@ var Card = Class.extend({
                    (cardNo == 44) ||
                    (cardNo == 47) ||
                    (cardNo == 48);
+        }if(setNo == 218) {
+            return (cardNo == 17) ||
+                   (cardNo == 18) ||
+                   (cardNo == 22) ||
+                   (cardNo == 30);
         }if (setNo == 501) {
             return (cardNo == 13) ||
                    (cardNo == 35) ||
