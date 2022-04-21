@@ -40,7 +40,7 @@ public class Card501_065 extends AbstractNormalEffect {
         setGameText("Deploy on [Cloud City] Leia. If at Guest Quarters (or a [Skywalker] Objective on table): your total power is +2 here and, once per turn, may add 1 to a just drawn weapon or battle destiny (and once per turn, may subtract 1 from a just drawn weapon or battle destiny) at another location.");
         addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_18);
-        setTestingText("Reflection (V)");
+        setTestingText("[Set 19] Reflection (V)");
         hideFromDeckBuilder();
     }
 

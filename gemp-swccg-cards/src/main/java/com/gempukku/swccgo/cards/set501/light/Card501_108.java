@@ -30,7 +30,7 @@ public class Card501_108 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 3);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_18);
-        setTestingText("Lothal: Jedi Temple");
+        setTestingText("[Set 19] Lothal: Jedi Temple");
     }
 
     @Override

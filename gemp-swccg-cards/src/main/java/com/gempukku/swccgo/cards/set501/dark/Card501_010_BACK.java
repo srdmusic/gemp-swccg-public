@@ -38,7 +38,7 @@ public class Card501_010_BACK extends AbstractObjective {
         setGameText("While this side up, attrition against opponent is +1 for each Imperial leader in battle. Rebel Leadership and We’re Doomed are Lost Interrupts. Your Force drains are +1 at opponent’s sites (and Echo sites) where your snowtrooper or non-unique AT-AT is present. Unless opponent controls a Hoth location, your Force drain bonuses may not be canceled. Once per move phase, may place your AT-AT at 1st Marker (and your cards on it) in Used Pile to take top card of Lost Pile into hand. " +
                 "Place out of play if you do not occupy a Hoth location.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
-        setTestingText("Imperial Troops Have Entered the Base!");
+        setTestingText("[Set 19] Imperial Troops Have Entered the Base!");
     }
 
     @Override

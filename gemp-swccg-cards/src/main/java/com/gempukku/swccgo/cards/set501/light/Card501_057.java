@@ -28,7 +28,7 @@ public class Card501_057 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 2);
         addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
-        setTestingText("Scarif: Data Vault Control Room");
+        setTestingText("[Set 19] Scarif: Data Vault Control Room");
     }
 
     @Override

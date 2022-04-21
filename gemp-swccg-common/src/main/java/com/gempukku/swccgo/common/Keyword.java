@@ -163,6 +163,7 @@ public enum Keyword implements Filterable {
     SITH_APPRENTICE("Sith Apprentice", true),
     SKIFF("Skiff", false),
     SKYWALKER("Skywalker", false),
+    SLAVE("Slave", true),
     SLAVER("Slaver", true, true),
     SMUGGLER("Smuggler", true, true),
     SNOWSPEEDER("Snowspeeder", false),

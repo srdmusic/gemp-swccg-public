@@ -223,6 +223,7 @@ public interface Title {
     String Credits_Will_Do_Fine = "Credits Will Do Fine";
     String Crimson_Dawn_Blaster = "Crimson Dawn Blaster";
     String Crossfire = "Crossfire";
+    String Cyrkon = "Cyrkon";
     String Cyborg_Construct = "Cyborg Construct";
     String Dagobah = "Dagobah";
     String Dagobah_Bog_Clearing = "Dagobah: Bog Clearing";
@@ -464,6 +465,7 @@ public interface Title {
     String Holotheatre = "Executor: Holotheatre";
     String Honor_Of_The_Jedi = "Honor Of The Jedi";
     String Hopping_Mad = "Hopping Mad";
+    String Hosnian_Prime = "Hosnian Prime";
     String Hoth = "Hoth";
     String Hoth_Sentry = "Hoth Sentry";
     String Houjix = "Houjix";
@@ -545,6 +547,7 @@ public interface Title {
     String ISB_Operations = "ISB Operations";
     String IT0 = "IT-O (Eyetee-Oh)";
     String It_Could_Be_Worse = "It Could Be Worse";
+    String Its_A_Hit = "It's A Hit!";
     String Its_A_Trap = "It's A Trap!";
     String Its_An_Older_Code = "It's An Older Code";
     String Its_Worse = "It's Worse";

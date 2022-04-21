@@ -9,14 +9,11 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -33,7 +30,7 @@ public class Card501_050 extends AbstractNormalEffect {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Ounee_Ta, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Jabba's decadent behavior makes him susceptible to deception. Leia and Lando exploited this weakness, posing as Jabba's kind of scum.");
-        setGameText("Deploy on a site. When deployed, may take top card of Lost Pile into hand. Disarmed, None Shall Pass, and Stunning Leader are canceled here. Once per game, may place any Interrupt (except Ghhhk) in opponent's Lost Pile out of play. [Immune to Alter.]");
+        setGameText("Deploy on a battleground site. When deployed, may take top card of Lost Pile into hand. Opponent may not modify the deploy cost of your characters deploying here. Once per game, may place an Interrupt (except Ghhhk) from opponent's Lost Pile out of play. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_18);
         addKeyword(Keyword.DEPLOYS_ON_SITE);
         addImmuneToCardTitle(Title.Alter);
@@ -42,7 +39,7 @@ public class Card501_050 extends AbstractNormalEffect {
 
     @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.site;
+        return Filters.battleground_site;
     }
 
     @Override
@@ -72,7 +69,7 @@ public class Card501_050 extends AbstractNormalEffect {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Place Interrupt out of play");
-            action.setActionMsg("Place any Interrupt (except Ghhhk) in opponent's Lost Pile out of play");
+            action.setActionMsg("Place any Interrupt (except Ghhhk) from opponent's Lost Pile out of play");
 
             action.appendUsage(
                     new OncePerGameEffect(action));
@@ -86,32 +83,9 @@ public class Card501_050 extends AbstractNormalEffect {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if ((TriggerConditions.isPlayingCardTargeting(game, effect, Filters.or(Filters.title(Title.Disarmed), Filters.None_Shall_Pass), Filters.at(Filters.here(self)))
-                || (TriggerConditions.isPlayingCard(game, effect, Filters.Stunning_Leader)
-                    && GameConditions.isDuringBattleAt(game, Filters.here(self))))
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canTargetToCancel(game, self, Filters.and(Filters.title(Title.Disarmed), Filters.at(Filters.hasAttached(self))))) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.and(Filters.title(Title.Disarmed), Filters.at(Filters.hasAttached(self))), Title.Disarmed);
-            return Collections.singletonList(action);
-        }
-        return null;
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ImmuneToDeployCostModifiersToLocationModifier(self, Filters.and(Filters.your(self), Filters.character), Filters.opponents(self), Filters.here(self)));
+        return modifiers;
     }
 }

@@ -8,15 +8,12 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
@@ -34,11 +31,11 @@ import java.util.List;
 public class Card501_075 extends AbstractEpicEventDeployable {
     public Card501_075() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.The_Force_Is_Strong_In_My_Family);
-        setGameText("Deploy on table (only at start of game). Deploy a [Skywalker] Effect from Reserve Deck and choose: " +
+        setGameText("Deploy on table (only at start of game) and choose: " +
                 "My Father Has It: Anakin (and [Episode I] Obi-Wan) " +
                 "I Have It: Luke (and [Set 1] Obi-Wan) " +
                 "You Have That Power, Too: Rey (and [Episode VII] Luke) " +
-                "Once per game [Set 16] Anakin is deploy -2. Your total Force generation is +1. You may not deploy Boss Nass’s Chambers or Jedi (except Yoda and selected characters). If you just initiated battle involving a Skywalker (or if opponent's Sidious just lost from table), may retrieve 1 Force.");
+                "[Set 16] Anakin is deploy -1. Your total Force generation is +1. You may not deploy Boss Nass' Chambers or Jedi (except Yoda and the chosen characters). If you just initiated battle involving a Skywalker (or if opponent's Sidious just lost from table), may retrieve 1 Force.");
         addIcons(Icon.SKYWALKER, Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
         setTestingText("The Force Is Strong In My Family (ERRATA)");
     }
@@ -54,10 +51,6 @@ public class Card501_075 extends AbstractEpicEventDeployable {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.justDeployed(game, effectResult, Filters.and(Icon.VIRTUAL_SET_16, Filters.Anakin))) {
-            game.getModifiersQuerying().getUntilEndOfGameLimitCounter(self.getTitle(), GameTextActionId.THE_FORCE_IS_STRONG_IN_MY_FAMILY__ANAKIN_DEPLOY_MINUS_TWO).incrementToLimit(1, 1);
-        }
-
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
         final String playerId = self.getOwner();
@@ -65,8 +58,6 @@ public class Card501_075 extends AbstractEpicEventDeployable {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setPerformingPlayer(self.getOwner());
 
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.SKYWALKER, Filters.Effect), false));
             action.appendEffect(
                     new PlayoutDecisionEffect(action, playerId, new MultipleChoiceAwaitingDecision("Choose an option", new String[]{MY_FATHER_HAS_IT, I_HAVE_IT, YOU_HAVE_THAT_POWER_TOO}) {
                         @Override
@@ -113,22 +104,13 @@ public class Card501_075 extends AbstractEpicEventDeployable {
         Filter iHaveItFilter = Filters.or(Filters.Luke, Filters.and(Icon.VIRTUAL_SET_1, Filters.ObiWan));
         Filter youHaveThatPowerTooFilter = Filters.or(Filters.Rey, Filters.and(Icon.EPISODE_VII, Filters.Luke));
 
-        final int permCardId = self.getPermanentCardId();
-        Condition condition = new Condition() {
-            @Override
-            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
-                PhysicalCard self = gameState.findCardByPermanentId(permCardId);
-
-                return modifiersQuerying.getUntilEndOfGameLimitCounter(self.getTitle(), GameTextActionId.THE_FORCE_IS_STRONG_IN_MY_FAMILY__ANAKIN_DEPLOY_MINUS_TWO).getUsedLimit() < 1;
-            }
-        };
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new TotalForceGenerationModifier(self, 1, self.getOwner()));
         modifiers.add(new MayNotDeployModifier(self, Filters.Boss_Nass_Chambers, self.getOwner()));
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, myFatherHasItFilter))), new InPlayDataEqualsCondition(self, MY_FATHER_HAS_IT), self.getOwner()));
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, iHaveItFilter))), new InPlayDataEqualsCondition(self, I_HAVE_IT), self.getOwner()));
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, youHaveThatPowerTooFilter))), new InPlayDataEqualsCondition(self, YOU_HAVE_THAT_POWER_TOO), self.getOwner()));
-        modifiers.add(new DeployCostModifier(self, Filters.and(Icon.VIRTUAL_SET_16, Filters.Anakin), condition, -2));
+        modifiers.add(new DeployCostModifier(self, Filters.and(Icon.VIRTUAL_SET_16, Filters.Anakin), -1));
         return modifiers;
     }
 

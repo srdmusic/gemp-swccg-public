@@ -37,7 +37,7 @@ public class Card501_042 extends AbstractLostInterrupt {
         super(Side.DARK, 3, "Not Within Sight Or Reach", Uniqueness.UNIQUE);
         setGameText("If Thrawn and Vanto are participating in a battle, place Vanto in Used Pile to cancel all battle damage and attrition against you. OR Take your [Grabber] card on table into hand; place all cards stacked on it in owner's Used Pile.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("Not Within Sight Or Reach");
+        setTestingText("[Set 19] Not Within Sight Or Reach");
     }
 
     @Override

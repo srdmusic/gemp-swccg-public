@@ -24,7 +24,7 @@ import java.util.List;
 public class Card501_098 extends AbstractNormalEffect {
     public Card501_098() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Tragedy Of Plagueis", Uniqueness.UNIQUE);
-        setGameText("Deploy on table. If your [Set 17] objective on table, your Sidious may be targeted by Force Lightning and opponent’s non-[Skywalker] objective gains [Theed Palace]. Once per game, if Sidious with a Dark Jedi, may retrieve a character into hand. [Immune to Alter.]");
+        setGameText("Deploy on table. If Revenge Of The Sith on table, your Sidious may be targeted by Force Lightning and Lord Sidious may use his game text as if alone. Once per game, if Sidious with a Dark Jedi, may retrieve a character into hand. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Tragedy Of Plagueis (ERRATA)");
@@ -33,8 +33,8 @@ public class Card501_098 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MayBeTargetedByModifier(self, Filters.and(Filters.your(self), Filters.Sidious), new OnTableCondition(self, Filters.and(Filters.your(self), Icon.VIRTUAL_SET_17, Filters.Objective)), Title.Force_Lightning));
-        modifiers.add(new IconModifier(self, Filters.and(Filters.opponents(self), Filters.not(Icon.SKYWALKER), Filters.Objective), new OnTableCondition(self, Filters.and(Filters.your(self), Icon.VIRTUAL_SET_17, Filters.Objective)), Icon.THEED_PALACE));
+        modifiers.add(new MayBeTargetedByModifier(self, Filters.and(Filters.your(self), Filters.Sidious), new OnTableCondition(self, Filters.Revenge_Of_The_Sith), Title.Force_Lightning));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.title("Lord Sidious"), ModifyGameTextType.TRAGEDY_OF_PLAGUEIS__LORD_SIDIOUS_MAY_USE_GAME_TEXT_AS_IF_ALONE));
         return modifiers;
     }
 

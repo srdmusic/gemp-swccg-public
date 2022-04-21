@@ -28,9 +28,9 @@ import java.util.List;
 public class Card501_097 extends AbstractUsedInterrupt {
     public Card501_097() {
         super(Side.DARK, 4, "Show No Mercy", Uniqueness.UNIQUE);
-        setGameText("If Insidious Prisoner or your [Set 17] objective on table: Take The Works or a Coruscant battleground site into hand from Reserve Deck; reshuffle. OR If your Dark Jedi controls opponent’s battleground site, cancel a Force drain at the related system.");
+        setGameText("If Insidious Prisoner or your [Set 17] Epic Event on table: Take The Works or a Coruscant battleground site into hand from Reserve Deck; reshuffle. OR If your Dark Jedi controls opponent’s battleground site, cancel a Force drain at the related system.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
-        setTestingText("Show No Mercy");
+        setTestingText("[Set 19] Show No Mercy");
     }
 
 
@@ -41,7 +41,7 @@ public class Card501_097 extends AbstractUsedInterrupt {
         GameTextActionId gameTextActionId = GameTextActionId.SHOW_NO_MERCY__UPLOAD_CORUSCANT_SITE;
 
         // Check condition(s)
-        if (GameConditions.canSpot(game, self, Filters.or(Filters.Insidious_Prisoner, Filters.and(Filters.your(self), Icon.VIRTUAL_SET_17, Filters.Objective)))
+        if (GameConditions.canSpot(game, self, Filters.or(Filters.Insidious_Prisoner, Filters.and(Filters.your(self), Icon.VIRTUAL_SET_17, Filters.Epic_Event)))
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);

@@ -37,8 +37,8 @@ public class Card501_109 extends AbstractSite {
         setLocationLightSideGameText("If you control, your total power is +2 at related locations.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_18);
-        setTestingText("Lothal: Capital City (LIGHT)");
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
+        setTestingText("[Set 19] Lothal: Capital City (LIGHT)");
     }
 
     @Override

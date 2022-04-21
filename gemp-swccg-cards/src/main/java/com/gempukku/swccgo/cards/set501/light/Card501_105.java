@@ -41,11 +41,11 @@ public class Card501_105 extends AbstractObjective {
         super(Side.LIGHT, 0, "Zero Hour");
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Lothal system and a Lothal site. " +
-                "For remainder of game, Projection of a Skywalker and Menace Fades are cancelled. Jedi (except Ahsoka and Kanan) and Resistance characters and [Resistance] starships are deploy +1. " +
+                "For remainder of game, Menace Fades and Projection Of A Skywalker are canceled. Jedi (except Ahsoka and Kanan), Resistance characters, and [Resistance] starships are deploy +1. Phoenix Squadron characters are deploy -1. " +
                 "While this side up, once per turn, may deploy a Lothal site, Malachor, Mandalore, or Seelos from Reserve Deck; reshuffle. " +
-                "Flip if you control three Lothal locations (and opponent controls no Lothal locations).");
+                "Flip this card if you control three Lothal locations (or occupy three Lothal locations with Phoenix Squadron characters) and opponent control no Lothal locations.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("Zero Hour");
+        setTestingText("[Set 19] Zero Hour");
     }
 
     @Override
@@ -74,6 +74,10 @@ public class Card501_105 extends AbstractObjective {
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
                         new DeployCostModifier(self, Filters.or(Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Ahsoka, Filters.Kanan))), Filters.Resistance_character, Filters.and(Icon.RESISTANCE, Filters.starship)), 1),
+                        null));
+        action.appendEffect(
+                new AddUntilEndOfGameModifierEffect(action,
+                        new DeployCostModifier(self, Filters.and(Keyword.PHOENIX_SQUADRON, Filters.character), -1),
                         null));
         final int permCardId = self.getPermanentCardId();
         action.appendEffect(
@@ -165,7 +169,8 @@ public class Card501_105 extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && GameConditions.controls(game, playerId, 3, Filters.Lothal_location)
+                && (GameConditions.controls(game, playerId, 3, Filters.Lothal_location)
+                    || GameConditions.occupiesWith(game, self, playerId, 3, Filters.Lothal_location, Filters.and(Keyword.PHOENIX_SQUADRON, Filters.character)))
                 && !GameConditions.controls(game, opponent, Filters.Lothal_location)) {
 
 

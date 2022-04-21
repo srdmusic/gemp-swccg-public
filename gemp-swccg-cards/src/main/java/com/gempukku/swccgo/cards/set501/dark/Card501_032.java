@@ -31,7 +31,7 @@ public class Card501_032 extends AbstractNormalEffect {
         setGameText("Deploy on Lothal system. TIEs may deploy and land at related sites. TIE Defenders deploy -1 and may move as a 'react.' During battles at sites, your total battle destiny is +1 for each of your piloted TIE Defenders at locations related to that battle. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("TIE Defender Project");
+        setTestingText("[Set 19] TIE Defender Project");
     }
 
     @Override

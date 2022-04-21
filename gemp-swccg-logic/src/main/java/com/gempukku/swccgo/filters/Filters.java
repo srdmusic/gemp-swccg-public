@@ -11224,7 +11224,7 @@ public class Filters {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                if (Filters.Podracer.accepts(gameState, modifiersQuerying, physicalCard)) {
+                if (!Filters.Podracer.accepts(gameState, modifiersQuerying, physicalCard)) {
                     return false;
                 }
                 float raceTotal = modifiersQuerying.getPodracerRaceTotal(gameState, physicalCard);
@@ -12417,6 +12417,17 @@ public class Filters {
                 // Check if locations are part of the same system
                 if (Filters.partOfSystem(location.getPartOfSystem()).accepts(gameState, modifiersQuerying, physicalCard))
                     return true;
+
+                // Check if locations are part of the same unique starship or vehicle
+                if (Filters.or(Filters.starship_site, Filters.vehicle_site).accepts(gameState, modifiersQuerying, physicalCard)
+                        && Filters.or(Filters.starship_site, Filters.vehicle_site).accepts(gameState, modifiersQuerying, location)) {
+
+                    Persona physicalCardPersona = physicalCard.getBlueprint().getRelatedStarshipOrVehiclePersona();
+                    Persona locationPersona = physicalCard.getBlueprint().getRelatedStarshipOrVehiclePersona();
+
+                    if (physicalCardPersona != null && locationPersona != null && physicalCardPersona.equals(locationPersona))
+                        return true;
+                }
 
                 return false;
             }
@@ -18582,6 +18593,7 @@ public class Filters {
     public static final Filter Stardust = Filters.title(Title.Stardust);
     public static final Filter starfighter = Filters.subtype(CardSubtype.STARFIGHTER);
     public static final Filter Starkiller_Base_location = Filters.partOfSystem(Title.Starkiller_Base);
+    public static final Filter Starkiller_Base_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Starkiller_Base));
     public static final Filter starship = Filters.type(CardType.STARSHIP);
     public static final Filter starship_cannon = Filters.and(CardType.WEAPON, CardSubtype.STARSHIP, Filters.or(Keyword.CANNON, Keyword.ION_CANNON, Keyword.LASER_CANNON));
     public static final Filter Taking_Control_Of_The_Weapon = Filters.title(Title.Taking_Control_Of_The_Weapon);

@@ -27,7 +27,7 @@ public class Card501_011 extends AbstractStartingInterrupt {
         setVirtualSuffix(true);
         setGameText("If 1st Marker on table, take [Set 6] Veers into hand and deploy Make Ready To Land Our Troops and up to two Effects that deploy for free and are always [Immune to Alter]. Place Interrupt in Lost Pile.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
-        setTestingText("That's It, The Rebels Are There! (V)");
+        setTestingText("[Set 19] That's It, The Rebels Are There! (V)");
     }
 
     @Override

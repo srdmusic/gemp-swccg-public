@@ -36,7 +36,7 @@ public class Card501_039 extends AbstractUsedOrLostInterrupt {
         super(Side.DARK, 4, "Do You Stand By Your Work?", Uniqueness.UNIQUE);
         setGameText("USED: If opponent is about to cancel and redraw a destiny, it is canceled instead. LOST: Once per game, if your objective just canceled a battle, none of the opponent's cards participating in that battle may move for remainder of turn.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("Do You Stand By Your Work?");
+        setTestingText("[Set 19] Do You Stand By Your Work?");
     }
 
     @Override

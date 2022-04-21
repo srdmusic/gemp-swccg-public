@@ -10,7 +10,7 @@ body {
     font-weight: bolder;
     width: 42px;
     height: 42px;
-    background-image: url('/gemp-swccg/images/lightHand-42.png');
+    background-image: url('https://res.starwarsccg.org/gemp/lightHand-42.png');
 }
 
 .lightSabaccHandsize {
@@ -21,7 +21,7 @@ body {
     font-weight: bolder;
     width: 42px;
     height: 42px;
-    background-image: url('/gemp-swccg/images/lightSabaccHand-42.png');
+    background-image: url('https://res.starwarsccg.org/gemp/lightSabaccHand-42.png');
 }
 
 .darkHandsize {
@@ -32,7 +32,7 @@ body {
     font-weight: bolder;
     width: 42px;
     height: 42px;
-    background-image: url('/gemp-swccg/images/darkHand-42.png');
+    background-image: url('https://res.starwarsccg.org/gemp/darkHand-42.png');
 }
 
 .darkSabaccHandsize {
@@ -43,7 +43,7 @@ body {
     font-weight: bolder;
     width: 42px;
     height: 42px;
-    background-image: url('/gemp-swccg/images/darkSabaccHand-42.png');
+    background-image: url('https://res.starwarsccg.org/gemp/darkSabaccHand-42.png');
 }
 
 .lightOutOfPlayPileSize {
@@ -54,7 +54,7 @@ body {
     font-weight: bolder;
     width: 42px;
     height: 42px;
-    background-image: url('/gemp-swccg/images/lightOutOfPlay-42.png');
+    background-image: url('https://res.starwarsccg.org/gemp/lightOutOfPlay-42.png');
 }
 
 .darkOutOfPlayPileSize {
@@ -65,7 +65,7 @@ body {
     font-weight: bolder;
     width: 42px;
     height: 42px;
-    background-image: url('/gemp-swccg/images/darkOutOfPlay-42.png');
+    background-image: url('https://res.starwarsccg.org/gemp/darkOutOfPlay-42.png');
 }
 
 .lightForceGeneration {
@@ -77,7 +77,7 @@ body {
     font-weight: bolder;
     width: 42px;
     height: 42px;
-    background-image: url('/gemp-swccg/images/lightForce-42.png');
+    background-image: url('https://res.starwarsccg.org/gemp/lightForce-42.png');
 }
 
 .darkForceGeneration {
@@ -89,7 +89,7 @@ body {
     font-weight: bolder;
     width: 42px;
     height: 42px;
-    background-image: url('/gemp-swccg/images/darkForce-42.png');
+    background-image: url('https://res.starwarsccg.org/gemp/darkForce-42.png');
 }
 
 .lightRaceTotal {
@@ -101,7 +101,7 @@ body {
     font-weight: bolder;
     width: 42px;
     height: 42px;
-    background-image: url('/gemp-swccg/images/lightPodracer-42.png');
+    background-image: url('https://res.starwarsccg.org/gemp/lightPodracer-42.png');
 }
 
 .darkRaceTotal {
@@ -113,7 +113,7 @@ body {
     font-weight: bolder;
     width: 42px;
     height: 42px;
-    background-image: url('/gemp-swccg/images/darkPodracer-42.png');
+    background-image: url('https://res.starwarsccg.org/gemp/darkPodracer-42.png');
 }
 
 .sabaccTotalDiv {

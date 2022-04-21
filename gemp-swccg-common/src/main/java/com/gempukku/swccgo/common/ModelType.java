@@ -71,6 +71,7 @@ public enum ModelType implements Filterable {
     RECONNAISSANCE_FIGHTER("Reconnaissance Fighter"),
     RESURGENT_CLASS_STAR_DESTROYER("Resurgent-Class Star Destroyer"),
     SCAVENGER("Scavenger"),
+    SEADWELLING("Sea-Dwelling"),
     SECURITY("Security"),
     SENTINEL_CLASS_LANDING_CRAFT("Sentinel-Class Landing Craft"),
     SERVANT("Servant"),

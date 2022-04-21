@@ -9,10 +9,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.OrCondition;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -30,8 +27,8 @@ public class Card501_110 extends AbstractSite {
         setLocationLightSideGameText("Rebels may move for free to or from here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_18);
-        setTestingText("Lothal: Tarkintown");
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
+        setTestingText("[Set 19] Lothal: Tarkintown");
     }
 
 
@@ -47,7 +44,7 @@ public class Card501_110 extends AbstractSite {
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MovesFreeToLocationModifier(self, Filters.Rebel, self));
-        modifiers.add(new MovesFreeToLocationModifier(self, Filters.Rebel, self));
+        modifiers.add(new MovesFreeFromLocationModifier(self, Filters.Rebel, self));
         return modifiers;
     }
 }

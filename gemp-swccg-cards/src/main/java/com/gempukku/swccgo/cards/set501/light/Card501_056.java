@@ -40,7 +40,7 @@ public class Card501_056 extends AbstractUsedInterrupt {
         setLore("The Rebellion employees every advantage it has over Imperial machines. A corps of well-trained scouts can elude detection in proper terrain.");
         setGameText("During opponent's deploy phase, deploy a spy from hand to a location you occupy. OR Move your spy (or [Endor] scout) of ability < 3 as a react. OR If your spy or scout is in battle, opponent's total battle destiny is -2.");
         addIcons(Icon.DEATH_STAR_II);
-        setTestingText("Insertion Planning (V)");
+        setTestingText("[Set 19] Insertion Planning (V)");
     }
 
     @Override

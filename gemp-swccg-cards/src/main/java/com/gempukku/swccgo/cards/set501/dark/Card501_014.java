@@ -31,7 +31,7 @@ public class Card501_014 extends AbstractNormalEffect {
         setGameText("Deploy on table. Your AT-ATs and snowtroopers are destiny +1. Once per turn, may lose 2 Force to add 1 to your just drawn AT-AT Cannon weapon destiny. If you just deployed an AT-AT, may peek at top two cards of Reserve deck and take one into hand. [Immune to Alter.]");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Make Ready To Land Our Troops");
+        setTestingText("[Set 19] Make Ready To Land Our Troops");
     }
 
     @Override

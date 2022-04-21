@@ -1457,8 +1457,6 @@ public class TriggerConditions {
                 || effectResult.getType() == EffectResult.Type.RELOCATED_BETWEEN_LOCATIONS
                 || effectResult.getType() == EffectResult.Type.MOVED_MOBILE_EFFECT
                 || effectResult.getType() == EffectResult.Type.CHANGED_CAPACITY_SLOT
-                || effectResult.getType() == EffectResult.Type.EMBARKED
-                || effectResult.getType() == EffectResult.Type.DISEMBARKED
                 || effectResult.getType() == EffectResult.Type.SHIPDOCKED) {
             MovedResult movedResult = (MovedResult) effectResult;
             Collection<PhysicalCard> movedCards = movedResult.getMovedCards();

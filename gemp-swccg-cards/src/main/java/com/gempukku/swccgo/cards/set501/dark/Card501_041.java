@@ -32,7 +32,7 @@ public class Card501_041 extends AbstractUsedOrLostInterrupt {
         super(Side.DARK, 5, "History, Philosophy, And Art", Uniqueness.UNIQUE);
         setGameText("USED: During battle, add 1 to your total battle destiny for each card stacked on Thrawn's Art Collection. LOST: Once per game, if you just revealed an Interrupt as 'artwork' opponent may not play non-[Immune to Sense] Interrupts or fire weapons for remainder of battle.");
         addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("History, Philosophy, And Art");
+        setTestingText("[Set 19] History, Philosophy, And Art");
     }
 
     @Override

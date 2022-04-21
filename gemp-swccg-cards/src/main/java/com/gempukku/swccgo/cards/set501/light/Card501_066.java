@@ -33,7 +33,7 @@ public class Card501_066 extends AbstractLostInterrupt {
         setLore("Rebel pilots use visual scanning to supplement sensors for an edge against Imperial fighter pilots. Natural instincts allow lone Rebels to overcome superior numbers.");
         setGameText("During battle, target your lone starfighter piloted by a Skywalker. For remainder of turn, starfighter is immune to attrition. If opponent has two or more starships there (or your [Skywalker] Objective on table), add your starfighter's maneuver (if any) to your total power.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
-        setTestingText("Full Throttle (V)");
+        setTestingText("[Set 19] Full Throttle (V)");
         hideFromDeckBuilder();
     }
 

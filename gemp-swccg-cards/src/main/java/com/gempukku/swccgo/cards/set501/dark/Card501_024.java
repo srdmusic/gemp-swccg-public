@@ -37,7 +37,7 @@ public class Card501_024 extends AbstractUsedOrLostInterrupt {
         setGameText("USED: If a Hoth site has been 'blown away,' subtract 1 from a just drawn destiny. " +
                 "LOST: Cancel an attempt to target your AT-AT with a blaster or a rifle. OR If your piloted AT-AT is on Hoth (or opponent’s site), cancel a Force drain at a related site.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
-        setTestingText("That Armor's Too Strong For Blasters");
+        setTestingText("[Set 19] That Armor's Too Strong For Blasters");
     }
 
     @Override
