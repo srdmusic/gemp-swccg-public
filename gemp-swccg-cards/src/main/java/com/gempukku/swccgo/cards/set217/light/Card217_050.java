@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * Set: Set 17
- * Type: Objective
+ * Type: Epic Event
  * Title: The Force Is Strong In My Family
  */
 public class Card217_050 extends AbstractEpicEventDeployable {
