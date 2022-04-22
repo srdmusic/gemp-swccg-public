@@ -77,12 +77,12 @@ public class Card218_014 extends AbstractNormalEffect {
         }
 
         gameTextActionId = GameTextActionId.A_GOOD_BLASTER_AT_YOUR_SIDE_COMBO__DEPLOY_BLASTER;
-        if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.character, Filters.at(Filters.Death_Star_site)))) {
 
             if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
                 action.setText("Deploy blaster from Reserve Deck");
                 action.setActionMsg("Deploy a blaster from Reserve Deck on your character at a Death Star site");
 
@@ -97,7 +97,7 @@ public class Card218_014 extends AbstractNormalEffect {
             if (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)
                     && GameConditions.canUseForce(game, playerId, 2)) {
 
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
                 action.setText("Deploy blaster from Lost Pile");
                 action.setActionMsg("Deploy a non-unique blaster from Lost Pile on your character at a Death Star site");
 
