@@ -84,12 +84,12 @@ public class Card218_014 extends AbstractNormalEffect {
 
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Deploy blaster from Reserve Deck");
-                action.setActionMsg("Deploy a non-unique blaster from Reserve Deck on your character at a Death Star site");
+                action.setActionMsg("Deploy a blaster from Reserve Deck on your character at a Death Star site");
 
                 action.appendUsage(
                         new OncePerTurnEffect(action));
                 action.appendEffect(
-                        new DeployCardToTargetFromReserveDeckEffect(action, Filters.and(Filters.non_unique, Filters.blaster), Filters.and(Filters.your(self), Filters.character, Filters.at(Filters.Death_Star_site)), true));
+                        new DeployCardToTargetFromReserveDeckEffect(action, Filters.blaster, Filters.and(Filters.your(self), Filters.character, Filters.at(Filters.Death_Star_site)), true));
 
                 actions.add(action);
             }
