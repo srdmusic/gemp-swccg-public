@@ -2083,8 +2083,8 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
             return null;
         }
 
-        // Check if uniqueness limit reached
-        if (Filters.canSpotForUniquenessChecking(game, Filters.sameTitle(self))) {
+        // Check if uniqueness limit reached in opponent's cards
+        if (Filters.canSpotForUniquenessChecking(game, Filters.and(Filters.sameTitle(self), Filters.opponents(self)))) {
             return null;
         }
 
