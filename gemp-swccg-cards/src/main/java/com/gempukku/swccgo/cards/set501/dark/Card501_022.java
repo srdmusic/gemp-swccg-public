@@ -1,30 +1,23 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
+import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
-import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.modifiers.IconModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.SuspendsCardModifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
-
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Collections;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Effect
  * Title: Hoth Blockade
  */
@@ -33,9 +26,9 @@ public class Card501_022 extends AbstractNormalEffect {
         super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, "Hoth Blockade", Uniqueness.UNIQUE);
         setLore("Death Squadron.");
         setGameText("Deploy on Hoth system. Death Squadron Star Destroyers deploy -1 here (-5 if Executor). If your Star Destroyer here, your AT-ATs deploy -1 to related locations. While you control two Hoth sites, Haven suspended here. [Immune to Alter.]");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 19] Hoth Blockade");
+        setTestingText("Hoth Blockade");
     }
 
     @Override

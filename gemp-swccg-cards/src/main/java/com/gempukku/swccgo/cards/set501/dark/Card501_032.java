@@ -2,26 +2,19 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.conditions.DuringBattleAtCondition;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.LoseForceAndStackFaceDownEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Effect
  * Title: TIE Defender Project
  */
@@ -29,9 +22,9 @@ public class Card501_032 extends AbstractNormalEffect {
     public Card501_032() {
         super(Side.DARK, 2, PlayCardZoneOption.ATTACHED, "TIE Defender Project", Uniqueness.UNIQUE);
         setGameText("Deploy on Lothal system. TIEs may deploy and land at related sites. TIE Defenders deploy -1 and may move as a 'react.' During battles at sites, your total battle destiny is +1 for each of your piloted TIE Defenders at locations related to that battle. [Immune to Alter.]");
-        addIcons(Icon.VIRTUAL_SET_18);
+        addIcons(Icon.VIRTUAL_SET_19);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 19] TIE Defender Project");
+        setTestingText("TIE Defender Project");
     }
 
     @Override

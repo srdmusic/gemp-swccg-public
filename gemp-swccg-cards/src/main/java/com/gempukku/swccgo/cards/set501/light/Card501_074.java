@@ -30,7 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Defensive Shield
  * Title: Aim High (V)
  */
@@ -40,8 +40,8 @@ public class Card501_074 extends AbstractDefensiveShield {
         setVirtualSuffix(true);
         setLore("The destruction of a command vehicle negatively impacts Imperial battle efficiency.");
         setGameText("Plays on table. Whenever opponent retrieves X cards, opponent must first use X Force or that retrieval is canceled. Court Of The Vile Gangster may not deploy starships unless opponent deployed a battleground system this game.");
-        addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Aim High (V)");
+        addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_SET_19);
+        setTestingText("Aim High (V)");
     }
 
     @Override

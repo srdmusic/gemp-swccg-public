@@ -1,8 +1,6 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
-import com.gempukku.swccgo.cards.conditions.CantSpotCondition;
-import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
@@ -13,13 +11,16 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Location
  * Subtype: System
  * Title: Mandalore
@@ -31,8 +32,8 @@ public class Card501_113 extends AbstractSystem {
         setLocationLightSideGameText("If your Mandalorian here, Force drain +1 here (+2 if Darksaber here).");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Mandalore");
+        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_19);
+        setTestingText("Mandalore");
     }
 
     @Override

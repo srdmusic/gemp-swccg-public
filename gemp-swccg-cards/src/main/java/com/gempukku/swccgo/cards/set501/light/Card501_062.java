@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -19,7 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Character
  * Subtype: Rebel
  * Title: Kanan, Rebel Infiltrator
@@ -31,9 +30,9 @@ public class Card501_062 extends AbstractRebel {
         setLore("Stormtrooper.");
         setGameText("Unless Luke has been deployed this game, may be targeted instead of Luke by Bring Him Before Me (opponent's [Death Star II] objective, Insignificant Rebellion, and Your Destiny target Kanan instead of Luke for remainder of game). Ezra moves to here for free.");
         addPersona(Persona.KANAN);
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
         addKeywords(Keyword.STORMTROOPER);
-        setTestingText("[Set 19] Kanan, Rebel Infiltrator");
+        setTestingText("Kanan, Rebel Infiltrator");
     }
 
     @Override

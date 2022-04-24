@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.*;
@@ -13,11 +14,12 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
-import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
 import com.gempukku.swccgo.logic.conditions.NotCondition;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
+import com.gempukku.swccgo.logic.effects.RespondableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -28,7 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Objective
  * Title: The Shield Will Be Down In Moments / Imperial Troops Have Entered The Base!
  */
@@ -37,8 +39,8 @@ public class Card501_010_BACK extends AbstractObjective {
         super(Side.DARK, 7, Title.Imperial_Troops_Have_Entered_The_Base);
         setGameText("While this side up, attrition against opponent is +1 for each Imperial leader in battle. Rebel Leadership and We’re Doomed are Lost Interrupts. Your Force drains are +1 at opponent’s sites (and Echo sites) where your snowtrooper or non-unique AT-AT is present. Unless opponent controls a Hoth location, your Force drain bonuses may not be canceled. Once per move phase, may place your AT-AT at 1st Marker (and your cards on it) in Used Pile to take top card of Lost Pile into hand. " +
                 "Place out of play if you do not occupy a Hoth location.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Imperial Troops Have Entered the Base!");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
+        setTestingText("Imperial Troops Have Entered the Base!");
     }
 
     @Override

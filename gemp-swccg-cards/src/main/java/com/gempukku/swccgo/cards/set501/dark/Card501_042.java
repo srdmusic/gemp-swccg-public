@@ -2,32 +2,30 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.cards.effects.SatisfyAllBattleDamageAndAttritionEffect;
-import com.gempukku.swccgo.cards.effects.choose.ChooseAndLoseCardFromHandEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Lost
  * Title: Not Within Sight Or Reach
@@ -36,8 +34,8 @@ public class Card501_042 extends AbstractLostInterrupt {
     public Card501_042() {
         super(Side.DARK, 3, "Not Within Sight Or Reach", Uniqueness.UNIQUE);
         setGameText("If Thrawn and Vanto are participating in a battle, place Vanto in Used Pile to cancel all battle damage and attrition against you. OR Take your [Grabber] card on table into hand; place all cards stacked on it in owner's Used Pile.");
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Not Within Sight Or Reach");
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Not Within Sight Or Reach");
     }
 
     @Override

@@ -17,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Effect
  * Title: Phoenix Squadron
  */
@@ -25,9 +25,9 @@ public class Card501_106 extends AbstractNormalEffect {
     public Card501_106() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Phoenix Squadron", Uniqueness.UNIQUE);
         setGameText("Deploy on table. Chopper, Ezra, Hera, Kanan, Sabine, and Zeb are Phoenix Squadron members. Once per turn, may deploy Hobbie, Wedge or an A-wing to a Lothal location from Reserve Deck; reshuffle. [Immune to Alter.]");
-        addIcons(Icon.VIRTUAL_SET_18);
+        addIcons(Icon.VIRTUAL_SET_19);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 19] Phoenix Squadron");
+        setTestingText("Phoenix Squadron");
     }
 
     @Override

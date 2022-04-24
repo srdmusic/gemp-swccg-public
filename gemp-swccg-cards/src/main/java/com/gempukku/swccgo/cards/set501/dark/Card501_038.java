@@ -1,12 +1,9 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -16,19 +13,16 @@ import com.gempukku.swccgo.logic.effects.ExchangeCardFromLostPileWithStackedCard
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Thrawn Pincer
@@ -37,8 +31,8 @@ public class Card501_038 extends AbstractUsedOrLostInterrupt {
     public Card501_038() {
         super(Side.DARK, 4, "Thrawn Pincer", Uniqueness.UNIQUE);
         setGameText("USED: Exchange a card stacked on Thrawn's Art Collection with a card in opponent’s Lost Pile. LOST: Once per game, during battle at a system, if you just revealed a starship as ‘artwork’, relocate a Star Destroyer on table to that system.");
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Thrawn Pincer");
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Thrawn Pincer");
     }
 
     @Override

@@ -6,13 +6,11 @@ import com.gempukku.swccgo.cards.effects.CancelForceDrainEffect;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
-import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.AbstractActionProxy;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
@@ -20,21 +18,16 @@ import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.GuiUtils;
-import com.gempukku.swccgo.logic.timing.PassthruEffect;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Lost
  * Title: Ominous Approach
@@ -43,8 +36,8 @@ public class Card501_027 extends AbstractLostInterrupt {
     public Card501_027() {
         super(Side.DARK, 4, "Ominous Approach");
         setGameText("If your AT-AT is on Hoth or at opponent's site: Cancel Under Attack. (Immune to Sense) OR Return an Effect that deploys on related system to owner's hand. Opponent loses 2 force if they deploy a card with the same title this turn. OR Cancel a Force drain at a related site.");
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Ominous Approach");
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Ominous Approach");
         hideFromDeckBuilder();
     }
 

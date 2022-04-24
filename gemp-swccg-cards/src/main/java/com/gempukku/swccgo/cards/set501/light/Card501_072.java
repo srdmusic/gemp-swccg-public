@@ -11,14 +11,15 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotCloakModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotHaveTotalAbilityReducedModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Effect;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-
 
 /**
  * Set: Set 0
@@ -33,7 +34,7 @@ public class Card501_072 extends AbstractStarfighter {
         setGameText("Permanent pilot is •Obi-Wan, who provides ability of 6. Opponent's starships may not 'cloak.' Cancels Overwhelmed here. Your total ability here may not be reduced. Immune to attrition < 4.");
         addIcons(Icon.EPISODE_I, Icon.REPUBLIC, Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_0);
         addModelType(ModelType.JEDI_INTERCEPTOR);
-        setTestingText("[Set 19] Obi-Wan In Jedi Starfighter (ERRATA)");
+        setTestingText("Obi-Wan In Jedi Starfighter (ERRATA)");
     }
 
     @Override

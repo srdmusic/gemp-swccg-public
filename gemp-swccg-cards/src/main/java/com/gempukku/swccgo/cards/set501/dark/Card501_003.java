@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PeekAtRandomCardInOpponentsHandEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
@@ -17,7 +16,6 @@ import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromForcePileEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeDestinyCardIntoHandEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -25,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Effect
  * Title: Shadows Of The Empire & Information Exchange
  */
@@ -34,9 +32,9 @@ public class Card501_003 extends AbstractNormalEffect {
         super(Side.DARK, 0, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Shadows Of The Empire & Information Exchange", Uniqueness.UNIQUE);
         addComboCardTitles("Shadows Of The Empire", Title.Information_Exchange);
         setGameText("If your [Reflections II] objective on table, deploy on table. If you just deployed an information broker, may peek at a card (random selection) from opponent's hand. Once per turn, if [Reflections II] Emperor on Coruscant, may draw top card of Force Pile (if during your turn and you occupy three battlegrounds, opponent also loses 1 Force). Once per turn, may use 1 Force to deploy Imperial Square or [Reflections II] Emperor from Reserve Deck; reshuffle. If [Reflections II] Emperor drawn for destiny, may take him into hand to cancel that destiny and cause a re-draw. [Immune to Alter.]");
-        addIcons(Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_19);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 19] Shadows Of The Empire & Information Exchange");
+        setTestingText("Shadows Of The Empire & Information Exchange");
     }
 
     @Override

@@ -1,32 +1,25 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
-import com.gempukku.swccgo.game.state.WeaponFiringState;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.ModifyEachWeaponDestinyBeforeDrawingDestinyEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
-import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.GuiUtils;
-import com.gempukku.swccgo.logic.timing.results.EnhanceForceDrainResult;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Lightsaber Deficiency (V)
@@ -37,8 +30,8 @@ public class Card501_007 extends AbstractUsedOrLostInterrupt {
         setVirtualSuffix(true);
         setLore("'Ah...Uh...'");
         setGameText("USED: If your character of ability < 5 was just targeted by opponent's lightsaber, subtract 1 from each weapon destiny draw. LOST: Lose 1 Force to cancel Clash Of Sabers (unless canceling Presence Of The Force) or Blaster Proficiency (if targeting a lightsaber or while swinging a lightsaber).");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Lightsaber Deficiency (V)");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
+        setTestingText("Lightsaber Deficiency (V)");
     }
 
     @Override
