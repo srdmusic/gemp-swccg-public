@@ -1031,6 +1031,7 @@ public interface Title {
     String The_Force_Is_Strong_With_This_One = "The Force Is Strong With This One";
     String The_Galaxy_May_Need_A_Legend = "The Galaxy May Need A Legend";
     String The_Hyperdrive_Generators_Gone = "The Hyperdrive Generator's Gone";
+    String The_Mythrol = "The Mythrol";
     String The_Phantom_Menace = "The Phantom Menace";
     String The_Planet_That_Its_Farthest_From = "The Planet That It's Farthest From";
     String The_Professor = "The Professor";
