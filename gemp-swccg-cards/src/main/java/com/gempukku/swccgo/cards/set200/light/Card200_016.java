@@ -14,9 +14,15 @@ import com.gempukku.swccgo.logic.actions.PlayCardAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.YesNoDecision;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.FlipCardEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
+import com.gempukku.swccgo.logic.effects.StackActionEffect;
 import com.gempukku.swccgo.logic.effects.choose.StackCardFromOutsideDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.MayNotHaveGameTextCanceledModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
@@ -34,12 +40,11 @@ import java.util.List;
  */
 public class Card200_016 extends AbstractAlien {
     public Card200_016() {
-        super(Side.LIGHT, 0, 0, 0, 0, 0, "The Mythrol", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 0, 0, 0, 0, 0, Title.The_Mythrol, Uniqueness.UNIQUE);
         setFrontOfDoubleSidedCard(true);
         setGameText("The Mythrol's game text may not be canceled. If about to leave table, place out of play. " +
                 "During start of game, may reveal this card from outside your deck to replace a just-deployed Jabba's Prize imprisoned in Security Tower. If not revealed during start of game, place this card under your Starting Effect. " +
                 "[Set 1] Despair targets The Mythrol instead of Jabba's Prize. Cancels Stunning Leader here. If just released, either flip this card or place it out of play.");
-        setDoesNotCountTowardDeckLimit(true);
         addIcons(Icon.VIRTUAL_SET_0);
         setSpecies(Species.MYTHROL);
         setMayNotBePlacedInReserveDeck(true);
