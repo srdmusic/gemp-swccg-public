@@ -146,11 +146,11 @@ public class Card216_024 extends AbstractEpicEventDeployable {
             if (stacked != null) {
                 self.setWhileInPlayData(new WhileInPlayData());
                 String communer = stacked.getBlueprint().getTitle();
-                if (communer.equals("Master Qui-Gon Jinn, An Old Friend"))
+                if (communer.equals(Title.Master_QuiGon_Jinn_An_Old_Friend))
                     communer = "Qui-Gon";
-                else if (communer.equals("Master Kenobi"))
+                else if (communer.equals(Title.Master_Kenobi))
                     communer = "Obi-Wan";
-                else if (communer.equals("Master Yoda"))
+                else if (communer.equals(Title.Master_Yoda))
                     communer = "Yoda";
 
                 game.getModifiersQuerying().setExtraInformationForArchetypeLabel(self.getOwner(), communer);
