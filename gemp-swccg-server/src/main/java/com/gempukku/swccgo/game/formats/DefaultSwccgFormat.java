@@ -238,8 +238,11 @@ public class DefaultSwccgFormat implements SwccgFormat {
             int light = 0;
             int numObjectives = 0;
             int numStartingEffects = 0;
+            int numFlipFalcons = 0;
+            int numMythrol = 0;
             int numJabbasPrize = 0;
             int numCCT = 0;
+
             for (String blueprintId : deck.getCards()) {
                 SwccgCardBlueprint card = _library.getSwccgoCardBlueprint(blueprintId);
                 if (card.getSide() == Side.DARK)
@@ -254,6 +257,12 @@ public class DefaultSwccgFormat implements SwccgFormat {
 
                 if (card.getCardCategory()== CardCategory.EFFECT && card.getCardSubtype()== CardSubtype.STARTING)
                     numStartingEffects++;
+
+                if(Title.The_Falcon_Junkyard_Garbage.equals(card.getTitle()))
+                    numFlipFalcons++;
+
+                if(Title.The_Mythrol.equals(card.getTitle()))
+                    numMythrol++;
 
                 if (Title.Jabbas_Prize.equals(card.getTitle()))
                     numJabbasPrize++;
@@ -281,6 +290,12 @@ public class DefaultSwccgFormat implements SwccgFormat {
 
             if (numStartingEffects > 1)
                 throw new DeckInvalidException("Deck contains more than one Starting Effect");
+
+            if (numFlipFalcons > 1)
+                throw new DeckInvalidException("Deck contains more than one The Falcon, Junkyard Garbage");
+
+            if (numMythrol > 1)
+                throw new DeckInvalidException("Deck contains more than one of The Mythrol");
 
             if (numJabbasPrize > 1)
                 throw new DeckInvalidException("Deck contains more than one Jabba's Prize");
