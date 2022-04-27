@@ -50,7 +50,7 @@ public class Card6_054 extends AbstractNormalEffect {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotInitiateBattleAtLocationModifier(self, Filters.here(self), yourHaveAnAlienHere));
         modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.here(self), yourHaveAnAlienHere));
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.your(self), Filters.alien), Filters.Trap_Door));
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.your(self), Filters.alien), Filters.and(Filters.Trap_Door, Filters.canBeTargetedBy(self))));
         return modifiers;
     }
 
