@@ -1273,17 +1273,29 @@ public class SwccgGameMediator {
                 if(Filters.title("I Am Part Of The Living Force").accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null)  {
                     // Communing (ignore the location)
-                    return "Communing";
+                    String communer = _swccgoGame.getModifiersQuerying().getExtraInformationForArchetypeLabel(playerId);
+                    if (communer==null)
+                        return "Communing";
+                    else
+                        return "Communing - "+communer;
                 }
                 if(Filters.title(Title.The_Rise_Of_Skywalker).accepts(_swccgoGame, startingInterrupt)
                     && startingLocation.getBlueprint().getTitle() != null) {
                     // The Force Is Strong In My Family
-                    return "Skywalker Saga";
+                    String hero = _swccgoGame.getModifiersQuerying().getExtraInformationForArchetypeLabel(playerId);
+                    if (hero==null)
+                        return "Skywalker Saga";
+                    else
+                        return "Skywalker Saga - "+hero;
                 }
                 if(Filters.title(Title.Rise_Of_The_Sith).accepts(_swccgoGame, startingInterrupt)
                         && startingLocation.getBlueprint().getTitle() != null) {
                     // Revenge Of The Sith
-                    return startingLocation.getBlueprint().getTitle() +  (startingLocation.getBlueprint().hasVirtualSuffix()?" v":"") + " Revenge Of The Sith";
+                    String apprentice = _swccgoGame.getModifiersQuerying().getExtraInformationForArchetypeLabel(playerId);
+                    if (apprentice==null)
+                        return "ROTS";
+                    else
+                        return "ROTS - "+apprentice;
                 }
                 if (Filters.Communing.accepts(_swccgoGame, startingInterrupt)
                         && startingInterrupt.getBlueprint().isLegacy()) {

@@ -668,7 +668,10 @@ public interface Title {
     String Massassi_Ruins = "Yavin 4: Massassi Ruins";
     String Massassi_Throne_Room = "Yavin 4: Massassi Throne Room";
     String Massassi_War_Room = "Yavin 4: Massassi War Room";
+    String Master_Kenobi = "Master Kenobi";
     String Master_Luke = "Master Luke";
+    String Master_QuiGon_Jinn_An_Old_Friend= "Master Qui-Gon Jinn, An Old Friend";
+    String Master_Yoda = "Master Yoda";
     String Masterful_Move = "Masterful Move";
     String Maul_Strikes = "Maul Strikes";
     String Mauls_Lightsaber = "Maul's Lightsaber";
