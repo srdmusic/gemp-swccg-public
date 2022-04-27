@@ -54,7 +54,7 @@ public class Card218_032 extends AbstractUsedInterrupt {
                 protected void performActionResults(Action targetingAction) {
                     final int permCardId = self.getPermanentCardId();
                     final int gameTextSourceCardId = self.getCardId();
-                    action.appendEffect(new AddUntilEndOfTurnModifierEffect(action, new EachWeaponDestinyModifier(self, Filters.and(Filters.your(self), Filters.Fett), Filters.any, 1), "Add 1 to your Fetts' weapon destinies"));
+                    action.appendEffect(new AddUntilEndOfTurnModifierEffect(action, new EachWeaponDestinyModifier(self, Filters.any, Filters.and(Filters.your(self), Filters.Fett), 1), "Add 1 to your Fetts' weapon destinies"));
                     action.appendEffect(new AddUntilEndOfTurnActionProxyEffect(action, new AbstractActionProxy() {
                         @Override
                         public List<TriggerAction> getRequiredAfterTriggers(SwccgGame game, EffectResult effectResult) {
