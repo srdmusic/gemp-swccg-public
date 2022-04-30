@@ -11,7 +11,9 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -23,9 +25,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Understand Art, Understand A Species
@@ -34,8 +35,8 @@ public class Card501_040 extends AbstractUsedOrLostInterrupt {
     public Card501_040() {
         super(Side.DARK, 4, "Understand Art, Understand A Species", Uniqueness.UNIQUE);
         setGameText("USED: Target a character in battle. Target and characters that share a characteristic with target are power and forfeit -1. LOST: Once per game, during battle, if you just revealed a character as 'artwork,' add one battle destiny (two if its species is participating in battle).");
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Understand Art, Understand A Species");
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Understand Art, Understand A Species");
     }
 
     @Override

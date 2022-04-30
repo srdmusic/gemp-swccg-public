@@ -3,32 +3,31 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.MoveAsReactEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.ModifyTotalBattleDestinyEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromHandEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.GuiUtils;
-import com.gempukku.swccgo.logic.timing.results.MovedResult;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Used
  * Title: Insertion Planning (V)
@@ -39,8 +38,8 @@ public class Card501_056 extends AbstractUsedInterrupt {
         setVirtualSuffix(true);
         setLore("The Rebellion employees every advantage it has over Imperial machines. A corps of well-trained scouts can elude detection in proper terrain.");
         setGameText("During opponent's deploy phase, deploy a spy from hand to a location you occupy. OR Move your spy (or [Endor] scout) of ability < 3 as a react. OR If your spy or scout is in battle, opponent's total battle destiny is -2.");
-        addIcons(Icon.DEATH_STAR_II);
-        setTestingText("[Set 19] Insertion Planning (V)");
+        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_19);
+        setTestingText("Insertion Planning (V)");
     }
 
     @Override

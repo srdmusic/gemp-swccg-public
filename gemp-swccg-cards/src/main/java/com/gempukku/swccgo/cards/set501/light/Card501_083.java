@@ -16,9 +16,8 @@ import com.gempukku.swccgo.logic.modifiers.*;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Creature
  * Title: Porg
  */
@@ -27,8 +26,8 @@ public class Card501_083 extends AbstractCreature {
         super(Side.LIGHT, 5, 2, 1, 3, 0, "Porg", Uniqueness.RESTRICTED_3);
         setGameText("Habitat: Ahch-To sites, either player’s starship (uses no capacity). Does not attack. Characters present (or starship aboard) are cumulatively power and defense value -1 (+1 if yours). Adds one [Light Side] icon here.");
         addModelType(ModelType.SEADWELLING);
-        addIcons(Icon.SELECTIVE_CREATURE, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Porg");
+        addIcons(Icon.SELECTIVE_CREATURE, Icon.VIRTUAL_SET_19);
+        setTestingText("Porg");
     }
 
     @Override

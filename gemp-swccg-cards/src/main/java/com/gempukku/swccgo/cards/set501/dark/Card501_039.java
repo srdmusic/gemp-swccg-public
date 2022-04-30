@@ -8,25 +8,24 @@ import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.BattleState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.CancelDestinyEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetAllCardsAtSameLocationEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Do You Stand By Your Work?
@@ -35,8 +34,8 @@ public class Card501_039 extends AbstractUsedOrLostInterrupt {
     public Card501_039() {
         super(Side.DARK, 4, "Do You Stand By Your Work?", Uniqueness.UNIQUE);
         setGameText("USED: If opponent is about to cancel and redraw a destiny, it is canceled instead. LOST: Once per game, if your objective just canceled a battle, none of the opponent's cards participating in that battle may move for remainder of turn.");
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Do You Stand By Your Work?");
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Do You Stand By Your Work?");
     }
 
     @Override

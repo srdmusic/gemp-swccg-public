@@ -9,20 +9,21 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeOneCardIntoHandFromOffTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Location
  * Subtype: Site
  * Title: Lothal: Capital City
@@ -34,8 +35,8 @@ public class Card501_036 extends AbstractSite {
         setLocationLightSideGameText("While occupied, related spaceport sites are immune to No Escape and Ounee Ta.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Lothal: Capital City (DARK)");
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_19);
+        setTestingText("Lothal: Capital City (DARK)");
     }
 
     @Override

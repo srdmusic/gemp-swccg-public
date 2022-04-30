@@ -13,12 +13,11 @@ import com.gempukku.swccgo.logic.effects.choose.DeployCardToSystemFromReserveDec
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
-
 /**
- * Set: Set 18
+ * Set: Set 0
  * Type: Interrupt
  * Subtype: Starting
- * Title: Careful Planning (V)
+ * Title: Careful Planning (V) (ERRATA)
  */
 public class Card501_051 extends AbstractStartingInterrupt {
     public Card501_051() {

@@ -17,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Location
  * Subtype: Site
  * Title: Lothal: Jedi Temple
@@ -29,8 +29,8 @@ public class Card501_108 extends AbstractSite {
         setLocationLightSideGameText("Ezra and Kanan are deploy -1 and power +1 here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 3);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Lothal: Jedi Temple");
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_19);
+        setTestingText("Lothal: Jedi Temple");
     }
 
     @Override

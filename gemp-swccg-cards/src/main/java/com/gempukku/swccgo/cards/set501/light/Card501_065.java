@@ -4,7 +4,6 @@ import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
@@ -13,22 +12,17 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
-import com.gempukku.swccgo.logic.modifiers.TotalTrainingDestinyModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Effect
  * Title: Reflection (V)
  */
@@ -39,8 +33,8 @@ public class Card501_065 extends AbstractNormalEffect {
         setLore("It was hard to imagine the enormous losses the Alliance suffered during the Battle of Hoth. Leia contemplated what she could do to help the Rebellion recover.");
         setGameText("Deploy on [Cloud City] Leia. If at Guest Quarters (or a [Skywalker] Objective on table): your total power is +2 here and, once per turn, may add 1 to a just drawn weapon or battle destiny (and once per turn, may subtract 1 from a just drawn weapon or battle destiny) at another location.");
         addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
-        addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Reflection (V)");
+        addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_19);
+        setTestingText("Reflection (V)");
         hideFromDeckBuilder();
     }
 

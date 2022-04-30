@@ -15,7 +15,10 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
@@ -26,7 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Used Or Lost
  * Title: Dark Approach (V)
@@ -37,8 +40,8 @@ public class Card501_020 extends AbstractUsedInterrupt {
         setVirtualSuffix(true);
         setLore("'The Force is with you, young Skywalker. But you are not a Jedi yet.'");
         setGameText("If opponent just retrieved Force, opponent must lose 1 Force. OR Cancel Dark Strike, Stunning Leader or You Are Beaten. OR If your Skywalker defending a battle alone, add one destiny to your total power (if [CC] Luke, he is also immune to attrition).");
-        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Dark Approach (V)");
+        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_19);
+        setTestingText("Dark Approach (V)");
     }
 
 

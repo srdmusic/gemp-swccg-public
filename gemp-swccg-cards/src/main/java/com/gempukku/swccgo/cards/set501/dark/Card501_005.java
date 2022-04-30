@@ -1,7 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
-import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
@@ -14,20 +13,19 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.ChooseToMoveAwayOrReturnToHandEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.PlayCardResult;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Used
  * Title: I'd Just As Soon Kiss A Wookiee (V)
@@ -38,8 +36,8 @@ public class Card501_005 extends AbstractUsedInterrupt {
         setVirtualSuffix(true);
         setLore("'I can arrange that. You could USE a good kiss!'");
         setGameText("If opponent just deployed a character (except as a driver, pilot, or passenger), use 1 Force (free if a Wookiee on table and target is Leia). Opponent chooses: move target away to an adjacent site as a regular move for free, or return target to hand.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] I'd Just As Soon Kiss A Wookiee (V)");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
+        setTestingText("I'd Just As Soon Kiss A Wookiee (V)");
     }
 
     @Override

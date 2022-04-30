@@ -1,28 +1,32 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.conditions.TrueCondition;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardAboardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.evaluators.ConstantEvaluator;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
+import com.gempukku.swccgo.logic.modifiers.EachWeaponDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToFireWeaponModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Antilles Maneuver & Moving To Attack Position
@@ -33,8 +37,8 @@ public class Card501_119 extends AbstractUsedOrLostInterrupt {
         addComboCardTitles("Antilles Maneuver", "Moving To Attack Position");
         setGameText("USED: For remainder of turn, opponent must first use 1 force to fire a weapon (and their weapon destiny draws targeting your starships are -1). " +
                 "LOST: During battle at a system where you have two or more starships, draw two battle destiny if unable to otherwise. OR During battle your snub fighter is immune to attrition and draws battle destiny if unable to otherwise.");
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Antilles Maneuver & Moving To Attack Position");
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Antilles Maneuver & Moving To Attack Position");
     }
 
     @Override

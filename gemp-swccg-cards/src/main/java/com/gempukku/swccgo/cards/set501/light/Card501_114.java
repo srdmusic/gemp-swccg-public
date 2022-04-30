@@ -1,7 +1,6 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
-import com.gempukku.swccgo.cards.conditions.CantSpotCondition;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
@@ -9,13 +8,15 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.MayNotApplyAbilityForBattleDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Location
  * Subtype: System
  * Title: Malachor
@@ -27,8 +28,8 @@ public class Card501_114 extends AbstractSystem {
         setLocationLightSideGameText("If you control, Vader is power -3.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 2);
-        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Malachor");
+        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_19);
+        setTestingText("Malachor");
     }
 
     @Override

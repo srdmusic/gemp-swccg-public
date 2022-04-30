@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -20,13 +19,12 @@ import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Lost
  * Title: Skywalkers (V)
@@ -37,8 +35,8 @@ public class Card501_068 extends AbstractLostInterrupt {
         setVirtualSuffix(true);
         setLore("Luke and Leia escaped to an unused portion of the Death Star, evading security checkpoints. At a retracted bridge, they swung across on a grappling line through enemy fire.");
         setGameText("If your [Skywalker] Objective on table, add X to your just drawn weapon or battle destiny, where X = the number of Skywalkers on table. OR If targeting your Skywalker, cancel Dark Strike, Imperial Barrier, or You Are Beaten.");
-        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Skywalkers (V)");
+        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_19);
+        setTestingText("Skywalkers (V)");
         hideFromDeckBuilder();
     }
 

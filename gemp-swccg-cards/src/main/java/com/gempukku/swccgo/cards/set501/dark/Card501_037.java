@@ -3,31 +3,25 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
-import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
-import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceGenerationModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Location
  * Subtype: Site
  * Title: Lothal: Imperial Strip Mines
@@ -39,8 +33,8 @@ public class Card501_037 extends AbstractSite {
         setLocationLightSideGameText("If you control, Force generation +1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.UNDERGROUND, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Lothal: Imperial Strip Mines");
+        addIcons(Icon.EXTERIOR_SITE, Icon.UNDERGROUND, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_19);
+        setTestingText("Lothal: Imperial Strip Mines");
     }
 
     @Override
