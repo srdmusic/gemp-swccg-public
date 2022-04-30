@@ -1,8 +1,8 @@
 var cardCache = {};
 var cardScale = 350 / 490;
 var fixedImages = {
-"-1_1":"https://res.starwarsccg.org/cards/lightCardBack.gif",
-"-1_2":"https://res.starwarsccg.org/cards/darkCardBack.gif",
+"-1_1":"https://res.starwarsccg.org/gemp/lightCardBack20thAnniversary.png",
+"-1_2":"https://res.starwarsccg.org/gemp/darkCardBack20thAnniversary.png",
 "1_1":"https://res.starwarsccg.org/cards/Premiere-Light/large/2x3kpr.gif",
 "1_2":"https://res.starwarsccg.org/cards/Premiere-Light/large/berulars.gif",
 "1_3":"https://res.starwarsccg.org/cards/Premiere-Light/large/biggsdarklighter.gif",
@@ -3903,7 +3903,7 @@ var fixedImages = {
 "200_6ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/commandercody_ai.png",
 "204_54ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/finalizer_ai.png",
 "207_18ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/profundity_ai.png",
-"207_23ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/savageopress_ai.png",
+"207_23ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/large/savageopress_ai.gif",
 "208_51ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/starkillerbase_ai.png",
 "209_6ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/generalkenobi_ai.png",
 "210_1ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/ahchtosaddle_ai.png",
