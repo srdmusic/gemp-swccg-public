@@ -65,10 +65,23 @@
 
                 $("#tabs").tabs();
 
-                $("#social-link-slack a"  ).click(function(e){ e.preventDefault(); window.location="https://join.slack.com/t/starwarsccg/shared_invite/zt-5b1k0uia-iErkXSYUyVMw5Dmcweo3vg"; });
-                $("#social-link-discord a").click(function(e){ e.preventDefault(); window.location="https://discord.gg/nEEnXCZ"; });
-                $("#social-link-youtube a").click(function(e){ e.preventDefault(); window.location="https://www.youtube.com/channel/UCwzN9PSUyCvxzbvCRfScS6Q"; });
-                $("#social-link-twitch a" ).click(function(e){ e.preventDefault(); window.location="https://www.twitch.tv/swccgpc"; });
+                /*
+                 * jquery tabs is aggressive and will remove the links in an ahref.
+                 * These hacks override the click and target it to the desired url in a new tab
+                 */
+                $("#social-link-slack a"  ).click(function(e){ e.preventDefault(); window.open("https://join.slack.com/t/starwarsccg/shared_invite/zt-5b1k0uia-iErkXSYUyVMw5Dmcweo3vg", "_blank"); });
+                $("#social-link-discord a").click(function(e){ e.preventDefault(); window.open("https://discord.gg/nEEnXCZ", "_blank"); });
+                $("#social-link-youtube a").click(function(e){ e.preventDefault(); window.open("https://www.youtube.com/channel/UCwzN9PSUyCvxzbvCRfScS6Q", "_blank"); });
+                $("#social-link-twitch a" ).click(function(e){ e.preventDefault(); window.open("https://www.twitch.tv/swccgpc", "_blank"); });
+                /*
+                 * These hacks change the links in th ahref back to the intended destination,
+                 * instead of using the tabs system.
+                 * This enables support for right-click open-in-new-tab ability.
+                 */
+                $("#social-link-slack a"  ).attr("href", "https://join.slack.com/t/starwarsccg/shared_invite/zt-5b1k0uia-iErkXSYUyVMw5Dmcweo3vg");
+                $("#social-link-discord a").attr("href", "https://discord.gg/nEEnXCZ");
+                $("#social-link-youtube a").attr("href", "https://www.youtube.com/channel/UCwzN9PSUyCvxzbvCRfScS6Q");
+                $("#social-link-twitch a" ).attr("href", "https://www.twitch.tv/swccgpc");
 
                 $(window).resize(function () {
                     resizeHall();
