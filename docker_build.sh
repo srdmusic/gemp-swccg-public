@@ -5,7 +5,7 @@
 mvn clean install
 
 ## Build Gemp Container Image
-docker build --force-rm=true --no-cache \
+docker build \
   -t gemp:latest \
   -f Dockerfile .
 
