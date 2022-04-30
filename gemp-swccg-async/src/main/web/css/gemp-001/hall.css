@@ -176,3 +176,9 @@ table.tables td, table.tables th {
 tr.played {
     background-color: #990000;
 }
+
+/* Social Links */
+li.social-link {
+    background:none !important;
+    border:none !important;
+}
