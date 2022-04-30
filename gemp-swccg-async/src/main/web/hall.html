@@ -126,8 +126,8 @@
                             }
 
                             return true;
-                        });
-            });
+                        }); /* body click */
+            }); /* document ready */
 
     function resizeHall() {
         var width = $(window).width();
@@ -150,7 +150,24 @@
 
         chat.setBounds(2, 2, innerWidth - 4, middleHeight - 4);
         hall.hallResized(innerWidth, middleHeight);
-    }
+    } /* resizeHall */
+
+    /*
+     * Function to expand, or contract, formats on the "Format Rules" page.
+     */
+    function showFormat(t) {
+        console.log("id:",$(t).attr('id'));
+        var contentId = $(t).attr('id') + "-content";
+        console.log("contentId:",contentId);
+        $("#"+contentId).slideToggle();
+    } /* showFormat */
+
+    /*
+     * Function to change the arrow before the label: ▼ ▶
+     */
+    function toggleLabelArrow(t) {
+        $(t).toggleClass("format-name-label-downarrow");
+    } /* showFormat */
 </script>
 
 </head>
