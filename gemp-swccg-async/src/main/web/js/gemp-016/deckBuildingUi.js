@@ -428,6 +428,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
             exportDeckBut.click(
                     (function (hiddenDeckDownloadLink) {
                         return function() {
+                            /* Call to the DeckRequestHandler getDeck */
                             hiddenDeckDownloadLink[0].click();
                         };
                     })(hiddenDeckDownloadLink));
