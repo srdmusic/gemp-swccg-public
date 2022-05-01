@@ -5,7 +5,6 @@ import com.gempukku.swccgo.cards.evaluators.HereEvaluator;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -15,7 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Location
  * Subtype: Site
  * Title: Scarif: Data Vault Control Room
@@ -27,8 +26,8 @@ public class Card501_057 extends AbstractSite {
         setLocationDarkSideGameText("Your characters are defense value -1 here. May not be separated from Data Vault.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 2);
-        addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Scarif: Data Vault Control Room");
+        addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_19);
+        setTestingText("Scarif: Data Vault Control Room");
     }
 
     @Override

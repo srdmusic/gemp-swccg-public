@@ -2,27 +2,27 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.*;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
+import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.modifiers.MayNotHaveForfeitValueIncreasedModifier;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Objective
  * Title: The Shield Will Be Down In Moments / Imperial Troops Have Entered The Base!
  */
@@ -33,8 +33,8 @@ public class Card501_010 extends AbstractObjective {
         setGameText("Deploy Hoth, [Set 17] 4th marker, 1st Marker and [Set 18] You May Start Your Landing. " +
                 "For remainder of game, you may not play Sunsdown. " +
                 "While this side up, Force loss from You May Start Your Landing is limited to 1. Once per turn, may deploy a snowtrooper or non-unique AT-AT to Hoth from Reserve Deck; reshuffle. When drawing for Target the Main Generator, X = 6 - the Marker Number from where you’re firing. Flip this card if Main Power Generators 'blown away.'");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] The Shield Will Be Down in Moments");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
+        setTestingText("The Shield Will Be Down in Moments");
     }
 
     @Override

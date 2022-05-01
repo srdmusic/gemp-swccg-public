@@ -668,7 +668,10 @@ public interface Title {
     String Massassi_Ruins = "Yavin 4: Massassi Ruins";
     String Massassi_Throne_Room = "Yavin 4: Massassi Throne Room";
     String Massassi_War_Room = "Yavin 4: Massassi War Room";
+    String Master_Kenobi = "Master Kenobi";
     String Master_Luke = "Master Luke";
+    String Master_QuiGon_Jinn_An_Old_Friend= "Master Qui-Gon Jinn, An Old Friend";
+    String Master_Yoda = "Master Yoda";
     String Masterful_Move = "Masterful Move";
     String Maul_Strikes = "Maul Strikes";
     String Mauls_Lightsaber = "Maul's Lightsaber";
@@ -1025,11 +1028,13 @@ public interface Title {
     String Theyve_Shut_Down_The_Main_Reactor = "They've Shut Down The Main Reactor";
     String The_Camp = "The Camp";
     String The_Circle_Is_Now_Complete = "The Circle Is Now Complete";
+    String The_Falcon_Junkyard_Garbage = "The Falcon, Junkyard Garbage";
     String The_First_Transport_Is_Away = "The First Transport Is Away!";
     String The_Force_Is_Strong_In_My_Family = "The Force Is Strong In My Family";
     String The_Force_Is_Strong_With_This_One = "The Force Is Strong With This One";
     String The_Galaxy_May_Need_A_Legend = "The Galaxy May Need A Legend";
     String The_Hyperdrive_Generators_Gone = "The Hyperdrive Generator's Gone";
+    String The_Mythrol = "The Mythrol";
     String The_Phantom_Menace = "The Phantom Menace";
     String The_Planet_That_Its_Farthest_From = "The Planet That It's Farthest From";
     String The_Professor = "The Professor";

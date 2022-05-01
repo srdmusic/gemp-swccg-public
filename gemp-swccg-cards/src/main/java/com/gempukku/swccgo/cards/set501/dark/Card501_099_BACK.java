@@ -2,13 +2,10 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.cards.effects.MoveAsReactEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -19,25 +16,21 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.FlipCardEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromHandOnReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
-import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.PlayCardResult;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Objective
  * Title: Imperial Occupation (V) / Imperial Control (V)
  */
@@ -47,8 +40,8 @@ public class Card501_099_BACK extends AbstractObjective {
         setVirtualSuffix(true);
         setGameText("While this side up, once per game, may deploy any Effect (or starship, at deploy -4) from your Reserve Deck; reshuffle. Once during your control phase, may place a card from hand on top of your Reserve Deck to take one Interrupt into hand from Reserve Deck; reshuffle. Once per turn, may move your character as a 'react' to a battle or Force drain at a site related to the renegade planet. " +
                 "Flip this card if opponent controls more sites on the renegade planet than you.");
-        addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Imperial Control (V)");
+        addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_19);
+        setTestingText("Imperial Control (V)");
     }
 
     @Override

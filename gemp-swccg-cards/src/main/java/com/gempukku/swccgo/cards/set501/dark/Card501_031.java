@@ -18,7 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Effect
  * Title: Thrawn's Art Collection
  */
@@ -26,9 +26,9 @@ public class Card501_031 extends AbstractNormalEffect {
     public Card501_031() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Thrawns_Art_Collection, Uniqueness.UNIQUE);
         setGameText("Use 4 Force to deploy on table. Cards stacked here are 'artwork.' If you just initiated a Force drain (or won a battle) at the same battleground as Thrawn, opponent loses 1 Force (cannot be reduced) and stacks it here face down. [Immune to Alter.]");
-        addIcons(Icon.VIRTUAL_SET_18);
+        addIcons(Icon.VIRTUAL_SET_19);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 19] Thrawn's Art Collection");
+        setTestingText("Thrawn's Art Collection");
     }
 
     @Override

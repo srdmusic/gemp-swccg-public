@@ -1,31 +1,21 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
-import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
-import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
-import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.OrCondition;
-import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Location
  * Subtype: Site
  * Title: Lothal: Capital City
@@ -37,8 +27,8 @@ public class Card501_109 extends AbstractSite {
         setLocationLightSideGameText("If you control, your total power is +2 at related locations.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Lothal: Capital City (LIGHT)");
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_19);
+        setTestingText("Lothal: Capital City (LIGHT)");
     }
 
     @Override

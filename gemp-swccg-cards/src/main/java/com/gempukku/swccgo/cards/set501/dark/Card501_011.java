@@ -2,8 +2,9 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractStartingInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -16,7 +17,7 @@ import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckE
 import com.gempukku.swccgo.logic.timing.Action;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Lost or Starting
  * Title: That's It, The Rebels Are There! (V)
@@ -26,8 +27,8 @@ public class Card501_011 extends AbstractStartingInterrupt {
         super(Side.DARK, 4, "That's It, The Rebels Are There!");
         setVirtualSuffix(true);
         setGameText("If 1st Marker on table, take [Set 6] Veers into hand and deploy Make Ready To Land Our Troops and up to two Effects that deploy for free and are always [Immune to Alter]. Place Interrupt in Lost Pile.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] That's It, The Rebels Are There! (V)");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
+        setTestingText("That's It, The Rebels Are There! (V)");
     }
 
     @Override

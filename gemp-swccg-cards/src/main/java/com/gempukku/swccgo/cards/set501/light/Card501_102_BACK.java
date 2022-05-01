@@ -31,9 +31,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Objective
  * Title: Title: Local Uprising (V) / Liberation (V)
  */
@@ -44,8 +43,8 @@ public class Card501_102_BACK extends AbstractObjective {
         setGameText("While this side up, once per game, may deploy any Effect (or starship, at deploy -4) from your Reserve Deck; reshuffle. " +
                 "Once during your control phase, may place a card from hand on top of your Reserve Deck to take one Interrupt into hand from Reserve Deck; reshuffle. Once per turn, may move your character as a 'react' to a battle or Force drain at a site related to the subjugated planet. " +
                 "Flip this card if opponent controls more sites on the subjugated planet than you.");
-        addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Liberation (V)");
+        addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_19);
+        setTestingText("Liberation (V)");
     }
 
     @Override

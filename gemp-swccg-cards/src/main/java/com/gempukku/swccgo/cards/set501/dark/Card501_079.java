@@ -2,26 +2,19 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractDevice;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.UseDeviceEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.TotalWeaponDestinyModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.GuiUtils;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -29,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Device
  * Title: Observation Holocam (V)
  */
@@ -40,8 +33,8 @@ public class Card501_079 extends AbstractDevice {
         setLore("Remote surveillance viewers with droid controllers supplement security. Can activate alarms and automated weapons when needed, bringing help to endangered locations.");
         setGameText("Deploy on your interior site. If opponent just deployed a character or vehicle here, may lose 1 Force to relocate your character to here from an adjacent site as a regular move. Opponent may not 'react' to here. May place out of play to draw top card of Reserve Deck.");
         addKeywords(Keyword.DEPLOYS_ON_SITE);
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Observation Holocam (V)");
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Observation Holocam (V)");
     }
 
     @Override

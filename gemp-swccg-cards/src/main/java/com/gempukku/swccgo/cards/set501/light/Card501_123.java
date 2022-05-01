@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
@@ -11,18 +10,18 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.MovesFreeFromLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationModifier;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Location
  * Subtype: System
  * Title: Cyrkon
@@ -34,8 +33,8 @@ public class Card501_123 extends AbstractSystem {
         setLocationLightSideGameText("During your control phase, if you control with two smugglers, may retrieve 1 Force.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.PLANET, Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Cyrkon");
+        addIcons(Icon.PLANET, Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_19);
+        setTestingText("Cyrkon");
     }
 
     @Override

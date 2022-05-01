@@ -125,6 +125,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private Set<Persona> _personasCrossedOver = new HashSet<Persona>();
     private Map<String, List<PhysicalCard>> _completedUtinniEffect = new HashMap<String, List<PhysicalCard>>();
     private Map<Integer, PhysicalCard> _completedJediTest = new HashMap<Integer, PhysicalCard>();
+    private Map<String, String> _extraInformationForArchetypeLabel = new HashMap<>();
 
     /**
      * Needed to generate snapshot.
@@ -492,6 +493,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
         for (Map.Entry<Integer, PhysicalCard> entry : _completedJediTest.entrySet()) {
             snapshot._completedJediTest.put(entry.getKey(), snapshotData.getDataForSnapshot(entry.getValue()));
+        }
+        for (String playerId : _extraInformationForArchetypeLabel.keySet()) {
+            snapshot._extraInformationForArchetypeLabel.put(playerId, _extraInformationForArchetypeLabel.get(playerId));
         }
     }
 
@@ -16741,5 +16745,16 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
 
         return false;
+    }
+
+    public void setExtraInformationForArchetypeLabel(String playerId, String text) {
+        _extraInformationForArchetypeLabel.put(playerId, text);
+    }
+
+    public String getExtraInformationForArchetypeLabel(String playerId) {
+        if (_extraInformationForArchetypeLabel.containsKey(playerId))
+            return _extraInformationForArchetypeLabel.get(playerId);
+
+        return null;
     }
 }

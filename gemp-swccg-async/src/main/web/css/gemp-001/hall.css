@@ -246,3 +246,10 @@ span.format-name-label-downarrow::before { content: "▼ "; color:#ffa84a; font-
 span.all-sets-valid {
     color:#66d766;
 }
+
+/* Social Links */
+li.social-link {
+    background:none !important;
+    border:none !important;
+}
+

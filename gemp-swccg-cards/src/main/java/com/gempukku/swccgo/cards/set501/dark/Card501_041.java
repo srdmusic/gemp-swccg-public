@@ -7,9 +7,10 @@ import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
+import com.gempukku.swccgo.logic.effects.ModifyTotalBattleDestinyEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeFiredModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayUnlessImmuneToSpecificTitleModifier;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -20,9 +21,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: History, Philosophy, And Art
@@ -31,8 +31,8 @@ public class Card501_041 extends AbstractUsedOrLostInterrupt {
     public Card501_041() {
         super(Side.DARK, 5, "History, Philosophy, And Art", Uniqueness.UNIQUE);
         setGameText("USED: During battle, add 1 to your total battle destiny for each card stacked on Thrawn's Art Collection. LOST: Once per game, if you just revealed an Interrupt as 'artwork' opponent may not play non-[Immune to Sense] Interrupts or fire weapons for remainder of battle.");
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] History, Philosophy, And Art");
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("History, Philosophy, And Art");
     }
 
     @Override

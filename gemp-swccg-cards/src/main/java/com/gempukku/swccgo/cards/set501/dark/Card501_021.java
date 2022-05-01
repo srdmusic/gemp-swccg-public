@@ -4,32 +4,30 @@ import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeDestinyCardIntoHandEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.DeploysFreeToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.DestinyDrawnResult;
 
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Character
  * Subtype: Alien
  * Title: Elan Sleazebaggano
@@ -41,14 +39,14 @@ public class Card501_021 extends AbstractAlien {
         setLore("Balosar information broker.");
         setGameText("Deploys free to (and power +2 at) a bar, cantina, night club, or parlor. If present with a Jedi, place Elan Sleazebaggano in Used Pile. If present with opponent's character during your control phase, 'sell death sticks' (opponent must use or lose 1 Force).");
         addKeywords(Keyword.INFORMATION_BROKER);
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_19);
         setSpecies(Species.BALOSAR);
-        setTestingText("[Set 19] Elan Sleazebaggano");
+        setTestingText("Elan Sleazebaggano");
     }
 
     @Override
     protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         Filter filter = Filters.or(Filters.titleContains("Bar"), Filters.titleContains("Cantina"), Filters.titleContains("Night Club"), Filters.titleContains("Parlor"));
         modifiers.add(new DeploysFreeToLocationModifier(self, filter));
         return modifiers;
@@ -56,7 +54,7 @@ public class Card501_021 extends AbstractAlien {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         Filter filter = Filters.or(Filters.titleContains("Bar"), Filters.titleContains("Cantina"), Filters.titleContains("Night Club"), Filters.titleContains("Parlor"));
         modifiers.add(new PowerModifier(self, new AtCondition(self, filter), 2));
         return modifiers;
@@ -80,7 +78,7 @@ public class Card501_021 extends AbstractAlien {
 
             final String USE_FORCE = "Use 1 Force";
             final String LOSE_FORCE = "Lose 1 Force";
-            List<String> optionsTextList = new ArrayList<String>();
+            List<String> optionsTextList = new ArrayList<>();
             if (GameConditions.canUseForce(game, opponent, 1)) {
                 optionsTextList.add(USE_FORCE);
             }
@@ -115,7 +113,7 @@ public class Card501_021 extends AbstractAlien {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
+        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
         final String playerId = self.getOwner();
         final String opponent = game.getOpponent(playerId);
@@ -133,7 +131,7 @@ public class Card501_021 extends AbstractAlien {
 
             final String USE_FORCE = "Use 1 Force";
             final String LOSE_FORCE = "Lose 1 Force";
-            List<String> optionsTextList = new ArrayList<String>();
+            List<String> optionsTextList = new ArrayList<>();
             if (GameConditions.canUseForce(game, opponent, 1)) {
                 optionsTextList.add(USE_FORCE);
             }

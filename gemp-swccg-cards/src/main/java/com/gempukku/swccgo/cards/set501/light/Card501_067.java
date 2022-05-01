@@ -1,6 +1,5 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
@@ -11,7 +10,6 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.ModifyTotalPowerUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.SubstituteDestinyEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
@@ -25,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: My Sister Has It
@@ -34,8 +32,8 @@ public class Card501_067 extends AbstractUsedOrLostInterrupt {
     public Card501_067() {
         super(Side.LIGHT, 5, "My Sister Has It", Uniqueness.UNIQUE);
         setGameText("USED: If your [Skywalker] Objective on table, take [Set 14] Chief Chirpa's Hut or [Cloud City] Leia into hand from Reserve Deck; reshuffle. LOST: If you are about to draw a card for battle destiny, may instead use ability number of your Leia involved in that battle.");
-        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] My Sister Has It");
+        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_19);
+        setTestingText("My Sister Has It");
         hideFromDeckBuilder();
     }
 

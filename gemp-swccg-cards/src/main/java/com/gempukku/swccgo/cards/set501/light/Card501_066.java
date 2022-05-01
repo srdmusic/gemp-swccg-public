@@ -11,17 +11,18 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.ModifyTotalPowerUntilEndOfBattleEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Collections;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Lost
  * Title: Full Throttle (V)
@@ -32,8 +33,8 @@ public class Card501_066 extends AbstractLostInterrupt {
         setVirtualSuffix(true);
         setLore("Rebel pilots use visual scanning to supplement sensors for an edge against Imperial fighter pilots. Natural instincts allow lone Rebels to overcome superior numbers.");
         setGameText("During battle, target your lone starfighter piloted by a Skywalker. For remainder of turn, starfighter is immune to attrition. If opponent has two or more starships there (or your [Skywalker] Objective on table), add your starfighter's maneuver (if any) to your total power.");
-        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Full Throttle (V)");
+        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_19);
+        setTestingText("Full Throttle (V)");
         hideFromDeckBuilder();
     }
 
