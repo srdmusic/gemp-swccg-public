@@ -34,7 +34,7 @@ public class Card9_023 extends AbstractRebel {
         setLore("One of only four attackers who survived the raid on the Imperial Academy at Carida. Gray Squadron pilot.");
         setGameText("Adds 2 to power of anything he pilots. When at a system, sector or docking bay, once during each of your deploy phases, subtracts 2 from deploy cost of your unique (•) Y-wing deploying there.");
         addIcons(Icon.DEATH_STAR_II, Icon.PILOT);
-        addKeywords(Keyword.RED_SQUADRON);
+        addKeywords(Keyword.GRAY_SQUADRON);
     }
 
     @Override
