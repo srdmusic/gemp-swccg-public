@@ -3315,7 +3315,7 @@ var fixedImages = {
 "216_18":"https://res.starwarsccg.org/cards/Virtual16-Dark/hires/shieldgate.png",
 "216_19":"https://res.starwarsccg.org/cards/Virtual16-Dark/hires/superlaser.png",
 "216_20":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/alienrabble.png",
-"216_21":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/anakinskywalkerjediknightholo_ai.png",
+"216_21":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/anakinskywalkerjediknight.png",
 "216_22":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/bowcaster.png",
 "216_23":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/chewbaccadefenderofkashyyyk.png",
 "216_24":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/communing.png",
