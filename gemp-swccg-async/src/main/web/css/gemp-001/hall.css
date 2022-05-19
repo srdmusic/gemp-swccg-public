@@ -182,3 +182,27 @@ li.social-link {
     background:none !important;
     border:none !important;
 }
+
+/* Leagues information page */
+.leagueSeeDetails {
+    margin-top:3px;
+    margin-bottom:3px;
+}
+.leagueExtraInfo {
+    border:0.5px #ffa74a solid;
+    padding:5px;
+    margin:5px;
+}
+.leagueHr {
+    color:#555555;
+    border:1px #555555 solid;
+    margin-top:5px;
+    margin-bottom:5px;
+    padding:none;
+}
+.leagueDurationStart {
+    color:green;
+}
+.leagueDurationStop {
+    color:red;
+}
