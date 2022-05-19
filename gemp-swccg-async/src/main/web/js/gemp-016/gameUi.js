@@ -804,10 +804,11 @@ var GempSwccgGameUI = Class.extend({
         var that = this;
         var tabsLabels = "<li><a href='#chatBox' class='slimTab'>Chat</a></li>";
         var tabsBodies = "<div id='chatBox' class='slimPanel'></div>";
-        if (!this.spectatorMode && !this.replayMode) {
+
+        //if (!this.spectatorMode && !this.replayMode) {
             tabsLabels += "<li><a href='#settingsBox' class='slimTab'>Settings</a></li><li><a href='#gameOptionsBox' class='slimTab'>Options</a></li>";
             tabsBodies += "<div id='settingsBox' class='slimPanel'></div><div id='gameOptionsBox' class='slimPanel'></div>";
-        }
+        //}
         if (!this.replayMode) {
             tabsLabels += "<li><a href='#playersInRoomBox' class='slimTab'>Players</a></li>";
             tabsBodies += "<div id='playersInRoomBox' class='slimPanel'></div>";
@@ -819,6 +820,48 @@ var GempSwccgGameUI = Class.extend({
         $("#main").append(this.tabPane);
 
         this.chatBoxDiv = $("#chatBox");
+
+        //
+        // DPH
+        // 
+        //
+        // DPH
+        // TODO: pull default value from cookie:
+        var gameBackgroundSettingCookie = "darkHive"; //$.cookie("gameBackgroundSetting");
+        console.log("Previous background set in cookie: "+gameBackgroundSettingCookie);
+
+        var darkHiveSelected="";
+        var darkHyperspeedSelected="";
+        var hyperRouteSelected="";
+        var blackSelected="";
+        var darkGraySelected="";
+        var GraySelected="";
+        var lightGraySelected="";
+        var orangeSelected="";
+
+        if ((gameBackgroundSettingCookie == "darkHive") || (gameBackgroundSettingCookie == "") || (gameBackgroundSettingCookie == null)) { darkHiveSelected="selected"; }
+        if (gameBackgroundSettingCookie == "darkHyperspeed") { darkHyperspeedSelected="selected"; }
+        if (gameBackgroundSettingCookie == "hyperRoute")     { hyperRouteSelected="selected"; }
+        if (gameBackgroundSettingCookie == "black")          { blackSelected="selected"; }
+        if (gameBackgroundSettingCookie == "darkGray")       { darkGraySelected="selected"; }
+        if (gameBackgroundSettingCookie == "gray")           { GraySelected="selected"; }
+        if (gameBackgroundSettingCookie == "lightGray")      { lightGraySelected="selected"; }
+        if (gameBackgroundSettingCookie == "orange")         { orangeSelected="selected"; }
+
+        var backgroundSettingsToAppend = "";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "<br /><label for='gameBackgroundSetting'>Background: </label><select name='gameBackgroundSetting' id='gameBackgroundSetting' onchange='gameBackgroundSettingChange();'>";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='darkHive' "+darkHiveSelected+">Dark Hive</option>";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='darkHyperspeed' "+darkHyperspeedSelected+">Dark Hyperspeed</option>";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='hyperRoute' "+hyperRouteSelected+">Hyper Route</option>";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='black' "+blackSelected+">Black</option>";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='#111111' "+darkGraySelected+">Dark Gray</option>";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='#222222' "+GraySelected+">Gray</option>";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='#333333' "+lightGraySelected+">Light Gray</option>";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='#ffa74a' "+orangeSelected+">Orange</option>";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "</select><br /><br />";
+        $("#settingsBox").append(backgroundSettingsToAppend);
+        gameBackgroundSettingChange();
+
 
         if (!this.spectatorMode && !this.replayMode) {
 
@@ -3424,3 +3467,38 @@ var GempSwccgGameUI = Class.extend({
             this.dialogResize(this.cardActionDialog, this.specialGroup);
     }
 });
+
+
+
+function gameBackgroundSettingChange () {
+
+    var gameBackgroundSettingSelected = $("select#gameBackgroundSetting option:checked" ).val();
+    console.log("Changing background to: "+gameBackgroundSettingSelected);
+    $.cookie("gameBackgroundSetting", "" + gameBackgroundSettingSelected, { expires:365 });
+    /*
+     * background is an image, use that.
+     */
+    $(".ui-dialog").css({"background": "#000000"});
+    $("div#bottomLeftTabs").css({"background": "#000000"});
+    if (gameBackgroundSettingSelected == "darkHive") {
+        $(".ui-widget-content").css({"border": "1px solid #555555"});
+        $(".ui-widget-content").css({"background": "#000000 url(css/dark-hive/images/ui-bg_loop_25_000000_21x21.png) 50% repeat"});
+        $(".ui-dialog").css({"background": "#000000"});
+    } else if (gameBackgroundSettingSelected == "darkHyperspeed") {
+        $(".ui-widget-content").css({"border": "1px solid #555555"});
+        $(".ui-widget-content").css({"background": "none"});
+        $("div#main").css({"background": "#000000 url(https://res.starwarsccg.org/wp/wp-content/uploads/2019/04/bg.jpg) 100% center"});
+    } else if (gameBackgroundSettingSelected == "hyperRoute") {
+        $(".ui-widget-content").css({"border": "1px solid #aaaaaa"});
+        $(".ui-widget-content").css({"background": "#000000 url(https://res.starwarsccg.org/parsecs/hyperroute_background_top.png)"});
+    /*
+     * background is a COLOR
+     */
+    } else {
+        $(".ui-widget-content").css({"border": "1px solid #555555"});
+        $(".ui-widget-content").css({"background": gameBackgroundSettingSelected});
+    }
+
+}
+
+
