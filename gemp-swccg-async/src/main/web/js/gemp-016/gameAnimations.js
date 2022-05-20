@@ -1140,8 +1140,8 @@ var GameAnimations = Class.extend({
                 var lightForceGeneration = element.getAttribute("lightForceGeneration");
                 var darkRaceTotal = element.getAttribute("darkRaceTotal");
                 var lightRaceTotal = element.getAttribute("lightRaceTotal");
-                var darkPolitics = element.getAttribute("darkPolitics";)
-                var lightPolitics = element.getAttribute("lightPolitics";)
+                var darkPoliticsTotal = element.getAttribute("darkPoliticsTotal";)
+                var lightPoliticsTotal = element.getAttribute("lightPoliticsTotal";)
 
                 var playerZones = element.getElementsByTagName("playerZones");
                 for (var i = 0; i < playerZones.length; i++) {
