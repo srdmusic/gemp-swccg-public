@@ -311,6 +311,22 @@ public class GuiUtils {
     }
 
     /**
+     * Gets the politics total for the specified player.
+     * @param game the game
+     * @param playerId the player
+     * @return the politics total, or -1 if galactic senate not on table
+     */
+    public static float getPoliticsTotal(SwccgGame game, String playerId) {
+        GameState gameState = game.getGameState();
+        float totalPolitics =  game.getModifiersQuerying().getTotalPoliticsAtGalacticSenate(gameState, playerId);
+        if (Filters.findFirstFromTopLocationsOnTable(gameState.getGame(), Filters.Galactic_Senate) == null) {
+            return -1;
+        }
+        return totalPolitics;
+    }
+
+
+    /**
      * Format a float value as a String for display.
      * @param floatValue the float value
      */
