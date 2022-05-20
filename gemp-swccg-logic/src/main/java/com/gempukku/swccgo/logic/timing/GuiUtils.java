@@ -318,11 +318,7 @@ public class GuiUtils {
      */
     public static float getPoliticsTotal(SwccgGame game, String playerId) {
         GameState gameState = game.getGameState();
-        float totalPolitics =  game.getModifiersQuerying().getTotalPoliticsAtGalacticSenate(gameState, playerId);
-        if (Filters.findFirstFromTopLocationsOnTable(gameState.getGame(), Filters.Galactic_Senate) == null) {
-            return -1;
-        }
-        return totalPolitics;
+        return game.getModifiersQuerying().getTotalPoliticsAtGalacticSenate(gameState, playerId);
     }
 
 
