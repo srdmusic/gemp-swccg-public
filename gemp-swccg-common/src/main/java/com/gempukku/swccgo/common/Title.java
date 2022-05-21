@@ -642,6 +642,8 @@ public interface Title {
     String Losing_Track = "Losing Track";
     String Lost_In_The_Wilderness = "Lost In The Wilderness";
     String Lothal = "Lothal";
+    String Lothal_Capital_City = "Lothal: Capital City";
+    String Lothal_Jedi_Temple = "Lothal: Jedi Temple";
     String Lukes_Backpack = "Luke's Backpack";
     String Lukes_T16_Skyhopper = "Luke's T-16 Skyhopper";
     String Lukes_X34_Landspeeder = "Luke's X-34 Landspeeder";

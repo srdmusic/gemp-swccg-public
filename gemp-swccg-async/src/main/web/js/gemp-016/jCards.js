@@ -3469,7 +3469,7 @@ var fixedImages = {
 "501_24":"https://res.starwarsccg.org/cards/Hoth-Dark/large/directhit.gif",
 "501_25":"https://res.starwarsccg.org/cards/Hoth-Dark/large/tyrant.gif",
 "501_26":"https://res.starwarsccg.org/cards/CloudCity-Dark/large/hesallyoursbountyhunter.gif",
-"501_27":"https://res.starwarsccg.org/cards/EmpireStrikesBackIntroductoryTwoPlayerGame-Dark/large/walkergarrison.gif",
+"501_27":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/cloudcityporttowndistrict.gif",
 "501_28":"https://res.starwarsccg.org/cards/Virtual13-Dark/large/seventhsister.gif",
 "501_29":"https://res.starwarsccg.org/cards/Hoth-Dark/large/captainpiett.gif",
 "501_30":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/nomoneynopartsnodeal.gif",
@@ -4403,6 +4403,7 @@ var Card = Class.extend({
                    (cardNo == 30);
         }if (setNo == 501) {
             return (cardNo == 13) ||
+                   (cardNo == 27) ||
                    (cardNo == 35) ||
                    (cardNo == 36) ||
                    (cardNo == 37) ||
