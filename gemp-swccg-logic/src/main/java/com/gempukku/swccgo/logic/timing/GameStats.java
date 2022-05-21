@@ -47,8 +47,8 @@ public class GameStats {
     private int _defendingNumDestinyInAttack;
     private float _lightRaceTotal = -1;
     private float _darkRaceTotal = -1;
-    private float _lightPolitics = -1;
-    private float _darkPolitics = -1;
+    private float _lightPoliticsTotal = -1;
+    private float _darkPoliticsTotal = -1;
     private Map<String, Map<Zone, Integer>> _zoneSizes = new HashMap<String, Map<Zone, Integer>>();
     private Map<Integer, Float> _darkPowerAtLocations = new HashMap<Integer, Float>();
     private Map<Integer, Float> _lightPowerAtLocations = new HashMap<Integer, Float>();
@@ -236,15 +236,15 @@ public class GameStats {
         }
 
         float newLightPoliticsTotal = GuiUtils.getPoliticsTotal(game, lightPlayer);
-        if (newLightPoliticsTotal != _lightPolitics) {
+        if (newLightPoliticsTotal != _lightPoliticsTotal) {
             changed = true;
-            _lightPolitics = newLightPoliticsTotal;
+            _lightPoliticsTotal = newLightPoliticsTotal;
         }
 
         float newDarkPoliticsTotal = GuiUtils.getPoliticsTotal(game, darkPlayer);
-        if (newDarkPoliticsTotal != _darkPolitics) {
+        if (newDarkPoliticsTotal != _darkPoliticsTotal) {
             changed = true;
-            _darkPolitics = newDarkPoliticsTotal;
+            _darkPoliticsTotal = newDarkPoliticsTotal;
         }
 
         Map<String, Map<Zone, Integer>> newZoneSizes = new HashMap<String, Map<Zone, Integer>>();
