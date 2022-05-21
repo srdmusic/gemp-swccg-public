@@ -1175,11 +1175,11 @@ var GameAnimations = Class.extend({
                             $("#raceTotal" + that.game.getPlayerIndex(playerId)).text(darkRaceTotal);
                             $("#raceTotal" + that.game.getPlayerIndex(playerId)).css({display:"table-cell"});
                         }
-                        if (darkPolitics == null || darkPolitics == -1) {
+                        if (darkPoliticsTotal == null || darkPoliticsTotal == -1) {
                             $("#politicsTotal" + that.game.getPlayerIndex(playerId)).css({display:"none"});
                         }
                         else {
-                            $("#politicsTotal" + that.game.getPlayerIndex(playerId)).text(darkPolitics);
+                            $("#politicsTotal" + that.game.getPlayerIndex(playerId)).text(darkPoliticsTotal);
                             $("#politicsTotal" + that.game.getPlayerIndex(playerId)).css({display:"table-cell"});
                         }
                         $(".topDarkReserveDeck").text(reserve);
@@ -1196,11 +1196,11 @@ var GameAnimations = Class.extend({
                             $("#raceTotal" + that.game.getPlayerIndex(playerId)).text(lightRaceTotal);
                             $("#raceTotal" + that.game.getPlayerIndex(playerId)).css({display:"table-cell"});
                         }
-                        if (lightPolitics == null || lightPolitics == -1) {
+                        if (lightPoliticsTotal == null || lightPoliticsTotal == -1) {
                             $("#politicsTotal" + that.game.getPlayerIndex(playerId)).css({display:"none"});
                         }
                         else {
-                            $("#politicsTotal" + that.game.getPlayerIndex(playerId)).text(darkPolitics);
+                            $("#politicsTotal" + that.game.getPlayerIndex(playerId)).text(lightPoliticsTotal);
                             $("#politicsTotal" + that.game.getPlayerIndex(playerId)).css({display:"table-cell"});
                         }
                         $(".topLightReserveDeck").text(reserve);
