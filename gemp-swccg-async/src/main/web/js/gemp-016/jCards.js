@@ -3491,7 +3491,7 @@ var fixedImages = {
 "501_45":"https://res.starwarsccg.org/cards/TheedPalace-Light/large/quigonjinnwithlightsaber.gif",
 "501_46":"https://res.starwarsccg.org/cards/TheedPalace-Light/large/macewindujedimaster.gif",
 "501_47":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/coruscantjeditemplemeditationroom.png",
-"501_48":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/kashyyykoperative.gif",
+"501_48":"https://res.starwarsccg.org/cards/CloudCity-Dark/large/cloudcitychasmwalkway.gif",
 "501_49":"https://res.starwarsccg.org/cards/Endor-Light/large/ihopeshesallright.gif",
 "501_50":"https://res.starwarsccg.org/cards/JabbasPalaceSealedDeck-Light/large/ouneeta.gif",
 "501_51":"https://res.starwarsccg.org/cards/Virtual0-Light/large/carefulplanning.gif",
@@ -3502,13 +3502,13 @@ var fixedImages = {
 "501_56":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/insertionplanning.gif",
 "501_57":"https://res.starwarsccg.org/cards/Virtual13-Light/large/deathstariichasmwalkway.gif",
 "501_58":"https://res.starwarsccg.org/cards/Virtual8-Light/large/admiraluostatura.gif",
-"501_59":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/landoherooftherebellion.png",
-"501_60":"https://res.starwarsccg.org/cards/Virtual8-Light/large/whydoeseveryonewanttogobacktojakku.gif",
+"501_59":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/artoo.gif",
+"501_60":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/chadrafan.gif",
 "501_61":"https://res.starwarsccg.org/cards/Virtual0-Light/large/agoodblasteratyourside.gif",
 "501_62":"https://res.starwarsccg.org/cards/Virtual3-Light/large/kananjarrus.gif",
 "501_63":"https://res.starwarsccg.org/cards/ThirdAnthology-Light/large/prisoner2187.gif",
 "501_64":"https://res.starwarsccg.org/cards/TheedPalace-Light/large/wedidnthitit.gif",
-"501_65":"https://res.starwarsccg.org/cards/Dagobah-Light/large/reflection.gif",
+"501_65":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/debnoli.gif",
 "501_66":"https://res.starwarsccg.org/cards/Premiere-Light/large/fullthrottle.gif",
 "501_67":"https://res.starwarsccg.org/cards/Endor-Light/large/freeride.gif",
 "501_68":"https://res.starwarsccg.org/cards/Premiere-Light/large/skywalkers.gif",
@@ -4408,6 +4408,7 @@ var Card = Class.extend({
                    (cardNo == 36) ||
                    (cardNo == 37) ||
                    (cardNo == 47) ||
+                   (cardNo == 48) ||
                    (cardNo == 57) ||
                    (cardNo == 69) ||
                    (cardNo == 70) ||

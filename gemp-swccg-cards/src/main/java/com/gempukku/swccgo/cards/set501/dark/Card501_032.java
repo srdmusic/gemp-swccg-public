@@ -25,6 +25,7 @@ public class Card501_032 extends AbstractNormalEffect {
         addIcons(Icon.VIRTUAL_SET_19);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("TIE Defender Project");
+        hideFromDeckBuilder();
     }
 
     @Override
