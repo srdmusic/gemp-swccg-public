@@ -125,7 +125,7 @@ body {
      font-weight: bolder;
      width: 42px;
      height: 42px;
-     background-image: url('https://res.starwarsccg.org/gemp/darkPodracer-42.png');
+     background-image: url('https://res.starwarsccg.org/gemp/lightPolitics-42.png');
  }
 
  .darkPoliticsTotal {
@@ -137,7 +137,7 @@ body {
      font-weight: bolder;
      width: 42px;
      height: 42px;
-     background-image: url('https://res.starwarsccg.org/gemp/darkPodracer-42.png');
+     background-image: url('https://res.starwarsccg.org/gemp/darkPolitics-42.png');
  }
 
 .sabaccTotalDiv {
