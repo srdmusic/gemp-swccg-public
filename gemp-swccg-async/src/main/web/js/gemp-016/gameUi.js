@@ -449,12 +449,14 @@ var GempSwccgGameUI = Class.extend({
             var outOfPlayClass = null;
             var forceGenerationClass = null;
             var raceTotalClass = null;
+            var politicsTotalClass = null;
             if (i == 0) {
                 handClass = "darkHandsize";
                 sabaccHandClass = "darkSabaccHandsize";
                 outOfPlayClass = "darkOutOfPlayPileSize";
                 forceGenerationClass = "darkForceGeneration";
                 raceTotalClass = "darkRaceTotal";
+                politicsTotalClass = "darkPoliticsTotal"
             }
             else {
                 handClass = "lightHandsize";
@@ -462,10 +464,11 @@ var GempSwccgGameUI = Class.extend({
                 outOfPlayClass = "lightOutOfPlayPileSize";
                 forceGenerationClass = "lightForceGeneration";
                 raceTotalClass = "lightRaceTotal";
+                politicsTotalClass = "lightPoliticsTotal"
             }
 
             this.gameStateElem.append("<div class='player'>" + (i + 1) + ". " + this.allPlayerIds[i] + "<div id='clock" + i + "' class='clock'></div><div class='phase'></div>"
-                    + "<div class='playerStats'><div id='hand" + i + "' class='" + handClass + "'></div><div id='sabaccHand" + i + "' class='" + sabaccHandClass + "'></div><div id='showStats" + i + "' class='showStats'></div><div id='outOfPlay" + i + "' class='" + outOfPlayClass + "'></div><div id='forceGeneration" + i + "' class='" + forceGenerationClass + "'></div><div id='raceTotal" + i + "' class='" + raceTotalClass + "'></div></div></div>");
+                    + "<div class='playerStats'><div id='hand" + i + "' class='" + handClass + "'></div><div id='sabaccHand" + i + "' class='" + sabaccHandClass + "'></div><div id='showStats" + i + "' class='showStats'></div><div id='outOfPlay" + i + "' class='" + outOfPlayClass + "'></div><div id='forceGeneration" + i + "' class='" + forceGenerationClass + "'></div><div id='politicsTotal" + i + "' class='" + politicsTotalClass + "'></div><div id='raceTotal" + i + "' class='" + raceTotalClass + "'></div></div></div>");
         }
 
         $("#main").append(this.gameStateElem);
