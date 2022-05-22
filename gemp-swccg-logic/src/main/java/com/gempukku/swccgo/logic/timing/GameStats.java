@@ -413,6 +413,14 @@ public class GameStats {
         return _darkRaceTotal;
     }
 
+    public Float getLightPoliticsTotal() {
+        return _lightPoliticsTotal;
+    }
+
+    public Float getDarkPoliticsTotal() {
+        return _darkPoliticsTotal;
+    }
+
     public Map<String, Map<Zone, Integer>> getZoneSizes() {
         return Collections.unmodifiableMap(_zoneSizes);
     }
@@ -457,6 +465,8 @@ public class GameStats {
         copy._defendingNumDestinyInAttack = _defendingNumDestinyInAttack;
         copy._lightRaceTotal = _lightRaceTotal;
         copy._darkRaceTotal = _darkRaceTotal;
+        copy._lightPoliticsTotal = _lightPoliticsTotal;
+        copy._darkPoliticsTotal = _darkPoliticsTotal;
 
         // Only copy sabacc total if sending to that player (or sabacc hands are revealed)
         if (_game != null && playerToSendTo != null) {
