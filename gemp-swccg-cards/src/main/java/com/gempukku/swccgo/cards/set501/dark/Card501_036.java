@@ -2,7 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
+import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -10,10 +10,9 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
@@ -30,12 +29,12 @@ import java.util.Set;
  */
 public class Card501_036 extends AbstractSite {
     public Card501_036() {
-        super(Side.DARK, "Lothal: Capital City", Title.Lothal);
+        super(Side.DARK, Title.Lothal_Capital_City, Title.Lothal);
         setLocationDarkSideGameText("If you just revealed an 'artwork' card during battle here, may retrieve a card of the same card type.");
-        setLocationLightSideGameText("While occupied, related spaceport sites are immune to No Escape and Ounee Ta.");
+        setLocationLightSideGameText("If you control, your total power is +1 at related locations.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_19);
+        addIcons(Icon.EXTERIOR_SITE, Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_19);
         setTestingText("Lothal: Capital City (DARK)");
     }
 
@@ -71,8 +70,7 @@ public class Card501_036 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.relatedSite(self), Filters.spaceport_site), new OrCondition(new OccupiesCondition(playerOnLightSideOfLocation, self), new OccupiesCondition(game.getOpponent(playerOnLightSideOfLocation), self)), Title.No_Escape));
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.relatedSite(self), Filters.spaceport_site), new OrCondition(new OccupiesCondition(playerOnLightSideOfLocation, self), new OccupiesCondition(game.getOpponent(playerOnLightSideOfLocation), self)), Title.Ounee_Ta));
+        modifiers.add(new TotalPowerModifier(self, Filters.relatedLocation(self), new ControlsCondition(playerOnLightSideOfLocation, self), 1, playerOnLightSideOfLocation));
         return modifiers;
     }
 }

@@ -18104,6 +18104,8 @@ public class Filters {
     public static final Filter Lor_San_Tekka = Filters.title(Title.Lor_San_Tekka);
     public static final Filter Losing_Track = Filters.title(Title.Losing_Track);
     public static final Filter Lost_In_The_Wilderness = Filters.title(Title.Lost_In_The_Wilderness);
+    public static final Filter Lothal_Capital_City = Filters.title(Title.Lothal_Capital_City);
+    public static final Filter Lothal_Jedi_Temple = Filters.title(Title.Lothal_Jedi_Temple);
     public static final Filter Lothal_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Lothal));
     public static final Filter Lothal_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Lothal));
     public static final Filter Lothal_system = Filters.and(CardSubtype.SYSTEM, Filters.partOfSystem(Title.Lothal));

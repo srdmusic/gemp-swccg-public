@@ -118,7 +118,7 @@ public class Card211_026_BACK extends AbstractObjective {
                             action.addAnimationGroup(selectedCard);
                             action.appendEffect(
                                     new PlayoutDecisionEffect(action, opponent,
-                                            new MultipleChoiceAwaitingDecision("Opponent revealed " + GameUtils.getCardLink(selectedCard) + " from Force Pile. Choose result", new String[]{"Lose 2 force to place card on bottom of used pile", "Opponent takes card into hand"}) {
+                                            new MultipleChoiceAwaitingDecision("Opponent revealed " + GameUtils.getCardLink(selectedCard) + " from Force Pile. Choose result", new String[]{"Lose 2 Force to place card on bottom of Used Pile", "Opponent takes card into hand"}) {
                                                 @Override
                                                 protected void validDecisionMade(int index, String result) {
                                                     if (index == 0) {

@@ -35,7 +35,7 @@ public class Card501_030 extends AbstractObjective {
         setGameText("Deploy Lothal system, Lothal: Imperial Complex, and Thrawn's Art Collection. " +
                 "For remainder of game, your [Episode I] (or [Episode VII]) cards with ability or a [Presence] icon and your admirals (except Thrawn) are deploy +3. " +
                 "While this side up, Imperial Star Destroyers deploy -1 (-3 if Chimaera). Once per turn, may deploy a battleground system (or a site to Lothal) from Reserve Deck; reshuffle. " +
-                "Flip this card if Thrawn at a system and you have three cards stacked on Thrawn's Art Collection.");
+                "Flip this card if Thrawn at a battleground and there are two or more cards stacked on Thrawn’s Art Collection.");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("A Great Tactician Creates Plans");
     }
@@ -105,9 +105,9 @@ public class Card501_030 extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.Thrawn, Filters.at(Filters.system)))) {
+                && GameConditions.canSpot(game, self, Filters.and(Filters.Thrawn, Filters.at(Filters.battleground)))) {
             PhysicalCard thrawnsArtCollection = Filters.findFirstActive(game, self, Filters.Thrawns_Art_Collection);
-            if (thrawnsArtCollection != null && GameConditions.hasStackedCards(game, thrawnsArtCollection, 3)) {
+            if (thrawnsArtCollection != null && GameConditions.hasStackedCards(game, thrawnsArtCollection, 2)) {
 
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setSingletonTrigger(true);
