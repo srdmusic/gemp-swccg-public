@@ -24,7 +24,6 @@ import com.gempukku.swccgo.logic.timing.GameResultListener;
 import com.gempukku.swccgo.logic.vo.SwccgDeck;
 import com.gempukku.swccgo.service.AdminService;
 import com.gempukku.swccgo.tournament.*;
-import com.gempukku.util.SwccgUuid;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -52,6 +51,8 @@ public class HallServer extends AbstractServer {
     private TournamentPrizeSchemeRegistry _tournamentPrizeSchemeRegistry;
 
     private CollectionType _allCardsCollectionType = CollectionType.ALL_CARDS;
+
+    private int _nextTableId = 1;
 
     private String _motd;
 
@@ -204,8 +205,6 @@ public class HallServer extends AbstractServer {
             tournamentQueue.leaveAllPlayers(_collectionsManager);
     }
 
-
-
     /**
      * @return If table created, otherwise <code>false</code> (if the user already is sitting at a table or playing).
      */
@@ -264,12 +263,7 @@ public class HallServer extends AbstractServer {
             boolean isPrivateGame = isPrivate&&privateGamesAllowed();
 
 
-            /*
-             * Generate a new table ID based on a UUID.
-             * Generating the table ID from a UUID means that the previous method of auto-incrememting the tableId
-             * is removed from the internal memory of the gemp server.
-             */
-            String tableId = new SwccgUuid().generateNewTableId();
+            String tableId = String.valueOf(_nextTableId++);
             AwaitingTable table = new AwaitingTable(format, collectionType, league, leagueSerie, tableDesc, isPrivateGame);
             _awaitingTables.put(tableId, table);
 
@@ -614,7 +608,7 @@ public class HallServer extends AbstractServer {
                 visitor.motd(_motd);
             }
             else {
-                visitor.motd("<a href=\"/gemp-swccg/newgui.html\">Try the new interface Public beta</a>");
+                visitor.motd("Public beta of new interface <a href=\"https://gemp.starwarsccg.org/gemp-swccg/newgui.html\">https://gemp.starwarsccg.org/gemp-swccg/newgui.html</a>");
             }
 
             // Only show playtesting table details if player is a playtester or admin
@@ -1025,7 +1019,7 @@ public class HallServer extends AbstractServer {
             _hallDataAccessLock.writeLock().lock();
             try {
                 if (_operational && !_shutdown) {
-                    HallServer.this.createGame(null, null, new SwccgUuid().generateNewTableId(), participants,
+                    HallServer.this.createGame(null, null, String.valueOf(_nextTableId++), participants,
                             new GameResultListener() {
                                 @Override
                                 public void gameFinished(String winnerPlayerId, String winReason, Map<String, String> loserPlayerIdsWithReasons, String winnerSide, String loserSide) {
