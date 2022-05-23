@@ -356,7 +356,7 @@ public interface Title {
     String Evader = "Evader";
     String Evacuation_Control = "Evacuation Control";
     String E_web_Blaster = "E-web Blaster";
-    String Evil_Is_Everywhere = "Evil Is Everywhere!";
+    String Evil_Is_Everywhere = "Evil Is Everywhere";
     String Ewok_Bow = "Ewok Bow";
     String Ewok_Glider = "Ewok Glider";
     String Ewok_Rescue = "Ewok Rescue";
@@ -1104,6 +1104,7 @@ public interface Title {
     String Under_Attack = "Under Attack";
     String Undercover = "Undercover";
     String Underworld_Contacts = "Underworld Contacts";
+    String Unlimited_Power = "Unlimited Power!";
     String Unkar_Plutt = "Unkar Plutt";
     String Unsalvageable = "Unsalvageable";
     String Until_We_Win_Or_The_Chances_Are_Spent = "Until We Win, Or The Chances Are Spent";
