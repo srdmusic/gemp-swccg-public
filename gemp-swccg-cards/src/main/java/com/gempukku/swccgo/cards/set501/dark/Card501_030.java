@@ -32,7 +32,7 @@ public class Card501_030 extends AbstractObjective {
     public Card501_030() {
         super(Side.DARK, 0, Title.A_Great_Tactician_Creates_Plans);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Lothal system, Lothal: Imperial Complex, and Thrawn's Art Collection. " +
+        setGameText("Deploy Lothal system, Lothal: Imperial Complex, Lothal: Advanced Projects Laboratory, and Thrawn's Art Collection. " +
                 "For remainder of game, your [Episode I] (or [Episode VII]) cards with ability or a [Presence] icon and your admirals (except Thrawn) are deploy +3. " +
                 "While this side up, Imperial Star Destroyers deploy -1 (-3 if Chimaera). Once per turn, may deploy a battleground system (or a site to Lothal) from Reserve Deck; reshuffle. " +
                 "Flip this card if Thrawn at a battleground and there are two or more cards stacked on Thrawn’s Art Collection.");
@@ -55,6 +55,13 @@ public class Card501_030 extends AbstractObjective {
                     @Override
                     public String getChoiceText() {
                         return "Choose Lothal: Imperial Complex to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.title("Lothal: Advanced Projects Laboratory"), true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Lothal: Advanced Projects Laboratory";
                     }
                 });
         action.appendRequiredEffect(
