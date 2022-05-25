@@ -423,7 +423,11 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
             }
         }
         result.append(setIcons.toString());
-        result.append("</span> <ul id=\""+formatCssId+"-format-valid-sets-content\" style=\"display:none;\">");
+        if (validSets.equals(knownSets)) {
+            result.append("</span> <ul id=\""+formatCssId+"-format-valid-sets-content\" style=\"display:none;\">");
+        } else {
+            result.append("</span> <ul id=\""+formatCssId+"-format-valid-sets-content\">");
+        }
         result.append(setIconsLi.toString());
         result.append("</ul></li>"); /* valid sets */
 
@@ -439,7 +443,7 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
         }
 
         if (!swccgFormat.getBannedRarities().isEmpty()) {
-            result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-rarities-not-allowed\" class=\"format-rarities-not-allowed-label\" onclick=\"showFormat(this);\">Rarities not allowed:</span> <ul id=\""+formatCssId+"-format-rarities-not-allowed-content\" style=\"display:none;\">");
+            result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-rarities-not-allowed\" class=\"format-rarities-not-allowed-label\" onclick=\"showFormat(this);\">Rarities not allowed:</span> <ul id=\""+formatCssId+"-format-rarities-not-allowed-content\">");
             for (String bannedRarity : swccgFormat.getBannedRarities()) {
                 Rarity rarity = Rarity.getRarityFromString(bannedRarity);
                 if (rarity != null) {
@@ -456,7 +460,7 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
              * Otherwise, just list all the cards.
              */
             if(swccgFormat.getBannedListLink()==null) {
-                result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-x-listed\" class=\"format-x-listed-label\" onclick=\"showFormat(this);\">Banned cards:</span> <ul id=\""+formatCssId+"-format-x-listed-content\" style=\"display:none;\">");
+                result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-x-listed\" class=\"format-x-listed-label\" onclick=\"showFormat(this);\">Banned cards:</span> <ul id=\""+formatCssId+"-format-x-listed-content\">");
                 /*
                  * blueprintId is a gemp_id, such as 7_299.
                  */
