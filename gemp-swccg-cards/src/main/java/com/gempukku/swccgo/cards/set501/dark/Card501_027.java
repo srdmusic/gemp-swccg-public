@@ -4,6 +4,8 @@ import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -24,7 +26,7 @@ import java.util.List;
  */
 public class Card501_027 extends AbstractSite {
     public Card501_027() {
-        super(Side.DARK, "Lothal: Advanced Projects Laboratory", Title.Lothal);
+        super(Side.DARK, Title.Lothal_Advanced_Projects_Laboratory, Title.Lothal);
         setLocationDarkSideGameText("Once per game, if you occupy, may deploy TIE Defender Project from Reserve Deck; reshuffle.");
         setLocationLightSideGameText("Force drain +1 here.");
         addIcon(Icon.DARK_FORCE, 1);

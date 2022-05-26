@@ -51,17 +51,17 @@ public class Card501_030 extends AbstractObjective {
                     }
                 });
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.Lothal_Capital_City, true, false) {
+                new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Lothal_Imperial_Complex), true, false) {
                     @Override
                     public String getChoiceText() {
                         return "Choose Lothal: Imperial Complex to deploy";
                     }
                 });
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.Lothal_Advanced_Projects_Laboratory, true, false) {
+                new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Lothal_Advanced_Projects_Laboratory), true, false) {
                     @Override
                     public String getChoiceText() {
-                        return "Choose Lothal: Advanced Projects Laboratory";
+                        return "Choose Lothal: Advanced Projects Laboratory to deploy";
                     }
                 });
         action.appendRequiredEffect(

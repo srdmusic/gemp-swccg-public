@@ -642,7 +642,9 @@ public interface Title {
     String Losing_Track = "Losing Track";
     String Lost_In_The_Wilderness = "Lost In The Wilderness";
     String Lothal = "Lothal";
+    String Lothal_Advanced_Projects_Laboratory = "Lothal: Advanced Projects Laboratory";
     String Lothal_Capital_City = "Lothal: Capital City";
+    String Lothal_Imperial_Complex = "Lothal: Imperial Complex";
     String Lothal_Jedi_Temple = "Lothal: Jedi Temple";
     String Lukes_Backpack = "Luke's Backpack";
     String Lukes_T16_Skyhopper = "Luke's T-16 Skyhopper";
@@ -1203,4 +1205,5 @@ public interface Title {
     String Zeb = "Zeb Orrelios";
     String Zev = "Zev Senesca";
     String Zutton = "Zutton";
+
 }

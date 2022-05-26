@@ -7,6 +7,7 @@ import com.gempukku.swccgo.cards.conditions.DuringBattleWithParticipantCondition
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -30,7 +31,7 @@ import java.util.List;
  */
 public class Card501_035 extends AbstractSite {
     public Card501_035() {
-        super(Side.DARK, "Lothal: Imperial Complex", Title.Lothal);
+        super(Side.DARK, Title.Lothal_Imperial_Complex, Title.Lothal);
         setLocationDarkSideGameText("If you control with a leader, once per battle involving an Imperial, may deploy a card as a 'react.'");
         setLocationLightSideGameText("Unless you control Capital City, your non-Rebel characters may not deploy or move to here.");
         addIcon(Icon.DARK_FORCE, 2);
