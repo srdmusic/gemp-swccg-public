@@ -1,6 +1,8 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
+import com.gempukku.swccgo.cards.conditions.ControlsCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
@@ -34,7 +36,8 @@ public class Card501_034 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.relatedLocation(self), Filters.battleground, Filters.controlsWith(playerOnDarkSideOfLocation, self, Filters.Imperial_leader)), 1, playerOnDarkSideOfLocation));
+        Condition youControl = new ControlsCondition(playerOnDarkSideOfLocation, self);
+        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.relatedLocation(self), Filters.battleground, Filters.controlsWith(playerOnDarkSideOfLocation, self, Filters.Imperial_leader)), youControl, 1, playerOnDarkSideOfLocation));
         return modifiers;
     }
 
