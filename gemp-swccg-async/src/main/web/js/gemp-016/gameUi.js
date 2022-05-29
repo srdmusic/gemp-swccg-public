@@ -821,13 +821,11 @@ var GempSwccgGameUI = Class.extend({
 
         this.chatBoxDiv = $("#chatBox");
 
-        //
-        // DPH
-        // 
-        //
-        // DPH
-        // TODO: pull default value from cookie:
-        var gameBackgroundSettingCookie = "darkHive"; //$.cookie("gameBackgroundSetting");
+        /*
+         * Set the game background.
+         * Try to load the game background from the cookie so the background choice persists across games.
+         */
+        var gameBackgroundSettingCookie = $.cookie("gameBackgroundSetting");
         console.log("Previous background set in cookie: "+gameBackgroundSettingCookie);
 
         var darkHiveSelected="";
@@ -837,8 +835,15 @@ var GempSwccgGameUI = Class.extend({
         var darkGraySelected="";
         var GraySelected="";
         var lightGraySelected="";
-        var orangeSelected="";
 
+        /*
+         * If the game background cookie was not previously set, use the default darkHive.
+         * If the cookie WAS set previously, then set that value to "selected" in the select list.
+         * When a new option is selected, the gameBackgroundSettingChange function will 
+         * unload the previously set CSS and load the new CSS by name.
+         * To add a new background theme, set the name in the list below,
+         * then create a CSS file in the css/game directory that matches that name.
+         */
         if ((gameBackgroundSettingCookie == "darkHive") || (gameBackgroundSettingCookie == "") || (gameBackgroundSettingCookie == null)) { darkHiveSelected="selected"; }
         if (gameBackgroundSettingCookie == "darkHyperspeed") { darkHyperspeedSelected="selected"; }
         if (gameBackgroundSettingCookie == "hyperRoute")     { hyperRouteSelected="selected"; }
@@ -846,7 +851,6 @@ var GempSwccgGameUI = Class.extend({
         if (gameBackgroundSettingCookie == "darkGray")       { darkGraySelected="selected"; }
         if (gameBackgroundSettingCookie == "gray")           { GraySelected="selected"; }
         if (gameBackgroundSettingCookie == "lightGray")      { lightGraySelected="selected"; }
-        if (gameBackgroundSettingCookie == "orange")         { orangeSelected="selected"; }
 
         var backgroundSettingsToAppend = "";
         backgroundSettingsToAppend = backgroundSettingsToAppend + "<br /><label for='gameBackgroundSetting'>Background: </label><select name='gameBackgroundSetting' id='gameBackgroundSetting' onchange='gameBackgroundSettingChange();'>";
@@ -854,10 +858,9 @@ var GempSwccgGameUI = Class.extend({
         backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='darkHyperspeed' "+darkHyperspeedSelected+">Dark Hyperspeed</option>";
         backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='hyperRoute' "+hyperRouteSelected+">Hyper Route</option>";
         backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='black' "+blackSelected+">Black</option>";
-        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='#111111' "+darkGraySelected+">Dark Gray</option>";
-        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='#222222' "+GraySelected+">Gray</option>";
-        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='#333333' "+lightGraySelected+">Light Gray</option>";
-        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='#ffa74a' "+orangeSelected+">Orange</option>";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='darkGray' "+darkGraySelected+">Dark Gray</option>";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='Gray' "+GraySelected+">Gray</option>";
+        backgroundSettingsToAppend = backgroundSettingsToAppend + "<option value='lightGray' "+lightGraySelected+">Light Gray</option>";
         backgroundSettingsToAppend = backgroundSettingsToAppend + "</select><br /><br />";
         $("#settingsBox").append(backgroundSettingsToAppend);
         gameBackgroundSettingChange();
@@ -3472,32 +3475,20 @@ var GempSwccgGameUI = Class.extend({
 
 function gameBackgroundSettingChange () {
 
+    var gameBackgroundSettingOriginal = $.cookie("gameBackgroundSetting");
+    if (gameBackgroundSettingOriginal == null) { gameBackgroundSettingOriginal="darkHive"; }
+
     var gameBackgroundSettingSelected = $("select#gameBackgroundSetting option:checked" ).val();
+    console.log("Original background: "+gameBackgroundSettingOriginal);
     console.log("Changing background to: "+gameBackgroundSettingSelected);
     $.cookie("gameBackgroundSetting", "" + gameBackgroundSettingSelected, { expires:365 });
-    /*
-     * background is an image, use that.
-     */
-    $(".ui-dialog").css({"background": "#000000"});
-    $("div#bottomLeftTabs").css({"background": "#000000"});
-    if (gameBackgroundSettingSelected == "darkHive") {
-        $(".ui-widget-content").css({"border": "1px solid #555555"});
-        $(".ui-widget-content").css({"background": "#000000 url(css/dark-hive/images/ui-bg_loop_25_000000_21x21.png) 50% repeat"});
-        $(".ui-dialog").css({"background": "#000000"});
-    } else if (gameBackgroundSettingSelected == "darkHyperspeed") {
-        $(".ui-widget-content").css({"border": "1px solid #555555"});
-        $(".ui-widget-content").css({"background": "none"});
-        $("div#main").css({"background": "#000000 url(https://res.starwarsccg.org/wp/wp-content/uploads/2019/04/bg.jpg) 100% center"});
-    } else if (gameBackgroundSettingSelected == "hyperRoute") {
-        $(".ui-widget-content").css({"border": "1px solid #aaaaaa"});
-        $(".ui-widget-content").css({"background": "#000000 url(https://res.starwarsccg.org/parsecs/hyperroute_background_top.png)"});
-    /*
-     * background is a COLOR
-     */
-    } else {
-        $(".ui-widget-content").css({"border": "1px solid #555555"});
-        $(".ui-widget-content").css({"background": gameBackgroundSettingSelected});
-    }
+
+    $("link[href='css/gemp-001/game/"+gameBackgroundSettingOriginal+".css']").remove();
+    $("<link/>", {
+       rel: "stylesheet",
+       type: "text/css",
+       href: "css/gemp-001/game/"+gameBackgroundSettingSelected+".css"
+    }).appendTo("head");
 
 }
 
