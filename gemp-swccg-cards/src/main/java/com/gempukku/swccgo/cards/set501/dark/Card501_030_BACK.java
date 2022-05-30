@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.CancelBattleEffect;
+import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.TargetingReason;
@@ -18,10 +19,10 @@ import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
-import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
+import com.gempukku.swccgo.logic.effects.ModifyTotalBattleDestinyEffect;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -35,7 +36,7 @@ import java.util.List;
 public class Card501_030_BACK extends AbstractObjective {
     public Card501_030_BACK() {
         super(Side.DARK, 7, Title.The_Result_Is_Often_Resentment);
-        setGameText("While this side up, Rebels are destiny -1. If a battle was just initiated involving an Imperial leader or occupied TIE defender, may peek at cards stacked on Thrawn's Art Collection and reveal one 'artwork' card. If a weapon, cancel battle. Otherwise, if artwork's printed destiny number is: (0-2), opponent's immunity to attrition (if any) is canceled during battle (3-4): Exclude one character (if any) from battle (5+): Add destiny value to your total power. Place 'artwork' in owner's Lost Pile. " +
+        setGameText("While this side up, If a battle was just initiated involving an imperial leader or occupied TIE defender, may peek at cards stacked upon ‘Thrawn’s Art Collection’ and reveal one ‘artwork’ card. If a weapon, cancel battle. Otherwise, If artwork's printed destiny number is: (0-2): Opponent’s immunity to attrition is canceled during battle (3-4): Exclude an opponent's character from battle (opponent's choice). (5+): Add 3 to your total battle destiny. Place ‘artwork’ in the opponent's Lost pile." +
                 "Flip this card (except during battle) if no 'artwork' stacked on Thrawn's Art Collection.");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("The Result Is Often Resentment");
@@ -47,10 +48,9 @@ public class Card501_030_BACK extends AbstractObjective {
         modifiers.add(new DeployCostModifier(self, Filters.or(Filters.and(Filters.your(self), Filters.admiral, Filters.except(Filters.Thrawn)),
                 Filters.and(Filters.your(self), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.hasAbilityOrHasPermanentPilotWithAbility, Icon.PRESENCE))), 3));
 
-        modifiers.add(new DestinyModifier(self, Filters.Rebel, -1));
+        modifiers.add(new DeployCostModifier(self, Filters.and(Filters.Imperial_starship, Filters.Star_Destroyer), new CardMatchesEvaluator(-1, -3, Filters.Chimaera)));
         return modifiers;
     }
-
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         if (TriggerConditions.battleInitiated(game, effectResult)
@@ -86,8 +86,9 @@ public class Card501_030_BACK extends AbstractObjective {
                                     action.appendEffect(
                                             new CancelImmunityToAttritionUntilEndOfBattleEffect(action, Filters.and(Filters.participatingInBattle, Filters.opponents(playerId)), "Cancel "+ game.getOpponent(playerId) + "'s immunity to attrition"));
                                 } else if (printedDestinyValue >= 3 && printedDestinyValue <= 4
-                                        && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.character, Filters.canBeTargetedBy(self, TargetingReason.TO_BE_EXCLUDED_FROM_BATTLE)))) {
-                                    action.appendEffect(new ChooseCardOnTableEffect(action, playerId, "Target a character to exclude from battle", Filters.and(Filters.participatingInBattle, Filters.character, Filters.canBeTargetedBy(self, TargetingReason.TO_BE_EXCLUDED_FROM_BATTLE))) {
+                                        && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.character, Filters.opponents(playerId), Filters.canBeTargetedBy(self, TargetingReason.TO_BE_EXCLUDED_FROM_BATTLE)))) {
+                                    final String opponent = game.getOpponent(playerId);
+                                    action.appendEffect(new ChooseCardOnTableEffect(action, opponent, "Target a character to exclude from battle", Filters.and(Filters.participatingInBattle, Filters.character, Filters.opponents(playerId), Filters.canBeTargetedBy(self, TargetingReason.TO_BE_EXCLUDED_FROM_BATTLE))) {
                                         @Override
                                         protected void cardSelected(PhysicalCard selectedCard) {
                                             action.appendEffect(
@@ -96,7 +97,7 @@ public class Card501_030_BACK extends AbstractObjective {
                                     });
                                 } else if (printedDestinyValue >= 5) {
                                     action.appendEffect(
-                                            new ModifyTotalPowerUntilEndOfBattleEffect(action, printedDestinyValue, playerId, "Adds "+ printedDestinyValue + " to total power"));
+                                            new ModifyTotalBattleDestinyEffect(action, playerId, 3));
                                 } else {
                                     game.getGameState().sendMessage("Result: No effect");
                                 }
