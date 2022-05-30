@@ -70,7 +70,6 @@ body {
 
 .lightForceGeneration {
     display: table-cell;
-    color: #000000;
     text-align: center;
     vertical-align: middle;
     font-size: 200%;
@@ -82,7 +81,6 @@ body {
 
 .darkForceGeneration {
     display: table-cell;
-    color: #000000;
     text-align: center;
     vertical-align: middle;
     font-size: 200%;
@@ -94,7 +92,7 @@ body {
 
 .lightRaceTotal {
      display: table-cell;
-     color: #000000;
+     color: #ffffff;
      text-align: center;
      vertical-align: middle;
      font-size: 200%;
@@ -106,7 +104,7 @@ body {
 
  .darkRaceTotal {
      display: table-cell;
-     color: #000000;
+     color: #ffffff;
      text-align: center;
      vertical-align: middle;
      font-size: 200%;
@@ -118,7 +116,7 @@ body {
 
  .lightPoliticsTotal {
      display: table-cell;
-     color: #000000;
+     color: #ffffff;
      text-align: center;
      vertical-align: middle;
      font-size: 200%;
@@ -130,7 +128,7 @@ body {
 
  .darkPoliticsTotal {
      display: table-cell;
-     color: #000000;
+     color: #ffffff;
      text-align: center;
      vertical-align: middle;
      font-size: 200%;
@@ -319,11 +317,19 @@ body {
 
 .playerStats {
     color: #ffffff;
+    text-shadow: -1px  1px 0 #000000,
+                  1px  1px 0 #000000,
+                  1px -1px 0 #000000,
+                 -1px -1px 0 #000000;
 }
 
 .playerStats .clickable {
     color: #6f6fff;
     cursor: pointer;
+    text-shadow: -1px  1px 0 #000000,
+                  1px  1px 0 #000000,
+                  1px -1px 0 #000000,
+                 -1px -1px 0 #000000;
 }
 
 .phase {
@@ -486,4 +492,43 @@ body {
     text-align: center;
     vertical-align: top;
     font-size: 75%;
+}
+
+div.playerStats .darkSabaccHandsize,    div.playerStats .lightSabaccHandsize,
+div.playerStats .darkPoliticsTotal,     div.playerStats .lightPoliticsTotal,
+div.playerStats .darkRaceTotal,         div.playerStats .lightRaceTotal {
+    color: #ffffff;
+    text-shadow: -1px  1px 0 #000000,
+                  1px  1px 0 #000000,
+                  1px -1px 0 #000000,
+                 -1px -1px 0 #000000;
+}
+
+div.playerStats .darkOutOfPlayPileSize, div.playerStats .lightOutOfPlayPileSize {
+    text-shadow: -1px  1px 0 #000000,
+                  1px  1px 0 #000000,
+                  1px -1px 0 #000000,
+                 -1px -1px 0 #000000;
+}
+
+div.playerStats .darkForceGeneration, div.playerStats .lightForceGeneration {
+    color: #000000
+    text-shadow: -1px  1px 0 #ffffff,
+                  1px  1px 0 #ffffff,
+                  1px -1px 0 #ffffff,
+                 -1px -1px 0 #ffffff;
+}
+
+div#forceGeneration0 {
+    color:darkred;
+    text-shadow: -1px  1px 0 #ffffff, 1px  1px 0 #ffffff, 1px -1px 0 #ffffff, -1px -1px 0 #ffffff;
+}
+
+div#forceGeneration1 {
+    color:darkblue;
+    text-shadow: -1px  1px 0 #ffffff, 1px  1px 0 #ffffff, 1px -1px 0 #ffffff, -1px -1px 0 #ffffff;
+}
+
+div.playerStats {
+   font-family: "Hack", monospace;
 }
