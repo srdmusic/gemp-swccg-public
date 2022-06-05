@@ -25,11 +25,10 @@ import java.util.List;
 
 public class Card501_069 extends AbstractEpicEventDeployable {
     public Card501_069() {
-        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.His_Destiny, Uniqueness.UNIQUE);
+        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "His Destiny", Uniqueness.UNIQUE);
         setGameText("Deploy on table if your V8 objective on table. Padme ignores objective deployment restrictions. X = number of cards stacked on I Feel The Conflict. If Luke is alone: he is immunity to attrition +X, your total battle destiny at other locations is +X, and if you just took a card into hand with He Will Bring Balance, opponent stacks a card from hand (if possible) on I Feel The Conflict. During your move phase, if Luke present with opponent’s character of ability > 4, may initiate a duel. Each player draws destiny. Highest total wins. Winner retrieves 1 Force (cannot be canceled).");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("His Destiny");
-        hideFromDeckBuilder();
     }
 
     @Override
