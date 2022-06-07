@@ -30,9 +30,10 @@ public class Card501_010 extends AbstractObjective {
     public Card501_010() {
         super(Side.DARK, 0, Title.The_Shield_Will_Be_Down_In_Moments);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Hoth, [Set 17] 4th marker, 1st Marker and [Set 18] You May Start Your Landing. " +
-                "For remainder of game, you may not play Sunsdown. " +
-                "While this side up, Force loss from You May Start Your Landing is limited to 1. Once per turn, may deploy a snowtrooper or non-unique AT-AT to Hoth from Reserve Deck; reshuffle. When drawing for Target the Main Generator, X = 6 - the Marker Number from where you’re firing. Flip this card if Main Power Generators 'blown away.'");
+        setGameText("Deploy Hoth system, [Set 17] 4th marker, 1st Marker, and [Set 18] You May Start Your Landing. " +
+                "For remainder of game, you may not play Sunsdown. Trample is a lost interrupt. When playing Target The Main Generator, X is limited to 3 (and is -2 unless firing at or below the 3rd Marker). " +
+                "While this side up, once per turn, may deploy an exterior Hoth site from Reserve Deck; reshuffle." +
+                "Flip this card if Main Power Generators has been 'blown away' and you occupy Hoth system.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
         setTestingText("The Shield Will Be Down in Moments");
     }
@@ -54,7 +55,7 @@ public class Card501_010 extends AbstractObjective {
                         return "Choose [Set 17] 4th marker to deploy";
                     }
                 });
-        
+
         action.appendRequiredEffect(
             new DeployCardFromReserveDeckEffect(action, Filters.First_Marker, true, false) {
                 @Override
@@ -64,7 +65,7 @@ public class Card501_010 extends AbstractObjective {
             });
 
         action.appendRequiredEffect(
-            new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_18, Filters.You_May_Start_Your_Landing), true, false) {
+            new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_19, Filters.You_May_Start_Your_Landing), true, false) {
                 @Override
                 public String getChoiceText() {
                     return "Choose [Set 18] You May Start Your Landing to deploy";
@@ -79,38 +80,31 @@ public class Card501_010 extends AbstractObjective {
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
                         new MayNotDeployModifier(self, Filters.Sunsdown, self.getOwner()), null));
-        
+        action.appendEffect(
+                new AddUntilEndOfGameModifierEffect(action,
+                        new LostInterruptModifier(self, Filters.Trample), null));
+        action.appendEffect(
+                new AddUntilEndOfGameModifierEffect(action,
+                    new ModifyGameTextModifier(self, Filters.Target_The_Main_Generator, ModifyGameTextType.TARGET_THE_MAIN_GENERATOR__MODIFY_X), null));
         return action;
-    }
-
-
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
-
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Target_The_Main_Generator, ModifyGameTextType.TARGET_THE_MAIN_GENERATOR__MODIFY_X));
-        modifiers.add(new LimitForceLossFromCardModifier(self, Filters.You_May_Start_Your_Landing, 1, opponent));
-        modifiers.add(new LimitForceLossFromCardModifier(self, Filters.You_May_Start_Your_Landing, 1, playerId));
-        return modifiers;
     }
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.THE_SHIELD_WILL_BE_DOWN__DOWNLOAD_ATAT_OR_TROOPER;
+        GameTextActionId gameTextActionId = GameTextActionId.THE_SHIELD_WILL_BE_DOWN__DOWNLOAD_HOTH_SITE;
 
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy a snowtrooper or non-unique AT-AT from Reserve Deck");
-            action.setActionMsg("Deploy a snowtrooper or non-unique AT-AT from Reserve Deck");
-            // Update usage limit(s)
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy a Hoth site from Reserve Deck");
+            action.setActionMsg("Deploy a Hoth site from Reserve Deck");
+
             action.appendUsage(
                     new OncePerPhaseEffect(action));
-            // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.snowtrooper, Filters.and(Filters.AT_AT, Filters.non_unique)), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.Hoth_site, Filters.exterior_site, true));
+
             return Collections.singletonList(action);
         }
 
@@ -125,15 +119,16 @@ public class Card501_010 extends AbstractObjective {
 
         // Check condition(s)
         if (GameConditions.canBeFlipped(game, self)
-                && TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Main_Power_Generators, true))) {
+                && TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Main_Power_Generators, true))
+                && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.at(Filters.Hoth_system))) {
 
-            RequiredGameTextTriggerAction action2 = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action2.setText("Flip");
-            action2.setActionMsg(null);
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Flip");
+            action.setActionMsg(null);
             // Perform result(s)
-            action2.appendEffect(
-                    new FlipCardEffect(action2, self));
-            actions.add(action2);
+            action.appendEffect(
+                    new FlipCardEffect(action, self));
+            actions.add(action);
         }
 
         return actions;

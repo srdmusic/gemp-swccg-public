@@ -12,13 +12,18 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.conditions.NotCondition;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
+import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
@@ -37,7 +42,7 @@ import java.util.List;
 public class Card501_010_BACK extends AbstractObjective {
     public Card501_010_BACK() {
         super(Side.DARK, 7, Title.Imperial_Troops_Have_Entered_The_Base);
-        setGameText("While this side up, attrition against opponent is +1 for each Imperial leader in battle. Rebel Leadership and We’re Doomed are Lost Interrupts. Your Force drains are +1 at opponent’s sites (and Echo sites) where your snowtrooper or non-unique AT-AT is present. Unless opponent controls a Hoth location, your Force drain bonuses may not be canceled. Once per move phase, may place your AT-AT at 1st Marker (and your cards on it) in Used Pile to take top card of Lost Pile into hand. " +
+        setGameText("While this side up, attrition against opponent is +1 for each Imperial leader in battle. Rebel Leadership and We’re Doomed are Lost Interrupts. Your Force drains are +1 at opponent’s sites (and Echo sites) where your snowtrooper or non-unique AT-AT is present. Unless opponent controls a Hoth location, your Force drain bonuses may not be canceled. If opponent just lost force to You May Start Your Landing, may take bottom card of Lost pile into hand." +
                 "Place out of play if you do not occupy a Hoth location.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
         setTestingText("Imperial Troops Have Entered the Base!");
@@ -57,64 +62,49 @@ public class Card501_010_BACK extends AbstractObjective {
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        Filter atatAt1stMarkerFilter = Filters.and(Filters.your(self), Filters.AT_AT, Filters.at(Filters.First_Marker));
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, Phase.MOVE)
-                && GameConditions.canSpot(game, self, atatAt1stMarkerFilter)) {
+        final String opponent = game.getOpponent(playerId);
+        GameTextActionId gameTextActionId = GameTextActionId.IMPERIAL_TROOPS_HAVE_ENTERED__TAKE_CARD_FROM_LOST_PILE;
+        if (TriggerConditions.justLostForceFromCard(game, effectResult, opponent, Filters.and(Filters.your(self), Filters.You_May_Start_Your_Landing))
+                && GameConditions.canTakeCardsIntoHandFromLostPile(game, playerId, self, gameTextActionId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
-            action.setText("Place AT-AT in Used Pile");
-            action.setActionMsg("Place your AT-AT at 1st Marker (and your cards on it) in Used Pile to take top card of Lost Pile into hand");
-            
-            // Update usage limit(s)
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Take bottom card of Lost Pile into hand");
+            // Allow response(s)
             action.appendUsage(
                     new OncePerPhaseEffect(action));
-
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose AT-AT", atatAt1stMarkerFilter) {
-                        @Override
-                        protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedAtat) {
-                            action.allowResponses(new RespondableEffect(action) {
-                                @Override
-                                protected void performActionResults(Action targetingAction) {
-
-                                    action.addAnimationGroup(targetedAtat);
-
-                                    // place cards in used pile
-                                    action.appendCost(
-                                            new PlaceCardInUsedPileFromTableEffect(action, targetedAtat, false, Zone.USED_PILE));
-
-                                    // take top card of lost pile into hand
-                                    action.appendEffect(
-                                            new DrawCardIntoHandFromLostPileEffect(action, playerId));
-                                }
-                            });
-                        }
-                    }
+            // Perform result(s)
+            action.appendEffect(
+                new TakeCardIntoHandFromLostPileEffect(action, playerId, Filters.bottomOfLostPile(playerId), false)
             );
-            return Collections.singletonList(action);
+
+            actions.add(action);
         }
-        return null;
+
+        return actions;
     }
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         String playerId = self.getOwner();
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && !GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.occupies(playerId), Filters.Hoth_location))) {
+        String opponent = game.getOpponent(playerId);
 
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Place out of play");
-            action.setActionMsg("Place " + GameUtils.getCardLink(self) + " out of play");
+        // Check condition(s)
+        if (TriggerConditions.isTableChanged(game, effectResult)
+                && GameConditions.canBeFlipped(game, self)
+                && GameConditions.controls(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Hoth_system)) {
+
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setSingletonTrigger(true);
+            action.setText("Flip");
+            action.setActionMsg(null);
             // Perform result(s)
             action.appendEffect(
-                    new PlaceCardOutOfPlayFromTableEffect(action, self));
+                    new FlipCardEffect(action, self));
             return Collections.singletonList(action);
         }
-
-        return actions;
+        return null;
     }
 }
