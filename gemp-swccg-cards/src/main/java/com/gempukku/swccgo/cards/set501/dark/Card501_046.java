@@ -28,7 +28,7 @@ import java.util.List;
 public class Card501_046 extends AbstractUsedOrStartingInterrupt {
     public Card501_046() {
         super(Side.DARK, 5, "More Powerful Than Either Of Us", Uniqueness.UNIQUE);
-        setGameText("USED: If Vader alone (or with Gunray), he is power +1 for remainder of turn. STARTING: Deploy [Episode I] Vader to Insidious Prisoner's site. Deploy Battle Order, Evil Is Everywhere, and Unlimited Power!. When drawing your starting hand, draw only 5 cards. Place Interrupt in Reserve Deck.");
+        setGameText("USED: If Vader alone (or with Gunray), he is power +1 for remainder of turn.  STARTING: Deploy Battle Order, Evil Is Everywhere and Unlimited Power on table and [E1] Vader and Vader’s Lightsaber to Insidious Prisoner’s site. Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("More Powerful Than Either Of Us");
     }
@@ -41,7 +41,7 @@ public class Card501_046 extends AbstractUsedOrStartingInterrupt {
         if (GameConditions.canSpotLocation(game, sameSiteAsInsidiousPrisoner)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
-            action.setText("Deploy Vader and Effects from Reserve Deck");
+            action.setText("Deploy Vader, Vader's Lightsaber, and Effects from Reserve Deck");
             // Allow response(s)
             action.allowResponses(
                     new RespondablePlayCardEffect(action) {
@@ -50,14 +50,13 @@ public class Card501_046 extends AbstractUsedOrStartingInterrupt {
                             // Perform result(s)
                             action.appendEffect(
                                     new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Icon.EPISODE_I, Filters.Vader), sameSiteAsInsidiousPrisoner, true, false));
+                            action.appendEffect(new DeployCardFromReserveDeckEffect(action, Filters.Vaders_Lightsaber,true,false));
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Battle_Order), true, false));
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Evil_Is_Everywhere), true, false));
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Unlimited_Power), true, false));
-                            action.appendEffect(
-                                    new ModifyNumCardsDrawnInStartingHandEffect(action, playerId, 5));
                             action.appendEffect(
                                     new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
 
