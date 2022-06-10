@@ -3442,10 +3442,10 @@ var fixedImages = {
 "301_8":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/red12.gif",
 
 //playtesting
-"501_1":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/savageopress.gif",
+"501_1":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/darthvaderdarklordofthesith.gif",
 "501_2":"https://res.starwarsccg.org/cards/Virtual5-Dark/large/overseeingitpersonally.gif",
 "501_3":"https://res.starwarsccg.org/cards/Virtual9-Dark/large/shadowsoftheempire.gif",
-"501_4":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/imperialcommand.gif",
+"501_4":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/hemdazon.gif",
 "501_5":"https://res.starwarsccg.org/cards/Hoth-Dark/large/idjustassoonkissawookiee.gif",
 "501_6":"https://res.starwarsccg.org/cards/CloudCity-Dark/large/darkdeal.gif",
 "501_7":"https://res.starwarsccg.org/cards/Hoth-Dark/large/lightsaberdeficiency.gif",
@@ -3495,7 +3495,7 @@ var fixedImages = {
 "501_49":"https://res.starwarsccg.org/cards/Endor-Light/large/ihopeshesallright.gif",
 "501_50":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/thunderflare.gif",
 "501_51":"https://res.starwarsccg.org/cards/Virtual0-Light/large/carefulplanning.gif",
-"501_52":"https://res.starwarsccg.org/cards/CloudCity-Light/large/computerinterface.gif",
+"501_52":"https://res.starwarsccg.org/cards/Virtual0-Dark/large/bobafettinslavei.gif",
 "501_53":"https://res.starwarsccg.org/cards/Virtual3-Light/large/rebelleadership.gif",
 "501_54":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/nomatchforasith.gif",
 "501_55":"https://res.starwarsccg.org/cards/Coruscant-Light/large/speakwiththejedicouncil.gif",
@@ -3518,8 +3518,7 @@ var fixedImages = {
 "501_72":"https://res.starwarsccg.org/cards/Virtual0-Light/large/obiwaninradiantvii.gif",
 "501_73":"https://res.starwarsccg.org/cards/Premiere-Light/large/fullthrottle.gif",
 "501_74":"https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/aimhigh.gif",
-"501_75":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/theforceisstronginmyfamily.png",
-"501_75_BACK":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/youtrulybelongherewithus.gif",
+"501_75":"https://res.starwarsccg.org/cards/Dagobah-Light/large/sonofskywalker.gif",
 "501_76":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/theriseofskywalker.png",
 "501_77":"https://res.starwarsccg.org/cards/Dagobah-Light/large/warsnotmakeonegreat.gif",
 "501_78":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
@@ -3528,7 +3527,7 @@ var fixedImages = {
 "501_81":"https://res.starwarsccg.org/cards/CloudCity-Light/large/weathervane.gif",
 "501_82":"https://res.starwarsccg.org/cards/Premiere-Light/large/utinni.gif",
 "501_83":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/scurrier.gif",
-"501_84":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/endoranakinsfuneralpyre.png",
+"501_84":"https://res.starwarsccg.org/cards/ReflectionsII-Dark/large/theemperor.gif",
 "501_85":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/ajanklosstrainingcourse.png",
 "501_86":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/tatooineslavequarters.png",
 "501_87":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/yourthoughtsdwellonyourmother.png",
@@ -3551,7 +3550,7 @@ var fixedImages = {
 "501_102":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/localuprising.gif",
 "501_102_BACK":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/liberation.gif",
 "501_103":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/bb9e.png",
-"501_104": "https://res.starwarsccg.org/cards/Endor-Light/large/insurrection.gif",
+"501_104":"https://res.starwarsccg.org/cards/Virtual1-Light/large/ascensionguns.gif",
 "501_105": "https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/centeroftyranny.gif",
 "501_105_BACK": "https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/aliberatedworld.gif",
 "501_106": "https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/roguesquadrontactics.gif",
@@ -4412,7 +4411,6 @@ var Card = Class.extend({
                    (cardNo == 57) ||
                    (cardNo == 69) ||
                    (cardNo == 70) ||
-                   (cardNo == 84) ||
                    (cardNo == 85) ||
                    (cardNo == 86) ||
                    (cardNo == 108) ||
