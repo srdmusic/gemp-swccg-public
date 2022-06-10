@@ -3930,7 +3930,8 @@ var fixedImages = {
 "201_19ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/tantiveiv_ai.png",
 "204_35ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/thefalconjunkyardgarbagefront_ai.png",
 "204_35ai_BACK":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/thefalconjunkyardgarbageback_ai.png",
-
+"205_17ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/iamyourfather_ai.png",
+"202_5ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/likemyfatherbeforeme_ai.png",
 
 };
 
