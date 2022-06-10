@@ -49,7 +49,7 @@ public class Card501_012 extends AbstractNormalEffect {
 
             int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.marker_site, Filters.controlsWith(playerId, self, Filters.and(Filters.piloted, Filters.AT_AT))));
             if (numForce > 0) {
-                final boolean occupiesHoth = GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(playerId), Filters.at(Filters.Hoth_system)));
+                final boolean occupiesHoth = GameConditions.occupies(game, playerId, Filters.Hoth_system);
                 if (!occupiesHoth) {
                     numForce = 1;
                 }
@@ -85,7 +85,7 @@ public class Card501_012 extends AbstractNormalEffect {
             int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.marker_site, Filters.controlsWith(playerId, self, Filters.and(Filters.piloted, Filters.AT_AT))));
 
             if (numForce > 0) {
-                final boolean occupiesHoth = GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.at(Filters.Hoth_system));
+                final boolean occupiesHoth = GameConditions.occupies(game, playerId, Filters.Hoth_system);
                 if (!occupiesHoth) {
                     numForce = 1;
                 }

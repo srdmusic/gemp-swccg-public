@@ -73,7 +73,7 @@ public class Card501_010_BACK extends AbstractObjective {
                 && GameConditions.isOncePerForceLoss(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Take bottom card of Lost Pile into hand");
             // Allow response(s)
             action.appendUsage(

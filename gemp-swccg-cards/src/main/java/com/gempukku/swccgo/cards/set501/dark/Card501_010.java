@@ -123,7 +123,7 @@ public class Card501_010 extends AbstractObjective {
                     TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Main_Power_Generators, true)) ||
                     GameConditions.isBlownAway(game, Filters.title(Title.Main_Power_Generators, true))
                 )
-                && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(playerId), Filters.at(Filters.Hoth_system)))) {
+                && GameConditions.occupies(game, playerId, Filters.Hoth_system)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Flip");
