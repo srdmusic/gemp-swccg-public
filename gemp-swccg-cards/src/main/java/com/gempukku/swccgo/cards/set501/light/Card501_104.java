@@ -1,107 +1,95 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.effects.CancelWeaponTargetingEffect;
+import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
-import com.gempukku.swccgo.logic.decisions.YesNoDecision;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeDestinyCardIntoHandEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.PassthruEffect;
-import com.gempukku.swccgo.logic.timing.results.DestinyDrawnResult;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
+import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.Effect;
 
-import java.util.Collections;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
  * Set: Set 19
- * Type: Effect
+ * Type: Interrupt
+ * Subtype: Used
  * Title: This Is Our Rebellion
  */
-public class Card501_104 extends AbstractNormalEffect {
+public class Card501_104 extends AbstractUsedInterrupt {
     public Card501_104() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "This Is Our Rebellion", Uniqueness.UNIQUE);
-        setGameText("If Lothal on table, deploy on table. During battle, if you just drew a Rebel for destiny, opponent’s immunity to attrition is canceled (if a Phoenix squadron member, may also take it into hand). Whenever a Rebel wins a battle, opponent loses 1 Force. [Immune to Alter.]");
+        super(Side.LIGHT, 5, "This Is Our Rebellion", Uniqueness.UNIQUE);
+        setGameText("Peek at up to X cards from the top of your Reserve Deck, where X = number of your Lothal sites on table; take one into hand and shuffle your Reserve Deck. OR Cancel an attempt to target your starship with a weapon.");
         addIcons(Icon.VIRTUAL_SET_19);
-        addImmuneToCardTitle(Title.Alter);
         setTestingText("This Is Our Rebellion");
     }
 
     @Override
-    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.Lothal_system);
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
+
+
+        final int yourLothalSiteCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.your(self), Filters.Lothal_site));
+
+        // Check condition(s)
+        if (yourLothalSiteCount > 0
+                && GameConditions.hasReserveDeck(game, playerId)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Peek at top " + yourLothalSiteCount + " card" + GameUtils.s(yourLothalSiteCount)+ " of Reserve Deck");
+            // Allow response(s)
+            action.allowResponses("Peek at top " + yourLothalSiteCount + "card" + GameUtils.s(yourLothalSiteCount)+ " of Reserve Deck and take one into hand",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, yourLothalSiteCount, 1, 1));
+                            action.appendEffect(
+                                    new ShuffleReserveDeckEffect(action));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
+        return actions;
     }
 
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
+    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
 
-        final String playerId = self.getOwner();
-        final String opponent = game.getOpponent(playerId);
-
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
-        if (GameConditions.isDuringBattle(game)
-                && TriggerConditions.isDestinyJustDrawn(game, effectResult)) {
-            DestinyDrawnResult destinyDrawnResult = (DestinyDrawnResult) effectResult;
-            final PhysicalCard cardDrawn = destinyDrawnResult.getCard();
-            if (cardDrawn != null
-                    && Filters.Rebel.accepts(game, cardDrawn)) {
+        if (TriggerConditions.isTargetedByWeapon(game, effect, Filters.and(Filters.your(self), Filters.starship), Filters.character_weapon)) {
 
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setPerformingPlayer(playerId);
-                action.setText("Cancel opponent's immunity to attrition");
-                // Perform result(s)
-
-                action.appendEffect(
-                        new CancelImmunityToAttritionUntilEndOfBattleEffect(action, Filters.opponents(self), "Cancels opponent's immunity to attrition until end of battle"));
-                if (Filters.and(Keyword.PHOENIX_SQUADRON).accepts(game, cardDrawn)
-                        && GameConditions.canTakeDestinyCardIntoHand(game, playerId)) {
-                    action.appendEffect(new PlayoutDecisionEffect(action, playerId, new YesNoDecision("Take " + GameUtils.getCardLink(cardDrawn) + " into hand?") {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Cancel weapon targeting");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
                         @Override
-                        protected void yes() {
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
                             action.appendEffect(
-                                    new TakeDestinyCardIntoHandEffect(action));
-                            action.appendEffect(new SendMessageEffect(action, "okay"));
+                                    new CancelWeaponTargetingEffect(action));
                         }
-
-                        @Override
-                        protected void no() {
-                            action.appendEffect(
-                                    new SendMessageEffect(action, playerId + " chooses not to take just drawn destiny into hand"));
-                        }
-                    }));
-                }
-                actions.add(action);
-            }
-
-        }
-
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-        if (TriggerConditions.wonBattle(game, effectResult, Filters.Rebel)) {
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Opponent loses 1 Force");
-
-            action.appendEffect(
-                    new LoseForceEffect(action, opponent, 1));
+                    }
+            );
             actions.add(action);
         }
-
         return actions;
     }
 }
