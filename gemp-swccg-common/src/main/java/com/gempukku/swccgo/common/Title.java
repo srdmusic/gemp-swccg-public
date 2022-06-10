@@ -356,7 +356,7 @@ public interface Title {
     String Evader = "Evader";
     String Evacuation_Control = "Evacuation Control";
     String E_web_Blaster = "E-web Blaster";
-    String Evil_Is_Everywhere = "Evil Is Everywhere!";
+    String Evil_Is_Everywhere = "Evil Is Everywhere";
     String Ewok_Bow = "Ewok Bow";
     String Ewok_Glider = "Ewok Glider";
     String Ewok_Rescue = "Ewok Rescue";
@@ -459,6 +459,7 @@ public interface Title {
     String Hidden_Recess= "Maz's Castle: Hidden Recess";
     String Hidden_Weapons = "Hidden Weapons";
     String Highspeed_Tactics = "High-speed Tactics";
+    String His_Destiny = "His Destiny";
     String His_Name_Is_Anakin = "His Name Is Anakin";
     String Hit_Racer = "Hit Racer";
     String Hobbie = "Derek 'Hobbie' Klivian";
@@ -642,6 +643,10 @@ public interface Title {
     String Losing_Track = "Losing Track";
     String Lost_In_The_Wilderness = "Lost In The Wilderness";
     String Lothal = "Lothal";
+    String Lothal_Advanced_Projects_Laboratory = "Lothal: Advanced Projects Laboratory";
+    String Lothal_Capital_City = "Lothal: Capital City";
+    String Lothal_Imperial_Complex = "Lothal: Imperial Complex";
+    String Lothal_Jedi_Temple = "Lothal: Jedi Temple";
     String Lukes_Backpack = "Luke's Backpack";
     String Lukes_T16_Skyhopper = "Luke's T-16 Skyhopper";
     String Lukes_X34_Landspeeder = "Luke's X-34 Landspeeder";
@@ -727,6 +732,7 @@ public interface Title {
     String No_Love_For_The_Empire = "No Love For The Empire";
     String No_Money_No_Parts_No_Deal = "No Money, No Parts, No Deal!";
     String No_One_To_Stop_Us_This_Time = "No One To Stop Us This Time";
+    String No_Questions_Asked = "No Questions Asked";
     String Noble_Sacrifice = "Noble Sacrifice";
     String None_Shall_Pass = "None Shall Pass";
     String NOOOOOOOOOOOO = "NOOOOOOOOOOOO!";
@@ -1102,6 +1108,7 @@ public interface Title {
     String Under_Attack = "Under Attack";
     String Undercover = "Undercover";
     String Underworld_Contacts = "Underworld Contacts";
+    String Unlimited_Power = "Unlimited Power!";
     String Unkar_Plutt = "Unkar Plutt";
     String Unsalvageable = "Unsalvageable";
     String Until_We_Win_Or_The_Chances_Are_Spent = "Until We Win, Or The Chances Are Spent";
@@ -1149,6 +1156,7 @@ public interface Title {
     String Were_The_Bait = "We're The Bait";
     String What_Is_Thy_Bidding_My_Master = "What Is Thy Bidding, My Master?";
     String Where_Are_Those_Droidekas = "Where Are Those Droidekas?!";
+    String Wheres_Han = "Where's Han?";
     String Why_Didnt_You_Tell_Me = "Why Didn't You Tell Me?";
     String Wild_Karrde = "Wild Karrde";
     String Williams = "Lieutenant Williams";
@@ -1181,6 +1189,7 @@ public interface Title {
     String Yorr = "Captain Yorr";
     String You_Are_Beaten = "You Are Beaten";
     String You_Can_Either_Profit_By_This = "You Can Either Profit By This...";
+    String You_Cannot_Escape_Your_Destiny = "You Cannot Escape Your Destiny";
     String You_Cannot_Hide_Forever = "You Cannot Hide Forever";
     String You_Do_Have_Your_Moments = "You Do Have Your Moments";
     String You_Know_Who_I_Answer_To = "You Know Who I Answer To";
@@ -1200,4 +1209,5 @@ public interface Title {
     String Zeb = "Zeb Orrelios";
     String Zev = "Zev Senesca";
     String Zutton = "Zutton";
+
 }

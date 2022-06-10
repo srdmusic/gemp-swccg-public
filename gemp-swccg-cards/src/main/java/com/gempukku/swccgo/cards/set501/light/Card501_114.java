@@ -25,7 +25,7 @@ public class Card501_114 extends AbstractSystem {
     public Card501_114() {
         super(Side.LIGHT, Title.Malachor, 6);
         setLocationDarkSideGameText("If you control, Ezra is power -2 and does not apply ability towards drawing battle destiny.");
-        setLocationLightSideGameText("If you control, Vader is power -3.");
+        setLocationLightSideGameText("If you control, Vader is power -2 and does not apply ability towards drawing battle destiny.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 2);
         addIcons(Icon.PLANET, Icon.VIRTUAL_SET_19);
@@ -43,7 +43,8 @@ public class Card501_114 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new PowerModifier(self, Filters.Vader, new ControlsCondition(playerOnLightSideOfLocation, self), -3));
+        modifiers.add(new PowerModifier(self, Filters.Vader, new ControlsCondition(playerOnLightSideOfLocation, self), -2));
+        modifiers.add(new MayNotApplyAbilityForBattleDestinyModifier(self, Filters.Vader, new ControlsCondition(playerOnLightSideOfLocation, self)));
         return modifiers;
     }
 }

@@ -1,23 +1,22 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
-import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.conditions.ControlsWithCondition;
 import com.gempukku.swccgo.cards.conditions.DuringBattleWithParticipantCondition;
-import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
-import com.gempukku.swccgo.logic.effects.choose.TakeOneCardIntoHandFromOffTableEffect;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.modifiers.MayDeployOtherCardsAsReactToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotMoveToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -32,9 +31,9 @@ import java.util.List;
  */
 public class Card501_035 extends AbstractSite {
     public Card501_035() {
-        super(Side.DARK, "Lothal: Imperial Complex", Title.Lothal);
-        setLocationDarkSideGameText("While you control with a leader, once per battle with an Imperial, may deploy a card as a 'react.'");
-        setLocationLightSideGameText("If you just Force drained here, may take a card stacked on Thrawn's Art Collection into hand.");
+        super(Side.DARK, Title.Lothal_Imperial_Complex, Title.Lothal);
+        setLocationDarkSideGameText("If you control with a leader, once per battle involving an Imperial, may deploy a card as a 'react.'");
+        setLocationLightSideGameText("Unless you control Capital City, your non-Rebel characters may not deploy or move to here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 0);
         addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_19);
@@ -49,34 +48,10 @@ public class Card501_035 extends AbstractSite {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextLightSideOptionalAfterTriggers(String playerOnLightSideOfLocation, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        // Check condition(s)
-        if (TriggerConditions.forceDrainCompleted(game, effectResult, playerOnLightSideOfLocation, Filters.here(self))
-            && GameConditions.canSpot(game, self, Filters.and(Filters.Thrawns_Art_Collection, Filters.hasStacked(Filters.any)))) {
-
-            Collection<PhysicalCard> stackedCards = Filters.filterStacked(game, Filters.stackedOn(self, Filters.Thrawns_Art_Collection));
-
-            if (!stackedCards.isEmpty()) {
-                List<PhysicalCard> list = new LinkedList<>(stackedCards);
-                Collections.shuffle(list);
-                PhysicalCard randomlySelected = list.get(0);
-
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
-                action.setText("Take an 'artwork' card into hand");
-                action.setActionMsg("Randomly select an 'artwork' card to take into hand");
-                // Perform result(s)
-                action.appendEffect(
-                        new TakeOneCardIntoHandFromOffTableEffect(action, playerOnLightSideOfLocation, randomlySelected, "Take an 'artwork' card into hand") {
-                            @Override
-                            protected void afterCardTakenIntoHand() {
-
-                            }
-                        });
-                return Collections.singletonList(action);
-            }
-        }
-        return null;
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new MayNotDeployToLocationModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.character, Filters.not(Filters.Rebel)), new UnlessCondition(new ControlsCondition(playerOnLightSideOfLocation, Filters.Lothal_Capital_City)), self));
+        modifiers.add(new MayNotMoveToLocationModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.character, Filters.not(Filters.Rebel)), new UnlessCondition(new ControlsCondition(playerOnLightSideOfLocation, Filters.Lothal_Capital_City)), self));
+        return modifiers;
     }
 }

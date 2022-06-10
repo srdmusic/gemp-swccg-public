@@ -114,6 +114,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private Map<String, Map<Integer, List<PhysicalCard>>> _cardPlayedToLocationThisTurn = new HashMap<String, Map<Integer, List<PhysicalCard>>>();
     private boolean _bluffCardStacked;
     private boolean _deathStarPowerShutDown;
+    private boolean _senateIsInSession;
     private Set<String> _usedCombatCard = new HashSet<String>();
     private Map<Integer, List<PhysicalCard>> _targetedByWeaponsMap = new HashMap<Integer, List<PhysicalCard>>();
     private Map<Integer, List<SwccgBuiltInCardBlueprint>> _targetedByPermanentWeaponsMap = new HashMap<Integer, List<SwccgBuiltInCardBlueprint>>();
@@ -453,6 +454,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         snapshot._bluffCardStacked = _bluffCardStacked;
         snapshot._deathStarPowerShutDown = _deathStarPowerShutDown;
+        snapshot._senateIsInSession = _senateIsInSession;
 
         snapshot._usedCombatCard.addAll(_usedCombatCard);
         for (Integer cardId : _targetedByWeaponsMap.keySet()) {
@@ -3612,6 +3614,25 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     public boolean isDeathStarPowerShutDown() {
         return _deathStarPowerShutDown;
     }
+
+    /**
+     * Records that the Senate is in session.
+     */
+    @Override
+    public void declareSenateIsInSession() {
+        _senateIsInSession = true;
+    }
+
+    /**
+     * Determines if the Senate is in session.
+     *
+     * @return true or false
+     */
+    @Override
+    public boolean isSenateInSession() {
+        return _senateIsInSession;
+    }
+
 
     /**
      * Records that the specified card being played (or being deployed).

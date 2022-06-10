@@ -1,16 +1,16 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
+import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.MovesFreeFromLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationModifier;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -24,8 +24,8 @@ import java.util.List;
 public class Card501_110 extends AbstractSite {
     public Card501_110() {
         super(Side.LIGHT, "Lothal: Tarkintown", Title.Lothal);
-        setLocationDarkSideGameText("Force drain -1 here.");
-        setLocationLightSideGameText("Rebels may move for free to or from here.");
+        setLocationDarkSideGameText("Unless Tarkin here, Force drain -1 here.");
+        setLocationLightSideGameText("Sabine and Zeb draw battle destiny if unable to otherwise here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_19);
@@ -36,7 +36,7 @@ public class Card501_110 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, -1, playerOnDarkSideOfLocation));
+        modifiers.add(new ForceDrainModifier(self, new UnlessCondition(new HereCondition(self, Filters.Tarkin)),-1, playerOnDarkSideOfLocation));
         return modifiers;
     }
 
@@ -44,8 +44,7 @@ public class Card501_110 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MovesFreeToLocationModifier(self, Filters.Rebel, self));
-        modifiers.add(new MovesFreeFromLocationModifier(self, Filters.Rebel, self));
+        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, Filters.and(Filters.here(self), Filters.or(Filters.Sabine, Filters.Zeb)), 1));
         return modifiers;
     }
 }

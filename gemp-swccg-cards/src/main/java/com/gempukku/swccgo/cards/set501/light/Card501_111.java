@@ -24,7 +24,7 @@ public class Card501_111 extends AbstractSite {
     public Card501_111() {
         super(Side.LIGHT, "Lothal: Comm Tower E-272 (Ezra's Roost)", Title.Lothal);
         setLocationDarkSideGameText("");
-        setLocationLightSideGameText("Ezra deploys -2 and is immune to attrition here.");
+        setLocationLightSideGameText("Ezra deploys -1 and is immune to attrition here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_19);
@@ -34,7 +34,7 @@ public class Card501_111 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.Ezra, -2, self));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.Ezra, -1, self));
         modifiers.add(new ImmuneToAttritionModifier(self, Filters.and(Filters.here(self), Filters.Ezra)));
         return modifiers;
     }

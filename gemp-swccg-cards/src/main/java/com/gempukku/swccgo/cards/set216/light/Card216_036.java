@@ -14,6 +14,8 @@ import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.effects.ModifyTotalBattleDestinyEffect;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -80,7 +82,10 @@ public class Card216_036 extends AbstractRebel {
             action.setText("Add " + toAdd + " to total power");
             action.appendCost(new UseForceEffect(action, playerId, 1));
             action.appendEffect(new ModifyTotalPowerUntilEndOfBattleEffect(action, toAdd, playerId, "Add " + toAdd + " to total power"));
-
+            if (GameConditions.hasGameTextModification(game, self, ModifyGameTextType.MASTER_KENOBI__SUBTRACT_FROM_BATTLE_DESTINY_IF_POWER_MODIFIED))
+            {
+                action.appendEffect(new ModifyTotalBattleDestinyEffect(action, game.getOpponent(playerId), -1));
+            }
             actions.add(action);
         }
 

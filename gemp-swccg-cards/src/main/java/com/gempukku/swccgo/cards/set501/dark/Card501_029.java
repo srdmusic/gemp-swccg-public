@@ -32,7 +32,7 @@ public class Card501_029 extends AbstractImperial {
     public Card501_029() {
         super(Side.DARK, 2, 3, 2, 3, 6, "Ensign Eli Vanto", Uniqueness.UNIQUE);
         setPolitics(1);
-        setGameText("Adds 2 to power of any capital starship he pilots (3 if beyond parsec 5). If with Thrawn, your starships here are power and hyperspeed +1. During your control phase, may use 1 Force to take a card with 'artwork' in game text into hand from Reserve Deck; reshuffle.");
+        setGameText("Adds 2 to power of any capital starship he pilots. If with Thrawn, your starships here are power and hyperspeed +1. During your control phase, may use 1 Force to take a card with 'artwork' in game text into hand from Reserve Deck; reshuffle.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
         setTestingText("Ensign Eli Vanto");
     }
@@ -40,7 +40,7 @@ public class Card501_029 extends AbstractImperial {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, new ConditionEvaluator(2, 3, new AtCondition(self, Filters.systemAtOrAboveParsec(6))), Filters.capital_starship));
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2, Filters.capital_starship));
         modifiers.add(new PowerModifier(self, Filters.and(Filters.your(self), Filters.starship, Filters.here(self)), new WithCondition(self, Filters.Thrawn), 1));
         modifiers.add(new HyperspeedModifier(self, Filters.and(Filters.your(self), Filters.starship, Filters.here(self)), new WithCondition(self, Filters.Thrawn), 1));
         return modifiers;

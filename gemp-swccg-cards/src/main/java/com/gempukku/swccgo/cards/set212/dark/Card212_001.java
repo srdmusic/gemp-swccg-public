@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Set: Set 12
  * Type: Effect
- * Title: Evil Is Everywhere!
+ * Title: Evil Is Everywhere
  */
 public class Card212_001 extends AbstractNormalEffect {
     public Card212_001() {

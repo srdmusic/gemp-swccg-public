@@ -1,94 +1,101 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractLostInterrupt;
+import com.gempukku.swccgo.cards.AbstractAlienRebel;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.cards.conditions.DuringBattleAtCondition;
+import com.gempukku.swccgo.cards.conditions.InBattleWithCondition;
+import com.gempukku.swccgo.cards.conditions.PilotingCondition;
+import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
+import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
+import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
-import com.gempukku.swccgo.logic.effects.ModifyTotalPowerUntilEndOfBattleEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
-import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.game.state.WhileInPlayData;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.decisions.YesNoDecision;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
- * Type: Interrupt
- * Subtype: Lost
- * Title: Full Throttle (V)
+ * Set: Set 13
+ * Type: Character
+ * Subtype: Alien/Rebel
+ * Title: Fenn Rau
  */
-public class Card501_066 extends AbstractLostInterrupt {
+public class Card501_066 extends AbstractAlienRebel {
     public Card501_066() {
-        super(Side.LIGHT, 4, "Full Throttle", Uniqueness.UNIQUE);
-        setVirtualSuffix(true);
-        setLore("Rebel pilots use visual scanning to supplement sensors for an edge against Imperial fighter pilots. Natural instincts allow lone Rebels to overcome superior numbers.");
-        setGameText("During battle, target your lone starfighter piloted by a Skywalker. For remainder of turn, starfighter is immune to attrition. If opponent has two or more starships there (or your [Skywalker] Objective on table), add your starfighter's maneuver (if any) to your total power.");
-        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_19);
-        setTestingText("Full Throttle (V)");
-        hideFromDeckBuilder();
+        super(Side.LIGHT, 2, 4, 4, 3, 5, "Fenn Rau", Uniqueness.UNIQUE);
+        setArmor(5);
+        setLore("Mandalorian scout.");
+        setGameText("Adds 3 to power of anything he pilots. While with another Mandalorian in battle, opponent's total power is -3 here. During any draw phase, may take Fenn Rau into hand to activate 2 Force; may also retrieve 1 Force if Fenn Rau won a battle this turn.");
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
+        addKeywords(Keyword.SCOUT);
+        setSpecies(Species.MANDALORIAN);
+        setTestingText("Fenn Rau");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        Filter filter = Filters.and(Filters.starfighter, Filters.alone, Filters.hasPiloting(self, Filters.and(Filters.your(self), Filters.Skywalker)), Filters.participatingInBattle, Filters.canBeTargetedBy(self));
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
+        modifiers.add(new TotalPowerModifier(self, Filters.here(self), new InBattleWithCondition(self, Filters.Mandalorian), -3, game.getOpponent(self.getOwner())));
+        return modifiers;
+    }
 
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (GameConditions.isDuringBattleWithParticipant(game, filter)) {
+        if (GameConditions.isDuringEitherPlayersPhase(game, Phase.DRAW)
+                && GameConditions.canActivateForce(game, playerId)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Target a starfighter");
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose starfighter", filter) {
-                        @Override
-                        protected boolean getUseShortcut() {
-                            return true;
-                        }
-
-                        @Override
-                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                            action.addAnimationGroup(targetedCard);
-                            // Allow response(s)
-                            action.allowResponses("Target " + GameUtils.getCardLink(targetedCard),
-                                    new RespondablePlayCardEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            // Get the targeted card(s) from the action using the targetGroupId.
-                                            // This needs to be done in case the target(s) were changed during the responses.
-                                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
-
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new AddUntilEndOfTurnModifierEffect(action,
-                                                            new ImmuneToAttritionModifier(self, finalTarget),
-                                                            "Makes " + GameUtils.getCardLink(finalTarget) + " immune to attrition"));
-                                            
-                                            if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Objective))
-                                                    || GameConditions.canSpot(game, self, 2, Filters.and(Filters.opponents(self), Filters.starship, Filters.participatingInBattle))) {
-                                                float maneuver = game.getModifiersQuerying().getManeuver(game.getGameState(), finalTarget);
-                                                action.appendEffect(
-                                                        new ModifyTotalPowerUntilEndOfBattleEffect(action, maneuver, playerId, "Adds "+maneuver+" to total power"));
-                                            }
-                                        }
-                                    }
-                            );
-                        }
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+            action.setText("Activate 2 Force");
+            // Choose target(s)`1`
+            action.appendCost(
+                    new ReturnCardToHandFromTableEffect(action, self));
+            action.appendEffect(
+                    new ActivateForceEffect(action, playerId, 2));
+            if (GameConditions.cardHasWhileInPlayDataEquals(self, true)) {
+                action.appendEffect(new PlayoutDecisionEffect(action, playerId, new YesNoDecision("Retrieve 1 Force?") {
+                    @Override
+                    protected void yes() {
+                        action.appendEffect(
+                                new RetrieveForceEffect(action, playerId, 1));
                     }
 
-
-            );
+                    @Override
+                    protected void no() {
+                        action.appendEffect(
+                                new SendMessageEffect(action, playerId+" chooses not to retrieve 1 Force"));
+                    }
+                }));
+            }
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
+
+        // Track if he won a battle this turn
+        if (TriggerConditions.wonBattle(game, effectResult, self)) {
+            self.setWhileInPlayData(new WhileInPlayData(true));
+        }
+
+        // Reset at the end of each turn
+        if (TriggerConditions.isEndOfEachTurn(game, effectResult)) {
+            self.setWhileInPlayData(null);
+        }
+        return actions;
     }
 }
