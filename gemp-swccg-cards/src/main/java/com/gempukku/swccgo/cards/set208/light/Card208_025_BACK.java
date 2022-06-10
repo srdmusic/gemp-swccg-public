@@ -19,6 +19,7 @@ import com.gempukku.swccgo.logic.decisions.YesNoDecision;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.StackCardFromHandEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -62,10 +63,18 @@ public class Card208_025_BACK extends AbstractObjective {
                                 new IntegerAwaitingDecision("Choose number of cards to peek at", 1, maxValueOfX, maxValueOfX) {
                                     @Override
                                     public void decisionMade(final int numToDraw) {
+                                        final String opponent = game.getOpponent(playerId);
+                                        final PhysicalCard iFeelTheConflict = Filters.findFirstActive(game, self, Filters.I_Feel_The_Conflict);
                                         action.appendEffect(
                                                 new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, maxValueOfX, 1, 1));
                                         action.appendEffect(
                                                 new ShuffleReserveDeckEffect(action));
+                                        if (GameConditions.hasGameTextModification(game, self, ModifyGameTextType.HE_WILL_BRING_BALANCE__STACK_IF_CARD_TAKEN_INTO_HAND)
+                                                && GameConditions.hasHand(game, opponent)) {
+                                            action.appendEffect(
+                                                    new StackCardFromHandEffect(action, opponent, iFeelTheConflict)
+                                            );
+                                        }
                                     }
                                 }
                         ));

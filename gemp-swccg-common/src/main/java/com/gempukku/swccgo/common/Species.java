@@ -26,6 +26,7 @@ public enum Species implements Filterable {
     CHEVIN("Chevin", true),
     CLAWDITE("Clawdite", true),
     CORELLIAN("Corellian", true),
+    CROLUTE("Crolute", true),
     DATHOMIRIAN("Dathomirian", true),
     DEFEL("Defel", true),
     DELPHIDIAN("Delphidian", true),

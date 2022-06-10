@@ -459,6 +459,7 @@ public interface Title {
     String Hidden_Recess= "Maz's Castle: Hidden Recess";
     String Hidden_Weapons = "Hidden Weapons";
     String Highspeed_Tactics = "High-speed Tactics";
+    String His_Destiny = "His Destiny";
     String His_Name_Is_Anakin = "His Name Is Anakin";
     String Hit_Racer = "Hit Racer";
     String Hobbie = "Derek 'Hobbie' Klivian";
@@ -731,6 +732,7 @@ public interface Title {
     String No_Love_For_The_Empire = "No Love For The Empire";
     String No_Money_No_Parts_No_Deal = "No Money, No Parts, No Deal!";
     String No_One_To_Stop_Us_This_Time = "No One To Stop Us This Time";
+    String No_Questions_Asked = "No Questions Asked";
     String Noble_Sacrifice = "Noble Sacrifice";
     String None_Shall_Pass = "None Shall Pass";
     String NOOOOOOOOOOOO = "NOOOOOOOOOOOO!";
@@ -1154,6 +1156,7 @@ public interface Title {
     String Were_The_Bait = "We're The Bait";
     String What_Is_Thy_Bidding_My_Master = "What Is Thy Bidding, My Master?";
     String Where_Are_Those_Droidekas = "Where Are Those Droidekas?!";
+    String Wheres_Han = "Where's Han?";
     String Why_Didnt_You_Tell_Me = "Why Didn't You Tell Me?";
     String Wild_Karrde = "Wild Karrde";
     String Williams = "Lieutenant Williams";
@@ -1186,6 +1189,7 @@ public interface Title {
     String Yorr = "Captain Yorr";
     String You_Are_Beaten = "You Are Beaten";
     String You_Can_Either_Profit_By_This = "You Can Either Profit By This...";
+    String You_Cannot_Escape_Your_Destiny = "You Cannot Escape Your Destiny";
     String You_Cannot_Hide_Forever = "You Cannot Hide Forever";
     String You_Do_Have_Your_Moments = "You Do Have Your Moments";
     String You_Know_Who_I_Answer_To = "You Know Who I Answer To";

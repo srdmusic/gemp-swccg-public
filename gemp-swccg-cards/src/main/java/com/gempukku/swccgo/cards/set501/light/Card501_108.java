@@ -23,11 +23,11 @@ import java.util.List;
 public class Card501_108 extends AbstractSite {
     public Card501_108() {
         super(Side.LIGHT, Title.Lothal_Jedi_Temple, Title.Lothal);
-        setLocationDarkSideGameText("Vader may not deploy here and your characters deploy and move to here for +4 Force.");
+        setLocationDarkSideGameText("Vader may not deploy here and your characters deploy and move to here for +3 Force.");
         setLocationLightSideGameText("Ezra and Kanan are deploy -1 and power +1 here. If you occupy, opponent's game text canceled.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 3);
-        addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_19);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_19);
         setTestingText("Lothal: Jedi Temple");
     }
 
@@ -35,8 +35,8 @@ public class Card501_108 extends AbstractSite {
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotDeployToLocationModifier(self, Filters.Vader, self));
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.character), 4, self));
-        modifiers.add(new MoveCostToLocationModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.character), 4, self));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.character), 3, self));
+        modifiers.add(new MoveCostToLocationModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.character), 3, self));
         return modifiers;
     }
 
