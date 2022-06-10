@@ -73,13 +73,16 @@ public class Card501_011 extends AbstractUsedOrStartingInterrupt {
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
         String opponent = game.getOpponent(playerId);
         // Check condition(s)
-        if (TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent)
-                || TriggerConditions.battleInitiated(game, effectResult, opponent)) {
 
-            final Filter atatFilter = Filters.and(Filters.your(playerId), Filters.AT_AT);
-            if (GameConditions.canTarget(game, self, atatFilter)) {
+        // Check condition(s)
+        if (TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent, Filters.and(Filters.canBeTargetedBy(self)))
+            || TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.and(Filters.canBeTargetedBy(self)))) {
+            final Filter atatFilter = Filters.and(Filters.your(playerId), Filters.AT_AT,
+                Filters.canMoveAsReactAsActionFromOtherCard(self, false, GameConditions.additionalForceUseRequiredToPlayInterrupt(game, playerId, self), false));
 
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                if (GameConditions.canTarget(game, self, atatFilter)) {
+
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
                 action.setText("Move your AT-AT as a 'react'");
                 // Choose target(s)
                 action.appendTargeting(
@@ -92,13 +95,11 @@ public class Card501_011 extends AbstractUsedOrStartingInterrupt {
                                         new RespondablePlayCardEffect(action) {
                                             @Override
                                             protected void performActionResults(Action targetingAction) {
-                                                // Get the targeted card(s) from the action using the targetGroupId.
-                                                // This needs to be done in case the target(s) were changed during the responses.
+                                                // Get the final targeted card(s)
                                                 PhysicalCard finalAtat = action.getPrimaryTargetCard(targetGroupId);
-
                                                 // Perform result(s)
                                                 action.appendEffect(
-                                                        new MoveAsReactEffect(action, finalAtat, true));
+                                                        new MoveAsReactEffect(action, finalAtat, false));
                                             }
                                         }
                                 );
@@ -108,6 +109,7 @@ public class Card501_011 extends AbstractUsedOrStartingInterrupt {
                 return Collections.singletonList(action);
             }
         }
+
         return null;
     }
 }

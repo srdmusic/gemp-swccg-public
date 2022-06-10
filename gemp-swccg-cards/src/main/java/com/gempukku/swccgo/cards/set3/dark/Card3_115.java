@@ -71,7 +71,7 @@ public class Card3_115 extends AbstractEpicEventPlayable {
                                                     epicEventState.setAtat(atat);
                                                     epicEventState.setAtatCannon(weapon);
                                                     epicEventState.setAtatPilot(pilot);
-                                                    String actionText = "Have " + (Filters.character.accepts(game, pilot) ? "Permanent pilot" : GameUtils.getCardLink(pilot))
+                                                    String actionText = "Have " + (Filters.character.accepts(game, pilot) ? GameUtils.getCardLink(pilot) : "Permanent pilot")
                                                             + " aboard " + GameUtils.getCardLink(atat) + " fire " + GameUtils.getCardLink(weapon) + " at " + GameUtils.getCardLink(mainPowerGenerators);
                                                     // Allow response(s)
                                                     action.allowResponses(actionText,
@@ -85,7 +85,7 @@ public class Card3_115 extends AbstractEpicEventPlayable {
                                                                             new PassthruEffect(action) {
                                                                                 @Override
                                                                                 protected void doPlayEffect(SwccgGame game) {
-                                                                                    gameState.sendMessage((Filters.character.accepts(game, pilot) ? "Permanent pilot" : GameUtils.getCardLink(pilot))
+                                                                                    gameState.sendMessage((Filters.character.accepts(game, pilot) ? GameUtils.getCardLink(pilot) : "Permanent pilot")
                                                                                             + " aboard " + GameUtils.getCardLink(atat) + " fires " + GameUtils.getCardLink(weapon) + " at " + GameUtils.getCardLink(mainPowerGenerators));
                                                                                     gameState.activatedCard(playerId, weapon);
                                                                                     gameState.cardAffectsCard(playerId, weapon, mainPowerGenerators);
@@ -112,10 +112,14 @@ public class Card3_115 extends AbstractEpicEventPlayable {
                                                                                     // 2) Maximum Firepower!
                                                                                     gameState.sendMessage("Destiny: " + (totalDestiny != null ? GuiUtils.formatAsString(totalDestiny) : "Failed destiny draw"));
 
+                                                                                    float valueForX;
+                                                                                    if (Filters.character.accepts(game, pilot))
+                                                                                        valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, modifiersQuerying.getAbility(gameState, pilot));
+                                                                                    else
+                                                                                        valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, modifiersQuerying.getHighestAbilityPiloting(gameState, pilot, true, false));
+
                                                                                     boolean modifyX = modifiersQuerying.hasGameTextModification(gameState, self, ModifyGameTextType.TARGET_THE_MAIN_GENERATOR__MODIFY_X);
 
-                                                                                    float valueForX = modifiersQuerying.getVariableValue(gameState, self, Variable.X, modifiersQuerying.getHighestAbilityPiloting(gameState, pilot, true, false));
-                                                                                    gameState.sendMessage("Starting value for x: " + valueForX);
                                                                                     if (modifyX) {
                                                                                         PhysicalCard location = modifiersQuerying.getLocationThatCardIsAt(gameState, weapon);
                                                                                         int markerNumber = 0;
@@ -134,7 +138,6 @@ public class Card3_115 extends AbstractEpicEventPlayable {
                                                                                         } else if (Filters.Seventh_Marker.accepts(gameState, modifiersQuerying, location)) {
                                                                                             markerNumber = 7;
                                                                                         }
-                                                                                    gameState.sendMessage("At marker: " + markerNumber);
 
                                                                                         if (markerNumber > 3) {
                                                                                             valueForX = valueForX - 2;
@@ -143,11 +146,9 @@ public class Card3_115 extends AbstractEpicEventPlayable {
                                                                                         if (valueForX > 3) {
                                                                                             valueForX = 3;
                                                                                         }
-                                                                                    gameState.sendMessage("Final value for X: " + valueForX);
                                                                                     }
-
                                                                                     float valueForY = modifiersQuerying.getVariableValue(gameState, self, Variable.Y, Filters.countTopLocationsOnTable(game,
-                                                                                                    Filters.and(Filters.Hoth_site, Filters.notIgnoredDuringEpicEventCalculation, Filters.controls(playerId))));
+                                                                                            Filters.and(Filters.Hoth_site, Filters.notIgnoredDuringEpicEventCalculation, Filters.controls(playerId))));
 
                                                                                     gameState.sendMessage("X: " + GuiUtils.formatAsString(valueForX));
                                                                                     gameState.sendMessage("Y: " + GuiUtils.formatAsString(valueForY));

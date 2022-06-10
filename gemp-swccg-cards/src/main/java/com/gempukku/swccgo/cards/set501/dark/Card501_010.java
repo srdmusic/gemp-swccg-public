@@ -119,8 +119,11 @@ public class Card501_010 extends AbstractObjective {
 
         // Check condition(s)
         if (GameConditions.canBeFlipped(game, self)
-                && TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Main_Power_Generators, true))
-                && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.at(Filters.Hoth_system))) {
+                && (
+                    TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Main_Power_Generators, true)) ||
+                    GameConditions.isBlownAway(game, Filters.title(Title.Main_Power_Generators, true))
+                )
+                && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(playerId), Filters.at(Filters.Hoth_system)))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Flip");
