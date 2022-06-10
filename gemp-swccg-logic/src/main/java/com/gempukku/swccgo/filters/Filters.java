@@ -18127,6 +18127,7 @@ public class Filters {
     public static final Filter Malachor_location = Filters.partOfSystem(Title.Malachor);
     public static final Filter Malachor_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Malachor));
     public static final Filter Malakili = Filters.title(Title.Malakili);
+    public static final Filter Make_Ready_To_Land_Our_Troops = Filters.title(Title.Make_Ready_To_Land_Our_Troops);
     public static final Filter Malastare = Filters.title(Title.Malastare);
     public static final Filter male = Filters.and(CardCategory.CHARACTER, Filters.or(Keyword.MALE, Filters.not(Filters.keyword(Keyword.FEMALE))));
     public static final Filter Mandalore_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Mandalore));

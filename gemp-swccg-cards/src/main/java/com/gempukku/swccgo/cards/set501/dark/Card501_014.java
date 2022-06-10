@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class Card501_014 extends AbstractNormalEffect {
     public Card501_014() {
-        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Make Ready To Land Our Troops", Uniqueness.UNIQUE);
+        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Make_Ready_To_Land_Our_Troops, Uniqueness.UNIQUE);
         setGameText("Deploy on table. Your AT-ATs and snowtroopers are destiny +1. Once per turn, may lose 2 Force to add 1 to your just drawn AT-AT Cannon weapon destiny. If you just deployed an AT-AT, may peek at top two cards of Reserve deck and take one into hand. [Immune to Alter.]");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
         addImmuneToCardTitle(Title.Alter);
@@ -39,7 +39,7 @@ public class Card501_014 extends AbstractNormalEffect {
         modifiers.add(new DestinyModifier(self, Filters.and(Filters.your(self), Filters.or(Filters.AT_AT, Filters.snowtrooper)), 1));
         return modifiers;
     }
-
+    
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
@@ -53,7 +53,7 @@ public class Card501_014 extends AbstractNormalEffect {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Add 1 to weapon destiny");
             action.setActionMsg("Lose 2 Force to add 1 to your just drawn AT-AT Cannon weapon destiny");
-
+            
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
@@ -62,7 +62,7 @@ public class Card501_014 extends AbstractNormalEffect {
             action.appendCost(
                     new LoseForceEffect(action, playerId, 2)
             );
-
+            
             action.appendEffect(
                 new ModifyDestinyEffect(action, 1));
 
@@ -78,7 +78,7 @@ public class Card501_014 extends AbstractNormalEffect {
             action.setText("Peek at top two cards of Reserve Deck and take one into hand");
             action.appendEffect(
                     new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, 2, 1, 1));
-
+            
             actions.add(action);
         }
 
