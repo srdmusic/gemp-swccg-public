@@ -614,7 +614,7 @@ public class HallServer extends AbstractServer {
                 visitor.motd(_motd);
             }
             else {
-                visitor.motd("<a href=\"/gemp-swccg/newgui.html\">Try the new interface Public beta</a>");
+                visitor.motd("Follow the PC on Twitter @swccg to stay informed of Star Wars CCG news and events.");
             }
 
             // Only show playtesting table details if player is a playtester or admin
