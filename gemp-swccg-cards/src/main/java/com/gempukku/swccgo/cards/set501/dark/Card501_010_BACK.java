@@ -3,8 +3,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerForceLossEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
@@ -70,16 +69,13 @@ public class Card501_010_BACK extends AbstractObjective {
         GameTextActionId gameTextActionId = GameTextActionId.IMPERIAL_TROOPS_HAVE_ENTERED__TAKE_CARD_FROM_LOST_PILE;
         if (TriggerConditions.justLostForceFromCard(game, effectResult, opponent, Filters.and(Filters.your(self), Filters.You_May_Start_Your_Landing))
                 && GameConditions.canTakeCardsIntoHandFromLostPile(game, playerId, self, gameTextActionId)
-                && GameConditions.isOncePerForceLoss(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Take bottom card of Lost Pile into hand");
             // Allow response(s)
             action.appendUsage(
-                    new OncePerPhaseEffect(action));
-            action.appendUsage(
-                    new OncePerForceLossEffect(action));
+                    new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
                 new TakeCardIntoHandFromLostPileEffect(action, playerId, Filters.bottomOfLostPile(playerId), false)
