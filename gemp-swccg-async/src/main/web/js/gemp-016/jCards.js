@@ -3496,7 +3496,7 @@ var fixedImages = {
 "501_50":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/thunderflare.gif",
 "501_51":"https://res.starwarsccg.org/cards/Virtual0-Light/large/carefulplanning.gif",
 "501_52":"https://res.starwarsccg.org/cards/Virtual0-Dark/large/bobafettinslavei.gif",
-"501_53":"https://res.starwarsccg.org/cards/Virtual3-Light/large/rebelleadership.gif",
+"501_53":"https://res.starwarsccg.org/cards/Tatooine-Light/large/icantbelievehesgone.gif",
 "501_54":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/nomatchforasith.gif",
 "501_55":"https://res.starwarsccg.org/cards/Coruscant-Light/large/speakwiththejedicouncil.gif",
 "501_56":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/insertionplanning.gif",
