@@ -71,9 +71,11 @@ public class Card501_010_BACK extends AbstractObjective {
                 && GameConditions.canTakeCardsIntoHandFromLostPile(game, playerId, self, gameTextActionId)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Take bottom card of Lost Pile into hand");
             // Allow response(s)
+            action.setSingletonTrigger(true);
+
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
