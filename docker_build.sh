@@ -10,7 +10,7 @@ docker build \
   -f Dockerfile .
 
 ## Build Database Container Image
-docker build --force-rm=true --no-cache \
-  -t gempdb:latest \
-  -f db.Dockerfile .
+#docker build --force-rm=true --no-cache \
+#  -t gempdb:latest \
+#  -f db.Dockerfile .
 

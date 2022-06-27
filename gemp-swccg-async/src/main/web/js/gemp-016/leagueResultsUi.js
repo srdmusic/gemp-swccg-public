@@ -182,38 +182,76 @@ var LeagueResultsUI = Class.extend({
         log(xml);
         var root = xml.documentElement;
         if (root.tagName == 'leagues') {
+            $("#myLeagueResults").html("");
             $("#leagueResults").html("");
+            var myLeaguesCount = 0;
 
             var leagues = root.getElementsByTagName("league");
             for (var i = 0; i < leagues.length; i++) {
                 var league = leagues[i];
+                console.log(league);
                 var leagueName = league.getAttribute("name");
+                var leagueMember = league.getAttribute("member");
                 var leagueType = league.getAttribute("type");
                 var start = league.getAttribute("start");
                 var end = league.getAttribute("end");
                 var leagueExtraInfoCssId = "league-"+i+"-extra-info";
 
-                $("#leagueResults").append("<div id='league-"+i+"-name' class='leagueName'>" + leagueName + "</div>");
+                if (leagueMember == "true") {
+                    myLeaguesCount = myLeaguesCount + 1;
 
-                var duration = '<span class="leagueDurationStart">' + getDateString(start) + '</span> to <span class="leagueDurationStop">' + getDateString(end) + '</span>';
-                $("#leagueResults").append("<div id='league-"+i+"-duration' class='leagueDuration'><b>Duration (GMT+0):</b> " + duration + "</div>");
+                    /* ALL Leagues */
+                    $("#myLeagueResults").append("<div id='my-league-"+i+"-name' class='leagueName'>" + leagueName + "</div>");
 
-                var detailsBut = $('<button id="league-'+i+'-see-details-button" class="leagueSeeDetails">Display league details</button>').button();
-                $("#leagueResults").append(detailsBut);
-                $("#leagueResults").append("<div id='"+leagueExtraInfoCssId+"' class='leagueExtraInfo' style='display:none;'></div>");
-                $("#leagueResults").append("<hr class='leagueHr' />");
+                    var duration = '<span class="leagueDurationStart">' + getDateString(start) + '</span> to <span class="leagueDurationStop">' + getDateString(end) + '</span>';
+                    $("#myLeagueResults").append("<div id='my-league-"+i+"-duration' class='leagueDuration'><b>Duration (GMT+0):</b> " + duration + "</div>");
 
-                detailsBut.click(
-                    (function (type, cssid) {
-                        return function () {
-                            that.communication.getLeague(type, function (xml) {
-                                that.loadedLeague(xml, cssid);
-                                $(cssid).slideToggle();
-                                console.log("Showing details for: "+cssid);
-                            });
-                        };
-                    })(leagueType, "#"+leagueExtraInfoCssId)); // detailsBut.click
+                    var myDetailsBut = $('<button id="my-league-'+i+'-see-details-button" class="leagueSeeDetails">Display league details</button>').button();
+                    $("#myLeagueResults").append(myDetailsBut);
+                    $("#myLeagueResults").append("<div id='my-"+leagueExtraInfoCssId+"' class='leagueExtraInfo' style='display:none;'></div>");
+                    $("#myLeagueResults").append("<hr class='leagueHr' />");
+
+                    myDetailsBut.click(
+                        (function (type, cssid, t) {
+                            return function () {
+                                that.communication.getLeague(type, function (xml) {
+                                    that.loadedLeague(xml, cssid);
+                                    $(cssid).slideToggle();
+                                    console.log("Showing MY details for: "+cssid);
+                                });
+                            };
+                        })(leagueType, "#my-"+leagueExtraInfoCssId, "")); // myDetailsBut.click
+
+                } else {
+
+                    /* ALL Leagues */
+                    $("#leagueResults").append("<div id='league-"+i+"-name' class='leagueName'>" + leagueName + "</div>");
+
+                    var duration = '<span class="leagueDurationStart">' + getDateString(start) + '</span> to <span class="leagueDurationStop">' + getDateString(end) + '</span>';
+                    $("#leagueResults").append("<div id='league-"+i+"-duration' class='leagueDuration'><b>Duration (GMT+0):</b> " + duration + "</div>");
+
+                    var detailsBut = $('<button id="league-'+i+'-see-details-button" class="leagueSeeDetails">Display league details</button>').button();
+                    $("#leagueResults").append(detailsBut);
+                    $("#leagueResults").append("<div id='"+leagueExtraInfoCssId+"' class='leagueExtraInfo' style='display:none;'></div>");
+                    $("#leagueResults").append("<hr class='leagueHr' />");
+
+                    detailsBut.click(
+                        (function (type, cssid) {
+                            return function () {
+                                that.communication.getLeague(type, function (xml) {
+                                    that.loadedLeague(xml, cssid);
+                                    $(cssid).slideToggle();
+                                    console.log("Showing ALL details for: "+cssid);
+                                });
+                            };
+                        })(leagueType, "#"+leagueExtraInfoCssId)); // detailsBut.click
+
+                } // leagueMember
+
             } // for
+            if (myLeaguesCount == 0) {
+                $("#myLeagueResults").html("You are not currently part of any leagues. Join one by expanding the league info in the <strong>All Leagues</strong> section and joining a league.");
+            }
         } // root.tagName leagues
     },
 
