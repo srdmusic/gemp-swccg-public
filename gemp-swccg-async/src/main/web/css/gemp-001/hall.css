@@ -206,3 +206,25 @@ li.social-link {
 .leagueDurationStop {
     color:red;
 }
+
+/* League Results */
+
+#myLeagueResults {
+    border:0.5px #00a3ff solid;
+    padding:5px;
+    margin:5px;
+}
+
+#my-leagues-header {
+    color:#00a3ff;
+}
+
+#leagueResults {
+    border:0.5px #79da71 solid;
+    padding:5px;
+    margin:5px;
+}
+
+#all-leagues-header {
+    color:#79da71;
+}
