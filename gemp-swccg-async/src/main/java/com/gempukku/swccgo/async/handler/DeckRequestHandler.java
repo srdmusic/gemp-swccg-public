@@ -109,6 +109,9 @@ public class DeckRequestHandler extends SwccgoServerRequestHandler implements Ur
         }
     }
 
+    /*
+     * Returns data used on the Deck Validation in the Deck Builder.
+     */
     private void getDeckStats(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
         String participantId = getFormParameterSafely(postDecoder, "participantId");
@@ -130,17 +133,28 @@ public class DeckRequestHandler extends SwccgoServerRequestHandler implements Ur
                 lightCount++;
         }
 
+        String lightDarkCountBonusCss = "";
+        if ((lightCount > 0) && (darkCount > 0)) {
+            lightDarkCountBonusCss = "deckstats-card-count-light-and-dark-set";
+        }
+
         StringBuilder sb = new StringBuilder();
-        sb.append("<b>Light</b>: " + lightCount + ", <b>Dark</b>: " + darkCount + "<br/>");
+        sb.append("<div id=\"deckstats-card-count-container\">");
+        sb.append("<div id=\"deckstats-light-container\" class=\""+lightDarkCountBonusCss+"\"><span id=\"deckstats-light\">Light Cards:</span> <span id=\"deckstats-light-content\">" + lightCount + "</span></div>");
+        sb.append("<div id=\"deckstats-dark-container\"  class=\""+lightDarkCountBonusCss+"\"><span id=\"deckstats-dark\">Dark Cards:</span> <span id=\"deckstats-dark-content\">" + darkCount + "</span></div>");
+        sb.append("</div>");
+        /* Clear out the floats. Render all elements after inline */
+        sb.append("<div style=\"clear:both; margin-bottom:1em;\"></div>");
 
         StringBuilder valid = new StringBuilder();
         StringBuilder invalid = new StringBuilder();
         for (SwccgFormat format : _formatLibrary.getAllFormats().values()) {
+            String formatCssId = format.getName().replace(" ", "-").replace("(", "").replace(")", "").replace("/", "").replace("'", "");
             try {
                 format.validateDeck(deck);
-                valid.append("<b>" + format.getName() + "</b>: <font color='green'>valid</font><br/>");
+                valid.append("<div id=\"deckstats-format-"+formatCssId+"-container\" class=\"deckstats-format-container\"></span><span id=\"deckstats-format-"+formatCssId+"\" class=\"deckstats-format-name\">" + format.getName() + ":</span> <span id=\"deckstats-format-"+formatCssId+"-content\" class=\"deckstats-format-valid\">valid</span></div>");
             } catch (DeckInvalidException exp) {
-                invalid.append("<b>" + format.getName() + "</b>: <font color='red'>" + exp.getMessage() + "</font><br/>");
+                invalid.append("<div id=\"deckstats-format-"+formatCssId+"-container\" class=\"deckstats-format-container\"></span><span id=\"deckstats-format-"+formatCssId+"\" class=\"deckstats-format-name\">" + format.getName() + ":</span> <span id=\"deckstats-format-"+formatCssId+"-content\" class=\"deckstats-format-invalid\">" + exp.getMessage() + "</span></div>");
             }
         }
         sb.append(valid);
