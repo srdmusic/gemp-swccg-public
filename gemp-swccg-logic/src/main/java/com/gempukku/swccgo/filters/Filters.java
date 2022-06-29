@@ -17754,6 +17754,7 @@ public class Filters {
     public static final Filter Fearless_And_Inventive = Filters.title(Title.Fearless_And_Inventive);
     public static final Filter Fel = Filters.title(Title.Fel);
     public static final Filter Feltipern_Trevagg = Filters.title(Title.Feltipern_Trevagg);
+    public static final Filter Fennec_Shand = Filters.persona(Persona.FENNEC_SHAND);
     public static final Filter Fett = Filters.or(Filters.persona(Persona.BOBA_FETT), Filters.persona(Persona.JANGO_FETT));
     public static final Filter female = Filters.and(CardCategory.CHARACTER, Keyword.FEMALE);
     public static final Filter Free_Ride = Filters.title(Title.Free_Ride);
