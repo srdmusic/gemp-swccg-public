@@ -73,7 +73,7 @@ public class Card501_095 extends AbstractObjective {
                 });
         action.appendOptionalEffect(
                 new ChooseCardsFromReserveDeckEffect(action, opponent, 0, 1,
-                        Filters.or(Filters.and(Filters.unique, Filters.hasAbility, Filters.character, Filters.except(Filters.or(Filters.Luke, Filters.Jedi)), Filters.mayBeRevealedAsResistanceAgent))) {
+                        Filters.or(Filters.and(Filters.unique, Filters.hasAbility, Filters.character, Filters.except(Filters.or(Filters.Luke, Filters.Jedi))), Filters.mayBeRevealedAsResistanceAgent)) {
                     @Override
                     protected void cardsSelected(SwccgGame game, Collection<PhysicalCard> selectedCards) {
                         GameState gameState = game.getGameState();
