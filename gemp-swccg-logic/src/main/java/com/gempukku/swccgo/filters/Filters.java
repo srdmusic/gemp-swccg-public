@@ -1324,7 +1324,7 @@ public class Filters {
         public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
             if (physicalCard.getBlueprint().hasSpeciesAttribute() && physicalCard.getBlueprint().getSpecies() != null) {
                 Species species = physicalCard.getBlueprint().getSpecies();
-                return Filters.canSpot(gameState.getGame(), physicalCard, Filters.with(physicalCard, Filters.species(species));
+                return Filters.canSpot(gameState.getGame(), physicalCard, Filters.with(physicalCard, Filters.species(species)));
             }
 
             return false;
