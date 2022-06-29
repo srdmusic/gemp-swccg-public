@@ -1,28 +1,31 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.evaluators.AbilityEvaluator;
+import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
-import com.gempukku.swccgo.logic.modifiers.ImmunityToAttritionChangeModifier;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.game.state.DuelState;
-import com.gempukku.swccgo.cards.evaluators.AbilityEvaluator;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.evaluators.Evaluator;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Set: Set 19
+ * Type: Epic Event
+ * Title: His Destiny
+ */
 public class Card501_069 extends AbstractEpicEventDeployable {
     public Card501_069() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "His Destiny", Uniqueness.UNIQUE);
