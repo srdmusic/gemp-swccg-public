@@ -635,68 +635,46 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that are alone.
+     * Filter that accepts cards that are in the specified zone (top of zone included).
+     *
+     * @param zone the zone
+     * @return Filter
      */
-    public static final Filter alone = new Filter() {
-        @Override
-        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-            return modifiersQuerying.isAlone(gameState, physicalCard);
-        }
-
-        @Override
-        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
-            PhysicalCard card = builtInCardBlueprint.getPhysicalCard(gameState.getGame());
-            List<SwccgBuiltInCardBlueprint> permanentsAboard = modifiersQuerying.getPermanentsAboard(gameState, card);
-
-            if (permanentsAboard.size() > 1) {
-                return false;
+    private static Filter zone(final Zone zone) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                Zone cardZone = physicalCard.getZone();
+                // Top of zone and zone itself are combined for this filter
+                if (GameUtils.getZoneFromZoneTop(cardZone) == GameUtils.getZoneFromZoneTop(zone))
+                    return true;
+                else
+                    return false;
             }
+        };
+    }
 
-            PhysicalCard location = modifiersQuerying.getLocationThatCardIsAt(gameState, card);
-            if (location == null)
-                return false;
-
-            return !Filters.canSpot(gameState.getGame(), null, Filters.and(Filters.not(Filters.sameCardId(card)), Filters.at(location),
-                    Filters.owner(card.getOwner()), Filters.or(Filters.character, Filters.abilityMoreThan(0, true))));
-        }
-    };
     /**
-     * Gets a filter that accepts the location that is the innermost marker site
+     * Filter that accepts cards that are in the specified zone (top of zone included) owned by the specified player.
+     *
+     * @param zone the zone
+     * @param zoneOwner the zone owner
+     * @return Filter
      */
-    public static final Filter innermostMarker = new Filter() {
-        @Override
-        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-            Filter filter = Filters.marker_site;
-            if (!filter.accepts(gameState, modifiersQuerying, physicalCard))
-                return false;
-
-            Collection<PhysicalCard> markerSites = Filters.filterTopLocationsOnTable(gameState.getGame(), filter);
-            if (Filters.Seventh_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
-                return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.or(Filters.First_Marker,
-                        Filters.Second_Marker, Filters.Third_Marker, Filters.Fourth_Marker, Filters.Fifth_Marker, Filters.Sixth_Marker)).isEmpty();
+    public static Filter zoneOfPlayer(final Zone zone, final String zoneOwner) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                Zone cardZone = physicalCard.getZone();
+                // Top of zone and zone itself are combined for this filter
+                if (physicalCard.getZoneOwner().equals(zoneOwner)
+                        && GameUtils.getZoneFromZoneTop(cardZone) == GameUtils.getZoneFromZoneTop(zone))
+                    return true;
+                else
+                    return false;
             }
-            if (Filters.Sixth_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
-                return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.or(Filters.First_Marker,
-                        Filters.Second_Marker, Filters.Third_Marker, Filters.Fourth_Marker, Filters.Fifth_Marker)).isEmpty();
-            }
-            if (Filters.Fifth_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
-                return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.or(Filters.First_Marker,
-                        Filters.Second_Marker, Filters.Third_Marker, Filters.Fourth_Marker)).isEmpty();
-            }
-            if (Filters.Fourth_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
-                return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.or(Filters.First_Marker,
-                        Filters.Second_Marker, Filters.Third_Marker)).isEmpty();
-            }
-            if (Filters.Third_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
-                return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.or(Filters.First_Marker,
-                        Filters.Second_Marker)).isEmpty();
-            }
-            if (Filters.Second_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
-                return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.First_Marker).isEmpty();
-            }
-            return Filters.First_Marker.accepts(gameState, modifiersQuerying, physicalCard);
-        }
-    };
+        };
+    }
 
 
     /**
@@ -2561,7 +2539,17 @@ public class Filters {
         return mayContributeToForceRetrieval;
     }
 
-    public static final Filter Fennec_Shand = Filters.persona(Persona.FENNEC_SHAND);
+    /**
+     * Filter that accepts cards that are not prevented from contributing to Force retrieval.
+     */
+    public static Filter playersCardsAtLocationMayContributeToForceRetrieval(final String playerId) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                return !modifiersQuerying.playersCardsAtLocationMayNotContributeToForceRetrieval(gameState, physicalCard, playerId);
+            }
+        };
+    };
 
     //
     //
@@ -2764,18 +2752,33 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that are in the specified zone (top of zone included).
+     * Filter that accepts cards that are locations controlled for the purposes of Force draining by the specified player.
      *
-     * @param zone the zone
+     * @param playerId the player
      * @return Filter
      */
-    private static Filter zone(final Zone zone) {
+    public static Filter controlsForForceDrain(final String playerId) {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                Zone cardZone = physicalCard.getZone();
-                // Top of zone and zone itself are combined for this filter
-                return GameUtils.getZoneFromZoneTop(cardZone) == GameUtils.getZoneFromZoneTop(zone);
+                if (physicalCard.getZone()!=Zone.LOCATIONS)
+                    return false;
+
+                if (Filters.canSpot(gameState.getGame(), null, SpotOverride.INCLUDE_UNDERCOVER,
+                        Filters.and(Filters.opponents(playerId), Filters.undercover_spy, Filters.at(physicalCard))))
+                    return false;
+
+                if (modifiersQuerying.controlsLocation(gameState, physicalCard, playerId))
+                    return true;
+
+                if (modifiersQuerying.occupiesLocation(gameState, physicalCard, gameState.getOpponent(playerId)))
+                    return false;
+
+                if (Filters.canSpot(gameState.getGame(), null,
+                        Filters.and(Filters.owner(playerId), Filters.mayForceDrain, Filters.at(physicalCard))))
+                    return true;
+
+                return false;
             }
         };
     }
@@ -2971,32 +2974,59 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that are in the specified zone (top of zone included) owned by the specified player.
+     * Filter that accepts cards that are locations that a card accepted by the specified filter is "at", or the locations
+     * themselves.
      *
-     * @param zone the zone
-     * @param zoneOwner the zone owner
+     * @param source the card that is performing this query
+     * @param spotOverrides overrides for which inactive cards are visible to the query
+     * @param filters the filters
      * @return Filter
      */
-    public static Filter zoneOfPlayer(final Zone zone, final String zoneOwner) {
+    public static Filter sameLocationAs(PhysicalCard source, final Map<InactiveReason, Boolean> spotOverrides, final Filter filters) {
+        final Integer permSourceCardId = source != null ? source.getPermanentCardId() : null;
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                Zone cardZone = physicalCard.getZone();
-                // Top of zone and zone itself are combined for this filter
-                return physicalCard.getZoneOwner().equals(zoneOwner)
-                        && GameUtils.getZoneFromZoneTop(cardZone) == GameUtils.getZoneFromZoneTop(zone);
+                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
+                    return false;
+
+                PhysicalCard source = gameState.findCardByPermanentId(permSourceCardId);
+                Filter filterToUse = Filters.or(filters, Filters.hasPermanentAboard(filters), Filters.hasPermanentWeapon(filters));
+                Collection<PhysicalCard> locations = modifiersQuerying.getLocationsHere(gameState, filterActive(gameState.getGame(), source, spotOverrides, filterToUse));
+
+                if (locations.contains(physicalCard))
+                    return true;
+
+                return false;
             }
         };
     }
 
     /**
-     * Filter that accepts cards that are not prevented from contributing to Force retrieval.
+     * Filter that accepts cards that are locations that a card accepted by the specified filter is "at", or the locations
+     * themselves.
+     *
+     * @param source the card that is performing this query
+     * @param targetingReason the reason the source card is targeting
+     * @param filters the filters
+     * @return Filter
      */
-    public static Filter playersCardsAtLocationMayContributeToForceRetrieval(final String playerId) {
+    public static Filter sameLocationAs(PhysicalCard source, final TargetingReason targetingReason, final Filter filters) {
+        final Integer permSourceCardId = source != null ? source.getPermanentCardId() : null;
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                return !modifiersQuerying.playersCardsAtLocationMayNotContributeToForceRetrieval(gameState, physicalCard, playerId);
+                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
+                    return false;
+
+                PhysicalCard source = gameState.findCardByPermanentId(permSourceCardId);
+                Filter filterToUse = Filters.or(filters, Filters.hasPermanentAboard(filters), Filters.hasPermanentWeapon(filters));
+                Collection<PhysicalCard> locations = modifiersQuerying.getLocationsHere(gameState, filterActive(gameState.getGame(), source, null, targetingReason, filterToUse));
+
+                if (locations.contains(physicalCard))
+                    return true;
+
+                return false;
             }
         };
     }
@@ -3237,30 +3267,35 @@ public class Filters {
     //
 
     /**
-     * Filter that accepts cards that are locations controlled for the purposes of Force draining by the specified player.
+     * Filter that accepts cards that are either related locations to the specified card, or related locations to the
+     * location the specified card is "at".
      *
-     * @param playerId the player
+     * @param card a card
      * @return Filter
      */
-    public static Filter controlsForForceDrain(final String playerId) {
+    public static Filter relatedLocation(PhysicalCard card) {
+        final Integer permCardId = card.getPermanentCardId();
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                if (physicalCard.getZone() != Zone.LOCATIONS)
+                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
                     return false;
 
-                if (Filters.canSpot(gameState.getGame(), null, SpotOverride.INCLUDE_UNDERCOVER,
-                        Filters.and(Filters.opponents(playerId), Filters.undercover_spy, Filters.at(physicalCard))))
-                    return false;
+                PhysicalCard card = gameState.findCardByPermanentId(permCardId);
+                boolean isStarshipOrVehicle = Filters.or(Filters.starship, Filters.vehicle).accepts(gameState, modifiersQuerying, card);
+                PhysicalCard location = modifiersQuerying.getLocationHere(gameState, card);
 
-                if (modifiersQuerying.controlsLocation(gameState, physicalCard, playerId))
+                // If input card is a starship or vehicle, check if the current card is a starship or vehicle site of
+                // that starship or vehicle.
+                if (isStarshipOrVehicle
+                        && modifiersQuerying.isRelatedStarshipOrVehicleSite(gameState, card, physicalCard))
                     return true;
 
-                if (modifiersQuerying.occupiesLocation(gameState, physicalCard, gameState.getOpponent(playerId)))
-                    return false;
+                if (location != null
+                        && modifiersQuerying.isRelatedLocations(gameState, location, physicalCard))
+                    return true;
 
-                return Filters.canSpot(gameState.getGame(), null,
-                        Filters.and(Filters.owner(playerId), Filters.mayForceDrain, Filters.at(physicalCard)));
+                return false;
             }
         };
     }
@@ -4249,15 +4284,14 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that are locations that a card accepted by the specified filter is "at", or the locations
-     * themselves.
+     * Filter that accepts cards that are locations that have a card accepted by the specified filter "present".
      *
      * @param source the card that is performing this query
      * @param spotOverrides overrides for which inactive cards are visible to the query
      * @param filters the filters
      * @return Filter
      */
-    public static Filter sameLocationAs(PhysicalCard source, final Map<InactiveReason, Boolean> spotOverrides, final Filter filters) {
+    public static Filter wherePresent(PhysicalCard source, final Map<InactiveReason, Boolean> spotOverrides, final Filter filters) {
         final Integer permSourceCardId = source != null ? source.getPermanentCardId() : null;
         return new Filter() {
             @Override
@@ -4266,36 +4300,53 @@ public class Filters {
                     return false;
 
                 PhysicalCard source = gameState.findCardByPermanentId(permSourceCardId);
-                Filter filterToUse = Filters.or(filters, Filters.hasPermanentAboard(filters), Filters.hasPermanentWeapon(filters));
-                Collection<PhysicalCard> locations = modifiersQuerying.getLocationsHere(gameState, filterActive(gameState.getGame(), source, spotOverrides, filterToUse));
+                Filter filterToUse = Filters.or(filters, Filters.hasPermanentWeapon(filters));
+                Collection<PhysicalCard> locations = modifiersQuerying.getLocationsThatCardsArePresentAt(gameState, Filters.filterActive(gameState.getGame(), source, spotOverrides, filterToUse));
 
-                return locations.contains(physicalCard);
+                if (locations.contains(physicalCard))
+                    return true;
+
+                return false;
+            }
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
+                PhysicalCard source = gameState.findCardByPermanentId(permSourceCardId);
+                return builtInCardBlueprint.isWeapon()
+                        && wherePresent(source, spotOverrides, filters).accepts(gameState, modifiersQuerying, builtInCardBlueprint.getPhysicalCard(gameState.getGame()));
             }
         };
     }
 
     /**
-     * Filter that accepts cards that are locations that a card accepted by the specified filter is "at", or the locations
-     * themselves.
+     * Filter that accepts cards that are locations that have a card accepted by the specified filter "present".
      *
      * @param source the card that is performing this query
      * @param targetingReason the reason the source card is targeting
      * @param filters the filters
      * @return Filter
      */
-    public static Filter sameLocationAs(PhysicalCard source, final TargetingReason targetingReason, final Filter filters) {
+    public static Filter wherePresent(PhysicalCard source, final TargetingReason targetingReason, final Filter filters) {
         final Integer permSourceCardId = source != null ? source.getPermanentCardId() : null;
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard source = gameState.findCardByPermanentId(permSourceCardId);
                 if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
                     return false;
 
-                PhysicalCard source = gameState.findCardByPermanentId(permSourceCardId);
-                Filter filterToUse = Filters.or(filters, Filters.hasPermanentAboard(filters), Filters.hasPermanentWeapon(filters));
-                Collection<PhysicalCard> locations = modifiersQuerying.getLocationsHere(gameState, filterActive(gameState.getGame(), source, null, targetingReason, filterToUse));
+                Filter filterToUse = Filters.or(filters, Filters.hasPermanentWeapon(filters));
+                Collection<PhysicalCard> locations = modifiersQuerying.getLocationsThatCardsArePresentAt(gameState, Filters.filterActive(gameState.getGame(), source, null, targetingReason, filterToUse));
 
-                return locations.contains(physicalCard);
+                if (locations.contains(physicalCard))
+                    return true;
+
+                return false;
+            }
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
+                PhysicalCard source = gameState.findCardByPermanentId(permSourceCardId);
+                return builtInCardBlueprint.isWeapon()
+                        && wherePresent(source, targetingReason, filters).accepts(gameState, modifiersQuerying, builtInCardBlueprint.getPhysicalCard(gameState.getGame()));
             }
         };
     }
@@ -5746,32 +5797,29 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that are either related locations to the specified card, or related locations to the
-     * location the specified card is "at".
+     * Filter that accepts cards that are aboard the specified card as a passenger.
      *
-     * @param card a card
+     * @param card a starship or vehicle
      * @return Filter
      */
-    public static Filter relatedLocation(PhysicalCard card) {
+    public static Filter aboardAsPassenger(PhysicalCard card) {
         final Integer permCardId = card.getPermanentCardId();
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
-                    return false;
-
                 PhysicalCard card = gameState.findCardByPermanentId(permCardId);
-                boolean isStarshipOrVehicle = Filters.or(Filters.starship, Filters.vehicle).accepts(gameState, modifiersQuerying, card);
-                PhysicalCard location = modifiersQuerying.getLocationHere(gameState, card);
+                Collection<PhysicalCard> passengers = gameState.getPassengerCardsAboard(card);
 
-                // If input card is a starship or vehicle, check if the current card is a starship or vehicle site of
-                // that starship or vehicle.
-                if (isStarshipOrVehicle
-                        && modifiersQuerying.isRelatedStarshipOrVehicleSite(gameState, card, physicalCard))
+                if (passengers.contains(physicalCard))
                     return true;
 
-                return location != null
-                        && modifiersQuerying.isRelatedLocations(gameState, location, physicalCard);
+                return false;
+            }
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
+                PhysicalCard card = gameState.findCardByPermanentId(permCardId);
+                return builtInCardBlueprint.isAstromech()
+                        && Filters.sameCardId(card).accepts(gameState, modifiersQuerying, builtInCardBlueprint.getPhysicalCard(gameState.getGame()));
             }
         };
     }
@@ -5804,33 +5852,19 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that are locations that have a card accepted by the specified filter "present".
+     * Filter that accepts cards that may not board starfighters
      *
-     * @param source the card that is performing this query
-     * @param spotOverrides overrides for which inactive cards are visible to the query
-     * @param filters the filters
+     * @param starshipOrVehicleToBeBoarded Filter for the cards that are potentially boarding a starship or vehicle
      * @return Filter
      */
-    public static Filter wherePresent(PhysicalCard source, final Map<InactiveReason, Boolean> spotOverrides, final Filter filters) {
-        final Integer permSourceCardId = source != null ? source.getPermanentCardId() : null;
+    public static Filter mayNotBoard(final PhysicalCard starshipOrVehicleToBeBoarded) {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
-                    return false;
-
-                PhysicalCard source = gameState.findCardByPermanentId(permSourceCardId);
-                Filter filterToUse = Filters.or(filters, Filters.hasPermanentWeapon(filters));
-                Collection<PhysicalCard> locations = modifiersQuerying.getLocationsThatCardsArePresentAt(gameState, Filters.filterActive(gameState.getGame(), source, spotOverrides, filterToUse));
-
-                return locations.contains(physicalCard);
-            }
-
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
-                PhysicalCard source = gameState.findCardByPermanentId(permSourceCardId);
-                return builtInCardBlueprint.isWeapon()
-                        && wherePresent(source, spotOverrides, filters).accepts(gameState, modifiersQuerying, builtInCardBlueprint.getPhysicalCard(gameState.getGame()));
+                if (modifiersQuerying.isProhibitedFromTarget(gameState, physicalCard, starshipOrVehicleToBeBoarded)) {
+                    return true;
+                }
+                return false;
             }
         };
     }
@@ -6138,97 +6172,6 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that are locations that have a card accepted by the specified filter "present".
-     *
-     * @param source          the card that is performing this query
-     * @param targetingReason the reason the source card is targeting
-     * @param filters         the filters
-     * @return Filter
-     */
-    public static Filter wherePresent(PhysicalCard source, final TargetingReason targetingReason, final Filter filters) {
-        final Integer permSourceCardId = source != null ? source.getPermanentCardId() : null;
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard source = gameState.findCardByPermanentId(permSourceCardId);
-                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
-                    return false;
-
-                Filter filterToUse = Filters.or(filters, Filters.hasPermanentWeapon(filters));
-                Collection<PhysicalCard> locations = modifiersQuerying.getLocationsThatCardsArePresentAt(gameState, Filters.filterActive(gameState.getGame(), source, null, targetingReason, filterToUse));
-
-                return locations.contains(physicalCard);
-            }
-
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
-                PhysicalCard source = gameState.findCardByPermanentId(permSourceCardId);
-                return builtInCardBlueprint.isWeapon()
-                        && wherePresent(source, targetingReason, filters).accepts(gameState, modifiersQuerying, builtInCardBlueprint.getPhysicalCard(gameState.getGame()));
-            }
-        };
-    }
-
-    /**
-     * Filter that accepts cards that can move to a location using hyperspeed.
-     *
-     * @param playerId     the player to move the card
-     * @param asReact      true if the movement is for a 'react' movement, otherwise false
-     * @param forFree      true if the movement is to be free, otherwise false
-     * @param changeInCost change in amount of Force (can be positive or negative) required to perform the movement
-     * @return Filter
-     */
-    public static Filter canMoveUsingHyperspeed(final String playerId, final boolean asReact, final boolean forFree, final float changeInCost) {
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                return Filters.canSpotFromTopLocationsOnTable(gameState.getGame(), Filters.canMoveToUsingHyperspeed(playerId, physicalCard, asReact, forFree, changeInCost));
-            }
-        };
-    }
-
-    /**
-     * Filter that accepts cards that are aboard the specified card as a passenger.
-     *
-     * @param card a starship or vehicle
-     * @return Filter
-     */
-    public static Filter aboardAsPassenger(PhysicalCard card) {
-        final Integer permCardId = card.getPermanentCardId();
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard card = gameState.findCardByPermanentId(permCardId);
-                Collection<PhysicalCard> passengers = gameState.getPassengerCardsAboard(card);
-
-                return passengers.contains(physicalCard);
-            }
-
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
-                PhysicalCard card = gameState.findCardByPermanentId(permCardId);
-                return builtInCardBlueprint.isAstromech()
-                        && Filters.sameCardId(card).accepts(gameState, modifiersQuerying, builtInCardBlueprint.getPhysicalCard(gameState.getGame()));
-            }
-        };
-    }
-
-    /**
-     * Filter that accepts cards that may not board starfighters
-     *
-     * @param starshipOrVehicleToBeBoarded Filter for the cards that are potentially boarding a starship or vehicle
-     * @return Filter
-     */
-    public static Filter mayNotBoard(final PhysicalCard starshipOrVehicleToBeBoarded) {
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                return modifiersQuerying.isProhibitedFromTarget(gameState, physicalCard, starshipOrVehicleToBeBoarded);
-            }
-        };
-    }
-
-    /**
      * Filter that accepts locations that the specified card can move to using landspeed.
      *
      * @param playerId the player to move the card
@@ -6295,8 +6238,10 @@ public class Filters {
 
                 // 5) Check that there is enough Force available to use for this move
                 if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, playerId)
-                            < modifiersQuerying.getMoveUsingLandspeedCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost));
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, playerId)
+                            < modifiersQuerying.getMoveUsingLandspeedCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost)) {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -6305,19 +6250,19 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that can attempt to 'escape' Death Star II while it is being 'blown away'.
+     * Filter that accepts cards that can move to a location using hyperspeed.
      *
      * @param playerId the player to move the card
+     * @param asReact true if the movement is for a 'react' movement, otherwise false
+     * @param forFree true if the movement is to be free, otherwise false
+     * @param changeInCost change in amount of Force (can be positive or negative) required to perform the movement
      * @return Filter
      */
-    public static Filter movableToEscapeDeathStarII(final String playerId) {
+    public static Filter canMoveUsingHyperspeed(final String playerId, final boolean asReact, final boolean forFree, final float changeInCost) {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                if (Filters.and(Filters.owner(playerId), Filters.starfighter, Filters.at(Filters.Death_Star_II_sector)).accepts(gameState, modifiersQuerying, physicalCard)) {
-                    return physicalCard.getBlueprint().getMoveUsingEscapeFromDeathStarIIMovementAction(playerId, gameState.getGame(), physicalCard) != null;
-                }
-                return false;
+                return Filters.canSpotFromTopLocationsOnTable(gameState.getGame(), Filters.canMoveToUsingHyperspeed(playerId, physicalCard, asReact, forFree, changeInCost));
             }
         };
     }
@@ -6397,8 +6342,10 @@ public class Filters {
 
                 // 7) Check that there is enough Force available to use for this move
                 if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, playerId)
-                            < modifiersQuerying.getMoveUsingHyperspeedCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost));
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, playerId)
+                            < modifiersQuerying.getMoveUsingHyperspeedCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost)) {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -6462,8 +6409,10 @@ public class Filters {
 
                 // 5) Check that there is enough Force available to use for this move
                 if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, playerId)
-                            < modifiersQuerying.getMoveWithoutUsingHyperspeedCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost));
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, playerId)
+                            < modifiersQuerying.getMoveWithoutUsingHyperspeedCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost)) {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -6574,8 +6523,10 @@ public class Filters {
 
                 // 8) Check that there is enough Force available to use for this move
                 if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, playerId)
-                            < modifiersQuerying.getMoveUsingSectorMovementCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost));
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, playerId)
+                            < modifiersQuerying.getMoveUsingSectorMovementCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost)) {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -6584,16 +6535,19 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that can perform a "move at start of Attack Run" action.
+     * Filter that accepts cards that can attempt to 'escape' Death Star II while it is being 'blown away'.
      *
      * @param playerId the player to move the card
      * @return Filter
      */
-    public static Filter canMoveAtStartOfAttackRun(final String playerId) {
+    public static Filter movableToEscapeDeathStarII(final String playerId) {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                return physicalCard.getBlueprint().getMoveAtStartOfAttackRunAction(playerId, gameState.getGame(), physicalCard) != null;
+                if (Filters.and(Filters.owner(playerId), Filters.starfighter, Filters.at(Filters.Death_Star_II_sector)).accepts(gameState, modifiersQuerying, physicalCard)) {
+                    return physicalCard.getBlueprint().getMoveUsingEscapeFromDeathStarIIMovementAction(playerId, gameState.getGame(), physicalCard) != null;
+                }
+                return false;
             }
         };
     }
@@ -6685,26 +6639,13 @@ public class Filters {
 
                 // 4) Check that there is enough Force available to use for this move
                 if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, playerId)
-                            < modifiersQuerying.getLandingCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost));
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, playerId)
+                            < modifiersQuerying.getLandingCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost)) {
+                        return false;
+                    }
                 }
 
                 return true;
-            }
-        };
-    }
-
-    /**
-     * Filter that accepts cards that can perform a "move at end of Attack Run" action.
-     *
-     * @param playerId the player to move the card
-     * @return Filter
-     */
-    public static Filter canMoveAtEndOfAttackRun(final String playerId) {
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                return physicalCard.getBlueprint().getMoveAtEndOfAttackRunAction(playerId, gameState.getGame(), physicalCard) != null;
             }
         };
     }
@@ -6794,8 +6735,10 @@ public class Filters {
 
                 // 4) Check that there is enough Force available to use for this move
                 if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, playerId)
-                            < modifiersQuerying.getTakeOffCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost));
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, playerId)
+                            < modifiersQuerying.getTakeOffCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost)) {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -6840,8 +6783,10 @@ public class Filters {
 
                 // 5) Check that there is enough Force available to use for this move
                 if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, playerId)
-                            < modifiersQuerying.getMoveToStartBombingRunCost(gameState, cardToMove, currentAtLocation, physicalCard, changeInCost));
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, playerId)
+                            < modifiersQuerying.getMoveToStartBombingRunCost(gameState, cardToMove, currentAtLocation, physicalCard, changeInCost)) {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -6850,20 +6795,16 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts starship sites that that the player can shuttle, transfer, land, and take off at instead of
-     * the related starship.
+     * Filter that accepts cards that can perform a "move at start of Attack Run" action.
      *
-     * @param playerId the player
+     * @param playerId the player to move the card
      * @return Filter
      */
-    public static Filter starshipSiteToShuttleTransferLandAndTakeOffAtForFreeInsteadOfRelatedStarship(final String playerId) {
+    public static Filter canMoveAtStartOfAttackRun(final String playerId) {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                if (!physicalCard.getBlueprint().hasIcon(Icon.STARSHIP_SITE)) {
-                    return false;
-                }
-                return modifiersQuerying.mayShuttleTransferLandAndTakeOffForFreeAtInsteadOfRelatedStarship(gameState, playerId, physicalCard);
+                return physicalCard.getBlueprint().getMoveAtStartOfAttackRunAction(playerId, gameState.getGame(), physicalCard) != null;
             }
         };
     }
@@ -6899,7 +6840,252 @@ public class Filters {
                 }
 
                 // 4) Check that it is piloted
-                return modifiersQuerying.isPiloted(gameState, cardToMove, false);
+                if (!modifiersQuerying.isPiloted(gameState, cardToMove, false)) {
+                    return false;
+                }
+
+                return true;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts cards that can perform a "move at end of Attack Run" action.
+     *
+     * @param playerId the player to move the card
+     * @return Filter
+     */
+    public static Filter canMoveAtEndOfAttackRun(final String playerId) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                return physicalCard.getBlueprint().getMoveAtEndOfAttackRunAction(playerId, gameState.getGame(), physicalCard) != null;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts locations that the specified card can move to at end of an Attack Run.
+     *
+     * @param playerId the player to move the card
+     * @param cardToMove the card to move
+     * @return Filter
+     */
+    public static Filter canMoveToLocationAtEndOfAttackRun(final String playerId, PhysicalCard cardToMove) {
+        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
+
+                // 1) Check the card is at the Death Star system
+                PhysicalCard currentAtLocation = cardToMove.getAtLocation();
+                if (currentAtLocation == null || !Filters.Death_Star_Trench.accepts(gameState, modifiersQuerying, currentAtLocation)) {
+                    return false;
+                }
+
+                // 2) Check if location is Death Star system
+                if (!Filters.Death_Star_system.accepts(gameState, modifiersQuerying, physicalCard)) {
+                    return false;
+                }
+
+                // 3) Check that card is allowed to move from location and to location
+                if (modifiersQuerying.mayNotMoveFromLocationToLocationAtEndOfAttackRun(gameState, cardToMove, currentAtLocation, physicalCard)) {
+                    return false;
+                }
+
+                return true;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts locations that the specified card can move to at end of a Bombing Run.
+     *
+     * @param playerId the player to move the card
+     * @param cardToMove the card to move
+     * @return Filter
+     */
+    public static Filter canMoveToLocationToEndBombingRun(final String playerId, PhysicalCard cardToMove) {
+        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
+
+                if (!cardToMove.isMakingBombingRun()) {
+                    return false;
+                }
+                // 1) Check the location is the related system
+                PhysicalCard currentAtLocation = cardToMove.getAtLocation();
+                if (currentAtLocation == null || !Filters.relatedSystem(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
+                    return false;
+                }
+
+                // 2) Check that card is allowed to move from location and to location
+                if (modifiersQuerying.mayNotMoveFromLocationToLocationToEndBombingRun(gameState, cardToMove, currentAtLocation, physicalCard)) {
+                    return false;
+                }
+
+                // 3) Check that it is piloted
+                if (!modifiersQuerying.isPiloted(gameState, cardToMove, false)) {
+                    return false;
+                }
+
+                return true;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts starship sites that that the player can shuttle, transfer, land, and take off at instead of
+     * the related starship.
+     *
+     * @param playerId the player
+     * @return Filter
+     */
+    public static Filter starshipSiteToShuttleTransferLandAndTakeOffAtForFreeInsteadOfRelatedStarship(final String playerId) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                if (!physicalCard.getBlueprint().hasIcon(Icon.STARSHIP_SITE)) {
+                    return false;
+                }
+                return modifiersQuerying.mayShuttleTransferLandAndTakeOffForFreeAtInsteadOfRelatedStarship(gameState, playerId, physicalCard);
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts cards that the specified card can move to by shuttling.
+     *
+     * @param playerId the player to move the card
+     * @param cardToMove the card to move
+     * @param forFree true if the movement is to be free, otherwise false
+     * @param changeInCost change in amount of Force (can be positive or negative) required to perform the movement
+     * @return Filter
+     */
+    public static Filter canShuttleTo(final String playerId, PhysicalCard cardToMove, final boolean forFree, final float changeInCost) {
+        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
+
+                // Check if current location is exterior site, and this card is capital starship at related system, or vice versa
+                PhysicalCard atLocation = cardToMove.getAtLocation();
+                PhysicalCard attachedTo = cardToMove.getAttachedTo();
+                if ((atLocation == null && attachedTo == null)
+                        || (cardToMove.getBlueprint().getCardCategory() != CardCategory.CHARACTER
+                        && cardToMove.getBlueprint().getCardCategory() != CardCategory.VEHICLE)) {
+                    return false;
+                }
+
+                boolean validDestination = false;
+                PhysicalCard fromLocation = null;
+                PhysicalCard toLocation = null;
+
+                if (atLocation != null) {
+
+                    if (physicalCard.getBlueprint().getCardCategory() == CardCategory.LOCATION
+                            && modifiersQuerying.mayShuttleDirectlyFromLocationToLocation(gameState, cardToMove, atLocation, physicalCard)) {
+                        validDestination = true;
+                        fromLocation = atLocation;
+                        toLocation = physicalCard;
+                    }
+                    else if (atLocation.getBlueprint().hasIcon(Icon.EXTERIOR_SITE)) {
+
+                        // Check if shuttling from exterior site to capital starship (or related starship site that may be shuttled to)
+                        if (!atLocation.getBlueprint().hasIcon(Icon.STARSHIP_SITE)) {
+
+                            Filter yourCapitalStarshipAtRelatedSystem = Filters.and(Filters.your(cardToMove), Filters.capital_starship, Filters.presentAt(Filters.relatedSystem(atLocation)));
+
+                            // Check that destination is capital starship at related system (or related starship site that may be shuttled to)
+                            if (!yourCapitalStarshipAtRelatedSystem.accepts(gameState, modifiersQuerying, physicalCard)
+                                    && !Filters.and(Filters.starshipSiteToShuttleTransferLandAndTakeOffAtForFreeInsteadOfRelatedStarship(cardToMove.getOwner()),
+                                    Filters.relatedSiteTo(null, yourCapitalStarshipAtRelatedSystem)).accepts(gameState, modifiersQuerying, physicalCard)) {
+                                return false;
+                            }
+
+                            if (physicalCard.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
+                                validDestination = true;
+                                toLocation = physicalCard;
+                            } else {
+                                // Check that starship has sufficent capacity
+                                if (cardToMove.getBlueprint().getCardCategory() == CardCategory.CHARACTER || cardToMove.getBlueprint().isMovesLikeCharacter()) {
+                                    Filter filter = Filters.or(Filters.hasAvailablePilotCapacity(cardToMove), Filters.hasAvailablePassengerCapacity(cardToMove));
+                                    if (filter.accepts(gameState, modifiersQuerying, physicalCard)) {
+                                        validDestination = true;
+                                    }
+                                }
+                                if (cardToMove.getBlueprint().getCardCategory() == CardCategory.VEHICLE || cardToMove.getBlueprint().isVehicleSlotOfStarshipCompatible()) {
+                                    if (Filters.hasAvailableVehicleCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
+                                        validDestination = true;
+                                    }
+                                }
+                                if (Filters.or(Filters.starfighter, Filters.squadron, Filters.TIE).accepts(gameState, modifiersQuerying, cardToMove)) {
+                                    if (Filters.hasAvailableStarfighterOrTIECapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
+                                        validDestination = true;
+                                    }
+                                }
+                                if (Filters.capital_starship.accepts(gameState, modifiersQuerying, cardToMove)) {
+                                    if (Filters.hasAvailableCapitalStarshipCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
+                                        validDestination = true;
+                                    }
+                                }
+                                toLocation = physicalCard.getAtLocation();
+                            }
+                            fromLocation = atLocation;
+                        }
+                        // Check if shuttling from starship site (instead of related capital starship) to exterior site
+                        else if (Filters.starshipSiteToShuttleTransferLandAndTakeOffAtForFreeInsteadOfRelatedStarship(cardToMove.getOwner()).accepts(gameState, modifiersQuerying, atLocation)) {
+
+                            // Check that destination is an exterior site
+                            if (Filters.exterior_site.accepts(gameState, modifiersQuerying, physicalCard)) {
+                                Filter yourCapitalStarshipAtRelatedSystem = Filters.and(Filters.your(cardToMove), Filters.capital_starship, Filters.presentAt(Filters.relatedSystem(physicalCard)));
+                                if (Filters.siteOfStarshipOrVehicle(yourCapitalStarshipAtRelatedSystem).accepts(gameState, modifiersQuerying, atLocation)) {
+                                    validDestination = true;
+                                }
+                            }
+
+                            fromLocation = atLocation;
+                            toLocation = physicalCard;
+                        }
+                    }
+                }
+                // Check if shuttling from capital starship to exterior site
+                else if (attachedTo.getBlueprint().getCardSubtype() == CardSubtype.CAPITAL
+                        && (cardToMove.isPilotOf() || cardToMove.isPassengerOf() || cardToMove.isInCargoHoldAsVehicle() || cardToMove.isInCargoHoldAsStarfighterOrTIE() || cardToMove.isInCargoHoldAsCapitalStarship())
+                        && attachedTo.getAtLocation() != null && attachedTo.getAtLocation().getBlueprint().getCardSubtype() == CardSubtype.SYSTEM) {
+
+                    // Check that destination is related exterior site to the system the capital starship is at
+                    if (Filters.and(Filters.exterior_site, Filters.relatedSite(attachedTo.getAtLocation())).accepts(gameState, modifiersQuerying, physicalCard)) {
+                        validDestination = true;
+                    }
+
+                    fromLocation = attachedTo.getAtLocation();
+                    toLocation = physicalCard;
+                }
+
+                // 1) Check if destination is valid
+                if (!validDestination) {
+                    return false;
+                }
+
+                // 2) Check that card is allowed to shuttle from location to location
+                if (modifiersQuerying.mayNotShuttleFromLocationToLocation(gameState, cardToMove, fromLocation, toLocation)) {
+                    return false;
+                }
+
+                // 3) Check that there is enough Force available to use for this move
+                if (!forFree) {
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, playerId)
+                            < modifiersQuerying.getShuttleCost(gameState, cardToMove, fromLocation, toLocation, changeInCost)) {
+                        return false;
+                    }
+                }
+
+                return true;
             }
         };
     }
@@ -7029,203 +7215,6 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts locations that the specified card can move to at end of an Attack Run.
-     *
-     * @param playerId the player to move the card
-     * @param cardToMove the card to move
-     * @return Filter
-     */
-    public static Filter canMoveToLocationAtEndOfAttackRun(final String playerId, PhysicalCard cardToMove) {
-        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
-
-                // 1) Check the card is at the Death Star system
-                PhysicalCard currentAtLocation = cardToMove.getAtLocation();
-                if (currentAtLocation == null || !Filters.Death_Star_Trench.accepts(gameState, modifiersQuerying, currentAtLocation)) {
-                    return false;
-                }
-
-                // 2) Check if location is Death Star system
-                if (!Filters.Death_Star_system.accepts(gameState, modifiersQuerying, physicalCard)) {
-                    return false;
-                }
-
-                // 3) Check that card is allowed to move from location and to location
-                return !modifiersQuerying.mayNotMoveFromLocationToLocationAtEndOfAttackRun(gameState, cardToMove, currentAtLocation, physicalCard);
-            }
-        };
-    }
-
-    /**
-     * Filter that accepts locations that the specified card can move to at end of a Bombing Run.
-     *
-     * @param playerId the player to move the card
-     * @param cardToMove the card to move
-     * @return Filter
-     */
-    public static Filter canMoveToLocationToEndBombingRun(final String playerId, PhysicalCard cardToMove) {
-        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
-
-                if (!cardToMove.isMakingBombingRun()) {
-                    return false;
-                }
-                // 1) Check the location is the related system
-                PhysicalCard currentAtLocation = cardToMove.getAtLocation();
-                if (currentAtLocation == null || !Filters.relatedSystem(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
-                    return false;
-                }
-
-                // 2) Check that card is allowed to move from location and to location
-                if (modifiersQuerying.mayNotMoveFromLocationToLocationToEndBombingRun(gameState, cardToMove, currentAtLocation, physicalCard)) {
-                    return false;
-                }
-
-                // 3) Check that it is piloted
-                return modifiersQuerying.isPiloted(gameState, cardToMove, false);
-            }
-        };
-    }
-
-    /**
-     * Filter that accepts cards that the specified card can move to by shuttling.
-     *
-     * @param playerId the player to move the card
-     * @param cardToMove the card to move
-     * @param forFree true if the movement is to be free, otherwise false
-     * @param changeInCost change in amount of Force (can be positive or negative) required to perform the movement
-     * @return Filter
-     */
-    public static Filter canShuttleTo(final String playerId, PhysicalCard cardToMove, final boolean forFree, final float changeInCost) {
-        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
-
-                // Check if current location is exterior site, and this card is capital starship at related system, or vice versa
-                PhysicalCard atLocation = cardToMove.getAtLocation();
-                PhysicalCard attachedTo = cardToMove.getAttachedTo();
-                if ((atLocation == null && attachedTo == null)
-                        || (cardToMove.getBlueprint().getCardCategory() != CardCategory.CHARACTER
-                        && cardToMove.getBlueprint().getCardCategory() != CardCategory.VEHICLE)) {
-                    return false;
-                }
-
-                boolean validDestination = false;
-                PhysicalCard fromLocation = null;
-                PhysicalCard toLocation = null;
-
-                if (atLocation != null) {
-
-                    if (physicalCard.getBlueprint().getCardCategory() == CardCategory.LOCATION
-                            && modifiersQuerying.mayShuttleDirectlyFromLocationToLocation(gameState, cardToMove, atLocation, physicalCard)) {
-                        validDestination = true;
-                        fromLocation = atLocation;
-                        toLocation = physicalCard;
-                    }
-                    else if (atLocation.getBlueprint().hasIcon(Icon.EXTERIOR_SITE)) {
-
-                        // Check if shuttling from exterior site to capital starship (or related starship site that may be shuttled to)
-                        if (!atLocation.getBlueprint().hasIcon(Icon.STARSHIP_SITE)) {
-
-                            Filter yourCapitalStarshipAtRelatedSystem = Filters.and(Filters.your(cardToMove), Filters.capital_starship, Filters.presentAt(Filters.relatedSystem(atLocation)));
-
-                            // Check that destination is capital starship at related system (or related starship site that may be shuttled to)
-                            if (!yourCapitalStarshipAtRelatedSystem.accepts(gameState, modifiersQuerying, physicalCard)
-                                    && !Filters.and(Filters.starshipSiteToShuttleTransferLandAndTakeOffAtForFreeInsteadOfRelatedStarship(cardToMove.getOwner()),
-                                    Filters.relatedSiteTo(null, yourCapitalStarshipAtRelatedSystem)).accepts(gameState, modifiersQuerying, physicalCard)) {
-                                return false;
-                            }
-
-                            if (physicalCard.getBlueprint().getCardCategory() == CardCategory.LOCATION) {
-                                validDestination = true;
-                                toLocation = physicalCard;
-                            } else {
-                                // Check that starship has sufficent capacity
-                                if (cardToMove.getBlueprint().getCardCategory() == CardCategory.CHARACTER || cardToMove.getBlueprint().isMovesLikeCharacter()) {
-                                    Filter filter = Filters.or(Filters.hasAvailablePilotCapacity(cardToMove), Filters.hasAvailablePassengerCapacity(cardToMove));
-                                    if (filter.accepts(gameState, modifiersQuerying, physicalCard)) {
-                                        validDestination = true;
-                                    }
-                                }
-                                if (cardToMove.getBlueprint().getCardCategory() == CardCategory.VEHICLE || cardToMove.getBlueprint().isVehicleSlotOfStarshipCompatible()) {
-                                    if (Filters.hasAvailableVehicleCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
-                                        validDestination = true;
-                                    }
-                                }
-                                if (Filters.or(Filters.starfighter, Filters.squadron, Filters.TIE).accepts(gameState, modifiersQuerying, cardToMove)) {
-                                    if (Filters.hasAvailableStarfighterOrTIECapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
-                                        validDestination = true;
-                                    }
-                                }
-                                if (Filters.capital_starship.accepts(gameState, modifiersQuerying, cardToMove)) {
-                                    if (Filters.hasAvailableCapitalStarshipCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
-                                        validDestination = true;
-                                    }
-                                }
-                                toLocation = physicalCard.getAtLocation();
-                            }
-                            fromLocation = atLocation;
-                        }
-                        // Check if shuttling from starship site (instead of related capital starship) to exterior site
-                        else if (Filters.starshipSiteToShuttleTransferLandAndTakeOffAtForFreeInsteadOfRelatedStarship(cardToMove.getOwner()).accepts(gameState, modifiersQuerying, atLocation)) {
-
-                            // Check that destination is an exterior site
-                            if (Filters.exterior_site.accepts(gameState, modifiersQuerying, physicalCard)) {
-                                Filter yourCapitalStarshipAtRelatedSystem = Filters.and(Filters.your(cardToMove), Filters.capital_starship, Filters.presentAt(Filters.relatedSystem(physicalCard)));
-                                if (Filters.siteOfStarshipOrVehicle(yourCapitalStarshipAtRelatedSystem).accepts(gameState, modifiersQuerying, atLocation)) {
-                                    validDestination = true;
-                                }
-                            }
-
-                            fromLocation = atLocation;
-                            toLocation = physicalCard;
-                        }
-                    }
-                }
-                // Check if shuttling from capital starship to exterior site
-                else if (attachedTo.getBlueprint().getCardSubtype() == CardSubtype.CAPITAL
-                        && (cardToMove.isPilotOf() || cardToMove.isPassengerOf() || cardToMove.isInCargoHoldAsVehicle() || cardToMove.isInCargoHoldAsStarfighterOrTIE() || cardToMove.isInCargoHoldAsCapitalStarship())
-                        && attachedTo.getAtLocation() != null && attachedTo.getAtLocation().getBlueprint().getCardSubtype() == CardSubtype.SYSTEM) {
-
-                    // Check that destination is related exterior site to the system the capital starship is at
-                    if (Filters.and(Filters.exterior_site, Filters.relatedSite(attachedTo.getAtLocation())).accepts(gameState, modifiersQuerying, physicalCard)) {
-                        validDestination = true;
-                    }
-
-                    fromLocation = attachedTo.getAtLocation();
-                    toLocation = physicalCard;
-                }
-
-                // 1) Check if destination is valid
-                if (!validDestination) {
-                    return false;
-                }
-
-                // 2) Check that card is allowed to shuttle from location to location
-                if (modifiersQuerying.mayNotShuttleFromLocationToLocation(gameState, cardToMove, fromLocation, toLocation)) {
-                    return false;
-                }
-
-                // 3) Check that there is enough Force available to use for this move
-                if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, playerId)
-                            < modifiersQuerying.getShuttleCost(gameState, cardToMove, fromLocation, toLocation, changeInCost));
-                }
-
-                return true;
-            }
-        };
-    }
-
-    /**
      * Filter that accepts cards that the specified card can move to by moving to the related starship or vehicle from
      * a related starship or vehicle site.
      *
@@ -7295,7 +7284,9 @@ public class Filters {
                     }
                 }
                 if (Filters.capital_starship.accepts(gameState, modifiersQuerying, cardToMove)) {
-                    return Filters.hasAvailableCapitalStarshipCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard);
+                    if (Filters.hasAvailableCapitalStarshipCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
+                        return true;
+                    }
                 }
 
                 return false;
@@ -7347,7 +7338,11 @@ public class Filters {
                     return false;
 
                 // 2) Check that card is allowed to move from starship/vehicle to starship/vehicle site
-                return !modifiersQuerying.mayNotMoveFromStarshipOrVehicleToRelatedStarshipOrVehicleSite(gameState, cardToMove, currentStarshipOrVehicle, physicalCard);
+                if (modifiersQuerying.mayNotMoveFromStarshipOrVehicleToRelatedStarshipOrVehicleSite(gameState, cardToMove, currentStarshipOrVehicle, physicalCard)) {
+                    return false;
+                }
+
+                return true;
             }
         };
     }
@@ -7405,8 +7400,10 @@ public class Filters {
 
                 // 3) Check that there is enough Force available to use for this move
                 if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, playerId)
-                            < modifiersQuerying.getEnterStarshipOrVehicleSiteCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost));
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, playerId)
+                            < modifiersQuerying.getEnterStarshipOrVehicleSiteCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost)) {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -7467,8 +7464,10 @@ public class Filters {
 
                 // 3) Check that there is enough Force available to use for this move
                 if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, playerId)
-                            < modifiersQuerying.getExitStarshipOrVehicleSiteCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost));
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, playerId)
+                            < modifiersQuerying.getExitStarshipOrVehicleSiteCost(gameState, cardToMove, currentAtLocation, physicalCard, asReact, changeInCost)) {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -7518,8 +7517,10 @@ public class Filters {
 
                 // 4) Check that there is enough Force available to use for this move
                 if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, starship.getOwner())
-                            < modifiersQuerying.getShipdockingCost(gameState, starship, physicalCard, changeInCost));
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, starship.getOwner())
+                            < modifiersQuerying.getShipdockingCost(gameState, starship, physicalCard, changeInCost)) {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -7613,8 +7614,271 @@ public class Filters {
 
                 // 6) Check that there is enough Force available to use for this move
                 if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, cardToMove.getOwner())
-                            < modifiersQuerying.getMoveUsingLocationTextCost(gameState, cardToMove, currentLocation, destinationLocation, baseCost, changeInCost));
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, cardToMove.getOwner())
+                            < modifiersQuerying.getMoveUsingLocationTextCost(gameState, cardToMove, currentLocation, destinationLocation, baseCost, changeInCost)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts docking bays that the specified card can move to using docking bay transit.
+     *
+     * @param cardToMove the card to move
+     * @param forFree true if the movement is to be free, otherwise false
+     * @param changeInCost change in amount of Force (can be positive or negative) required to perform the movement
+     * @return Filter
+     */
+    public static Filter canMoveToUsingDockingBayTransit(PhysicalCard cardToMove, final boolean forFree, final float changeInCost) {
+        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
+
+                PhysicalCard currentDockingBay = cardToMove.getAtLocation();
+                if (currentDockingBay == null || !Filters.docking_bay.accepts(gameState, modifiersQuerying, currentDockingBay)) {
+                    return false;
+                }
+
+                // 1) Check that destination is another docking bay
+                if (Filters.sameCardId(physicalCard).accepts(gameState, modifiersQuerying, currentDockingBay)
+                        || !Filters.docking_bay.accepts(gameState, modifiersQuerying, physicalCard)) {
+                    return false;
+                }
+
+                // 2) Check that the card can move
+                if (modifiersQuerying.mayNotMove(gameState, cardToMove)) {
+                    return false;
+                }
+
+                // 3) Check destination is valid for card to move to
+                if (!cardToMove.getBlueprint().getValidMoveTargetFilter(cardToMove.getOwner(), gameState.getGame(), cardToMove, false).accepts(gameState, modifiersQuerying, physicalCard)) {
+                    return false;
+                }
+
+                // 4) Check that card is allowed to move from location to location
+                if (modifiersQuerying.mayNotMoveFromLocationToLocationUsingDockingBayTransit(gameState, cardToMove, currentDockingBay, physicalCard)) {
+                    return false;
+                }
+
+                // 5) Check that there is enough Force available to use for this move
+                if (!forFree) {
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, cardToMove.getOwner())
+                            < modifiersQuerying.getDockingBayTransitCost(gameState, cardToMove, currentDockingBay, physicalCard, changeInCost)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts cards that the specified card can move to by embarking.
+     *
+     * @param playerId the player to move the card
+     * @param cardToMove the card to move
+     * @param forFree true if the movement is to be free, otherwise false
+     * @param changeInCost change in amount of Force (can be positive or negative) required to perform the movement
+     * @return Filter
+     */
+    public static Filter canEmbarkTo(final String playerId, PhysicalCard cardToMove, final boolean forFree, final float changeInCost) {
+        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
+
+                PhysicalCard atLocation = cardToMove.getAtLocation();
+                PhysicalCard attachedTo = cardToMove.getAttachedTo();
+                if (atLocation == null && attachedTo == null)
+                    return false;
+
+                // No characters may embark on captured starships
+                if (physicalCard.isCapturedStarship())
+                    return false;
+
+                // 1) Check that destination is owner's card.
+                if (!cardToMove.getOwner().equals(physicalCard.getOwner()))
+                    return false;
+
+                // 2) Check the destination is not attached to the card
+                if (gameState.getAllAttachedRecursively(cardToMove).contains(physicalCard))
+                    return false;
+
+                boolean validDestination = false;
+
+                // 3) If physically at a location, check if the destination is present with the card and has sufficent capacity
+                // (or if destination is a related starship site to a starship present with that may be embarked to)
+                if (atLocation != null) {
+
+                    // Check that destination is capital starship at related system (or related starship site that may be shuttled to)
+                    if (!modifiersQuerying.isPresentWith(gameState, cardToMove, physicalCard, true)) {
+                        return false;
+                    }
+
+                    // Check that starship/vehicle has sufficent capacity
+                    if (cardToMove.getBlueprint().getCardCategory() == CardCategory.CHARACTER || cardToMove.getBlueprint().isMovesLikeCharacter()) {
+                        Filter filter = Filters.or(Filters.hasAvailablePilotCapacity(cardToMove), Filters.hasAvailablePassengerCapacity(cardToMove));
+                        if (Filters.and(filter).accepts(gameState, modifiersQuerying, physicalCard)) {
+                            validDestination = true;
+                        }
+                    }
+                    if (cardToMove.getBlueprint().getCardCategory() == CardCategory.VEHICLE || cardToMove.getBlueprint().isVehicleSlotOfStarshipCompatible()) {
+                        if (Filters.hasAvailableVehicleCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
+                            validDestination = true;
+                        }
+                    }
+                    if (Filters.or(Filters.starfighter, Filters.squadron, Filters.TIE).accepts(gameState, modifiersQuerying, cardToMove)) {
+                        if (Filters.hasAvailableStarfighterOrTIECapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
+                            validDestination = true;
+                        }
+                    }
+                    if (Filters.capital_starship.accepts(gameState, modifiersQuerying, cardToMove)) {
+                        if (Filters.hasAvailableCapitalStarshipCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
+                            validDestination = true;
+                        }
+                    }
+                }
+
+                // 4) Check if moving a character from the "bridge" of a starship/vehicle to a starship or vehicle in the cargo hold of a that starship/vehicle.
+                if (attachedTo != null && (cardToMove.isPilotOf() || cardToMove.isPassengerOf())) {
+                    // Check if destination is in the cargo hold of the starship/vehicle this card is on the bridge of
+                    if (physicalCard.getAttachedTo() != null && Filters.sameCardId(physicalCard.getAttachedTo()).accepts(gameState, modifiersQuerying, attachedTo)
+                            && (physicalCard.isInCargoHoldAsStarfighterOrTIE() || physicalCard.isInCargoHoldAsVehicle() || physicalCard.isInCargoHoldAsCapitalStarship())) {
+
+                        // Check that starship/vehicle has sufficent capacity
+                        if (cardToMove.getBlueprint().getCardCategory() == CardCategory.CHARACTER || cardToMove.getBlueprint().isMovesLikeCharacter()) {
+                            Filter filter = Filters.or(Filters.hasAvailablePilotCapacity(cardToMove), Filters.hasAvailablePassengerCapacity(cardToMove));
+                            if (Filters.and(filter).accepts(gameState, modifiersQuerying, physicalCard)) {
+                                validDestination = true;
+                            }
+                        }
+                    }
+                }
+
+                if (!validDestination)
+                    return false;
+
+                // 5) Check that card is allowed to move from location to location
+                PhysicalCard currentLocation = modifiersQuerying.getLocationHere(gameState, cardToMove);
+                PhysicalCard destinationLocation = modifiersQuerying.getLocationHere(gameState, physicalCard);
+                if (!Filters.sameCardId(currentLocation).accepts(gameState, modifiersQuerying, destinationLocation)
+                        && modifiersQuerying.mayNotEmbarkFromLocationToLocation(gameState, cardToMove, currentLocation, destinationLocation)) {
+                    return false;
+                }
+
+                // 6) Check that there is enough force in force pile for this move
+                if (!forFree && physicalCard.isCrashed()) {
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, playerId)
+                            < modifiersQuerying.getEmbarkingCost(gameState, cardToMove, physicalCard, changeInCost))
+                        return false;
+                }
+
+                return true;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts cards that the specified card can move to by disembarking.
+     *
+     * @param playerId the player to move the card
+     * @param cardToMove the card to move
+     * @param forFree true if the movement is to be free, otherwise false
+     * @param changeInCost change in amount of Force (can be positive or negative) required to perform the movement
+     * @return Filter
+     */
+    public static Filter canDisembarkTo(final String playerId, PhysicalCard cardToMove, final boolean forFree, final float changeInCost) {
+        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
+
+                PhysicalCard atLocation = cardToMove.getAtLocation();
+                PhysicalCard attachedTo = cardToMove.getAttachedTo();
+                if (atLocation == null && attachedTo == null)
+                    return false;
+
+                // 1) Check that destination is owner's card or location.
+                if (!cardToMove.getOwner().equals(physicalCard.getOwner()) && physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
+                    return false;
+
+                boolean validDestination = false;
+
+                if (attachedTo != null) {
+
+                    PhysicalCard attachedToIsPresentAtLoc = modifiersQuerying.getLocationThatCardIsPresentAt(gameState, attachedTo);
+                    PhysicalCard attachedToIsAttachedTo = attachedTo.getAttachedTo();
+
+                    // 3) If aboard a card at a location
+                    if (attachedToIsPresentAtLoc != null) {
+                        // Check if same location
+                        if (!Filters.sameCardId(attachedToIsPresentAtLoc).accepts(gameState, modifiersQuerying, physicalCard)) {
+                            return false;
+                        }
+
+                        // Characters trapped on a captured starship may disembark at a site if the Dark Side does not occupy that site
+                        if (attachedTo.isCapturedStarship() && attachedToIsPresentAtLoc.getBlueprint().getCardSubtype() == CardSubtype.SITE
+                            && occupies(gameState.getOpponent(cardToMove.getOwner())).accepts(gameState, modifiersQuerying, attachedToIsPresentAtLoc))
+                            return false;
+
+                        // Check if destination for character or "moves like a character" is a site
+                        if ((cardToMove.getBlueprint().getCardCategory() == CardCategory.CHARACTER || cardToMove.getBlueprint().isMovesLikeCharacter())
+                                && attachedToIsPresentAtLoc.getBlueprint().getCardSubtype() == CardSubtype.SITE) {
+                            validDestination = true;
+                        }
+
+                        // Check if card is a vehicle or starship
+                        if (cardToMove.getBlueprint().getCardCategory() == CardCategory.VEHICLE
+                                || cardToMove.getBlueprint().getCardCategory() == CardCategory.STARSHIP) {
+                            validDestination = true;
+                        }
+                    }
+
+                    // 4) Check if moving a character from the "bridge" of a starship or vehicle in a cargo hold to the "bridge" of the carrying starship/vehicle.
+                    if (attachedToIsAttachedTo != null
+                            && (cardToMove.isPilotOf() || cardToMove.isPassengerOf())
+                            && (attachedTo.isInCargoHoldAsVehicle() || attachedTo.isInCargoHoldAsStarfighterOrTIE() || attachedTo.isInCargoHoldAsCapitalStarship())) {
+
+                        // Check if same starship/vehicle
+                        if (!Filters.sameCardId(attachedToIsAttachedTo).accepts(gameState, modifiersQuerying, physicalCard)) {
+                            return false;
+                        }
+
+                        // Check that starship/vehicle has sufficent capacity
+                        if (cardToMove.getBlueprint().getCardCategory() == CardCategory.CHARACTER || cardToMove.getBlueprint().isMovesLikeCharacter()) {
+                            Filter filter = Filters.or(Filters.hasAvailablePilotCapacity(cardToMove), Filters.hasAvailablePassengerCapacity(cardToMove));
+                            if (Filters.and(filter).accepts(gameState, modifiersQuerying, physicalCard)) {
+                                validDestination = true;
+                            }
+                        }
+                    }
+                }
+
+                if (!validDestination)
+                    return false;
+
+                // 5) Check that card is allowed to move from location to location
+                PhysicalCard currentLocation = modifiersQuerying.getLocationHere(gameState, cardToMove);
+                PhysicalCard destinationLocation = modifiersQuerying.getLocationHere(gameState, physicalCard);
+                if (!Filters.sameCardId(currentLocation).accepts(gameState, modifiersQuerying, destinationLocation)
+                        && modifiersQuerying.mayNotDisembarkFromLocationToLocation(gameState, cardToMove, currentLocation, destinationLocation)) {
+                    return false;
+                }
+
+                // 6) Check that there is enough force in force pile for this move
+                if (!forFree && attachedTo.isCrashed()) {
+                    if (modifiersQuerying.getForceAvailableToUse(gameState, playerId)
+                            < modifiersQuerying.getDisembarkingCost(gameState, cardToMove, physicalCard, changeInCost))
+                        return false;
                 }
 
                 return true;
@@ -7741,52 +8005,29 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts docking bays that the specified card can move to using docking bay transit.
-     *
-     * @param cardToMove the card to move
-     * @param forFree true if the movement is to be free, otherwise false
-     * @param changeInCost change in amount of Force (can be positive or negative) required to perform the movement
-     * @return Filter
+     * Filter that accepts cards that may be relocated.
      */
-    public static Filter canMoveToUsingDockingBayTransit(PhysicalCard cardToMove, final boolean forFree, final float changeInCost) {
-        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
+    public static final Filter canBeRelocated(final boolean allowEscort) {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
+                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.CHARACTER
+                        && physicalCard.getBlueprint().getCardCategory() != CardCategory.VEHICLE
+                        && physicalCard.getBlueprint().getCardCategory() != CardCategory.STARSHIP)
+                    return false;
+                // 1) Check if card is at a location
+                PhysicalCard currentLocation = modifiersQuerying.getLocationThatCardIsAt(gameState, physicalCard);
+                if (currentLocation == null)
+                    return false;
 
-                PhysicalCard currentDockingBay = cardToMove.getAtLocation();
-                if (currentDockingBay == null || !Filters.docking_bay.accepts(gameState, modifiersQuerying, currentDockingBay)) {
+                // 2) Check if card can move
+                if (modifiersQuerying.mayNotMove(gameState, physicalCard)) {
                     return false;
                 }
-
-                // 1) Check that destination is another docking bay
-                if (Filters.sameCardId(physicalCard).accepts(gameState, modifiersQuerying, currentDockingBay)
-                        || !Filters.docking_bay.accepts(gameState, modifiersQuerying, physicalCard)) {
+                // 3) Check if escorting a captive
+                if (!allowEscort && Filters.escort.accepts(gameState, modifiersQuerying, physicalCard)) {
                     return false;
                 }
-
-                // 2) Check that the card can move
-                if (modifiersQuerying.mayNotMove(gameState, cardToMove)) {
-                    return false;
-                }
-
-                // 3) Check destination is valid for card to move to
-                if (!cardToMove.getBlueprint().getValidMoveTargetFilter(cardToMove.getOwner(), gameState.getGame(), cardToMove, false).accepts(gameState, modifiersQuerying, physicalCard)) {
-                    return false;
-                }
-
-                // 4) Check that card is allowed to move from location to location
-                if (modifiersQuerying.mayNotMoveFromLocationToLocationUsingDockingBayTransit(gameState, cardToMove, currentDockingBay, physicalCard)) {
-                    return false;
-                }
-
-                // 5) Check that there is enough Force available to use for this move
-                if (!forFree) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, cardToMove.getOwner())
-                            < modifiersQuerying.getDockingBayTransitCost(gameState, cardToMove, currentDockingBay, physicalCard, changeInCost));
-                }
-
                 return true;
             }
         };
@@ -7816,107 +8057,61 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that the specified card can move to by embarking.
+     * Filter that accepts locations the specified card can be relocated to.
      *
-     * @param playerId the player to move the card
-     * @param cardToMove the card to move
+     * @param cardToMove the card to be relocated
+     * @param allowDagobah true if relocating from/to Dagobah locations is allowed, otherwise false
+     * @param allowEscort true if relocating captive escort is allowed, otherwise false
      * @param forFree true if the movement is to be free, otherwise false
-     * @param changeInCost change in amount of Force (can be positive or negative) required to perform the movement
+     * @param baseCost the base cost (as defined by the card performing the relocation)
+     * @param allowAhchTo true if relocating from/to Ahch-To locations is allowed, otherwise false
      * @return Filter
      */
-    public static Filter canEmbarkTo(final String playerId, PhysicalCard cardToMove, final boolean forFree, final float changeInCost) {
+    public static Filter locationCanBeRelocatedTo(PhysicalCard cardToMove, final boolean allowDagobah, final boolean allowEscort, final boolean forFree, final float baseCost, final boolean allowAhchTo) {
         final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
                 PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
 
-                PhysicalCard atLocation = cardToMove.getAtLocation();
-                PhysicalCard attachedTo = cardToMove.getAttachedTo();
-                if (atLocation == null && attachedTo == null)
+                if ((cardToMove.getBlueprint().getCardCategory() != CardCategory.CHARACTER
+                        && cardToMove.getBlueprint().getCardCategory() != CardCategory.CREATURE
+                        && cardToMove.getBlueprint().getCardCategory() != CardCategory.VEHICLE
+                        && cardToMove.getBlueprint().getCardCategory() != CardCategory.STARSHIP)
+                        || physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
                     return false;
 
-                // No characters may embark on captured starships
-                if (physicalCard.isCapturedStarship())
+                // 1) Check if card is at a location (and the destination is a different location) or on Weather Vane
+                PhysicalCard currentLocation = modifiersQuerying.getLocationThatCardIsAt(gameState, cardToMove);
+                boolean isOnWeatherVane = cardToMove.getStackedOn() != null && Filters.Weather_Vane.accepts(gameState, modifiersQuerying, cardToMove.getStackedOn());
+                if (!isOnWeatherVane && (currentLocation == null || Filters.sameCardId(physicalCard).accepts(gameState, modifiersQuerying, currentLocation)))
                     return false;
 
-                // 1) Check that destination is owner's card.
-                if (!cardToMove.getOwner().equals(physicalCard.getOwner()))
+                // 2) Check if card can move
+                if (modifiersQuerying.mayNotMove(gameState, cardToMove)) {
                     return false;
+                }
 
-                // 2) Check the destination is not attached to the card
-                if (gameState.getAllAttachedRecursively(cardToMove).contains(physicalCard))
+                // 3) Check if escorting a captive
+                if (!allowEscort && Filters.escort.accepts(gameState, modifiersQuerying, cardToMove)) {
                     return false;
+                }
 
-                boolean validDestination = false;
+                // 4) Check destination is valid for card to be relocated to
+                if (cardToMove.getBlueprint().getValidMoveTargetFilter(cardToMove.getOwner(), gameState.getGame(), cardToMove, false).accepts(gameState, modifiersQuerying, physicalCard)) {
+                    if (isOnWeatherVane || !modifiersQuerying.mayNotRelocateFromLocationToLocation(gameState, cardToMove, currentLocation, physicalCard, allowDagobah, allowAhchTo)) {
 
-                // 3) If physically at a location, check if the destination is present with the card and has sufficent capacity
-                // (or if destination is a related starship site to a starship present with that may be embarked to)
-                if (atLocation != null) {
-
-                    // Check that destination is capital starship at related system (or related starship site that may be shuttled to)
-                    if (!modifiersQuerying.isPresentWith(gameState, cardToMove, physicalCard, true)) {
-                        return false;
-                    }
-
-                    // Check that starship/vehicle has sufficent capacity
-                    if (cardToMove.getBlueprint().getCardCategory() == CardCategory.CHARACTER || cardToMove.getBlueprint().isMovesLikeCharacter()) {
-                        Filter filter = Filters.or(Filters.hasAvailablePilotCapacity(cardToMove), Filters.hasAvailablePassengerCapacity(cardToMove));
-                        if (Filters.and(filter).accepts(gameState, modifiersQuerying, physicalCard)) {
-                            validDestination = true;
-                        }
-                    }
-                    if (cardToMove.getBlueprint().getCardCategory() == CardCategory.VEHICLE || cardToMove.getBlueprint().isVehicleSlotOfStarshipCompatible()) {
-                        if (Filters.hasAvailableVehicleCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
-                            validDestination = true;
-                        }
-                    }
-                    if (Filters.or(Filters.starfighter, Filters.squadron, Filters.TIE).accepts(gameState, modifiersQuerying, cardToMove)) {
-                        if (Filters.hasAvailableStarfighterOrTIECapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
-                            validDestination = true;
-                        }
-                    }
-                    if (Filters.capital_starship.accepts(gameState, modifiersQuerying, cardToMove)) {
-                        if (Filters.hasAvailableCapitalStarshipCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
-                            validDestination = true;
+                        // 5) Check that there is enough Force available to use for this move
+                        if (forFree
+                                || isOnWeatherVane
+                                || (modifiersQuerying.getForceAvailableToUse(gameState, cardToMove.getOwner())
+                                >= modifiersQuerying.getRelocateBetweenLocationsCost(gameState, cardToMove, currentLocation, physicalCard, baseCost))) {
+                            return true;
                         }
                     }
                 }
 
-                // 4) Check if moving a character from the "bridge" of a starship/vehicle to a starship or vehicle in the cargo hold of a that starship/vehicle.
-                if (attachedTo != null && (cardToMove.isPilotOf() || cardToMove.isPassengerOf())) {
-                    // Check if destination is in the cargo hold of the starship/vehicle this card is on the bridge of
-                    if (physicalCard.getAttachedTo() != null && Filters.sameCardId(physicalCard.getAttachedTo()).accepts(gameState, modifiersQuerying, attachedTo)
-                            && (physicalCard.isInCargoHoldAsStarfighterOrTIE() || physicalCard.isInCargoHoldAsVehicle() || physicalCard.isInCargoHoldAsCapitalStarship())) {
-
-                        // Check that starship/vehicle has sufficent capacity
-                        if (cardToMove.getBlueprint().getCardCategory() == CardCategory.CHARACTER || cardToMove.getBlueprint().isMovesLikeCharacter()) {
-                            Filter filter = Filters.or(Filters.hasAvailablePilotCapacity(cardToMove), Filters.hasAvailablePassengerCapacity(cardToMove));
-                            if (Filters.and(filter).accepts(gameState, modifiersQuerying, physicalCard)) {
-                                validDestination = true;
-                            }
-                        }
-                    }
-                }
-
-                if (!validDestination)
-                    return false;
-
-                // 5) Check that card is allowed to move from location to location
-                PhysicalCard currentLocation = modifiersQuerying.getLocationHere(gameState, cardToMove);
-                PhysicalCard destinationLocation = modifiersQuerying.getLocationHere(gameState, physicalCard);
-                if (!Filters.sameCardId(currentLocation).accepts(gameState, modifiersQuerying, destinationLocation)
-                        && modifiersQuerying.mayNotEmbarkFromLocationToLocation(gameState, cardToMove, currentLocation, destinationLocation)) {
-                    return false;
-                }
-
-                // 6) Check that there is enough force in force pile for this move
-                if (!forFree && physicalCard.isCrashed()) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, playerId)
-                            < modifiersQuerying.getEmbarkingCost(gameState, cardToMove, physicalCard, changeInCost));
-                }
-
-                return true;
+                return false;
             }
         };
     }
@@ -8150,103 +8345,33 @@ public class Filters {
     //
 
     /**
-     * Filter that accepts cards that the specified card can move to by disembarking.
-     *
-     * @param playerId the player to move the card
-     * @param cardToMove the card to move
-     * @param forFree true if the movement is to be free, otherwise false
-     * @param changeInCost change in amount of Force (can be positive or negative) required to perform the movement
-     * @return Filter
+     * Filter that accepts cards that are alone.
      */
-    public static Filter canDisembarkTo(final String playerId, PhysicalCard cardToMove, final boolean forFree, final float changeInCost) {
-        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
+    public static final Filter alone = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return modifiersQuerying.isAlone(gameState, physicalCard);
+        }
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, SwccgBuiltInCardBlueprint builtInCardBlueprint) {
+            PhysicalCard card = builtInCardBlueprint.getPhysicalCard(gameState.getGame());
+            List<SwccgBuiltInCardBlueprint> permanentsAboard = modifiersQuerying.getPermanentsAboard(gameState, card);
 
-                PhysicalCard atLocation = cardToMove.getAtLocation();
-                PhysicalCard attachedTo = cardToMove.getAttachedTo();
-                if (atLocation == null && attachedTo == null)
-                    return false;
-
-                // 1) Check that destination is owner's card or location.
-                if (!cardToMove.getOwner().equals(physicalCard.getOwner()) && physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
-                    return false;
-
-                boolean validDestination = false;
-
-                if (attachedTo != null) {
-
-                    PhysicalCard attachedToIsPresentAtLoc = modifiersQuerying.getLocationThatCardIsPresentAt(gameState, attachedTo);
-                    PhysicalCard attachedToIsAttachedTo = attachedTo.getAttachedTo();
-
-                    // 3) If aboard a card at a location
-                    if (attachedToIsPresentAtLoc != null) {
-                        // Check if same location
-                        if (!Filters.sameCardId(attachedToIsPresentAtLoc).accepts(gameState, modifiersQuerying, physicalCard)) {
-                            return false;
-                        }
-
-                        // Characters trapped on a captured starship may disembark at a site if the Dark Side does not occupy that site
-                        if (attachedTo.isCapturedStarship() && attachedToIsPresentAtLoc.getBlueprint().getCardSubtype() == CardSubtype.SITE
-                                && occupies(gameState.getOpponent(cardToMove.getOwner())).accepts(gameState, modifiersQuerying, attachedToIsPresentAtLoc))
-                            return false;
-
-                        // Check if destination for character or "moves like a character" is a site
-                        if ((cardToMove.getBlueprint().getCardCategory() == CardCategory.CHARACTER || cardToMove.getBlueprint().isMovesLikeCharacter())
-                                && attachedToIsPresentAtLoc.getBlueprint().getCardSubtype() == CardSubtype.SITE) {
-                            validDestination = true;
-                        }
-
-                        // Check if card is a vehicle or starship
-                        if (cardToMove.getBlueprint().getCardCategory() == CardCategory.VEHICLE
-                                || cardToMove.getBlueprint().getCardCategory() == CardCategory.STARSHIP) {
-                            validDestination = true;
-                        }
-                    }
-
-                    // 4) Check if moving a character from the "bridge" of a starship or vehicle in a cargo hold to the "bridge" of the carrying starship/vehicle.
-                    if (attachedToIsAttachedTo != null
-                            && (cardToMove.isPilotOf() || cardToMove.isPassengerOf())
-                            && (attachedTo.isInCargoHoldAsVehicle() || attachedTo.isInCargoHoldAsStarfighterOrTIE() || attachedTo.isInCargoHoldAsCapitalStarship())) {
-
-                        // Check if same starship/vehicle
-                        if (!Filters.sameCardId(attachedToIsAttachedTo).accepts(gameState, modifiersQuerying, physicalCard)) {
-                            return false;
-                        }
-
-                        // Check that starship/vehicle has sufficent capacity
-                        if (cardToMove.getBlueprint().getCardCategory() == CardCategory.CHARACTER || cardToMove.getBlueprint().isMovesLikeCharacter()) {
-                            Filter filter = Filters.or(Filters.hasAvailablePilotCapacity(cardToMove), Filters.hasAvailablePassengerCapacity(cardToMove));
-                            if (Filters.and(filter).accepts(gameState, modifiersQuerying, physicalCard)) {
-                                validDestination = true;
-                            }
-                        }
-                    }
-                }
-
-                if (!validDestination)
-                    return false;
-
-                // 5) Check that card is allowed to move from location to location
-                PhysicalCard currentLocation = modifiersQuerying.getLocationHere(gameState, cardToMove);
-                PhysicalCard destinationLocation = modifiersQuerying.getLocationHere(gameState, physicalCard);
-                if (!Filters.sameCardId(currentLocation).accepts(gameState, modifiersQuerying, destinationLocation)
-                        && modifiersQuerying.mayNotDisembarkFromLocationToLocation(gameState, cardToMove, currentLocation, destinationLocation)) {
-                    return false;
-                }
-
-                // 6) Check that there is enough force in force pile for this move
-                if (!forFree && attachedTo.isCrashed()) {
-                    return !(modifiersQuerying.getForceAvailableToUse(gameState, playerId)
-                            < modifiersQuerying.getDisembarkingCost(gameState, cardToMove, physicalCard, changeInCost));
-                }
-
-                return true;
+            if (permanentsAboard.size() > 1) {
+                return false;
             }
-        };
-    }
+
+            PhysicalCard location = modifiersQuerying.getLocationThatCardIsAt(gameState, card);
+            if (location == null)
+                return false;
+
+            if (Filters.canSpot(gameState.getGame(), null, Filters.and(Filters.not(Filters.sameCardId(card)), Filters.at(location),
+                    Filters.owner(card.getOwner()), Filters.or(Filters.character, Filters.abilityMoreThan(0, true)))))
+                return false;
+
+            return true;
+        }
+    };
     /**
      * Wrapper method to allow other static filters to access the wrapped filter.
      */
@@ -8765,90 +8890,6 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that may be relocated.
-     */
-    public static final Filter canBeRelocated(final boolean allowEscort) {
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.CHARACTER
-                        && physicalCard.getBlueprint().getCardCategory() != CardCategory.VEHICLE
-                        && physicalCard.getBlueprint().getCardCategory() != CardCategory.STARSHIP)
-                    return false;
-                // 1) Check if card is at a location
-                PhysicalCard currentLocation = modifiersQuerying.getLocationThatCardIsAt(gameState, physicalCard);
-                if (currentLocation == null)
-                    return false;
-
-                // 2) Check if card can move
-                if (modifiersQuerying.mayNotMove(gameState, physicalCard)) {
-                    return false;
-                }
-                // 3) Check if escorting a captive
-                return allowEscort || !Filters.escort.accepts(gameState, modifiersQuerying, physicalCard);
-            }
-        };
-    }
-
-    /**
-     * Filter that accepts locations the specified card can be relocated to.
-     *
-     * @param cardToMove the card to be relocated
-     * @param allowDagobah true if relocating from/to Dagobah locations is allowed, otherwise false
-     * @param allowEscort true if relocating captive escort is allowed, otherwise false
-     * @param forFree true if the movement is to be free, otherwise false
-     * @param baseCost the base cost (as defined by the card performing the relocation)
-     * @param allowAhchTo true if relocating from/to Ahch-To locations is allowed, otherwise false
-     * @return Filter
-     */
-    public static Filter locationCanBeRelocatedTo(PhysicalCard cardToMove, final boolean allowDagobah, final boolean allowEscort, final boolean forFree, final float baseCost, final boolean allowAhchTo) {
-        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
-
-                if ((cardToMove.getBlueprint().getCardCategory() != CardCategory.CHARACTER
-                        && cardToMove.getBlueprint().getCardCategory() != CardCategory.CREATURE
-                        && cardToMove.getBlueprint().getCardCategory() != CardCategory.VEHICLE
-                        && cardToMove.getBlueprint().getCardCategory() != CardCategory.STARSHIP)
-                        || physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
-                    return false;
-
-                // 1) Check if card is at a location (and the destination is a different location) or on Weather Vane
-                PhysicalCard currentLocation = modifiersQuerying.getLocationThatCardIsAt(gameState, cardToMove);
-                boolean isOnWeatherVane = cardToMove.getStackedOn() != null && Filters.Weather_Vane.accepts(gameState, modifiersQuerying, cardToMove.getStackedOn());
-                if (!isOnWeatherVane && (currentLocation == null || Filters.sameCardId(physicalCard).accepts(gameState, modifiersQuerying, currentLocation)))
-                    return false;
-
-                // 2) Check if card can move
-                if (modifiersQuerying.mayNotMove(gameState, cardToMove)) {
-                    return false;
-                }
-
-                // 3) Check if escorting a captive
-                if (!allowEscort && Filters.escort.accepts(gameState, modifiersQuerying, cardToMove)) {
-                    return false;
-                }
-
-                // 4) Check destination is valid for card to be relocated to
-                if (cardToMove.getBlueprint().getValidMoveTargetFilter(cardToMove.getOwner(), gameState.getGame(), cardToMove, false).accepts(gameState, modifiersQuerying, physicalCard)) {
-                    if (isOnWeatherVane || !modifiersQuerying.mayNotRelocateFromLocationToLocation(gameState, cardToMove, currentLocation, physicalCard, allowDagobah, allowAhchTo)) {
-
-                        // 5) Check that there is enough Force available to use for this move
-                        return forFree
-                                || isOnWeatherVane
-                                || (modifiersQuerying.getForceAvailableToUse(gameState, cardToMove.getOwner())
-                                >= modifiersQuerying.getRelocateBetweenLocationsCost(gameState, cardToMove, currentLocation, physicalCard, baseCost));
-                    }
-                }
-
-                return false;
-            }
-        };
-    }
-
-    /**
      * Filter that accepts cards that can be converted by the specified player deploying another card.
      *
      * @param playerId the player to deploy a card
@@ -8869,10 +8910,95 @@ public class Filters {
                     if (physicalCard.getZone() != Zone.LOCATIONS)
                         return false;
 
-                    return !physicalCard.isBlownAway() && !physicalCard.isCollapsed();
+                    if (physicalCard.isBlownAway() || physicalCard.isCollapsed())
+                        return false;
+
+                    return true;
                 }
 
-                return modifiersQuerying.canBeConvertedByDeployment(gameState, physicalCard, playerId);
+                if (modifiersQuerying.canBeConvertedByDeployment(gameState, physicalCard, playerId))
+                    return true;
+
+                return false;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts cards that are the current top locations that can be converted by deploying the specified location.
+     *
+     * @param locationToConvertWith the location
+     * @return Filter
+     */
+    public static Filter canBeConvertedByDeployment(PhysicalCard locationToConvertWith) {
+        final Integer permLocationToConvertWithCardId = locationToConvertWith.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard locationToConvertWith = gameState.findCardByPermanentId(permLocationToConvertWithCardId);
+                Uniqueness uniqueness = modifiersQuerying.getUniqueness(gameState, locationToConvertWith);
+
+                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
+                    return false;
+
+                if (physicalCard.getZone() != Zone.LOCATIONS)
+                    return false;
+
+                if (physicalCard.isBlownAway() || physicalCard.isCollapsed())
+                    return false;
+
+                if (physicalCard.getOwner().equals(locationToConvertWith.getOwner()))
+                    return false;
+
+                if (uniqueness != modifiersQuerying.getUniqueness(gameState, physicalCard))
+                    return false;
+
+                if ((!Filters.holosite.accepts(gameState, modifiersQuerying, locationToConvertWith) || !Filters.holosite.accepts(gameState, modifiersQuerying, physicalCard))
+                        && (!Filters.Big_One_Asteroid_Cave_Or_Space_Slug_Belly.accepts(gameState, modifiersQuerying, locationToConvertWith) || !Filters.Big_One_Asteroid_Cave_Or_Space_Slug_Belly.accepts(gameState, modifiersQuerying, physicalCard))
+                        && !Filters.sameTitleAs(locationToConvertWith).accepts(gameState, modifiersQuerying, physicalCard))
+                    return false;
+
+                if (modifiersQuerying.cannotBeConverted(gameState, physicalCard))
+                    return false;
+
+                return true;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts cards that are the current top collapsed locations that can be rebuilt by deploying the specified location.
+     *
+     * @param locationToRebuildWith the location
+     * @return Filter
+     */
+    public static Filter canBeRebuiltByDeployment(PhysicalCard locationToRebuildWith) {
+        final Integer permLocationToRebuildWithCardId = locationToRebuildWith.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard locationToRebuildWith = gameState.findCardByPermanentId(permLocationToRebuildWithCardId);
+
+                Uniqueness uniqueness = modifiersQuerying.getUniqueness(gameState, locationToRebuildWith);
+
+                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
+                    return false;
+
+                if (physicalCard.getZone() != Zone.LOCATIONS)
+                    return false;
+
+                if (!physicalCard.isCollapsed())
+                    return false;
+
+                if (uniqueness != modifiersQuerying.getUniqueness(gameState, physicalCard))
+                    return false;
+
+                if ((!Filters.holosite.accepts(gameState, modifiersQuerying, locationToRebuildWith) || !Filters.holosite.accepts(gameState, modifiersQuerying, physicalCard))
+                        && (!Filters.Big_One_Asteroid_Cave_Or_Space_Slug_Belly.accepts(gameState, modifiersQuerying, locationToRebuildWith) || !Filters.Big_One_Asteroid_Cave_Or_Space_Slug_Belly.accepts(gameState, modifiersQuerying, physicalCard))
+                        && !Filters.sameTitleAs(locationToRebuildWith).accepts(gameState, modifiersQuerying, physicalCard))
+                    return false;
+
+                return true;
             }
         };
     }
@@ -10119,74 +10245,84 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that are the current top locations that can be converted by deploying the specified location.
+     * Filter that accepts cards that would participate in an attack on a specified creature.
      *
-     * @param locationToConvertWith the location
+     * @param playerId the player to initiate the attack
+     * @param creature the creature
+     * @param checkingOnly true if only checking if attack can be initiated, false if getting all cards to participate in the attack
      * @return Filter
      */
-    public static Filter canBeConvertedByDeployment(PhysicalCard locationToConvertWith) {
-        final Integer permLocationToConvertWithCardId = locationToConvertWith.getPermanentCardId();
+    public static Filter initiallyParticipatesInAttackOnCreature(final String playerId, PhysicalCard creature, final boolean checkingOnly) {
+        final Integer permCardId = creature.getPermanentCardId();
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard locationToConvertWith = gameState.findCardByPermanentId(permLocationToConvertWithCardId);
-                Uniqueness uniqueness = modifiersQuerying.getUniqueness(gameState, locationToConvertWith);
-
-                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
+                PhysicalCard creature = gameState.findCardByPermanentId(permCardId);
+                if (!physicalCard.getOwner().equals(playerId))
                     return false;
 
-                if (physicalCard.getZone() != Zone.LOCATIONS)
-                    return false;
+                CardCategory cardCategory = physicalCard.getBlueprint().getCardCategory();
 
-                if (physicalCard.isBlownAway() || physicalCard.isCollapsed())
-                    return false;
+                if (cardCategory == CardCategory.CHARACTER || cardCategory == CardCategory.VEHICLE || cardCategory == CardCategory.STARSHIP
+                        || (!checkingOnly && (cardCategory == CardCategory.DEVICE || cardCategory == CardCategory.WEAPON || cardCategory == CardCategory.EFFECT))) {
 
-                if (physicalCard.getOwner().equals(locationToConvertWith.getOwner()))
-                    return false;
+                    if (!Filters.presentWith(creature).accepts(gameState, modifiersQuerying, physicalCard))
+                        return false;
 
-                if (uniqueness != modifiersQuerying.getUniqueness(gameState, physicalCard))
-                    return false;
+                    if (modifiersQuerying.isProhibitedFromAttackingTarget(gameState, physicalCard, creature))
+                        return false;
 
-                if ((!Filters.holosite.accepts(gameState, modifiersQuerying, locationToConvertWith) || !Filters.holosite.accepts(gameState, modifiersQuerying, physicalCard))
-                        && (!Filters.Big_One_Asteroid_Cave_Or_Space_Slug_Belly.accepts(gameState, modifiersQuerying, locationToConvertWith) || !Filters.Big_One_Asteroid_Cave_Or_Space_Slug_Belly.accepts(gameState, modifiersQuerying, physicalCard))
-                        && !Filters.sameTitleAs(locationToConvertWith).accepts(gameState, modifiersQuerying, physicalCard))
-                    return false;
+                    if (checkingOnly && modifiersQuerying.hasParticipatedInAttackOnCreatureThisTurn(physicalCard))
+                        return false;
 
-                return !modifiersQuerying.cannotBeConverted(gameState, physicalCard);
+                    return true;
+                }
+
+                return false;
             }
         };
     }
 
     /**
-     * Filter that accepts cards that are the current top collapsed locations that can be rebuilt by deploying the specified location.
+     * Filter that accepts non-creatures at the specified location that can be attacked by the specified creature.
      *
-     * @param locationToRebuildWith the location
+     * @param creature the creature
+     * @param allowDroidsAndAboardVehicles true if non-parasite attack is not restricted to creature vehicles,
+     *                                     non-droid characters, and those not aboard open vehicles, otherwise false
      * @return Filter
      */
-    public static Filter canBeRebuiltByDeployment(PhysicalCard locationToRebuildWith) {
-        final Integer permLocationToRebuildWithCardId = locationToRebuildWith.getPermanentCardId();
+    public static Filter nonCreatureCanBeAttackedByCreature(PhysicalCard creature, final boolean allowDroidsAndAboardVehicles) {
+        final Integer permCardId = creature.getPermanentCardId();
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard locationToRebuildWith = gameState.findCardByPermanentId(permLocationToRebuildWithCardId);
+                PhysicalCard creature = gameState.findCardByPermanentId(permCardId);
 
-                Uniqueness uniqueness = modifiersQuerying.getUniqueness(gameState, locationToRebuildWith);
-
-                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
+                if (!Filters.presentWith(creature).accepts(gameState, modifiersQuerying, physicalCard)) {
                     return false;
+                }
 
-                if (physicalCard.getZone() != Zone.LOCATIONS)
+                if (!allowDroidsAndAboardVehicles || Filters.parasite.accepts(gameState, modifiersQuerying, creature)) {
+                    if (Filters.aboard(Filters.vehicle).accepts(gameState, modifiersQuerying, physicalCard)) {
+                        return false;
+                    }
+                }
+
+                if (modifiersQuerying.isProhibitedFromAttackingTarget(gameState, creature, physicalCard)) {
                     return false;
+                }
 
-                if (!physicalCard.isCollapsed())
-                    return false;
+                if (!Filters.parasite.accepts(gameState, modifiersQuerying, creature)
+                        && (allowDroidsAndAboardVehicles
+                        || Filters.or(Filters.creature_vehicle, Filters.non_droid_character).accepts(gameState, modifiersQuerying, physicalCard))) {
+                    return true;
+                }
 
-                if (uniqueness != modifiersQuerying.getUniqueness(gameState, physicalCard))
-                    return false;
+                if (modifiersQuerying.grantedToAttackTarget(gameState, creature, physicalCard)) {
+                    return true;
+                }
 
-                return (Filters.holosite.accepts(gameState, modifiersQuerying, locationToRebuildWith) && Filters.holosite.accepts(gameState, modifiersQuerying, physicalCard))
-                        || (Filters.Big_One_Asteroid_Cave_Or_Space_Slug_Belly.accepts(gameState, modifiersQuerying, locationToRebuildWith) && Filters.Big_One_Asteroid_Cave_Or_Space_Slug_Belly.accepts(gameState, modifiersQuerying, physicalCard))
-                        || Filters.sameTitleAs(locationToRebuildWith).accepts(gameState, modifiersQuerying, physicalCard);
+                return false;
             }
         };
     }
@@ -10291,77 +10427,72 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that would participate in an attack on a specified creature.
+     * Filter that accepts cards that are currently eligible to participate in a battle at a specified location.
      *
-     * @param playerId the player to initiate the attack
-     * @param creature the creature
-     * @param checkingOnly true if only checking if attack can be initiated, false if getting all cards to participate in the attack
+     * @param location the location
+     * @param playerInitiatingBattle the player initiating battle
      * @return Filter
      */
-    public static Filter initiallyParticipatesInAttackOnCreature(final String playerId, PhysicalCard creature, final boolean checkingOnly) {
-        final Integer permCardId = creature.getPermanentCardId();
+    public static Filter canParticipateInBattleAt(PhysicalCard location, final String playerInitiatingBattle) {
+        final Integer permLocationId = location.getPermanentCardId();
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard creature = gameState.findCardByPermanentId(permCardId);
-                if (!physicalCard.getOwner().equals(playerId))
-                    return false;
+                PhysicalCard location = gameState.findCardByPermanentId(permLocationId);
 
                 CardCategory cardCategory = physicalCard.getBlueprint().getCardCategory();
+                if (physicalCard.isDejarikHologramAtHolosite() || cardCategory == CardCategory.CHARACTER || cardCategory == CardCategory.DEVICE || cardCategory == CardCategory.VEHICLE
+                        || cardCategory == CardCategory.STARSHIP || cardCategory == CardCategory.WEAPON || cardCategory == CardCategory.EFFECT) {
 
-                if (cardCategory == CardCategory.CHARACTER || cardCategory == CardCategory.VEHICLE || cardCategory == CardCategory.STARSHIP
-                        || (!checkingOnly && (cardCategory == CardCategory.DEVICE || cardCategory == CardCategory.WEAPON || cardCategory == CardCategory.EFFECT))) {
-
-                    if (!Filters.presentWith(creature).accepts(gameState, modifiersQuerying, physicalCard))
+                    PhysicalCard cardLocation = modifiersQuerying.getLocationThatCardIsAt(gameState, physicalCard);
+                    if (cardLocation == null || !Filters.sameCardId(location).accepts(gameState, modifiersQuerying, cardLocation))
                         return false;
 
-                    if (modifiersQuerying.isProhibitedFromAttackingTarget(gameState, physicalCard, creature))
+                    if (modifiersQuerying.hasParticipatedInBattleAtOtherLocation(physicalCard, location))
                         return false;
 
-                    return !checkingOnly || !modifiersQuerying.hasParticipatedInAttackOnCreatureThisTurn(physicalCard);
+                    if (modifiersQuerying.isExcludedFromBattle(gameState, physicalCard))
+                        return false;
+
+                    if (!modifiersQuerying.mayNotBeExcludedFromBattle(gameState, physicalCard)) {
+                        if (modifiersQuerying.isProhibitedFromParticipatingInBattle(gameState, physicalCard, playerInitiatingBattle))
+                            return false;
+                    }
+
+                    return true;
                 }
-
                 return false;
             }
         };
     }
 
     /**
-     * Filter that accepts non-creatures at the specified location that can be attacked by the specified creature.
+     * Filter that accepts cards that initially would join a battle at the specified location.
+     * This ignores whether the cards cannot participate in the battle, since those cards will be excluded
+     * when the battle actually starts.
      *
-     * @param creature the creature
-     * @param allowDroidsAndAboardVehicles true if non-parasite attack is not restricted to creature vehicles,
-     *                                     non-droid characters, and those not aboard open vehicles, otherwise false
+     * @param location the location
      * @return Filter
      */
-    public static Filter nonCreatureCanBeAttackedByCreature(PhysicalCard creature, final boolean allowDroidsAndAboardVehicles) {
-        final Integer permCardId = creature.getPermanentCardId();
+    public static Filter initiallyParticipatesInBattle(PhysicalCard location) {
+        final Integer permLocationId = location.getPermanentCardId();
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard creature = gameState.findCardByPermanentId(permCardId);
+                PhysicalCard location = gameState.findCardByPermanentId(permLocationId);
 
-                if (!Filters.presentWith(creature).accepts(gameState, modifiersQuerying, physicalCard)) {
-                    return false;
-                }
+                CardCategory cardCategory = physicalCard.getBlueprint().getCardCategory();
+                if (physicalCard.isDejarikHologramAtHolosite() || cardCategory == CardCategory.CHARACTER || cardCategory==CardCategory.DEVICE || cardCategory == CardCategory.VEHICLE
+                        || cardCategory == CardCategory.STARSHIP || cardCategory == CardCategory.WEAPON || cardCategory == CardCategory.EFFECT) {
 
-                if (!allowDroidsAndAboardVehicles || Filters.parasite.accepts(gameState, modifiersQuerying, creature)) {
-                    if (Filters.aboard(Filters.vehicle).accepts(gameState, modifiersQuerying, physicalCard)) {
+                    PhysicalCard cardLocation = modifiersQuerying.getLocationThatCardIsAt(gameState, physicalCard);
+                    if (cardLocation==null || !Filters.sameCardId(location).accepts(gameState, modifiersQuerying, cardLocation))
                         return false;
-                    }
-                }
 
-                if (modifiersQuerying.isProhibitedFromAttackingTarget(gameState, creature, physicalCard)) {
-                    return false;
-                }
-
-                if (!Filters.parasite.accepts(gameState, modifiersQuerying, creature)
-                        && (allowDroidsAndAboardVehicles
-                        || Filters.or(Filters.creature_vehicle, Filters.non_droid_character).accepts(gameState, modifiersQuerying, physicalCard))) {
                     return true;
                 }
 
-                return modifiersQuerying.grantedToAttackTarget(gameState, creature, physicalCard);
+                return false;
             }
         };
     }
@@ -11821,40 +11952,32 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that are currently eligible to participate in a battle at a specified location.
+     * Filter that accepts cards that can can join Search Party at the specified site for the specified player.
      *
-     * @param location the location
-     * @param playerInitiatingBattle the player initiating battle
+     * @param playerId the player
+     * @param site the site
      * @return Filter
      */
-    public static Filter canParticipateInBattleAt(PhysicalCard location, final String playerInitiatingBattle) {
-        final Integer permLocationId = location.getPermanentCardId();
+    public static Filter canJoinSearchPartyAt(final String playerId, PhysicalCard site) {
+        final Integer permSiteCardId = site.getPermanentCardId();
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard location = gameState.findCardByPermanentId(permLocationId);
+                if (!physicalCard.getOwner().equals(playerId))
+                    return false;
 
-                CardCategory cardCategory = physicalCard.getBlueprint().getCardCategory();
-                if (physicalCard.isDejarikHologramAtHolosite() || cardCategory == CardCategory.CHARACTER || cardCategory == CardCategory.DEVICE || cardCategory == CardCategory.VEHICLE
-                        || cardCategory == CardCategory.STARSHIP || cardCategory == CardCategory.WEAPON || cardCategory == CardCategory.EFFECT) {
+                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.CHARACTER)
+                    return false;
 
-                    PhysicalCard cardLocation = modifiersQuerying.getLocationThatCardIsAt(gameState, physicalCard);
-                    if (cardLocation == null || !Filters.sameCardId(location).accepts(gameState, modifiersQuerying, cardLocation))
-                        return false;
+                if (modifiersQuerying.cannotJoinSearchParty(gameState, physicalCard))
+                    return false;
 
-                    if (modifiersQuerying.hasParticipatedInBattleAtOtherLocation(physicalCard, location))
-                        return false;
+                PhysicalCard site = gameState.findCardByPermanentId(permSiteCardId);
+                PhysicalCard siteCardIsAt = modifiersQuerying.getLocationThatCardIsAt(gameState, physicalCard);
+                if (siteCardIsAt == null || !Filters.sameCardId(site).accepts(gameState, modifiersQuerying, siteCardIsAt))
+                    return false;
 
-                    if (modifiersQuerying.isExcludedFromBattle(gameState, physicalCard))
-                        return false;
-
-                    if (!modifiersQuerying.mayNotBeExcludedFromBattle(gameState, physicalCard)) {
-                        return !modifiersQuerying.isProhibitedFromParticipatingInBattle(gameState, physicalCard, playerInitiatingBattle);
-                    }
-
-                    return true;
-                }
-                return false;
+                return true;
             }
         };
     }
@@ -12152,30 +12275,29 @@ public class Filters {
         return Filters.or(Filters.cardBeingPlayedTargeting(source, filters), Filters.cardOnTableTargeting(filters));
     }
 
-    /**
-     * Filter that accepts cards that initially would join a battle at the specified location.
-     * This ignores whether the cards cannot participate in the battle, since those cards will be excluded
-     * when the battle actually starts.
-     *
-     * @param location the location
-     * @return Filter
-     */
-    public static Filter initiallyParticipatesInBattle(PhysicalCard location) {
-        final Integer permLocationId = location.getPermanentCardId();
+    // Gets a filter representing the Utinni Effects that could target a card represented by the input filters.
+    public static Filter utinniEffectThatCanTarget(final Filter filters) {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard location = gameState.findCardByPermanentId(permLocationId);
 
-                CardCategory cardCategory = physicalCard.getBlueprint().getCardCategory();
-                if (physicalCard.isDejarikHologramAtHolosite() || cardCategory == CardCategory.CHARACTER || cardCategory == CardCategory.DEVICE || cardCategory == CardCategory.VEHICLE
-                        || cardCategory == CardCategory.STARSHIP || cardCategory == CardCategory.WEAPON || cardCategory == CardCategory.EFFECT) {
 
-                    PhysicalCard cardLocation = modifiersQuerying.getLocationThatCardIsAt(gameState, physicalCard);
-                    return cardLocation != null && Filters.sameCardId(location).accepts(gameState, modifiersQuerying, cardLocation);
-                }
+                // TODO: Fix this
+
+                SwccgCardBlueprint blueprint = physicalCard.getBlueprint();
+                if (blueprint.getCardSubtype()!=CardSubtype.UTINNI)
+                    return false;
+                if (physicalCard.getUtinniEffectStatus() != UtinniEffectStatus.REACHED)
+                    return true;
 
                 return false;
+
+                /* TODO: Fix this
+
+
+                Filter validTargetFilter = blueprint.getValidUtinniEffectTargetFilter(physicalCard.getOwner(), gameState.getGame(), physicalCard);
+                return Filters.canSpot(gameState, modifiersQuerying, Filters.and(filters, validTargetFilter));
+                */
             }
         };
     }
@@ -12284,30 +12406,48 @@ public class Filters {
     // Or related locations (even when not in play) to the location the card is "at" if the input card is not a location.
     // For example, this can be used to find a "related location" from Reserve deck.
 
+
     /**
-     * Filter that accepts cards that can can join Search Party at the specified site for the specified player.
-     *
-     * @param playerId the player
-     * @param site the site
+     * Filters that accepts cards that are related locations (even when not in play) to the input card.
+     * Or related locations (even when not in play) to the location the card is "at" if the input card is not a location.
+     * For example, this can be used to find a "related location" from Reserve deck.
+     * @param card the card
      * @return Filter
      */
-    public static Filter canJoinSearchPartyAt(final String playerId, PhysicalCard site) {
-        final Integer permSiteCardId = site.getPermanentCardId();
+    public static Filter relatedLocationEvenWhenNotInPlay(PhysicalCard card) {
+        final Integer permCardId = card.getPermanentCardId();
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                if (!physicalCard.getOwner().equals(playerId))
+                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
                     return false;
 
-                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.CHARACTER)
+                PhysicalCard card = gameState.findCardByPermanentId(permCardId);
+
+                PhysicalCard location = modifiersQuerying.getLocationHere(gameState, card);
+                if (location == null)
                     return false;
 
-                if (modifiersQuerying.cannotJoinSearchParty(gameState, physicalCard))
+                // If location is unique, then location with same title is not considered related.
+                if (!Filters.other(location).accepts(gameState, modifiersQuerying, physicalCard))
                     return false;
 
-                PhysicalCard site = gameState.findCardByPermanentId(permSiteCardId);
-                PhysicalCard siteCardIsAt = modifiersQuerying.getLocationThatCardIsAt(gameState, physicalCard);
-                return siteCardIsAt != null && Filters.sameCardId(site).accepts(gameState, modifiersQuerying, siteCardIsAt);
+                // Check if locations are part of the same system
+                if (Filters.partOfSystem(location.getPartOfSystem()).accepts(gameState, modifiersQuerying, physicalCard))
+                    return true;
+
+                // Check if locations are part of the same unique starship or vehicle
+                if (Filters.or(Filters.starship_site, Filters.vehicle_site).accepts(gameState, modifiersQuerying, physicalCard)
+                        && Filters.or(Filters.starship_site, Filters.vehicle_site).accepts(gameState, modifiersQuerying, location)) {
+
+                    Persona physicalCardPersona = physicalCard.getBlueprint().getRelatedStarshipOrVehiclePersona();
+                    Persona locationPersona = physicalCard.getBlueprint().getRelatedStarshipOrVehiclePersona();
+
+                    if (physicalCardPersona != null && locationPersona != null && physicalCardPersona.equals(locationPersona))
+                        return true;
+                }
+
+                return false;
             }
         };
     }
@@ -12341,26 +12481,31 @@ public class Filters {
         };
     }
 
-    // Gets a filter representing the Utinni Effects that could target a card represented by the input filters.
-    public static Filter utinniEffectThatCanTarget(final Filter filters) {
+
+    /**
+     * Filter that accepts the current battle location where player can have power added in battle due to starships
+     * controlling the related system.
+     *
+     * @param playerId the player
+     * @return Filter
+     */
+    public static Filter locationWherePowerCanBeAddedInBattleFromStarshipsControllingSystem(final String playerId) {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-
-
-                // TODO: Fix this
-
-                SwccgCardBlueprint blueprint = physicalCard.getBlueprint();
-                if (blueprint.getCardSubtype()!=CardSubtype.UTINNI)
+                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
                     return false;
-                return physicalCard.getUtinniEffectStatus() != UtinniEffectStatus.REACHED;
 
-                /* TODO: Fix this
+                BattleState battleState = gameState.getBattleState();
+                if (battleState==null || !Filters.sameCardId(battleState.getBattleLocation()).accepts(gameState, modifiersQuerying, physicalCard))
+                    return false;
 
+                // Check Hoth Energy Shield
+                if (playerId.equals(gameState.getDarkPlayer())
+                        && modifiersQuerying.isLocationUnderHothEnergyShield(gameState, physicalCard))
+                    return false;
 
-                Filter validTargetFilter = blueprint.getValidUtinniEffectTargetFilter(physicalCard.getOwner(), gameState.getGame(), physicalCard);
-                return Filters.canSpot(gameState, modifiersQuerying, Filters.and(filters, validTargetFilter));
-                */
+                return true;
             }
         };
     }
@@ -12454,47 +12599,52 @@ public class Filters {
         };
     }
 
-    /**
-     * Filters that accepts cards that are related locations (even when not in play) to the input card.
-     * Or related locations (even when not in play) to the location the card is "at" if the input card is not a location.
-     * For example, this can be used to find a "related location" from Reserve deck.
-     *
-     * @param card the card
-     * @return Filter
-     */
-    public static Filter relatedLocationEvenWhenNotInPlay(PhysicalCard card) {
-        final Integer permCardId = card.getPermanentCardId();
+    // Gets a filter representing the starships that the specified collection of "just lost" cards can all be relocated to.
+    public static Filter starshipSelectedLostCardsCanAllRelocateTo(final String playerId, final SwccgGame game, Collection<PhysicalCard> lostCards) {
+        final List<Integer> permLostCardIds = new LinkedList<Integer>();
+        for (PhysicalCard lostCard : lostCards) {
+            permLostCardIds.add(lostCard.getPermanentCardId());
+        }
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
+                if (physicalCard.getBlueprint().getCardCategory()!=CardCategory.STARSHIP || permLostCardIds.isEmpty())
                     return false;
 
-                PhysicalCard card = gameState.findCardByPermanentId(permCardId);
-
-                PhysicalCard location = modifiersQuerying.getLocationHere(gameState, card);
-                if (location == null)
+                // Check for "Dagobah"
+                if (Filters.at(Filters.Dagobah_location).accepts(gameState, modifiersQuerying, physicalCard))
                     return false;
 
-                // If location is unique, then location with same title is not considered related.
-                if (!Filters.other(location).accepts(gameState, modifiersQuerying, physicalCard))
+                if (Filters.AhchTo_location.accepts(gameState, modifiersQuerying, physicalCard))
                     return false;
 
-                // Check if locations are part of the same system
-                if (Filters.partOfSystem(location.getPartOfSystem()).accepts(gameState, modifiersQuerying, physicalCard))
-                    return true;
+                // Check for "Hoth Energy Shield"
+                if (playerId.equals(gameState.getDarkPlayer())
+                        && modifiersQuerying.isLocationUnderHothEnergyShield(gameState, modifiersQuerying.getLocationThatCardIsAt(gameState, physicalCard)))
+                    return false;
 
-                // Check if locations are part of the same unique starship or vehicle
-                if (Filters.or(Filters.starship_site, Filters.vehicle_site).accepts(gameState, modifiersQuerying, physicalCard)
-                        && Filters.or(Filters.starship_site, Filters.vehicle_site).accepts(gameState, modifiersQuerying, location)) {
-
-                    Persona physicalCardPersona = physicalCard.getBlueprint().getRelatedStarshipOrVehiclePersona();
-                    Persona locationPersona = physicalCard.getBlueprint().getRelatedStarshipOrVehiclePersona();
-
-                    return physicalCardPersona != null && locationPersona != null && physicalCardPersona.equals(locationPersona);
+                final List<PhysicalCard> lostCards = new LinkedList<PhysicalCard>();
+                for (Integer permLostCardId : permLostCardIds) {
+                    lostCards.add(gameState.findCardByPermanentId(permLostCardId));
                 }
 
-                return false;
+                // Check if all selected cards (only characters, devices, and weapons allowed) can relocate to capital starship
+                for (PhysicalCard lostCard : lostCards) {
+                    if (lostCard.getBlueprint().getCardCategory()!=CardCategory.CHARACTER
+                            && lostCard.getBlueprint().getCardCategory()!=CardCategory.DEVICE
+                            && lostCard.getBlueprint().getCardCategory()!=CardCategory.WEAPON)
+                        return false;
+
+                    if (game.getModifiersQuerying().mayNotMove(game.getGameState(), lostCard)
+                            || !lostCard.getBlueprint().getValidMoveTargetFilter(playerId, game, lostCard, false).accepts(gameState, modifiersQuerying, physicalCard))
+                        return false;
+                }
+
+                // Check if there is capacity for all the selected cards aboard the starship
+                if (!modifiersQuerying.hasCapacityForCardsToRelocate(gameState, physicalCard, lostCards))
+                    return false;
+
+                return true;
             }
         };
     }
@@ -13004,78 +13154,6 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts the current battle location where player can have power added in battle due to starships
-     * controlling the related system.
-     *
-     * @param playerId the player
-     * @return Filter
-     */
-    public static Filter locationWherePowerCanBeAddedInBattleFromStarshipsControllingSystem(final String playerId) {
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
-                    return false;
-
-                BattleState battleState = gameState.getBattleState();
-                if (battleState == null || !Filters.sameCardId(battleState.getBattleLocation()).accepts(gameState, modifiersQuerying, physicalCard))
-                    return false;
-
-                // Check Hoth Energy Shield
-                return !playerId.equals(gameState.getDarkPlayer())
-                        || !modifiersQuerying.isLocationUnderHothEnergyShield(gameState, physicalCard);
-            }
-        };
-    }
-
-    // Gets a filter representing the starships that the specified collection of "just lost" cards can all be relocated to.
-    public static Filter starshipSelectedLostCardsCanAllRelocateTo(final String playerId, final SwccgGame game, Collection<PhysicalCard> lostCards) {
-        final List<Integer> permLostCardIds = new LinkedList<Integer>();
-        for (PhysicalCard lostCard : lostCards) {
-            permLostCardIds.add(lostCard.getPermanentCardId());
-        }
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                if (physicalCard.getBlueprint().getCardCategory() != CardCategory.STARSHIP || permLostCardIds.isEmpty())
-                    return false;
-
-                // Check for "Dagobah"
-                if (Filters.at(Filters.Dagobah_location).accepts(gameState, modifiersQuerying, physicalCard))
-                    return false;
-
-                if (Filters.AhchTo_location.accepts(gameState, modifiersQuerying, physicalCard))
-                    return false;
-
-                // Check for "Hoth Energy Shield"
-                if (playerId.equals(gameState.getDarkPlayer())
-                        && modifiersQuerying.isLocationUnderHothEnergyShield(gameState, modifiersQuerying.getLocationThatCardIsAt(gameState, physicalCard)))
-                    return false;
-
-                final List<PhysicalCard> lostCards = new LinkedList<PhysicalCard>();
-                for (Integer permLostCardId : permLostCardIds) {
-                    lostCards.add(gameState.findCardByPermanentId(permLostCardId));
-                }
-
-                // Check if all selected cards (only characters, devices, and weapons allowed) can relocate to capital starship
-                for (PhysicalCard lostCard : lostCards) {
-                    if (lostCard.getBlueprint().getCardCategory() != CardCategory.CHARACTER
-                            && lostCard.getBlueprint().getCardCategory() != CardCategory.DEVICE
-                            && lostCard.getBlueprint().getCardCategory() != CardCategory.WEAPON)
-                        return false;
-
-                    if (game.getModifiersQuerying().mayNotMove(game.getGameState(), lostCard)
-                            || !lostCard.getBlueprint().getValidMoveTargetFilter(playerId, game, lostCard, false).accepts(gameState, modifiersQuerying, physicalCard))
-                        return false;
-                }
-
-                // Check if there is capacity for all the selected cards aboard the starship
-                return modifiersQuerying.hasCapacityForCardsToRelocate(gameState, physicalCard, lostCards);
-            }
-        };
-    }
-
-    /**
      * Gets a filter representing the cards that a specific card could be transferred to if the only requirement was having
      * enough Force to transfer to that target.
      * This filter is typically used from a getValidTargetFilter() method to handle transfer cost modifiers that only affect
@@ -13097,7 +13175,118 @@ public class Filters {
                     return true;
                 }
 
-                return !(totalTransferCost > modifiersQuerying.getForceAvailableToUse(gameState, playerId));
+                if (totalTransferCost > modifiersQuerying.getForceAvailableToUse(gameState, playerId)) {
+                    return false;
+                }
+
+                return true;
+            }
+        };
+    }
+
+    /**
+     * Gets a filter representing the cards that a specific card could be deployed to if the only requirement was having
+     * enough Force to deploy to that target.
+     * This filter is typically used from a getValidTargetFilter() method to handle deploy cost modifiers that only affect
+     * when a card is deployed to certain targets.
+     * @param sourceCard the card to initiate the deployment
+     * @param cardToDeploy the card to deploy
+     * @param playCardOption the play card option, or null
+     * @param forFree true if playing card for free, otherwise false
+     * @param changeInCost change in amount of Force (can be positive or negative) required
+     * @param reactActionOption a 'react' action option, or null if not a 'react'
+     * @return the filter
+     */
+    public static Filter canUseForceToDeployToTarget(PhysicalCard sourceCard, PhysicalCard cardToDeploy, final PlayCardOption playCardOption, final boolean forFree, final float changeInCost, final ReactActionOption reactActionOption) {
+        final Integer permSourceCardId = sourceCard.getPermanentCardId();
+        final Integer permCardToDeployCardId = cardToDeploy.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard targetCard) {
+                PhysicalCard sourceCard = gameState.findCardByPermanentId(permSourceCardId);
+                PhysicalCard cardToDeploy = gameState.findCardByPermanentId(permCardToDeployCardId);
+
+                String playerId = cardToDeploy.getOwner();
+                String opponent = gameState.getOpponent(playerId);
+
+                float deployCostForPlayer = modifiersQuerying.getDeployCost(gameState, sourceCard, cardToDeploy, targetCard, false, playCardOption, forFree, changeInCost, reactActionOption, true);
+
+                float deployCostForOpponent = 0;
+                boolean useBothForcePiles = modifiersQuerying.isDeployUsingBothForcePiles(gameState, cardToDeploy, targetCard);
+                if (useBothForcePiles) {
+                    deployCostForOpponent = modifiersQuerying.getDeployCost(gameState, sourceCard, cardToDeploy, targetCard, false, playCardOption, forFree, changeInCost, reactActionOption, false);
+                }
+
+                if (deployCostForPlayer <= 0 && deployCostForOpponent <= 0) {
+                    return true;
+                }
+
+                if (deployCostForPlayer > modifiersQuerying.getForceAvailableToUse(gameState, playerId)) {
+                    return false;
+                }
+
+                if (useBothForcePiles
+                        && deployCostForOpponent > modifiersQuerying.getForceAvailableToUse(gameState, opponent)) {
+                    return false;
+                }
+
+                return true;
+            }
+        };
+    }
+
+    /**
+     * Gets a filter representing the cards that a specific card could be deployed to if the only requirement was having
+     * enough Force to deploy to that target.
+     * This filter is typically used from a getValidTargetFilter() method to handle deploy cost modifiers that only affect
+     * when a card is deployed to certain targets.
+     * @param sourceCard the card to initiate the deployment
+     * @param starship the starship to deploy
+     * @param starshipForFree true if the starship deploys for free, otherwise false
+     * @param starshipChangeInCost change in amount of Force (can be positive or negative) required for starship
+     * @param pilot the pilot to deploy
+     * @param pilotForFree true if the pilot (or driver) deploys for free, otherwise false
+     * @param pilotChangeInCost change in amount of Force (can be positive or negative) required for pilot
+     * @param reactActionOption a 'react' action option, or null if not a 'react'
+     * @return the filter
+     */
+    public static Filter canUseForceToDeploySimultaneouslyToTarget(PhysicalCard sourceCard, PhysicalCard starship, final boolean starshipForFree, final float starshipChangeInCost, PhysicalCard pilot, final boolean pilotForFree, final float pilotChangeInCost, final ReactActionOption reactActionOption) {
+        final Integer permSourceCardId = sourceCard.getPermanentCardId();
+        final Integer permStarshipCardId = starship.getPermanentCardId();
+        final Integer permPilotCardId = pilot.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard targetCard) {
+                PhysicalCard sourceCard = gameState.findCardByPermanentId(permSourceCardId);
+                PhysicalCard starship = gameState.findCardByPermanentId(permStarshipCardId);
+                PhysicalCard pilot = gameState.findCardByPermanentId(permPilotCardId);
+
+                String playerId = starship.getOwner();
+                String opponent = gameState.getOpponent(playerId);
+
+                float deployCostForPlayer = modifiersQuerying.getSimultaneousDeployCost(gameState, sourceCard, starship, starshipForFree, starshipChangeInCost, pilot, pilotForFree, pilotChangeInCost, targetCard, reactActionOption, true);
+
+                float deployCostForOpponent = 0;
+                boolean useBothForcePiles = modifiersQuerying.isDeployUsingBothForcePiles(gameState, starship, targetCard)
+                        || modifiersQuerying.isDeployUsingBothForcePiles(gameState, pilot, targetCard);
+                if (useBothForcePiles) {
+                    deployCostForOpponent = modifiersQuerying.getSimultaneousDeployCost(gameState, sourceCard, starship, starshipForFree, starshipChangeInCost, pilot, pilotForFree, pilotChangeInCost, targetCard, reactActionOption, false);
+                }
+
+                if (deployCostForPlayer <= 0 && deployCostForOpponent <= 0) {
+                    return true;
+                }
+
+                if (deployCostForPlayer > modifiersQuerying.getForceAvailableToUse(gameState, playerId)) {
+                    return false;
+                }
+
+                if (useBothForcePiles
+                        && deployCostForOpponent > modifiersQuerying.getForceAvailableToUse(gameState, opponent)) {
+                    return false;
+                }
+
+                return true;
             }
         };
     }
@@ -13573,134 +13762,52 @@ public class Filters {
     }
 
     /**
-     * Gets a filter representing the cards that a specific card could be deployed to if the only requirement was having
-     * enough Force to deploy to that target.
-     * This filter is typically used from a getValidTargetFilter() method to handle deploy cost modifiers that only affect
-     * when a card is deployed to certain targets.
-     * @param sourceCard the card to initiate the deployment
-     * @param cardToDeploy the card to deploy
-     * @param playCardOption the play card option, or null
-     * @param forFree true if playing card for free, otherwise false
-     * @param changeInCost change in amount of Force (can be positive or negative) required
-     * @param reactActionOption a 'react' action option, or null if not a 'react'
-     * @return the filter
+     * Gets a filter that accepts the location that is the innermost marker site
      */
-    public static Filter canUseForceToDeployToTarget(PhysicalCard sourceCard, PhysicalCard cardToDeploy, final PlayCardOption playCardOption, final boolean forFree, final float changeInCost, final ReactActionOption reactActionOption) {
-        final Integer permSourceCardId = sourceCard.getPermanentCardId();
-        final Integer permCardToDeployCardId = cardToDeploy.getPermanentCardId();
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard targetCard) {
-                PhysicalCard sourceCard = gameState.findCardByPermanentId(permSourceCardId);
-                PhysicalCard cardToDeploy = gameState.findCardByPermanentId(permCardToDeployCardId);
+    public static final Filter innermostMarker = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            Filter filter = Filters.marker_site;
+            if (!filter.accepts(gameState, modifiersQuerying, physicalCard))
+                return false;
 
-                String playerId = cardToDeploy.getOwner();
-                String opponent = gameState.getOpponent(playerId);
-
-                float deployCostForPlayer = modifiersQuerying.getDeployCost(gameState, sourceCard, cardToDeploy, targetCard, false, playCardOption, forFree, changeInCost, reactActionOption, true);
-
-                float deployCostForOpponent = 0;
-                boolean useBothForcePiles = modifiersQuerying.isDeployUsingBothForcePiles(gameState, cardToDeploy, targetCard);
-                if (useBothForcePiles) {
-                    deployCostForOpponent = modifiersQuerying.getDeployCost(gameState, sourceCard, cardToDeploy, targetCard, false, playCardOption, forFree, changeInCost, reactActionOption, false);
-                }
-
-                if (deployCostForPlayer <= 0 && deployCostForOpponent <= 0) {
-                    return true;
-                }
-
-                if (deployCostForPlayer > modifiersQuerying.getForceAvailableToUse(gameState, playerId)) {
-                    return false;
-                }
-
-                return !useBothForcePiles
-                        || !(deployCostForOpponent > modifiersQuerying.getForceAvailableToUse(gameState, opponent));
+            Collection<PhysicalCard> markerSites = Filters.filterTopLocationsOnTable(gameState.getGame(), filter);
+            if (Filters.Seventh_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
+                return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.or(Filters.First_Marker,
+                        Filters.Second_Marker, Filters.Third_Marker, Filters.Fourth_Marker, Filters.Fifth_Marker, Filters.Sixth_Marker)).isEmpty();
             }
-        };
-    }
+            if (Filters.Sixth_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
+                return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.or(Filters.First_Marker,
+                        Filters.Second_Marker, Filters.Third_Marker, Filters.Fourth_Marker, Filters.Fifth_Marker)).isEmpty();
+            }
+            if (Filters.Fifth_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
+                return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.or(Filters.First_Marker,
+                        Filters.Second_Marker, Filters.Third_Marker, Filters.Fourth_Marker)).isEmpty();
+            }
+            if (Filters.Fourth_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
+                return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.or(Filters.First_Marker,
+                        Filters.Second_Marker, Filters.Third_Marker)).isEmpty();
+            }
+            if (Filters.Third_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
+                return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.or(Filters.First_Marker,
+                        Filters.Second_Marker)).isEmpty();
+            }
+            if (Filters.Second_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
+                return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.First_Marker).isEmpty();
+            }
+            if (Filters.First_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
+                return true;
+            }
+
+            return false;
+        }
+    };
     /**
      * Wrapper method to allow other static filters to access the wrapped filter.
      */
     private static Filter innermostMarker() {
         return innermostMarker;
     }
-
-    /**
-     * Gets a filter representing the cards that a specific card could be deployed to if the only requirement was having
-     * enough Force to deploy to that target.
-     * This filter is typically used from a getValidTargetFilter() method to handle deploy cost modifiers that only affect
-     * when a card is deployed to certain targets.
-     *
-     * @param sourceCard           the card to initiate the deployment
-     * @param starship             the starship to deploy
-     * @param starshipForFree      true if the starship deploys for free, otherwise false
-     * @param starshipChangeInCost change in amount of Force (can be positive or negative) required for starship
-     * @param pilot                the pilot to deploy
-     * @param pilotForFree         true if the pilot (or driver) deploys for free, otherwise false
-     * @param pilotChangeInCost    change in amount of Force (can be positive or negative) required for pilot
-     * @param reactActionOption    a 'react' action option, or null if not a 'react'
-     * @return the filter
-     */
-    public static Filter canUseForceToDeploySimultaneouslyToTarget(PhysicalCard sourceCard, PhysicalCard starship, final boolean starshipForFree, final float starshipChangeInCost, PhysicalCard pilot, final boolean pilotForFree, final float pilotChangeInCost, final ReactActionOption reactActionOption) {
-        final Integer permSourceCardId = sourceCard.getPermanentCardId();
-        final Integer permStarshipCardId = starship.getPermanentCardId();
-        final Integer permPilotCardId = pilot.getPermanentCardId();
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard targetCard) {
-                PhysicalCard sourceCard = gameState.findCardByPermanentId(permSourceCardId);
-                PhysicalCard starship = gameState.findCardByPermanentId(permStarshipCardId);
-                PhysicalCard pilot = gameState.findCardByPermanentId(permPilotCardId);
-
-                String playerId = starship.getOwner();
-                String opponent = gameState.getOpponent(playerId);
-
-                float deployCostForPlayer = modifiersQuerying.getSimultaneousDeployCost(gameState, sourceCard, starship, starshipForFree, starshipChangeInCost, pilot, pilotForFree, pilotChangeInCost, targetCard, reactActionOption, true);
-
-                float deployCostForOpponent = 0;
-                boolean useBothForcePiles = modifiersQuerying.isDeployUsingBothForcePiles(gameState, starship, targetCard)
-                        || modifiersQuerying.isDeployUsingBothForcePiles(gameState, pilot, targetCard);
-                if (useBothForcePiles) {
-                    deployCostForOpponent = modifiersQuerying.getSimultaneousDeployCost(gameState, sourceCard, starship, starshipForFree, starshipChangeInCost, pilot, pilotForFree, pilotChangeInCost, targetCard, reactActionOption, false);
-                }
-
-                if (deployCostForPlayer <= 0 && deployCostForOpponent <= 0) {
-                    return true;
-                }
-
-                if (deployCostForPlayer > modifiersQuerying.getForceAvailableToUse(gameState, playerId)) {
-                    return false;
-                }
-
-                return !useBothForcePiles
-                        || !(deployCostForOpponent > modifiersQuerying.getForceAvailableToUse(gameState, opponent));
-            }
-        };
-    }
-
-    /**
-     * Filter that accepts representing cards not ignored during Epic Event calculations.
-     */
-    public static final Filter notIgnoredDuringEpicEventCalculation = new Filter() {
-        @Override
-        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-            return !modifiersQuerying.ignoreDuringEpicEventCalculation(gameState, physicalCard);
-        }
-    };
-
-    /**
-     * Wrapper method to allow other static filters to access the wrapped filter.
-     */
-    private static Filter notIgnoredDuringEpicEventCalculation() {
-        return notIgnoredDuringEpicEventCalculation;
-    }
-
-
-    //
-    //
-    // This section defines Filters used for devices.
-    //
-    //
 
     /**
      * Gets a filter that accepts the location that is the outermost marker site
@@ -13739,35 +13846,37 @@ public class Filters {
                 if (Filters.Sixth_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
                     return Filters.filterCount(markerSites, gameState.getGame(), 1, Filters.Seventh_Marker).isEmpty();
                 }
-                return Filters.Seventh_Marker.accepts(gameState, modifiersQuerying, physicalCard);
+                if (Filters.Seventh_Marker.accepts(gameState, modifiersQuerying, physicalCard)) {
+                    return true;
+                }
+
+                return false;
             }
         };
     }
 
     /**
-     * Filter that accepts devices and weapons cards that can be deployed on a character.
+     * Filter that accepts representing cards not ignored during Epic Event calculations.
      */
-    public static final Filter deviceOrWeaponThatCanBeDeployedOnCharacters = new Filter() {
+    public static final Filter notIgnoredDuringEpicEventCalculation = new Filter() {
         @Override
         public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-            return physicalCard.getBlueprint().canBeDeployedOnCharacter();
+            return !modifiersQuerying.ignoreDuringEpicEventCalculation(gameState, physicalCard);
         }
     };
-
     /**
      * Wrapper method to allow other static filters to access the wrapped filter.
      */
-    private static Filter deviceOrWeaponThatCanBeDeployedOnCharacters() {
-        return deviceOrWeaponThatCanBeDeployedOnCharacters;
+    private static Filter notIgnoredDuringEpicEventCalculation() {
+        return notIgnoredDuringEpicEventCalculation;
     }
 
-    //
-    //
-    // This section defines Filters used for weapons.
-    //
-    //
 
-    // Gets a filter representing the cards that can use a specified weapon.
+    //
+    //
+    // This section defines Filters used for devices.
+    //
+    //
 
     // Gets a filter representing the cards that can use a specified device.
     public static Filter canUseDevice(PhysicalCard device) {
@@ -13789,7 +13898,77 @@ public class Filters {
 
                 int numDevicesToUseLimit = modifiersQuerying.numDevicesAllowedToUse(gameState, physicalCard, mayBeUsedByLandedStarship);
                 List<Integer> otherDevicesUsed = modifiersQuerying.otherDevicesUsed(physicalCard, device);
-                return otherDevicesUsed.size() < numDevicesToUseLimit;
+                if (otherDevicesUsed.size() >= numDevicesToUseLimit)
+                    return false;
+
+                return true;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts devices and weapons cards that can be deployed on a character.
+     */
+    public static final Filter deviceOrWeaponThatCanBeDeployedOnCharacters = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return physicalCard.getBlueprint().canBeDeployedOnCharacter();
+        }
+    };
+    /**
+     * Wrapper method to allow other static filters to access the wrapped filter.
+     */
+    private static Filter deviceOrWeaponThatCanBeDeployedOnCharacters() {
+        return deviceOrWeaponThatCanBeDeployedOnCharacters;
+    }
+
+    //
+    //
+    // This section defines Filters used for weapons.
+    //
+    //
+
+    // Gets a filter representing the cards that can use a specified weapon.
+
+
+    /**
+     * Gets a filter representing the cards that can use a specified weapon.
+     * @param weapon the weapon
+     * @return Filter
+     */
+    public static Filter canUseWeapon(PhysicalCard weapon) {
+        final Integer permWeaponCardId = weapon.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard weapon = gameState.findCardByPermanentId(permWeaponCardId);
+
+                boolean mayBeUsedByLandedStarship = modifiersQuerying.mayBeUsedByLandedStarship(gameState, weapon);
+
+                if ((physicalCard.getBlueprint().getCardCategory()==CardCategory.VEHICLE || physicalCard.getBlueprint().getCardCategory()==CardCategory.STARSHIP)
+                        && !modifiersQuerying.isPiloted(gameState, physicalCard, mayBeUsedByLandedStarship)) {
+                    return false;
+                }
+
+                if (weapon.getBlueprint().getValidToUseWeaponFilter(weapon.getOwner(), gameState.getGame(), weapon).acceptsCount(gameState, modifiersQuerying, physicalCard) == 0) {
+                    return false;
+                }
+
+                if (Filters.sameCardId(weapon).accepts(gameState, modifiersQuerying, physicalCard)) {
+                    return true;
+                }
+
+                int numWeaponsToUseLimit = modifiersQuerying.numWeaponsAllowedToUse(gameState, physicalCard, mayBeUsedByLandedStarship);
+                List<Integer> otherWeaponsUsed = modifiersQuerying.otherWeaponsUsed(physicalCard, weapon);
+                if (otherWeaponsUsed.size() >= numWeaponsToUseLimit)
+                    return false;
+
+                if (Filters.squadron.accepts(gameState, modifiersQuerying, physicalCard)
+                        && !canModelTypesUseWeapons(gameState, modifiersQuerying, physicalCard, weapon, otherWeaponsUsed)) {
+                    return false;
+                }
+
+                return true;
             }
         };
     }
@@ -13841,7 +14020,8 @@ public class Filters {
                         if (canModelTypesUseWeaponsInner(gameState, modifiersQuerying, card, unmatchedModelTypes, unmatchedWeaponIds, validPairs, invalidPairs)) {
                             return true;
                         }
-                    } else {
+                    }
+                    else {
                         invalidPairs.add(pairKey);
                     }
                 }
@@ -13849,45 +14029,6 @@ public class Filters {
         }
 
         return false;
-    }
-
-    /**
-     * Gets a filter representing the cards that can use a specified weapon.
-     *
-     * @param weapon the weapon
-     * @return Filter
-     */
-    public static Filter canUseWeapon(PhysicalCard weapon) {
-        final Integer permWeaponCardId = weapon.getPermanentCardId();
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                PhysicalCard weapon = gameState.findCardByPermanentId(permWeaponCardId);
-
-                boolean mayBeUsedByLandedStarship = modifiersQuerying.mayBeUsedByLandedStarship(gameState, weapon);
-
-                if ((physicalCard.getBlueprint().getCardCategory() == CardCategory.VEHICLE || physicalCard.getBlueprint().getCardCategory() == CardCategory.STARSHIP)
-                        && !modifiersQuerying.isPiloted(gameState, physicalCard, mayBeUsedByLandedStarship)) {
-                    return false;
-                }
-
-                if (weapon.getBlueprint().getValidToUseWeaponFilter(weapon.getOwner(), gameState.getGame(), weapon).acceptsCount(gameState, modifiersQuerying, physicalCard) == 0) {
-                    return false;
-                }
-
-                if (Filters.sameCardId(weapon).accepts(gameState, modifiersQuerying, physicalCard)) {
-                    return true;
-                }
-
-                int numWeaponsToUseLimit = modifiersQuerying.numWeaponsAllowedToUse(gameState, physicalCard, mayBeUsedByLandedStarship);
-                List<Integer> otherWeaponsUsed = modifiersQuerying.otherWeaponsUsed(physicalCard, weapon);
-                if (otherWeaponsUsed.size() >= numWeaponsToUseLimit)
-                    return false;
-
-                return !Filters.squadron.accepts(gameState, modifiersQuerying, physicalCard)
-                        || canModelTypesUseWeapons(gameState, modifiersQuerying, physicalCard, weapon, otherWeaponsUsed);
-            }
-        };
     }
 
     /**
@@ -13909,7 +14050,10 @@ public class Filters {
 
                 int numWeaponsToUseLimit = modifiersQuerying.numWeaponsAllowedToUse(gameState, physicalCard, false);
                 List<Integer> otherWeaponsUsed = modifiersQuerying.otherWeaponsUsed(physicalCard, permanentWeapon);
-                return otherWeaponsUsed.size() < numWeaponsToUseLimit;
+                if (otherWeaponsUsed.size() >= numWeaponsToUseLimit)
+                    return false;
+
+                return true;
             }
         };
     }
@@ -13946,8 +14090,10 @@ public class Filters {
                     if (otherWeaponsUsed.size() >= numWeaponsToUseLimit)
                         return false;
 
-                    return !Filters.squadron.accepts(gameState, modifiersQuerying, physicalCard)
-                            || canModelTypesUseWeapons(gameState, modifiersQuerying, physicalCard, weapon, otherWeaponsUsed);
+                    if (Filters.squadron.accepts(gameState, modifiersQuerying, physicalCard)
+                            && !canModelTypesUseWeapons(gameState, modifiersQuerying, physicalCard, weapon, otherWeaponsUsed)) {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -13978,7 +14124,8 @@ public class Filters {
                 if (!modifiersQuerying.mayFireAnyNumberOfWeapons(gameState, physicalCard)) {
                     int numWeaponsToUseLimit = modifiersQuerying.numWeaponsAllowedToUse(gameState, physicalCard, false);
                     List<Integer> otherWeaponsUsed = modifiersQuerying.otherWeaponsUsed(physicalCard, permanentWeapon);
-                    return otherWeaponsUsed.size() < numWeaponsToUseLimit;
+                    if (otherWeaponsUsed.size() >= numWeaponsToUseLimit)
+                        return false;
                 }
 
                 return true;
@@ -14014,8 +14161,10 @@ public class Filters {
                                     && Filters.siteWithinDistance(weapon, 2).accepts(gameState, modifiersQuerying, location)) {
                                 return true;
                             }
-                            return modifiersQuerying.canWeaponTargetNearestRelatedExteriorSite(gameState, weapon)
-                                    && Filters.nearestRelatedExteriorSite(weapon).accepts(gameState, modifiersQuerying, location);
+                            if (modifiersQuerying.canWeaponTargetNearestRelatedExteriorSite(gameState, weapon)
+                                    && Filters.nearestRelatedExteriorSite(weapon).accepts(gameState, modifiersQuerying, location)) {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -14041,12 +14190,48 @@ public class Filters {
                                     && Filters.siteWithinDistance(physicalCard, 2).accepts(gameState, modifiersQuerying, location)) {
                                 return true;
                             }
-                            return modifiersQuerying.canWeaponTargetNearestRelatedExteriorSite(gameState, builtInCardBlueprint)
-                                    && Filters.nearestRelatedExteriorSite(physicalCard).accepts(gameState, modifiersQuerying, location);
+                            if (modifiersQuerying.canWeaponTargetNearestRelatedExteriorSite(gameState, builtInCardBlueprint)
+                                    && Filters.nearestRelatedExteriorSite(physicalCard).accepts(gameState, modifiersQuerying, location)) {
+                                return true;
+                            }
                         }
                     }
                 }
                 return false;
+            }
+        };
+    }
+
+    /**
+     * Gets a filter representing a Superlaser that can be fired at the specified planet system.
+     * @param planetSystem the planet system
+     */
+    public static Filter superlaserThatCanFireAtPlanetSystem(PhysicalCard planetSystem) {
+        final Integer permPlanetSystemCardId = planetSystem.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard superlaser) {
+                PhysicalCard planetSystem = gameState.findCardByPermanentId(permPlanetSystemCardId);
+
+                if (!Filters.planet_system.accepts(gameState, modifiersQuerying, planetSystem))
+                    return false;
+
+                if (!Filters.and(Filters.Superlaser, Filters.attachedTo(Filters.and(Filters.Death_Star_system, Filters.isOrbiting(planetSystem.getTitle())))).accepts(gameState, modifiersQuerying, superlaser))
+                    return false;
+
+                // Check if weapon cannot be used
+                if (modifiersQuerying.mayNotBeUsed(gameState, superlaser))
+                    return false;
+
+                // Check if weapon cannot be fired
+                if (modifiersQuerying.mayNotBeFired(gameState, superlaser))
+                    return false;
+
+                // Check if weapon cannot target planet system
+                if (!modifiersQuerying.canBeTargetedBy(gameState, planetSystem, superlaser))
+                    return false;
+
+                return true;
             }
         };
     }
@@ -17014,34 +17199,27 @@ public class Filters {
     }
 
     /**
-     * Gets a filter representing a Superlaser that can be fired at the specified planet system.
-     * @param planetSystem the planet system
+     * Checks if a piece of text contains a specified word or phrase.
+     *
+     * @param textBody the text to search within
+     * @param wordOrPhrase the word or phase to search for
+     * @return Filter
      */
-    public static Filter superlaserThatCanFireAtPlanetSystem(PhysicalCard planetSystem) {
-        final Integer permPlanetSystemCardId = planetSystem.getPermanentCardId();
-        return new Filter() {
-            @Override
-            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard superlaser) {
-                PhysicalCard planetSystem = gameState.findCardByPermanentId(permPlanetSystemCardId);
+    private static boolean containsWordOrPhrase(String textBody, String wordOrPhrase) {
+        if (textBody==null || textBody.isEmpty() || wordOrPhrase==null || wordOrPhrase.isEmpty())
+            return false;
 
-                if (!Filters.planet_system.accepts(gameState, modifiersQuerying, planetSystem))
-                    return false;
+        String textBodyLowerCase = textBody.toLowerCase();
+        String wordOrPhraseLowerCase = wordOrPhrase.toLowerCase();
 
-                if (!Filters.and(Filters.Superlaser, Filters.attachedTo(Filters.and(Filters.Death_Star_system, Filters.isOrbiting(planetSystem.getTitle())))).accepts(gameState, modifiersQuerying, superlaser))
-                    return false;
+        // Check if pattern match
+        if (textBodyLowerCase.matches(wordOrPhraseLowerCase)
+                || textBodyLowerCase.matches(wordOrPhraseLowerCase + "[^\\w].*")
+                || textBodyLowerCase.matches(".*[^\\w]"+ wordOrPhraseLowerCase + "[^\\w].*")
+                || textBodyLowerCase.matches(".*[^\\w]"+ wordOrPhraseLowerCase))
+            return true;
 
-                // Check if weapon cannot be used
-                if (modifiersQuerying.mayNotBeUsed(gameState, superlaser))
-                    return false;
-
-                // Check if weapon cannot be fired
-                if (modifiersQuerying.mayNotBeFired(gameState, superlaser))
-                    return false;
-
-                // Check if weapon cannot target planet system
-                return modifiersQuerying.canBeTargetedBy(gameState, planetSystem, superlaser);
-            }
-        };
+        return false;
     }
 
     //
@@ -17578,27 +17756,6 @@ public class Filters {
     public static final Filter Feltipern_Trevagg = Filters.title(Title.Feltipern_Trevagg);
     public static final Filter Fett = Filters.or(Filters.persona(Persona.BOBA_FETT), Filters.persona(Persona.JANGO_FETT));
     public static final Filter female = Filters.and(CardCategory.CHARACTER, Keyword.FEMALE);
-
-    /**
-     * Checks if a piece of text contains a specified word or phrase.
-     *
-     * @param textBody     the text to search within
-     * @param wordOrPhrase the word or phase to search for
-     * @return Filter
-     */
-    private static boolean containsWordOrPhrase(String textBody, String wordOrPhrase) {
-        if (textBody == null || textBody.isEmpty() || wordOrPhrase == null || wordOrPhrase.isEmpty())
-            return false;
-
-        String textBodyLowerCase = textBody.toLowerCase();
-        String wordOrPhraseLowerCase = wordOrPhrase.toLowerCase();
-
-        // Check if pattern match
-        return textBodyLowerCase.matches(wordOrPhraseLowerCase)
-                || textBodyLowerCase.matches(wordOrPhraseLowerCase + "[^\\w].*")
-                || textBodyLowerCase.matches(".*[^\\w]" + wordOrPhraseLowerCase + "[^\\w].*")
-                || textBodyLowerCase.matches(".*[^\\w]" + wordOrPhraseLowerCase);
-    }
     public static final Filter Free_Ride = Filters.title(Title.Free_Ride);
     public static final Filter Fifth_Marker = Filters.keyword(Keyword.MARKER_5);
     public static final Filter Fighters_Coming_In = Filters.title(Title.Fighters_Coming_In);
