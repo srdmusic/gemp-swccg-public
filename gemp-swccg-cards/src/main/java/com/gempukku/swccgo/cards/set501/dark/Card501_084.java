@@ -48,7 +48,7 @@ public class Card501_084 extends AbstractDarkJediMasterImperial {
 
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotDeployToLocationModifier(self, Filters.or(self, Filters.hasAttachedWithRecursiveChecking(self)), siteOpponentOccupies));
-        modifiers.add(new DestinyModifier(self, self, new NotCondition(new GameTextCanceledCondition(self)), new MaxLimitEvaluator(new OnTableEvaluator(self, Filters.or(Filters.Black_Sun_agent, Filters.Jedi)), 6)));
+        modifiers.add(new DestinyModifier(self, self, new NotCondition(new GameTextCanceledCondition(self)), new MaxLimitEvaluator(new OnTableEvaluator(self, Filters.or(Filters.Black_Sun_agent, Filters.Jedi)), 5)));
         return modifiers;
 
     }

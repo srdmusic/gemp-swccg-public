@@ -38,6 +38,7 @@ public class Card501_059 extends AbstractDroid {
         setGameText("Once per game, may use 1 Force to either place opponent's just played Interrupt out of play or shuffle opponent's Reserve Deck. If in battle with Anakin or Luke, may draw destiny; subtract that amount from opponent's total attrition.");
         addPersona(Persona.R2D2);
         addKeywords(Keyword.SPY);
+        addModelType(ModelType.ASTROMECH);
         addIcons(Icon.VIRTUAL_SET_19, Icon.JABBAS_PALACE);
         setTestingText("Artoo (V)");
     }
@@ -113,7 +114,7 @@ public class Card501_059 extends AbstractDroid {
                 action.setText("Reduce opponent's attrition");
                 // Perform result(s)
                 action.appendEffect(
-                        new DrawDestinyEffect(action, playerId, 1, DestinyType.DESTINY_TO_REDUCE_ATTRITION_POWER) {
+                        new DrawDestinyEffect(action, playerId, 1, DestinyType.DESTINY_TO_REDUCE_ATTRITION) {
                             @Override
                             protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
                                 if (totalDestiny != null && totalDestiny > 0) {

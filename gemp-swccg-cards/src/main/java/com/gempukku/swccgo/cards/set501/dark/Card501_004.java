@@ -29,7 +29,7 @@ import java.util.List;
  */
 public class Card501_004 extends AbstractRebel {
     public Card501_004() {
-        super(Side.DARK, 1, 2, 2, 2, 4, "Unkar Plutt", Uniqueness.UNIQUE);
+        super(Side.DARK, 4, 2, 2, 2, 4, "Unkar Plutt", Uniqueness.UNIQUE);
         setLore("Crolute scavenger and thief.");
         setGameText("During battle at a Jakku site (or with BB-8, Rey, or Falcon), adds one destiny to total power. Once per game, may retrieve a device or character weapon. During battle, your battle destinies are +¼ for each device, droid, starship, vehicle, or weapon here.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_19);
