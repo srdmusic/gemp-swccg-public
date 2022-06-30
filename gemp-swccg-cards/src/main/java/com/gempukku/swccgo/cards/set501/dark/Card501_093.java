@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class Card501_093 extends AbstractDevice {
     public Card501_093() {
-        super(Side.DARK, 5, PlayCardZoneOption.ATTACHED, "Laser Gate");
+        super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, "Laser Gate", Uniqueness.RESTRICTED_2);
         hasVirtualSuffix();
         setLore("Security corridors are guarded by a grid of laser emplacements which can be activated upon demand to seal off sensitive areas from intrusion.");
         setGameText("Deploy on a non-exterior site. Lost if you control this site. If a battle was just initiated here, " +
