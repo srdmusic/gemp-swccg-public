@@ -30,7 +30,7 @@ public class Card501_084 extends AbstractDarkJediMasterImperial {
         super(Side.DARK, 1, 5, 4, 7, 9, "The Emperor", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Leader. Secretive manipulator of the galaxy. Played Darth Vader and Prince Xizor off against one another in his relentless pursuit of 'young Skywalker'.");
-        setGameText("Even as a unit of Force, destiny +1 for each Black Sun Agent or Jedi on table (limit +6). Deploys only to Coruscant. Never deploys or moves (even if carried) to a site opponent occupies. May cancel Projection Of A Skywalker here. Immune to attrition.");
+        setGameText("Even as a unit of Force, destiny +1 for each Black Sun Agent or Jedi on table (limit +5). Deploys only to Coruscant. Never deploys or moves (even if carried) to a site opponent occupies. May cancel Projection Of A Skywalker here. Immune to attrition.");
         addPersona(Persona.SIDIOUS);
         addIcons(Icon.REFLECTIONS_II, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_19);
         addKeywords(Keyword.LEADER);
