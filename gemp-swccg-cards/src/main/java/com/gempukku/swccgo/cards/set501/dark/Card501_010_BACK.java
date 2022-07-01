@@ -18,6 +18,7 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.conditions.NotCondition;
+import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromBottomOfLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
@@ -80,8 +81,7 @@ public class Card501_010_BACK extends AbstractObjective {
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                new TakeCardIntoHandFromLostPileEffect(action, playerId, Filters.bottomOfLostPile(playerId), false)
-            );
+                new DrawCardIntoHandFromBottomOfLostPileEffect(action, playerId));
 
             actions.add(action);
         }
