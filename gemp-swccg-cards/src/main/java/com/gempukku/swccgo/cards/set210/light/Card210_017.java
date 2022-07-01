@@ -82,7 +82,7 @@ public class Card210_017 extends AbstractNormalEffect {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy Malastare, Mos Espa, or Nightclub from Reserve Deck");
+            action.setActionMsg("Deploy Malastare, Mos Espa, or Night Club from Reserve Deck");
 
             // Update usage limit(s)
             // Note:  This case is a little unique because this action counts
