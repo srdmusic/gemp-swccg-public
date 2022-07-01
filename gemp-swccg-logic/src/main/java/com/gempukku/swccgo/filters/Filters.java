@@ -1315,6 +1315,22 @@ public class Filters {
         return outOfPlay;
     }
 
+
+    /**
+     * Filter that accepts aliens that are with another alien that shares the same species.
+     */
+    public static final Filter alienWithAnotherAlienOfSameSpecies = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            if (physicalCard.getBlueprint().hasSpeciesAttribute() && physicalCard.getBlueprint().getSpecies() != null) {
+                Species species = physicalCard.getBlueprint().getSpecies();
+                return Filters.canSpot(gameState.getGame(), physicalCard, Filters.with(physicalCard, Filters.species(species)));
+            }
+
+            return false;
+        }
+    };
+
     /**
      * Filter that accepts cards that are in the specified player's hand and there are duplicates in that player's hand.
      *
