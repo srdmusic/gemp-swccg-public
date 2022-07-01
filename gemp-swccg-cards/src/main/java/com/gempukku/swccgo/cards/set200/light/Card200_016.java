@@ -43,11 +43,16 @@ public class Card200_016 extends AbstractAlien {
         super(Side.LIGHT, 0, 0, 0, 0, 0, Title.The_Mythrol, Uniqueness.UNIQUE);
         setFrontOfDoubleSidedCard(true);
         setGameText("The Mythrol's game text may not be canceled. If about to leave table, place out of play. " +
-                "During start of game, may reveal this card from outside your deck to replace a just-deployed Jabba's Prize imprisoned in Security Tower. If not revealed during start of game, place this card under your Starting Effect. " +
+                "Plays only during start of game by revealing from outside your deck to replace a just-deployed Jabba's Prize imprisoned in Security Tower. If not revealed, place this card under your Starting Effect. " +
                 "[Set 1] Despair targets The Mythrol instead of Jabba's Prize. Cancels Stunning Leader here. If just released, either flip this card or place it out of play.");
         addIcons(Icon.VIRTUAL_SET_0);
         setSpecies(Species.MYTHROL);
         setMayNotBePlacedInReserveDeck(true);
+    }
+
+    @Override
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return GameConditions.isDuringStartOfGame(game);
     }
 
     @Override
