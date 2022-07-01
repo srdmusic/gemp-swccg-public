@@ -24,7 +24,7 @@ import java.util.List;
 public class Card501_083 extends AbstractCreature {
     public Card501_083() {
         super(Side.LIGHT, 5, 2, 1, 3, 0, "Porg", Uniqueness.RESTRICTED_3);
-        setGameText("Habitat: Ahch-To sites, either player’s starship (uses no capacity). Does not attack. Characters present (or starship aboard) are cumulatively power and defense value -1 (+1 if yours). Adds one [Light Side] icon here.");
+        setGameText("Habitat: Ahch-To sites, either player’s starship (uses no capacity). Does not attack. Characters present (or starship aboard) are cumulatively power and defense value -1 (+1 if yours). While at your location, adds one [Light Side] icon here.");
         addModelType(ModelType.SEADWELLING);
         addIcons(Icon.SELECTIVE_CREATURE, Icon.VIRTUAL_SET_19);
         setTestingText("Porg");
@@ -43,7 +43,7 @@ public class Card501_083 extends AbstractCreature {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotAttackModifier(self, self));
-        modifiers.add(new IconModifier(self, Filters.sameLocation(self), Icon.LIGHT_FORCE));
+        modifiers.add(new IconModifier(self, Filters.and(Filters.sameLocation(self), Filters.your(self)), Icon.LIGHT_FORCE));
         modifiers.add(new PowerModifier(self, Filters.or(Filters.and(Filters.character, Filters.present(self)),  Filters.and(Filters.starship, Filters.or(Filters.hasAttached(self), Filters.hasAboard(self)))), new TrueCondition(), new CardMatchesEvaluator(-1, 1, Filters.your(self)), true));
         modifiers.add(new DefenseValueModifier(self, Filters.or(Filters.and(Filters.character, Filters.present(self)),  Filters.and(Filters.starship, Filters.or(Filters.hasAttached(self), Filters.hasAboard(self)))), new TrueCondition(), new CardMatchesEvaluator(-1, 1, Filters.your(self)), true));
         return modifiers;
