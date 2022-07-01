@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -30,9 +31,9 @@ public class Card501_010 extends AbstractObjective {
     public Card501_010() {
         super(Side.DARK, 0, Title.The_Shield_Will_Be_Down_In_Moments);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Hoth system, [Set 17] 4th marker, 1st Marker, and [Set 18] You May Start Your Landing. " +
-                "For remainder of game, you may not play Sunsdown. Trample is a lost interrupt. When playing Target The Main Generator, X is limited to 3 (and is -2 unless firing at or below the 3rd Marker). " +
-                "While this side up, once per turn, may deploy an exterior Hoth site from Reserve Deck; reshuffle." +
+        setGameText("Deploy Hoth system, [Set 17] 4th Marker, 1st Marker, and [Set 18] You May Start Your Landing. " +
+                "For remainder of game, you may not play Sunsdown. Trample is a Lost Interrupt. X on Target The Main Generator is -2 (unless firing at or below the 3rd Marker) and maximum X = 3. " +
+                "While this side up, once per turn, may deploy an exterior Hoth site from Reserve Deck; reshuffle. " +
                 "Flip this card if Main Power Generators has been 'blown away' and you occupy Hoth system.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
         setTestingText("The Shield Will Be Down in Moments");
@@ -93,17 +94,17 @@ public class Card501_010 extends AbstractObjective {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.THE_SHIELD_WILL_BE_DOWN__DOWNLOAD_HOTH_SITE;
 
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy a Hoth site from Reserve Deck");
-            action.setActionMsg("Deploy a Hoth site from Reserve Deck");
+            action.setActionMsg("Deploy an exterior Hoth site from Reserve Deck");
 
             action.appendUsage(
-                    new OncePerPhaseEffect(action));
+                    new OncePerTurnEffect(action));
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Hoth_site, Filters.exterior_site, true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.Hoth_site, Filters.exterior_site), true));
 
             return Collections.singletonList(action);
         }

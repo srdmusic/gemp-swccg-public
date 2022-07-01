@@ -26,7 +26,7 @@ public class Card501_051 extends AbstractStartingInterrupt {
         setLore("Alliance troops on planet must plan ahead to achieve success in military operations.");
         setGameText("If your starting location was a system, [download] a related site (must be a battleground if the system is a non-battleground) with < 3 [Light Side Force] icons and up to three Effects that are always immune to Alter. Place this Interrupt in Lost Pile.");
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_0);
-        setTestingText("[Set 19] Careful Planning (V) (ERRATA)");
+        setTestingText("Careful Planning (V) (ERRATA)");
     }
 
     @Override

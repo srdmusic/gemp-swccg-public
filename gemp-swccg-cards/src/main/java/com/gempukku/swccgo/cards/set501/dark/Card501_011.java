@@ -34,7 +34,7 @@ public class Card501_011 extends AbstractUsedOrStartingInterrupt {
     public Card501_011() {
         super(Side.DARK, 4, "That's It, The Rebels Are There!");
         setVirtualSuffix(true);
-        setGameText("Used: Your AT-AT may move as a 'react.'" + "Starting: If 1st Marker on table, take [Set 6] Veers into hand. Deploy [Set 9] Prepare For A Surface Attack and up to two Effects that deploy for free and are always [Immune to Alter]. Place Interrupt in Lost Pile.");
+        setGameText("USED: Move your AT-AT as a 'react.' STARTING: If 1st Marker on table, take [Set 6] Veers into hand. Deploy [Set 9] Prepare For A Surface Attack and up to two Effects that deploy for free and are always [Immune to Alter]. Place Interrupt in Lost Pile.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
         setTestingText("That's It, The Rebels Are There! (V)");
     }

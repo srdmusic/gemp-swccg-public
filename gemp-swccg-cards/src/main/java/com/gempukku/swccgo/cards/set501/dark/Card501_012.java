@@ -30,7 +30,7 @@ public class Card501_012 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.You_May_Start_Your_Landing, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Echo Base was no match for the Imperial war machine.");
-        setGameText("Deploy on table. If you just deployed an AT-AT, may peek at top two cards of Reserve deck and take one into hand. During your control phase, opponent loses 1 Force for each Marker site controlled by an AT-AT (limit 1 unless you occupy Hoth system). [Immune to Alter.]");
+        setGameText("Deploy on table. If you just deployed an AT-AT, may peek at top two cards of Reserve Deck and take one into hand. During your control phase, opponent loses 1 Force for each marker site your AT-AT controls (limit 1 unless you occupy Hoth system). [Immune to Alter.]");
         addIcons(Icon.TATOOINE, Icon.HOTH, Icon.VIRTUAL_SET_19);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("You May Start Your Landing (V)");

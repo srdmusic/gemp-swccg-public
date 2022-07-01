@@ -43,8 +43,8 @@ import java.util.List;
 public class Card501_010_BACK extends AbstractObjective {
     public Card501_010_BACK() {
         super(Side.DARK, 7, Title.Imperial_Troops_Have_Entered_The_Base);
-        setGameText("While this side up, attrition against opponent is +1 for each Imperial leader in battle. Rebel Leadership and We’re Doomed are Lost Interrupts. Your Force drains are +1 at opponent’s sites (and Echo sites) where your snowtrooper or non-unique AT-AT is present. Unless opponent controls a Hoth location, your Force drain bonuses may not be canceled. If opponent just lost force to You May Start Your Landing, may take bottom card of Lost pile into hand." +
-                "Place out of play if you do not occupy a Hoth location.");
+        setGameText("While this side up, attrition against opponent is +1 for each Imperial leader in battle. Rebel Leadership and We're Doomed are Lost Interrupts. Your Force drains are +1 at opponent's sites (and Echo sites) where your snowtrooper or non-unique AT-AT is present. Unless opponent controls a Hoth location, your Force drain bonuses may not be canceled. Once per turn, if opponent just lost Force to You May Start Your Landing, may take bottom card of Lost Pile into hand. " +
+                "Flip this card if opponent controls Hoth system.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
         setTestingText("Imperial Troops Have Entered the Base!");
     }
