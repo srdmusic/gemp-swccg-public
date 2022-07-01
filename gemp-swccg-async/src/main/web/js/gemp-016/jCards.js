@@ -3442,10 +3442,10 @@ var fixedImages = {
 "301_8":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/red12.gif",
 
 //playtesting
-"501_1":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/savageopress.gif",
+"501_1":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/darthvaderdarklordofthesith.gif",
 "501_2":"https://res.starwarsccg.org/cards/Virtual5-Dark/large/overseeingitpersonally.gif",
 "501_3":"https://res.starwarsccg.org/cards/Virtual9-Dark/large/shadowsoftheempire.gif",
-"501_4":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/imperialcommand.gif",
+"501_4":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/hemdazon.gif",
 "501_5":"https://res.starwarsccg.org/cards/Hoth-Dark/large/idjustassoonkissawookiee.gif",
 "501_6":"https://res.starwarsccg.org/cards/CloudCity-Dark/large/darkdeal.gif",
 "501_7":"https://res.starwarsccg.org/cards/Hoth-Dark/large/lightsaberdeficiency.gif",
@@ -3495,8 +3495,8 @@ var fixedImages = {
 "501_49":"https://res.starwarsccg.org/cards/Endor-Light/large/ihopeshesallright.gif",
 "501_50":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/thunderflare.gif",
 "501_51":"https://res.starwarsccg.org/cards/Virtual0-Light/large/carefulplanning.gif",
-"501_52":"https://res.starwarsccg.org/cards/CloudCity-Light/large/computerinterface.gif",
-"501_53":"https://res.starwarsccg.org/cards/Virtual3-Light/large/rebelleadership.gif",
+"501_52":"https://res.starwarsccg.org/cards/Virtual0-Dark/large/bobafettinslavei.gif",
+"501_53":"https://res.starwarsccg.org/cards/Tatooine-Light/large/icantbelievehesgone.gif",
 "501_54":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/nomatchforasith.gif",
 "501_55":"https://res.starwarsccg.org/cards/Coruscant-Light/large/speakwiththejedicouncil.gif",
 "501_56":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/insertionplanning.gif",
@@ -3518,8 +3518,7 @@ var fixedImages = {
 "501_72":"https://res.starwarsccg.org/cards/Virtual0-Light/large/obiwaninradiantvii.gif",
 "501_73":"https://res.starwarsccg.org/cards/Premiere-Light/large/fullthrottle.gif",
 "501_74":"https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/aimhigh.gif",
-"501_75":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/theforceisstronginmyfamily.png",
-"501_75_BACK":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/youtrulybelongherewithus.gif",
+"501_75":"https://res.starwarsccg.org/cards/Dagobah-Light/large/sonofskywalker.gif",
 "501_76":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/theriseofskywalker.png",
 "501_77":"https://res.starwarsccg.org/cards/Dagobah-Light/large/warsnotmakeonegreat.gif",
 "501_78":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
@@ -3528,20 +3527,21 @@ var fixedImages = {
 "501_81":"https://res.starwarsccg.org/cards/CloudCity-Light/large/weathervane.gif",
 "501_82":"https://res.starwarsccg.org/cards/Premiere-Light/large/utinni.gif",
 "501_83":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/scurrier.gif",
-"501_84":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/endoranakinsfuneralpyre.png",
+"501_84":"https://res.starwarsccg.org/cards/ReflectionsII-Dark/large/theemperor.gif",
 "501_85":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/ajanklosstrainingcourse.png",
 "501_86":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/tatooineslavequarters.png",
 "501_87":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/yourthoughtsdwellonyourmother.png",
 "501_88":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/hansolooptimisticgeneral.png",
 "501_89":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/grakchawwaa.png",
-"501_90":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/localdefense.gif",
-"501_91":"https://res.starwarsccg.org/cards/Virtual0-Light/large/boosterinpulsarskate.gif",
-"501_92":"https://res.starwarsccg.org/cards/Endor-Light/large/tydirium.gif",
+"501_90":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/hansolooptimisticgeneral.png",
+"501_91":"https://res.starwarsccg.org/cards/Virtual0-Light/hires/themythrolfront.png",
+"501_91_BACK":"https://res.starwarsccg.org/cards/Virtual0-Light/hires/themythrolback.png",
+"501_92":"https://res.starwarsccg.org/cards/Virtual3-Light/large/thrownback.gif",
 "501_93":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/lasergate.gif",
-"501_94":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/masterfulmove&endoroccupation.gif",
-"501_95":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/revengeofthesith.png",
-"501_95_BACK":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/takeyourfathersplace.gif",
-"501_96":"https://res.starwarsccg.org/cards/Premiere-Dark/large/ihaveyounow.gif",
+"501_94":"https://res.starwarsccg.org/cards/Virtual8-Dark/large/lieutenantdopheldmitaka.gif",
+"501_95":"https://res.starwarsccg.org/cards/Virtual8-Dark/hires/iwantthatmap.png",
+"501_95_BACK":"https://res.starwarsccg.org/cards/Virtual8-Dark/hires/andnowyoullgiveittome.png",
+"501_96":"https://res.starwarsccg.org/cards/Virtual3-Dark/large/drop.gif",
 "501_97":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/nomatchforasith.gif",
 "501_98":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/tragedyofplagueis.png",
 "501_99":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/imperialoccupation.gif",
@@ -3551,7 +3551,7 @@ var fixedImages = {
 "501_102":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/localuprising.gif",
 "501_102_BACK":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/liberation.gif",
 "501_103":"https://res.starwarsccg.org/cards/Virtual17-Dark/hires/bb9e.png",
-"501_104": "https://res.starwarsccg.org/cards/Endor-Light/large/insurrection.gif",
+"501_104":"https://res.starwarsccg.org/cards/Virtual1-Light/large/ascensionguns.gif",
 "501_105": "https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/centeroftyranny.gif",
 "501_105_BACK": "https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/aliberatedworld.gif",
 "501_106": "https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Light/large/roguesquadrontactics.gif",
@@ -3931,7 +3931,8 @@ var fixedImages = {
 "201_19ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/tantiveiv_ai.png",
 "204_35ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/thefalconjunkyardgarbagefront_ai.png",
 "204_35ai_BACK":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/thefalconjunkyardgarbageback_ai.png",
-
+"205_17ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/iamyourfather_ai.png",
+"202_5ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/likemyfatherbeforeme_ai.png",
 
 };
 
@@ -4409,18 +4410,10 @@ var Card = Class.extend({
                    (cardNo == 37) ||
                    (cardNo == 47) ||
                    (cardNo == 48) ||
-                   (cardNo == 57) ||
-                   (cardNo == 69) ||
-                   (cardNo == 70) ||
-                   (cardNo == 84) ||
-                   (cardNo == 85) ||
-                   (cardNo == 86) ||
                    (cardNo == 108) ||
                    (cardNo == 109) ||
                    (cardNo == 110) ||
-                   (cardNo == 111) ||
-                   (cardNo == 118) ||
-                   (cardNo == 126);
+                   (cardNo == 111);
         }
         if (setNo == 601) {
              return (cardNo == 14) ||

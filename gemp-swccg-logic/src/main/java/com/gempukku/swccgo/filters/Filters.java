@@ -8669,6 +8669,24 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that are systems above the specified parsec number.
+     *
+     * @param parsec the parsec number
+     * @return Filter
+     */
+    public static Filter systemAboveParsec(final int parsec) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                if (physicalCard.getBlueprint().getCardSubtype() != CardSubtype.SYSTEM)
+                    return false;
+
+                return physicalCard.getParsec() > parsec;
+            }
+        };
+    }
+
+    /**
      * Filter that accepts cards that are the systems orbited by the specified mobile system.
      *
      * @param card the mobile system
@@ -18127,6 +18145,7 @@ public class Filters {
     public static final Filter Malachor_location = Filters.partOfSystem(Title.Malachor);
     public static final Filter Malachor_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Malachor));
     public static final Filter Malakili = Filters.title(Title.Malakili);
+    public static final Filter Make_Ready_To_Land_Our_Troops = Filters.title(Title.Make_Ready_To_Land_Our_Troops);
     public static final Filter Malastare = Filters.title(Title.Malastare);
     public static final Filter male = Filters.and(CardCategory.CHARACTER, Filters.or(Keyword.MALE, Filters.not(Filters.keyword(Keyword.FEMALE))));
     public static final Filter Mandalore_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Mandalore));
@@ -18302,6 +18321,7 @@ public class Filters {
     public static final Filter Phantom = Filters.title(Title.Phantom);
     public static final Filter Phasma = Filters.title(Title.Phasma);
     public static final Filter Phennir = Filters.title(Title.Phennir);
+    public static final Filter Phoenix_Squadron_character = Filters.and(CardCategory.CHARACTER, Filters.or(Keyword.PHOENIX_SQUADRON, Filters.piloting(Filters.keyword(Keyword.PHOENIX_SQUADRON))));
     public static final Filter Piett = Filters.persona(Persona.PIETT);
     public static final Filter pilot = Filters.and(CardCategory.CHARACTER, Icon.PILOT);
     public static final Filter pilot_character = Filters.and(CardCategory.CHARACTER, Icon.PILOT);

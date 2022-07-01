@@ -34,7 +34,7 @@ import java.util.List;
 public class Card501_105_BACK extends AbstractObjective {
     public Card501_105_BACK() {
         super(Side.LIGHT, 7, "Liberation of Lothal");
-        setGameText("While this side up, if you have Force drained this turn, your other Force drains are +1. Once per turn, may add or subtract X from a just drawn battle destiny (or opponent's weapon destiny), where X = number of battlegrounds occupied by Phoenix Squadron characters. During battle at Lothal system, opponent may not limit the number of battle destinies you may draw. " +
+        setGameText("While this side up, if you have Force drained this turn, your other Force drains are +1. Once per turn, may add or subtract X from a just drawn battle destiny (or opponent's weapon destiny), where X = number of battlegrounds occupied by Phoenix Squadron characters. During battle at Lothal system, the number of battle destinies players may draw may not be limited. " +
                 "Flip this card if opponent controls more Lothal locations than you.");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("Liberation of Lothal");
@@ -45,6 +45,7 @@ public class Card501_105_BACK extends AbstractObjective {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ForceDrainModifier(self, Filters.location, new InPlayDataEqualsCondition(self, true), 1, self.getOwner()));
         modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier(self, Filters.Lothal_system, self.getOwner()));
+        modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier(self, Filters.Lothal_system, game.getOpponent(self.getOwner())));
         return modifiers;
     }
 

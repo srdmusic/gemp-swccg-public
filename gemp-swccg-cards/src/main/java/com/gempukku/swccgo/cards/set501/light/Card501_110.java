@@ -25,7 +25,7 @@ public class Card501_110 extends AbstractSite {
     public Card501_110() {
         super(Side.LIGHT, "Lothal: Tarkintown", Title.Lothal);
         setLocationDarkSideGameText("Unless Tarkin here, Force drain -1 here.");
-        setLocationLightSideGameText("If you occupy, Force generation +1 here.");
+        setLocationLightSideGameText("Sabine and Zeb draw battle destiny if unable to otherwise here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_19);
@@ -44,7 +44,7 @@ public class Card501_110 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceGenerationModifier(self, new OccupiesCondition(playerOnLightSideOfLocation, self), 1, playerOnLightSideOfLocation));
+        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, Filters.and(Filters.here(self), Filters.or(Filters.Sabine, Filters.Zeb)), 1));
         return modifiers;
     }
 }
