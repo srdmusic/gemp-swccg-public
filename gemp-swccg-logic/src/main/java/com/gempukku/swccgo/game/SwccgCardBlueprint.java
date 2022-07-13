@@ -1615,6 +1615,8 @@ public interface SwccgCardBlueprint {
 
     TractorBeamAction getTractorBeamAction(SwccgGame game, PhysicalCard self);
 
+    MagneticSuctionTubeAction getMagneticSuctionTubeAction(SwccgGame game, PhysicalCard self);
+
     /**
      * Determines if a card is a device or weapon that deploys on characters.
      * @return true if deploys on characters, otherwise false

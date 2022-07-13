@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.MoveAsReactEffect;
-import com.gempukku.swccgo.cards.effects.UseDeviceEffect;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
@@ -18,6 +17,7 @@ import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UseMagneticSuctionTubeEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
@@ -167,9 +167,6 @@ public class Card501_082 extends AbstractUsedInterrupt {
             );
             actions.add(action);
 
-            /**TODO
-             * This Currently Doesn't work because the Tube can only be used in control phase
-             */
             if(GameConditions.isDuringBattleWithParticipant(game, Filters.Magnetic_Suction_Tube)){
                 final PlayInterruptAction action2 = new PlayInterruptAction(game, self);
                 action2.setText("Use a Magnetic Suction Tube");
@@ -188,7 +185,7 @@ public class Card501_082 extends AbstractUsedInterrupt {
                                                 final PhysicalCard finalTube = targetingAction.getPrimaryTargetCard(targetGroupId);
                                                 // Perform result(s)
                                                 action2.appendEffect(
-                                                        new UseDeviceEffect(action2, finalTube));
+                                                        new UseMagneticSuctionTubeEffect(action2, finalTube));
                                             }
                                         });
                             }
