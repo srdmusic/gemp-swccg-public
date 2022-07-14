@@ -1159,7 +1159,31 @@ public class TriggerConditions {
         }
         return false;
     }
-    
+
+    /**
+     * Determines if a card accepted by the target filter is being targeted by any of the specified reasons.
+     * @param game the game
+     * @param effect the effect
+     * @param playerId the player
+     * @param targetFilter the target filter
+     * @param targetedByFilter the targeted by filter
+     * @param targetingReasons the targeting reasons
+     * @return true or false
+     */
+    public static boolean isTargetedForReasonBy(SwccgGame game, Effect effect, String playerId, Filterable targetFilter, Filterable targetedByFilter, Collection<TargetingReason> targetingReasons) {
+        if (effect.getType() == Effect.Type.PLAYING_CARD_EFFECT
+                || effect.getType() == Effect.Type.RESPONDABLE_EFFECT
+                || effect.getType() == Effect.Type.WEAPON_FIRING_EFFECT) {
+            if (!effect.isCanceled()) {
+                Action targetingAction = effect.getAction();
+                if (playerId.equals(targetingAction.getPerformingPlayer()) && Filters.and(targetedByFilter).accepts(game, targetingAction.getActionSource())) {
+                    return TargetingActionUtils.isTargeting(game, targetingAction, targetingReasons, Filters.and(targetFilter));
+                }
+            }
+        }
+        return false;
+    }
+
     /**
      * Determines if a card accepted by the card filter is beginning to move through hyperspace.
      * @param game the game
