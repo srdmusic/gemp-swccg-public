@@ -1,6 +1,5 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-
 import com.gempukku.swccgo.cards.AbstractLostOrStartingInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.CardSubtype;
@@ -29,7 +28,7 @@ import java.util.List;
  */
 public class Card501_085 extends AbstractLostOrStartingInterrupt {
     public Card501_085() {
-        super(Side.LIGHT, 4, "Grievous' Gambit");
+        super(Side.DARK, 4, "Grievous' Gambit");
         setLore("");
         setGameText("LOST: Deploy [Episode I] Coruscant from Reserve Deck; reshuffle. " +
                 "STARTING: If A Stunning Move on table, deploy three Effects that deploy on your side of table, " +
@@ -48,7 +47,7 @@ public class Card501_085 extends AbstractLostOrStartingInterrupt {
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
-            action.setText("Deploy [Episode I] Coruscant from Reserve Deck");
+            action.setText("Deploy [Episode I] Coruscant");
             // Allow response(s)
             action.allowResponses("Deploy [Episode I] Coruscant from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
@@ -68,7 +67,7 @@ public class Card501_085 extends AbstractLostOrStartingInterrupt {
     @Override
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, SwccgGame game, final PhysicalCard self) {
         // Check condition(s)
-        if (GameConditions.canSpotLocation(game, Filters.A_Stunning_Move)) {
+        if (GameConditions.canSpot(game, self, Filters.A_Stunning_Move)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Deploy 3 Effects that deploy free on your side of the table and are always immune to Alter.");
