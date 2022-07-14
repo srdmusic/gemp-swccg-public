@@ -76,8 +76,10 @@ public class Card501_093 extends AbstractDevice {
     private RequiredGameTextTriggerAction getAction(final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId, final String playerId, GameTextActionId gameTextActionId){
         final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
         // Perform result(s)
+        action.setText(playerId + " chooses target characters");
+        action.setActionMsg(playerId + " chooses target characters");
         action.appendTargeting(
-                new TargetCardsOnTableEffect(action, playerId, "Target up to two of your characters", 1, 2, Filters.and(Filters.your(playerId), Filters.inBattleWith(self))) {
+                new TargetCardsOnTableEffect(action, playerId, "Target up to two of your characters", 1, 2, Filters.and(Filters.your(playerId), Filters.character, Filters.inBattleWith(self))) {
                     @Override
                     protected void cardsTargeted(int targetGroupId, Collection<PhysicalCard> targetedCards) {
                         Filter cardsAffected = Filters.in(targetedCards);
