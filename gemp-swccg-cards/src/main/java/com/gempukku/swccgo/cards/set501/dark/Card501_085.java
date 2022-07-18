@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set211.light;
+package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractLostOrStartingInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -6,7 +6,6 @@ import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -22,40 +21,41 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 11
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Lost or Starting
- * Title: Rendezvous Point On Tatooine (V)
+ * Title: Grievous' Gambit
  */
-public class Card211_030 extends AbstractLostOrStartingInterrupt {
-    public Card211_030() {
-        super(Side.LIGHT, 4, "Rendezvous Point On Tatooine");
-        setLore("'When we find Jabba the Hutt and that bounty hunter, we'll contact you.'");
-        setGameText("LOST: [download] a Tatooine battleground." +
-                "STARTING: If your Jabba's Palace site on table, deploy Seeking An Audience and up to 2 Effects that deploy on table and are always immune to Alter. Place Interrupt in hand.");
-        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_11);
-        setVirtualSuffix(true);
+public class Card501_085 extends AbstractLostOrStartingInterrupt {
+    public Card501_085() {
+        super(Side.DARK, 4, "Grievous' Gambit");
+        setLore("");
+        setGameText("LOST: Deploy [Episode I] Coruscant from Reserve Deck; reshuffle. " +
+                "STARTING: If A Stunning Move on table, deploy three Effects that deploy on your side of table, " +
+                "deploy for free, and are always immune to Alter. Place Interrupt in hand.");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_19);
+        setTestingText("Grievous' Gambit");
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+        List<PlayInterruptAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.RENDEZVOUS_POINT_ON_TATOOINE_DEPLOY_TATOOINE_BATTLEGROUND;
+        GameTextActionId gameTextActionId = GameTextActionId.GRIEVOUS_GAMBIT__DOWNLOAD_CORUSCANT;
 
         // Check condition(s)
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
-            action.setText("Deploy a Tatooine battleground from Reserve Deck");
+            action.setText("Deploy [Episode I] Coruscant");
             // Allow response(s)
-            action.allowResponses("Deploy a Tatooine battleground from Reserve Deck",
+            action.allowResponses("Deploy [Episode I] Coruscant from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.Tatooine_location, Filters.battleground, true));
+                                    new DeployCardFromReserveDeckEffect(action, Filters.Coruscant_system, Filters.icon(Icon.EPISODE_I), true));
                         }
                     }
             );
@@ -66,13 +66,11 @@ public class Card211_030 extends AbstractLostOrStartingInterrupt {
 
     @Override
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, SwccgGame game, final PhysicalCard self) {
-        final Filter yourSiteEvenIfConverted = Filters.and(Filters.Jabbas_Palace_site, Filters.or(Filters.your(self), Filters.convertedLocationOnTopOfLocation(Filters.your(self))));
-
         // Check condition(s)
-        if (GameConditions.canSpotLocation(game, yourSiteEvenIfConverted)) {
+        if (GameConditions.canSpot(game, self, Filters.A_Stunning_Move)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Deploy Seeking An Audience and up to 2 Effects that deploy on table and are always immune to Alter.");
+            action.setText("Deploy 3 Effects that deploy free on your side of the table and are always immune to Alter.");
             // Allow response(s)
             action.allowResponses(
                     new RespondablePlayCardEffect(action) {
@@ -80,10 +78,8 @@ public class Card211_030 extends AbstractLostOrStartingInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.titleContains("Seeking An Audience"),  true, false));
-                            action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.immune_to_Alter,
-                                            Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table"))), 1, 2, true, false));
+                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.immune_to_Alter, Filters.deploysForFree,
+                                            Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table"))), 3, 3, true, false));
                             action.appendEffect(
                                     new TakeCardFromVoidIntoHandEffect(action, playerId, self));
                         }

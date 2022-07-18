@@ -3528,7 +3528,7 @@ var fixedImages = {
 "501_82":"https://res.starwarsccg.org/cards/Premiere-Light/large/utinni.gif",
 "501_83":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/scurrier.gif",
 "501_84":"https://res.starwarsccg.org/cards/ReflectionsII-Dark/large/theemperor.gif",
-"501_85":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/ajanklosstrainingcourse.png",
+"501_85":"https://res.starwarsccg.org/cards/Virtual12-Dark/large/eviliseverywhere.gif",
 "501_86":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/thephantommenace.gif",
 "501_87":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/yourthoughtsdwellonyourmother.png",
 "501_88":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/hansolooptimisticgeneral.png",
