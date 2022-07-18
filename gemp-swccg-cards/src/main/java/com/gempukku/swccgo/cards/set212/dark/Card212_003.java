@@ -17,7 +17,7 @@ import java.util.List;
  * Set: Set 12
  * Type: Character
  * Subtype: Alien
- * Title: Aurra Sing with Blaster Rifle
+ *  Title: Aurra Sing with Blaster Rifle
  */
 public class Card212_003 extends AbstractAlien {
     public Card212_003() {
