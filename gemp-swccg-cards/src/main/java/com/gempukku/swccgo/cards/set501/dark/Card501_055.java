@@ -17,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Death Star II
+ * Set: Set 19
  * Type: Starship
  * Subtype: Capital
  * Title: Chimaera (V)
