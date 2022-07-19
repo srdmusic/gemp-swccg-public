@@ -1,25 +1,21 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.ControlsCondition;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
+import com.gempukku.swccgo.logic.modifiers.CancelsGameTextOnSideOfLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Set: Set 19
@@ -30,8 +26,8 @@ import java.util.Set;
 public class Card501_036 extends AbstractSite {
     public Card501_036() {
         super(Side.DARK, Title.Lothal_Capital_City, Title.Lothal);
-        setLocationDarkSideGameText("If you just revealed an 'artwork' card during battle here, may retrieve a card of the same card type.");
-        setLocationLightSideGameText("If you control, your total power is +1 at related locations.");
+        setLocationDarkSideGameText("Imperials, Rukh, AT-STs, AT-DPs, and Speeder Bikes are power +1 and defense value +1 here.");
+        setLocationLightSideGameText("While you occupy this location, your game text on Imperial Complex is canceled.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_19);
@@ -39,38 +35,18 @@ public class Card501_036 extends AbstractSite {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextDarkSideOptionalAfterTriggers(String playerOnDarkSideOfLocation, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        // Check condition(s)
-        if (GameConditions.isDuringBattleAt(game, self)
-                && effectResult.getType() == EffectResult.Type.ARTWORK_CARD_REVEALED) {
-
-            PhysicalCard artwork = ((ArtworkCardRevealedResult)effectResult).getCard();
-
-            if (artwork != null) {
-                Set<CardType> cardTypes = game.getModifiersQuerying().getCardTypes(game.getGameState(), artwork);
-                Filter filterForCardInLostPile = Filters.none;
-                for (CardType cardType : cardTypes) {
-                    filterForCardInLostPile = Filters.or(filterForCardInLostPile, Filters.type(cardType));
-                }
-
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId);
-                action.setText("Retrieve a card with a matching type");
-                action.setActionMsg("Retrieve a card with a type matching " + GameUtils.getCardLink(artwork));
-                // Perform result(s)
-                action.appendEffect(
-                        new RetrieveCardEffect(action, playerOnDarkSideOfLocation, filterForCardInLostPile));
-                return Collections.singletonList(action);
-            }
-        }
-        return null;
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        Filter filter = Filters.or(Filters.Imperial, Filters.Rukh, Filters.AT_ST, Filters.AT_DP, Filters.speeder_bike);
+        modifiers.add(new PowerModifier(self, filter, 1));
+        modifiers.add(new ForfeitModifier(self, filter,1 ));
+        return modifiers;
     }
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new TotalPowerModifier(self, Filters.relatedLocation(self), new ControlsCondition(playerOnLightSideOfLocation, self), 1, playerOnLightSideOfLocation));
+        modifiers.add(new CancelsGameTextOnSideOfLocationModifier(self, Filters.Lothal_Imperial_Complex, new OccupiesCondition(playerOnLightSideOfLocation, self), playerOnLightSideOfLocation));
         return modifiers;
     }
 }
