@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set11.dark;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.TwicePerGameEffect;
+import com.gempukku.swccgo.cards.evaluators.PerStarDestroyerEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -81,7 +82,7 @@ public class Card11_068 extends AbstractNormalEffect {
         if (TriggerConditions.justDeployed(game, effectResult, playerId, Filters.and(Filters.unique, Filters.Star_Destroyer))
                 && GameConditions.isBlownAway(game, Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Alderaan, true)))) {
             final PhysicalCard playedCard = ((PlayCardResult) effectResult).getPlayedCard();
-            int numToRetrieve = 3;
+            int numToRetrieve = (int) new PerStarDestroyerEvaluator(3).evaluateExpression(game.getGameState(), game.getModifiersQuerying(), self);
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Retrieve "+numToRetrieve+" Force");
