@@ -17318,6 +17318,7 @@ public class Filters {
     public static final Filter Astromech_Shortage = Filters.title(Title.Astromech_Shortage);
     public static final Filter AT_AT = Filters.modelType(ModelType.AT_AT);
     public static final Filter AT_AT_Cannon = Filters.keyword(Keyword.AT_AT_CANNON);
+    public static final Filter AT_DP = Filters.modelType(ModelType.AT_DP);
     public static final Filter At_Last_The_Jedi_Are_No_More = Filters.title(Title.At_Last_The_Jedi_Are_No_More);
     public static final Filter At_Last_We_Will_Have_Revenge = Filters.title(Title.At_Last_We_Will_Have_Revenge);
     public static final Filter At_Peace = Filters.title(Title.At_Peace);
@@ -18140,6 +18141,7 @@ public class Filters {
     public static final Filter Losing_Track = Filters.title(Title.Losing_Track);
     public static final Filter Lost_In_The_Wilderness = Filters.title(Title.Lost_In_The_Wilderness);
     public static final Filter Lothal_Capital_City = Filters.title(Title.Lothal_Capital_City);
+    public static final Filter Lothal_Imperial_Complex = Filters.title(Title.Lothal_Imperial_Complex);
     public static final Filter Lothal_Jedi_Temple = Filters.title(Title.Lothal_Jedi_Temple);
     public static final Filter Lothal_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Lothal));
     public static final Filter Lothal_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Lothal));
@@ -18497,6 +18499,7 @@ public class Filters {
     public static final Filter Royal_Guard = Filters.keyword(Keyword.ROYAL_GUARD);
     public static final Filter Royal_Naboo_Security = Filters.keyword(Keyword.ROYAL_NABOO_SECURITY);
     public static final Filter Royal_Naboo_Security_Officer = Filters.title(Title.Royal_Naboo_Security_Officer);
+    public static final Filter Rukh = Filters.persona(Persona.RUKH);
     public static final Filter Run_Luke_Run = Filters.title(Title.Run_Luke_Run);
     public static final Filter Rya = Filters.title(Title.Rya);
     public static final Filter Rycar_Ryjerd = Filters.title(Title.Rycar_Ryjerd);

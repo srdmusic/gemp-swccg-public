@@ -10,14 +10,15 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.GameTextCanceledCondition;
-import com.gempukku.swccgo.logic.conditions.NotCondition;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.CancelCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.RespondableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.LinkedList;
 import java.util.List;
+
 
 /**
  * Set: Set 19
@@ -30,7 +31,7 @@ public class Card501_084 extends AbstractDarkJediMasterImperial {
         super(Side.DARK, 1, 5, 4, 7, 9, "The Emperor", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Leader. Secretive manipulator of the galaxy. Played Darth Vader and Prince Xizor off against one another in his relentless pursuit of 'young Skywalker'.");
-        setGameText("Even as a unit of Force, destiny +1 for each Black Sun Agent or Jedi on table (limit +5). Deploys only to Coruscant. Never deploys or moves (even if carried) to a site opponent occupies. May cancel Projection Of A Skywalker here. Immune to attrition.");
+        setGameText("Destiny +1 for each Black Sun Agent or Jedi on table (limit +5) when drawn for destiny. Deploys only to Coruscant. Never deploys or moves (even if carried) to a site opponent occupies. May cancel Projection Of A Skywalker here. Immune to attrition.");
         addPersona(Persona.SIDIOUS);
         addIcons(Icon.REFLECTIONS_II, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_19);
         addKeywords(Keyword.LEADER);
@@ -48,7 +49,7 @@ public class Card501_084 extends AbstractDarkJediMasterImperial {
 
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotDeployToLocationModifier(self, Filters.or(self, Filters.hasAttachedWithRecursiveChecking(self)), siteOpponentOccupies));
-        modifiers.add(new DestinyModifier(self, self, new NotCondition(new GameTextCanceledCondition(self)), new MaxLimitEvaluator(new OnTableEvaluator(self, Filters.or(Filters.Black_Sun_agent, Filters.Jedi)), 5)));
+        modifiers.add(new DestinyWhenDrawnForDestinyModifier(self, self, new MaxLimitEvaluator(new OnTableEvaluator(self, Filters.or(Filters.Black_Sun_agent, Filters.Jedi)), 5)));
         return modifiers;
 
     }

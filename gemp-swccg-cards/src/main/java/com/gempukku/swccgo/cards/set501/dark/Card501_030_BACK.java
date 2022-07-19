@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.CancelBattleEffect;
-import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.TargetingReason;
@@ -22,7 +21,6 @@ import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
-import com.gempukku.swccgo.logic.effects.ModifyTotalBattleDestinyEffect;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -36,7 +34,7 @@ import java.util.List;
 public class Card501_030_BACK extends AbstractObjective {
     public Card501_030_BACK() {
         super(Side.DARK, 7, Title.The_Result_Is_Often_Resentment);
-        setGameText("While this side up, If a battle was just initiated involving an imperial leader or occupied TIE defender, may peek at cards stacked upon ‘Thrawn’s Art Collection’ and reveal one ‘artwork’ card. If a weapon, cancel battle. Otherwise, If artwork's printed destiny number is: (0-2): Opponent’s immunity to attrition is canceled during battle (3-4): Exclude an opponent's character from battle (opponent's choice). (5+): Add 3 to your total battle destiny. Place ‘artwork’ in the opponent's Lost pile." +
+        setGameText("While this side up, If a battle was just initiated involving an imperial leader or piloted TIE defender, may peek at cards stacked upon ‘Thrawn’s Art Collection’ and reveal one ‘artwork’ card. If a weapon, cancel battle. Otherwise, If artwork's printed destiny number is: (0-2): Opponent’s immunity to attrition is canceled during battle (3-4): Exclude an opponent's character from battle (opponent's choice). (5+): Add 3 to your total battle destiny. Place ‘artwork’ in the opponent's Lost pile." +
                 "Flip this card (except during battle) if no 'artwork' stacked on Thrawn's Art Collection.");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("The Result Is Often Resentment");
