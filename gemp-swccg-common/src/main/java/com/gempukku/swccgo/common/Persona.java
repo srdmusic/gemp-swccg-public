@@ -157,6 +157,7 @@ public enum Persona implements Filterable {
     BLOCKADE_FLAGSHIP("Blockade Flagship"),
     BLUE_11("Blue 11"),
     BLUE_SQUADRON_1("Blue Squadron 1"),
+    CHIMAERA("Chimaera"),
     EXECUTOR("Executor"),
     FALCON("Falcon"),
     FIRST_LIGHT("First Light"),
