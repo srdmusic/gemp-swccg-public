@@ -8,7 +8,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.LoseForceAndStackFaceDownEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceAndStackFaceUpEffect;
 import com.gempukku.swccgo.logic.modifiers.DefinedByGameTextDeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -49,15 +49,10 @@ public class Card501_031 extends AbstractNormalEffect {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Make opponent lose 1 Force and stack here");
-            action.setActionMsg("Make opponent lose 1 Force and stack lost card face down on " + GameUtils.getCardLink(self));
+            action.setActionMsg("Make opponent lose 1 Force and stack lost card face up on " + GameUtils.getCardLink(self));
             // Perform result(s)
             action.appendEffect(
-                    new LoseForceAndStackFaceDownEffect(action, opponent, 1, self) {
-                        @Override
-                        public boolean isShownIfLostFromHand() {
-                            return true;
-                        }
-                    });
+                    new LoseForceAndStackFaceUpEffect(action, opponent, 1, self));
             return Collections.singletonList(action);
         }
         return null;
