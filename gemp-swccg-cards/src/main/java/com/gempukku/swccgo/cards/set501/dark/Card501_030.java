@@ -6,6 +6,7 @@ import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -16,6 +17,7 @@ import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -33,7 +35,7 @@ public class Card501_030 extends AbstractObjective {
         super(Side.DARK, 0, Title.A_Great_Tactician_Creates_Plans);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Lothal system, Lothal: Imperial Complex, Lothal: Advanced Projects Laboratory, and Thrawn's Art Collection. " +
-                "For remainder of game, your [Episode I] (or [Episode VII]) cards with ability or a [Presence] icon and your admirals (except Thrawn) are deploy +3. " +
+                "For remainder of game, you may not deploy admirals, [EI], or [E7] cards with ability or [Presence] (except Thrawn) " +
                 "While this side up, Imperial Star Destroyers deploy -1 (-3 if Chimaera). Once per turn, may deploy a battleground system (or a site to Lothal) from Reserve Deck; reshuffle. " +
                 "Flip this card if Thrawn at a battleground and there are two or more cards stacked on Thrawn’s Art Collection.");
         addIcons(Icon.VIRTUAL_SET_19);
@@ -77,9 +79,9 @@ public class Card501_030 extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostModifier(self, Filters.or(Filters.and(Filters.your(self), Filters.admiral, Filters.except(Filters.Thrawn)),
-                Filters.and(Filters.your(self), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.hasAbilityOrHasPermanentPilotWithAbility, Icon.PRESENCE))), 3));
-
+        Filter mayNotPlayFilter = Filters.or(Filters.and(Filters.your(self), Filters.admiral, Filters.except(Filters.Thrawn)),
+                Filters.and(Filters.your(self), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.hasAbilityOrHasPermanentPilotWithAbility, Icon.PRESENCE)));
+        modifiers.add(new MayNotPlayModifier(self, mayNotPlayFilter, self.getOwner()));
         modifiers.add(new DeployCostModifier(self, Filters.and(Filters.Imperial_starship, Filters.Star_Destroyer), new CardMatchesEvaluator(-1, -3, Filters.Chimaera)));
         return modifiers;
     }
