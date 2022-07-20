@@ -15,7 +15,9 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ChooseArbitraryCardsEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromReserveDeckOnTopOfCardPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collection;
@@ -70,10 +72,10 @@ public class Card215_011 extends AbstractRebel {
                                                     action.appendEffect(
                                                             new TakeCardIntoHandFromReserveDeckEffect(action, playerId, cardToTakeIntoHand, false));
                                                     Collection<PhysicalCard> nonSelectedCards = Filters.filter(cards, game, Filters.not(cardToTakeIntoHand));
-                                                    PhysicalCard cardToPlaceInUsedPile = nonSelectedCards.iterator().next();
-                                                    if (cardToPlaceInUsedPile != null) {
+                                                    PhysicalCard cardToPutBack = nonSelectedCards.iterator().next();
+                                                    if (cardToPutBack != null) {
                                                         action.appendEffect(
-                                                                new PutCardFromReserveDeckOnTopOfCardPileEffect(action, cardToPlaceInUsedPile, Zone.USED_PILE, false));
+                                                                new PutCardFromReserveDeckOnTopOfCardPileEffect(action, cardToPutBack, Zone.RESERVE_DECK, false));
                                                     }
                                                 }
                                             }
