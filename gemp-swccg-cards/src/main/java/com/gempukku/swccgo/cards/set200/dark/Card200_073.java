@@ -48,7 +48,7 @@ public class Card200_073 extends AbstractImperial {
         modifiers.add(new ForceDrainsMayNotBeModifiedByModifier(self, Filters.Chiraneau, playerId));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.Kuat_Drive_Yards, Title.Alter));
         modifiers.add(new PowerModifier(self, uniqueStarDestroyers, condition, new PerStarDestroyerEvaluator(2)));
-        modifiers.add(new ImmunityToAttritionChangeModifier(self, uniqueStarDestroyers, condition, new PerStarDestroyerEvaluator(2)));
+        modifiers.add(new ImmunityToAttritionChangeModifier(self, uniqueStarDestroyers, condition, new PerStarDestroyerEvaluator(1)));
         return modifiers;
     }
 
