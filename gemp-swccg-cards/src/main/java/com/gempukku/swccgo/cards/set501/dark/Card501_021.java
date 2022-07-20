@@ -5,7 +5,6 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -17,7 +16,7 @@ import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
-import com.gempukku.swccgo.logic.modifiers.DeploysFreeToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -35,9 +34,9 @@ import java.util.List;
 
 public class Card501_021 extends AbstractAlien {
     public Card501_021() {
-        super(Side.DARK, 5, 2, 1, 2, 2, "Elan Sleazebaggano", Uniqueness.UNIQUE);
+        super(Side.DARK, 5, 2, 2, 1, 3, "Elan Sleazebaggano", Uniqueness.UNIQUE);
         setLore("Balosar information broker.");
-        setGameText("Deploys free to (and power +2 at) a bar, cantina, night club, or parlor. If present with a Jedi, place Elan Sleazebaggano in Used Pile. If present with opponent's character during your control phase, 'sell death sticks' (opponent must use or lose 1 Force).");
+        setGameText("Power and forfeit +2 at a Coruscant location. If present with opponent’s character at the beginning of their control phase, ‘sell death sticks’ (opponent must use or lose 1 Force; if a Jedi present, also place Elan in Used Pile).");
         addKeywords(Keyword.INFORMATION_BROKER);
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_19);
         setSpecies(Species.BALOSAR);
@@ -45,18 +44,11 @@ public class Card501_021 extends AbstractAlien {
     }
 
     @Override
-    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        Filter filter = Filters.or(Filters.titleContains("Bar"), Filters.titleContains("Cantina"), Filters.titleContains("Night Club"), Filters.titleContains("Parlor"));
-        modifiers.add(new DeploysFreeToLocationModifier(self, filter));
-        return modifiers;
-    }
-
-    @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        Filter filter = Filters.or(Filters.titleContains("Bar"), Filters.titleContains("Cantina"), Filters.titleContains("Night Club"), Filters.titleContains("Parlor"));
-        modifiers.add(new PowerModifier(self, new AtCondition(self, filter), 2));
+        AtCondition atCoruscantLocationCondition = new AtCondition(self, Filters.Coruscant_location);
+        modifiers.add(new PowerModifier(self, atCoruscantLocationCondition, 2));
+        modifiers.add(new ForfeitModifier(self, atCoruscantLocationCondition, 2));
         return modifiers;
     }
 
@@ -99,6 +91,11 @@ public class Card501_021 extends AbstractAlien {
                                         game.getGameState().sendMessage(opponent + " chooses to lose 1 Force");
                                         action.appendEffect(
                                                 new LoseForceEffect(action, opponent, 1, true));
+                                    }
+                                    if(GameConditions.isPresentWith(game, self, Filters.Jedi)){
+                                        action.appendEffect(
+                                                new PlaceCardInUsedPileFromTableEffect(action, self)
+                                        );
                                     }
                                 }
                             }
@@ -153,24 +150,17 @@ public class Card501_021 extends AbstractAlien {
                                         action.appendEffect(
                                                 new LoseForceEffect(action, opponent, 1, true));
                                     }
+                                    if(GameConditions.isPresentWith(game, self, Filters.Jedi)){
+                                        action.appendEffect(
+                                                new PlaceCardInUsedPileFromTableEffect(action, self)
+                                        );
+                                    }
                                 }
                             }
                     )
             );
             actions.add(action);
 
-        }
-
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.isPresentWith(game, self, Filters.Jedi)) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Go home and rethink his life");
-            action.setActionMsg("Go home and rethink his life");
-            action.appendEffect(new PlaceCardInUsedPileFromTableEffect(action, self));
-            actions.add(action);
         }
 
         return actions;

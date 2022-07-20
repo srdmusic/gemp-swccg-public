@@ -1,20 +1,22 @@
 package com.gempukku.swccgo.cards.set501.light;
+
 import com.gempukku.swccgo.cards.AbstractLostOrStartingInterrupt;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
+import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.filters.Filters;
-import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.logic.effects.PutCardFromVoidInReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
-import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -29,8 +31,7 @@ import java.util.List;
 public class Card501_068 extends AbstractLostOrStartingInterrupt {
     public Card501_068() {
         super(Side.LIGHT, 4, "You Cannot Escape Your Destiny", Uniqueness.UNIQUE);
-        setGameText("LOST: During your move phase, relocate Luke to a battleground site. " +
-                "STARTING: If He Is The Chosen One on table, deploy His Destiny and upto three Effects that deploy for free and are always immune to Alter. Place Interrupt in Reserve Deck.");
+        setGameText("LOST: During your move phase, relocate Luke from a site to a battleground site. STARTING: If He Is The Chosen One on table, deploy His Destiny and two Effects that deploy for free and are always immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("You Cannot Escape Your Destiny");
     }
@@ -53,7 +54,7 @@ public class Card501_068 extends AbstractLostOrStartingInterrupt {
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.title(Title.His_Destiny), true, false));
                             action.appendEffect(
-                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter), 3, 3, true, false));
+                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.always_immune_to_Alter), 2, 2, true, false));
                             action.appendEffect(
                                     new PutCardFromVoidInReserveDeckEffect(action, playerId, self));
                         }
@@ -69,15 +70,17 @@ public class Card501_068 extends AbstractLostOrStartingInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
+        Filter lukeAtSiteWhoCanBeRelocated =  Filters.and(Filters.Luke, Filters.at(Filters.site), Filters.canBeRelocatedToLocation(Filters.battleground_site, true, 0));
+
         if (GameConditions.isDuringYourPhase(game, playerId, Phase.MOVE)
-                && GameConditions.canTarget(game, self, Filters.and(Filters.Luke, Filters.canBeRelocatedToLocation(Filters.battleground_site, true, 0))))
+                && GameConditions.canTarget(game, self, Filters.and(Filters.Luke, lukeAtSiteWhoCanBeRelocated)))
                {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setText("Relocate Luke to another site");
             // Choose target(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose Luke", Filters.and(Filters.Luke, Filters.canBeRelocatedToLocation(Filters.battleground_site, true, 0))) {
+                    new TargetCardOnTableEffect(action, playerId, "Choose Luke", lukeAtSiteWhoCanBeRelocated) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, final PhysicalCard characterToRelocate) {
                             action.appendTargeting(
