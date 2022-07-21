@@ -20,7 +20,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Character
  * Subtype: Alien/Republic
  * Title: Wullffwarro
@@ -32,8 +32,8 @@ public class Card501_089 extends AbstractAlienRepublic {
         setLore("Wookiee. Slave.");
         setGameText("When drawn for destiny, may play an Interrupt with 'Wookiee' in title from Lost Pile as if from hand (then place that card out of play). Adds 2 to power of anything he pilots (3 if a gunship). Forfeit +2 at a Kashyyyk location.");
         setSpecies(Species.WOOKIEE);
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_19);
-        setTestingText("Wullffwarro");
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        setTestingText("~Wullffwarro");
     }
 
     @Override

@@ -27,7 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Interrupt
  * Subtype: Used Or Lost
  * Title: Where's Han and Solo Han
@@ -40,8 +40,8 @@ public class Card501_125 extends AbstractUsedOrLostInterrupt {
                 "Reserve Deck; reshuffle. LOST: Cancel an attempt to target a smuggler with Hidden Weapons, " +
                 "You Are Beaten or Dr. Evazan. OR Cancel Overwhelmed or Lateral Damage if at same system as two " +
                 "smugglers piloting. OR If your smuggler defending a battle alone, add one battle destiny.");
-        addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("Where's Han and Solo Han");
+        addIcons(Icon.VIRTUAL_SET_20);
+        setTestingText("~Where's Han and Solo Han");
     }
 
     @Override

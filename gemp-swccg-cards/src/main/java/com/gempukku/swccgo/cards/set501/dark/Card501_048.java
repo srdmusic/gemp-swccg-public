@@ -14,20 +14,19 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.NotCondition;
+import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
+import com.gempukku.swccgo.logic.modifiers.EachWeaponDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.EachWeaponDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
-
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Location
  * Subtype: Site
- * Title: Cloud City: Chasm Walkway (v)
+ * Title: Cloud City: Chasm Walkway (V)
  */
 public class Card501_048 extends AbstractSite {
     public Card501_048 () {
@@ -37,9 +36,9 @@ public class Card501_048 extends AbstractSite {
         setLocationLightSideGameText("If Vader alone here (and Luke not here), [Special Edition] Vader is defense value +1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.VIRTUAL_SET_19, Icon.CLOUD_CITY, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK);
+        addIcons(Icon.VIRTUAL_SET_20, Icon.CLOUD_CITY, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK);
         addKeywords(Keyword.CLOUD_CITY_LOCATION);
-        setTestingText("Cloud City: Chasm Walkway (V)");
+        setTestingText("~Cloud City: Chasm Walkway (V)");
     }
 
     @Override

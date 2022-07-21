@@ -31,7 +31,6 @@ import java.util.List;
  * Subtype: Alien
  * Title: Elan Sleazebaggano
  */
-
 public class Card501_021 extends AbstractAlien {
     public Card501_021() {
         super(Side.DARK, 5, 2, 2, 1, 3, "Elan Sleazebaggano", Uniqueness.UNIQUE);

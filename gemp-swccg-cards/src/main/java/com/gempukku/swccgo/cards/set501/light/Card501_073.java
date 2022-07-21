@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.PlayersTurnCondition;
-import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -27,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Interrupt
  * Subtype: Lost
  * Title: Full Throttle (V)
@@ -38,8 +37,8 @@ public class Card501_073 extends AbstractLostInterrupt {
         setVirtualSuffix(true);
         setLore("Rebel pilots use visual scanning to supplement sensors for an edge against Imperial fighter pilots. Natural instincts allow lone Rebels to overcome superior numbers.");
         setGameText("If played during your turn, this is a Used Interrupt. During battle, if Han, Rey, or a Skywalker is piloting a lone starfighter, it is immune to attrition. If opponent has two or more starships there (or if a [Skywalker] Epic Event on table), add its maneuver (if any) to your total power.");
-        addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("Full Throttle (V)");
+        addIcons(Icon.VIRTUAL_SET_20);
+        setTestingText("~Full Throttle (V)");
     }
 
     @Override

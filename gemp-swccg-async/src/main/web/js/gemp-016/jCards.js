@@ -3444,7 +3444,7 @@ var fixedImages = {
 //playtesting
 "501_1":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/darthvaderdarklordofthesith.gif",
 "501_2":"https://res.starwarsccg.org/cards/Virtual5-Dark/large/overseeingitpersonally.gif",
-"501_3":"https://res.starwarsccg.org/cards/Virtual9-Dark/large/shadowsoftheempire.gif",
+"501_3":"https://res.starwarsccg.org/cards/JabbasPalace-Dark/large/bibfortuna.gif",
 "501_4":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/hemdazon.gif",
 "501_5":"https://res.starwarsccg.org/cards/Hoth-Dark/large/idjustassoonkissawookiee.gif",
 "501_6":"https://res.starwarsccg.org/cards/CloudCity-Dark/large/darkdeal.gif",
@@ -3500,7 +3500,7 @@ var fixedImages = {
 "501_54":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/nomatchforasith.gif",
 "501_55":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/chimaera.gif",
 "501_56":"https://res.starwarsccg.org/cards/Premiere-Dark/large/vaderslightsaber.gif",
-"501_57":"https://res.starwarsccg.org/cards/Virtual13-Light/large/deathstariichasmwalkway.gif",
+"501_57":"https://res.starwarsccg.org/cards/TheedPalace-Light/large/bravo4.gif",
 "501_58":"https://res.starwarsccg.org/cards/Virtual8-Light/large/admiraluostatura.gif",
 "501_59":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/artoo.gif",
 "501_60":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/chadrafan.gif",

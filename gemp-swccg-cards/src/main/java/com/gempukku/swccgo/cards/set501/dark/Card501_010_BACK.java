@@ -6,29 +6,17 @@ import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.conditions.NotCondition;
-import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromBottomOfLostPileEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
-import com.gempukku.swccgo.logic.effects.RespondableEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromLostPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromBottomOfLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -36,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Objective
  * Title: The Shield Will Be Down In Moments / Imperial Troops Have Entered The Base!
  */
@@ -45,8 +33,8 @@ public class Card501_010_BACK extends AbstractObjective {
         super(Side.DARK, 7, Title.Imperial_Troops_Have_Entered_The_Base);
         setGameText("While this side up, attrition against opponent is +1 for each Imperial leader in battle. Rebel Leadership and We're Doomed are Lost Interrupts. Your Force drains are +1 at opponent's sites (and Echo sites) where your snowtrooper or non-unique AT-AT is present. Unless opponent controls a Hoth location, your Force drain bonuses may not be canceled. Once per turn, if opponent just lost Force to You May Start Your Landing, may take bottom card of Lost Pile into hand. " +
                 "Flip this card if opponent controls Hoth system.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
-        setTestingText("Imperial Troops Have Entered the Base!");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_20);
+        setTestingText("~Imperial Troops Have Entered the Base!");
     }
 
     @Override

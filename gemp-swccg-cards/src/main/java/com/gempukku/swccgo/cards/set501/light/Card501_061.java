@@ -9,26 +9,20 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.StealCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: My Sister Has It
@@ -37,8 +31,8 @@ public class Card501_061 extends AbstractUsedOrLostInterrupt {
     public Card501_061() {
         super(Side.LIGHT, 4, "My Sister Has It", Uniqueness.UNIQUE);
         setGameText("USED: If a [Skywalker] Epic Event on table, take a lightsaber or [Endor] Leia into hand from Reserve Deck; reshuffle. OR If [Endor] Leia on table, add or subtract 1 from a just drawn weapon or battle destiny. LOST: Search a Lost Pile; take your lightsaber or a 'stolen' lightsaber into hand.");
-        addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("My Sister Has It");
+        addIcons(Icon.VIRTUAL_SET_20);
+        setTestingText("~My Sister Has It");
     }
 
     @Override

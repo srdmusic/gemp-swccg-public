@@ -22,20 +22,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Playtesting
+ * Set: Set 20
  * Type: Interrupt
  * Subtype: Lost Or Starting
  * Title: You Cannot Escape Your Destiny
  */
-
 public class Card501_068 extends AbstractLostOrStartingInterrupt {
     public Card501_068() {
         super(Side.LIGHT, 4, "You Cannot Escape Your Destiny", Uniqueness.UNIQUE);
         setGameText("LOST: During your move phase, relocate Luke from a site to a battleground site. STARTING: If He Is The Chosen One on table, deploy His Destiny and two Effects that deploy for free and are always immune to Alter. Place Interrupt in Reserve Deck.");
-        addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("You Cannot Escape Your Destiny");
+        addIcons(Icon.VIRTUAL_SET_20);
+        setTestingText("~You Cannot Escape Your Destiny");
     }
-
 
     @Override
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {

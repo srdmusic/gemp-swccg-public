@@ -1,7 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
@@ -18,7 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Effect
  * Title: Hoth Blockade
  */
@@ -27,9 +26,9 @@ public class Card501_022 extends AbstractNormalEffect {
         super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, "Hoth Blockade", Uniqueness.UNIQUE);
         setLore("Death Squadron.");
         setGameText("Deploy on Hoth system. Death Squadron starships deploy -1 here (-5 if Executor). While your Star Destroyer here, your AT-ATs deploy -1 to Hoth sites and Rebel starships deploy +1 here. While you control two Hoth sites, Haven is suspended here. [Immune to Alter.]");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_20);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Hoth Blockade");
+        setTestingText("~Hoth Blockade");
     }
 
     @Override

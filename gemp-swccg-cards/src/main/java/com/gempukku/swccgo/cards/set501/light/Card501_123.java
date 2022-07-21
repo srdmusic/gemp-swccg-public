@@ -21,7 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Location
  * Subtype: System
  * Title: Cyrkon
@@ -33,8 +33,8 @@ public class Card501_123 extends AbstractSystem {
         setLocationLightSideGameText("During your control phase, if you control with two smugglers, may retrieve 1 Force.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.PLANET, Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_19);
-        setTestingText("Cyrkon");
+        addIcons(Icon.PLANET, Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_20);
+        setTestingText("~Cyrkon");
     }
 
     @Override

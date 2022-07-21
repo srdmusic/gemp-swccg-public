@@ -106,6 +106,7 @@ public interface Title {
     String Black_4 = "Black 4";
     String Black_5 = "Black 5";
     String Black_Sun_Blaster = "Black Sun Blaster";
+    String Blast_Door_Controls = "Blast Door Controls";
     String Blast_The_Door_Kid = "Blast The Door, Kid!";
     String Blasted_Droid = "Blasted Droid";
     String Blaster_Deflection = "Blaster Deflection";

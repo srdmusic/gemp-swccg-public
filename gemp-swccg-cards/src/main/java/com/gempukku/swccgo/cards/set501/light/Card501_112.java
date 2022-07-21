@@ -21,7 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Location
  * Subtype: System
  * Title: Seelos
@@ -33,8 +33,8 @@ public class Card501_112 extends AbstractSystem {
         setLocationLightSideGameText("Once per game, if you control, may take a clone into hand from Reserve Deck; reshuffle.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_19);
-        setTestingText("Seelos");
+        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_20);
+        setTestingText("~Seelos");
     }
 
     @Override

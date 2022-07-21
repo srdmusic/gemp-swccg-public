@@ -1,4 +1,5 @@
 package com.gempukku.swccgo.cards.set501.light;
+
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
@@ -21,7 +22,6 @@ import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -31,7 +31,6 @@ import java.util.List;
  * Subtype: Alien
  * Title: Dexter Jettster
  */
-
 public class Card501_065 extends AbstractAlien {
     public Card501_065() {
         super(Side.LIGHT, 2, 3, 3, 3, 5, "Dexter Jettster", Uniqueness.UNIQUE);
