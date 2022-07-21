@@ -21,7 +21,7 @@ import java.util.List;
 
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Character
  * Subtype: Alien
  * Title: Black Krrsantan
@@ -33,10 +33,10 @@ public class Card501_043 extends AbstractAlien {
         setGameText("May not be excluded from battle. If a battle was just initiated here, each player with four or " +
                 "more characters here must return one of those characters to hand (owner's choice). " +
                 "Opponent’s characters of ability < 3 are power -1 here.");
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
         setSpecies(Species.WOOKIEE);
         addKeywords(Keyword.BOUNTY_HUNTER);
-        setTestingText("Black Krrsantan");
+        setTestingText("~Black Krrsantan");
     }
 
     @Override

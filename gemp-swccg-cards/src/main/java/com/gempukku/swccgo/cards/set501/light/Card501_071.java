@@ -2,8 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractCharacterWeapon;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.AttachedCondition;
-import com.gempukku.swccgo.cards.effects.AddDestinyToAttritionEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -12,18 +10,14 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.*;
 import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardInLostPileFromTableEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeStolenModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Effect;
 
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Weapon
  * Subtype: Character
  * Title: Leia's Lightsaber
@@ -32,10 +26,10 @@ public class Card501_071 extends AbstractCharacterWeapon {
     public Card501_071() {
         super(Side.LIGHT, 3, "Leia's Lightsaber", Uniqueness.UNIQUE);
         setGameText("Deploy on [Endor] Leia or Rey. Force Lighting here is canceled. May place in Used Pile to activate 1 Force. May target a character or creature for free. Draw two destiny. Target hit, and forfeit = 0, if total destiny > defense value.");
-        addIcons(Icon.VIRTUAL_SET_19);
+        addIcons(Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.LIGHTSABER);
         setMatchingCharacterFilter(Filters.or(Filters.Leia, Filters.Rey));
-        setTestingText("Leia's Lightsaber");
+        setTestingText("~Leia's Lightsaber");
     }
 
     @Override

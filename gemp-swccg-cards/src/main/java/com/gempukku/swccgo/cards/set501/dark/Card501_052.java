@@ -20,23 +20,22 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Starship
  * Subtype: Starfighter
- * Title: Jango Fett & Boba Fett In Slave I (V)
+ * Title: Jango Fett & Boba Fett In Slave I
  */
 public class Card501_052 extends AbstractStarfighter {
     public Card501_052() {
         super(Side.DARK, 2, 7, 8, null, 6, 5, 8, "Jango Fett & Boba Fett In Slave I", Uniqueness.UNIQUE);
-        setVirtualSuffix(true);
         setComboCard(true);
         setGameText("Permanent pilots are •Jango and •Boba, who provide ability of 6. May add 2 passengers. Power +2 at Nal Hutta or with Falcon. Immune to Eject, Eject! and attrition < 5.");
         addPersonas(Persona.SLAVE_I);
         setPassengerCapacity(2);
-        addIcons(Icon.TRADE_FEDERATION, Icon.EPISODE_I, Icon.INDEPENDENT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_19);
+        addIcons(Icon.TRADE_FEDERATION, Icon.EPISODE_I, Icon.INDEPENDENT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_20);
         addIcon(Icon.PILOT, 2);
         addModelType(ModelType.FIRESPRAY_CLASS_ATTACK_SHIP);
-        setTestingText("Jango Fett & Boba Fett In Slave I");
+        setTestingText("~Jango Fett & Boba Fett In Slave I");
     }
 
     @Override

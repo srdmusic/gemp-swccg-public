@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Effect
  * Title: I Hope She's All Right & Part Of The Tribe
  */
@@ -35,8 +35,8 @@ public class Card501_049 extends AbstractNormalEffect {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, "I Hope She's All Right & Part Of The Tribe", Uniqueness.UNIQUE);
         addComboCardTitles(Title.I_Hope_Shes_All_Right, "Part Of The Tribe");
         setGameText("Deploy on your Rebel of ability < 6. Character gains Ewok. Once per game, may take an Ewok into hand from Reserve Deck; reshuffle. During your draw phase, if you occupy two battleground sites, unless opponent’s character of destiny < 4 occupies a battleground site, opponent loses 1 Force. While on Endor, adds one [LS] icon. Immune to Alter while on Leia.");
-        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_19);
-        setTestingText("I Hope She's All Right & Part Of The Tribe");
+        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_20);
+        setTestingText("~I Hope She's All Right & Part Of The Tribe");
     }
 
     @Override

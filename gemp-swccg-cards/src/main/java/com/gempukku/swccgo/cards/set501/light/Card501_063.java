@@ -18,7 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Character
  * Subtype: Rebel
  * Title: Prisoner 2187 (V)
@@ -30,10 +30,10 @@ public class Card501_063 extends AbstractRebel {
         setLore("Princess Leia Organa. Alderaanian senator. Targeted by Vader for capture and interrogation. The Dark Lord of the Sith wanted her alive.");
         setGameText("Deploys only if A Power Loss on table. Opponent generates no Force from same Death Star site (even if imprisoned) unless an Imperial here. Your Force drains are +1 where you have a stormtrooper. Immune to attrition < 4.");
         addPersona(Persona.LEIA);
-        addIcons(Icon.PREMIUM, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
+        addIcons(Icon.PREMIUM, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.SENATOR, Keyword.FEMALE);
         setSpecies(Species.ALDERAANIAN);
-        setTestingText("Prisoner 2187 (V)");
+        setTestingText("~Prisoner 2187 (V)");
     }
 
     @Override

@@ -4,7 +4,6 @@ import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -14,14 +13,13 @@ import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Effect
  * Title: You May Start Your Landing (V)
  */
@@ -31,9 +29,9 @@ public class Card501_012 extends AbstractNormalEffect {
         setVirtualSuffix(true);
         setLore("Echo Base was no match for the Imperial war machine.");
         setGameText("Deploy on table. If you just deployed an AT-AT, may peek at top two cards of Reserve Deck and take one into hand. During your control phase, opponent loses 1 Force for each marker site your AT-AT controls (limit 1 unless you occupy Hoth system). [Immune to Alter.]");
-        addIcons(Icon.TATOOINE, Icon.HOTH, Icon.VIRTUAL_SET_19);
+        addIcons(Icon.TATOOINE, Icon.HOTH, Icon.VIRTUAL_SET_20);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("You May Start Your Landing (V)");
+        setTestingText("~You May Start Your Landing (V)");
     }
 
     @Override

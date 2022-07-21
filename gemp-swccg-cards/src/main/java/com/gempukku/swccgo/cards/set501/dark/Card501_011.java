@@ -15,17 +15,18 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.PutCardFromVoidInLostPileEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Interrupt
  * Subtype: Lost or Starting
  * Title: That's It, The Rebels Are There! (V)
@@ -35,8 +36,8 @@ public class Card501_011 extends AbstractUsedOrStartingInterrupt {
         super(Side.DARK, 4, "That's It, The Rebels Are There!");
         setVirtualSuffix(true);
         setGameText("USED: Move your AT-AT as a 'react.' STARTING: If 1st Marker on table, take [Set 6] Veers into hand. Deploy [Set 9] Prepare For A Surface Attack and up to two Effects that deploy for free and are always [Immune to Alter]. Place Interrupt in Lost Pile.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_19);
-        setTestingText("That's It, The Rebels Are There! (V)");
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_20);
+        setTestingText("~That's It, The Rebels Are There! (V)");
     }
 
     @Override

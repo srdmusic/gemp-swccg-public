@@ -17,6 +17,7 @@ public enum Persona implements Filterable {
     BECKETT("Beckett"),
     BEEDO("Beedo"),
     BEN_SOLO("Ben Solo"),
+    BIB("Bib Fortuna"),
     BLIZZARD_1("Blizzard 1"),
     BOBA_FETT("Boba Fett"),
     BO_KATAN("Bo-Katan"),

@@ -27,7 +27,6 @@ import java.util.List;
  * Subtype: Alien
  * Title: Babu Frik
  */
-
 public class Card501_060 extends AbstractAlien {
     public Card501_060() {
         super(Side.LIGHT, 4, 1, 0, 2, 3, "Babu Frik", Uniqueness.UNIQUE);

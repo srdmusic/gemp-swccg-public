@@ -34,7 +34,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Epic Event
  * Title: His Destiny
  */
@@ -46,8 +46,8 @@ public class Card501_069 extends AbstractEpicEventDeployable {
                 "While Luke is alone, your total power at other locations is +1 for each card stacked on I Feel The Conflict. " +
                 "If Luke and He Will Bring Balance on table at start of your turn, opponent loses 1 Force. " +
                 "During your move phase, if Luke present with a Dark Jedi, may initiate a duel. Each player draws destiny. Add power. Highest total wins. If Luke loses, lose 1 Force.");
-        addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("His Destiny");
+        addIcons(Icon.VIRTUAL_SET_20);
+        setTestingText("~His Destiny");
     }
 
     @Override

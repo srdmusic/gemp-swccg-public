@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Show No Mercy
@@ -31,10 +31,9 @@ public class Card501_097 extends AbstractUsedInterrupt {
     public Card501_097() {
         super(Side.DARK, 4, "Show No Mercy", Uniqueness.UNIQUE);
         setGameText("If Insidious Prisoner or your [Set 17] Epic Event on table: Take The Works or a Coruscant battleground site into hand from Reserve Deck; reshuffle. OR If your Dark Jedi controls opponent’s battleground site, cancel a Force drain at the related system.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_19);
-        setTestingText("Show No Mercy");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        setTestingText("~Show No Mercy");
     }
-
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
