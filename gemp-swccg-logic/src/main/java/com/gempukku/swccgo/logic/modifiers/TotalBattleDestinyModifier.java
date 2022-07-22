@@ -124,6 +124,7 @@ public class TotalBattleDestinyModifier extends AbstractModifier {
      * @param locationFilter the filter for locations where total battle destiny is modified
      * @param evaluator the evaluator that calculates the amount of the modifier
      * @param playerId the player whose total battle destiny is modified
+     * @param skipInBattleCheck true if check for source card in battle is skipped, otherwise false
      */
     public TotalBattleDestinyModifier(PhysicalCard source, Filter locationFilter, Evaluator evaluator, String playerId, boolean skipInBattleCheck) {
         this(source, locationFilter, null, evaluator, playerId, skipInBattleCheck);
@@ -135,6 +136,7 @@ public class TotalBattleDestinyModifier extends AbstractModifier {
      * @param condition the condition that must be fulfilled for the modifier to be in effect
      * @param evaluator the evaluator that calculates the amount of the modifier
      * @param playerId the player whose total battle destiny is modified
+     * @param skipInBattleCheck true if check for source card in battle is skipped, otherwise false
      */
     public TotalBattleDestinyModifier(PhysicalCard source, Condition condition, Evaluator evaluator, String playerId, boolean skipInBattleCheck) {
         this(source, Filters.any, condition, evaluator, playerId, skipInBattleCheck);
