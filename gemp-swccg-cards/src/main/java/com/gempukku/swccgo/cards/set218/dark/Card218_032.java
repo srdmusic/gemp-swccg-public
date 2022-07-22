@@ -14,7 +14,10 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TriggerAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnActionProxyEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.ResetForfeitUntilEndOfTurnEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.modifiers.EachWeaponDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.MovesForFreeModifier;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -55,24 +58,29 @@ public class Card218_032 extends AbstractUsedInterrupt {
                     final int permCardId = self.getPermanentCardId();
                     final int gameTextSourceCardId = self.getCardId();
                     action.appendEffect(new AddUntilEndOfTurnModifierEffect(action, new EachWeaponDestinyModifier(self, Filters.any, Filters.and(Filters.your(self), Filters.Fett), 1), "Add 1 to your Fetts' weapon destinies"));
-                    action.appendEffect(new AddUntilEndOfTurnActionProxyEffect(action, new AbstractActionProxy() {
-                        @Override
-                        public List<TriggerAction> getRequiredAfterTriggers(SwccgGame game, EffectResult effectResult) {
-                            final PhysicalCard self = game.findCardByPermanentId(permCardId);
 
-                            // Check condition(s)
-                            if (TriggerConditions.justHitBy(game, effectResult, Filters.here(self), Filters.and(Filters.your(self), Filters.Fett))) {
-                                PhysicalCard cardHit = ((HitResult) effectResult).getCardHit();
+                    action.appendEffect(
+                            new AddUntilEndOfTurnActionProxyEffect(action, new AbstractActionProxy() {
+                                @Override
+                                public List<TriggerAction> getRequiredAfterTriggers(SwccgGame game, EffectResult effectResult) {
+                                    final PhysicalCard self = game.findCardByPermanentId(permCardId);
 
-                                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                                action.setText("Reset " + GameUtils.getFullName(cardHit) + "'s forfeit to 0");
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new ResetForfeitEffect(action, cardHit, 0));
-                                return Collections.singletonList((TriggerAction) action);
+                                    // Check condition(s)
+                                    if (TriggerConditions.justHitBy(game, effectResult, Filters.any, Filters.and(Filters.your(self), Filters.Fett))) {
+                                        PhysicalCard cardHit = ((HitResult) effectResult).getCardHit();
+
+                                        final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                                        action.setText("Reset " + GameUtils.getFullName(cardHit) + "'s forfeit to 0");
+                                        // Perform result(s)
+                                        action.appendEffect(
+                                                new ResetForfeitUntilEndOfTurnEffect(action, cardHit, 0));
+                                        return Collections.singletonList((TriggerAction) action);
+                                    }
+                                    return null;
+                                }
                             }
-                            return null;
-                        }}));
+                            )
+                    );
                 }
             });
 
@@ -108,7 +116,7 @@ public class Card218_032 extends AbstractUsedInterrupt {
                                     new CancelBattleEffect(action));
                             Collection<PhysicalCard> opponentsCardsThere = Filters.filterActive(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.opponents(self), Filters.at(battleLocation), Filters.canBeTargetedBy(self)));
                             action.appendEffect(
-                                    new AddUntilEndOfTurnModifierEffect(action, new MovesForFreeModifier(self, Filters.in(opponentsCardsThere)), "makes "+opponent+"'s cards move for free"));
+                                    new AddUntilEndOfTurnModifierEffect(action, new MovesForFreeModifier(self, Filters.in(opponentsCardsThere)), "makes " + opponent + "'s cards move for free"));
                         }
                     }
             );
