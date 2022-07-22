@@ -2,6 +2,7 @@ package com.gempukku.swccgo.logic.modifiers;
 
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Filterable;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.state.GameState;
@@ -115,6 +116,17 @@ public class TotalBattleDestinyModifier extends AbstractModifier {
      */
     public TotalBattleDestinyModifier(PhysicalCard source, Condition condition, Evaluator evaluator, String playerId) {
         this(source, Filters.any, condition, evaluator, playerId, false);
+    }
+
+    /**
+     * Creates a modifier to total battle destiny.
+     * @param source the source of the modifier
+     * @param locationFilter the filter for locations where total battle destiny is modified
+     * @param evaluator the evaluator that calculates the amount of the modifier
+     * @param playerId the player whose total battle destiny is modified
+     */
+    public TotalBattleDestinyModifier(PhysicalCard source, Filter locationFilter, Evaluator evaluator, String playerId, boolean skipInBattleCheck) {
+        this(source, locationFilter, null, evaluator, playerId, skipInBattleCheck);
     }
 
     /**

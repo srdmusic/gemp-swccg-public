@@ -13,7 +13,7 @@ import com.gempukku.swccgo.filters.Filters;
  * Title: Din Djarin's Modified N-1
  */
 public class Card501_057 extends AbstractStarfighter {
-    protected Card501_057() {
+    public Card501_057() {
         super(Side.LIGHT, 3, 3, 3, null, 5, 3, 5, "Din Djarin's Modified N-1", Uniqueness.UNIQUE);
         setLore("");
         setGameText("May add 1 pilot and Grogu as a passenger. Din Djarin deploys -1 aboard. While Din piloting, immune to attrition < 5 and once per game may use 3 Force to cancel a battle just initiated here.");
