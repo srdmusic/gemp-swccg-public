@@ -1,14 +1,5 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-//•Daultay Dofine (V) 2
-//[Coruscant - R]
-//Lore: Neimoidian Trade Federation captain who gained his current position through political backstabbing and family connections. Not favored by Darth Sidious.
-//DARK- CHARACTER - REPUBLIC
-//POWER 3 ABILITY 3 FORCE-ATTUNED
-//Text: Adds 2 to power of anything he pilots. Your total battle destiny at sites is +1 for each of your participating [Presence] droids that did not fire its [Permanent Weapon] weapon in that battle. Weapon destinies at same system are -1.
-//DEPLOY 3 FORFEIT 6
-//[Coruscant] [Episode I] [Pilot] [Set 19]
-
 import com.gempukku.swccgo.cards.AbstractRepublic;
 import com.gempukku.swccgo.cards.evaluators.InBattleEvaluator;
 import com.gempukku.swccgo.common.*;
