@@ -47,8 +47,7 @@ public class Card501_044 extends AbstractAlien {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, playerId, Filters.here(self))
-                && GameConditions.hasLostPile(game, playerId)) {
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, playerId, Filters.here(self))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Prevent battle damage");
