@@ -50,7 +50,7 @@ public class Card501_104 extends AbstractUsedInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Peek at top " + yourLothalSiteCount + " card" + GameUtils.s(yourLothalSiteCount)+ " of Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Peek at top " + yourLothalSiteCount + "card" + GameUtils.s(yourLothalSiteCount)+ " of Reserve Deck and take one into hand",
+            action.allowResponses("Peek at top " + yourLothalSiteCount + " card" + GameUtils.s(yourLothalSiteCount)+ " of Reserve Deck and take one into hand",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {

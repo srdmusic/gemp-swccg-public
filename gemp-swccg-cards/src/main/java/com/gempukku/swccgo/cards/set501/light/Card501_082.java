@@ -5,7 +5,6 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.MoveAsReactEffect;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -18,7 +17,7 @@ import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UseMagneticSuctionTubeEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromHandEffect;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
@@ -27,7 +26,6 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -47,31 +45,6 @@ public class Card501_082 extends AbstractUsedInterrupt {
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
-        GameTextActionId gameTextActionId = GameTextActionId.UTINNI__DOWNLOAD_OR_MOVE_JAWA;
-
-        // Check condition(s)
-        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Deploy a Jawa from Reserve Deck");
-            // Allow response(s)
-            action.allowResponses("Deploy a Jawa from Reserve Deck",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.species(Species.JAWA), -1, false, true));
-                        }
-                    }
-            );
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new ArrayList<>();
 
@@ -84,18 +57,18 @@ public class Card501_082 extends AbstractUsedInterrupt {
         // Check condition(s)
         if ((TriggerConditions.battleInitiated(game, effectResult, opponent)
                 || TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent))
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, true)) {
+                && GameConditions.hasInHand(game, playerId, Filters.Jawa)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Deploy Jawa as 'react' from Reserve Deck");
+            action.setText("Deploy Jawa as 'react'");
             // Allow response(s)
-            action.allowResponses("Deploy Jawa as a 'react' from Reserve Deck",
+            action.allowResponses("Deploy Jawa as a 'react'",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, yourJawa, -1, true, true));
+                                    new DeployCardToTargetFromHandEffect(action, playerId, Filters.Jawa, Filters.any, false, true));
                         }
                     }
             );
@@ -104,7 +77,7 @@ public class Card501_082 extends AbstractUsedInterrupt {
 
         if ((TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent)
                 || TriggerConditions.battleInitiated(game, effectResult, opponent))
-                && GameConditions.canTarget(game, self, yourJawa)) {
+                && GameConditions.canTarget(game, self, Filters.and(yourJawa, Filters.canMoveAsReactAsActionFromOtherCard(self, false, -1, false)))) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Move Jawa as a 'react'");

@@ -189,6 +189,7 @@ public interface Title {
     String Cloud_City_Occupation = "Cloud City Occupation";
     String Cloud_City_Sabacc = "Cloud City Sabacc";
     String Close_Call = "Close Call";
+    String Cold_Feet = "Cold Feet";
     String Collateral_Damage = "Collateral Damage";
     String Collision = "Collision!";
     String Colo_Claw_Fish = "Colo Claw Fish";

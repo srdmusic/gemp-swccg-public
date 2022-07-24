@@ -37,7 +37,7 @@ public class Card501_036 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        Filter filter = Filters.or(Filters.Imperial, Filters.Rukh, Filters.AT_ST, Filters.AT_DP, Filters.speeder_bike);
+        Filter filter = Filters.or(Filters.Imperial, Filters.Rukh, Filters.AT_ST, Filters.AT_DP, Filters.speeder_bike, Filters.here(self));
         modifiers.add(new PowerModifier(self, filter, 1));
         modifiers.add(new ForfeitModifier(self, filter,1 ));
         return modifiers;
