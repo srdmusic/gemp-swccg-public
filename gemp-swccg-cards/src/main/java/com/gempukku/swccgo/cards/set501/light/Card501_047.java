@@ -25,13 +25,13 @@ import java.util.List;
  * Set: Set 19
  * Type: Location
  * Subtype: Site
- * Title: Coruscant: Jedi Temple Entrance
+ * Title: Coruscant: Jedi Temple
  */
 public class Card501_047 extends AbstractSite {
     public Card501_047() {
-        super(Side.LIGHT, "Coruscant: Jedi Temple Entrance", Title.Coruscant);
+        super(Side.LIGHT, "Coruscant: Jedi Temple", Title.Coruscant);
         setLocationDarkSideGameText("");
-        setLocationLightSideGameText("During your move phase, Jedi Council members may move between here and any battleground (or Coruscant) site. While a Jedi here, opponent's characters deploy +2 here and opponent may not Force drain at Jedi Council Chamber.");
+        setLocationLightSideGameText("During your move phase, [Episode I] Jedi may move between here and a battleground site. While a Jedi here, opponent's characters deploy +2 here and cancels Force drains at Jedi Council Chamber.");
         addIcon(Icon.DARK_FORCE, 0);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EPISODE_I, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_19);
@@ -49,23 +49,23 @@ public class Card501_047 extends AbstractSite {
     @Override
     protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
-        Filter otherBattlegroundSites = Filters.and(Filters.other(self), Filters.or(Filters.battleground_site, Filters.Coruscant_site));
+        Filter otherBattlegroundSites = Filters.and(Filters.other(self), Filters.battleground_site);
 
 
         // Move a Jedi Council member
         // Check condition(s)
         if (GameConditions.isDuringYourPhase(game, playerOnLightSideOfLocation, Phase.MOVE)
                 && GameConditions.canSpotLocation(game, otherBattlegroundSites)) {
-            if (GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, Filters.Jedi_Council_member, self, otherBattlegroundSites, false)) {
-                MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnLightSideOfLocation, game, self, gameTextSourceCardId, Filters.Jedi_Council_member, self, otherBattlegroundSites, false);
+            if (GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, Filters.and(Icon.EPISODE_I, Filters.Jedi), self, otherBattlegroundSites, false)) {
+                MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnLightSideOfLocation, game, self, gameTextSourceCardId, Filters.and(Icon.EPISODE_I, Filters.Jedi), self, otherBattlegroundSites, false);
                 action.setText("Move from here to other site");
-                action.setActionMsg("Move a Jedi Council member from " + GameUtils.getCardLink(self) + " to other battleground (or Coruscant) site");
+                action.setActionMsg("Move an [Episode 1] Jedi from " + GameUtils.getCardLink(self) + " to other battleground (or Coruscant) site");
                 actions.add(action);
             }
-            if (GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, Filters.Jedi_Council_member, otherBattlegroundSites, self, false)) {
-                MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnLightSideOfLocation, game, self, gameTextSourceCardId, Filters.Jedi_Council_member, otherBattlegroundSites, self, false);
+            if (GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game,Filters.and(Icon.EPISODE_I, Filters.Jedi), otherBattlegroundSites, self, false)) {
+                MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnLightSideOfLocation, game, self, gameTextSourceCardId, Filters.and(Icon.EPISODE_I, Filters.Jedi), otherBattlegroundSites, self, false);
                 action.setText("Move from other site to here");
-                action.setActionMsg("Move a Jedi Council member from other battleground (or Coruscant) site to " + GameUtils.getCardLink(self));
+                action.setActionMsg("Move an [Episode 1] Jedi from other battleground site to " + GameUtils.getCardLink(self));
                 actions.add(action);
             }
         }
