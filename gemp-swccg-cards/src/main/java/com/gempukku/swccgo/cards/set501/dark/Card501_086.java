@@ -2,17 +2,22 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
-import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.AttachCardFromTableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.modifiers.CancelImmunityToAttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeCanceledModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.Action;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,14 +29,10 @@ import java.util.List;
 public class Card501_086 extends AbstractNormalEffect {
     public Card501_086() {
         super(Side.DARK, 6, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Order 66", Uniqueness.UNIQUE);
-        setLore("Vader's hologram exacts loyalty from his legions.");
-        setGameText("Deploy on table." +
-                "Jedi are deploy +1 for each other Jedi on table." +
-                "Opponent must use 2 Force to initiate a Force drain with two Jedi." +
-                "Once per game, during battle, may lose Effect;" +
-                "[E1] Jedi immunity to attrition is limited to < 5" +
-                "and if your non-[E7] trooper present," +
-                "Jedi Masters may not swing a lightsaber at non-troopers. [Immune to Alter.]");
+        setLore("Hologram.");
+        setGameText("Deploy on table. Once per game, may 'execute Order 66' (relocate this Effect to a site). " +
+                "Whenever this Effect relocates to a site, immunity to attrition of Jedi here is canceled for remainder of turn. " +
+                "May not be canceled. [Immune to Alter].");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_19);
         addKeywords(Keyword.HOLOGRAM);
         addImmuneToCardTitle(Title.Alter);
@@ -40,12 +41,8 @@ public class Card501_086 extends AbstractNormalEffect {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
-
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostModifier(self, Filters.Jedi, new OnTableEvaluator(self, Filters.Jedi)));
-        modifiers.add(new InitiateForceDrainCostModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.Jedi, Filters.with(self, Filters.Jedi))), 2, opponent));
+        modifiers.add(new MayNotBeCanceledModifier(self, self));
         return modifiers;
     }
 
@@ -53,36 +50,46 @@ public class Card501_086 extends AbstractNormalEffect {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        //"Once per game, during battle, may lose Effect;" +
-        //                "[E1] Jedi immunity to attrition is limited to < 5" +
-        //                "and if your non-[E7] trooper present," +
-        //                "Jedi Masters may not swing a lightsaber at non-troopers.
-
         // Card action 1
         GameTextActionId gameTextActionId = GameTextActionId.ORDER_66__AFFECT_JEDI;
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-            && GameConditions.isDuringBattle(game)) {
-
-            Filter jediMasterPresentWithYourNonE7Trooper = Filters.and(Filters.Jedi_Master, Filters.presentWith(self,
-                    Filters.and(Filters.your(playerId), Filters.not(Filters.icon(Icon.EPISODE_VII)), Filters.trooper)));
+            && GameConditions.canSpot(game, self, Filters.site)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Affect Jedi");
-            action.setActionMsg("Affect Jedi");
-            // Pay cost(s)
-            action.appendCost(
-                    new LoseCardFromTableEffect(action, self));
-            // Perform result(s)
-            action.appendEffect(new AddUntilEndOfBattleModifierEffect(
-                    action, new ImmunityToAttritionLimitedToModifier(self, Filters.and(Filters.icon(Icon.EPISODE_I), Filters.Jedi), 5), "[E1] Jedi immunity to attrition is limited to < 5") {
-            });
-            action.appendEffect(
-                    new AddUntilEndOfBattleModifierEffect(action,
-                            new MayNotBeTargetedByModifier(self, Filters.not(Filters.trooper), Filters.and(Filters.lightsaber, Filters.or(Filters.permanentWeaponOf(jediMasterPresentWithYourNonE7Trooper), Filters.attachedTo(jediMasterPresentWithYourNonE7Trooper)))),
-                            "Prevents characters from being targeted by lightsabers"));
-            actions.add(action);
+            action.setText("Execute Order 66");
+            action.setActionMsg("Execute Order 66");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose site to relocate to", Filters.site) {
+                        @Override
+                        protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Cancel Immunity to attrition of Jedi here",
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new AttachCardFromTableEffect(action, self, targetedCard));
+                                            action.appendEffect(
+                                                    new AddUntilEndOfTurnModifierEffect(action,
+                                                            new CancelImmunityToAttritionModifier(self,
+                                                                    Filters.and(Filters.Jedi, Filters.here(targetedCard))),
+                                                            "Immunity to attrition of Jedi here is canceled")
+                                            );
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
+
+            return Collections.singletonList(action);
         }
         return actions;
     }
