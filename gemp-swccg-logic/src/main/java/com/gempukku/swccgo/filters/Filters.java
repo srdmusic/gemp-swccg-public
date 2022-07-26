@@ -10169,6 +10169,20 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that fired a weapon this battle.
+     *
+     * @return Filter
+     */
+    public static Filter didNotFireAPermanentWeaponThisBattle() {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                return modifiersQuerying.getPermanentWeaponsFiredInBattleByWeaponUser(physicalCard, false).isEmpty();
+            }
+        };
+    }
+
+    /**
      * Filter that accepts cards that has built-in permanent weapon accepted by the specified filter.
      *
      * @param filters the filters
