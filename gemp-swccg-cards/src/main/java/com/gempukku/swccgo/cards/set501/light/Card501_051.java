@@ -10,7 +10,7 @@ import com.gempukku.swccgo.common.Side;
  * Title: Might of the Mandalorians
  */
 public class Card501_051 extends AbstractUsedOrLostInterrupt {
-    protected Card501_051() {
+    public Card501_051() {
         super(Side.LIGHT, 4, "Might of the Mandaloriansn");
         setLore("");
         setGameText("USED: If your Mandalorian was just 'hit,' opponent chooses: make the character that fired that weapon 'hit’ or restore your character to normal.\n" +

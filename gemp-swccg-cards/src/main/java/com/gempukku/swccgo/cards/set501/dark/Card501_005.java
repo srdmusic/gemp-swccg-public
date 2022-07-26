@@ -11,7 +11,7 @@ import com.gempukku.swccgo.common.Uniqueness;
  * Title: A Fine Addition to my Collection
  */
 public class Card501_005 extends AbstractUsedOrLostInterrupt {
-    protected Card501_005() {
+    public Card501_005() {
         super(Side.DARK, 5, "A Fine Addition to my Collection", Uniqueness.UNIQUE);
         setLore("");
         setGameText("USED: If Grievous just swung a stolen lightsaber, add one battle destiny.\n" +

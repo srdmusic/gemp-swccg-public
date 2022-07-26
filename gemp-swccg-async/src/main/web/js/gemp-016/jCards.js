@@ -3519,7 +3519,7 @@ var fixedImages = {
 "501_73":"https://res.starwarsccg.org/cards/Premiere-Light/large/fullthrottle.gif",
 "501_74":"https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/aimhigh.gif",
 "501_75":"https://res.starwarsccg.org/cards/Dagobah-Light/large/sonofskywalker.gif",
-"501_76":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/theriseofskywalker.png",
+"501_76":"https://res.starwarsccg.org/cards/Hoth-Light/large/anakinslightsaber.gif",
 "501_77":"https://res.starwarsccg.org/cards/Dagobah-Light/large/warsnotmakeonegreat.gif",
 "501_78":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
 "501_79":"https://res.starwarsccg.org/cards/Premiere-Dark/large/observationholocam.gif",
