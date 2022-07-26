@@ -15,7 +15,10 @@ import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import com.gempukku.swccgo.logic.decisions.IntegerAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.*;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.AddsDestinyToAttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmunityToAttritionChangeModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeFiredModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.*;
 
 import java.util.*;
@@ -6099,11 +6102,14 @@ public class FireWeaponActionBuilder {
 
                                                         if (totalDestiny + 3 > valueToCompare) {
                                                             gameState.sendMessage("Result: Succeeded");
-                                                            if(cardFiredAt.getBlueprint().getAbility() > 4){
-                                                                new AddUntilEndOfTurnModifierEffect(action, new PowerModifier(_sourceCard, gameState.getWeaponFiringState().getCardFiringWeapon(),2), "");
+                                                            if(game.getModifiersQuerying().getAbility(game.getGameState(), cardFiredAt) > 4){
+                                                                action.appendEffect(
+                                                                        new ModifyPowerUntilEndOfTurnEffect(action, gameState.getWeaponFiringState().getCardFiringWeapon(), 2)
+                                                                );
                                                             }
                                                             action.appendEffect(
-                                                                    new HitCardAndResetForfeitEffect(action, cardFiredAt, 0,  _weaponOrCardWithPermanentWeapon, _permanentWeapon, gameState.getWeaponFiringState().getCardFiringWeapon()));
+                                                                    new HitCardAndResetForfeitEffect(action, cardFiredAt, 0,  _weaponOrCardWithPermanentWeapon, _permanentWeapon, gameState.getWeaponFiringState().getCardFiringWeapon())
+                                                            );
                                                         }
                                                         else {
                                                             gameState.sendMessage("Result: Failed");

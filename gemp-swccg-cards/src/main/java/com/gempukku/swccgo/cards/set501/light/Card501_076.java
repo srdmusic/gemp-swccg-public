@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class Card501_076 extends AbstractCharacterWeapon {
     public Card501_076() {
-        super(Side.DARK, 1, "Ezra's Blaster Lightsaber", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, "Ezra's Blaster Lightsaber", Uniqueness.UNIQUE);
         setLore("");
         setGameText(" Deploy on Ezra. Once per turn, may return to hand to cancel and redraw a destiny targeting a Rebel here." +
                 "May target a character for free. Draw destiny. " +
