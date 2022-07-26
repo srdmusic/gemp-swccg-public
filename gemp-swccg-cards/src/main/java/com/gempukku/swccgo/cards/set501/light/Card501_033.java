@@ -27,7 +27,7 @@ public class Card501_033 extends AbstractAlien {
     public Card501_033() {
         super(Side.LIGHT, 2, 4, 4, 2, 5, "Cara Dune With Heavy Blaster Rifle", Uniqueness.UNIQUE);
         setLore("Female Alderaanian. Gambler. Trooper.");
-        setGameText("If Alderaan has been 'blown away', Force drain +1 here. Permanent weapon is •Cara's Heavy Blaster Rifle (twice per battle, may target a character or vehicle for free; draw destiny; target hit, and its forfeit is cumulatively -3, if destiny +2 > defense value).");
+        setGameText("If Alderaan has been 'blown away', Force drain +1 here. Permanent weapon is •Cara's Heavy Blaster Rifle (twice per battle, may target a character or vehicle for free; draw destiny; target hit, and its forfeit is cumulatively -3, if destiny +1 > defense value).");
         addKeywords(Keyword.FEMALE, Keyword.GAMBLER, Keyword.TROOPER);
         setSpecies(Species.ALDERAANIAN);
         addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_19);
@@ -44,7 +44,7 @@ public class Card501_033 extends AbstractAlien {
                 if (actionBuilder != null) {
 
                     // Build action using common utility
-                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 2, Statistic.DEFENSE_VALUE, false, -3);
+                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 1, Statistic.DEFENSE_VALUE, false, -3);
                     return Collections.singletonList(action);
                 }
                 return null;

@@ -9,6 +9,7 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -44,7 +45,7 @@ public class Card501_034 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, new HereCondition(self, Filters.or(Filters.Ghost, Filters.Phantom)), 1, playerOnLightSideOfLocation));
+        modifiers.add(new ForceDrainModifier(self, new AndCondition(new HereCondition(self, Filters.Ghost), new HereCondition(self, Filters.Phantom)), 1, playerOnLightSideOfLocation));
         return modifiers;
     }
 }

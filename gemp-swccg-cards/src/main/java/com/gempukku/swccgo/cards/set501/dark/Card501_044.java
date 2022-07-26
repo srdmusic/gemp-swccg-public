@@ -16,7 +16,6 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromPileEffect;
 import com.gempukku.swccgo.logic.modifiers.NoBattleDamageModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -35,9 +34,8 @@ public class Card501_044 extends AbstractAlien {
     public Card501_044() {
         super(Side.DARK, 2, 3, 4, 2, 4, "Fennec Shand", Uniqueness.UNIQUE);
         setLore("Female assassin, bounty hunter, and mercenary.");
-        setGameText("If you just initiated battle here, may search your Lost Pile and move one card there to the top " +
-                "of that pile; battle damage against you this battle is canceled. Once per turn, may target opponent’s " +
-                "non-‘hit’ character here. If target lost this turn (and Fennec on table), opponent loses 1 Force.");
+        setGameText(" If you just initiated battle here, battle damage against you here this turn is canceled. " +
+                "Once per turn, may target opponent's non-'hit' character here. If Fennec on table when target lost this turn, opponent loses 1 Force.");
         addPersona(Persona.FENNEC_SHAND);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_19);
         addKeywords(Keyword.FEMALE, Keyword.ASSASSIN, Keyword.BOUNTY_HUNTER, Keyword.MERCENARY);
@@ -49,33 +47,13 @@ public class Card501_044 extends AbstractAlien {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, playerId, Filters.here(self))
-                && GameConditions.hasLostPile(game, playerId)) {
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, playerId, Filters.here(self))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Search your Lost Pile");
+            action.setText("Prevent battle damage");
             // Perform result(s)
             action.appendEffect(
-                    new ChooseCardFromPileEffect(action, playerId, Zone.LOST_PILE, playerId) {
-                        @Override
-                        public String getChoiceText(int numCardsToChoose) {
-                            return "Choose card" + GameUtils.s(numCardsToChoose) + " to put on top of " + Zone.LOST_PILE.getHumanReadable();
-                        }
-
-                        @Override
-                        protected void cardSelected(final SwccgGame game, final PhysicalCard selectedCard) {
-                            if (selectedCard != null) {
-                                String cardInfo = GameUtils.getCardLink(selectedCard);
-                                action.setActionMsg("Move " + cardInfo + " to the top of " + Zone.LOST_PILE.getHumanReadable());
-                                action.appendEffect(
-                                        new PutCardFromLostPileOnTopOfCardPileEffect(action, selectedCard, Zone.LOST_PILE, false));
-                                action.appendEffect(
-                                        new AddUntilEndOfBattleModifierEffect(action, new NoBattleDamageModifier(self, Filters.here(self), playerId), "Battle damage against you this battle is canceled")
-                                );
-                            }
-                        }
-                    }
-            );
+                    new AddUntilEndOfBattleModifierEffect(action, new NoBattleDamageModifier(self, Filters.here(self), playerId), "Battle damage against you this battle is canceled"));
             return Collections.singletonList(action);
         }
         return null;

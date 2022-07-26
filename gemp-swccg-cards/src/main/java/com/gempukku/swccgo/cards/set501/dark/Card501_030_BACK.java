@@ -7,6 +7,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -17,11 +18,12 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,8 +36,13 @@ import java.util.List;
 public class Card501_030_BACK extends AbstractObjective {
     public Card501_030_BACK() {
         super(Side.DARK, 7, Title.The_Result_Is_Often_Resentment);
-        setGameText("While this side up, If a battle was just initiated involving an imperial leader or piloted TIE defender, may peek at cards stacked upon ‘Thrawn’s Art Collection’ and reveal one ‘artwork’ card. If a weapon, cancel battle. Otherwise, If artwork's printed destiny number is: (0-2): Opponent’s immunity to attrition is canceled during battle (3-4): Exclude an opponent's character from battle (opponent's choice). (5+): Add 3 to your total battle destiny. Place ‘artwork’ in the opponent's Lost pile." +
-                "Flip this card (except during battle) if no 'artwork' stacked on Thrawn's Art Collection.");
+        setGameText("While this side up, if a battle was just initiated involving an Imperial leader or piloted TIE defender, " +
+                "may ‘study’ one artwork card. If it is a weapon, cancel the battle. Otherwise, if possible, if its printed destiny number is:" +
+                "(0-2) opponent’s immunity to attrition is canceled;" +
+                "(3-4) opponent excludes their character from battle;" +
+                "(5+) add 3 to your total power." +
+                "Place artwork card in owner's Lost Pile." +
+                "Flip this card if Thrawn not on table or (except during battle) if no artwork cards on table.");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("The Result Is Often Resentment");
     }
@@ -43,8 +50,9 @@ public class Card501_030_BACK extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostModifier(self, Filters.or(Filters.and(Filters.your(self), Filters.admiral, Filters.except(Filters.Thrawn)),
-                Filters.and(Filters.your(self), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.hasAbilityOrHasPermanentPilotWithAbility, Icon.PRESENCE))), 3));
+        Filter mayNotPlayFilter = Filters.or(Filters.and(Filters.your(self), Filters.admiral, Filters.except(Filters.Thrawn)),
+                Filters.and(Filters.your(self), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.hasAbilityOrHasPermanentPilotWithAbility, Icon.PRESENCE)));
+        modifiers.add(new MayNotPlayModifier(self, mayNotPlayFilter, self.getOwner()));
         return modifiers;
     }
     @Override
@@ -93,7 +101,7 @@ public class Card501_030_BACK extends AbstractObjective {
                                     });
                                 } else if (printedDestinyValue >= 5) {
                                     action.appendEffect(
-                                            new ModifyTotalBattleDestinyEffect(action, playerId, 3));
+                                            new ModifyTotalPowerUntilEndOfBattleEffect(action, 3, playerId, "Add 3 to your total power"));
                                 } else {
                                     game.getGameState().sendMessage("Result: No effect");
                                 }
@@ -112,12 +120,14 @@ public class Card501_030_BACK extends AbstractObjective {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new ArrayList<>();
+
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && !GameConditions.isDuringBattle(game)) {
+                && GameConditions.canSpot(game, self, Filters.Thrawns_Art_Collection)) {
             PhysicalCard thrawnsArtCollection = Filters.findFirstActive(game, self, Filters.Thrawns_Art_Collection);
-            if (thrawnsArtCollection != null && !GameConditions.hasStackedCards(game, thrawnsArtCollection)) {
+            if (!GameConditions.isDuringBattle(game) && thrawnsArtCollection != null && !GameConditions.hasStackedCards(game, thrawnsArtCollection)) {
 
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setSingletonTrigger(true);
@@ -126,9 +136,25 @@ public class Card501_030_BACK extends AbstractObjective {
                 // Perform result(s)
                 action.appendEffect(
                         new FlipCardEffect(action, self));
-                return Collections.singletonList(action);
+               actions.add(action);
             }
         }
-        return null;
+
+        // Check condition(s)
+        if (TriggerConditions.isTableChanged(game, effectResult)
+                && GameConditions.canBeFlipped(game, self)
+                && !GameConditions.canSpot(game, self, Filters.Thrawn)) {
+
+                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setSingletonTrigger(true);
+                action.setText("Flip");
+                action.setActionMsg(null);
+                // Perform result(s)
+                action.appendEffect(
+                        new FlipCardEffect(action, self));
+                actions.add(action);
+
+        }
+        return actions;
     }
 }
