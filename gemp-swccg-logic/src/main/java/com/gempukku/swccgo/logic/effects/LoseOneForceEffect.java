@@ -48,7 +48,7 @@ public class LoseOneForceEffect extends AbstractSuccessfulEffect {
         _stackFaceDown = true;
     }
 
-    public LoseOneForceEffect(Action action, PhysicalCard card, int amountLostSoFar, boolean isBattleDamage, boolean isFromForceDrain, PhysicalCard stackOn, boolean asLiberationCard, boolean stackFaceDown) {
+    public LoseOneForceEffect(Action action, PhysicalCard card, int amountLostSoFar, boolean isBattleDamage, boolean isFromForceDrain, PhysicalCard stackOn, boolean stackFaceDown, boolean asLiberationCard) {
         super(action);
         _card = card;
         _amountLostSoFar = amountLostSoFar;
@@ -76,15 +76,17 @@ public class LoseOneForceEffect extends AbstractSuccessfulEffect {
 
         if (_stackOn != null) {
             // Stack the unit of Force on specified card
-            if(!_stackFaceDown){
-                gameState.sendMessage(playerId + " loses a Force, " + GameUtils.getCardLink(_card) + ", from " + zone.getHumanReadable() + " and stacks it on " + GameUtils.getCardLink(_stackOn));
-            }else{
+            gameState.sendMessage("Face Down?:" + _stackFaceDown);
+            if(_stackFaceDown){
                 if (zone == Zone.HAND && isShownIfLostFromHand()) {
                     gameState.sendMessage(playerId + " loses a Force, " + GameUtils.getCardLink(_card) + ", from " + zone.getHumanReadable() + " and stacks it face down on " + GameUtils.getCardLink(_stackOn));
                 }
                 else {
                     gameState.sendMessage(playerId + " loses a Force from " + zone.getHumanReadable() + " and stacks it face down on " + GameUtils.getCardLink(_stackOn));
                 }
+            }
+            else{
+                gameState.sendMessage(playerId + " loses a Force, " + GameUtils.getCardLink(_card) + ", from " + zone.getHumanReadable() + " and stacks it on " + GameUtils.getCardLink(_stackOn));
             }
 
             gameState.removeCardsFromZone(Collections.singleton(_card));

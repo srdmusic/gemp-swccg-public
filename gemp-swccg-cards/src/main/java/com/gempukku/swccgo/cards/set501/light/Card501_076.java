@@ -28,7 +28,7 @@ public class Card501_076 extends AbstractCharacterWeapon {
                 "Ezra is power +2 until end of turn.");
         addPersona(Persona.EZRAS_BLADER_LIGHTSABER);
         addIcons(Icon.VIRTUAL_SET_19);
-        addKeywords(Keyword.LIGHTSABER);
+        addKeywords(Keyword.BLASTER, Keyword.LIGHTSABER);
         setMatchingCharacterFilter(Filters.Ezra);
         setTestingText("Ezra's Blaster Lightsaber");
     }

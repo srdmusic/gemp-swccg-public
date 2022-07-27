@@ -11,6 +11,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.choose.MoveCardUsingLandspeedEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -31,7 +32,7 @@ public class Card501_079 extends AbstractDevice {
         super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, "Observation Holocam");
         setVirtualSuffix(true);
         setLore("Remote surveillance viewers with droid controllers supplement security. Can activate alarms and automated weapons when needed, bringing help to endangered locations.");
-        setGameText("Deploy on your interior site. If opponent just deployed a character or vehicle here, may lose 1 Force to relocate your character to here from an adjacent site as a regular move. Opponent may not 'react' to here. May place out of play to draw top card of Reserve Deck.");
+        setGameText("Deploy on your interior site. If opponent just deployed a character or vehicle here, may lose 1 Force to move your character to here using landspeed (at normal use of the Force). Opponent may not 'react' to here. May place out of play to draw top card of Reserve Deck..");
         addKeywords(Keyword.DEPLOYS_ON_SITE);
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("Observation Holocam (V)");
@@ -70,18 +71,18 @@ public class Card501_079 extends AbstractDevice {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         String opponent = game.getOpponent(playerId);
 
-        Filter filter = Filters.and(Filters.your(self), Filters.character, Filters.hasNotPerformedRegularMove, Filters.at(Filters.adjacentSite(self)), Filters.canBeRelocatedToLocation(Filters.here(self), false, 0));
+        Filter filter = Filters.and(Filters.your(self), Filters.character, Filters.hasNotPerformedRegularMove, Filters.relatedSite(self),
+                Filters.canMoveUsingLandspeed(playerId, false, false, false,0));
 
         if(TriggerConditions.justDeployedToLocation(game, effectResult, opponent, Filters.or(Filters.character, Filters.vehicle), Filters.here(self))) {
 
-            final PhysicalCard location = Filters.findFirstFromTopLocationsOnTable(game, Filters.here(self));
             Collection<PhysicalCard> canMove = Filters.filterActive(game, self, filter);
             if (!canMove.isEmpty()) {
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId);
-                action.setText("Relocate a character here");
-                action.setActionMsg("Relocate your character to here from an adjacent site as a regular move");
+                action.setText("Move a character to here");
+                action.setActionMsg("Move a character to here using landspeed");
 
-                action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a character to relocate to ", Filters.in(canMove)) {
+                action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a character to move to here uaing landspeed ", Filters.in(canMove)) {
                     @Override
                     protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                         action.appendCost(
@@ -91,7 +92,7 @@ public class Card501_079 extends AbstractDevice {
                             protected void performActionResults(Action targetingAction) {
                                 PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
                                 action.appendEffect(
-                                        new RelocateBetweenLocationsEffect(action, finalTarget, location, true));
+                                        new MoveCardUsingLandspeedEffect(action, playerId, finalTarget, false, Filters.here(self)));
                             }
                         });
                     }

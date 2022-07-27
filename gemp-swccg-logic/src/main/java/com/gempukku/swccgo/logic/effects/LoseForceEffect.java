@@ -509,6 +509,7 @@ public class LoseForceEffect extends AbstractSubActionEffect {
                                             } else {
                                                 _amountLostSoFar++;
                                             }
+                                            game.getGameState().sendMessage("Down?:" + _stackFaceDown);
                                             subAction.appendEffect(
                                                     new LoseOneForceEffect(subAction, cards.get(0), _amountLostSoFar, false, _isFromForceDrain, _stackOn, _stackFaceDown, _asLiberationCard) {
                                                         @Override
