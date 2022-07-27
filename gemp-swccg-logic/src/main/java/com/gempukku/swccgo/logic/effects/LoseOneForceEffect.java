@@ -76,7 +76,6 @@ public class LoseOneForceEffect extends AbstractSuccessfulEffect {
 
         if (_stackOn != null) {
             // Stack the unit of Force on specified card
-            gameState.sendMessage("Face Down?:" + _stackFaceDown);
             if(_stackFaceDown){
                 if (zone == Zone.HAND && isShownIfLostFromHand()) {
                     gameState.sendMessage(playerId + " loses a Force, " + GameUtils.getCardLink(_card) + ", from " + zone.getHumanReadable() + " and stacks it face down on " + GameUtils.getCardLink(_stackOn));
