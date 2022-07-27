@@ -24,7 +24,7 @@ import java.util.List;
 public class Card501_083 extends AbstractCreature {
     public Card501_083() {
         super(Side.LIGHT, 5, 2, 1, 3, 0, "Porg", Uniqueness.RESTRICTED_3);
-        setGameText("Habitat: Ahch-To sites, either player’s starship (uses no capacity). Does not attack. Characters present (or starship aboard) are cumulatively power and defense value -1 (+1 if yours). While at your location, adds one [Light Side] icon here.");
+        setGameText("Habitat: Ahch-To sites, either player's starship (uses no capacity). Does not attack. Characters present (or starship aboard) are power and defense value -1 (+2 if yours). While at your location, adds one [Light Side] icon.");
         addModelType(ModelType.SEADWELLING);
         addIcons(Icon.SELECTIVE_CREATURE, Icon.VIRTUAL_SET_19);
         setTestingText("Porg");
