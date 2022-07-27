@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.conditions.PresentAtCondition;
+import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Side;
@@ -10,9 +11,10 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.GreaterThanCondition;
+import com.gempukku.swccgo.logic.evaluators.Evaluator;
 import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.LinkedList;
@@ -38,13 +40,11 @@ public class Card501_045 extends AbstractImperial {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         final String playerId = self.getOwner();
         final String opponent = game.getOpponent(playerId);
-        Condition controlMoreSystemsThanOpponentCondition = new Condition() {
-            @Override
-            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
-                return Filters.countTopLocationsOnTable(gameState.getGame(), Filters.and(Filters.system, Filters.controls(playerId)))
-                        > Filters.countTopLocationsOnTable(gameState.getGame(), Filters.and(Filters.system, Filters.controls(opponent)));
-            }
-        };
+
+        Evaluator numYourSystems = new OnTableEvaluator(self, Filters.and(Filters.system, Filters.controls(playerId)));
+        Evaluator numOpponentsSystems =  new OnTableEvaluator(self, Filters.and(Filters.system, Filters.controls(opponent)));
+
+        Condition controlMoreSystemsThanOpponentCondition = new GreaterThanCondition(numYourSystems, numOpponentsSystems);
 
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ForceDrainModifier(self, Filters.here(self), new AndCondition(new PresentAtCondition(self, Filters.battleground_site), controlMoreSystemsThanOpponentCondition), 1, playerId));
