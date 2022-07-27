@@ -68,7 +68,7 @@ public class Card501_079 extends AbstractDevice {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         String opponent = game.getOpponent(playerId);
 
         Filter filter = Filters.and(Filters.your(self), Filters.character, Filters.hasNotPerformedRegularMove, Filters.relatedSite(self),
