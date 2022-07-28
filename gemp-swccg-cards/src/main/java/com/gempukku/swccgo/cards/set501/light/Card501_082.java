@@ -68,7 +68,7 @@ public class Card501_082 extends AbstractUsedInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardToTargetFromHandEffect(action, playerId, Filters.Jawa, Filters.any, false, true));
+                                    new DeployCardToTargetFromHandEffect(action, playerId, Filters.Jawa, Filters.any, false, true, -1));
                         }
                     }
             );

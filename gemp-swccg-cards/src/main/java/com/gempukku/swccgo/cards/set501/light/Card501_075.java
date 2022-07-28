@@ -8,7 +8,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.Collections;
@@ -24,11 +24,11 @@ import java.util.List;
 public class Card501_075 extends AbstractRebel {
     public Card501_075() {
         super(Side.LIGHT, 1, 5, 4, 5, 6, "Ezra, Hero Of Phoenix Squadron", Uniqueness.UNIQUE);
-        setLore("Padawan.");
+        setLore("Padawan. Commander.");
         setGameText("Other Phoenix Squadron characters here are forfeit and defense value +2. Once per game, may retrieve a Phoenix Squadron character into hand. [Set 13] Maul may not modify destinies. Immune to attrition < 3.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
         addPersona(Persona.EZRA);
-        addKeywords(Keyword.PADAWAN, Keyword.PHOENIX_SQUADRON);
+        addKeywords(Keyword.PADAWAN, Keyword.COMMANDER, Keyword.PHOENIX_SQUADRON);
         setTestingText("Ezra, Hero Of Phoenix Squadron");
     }
 
