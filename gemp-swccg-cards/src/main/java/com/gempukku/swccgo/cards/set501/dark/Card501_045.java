@@ -24,7 +24,7 @@ import java.util.List;
  * Set: Set 19
  * Type: Character
  * Subtype: Imperial
- * Title: Morgan Elsbeth
+ * Title: Magistrate Morgan Elsbeth
  */
 public class Card501_045 extends AbstractImperial {
     public Card501_045() {
