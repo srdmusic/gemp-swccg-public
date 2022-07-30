@@ -38,7 +38,7 @@ public class Card501_065 extends AbstractAlien {
         setGameText("Deploys -1 and power +1 at a Cantina, Diner or Night Club. When deployed, may take a Jedi here into hand (if a bounty hunter on table, may [upload] Obi-Wan instead). Your aliens here are immune to Stunning Leader.");
         addKeywords(Keyword.INFORMATION_BROKER);
         setSpecies(Species.BESALISK);
-        addIcons(Icon.VIRTUAL_SET_19);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_19);
         setTestingText("Dexter Jettster");
     }
 
