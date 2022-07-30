@@ -2,25 +2,19 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.ShowCardOnScreenEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckSimultaneouslyWithCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -28,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Effect
  * Title: A Cunning Warrior
  */
@@ -36,7 +30,7 @@ public class Card501_077 extends AbstractNormalEffect {
     public Card501_077() {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, "A Cunning Warrior", Uniqueness.UNIQUE);
         setGameText("Deploy on your [Skywalker] Epic Event at start of game; may deploy Lars' Moisture Farm. Once per turn, may deploy Lower Corridor or a weapon on your lone Skywalker from Reserve Deck; reshuffle. Courage Of A Skywalker and Higher Ground are destiny +2. [Immune to Alter.]");
-        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_19);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("A Cunning Warrior");
         hideFromDeckBuilder();

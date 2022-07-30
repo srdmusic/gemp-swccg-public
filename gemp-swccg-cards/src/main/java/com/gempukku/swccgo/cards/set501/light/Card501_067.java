@@ -1,113 +1,92 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
-import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.ModifyTotalPowerUntilEndOfBattleEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.SubstituteDestinyEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.EndOfTurnLimitCounterNotReachedCondition;
+import com.gempukku.swccgo.logic.conditions.GreaterThanCondition;
+import com.gempukku.swccgo.logic.modifiers.CancelImmunityToAttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.GuiUtils;
+import com.gempukku.swccgo.logic.timing.results.PlayCardResult;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
- * Type: Interrupt
- * Subtype: Used or Lost
- * Title: My Sister Has It
+ * Set: Set 19
+ * Type: Effect
+ * Title: Steady, Steady & Bargaining Table
  */
-public class Card501_067 extends AbstractUsedOrLostInterrupt {
+public class Card501_067 extends AbstractNormalEffect {
     public Card501_067() {
-        super(Side.LIGHT, 5, "My Sister Has It", Uniqueness.UNIQUE);
-        setGameText("USED: If your [Skywalker] Objective on table, take [Set 14] Chief Chirpa's Hut or [Cloud City] Leia into hand from Reserve Deck; reshuffle. LOST: If you are about to draw a card for battle destiny, may instead use ability number of your Leia involved in that battle.");
-        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_18);
-        setTestingText("My Sister Has It");
+        super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Steady, Steady & Bargaining Table", Uniqueness.UNIQUE);
+        addComboCardTitles(Title.Steady_Steady, "Bargaining Table");
+        setGameText("Deploy on table. At sites where you have two aliens of the same species, all immunity to " +
+                "attrition is canceled. Once per turn, if you have more battlegrounds on table than opponent, " +
+                "subtracts 1 from deploy cost of your alien being deployed. At your battlegrounds, " +
+                "you initiate battles for free. Opponent may use 3 Force to cancel Gungan Energy Shield. [Immune to Alter.]");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_19);
+        addImmuneToCardTitle(Title.Alter);
+        setTestingText("Steady, Steady & Bargaining Table");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new ArrayList<>();
+        String playerId = self.getOwner();
 
-        GameTextActionId gameTextActionId = GameTextActionId.MY_SISTER_HAS_IT__UPLOAD_CARD;
+        OnTableEvaluator yourBattlegroundsOnTable = new OnTableEvaluator(self, Filters.and(Filters.your(playerId), Filters.battleground));
+        OnTableEvaluator opponentsBattlegroundsOnTable = new OnTableEvaluator(self, Filters.and(Filters.opponents(playerId), Filters.battleground));
 
-        if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Objective))
-                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        GreaterThanCondition moreBattlegroundsCondition = new GreaterThanCondition(yourBattlegroundsOnTable, opponentsBattlegroundsOnTable);
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
-            action.setText("Take card into hand from Reserve Deck");
+        modifiers.add(new DeployCostModifier(self, Filters.and(Filters.your(self), Filters.alien),
+                new AndCondition(moreBattlegroundsCondition, new EndOfTurnLimitCounterNotReachedCondition(self, 1)),
+                -1));
 
-            // Allow response(s)
-            action.allowResponses("Take [Set 14] Chief Chirpa's Hut or [Cloud City] Leia into hand from Reserve Deck",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.and(Icon.VIRTUAL_SET_14, Filters.Chief_Chirpas_Hut), Filters.and(Icon.CLOUD_CITY, Filters.Leia)), true));
-                        }
-                    }
-            );
-            actions.add(action);
+        Filter cardsWithYourAliensOfTheSameSpecies = Filters.with(self, Filters.and(Filters.your(playerId), Filters.at(Filters.site), Filters.alienWithAnotherAlienOfSameSpecies));
+        modifiers.add(new CancelImmunityToAttritionModifier(self, cardsWithYourAliensOfTheSameSpecies));
+        modifiers.add(new InitiateBattlesForFreeModifier(self, Filters.and(Filters.your(playerId), Filters.battleground), playerId));
+        return modifiers;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        if (TriggerConditions.justDeployed(game, effectResult, self.getOwner(), Filters.and(Filters.your(self), Filters.alien))) {
+            //need to account for deploying simultaneously with another card
+            PhysicalCard card1 = ((PlayCardResult) effectResult).getPlayedCard();
+            PhysicalCard card2 = ((PlayCardResult) effectResult).getOtherPlayedCard();
+            if (card1 == null || card2 == null || !(Filters.and(card1).accepts(game, self) || Filters.and(card2).accepts(game, self))) {
+                game.getModifiersQuerying().getUntilEndOfTurnLimitCounter(self, self.getOwner(), gameTextSourceCardId, GameTextActionId.OTHER_CARD_ACTION_DEFAULT).incrementToLimit(1, 1);
+            }
         }
-
-
-        return actions;
+        return super.getGameTextRequiredAfterTriggers(game, effectResult, self, gameTextSourceCardId);
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
-        final Filter yourCharacterInBattle = Filters.and(Filters.your(self), Filters.character, Filters.participatingInBattle, Filters.Leia);
-
+    protected List<TopLevelGameTextAction> getOpponentsCardGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.isAboutToDrawBattleDestiny(game, effectResult, playerId)
-                && GameConditions.canSubstituteDestiny(game)
-                && GameConditions.canSpot(game, self, yourCharacterInBattle)) {
+        if (GameConditions.canUseForce(game, playerId, 3)
+                && GameConditions.canTargetToCancel(game, self, Filters.Gungan_Energy_Shield)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            action.setText("Substitute destiny");
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose Leia", yourCharacterInBattle) {
-                        @Override
-                        protected boolean getUseShortcut() {
-                            return true;
-                        }
-
-                        @Override
-                        protected void cardTargeted(final int targetGroupId, PhysicalCard character) {
-                            action.addAnimationGroup(character);
-                            final float ability = game.getModifiersQuerying().getAbility(game.getGameState(), character);
-                            // Allow response(s)
-                            action.allowResponses("Substitute " + GameUtils.getCardLink(character) + "'s ability value of " + GuiUtils.formatAsString(ability) + " for battle destiny",
-                                    new RespondablePlayCardEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            float finalAbility = game.getModifiersQuerying().getAbility(game.getGameState(), action.getPrimaryTargetCard(targetGroupId));
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new SubstituteDestinyEffect(action, finalAbility));
-                                        }
-                                    }
-                            );
-                        }
-                    }
-
-
-            );
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId);
+            action.setText("Cancel Gungan Energy Shield");
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Gungan_Energy_Shield, Title.Gungan_Energy_Shield, 3);
             return Collections.singletonList(action);
         }
         return null;

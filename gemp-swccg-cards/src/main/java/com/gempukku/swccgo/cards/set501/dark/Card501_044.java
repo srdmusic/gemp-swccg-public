@@ -1,58 +1,115 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractSystem;
+import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.ControlsCondition;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Phase;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.AbstractActionProxy;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.AndCondition;
-import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.conditions.PhaseCondition;
-import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.actions.TriggerAction;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.NoBattleDamageModifier;
+import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
- * Type: Location
- * Subtype: System
- * Title: Malastare (V)
+ * Set: Set 19
+ * Type: Character
+ * Subtype: Alien
+ * Title: Fennec Shand
  */
-public class Card501_044 extends AbstractSystem {
+public class Card501_044 extends AbstractAlien {
     public Card501_044() {
-        super(Side.DARK, Title.Malastare, 3);
-        setVirtualSuffix(true);
-        setLocationDarkSideGameText("If you control Podrace Arena, Force drain +1 here.");
-        setLocationLightSideGameText("If opponent controls Podrace Arena, Force drain -1 here.");
-        addIcon(Icon.DARK_FORCE, 2);
-        addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_18);
-        setTestingText("Malastare (V)");
+        super(Side.DARK, 2, 3, 4, 2, 4, "Fennec Shand", Uniqueness.UNIQUE);
+        setLore("Female assassin, bounty hunter, and mercenary.");
+        setGameText(" If you just initiated battle here, battle damage against you here this turn is canceled. " +
+                "Once per turn, may target opponent's non-'hit' character here. If Fennec on table when target lost this turn, opponent loses 1 Force.");
+        addPersona(Persona.FENNEC_SHAND);
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_19);
+        addKeywords(Keyword.FEMALE, Keyword.ASSASSIN, Keyword.BOUNTY_HUNTER, Keyword.MERCENARY);
+        setTestingText("Fennec Shand");
     }
 
     @Override
-    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceDrainModifier(self, new ControlsCondition(playerOnDarkSideOfLocation, Filters.Podrace_Arena), 1, playerOnDarkSideOfLocation));
-        return modifiers;
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, playerId, Filters.here(self))) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Prevent battle damage");
+            // Perform result(s)
+            action.appendEffect(
+                    new AddUntilEndOfBattleModifierEffect(action, new NoBattleDamageModifier(self, Filters.here(self), playerId), "Battle damage against you this battle is canceled"));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
     @Override
-    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceDrainModifier(self, new ControlsCondition(game.getOpponent(playerOnLightSideOfLocation), Filters.Podrace_Arena), -1, playerOnLightSideOfLocation));
-        return modifiers;
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        Filter opponentsNonHitCharacterHere = Filters.and(Filters.opponents(playerId), Filters.character, Filters.here(self), Filters.not(Filters.hit));
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canTarget(game, self, opponentsNonHitCharacterHere)) {
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Target character");
+            action.appendUsage(
+                    new OncePerTurnEffect(action)
+            );
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Target character", opponentsNonHitCharacterHere) {
+                        @Override
+                        protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
+                            action.allowResponses("Target " + GameUtils.getCardLink(targetedCard),
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new AddUntilEndOfTurnActionProxyEffect(action,
+                                                            new AbstractActionProxy() {
+                                                                @Override
+                                                                public List<TriggerAction> getRequiredAfterTriggers(final SwccgGame game, final EffectResult effectResult) {
+                                                                    List<TriggerAction> actions = new LinkedList<>();
+                                                                    if (TriggerConditions.justLost(game, effectResult, targetedCard)
+                                                                            && GameConditions.canSpot(game, self, Filters.Feltipern_Trevagg)
+                                                                            && GameConditions.isOncePerTurn(game, self, self.getCardId())) {
+                                                                        final RequiredGameTextTriggerAction action2 = new RequiredGameTextTriggerAction(self, self.getCardId());
+                                                                        action2.setSingletonTrigger(true);
+                                                                        action2.appendUsage(new OncePerTurnEffect(action2));
+                                                                        action2.appendEffect(
+                                                                                new LoseForceEffect(action, game.getOpponent(playerId), 1));
+                                                                        actions.add(action2);
+
+                                                                    }
+                                                                    return actions;
+                                                                }
+                                                            })
+                                            );
+                                        }
+                                    }
+                            );
+
+                        }
+                    }
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }

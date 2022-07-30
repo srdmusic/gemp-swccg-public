@@ -1,110 +1,116 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.OrCondition;
-import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
+import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
-import com.gempukku.swccgo.logic.modifiers.TotalTrainingDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
- * Type: Effect
- * Title: Reflection (V)
+ * Set: Set 19
+ * Type: Character
+ * Subtype: Alien
+ * Title: Dexter Jettster
  */
-public class Card501_065 extends AbstractNormalEffect {
+public class Card501_065 extends AbstractAlien {
     public Card501_065() {
-        super(Side.LIGHT, 3, PlayCardZoneOption.ATTACHED, Title.Reflection, Uniqueness.UNIQUE);
-        setVirtualSuffix(true);
-        setLore("It was hard to imagine the enormous losses the Alliance suffered during the Battle of Hoth. Leia contemplated what she could do to help the Rebellion recover.");
-        setGameText("Deploy on [Cloud City] Leia. If at Guest Quarters (or a [Skywalker] Objective on table): your total power is +2 here and, once per turn, may add 1 to a just drawn weapon or battle destiny (and once per turn, may subtract 1 from a just drawn weapon or battle destiny) at another location.");
-        addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
-        addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_18);
-        setTestingText("Reflection (V)");
+        super(Side.LIGHT, 2, 3, 3, 3, 5, "Dexter Jettster", Uniqueness.UNIQUE);
+        setLore("Besalisk. Information broker");
+        setGameText("Deploys -1 and power +1 at a Cantina, Diner or Night Club. When deployed, may take a Jedi here into hand (if a bounty hunter on table, may [upload] Obi-Wan instead). Your aliens here are immune to Stunning Leader.");
+        addKeywords(Keyword.INFORMATION_BROKER);
+        setSpecies(Species.BESALISK);
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Dexter Jettster");
     }
 
     @Override
-    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.and(Icon.CLOUD_CITY, Filters.Leia);
-    }
-
-    @Override
-    protected Filter getGameTextValidTargetFilterToRemainAttachedToAfterCrossingOver(final SwccgGame game, final PhysicalCard self, PlayCardOptionId playCardOptionId) {
-        return Filters.Leia;
-    }
-
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new TotalPowerModifier(self, Filters.here(self),new OrCondition(new AtCondition(self, Filters.title("Cloud City: Guest Quarters")), new OnTableCondition(self, Filters.and(Icon.SKYWALKER, Filters.Objective))), 2, self.getOwner()));
+    public List<Modifier> getAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+        Filter venueFilter = Filters.or(Filters.titleContains("cantina"), Filters.titleContains("diner"), Filters.titleContains("night club"));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DeployCostToLocationModifier(self, -1, venueFilter));
         return modifiers;
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<OptionalGameTextTriggerAction> actions = new LinkedList<OptionalGameTextTriggerAction>();
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        Filter venueFilter = Filters.or(Filters.titleContains("cantina"), Filters.titleContains("diner"), Filters.titleContains("night club"));
+        Filter yourAliensHere = Filters.and(Filters.your(self), Filters.here(self), Filters.alien);
 
-        if (GameConditions.isAtLocation(game, self, Filters.title("Cloud City: Guest Quarters"))
-            || GameConditions.canSpot(game, self, Filters.and(Icon.SKYWALKER, Filters.Objective))) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new PowerModifier(self, new AtCondition(self, venueFilter), 1));
+        modifiers.add(new ImmuneToTitleModifier(self, yourAliensHere, Title.Stunning_Leader));
 
-            GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        return modifiers;
+    }
 
-            // Check condition(s)
-            if ((TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult, Filters.not(Filters.here(self)))
-                    || (TriggerConditions.isBattleDestinyJustDrawn(game, effectResult))
-                        && !GameConditions.isDuringBattleAt(game, Filters.here(self)))
-                    && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
-                OptionalGameTextTriggerAction action1 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action1.setText("Add 1 to destiny draw");
-                action1.appendUsage(
-                        new OncePerTurnEffect(action1)
+        GameTextActionId gameTextActionId = GameTextActionId.DEXTER_JETTSTER__TAKE_JEDI_INTO_HAND_OR_UPLOAD_OBI;
+        // Check condition(s)
+        if (TriggerConditions.justDeployed(game, effectResult, self)) {
+            Filter filter = Filters.and(Filters.Jedi, Filters.here(self));
+            if (GameConditions.canTarget(game, self, filter)) {
+
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Take a Jedi into hand");
+                // Choose target(s)
+                action.appendTargeting(
+                        new TargetCardOnTableEffect(action, playerId, "Target a Jedi to be taken into hand", filter) {
+                            @Override
+                            protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
+                                action.addAnimationGroup(targetedCard);
+                                // Allow response(s)
+                                action.allowResponses("Take " + GameUtils.getCardLink(targetedCard) + " into hand",
+                                        new UnrespondableEffect(action) {
+                                            @Override
+                                            protected void performActionResults(Action targetingAction) {
+                                                // Perform result(s)
+                                                action.appendEffect(
+                                                        new ReturnCardToHandFromTableEffect(action, targetedCard));
+                                            }
+                                        }
+                                );
+                            }
+                        }
                 );
-                // Perform result(s)
-                action1.appendEffect(
-                        new ModifyDestinyEffect(action1, 1));
-                actions.add(action1);
+                actions.add(action);
             }
 
-            gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+            if (GameConditions.canSpot(game, self, Filters.bounty_hunter)
+                    && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-            // Check condition(s)
-            if ((TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult, Filters.not(Filters.here(self)))
-                    || (TriggerConditions.isBattleDestinyJustDrawn(game, effectResult))
-                        && !GameConditions.isDuringBattleAt(game, Filters.here(self)))
-                    && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Take Obi-Wan into hand from Reserve Deck");
+                action.setActionMsg("Take Obi-Wan into hand from Reserve Deck");
 
-                OptionalGameTextTriggerAction action2 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action2.setText("Subtract 1 from destiny draw");
-                action2.appendUsage(
-                        new OncePerTurnEffect(action2)
-                );
-                // Perform result(s)
-                action2.appendEffect(
-                        new ModifyDestinyEffect(action2, -1));
-                actions.add(action2);
+                action.appendEffect(
+                        new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.ObiWan, true));
+                actions.add(action);
+
             }
         }
         return actions;
+
     }
 }

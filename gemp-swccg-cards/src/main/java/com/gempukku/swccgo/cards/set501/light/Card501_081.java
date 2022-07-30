@@ -11,7 +11,8 @@ import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.LoseCardsFromOffTableSimultaneouslyEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
 
@@ -20,7 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Effect
  * Title: Weather Vane (V)
  */
@@ -30,7 +31,7 @@ public class Card501_081 extends AbstractNormalEffect {
         setVirtualSuffix(true);
         setLore("The metal rods extending from the bottom of Cloud City are part of the city's flotation system. Sensors detect the velocity of wind and the content of local clouds.");
         setGameText("Deploy on table. Unless this card upright, characters here are lost. If you just Force drained or initiated battle, rotate this card 90° clockwise; if now upright, retrieve any one card. If opponent just initiated battle, unless this card upright, rotate it 90° counterclockwise.");
-        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_19);
         setTestingText("Weather Vane (V)");
     }
 

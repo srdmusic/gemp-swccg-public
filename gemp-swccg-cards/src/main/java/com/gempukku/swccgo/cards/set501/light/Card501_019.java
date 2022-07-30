@@ -2,14 +2,20 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfBattleEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotFireWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -21,7 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 20
  * Type: Interrupt
  * Subtype: Used Or Lost
  * Title: Glancing Blow (V)
@@ -32,8 +38,8 @@ public class Card501_019 extends AbstractUsedOrLostInterrupt {
         setVirtualSuffix(true);
         setLore("It had been decades since Vader had felt the sting of an enemy's blade.");
         setGameText("USED: If a lightsaber swung by your non-[Permanent Weapon] character just hit an opponent's character of equal or greater ability, opponent's character may not fire weapons this turn (if 'hit' by Luke, character is also power -3). LOST: Cancel the game text of a 'hit' character.");
-        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_18);
-        setTestingText("Glancing Blow (V)");
+        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_20);
+        setTestingText("~Glancing Blow (V)");
     }
 
 

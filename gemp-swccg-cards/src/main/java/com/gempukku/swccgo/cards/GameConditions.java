@@ -3378,7 +3378,7 @@ public class GameConditions {
     }
 
     /**
-     * Determines if the a card accepted by the filter is "here" (from perspective of the specified card).
+     * Determines if a card accepted by the filter is "here" (from perspective of the specified card).
      * @param game the game
      * @param card the card
      * @param filter the filter
@@ -5470,6 +5470,10 @@ public class GameConditions {
 
     public static boolean isDeathStarPowerShutDown(SwccgGame game) {
         return game.getModifiersQuerying().isDeathStarPowerShutDown();
+    }
+
+    public static boolean isSenateInSession(SwccgGame game) {
+        return game.getModifiersQuerying().isSenateInSession();
     }
 
     public static int countSpeciesOnTable(SwccgGame game, String playerId) {

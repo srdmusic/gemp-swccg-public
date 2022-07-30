@@ -1103,6 +1103,18 @@ public interface ModifiersQuerying {
     boolean isDeathStarPowerShutDown();
 
     /**
+     * Records that the Senate is in session.
+     */
+    void declareSenateIsInSession();
+
+    /**
+     * Determines if the Senate is in session.
+     *
+     * @return true or false
+     */
+    boolean isSenateInSession();
+
+    /**
      * Records that the specified card being played (or being deployed).
      * @param card the card
      */
@@ -4605,4 +4617,7 @@ public interface ModifiersQuerying {
     boolean onlyDeploysAdjacentToSpecificLocations(GameState gameState, PhysicalCard card);
     Filter getFilterForOnlyDeploysAdjacentToSpecificLocations(GameState gameState, PhysicalCard card);
     boolean tieAllowedToLand(GameState gameState, PhysicalCard card, PhysicalCard toLocation);
+
+    void setExtraInformationForArchetypeLabel(String playerId, String text);
+    String getExtraInformationForArchetypeLabel(String playerId);
 }

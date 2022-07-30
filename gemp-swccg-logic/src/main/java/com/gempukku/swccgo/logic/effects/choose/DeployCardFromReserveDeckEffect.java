@@ -102,6 +102,19 @@ public class DeployCardFromReserveDeckEffect extends DeployCardFromPileEffect {
      * @param action the action performing this effect
      * @param cardFilter the card filter
      * @param changeInCost change in amount of Force (can be positive or negative) required
+     * @param asReact true if deploying as a react, otherwise false
+     * @param reshuffle true if pile is reshuffled, otherwise false
+     */
+    public DeployCardFromReserveDeckEffect(Action action, Filter cardFilter, float changeInCost, boolean asReact, boolean reshuffle) {
+        super(action, Zone.RESERVE_DECK, cardFilter, null, null, false, changeInCost, null, asReact, reshuffle);
+    }
+
+    /**
+     * Creates an effect that causes the player performing the action to choose and deploy a card accepted by the card filter
+     * from Reserve Deck.
+     * @param action the action performing this effect
+     * @param cardFilter the card filter
+     * @param changeInCost change in amount of Force (can be positive or negative) required
      * @param reshuffle true if pile is reshuffled, otherwise false
      */
     public DeployCardFromReserveDeckEffect(Action action, Filter cardFilter, float changeInCost, Filter changeInCostCardFilter, boolean reshuffle) {

@@ -1,108 +1,136 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.cards.effects.usage.TwicePerGameEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
-import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.decisions.YesNoDecision;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromPileEffect;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.GuiUtils;
-import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 8
- * Type: Effect
- * Title: Why Does Everyone Want To Go Back To Jakku?!
+ * Set: Set 19
+ * Type: Character
+ * Subtype: Alien
+ * Title: Babu Frik
  */
-public class Card501_060 extends AbstractNormalEffect {
+public class Card501_060 extends AbstractAlien {
     public Card501_060() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Why Does Everyone Want To Go Back To Jakku?!", Uniqueness.UNIQUE);
-        setGameText("If Jakku on table, deploy on table. Strike Planning is canceled. Pryde does not add to attrition at Jakku system. Twice per game may take [Episode VII] Lando or an [Episode VII] general into hand from Reserve Deck; reshuffle. [Immune to Alter.]");
-        addIcons(Icon.VIRTUAL_SET_8);
-        addImmuneToCardTitle(Title.Alter);
-        setTestingText("Why Does Everyone Want To Go Back To Jakku?! (ERRATA)");
+        super(Side.LIGHT, 4, 1, 0, 2, 3, "Babu Frik", Uniqueness.UNIQUE);
+        setLore("Droidsmith. Spice Runner. Anzellan.");
+        setGameText("When deployed, may search your Lost Pile and move one card there to the top of that pile (if that card is a droid, may retrieve it into hand). Once per game, may use 2 Force to cancel a droid's game text here for remainder of turn.");
+        addKeywords(Keyword.DROIDSMITH, Keyword.SPICE_RUNNER);
+        setSpecies(Species.ANZELLAN);
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Babu Frik");
     }
 
     @Override
-    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return GameConditions.canSpotLocation(game, Filters.Jakku_system);
-    }
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.BABU_FRIK__SEARCH_LOST_PILE;
 
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Pryde, ModifyGameTextType.PRYDE__DOES_NOT_ADD_ATTRITION_AT_JAKKU_SYSTEM));
-        return modifiers;
+        // Check condition(s)
+        if (TriggerConditions.justDeployed(game, effectResult, self)
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Search your Lost Pile");
+            // Perform result(s)
+            action.appendEffect(
+                    new ChooseCardFromPileEffect(action, playerId, Zone.LOST_PILE, playerId) {
+                        @Override
+                        public String getChoiceText(int numCardsToChoose) {
+                            return "Choose card" + GameUtils.s(numCardsToChoose) + " to put on top of " + Zone.LOST_PILE.getHumanReadable();
+                        }
+                        @Override
+                        protected void cardSelected(final SwccgGame game, final PhysicalCard selectedCard) {
+                            if (selectedCard != null) {
+                                String cardInfo = GameUtils.getCardLink(selectedCard);
+                                action.setActionMsg("Move " + cardInfo + " to the top of " + Zone.LOST_PILE.getHumanReadable());
+                                action.appendEffect(
+                                        new PutCardFromLostPileOnTopOfCardPileEffect(action, selectedCard, Zone.LOST_PILE, false));
+
+                                if (Filters.droid.accepts(game, selectedCard)) {
+                                    action.appendEffect(
+                                            new PlayoutDecisionEffect(action, playerId,
+                                                    new YesNoDecision("Do you want retrieve " + GameUtils.getCardLink(selectedCard) + " into hand?") {
+                                                        @Override
+                                                        protected void yes() {
+                                                            action.setActionMsg("Retrieve " + GameUtils.getCardLink(selectedCard) + " into hand");
+                                                            action.appendEffect(
+                                                                    new RetrieveCardIntoHandEffect(action, playerId, false));
+                                                        }
+                                                        @Override
+                                                        protected void no() {
+                                                            game.getGameState().sendMessage(playerId + " chooses to not to retrieve " + GameUtils.getCardLink(selectedCard) + " into hand");
+                                                        }
+                                                    }
+                                            )
+                                    );
+                                }
+                            }
+                        }
+                    }
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.WHY_DOES_EVERYONE_WANT_TO_GO_BACK_TO_JAKKU__UPLOAD_LANDO_OR_GENERAL;
+        GameTextActionId gameTextActionId = GameTextActionId.BABU_FRIK__CANCEL_DROID_GAME_TEXT;
+        final Filter targetFilter = Filters.and(Filters.droid, Filters.here(self));
 
         // Check condition(s)
-        if (GameConditions.isTwicePerGame(game, self, gameTextActionId)
-                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canUseForce(game, playerId, 2)
+                && GameConditions.canTarget(game, self, targetFilter)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take card into hand from Reserve Deck");
-            action.setActionMsg("Take [Episode VII] Lando or an [Episode VII] general into hand from Reserve Deck");
+            action.setText("Cancel a droid's game text");
+            action.setActionMsg("Cancel the game text of a droid here for remainder of turn");
             // Update usage limit(s)
             action.appendUsage(
-                    new TwicePerGameEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.and(Icon.EPISODE_VII, Filters.Lando), Filters.and(Icon.EPISODE_VII, Filters.general)), true));
+                    new OncePerGameEffect(action));
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Target droid", targetFilter) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            action.appendCost(
+                                    new UseForceEffect(action, playerId, 2));
+                            // Allow response(s)
+                            action.allowResponses("Cancel " + GameUtils.getCardLink(targetedCard) + "'s game text for remainder of turn",
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new CancelGameTextUntilEndOfTurnEffect(action, finalTarget));
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
             return Collections.singletonList(action);
         }
         return null;
-    }
-
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.title("Strike Planning"))
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
-
-        // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canTargetToCancel(game, self, Filters.title("Strike Planning"))) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.title("Strike Planning"), "Strike Planning");
-            actions.add(action);
-        }
-        return actions;
     }
 }

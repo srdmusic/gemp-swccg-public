@@ -1,116 +1,128 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
-import com.gempukku.swccgo.cards.effects.ConvertLocationByRaisingToTopEffect;
-import com.gempukku.swccgo.cards.effects.DrawsNoMoreThanBattleDestinyEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.ModifyTotalBattleDestinyEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
+import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
+import com.gempukku.swccgo.logic.effects.PlaceAtLocationFromLostPileEffect;
+import com.gempukku.swccgo.logic.effects.RespondableEffect;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 3
- * Type: Interrupt
- * Subtype: Used
- * Title: Rebel Leadership & Critical Error Revealed
+ * Set: Set 19
+ * Type: Effect
+ * Subtype: Immediate
+ * Title: I Can't Believe He's Gone (V)
  */
-public class Card501_053 extends AbstractUsedInterrupt {
+public class Card501_053 extends AbstractNormalEffect {
     public Card501_053() {
-        super(Side.LIGHT, 4, "Rebel Leadership & Critical Error Revealed", Uniqueness.UNIQUE);
-        addComboCardTitles("Rebel Leadership","Critical Error Revealed");
-        setGameText("Take an admiral or general into hand from Reserve Deck; reshuffle. OR If your admiral is in battle at a system (or your general is in battle at a site), prevent opponent from drawing more than one battle destiny (your total battle destiny is +1 if Ackbar or Leia in battle). OR Raise your converted location to the top.");
-        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_18);
-        setTestingText("Rebel Leadership & Critical Error Revealed");
+        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.I_Cant_Believe_Hes_Gone, Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
+        setLore("Even though Luke felt the pain of losing his mentor, Obi-Wan continued to give him strength and guidance through the Force.");
+        setGameText("Deploy on table if Obi-Wan ‘communing.’ Opponent’s total battle destiny is -1. Once per game, " +
+                "if your Rebel was just forfeited, may return that Rebel to same site. During battle, " +
+                "may activate one Force or add 1 to a just drawn-destiny. Immune to Alter and Cold Feet.");
+        addIcons(Icon.TATOOINE, Icon.VIRTUAL_SET_19);
+        addImmuneToCardTitle(Title.Alter);
+        addImmuneToCardTitle(Title.Cold_Feet);
+        setTestingText("I Can't Believe He's Gone (V)");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.canSpot(game, self, Filters.and(Filters.Communing, Filters.hasStacked(Filters.ObiWan)));
+    }
 
-        GameTextActionId gameTextActionId = GameTextActionId.REBEL_LEADERSHIP__UPLOAD_ADMIRAL_OR_GENERAL;
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new TotalBattleDestinyModifier(self, -1, game.getOpponent(self.getOwner())));
+        return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isDuringBattle(game)
+                && GameConditions.canActivateForce(game, playerId)) {
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Activate 1 Force");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerBattleEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new ActivateForceEffect(action, playerId, 1));
+            actions.add(action);
+        }
+        return actions;
+    }
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Take card into hand from Reserve Deck");
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new ArrayList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (TriggerConditions.isDestinyJustDrawn(game, effectResult)
+                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isDuringBattle(game)) {
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Add 1 to destiny");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerBattleEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new ModifyDestinyEffect(action, 1));
+            actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.I_CANT_BELIEVE_HES_GONE__RETURN_A_REBEL;
+        // Check condition(s)
+        if (TriggerConditions.justForfeitedToLostPileFromLocation(game, effectResult, Filters.and(Filters.your(self), Filters.Rebel), Filters.site)
+            && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
+            LostFromTableResult lostFromTableResult = (LostFromTableResult) effectResult;
+            final PhysicalCard cardLost = lostFromTableResult.getCard();
+            final PhysicalCard location = lostFromTableResult.getFromLocation();
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Revive " + GameUtils.getFullName(cardLost));
+            // Pay cost(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
             // Allow response(s)
-            action.allowResponses("Take an admiral or general into hand from Reserve Deck",
-                    new RespondablePlayCardEffect(action) {
+            action.allowResponses("Revive " + GameUtils.getCardLink(cardLost),
+                    new RespondableEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.admiral, Filters.general), true));
-                        }
-                    }
-            );
-            actions.add(action);
-        }
-
-        // Check condition(s)
-        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.admiral, Filters.at(Filters.system)))
-                || GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.general, Filters.at(Filters.site)))) {
-            final String opponent = game.getOpponent(playerId);
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Limit opponent to one battle destiny");
-            // Allow response(s)
-            action.allowResponses("Prevent opponent from drawing more than one battle destiny",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new DrawsNoMoreThanBattleDestinyEffect(action, opponent, 1));
-                            if (GameConditions.isDuringBattleWithParticipant(game, Filters.or(Filters.Ackbar, Filters.Leia))) {
-                                action.appendEffect(
-                                        new ModifyTotalBattleDestinyEffect(action, playerId, 1));
-                            }
-                        }
-                    }
-            );
-            actions.add(action);
-        }
-
-        Filter yourConvertedLocationFilter = Filters.and(Filters.location, Filters.canBeConvertedByRaisingYourLocationToTop(playerId));
-
-        // Check condition(s)
-        if (GameConditions.canTarget(game, self, yourConvertedLocationFilter)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            action.setText("Raise a converted location");
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose location to convert", yourConvertedLocationFilter) {
-                        @Override
-                        protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
-                            action.addAnimationGroup(targetedCard);
-                            // Allow response(s)
-                            action.allowResponses("Convert " + GameUtils.getCardLink(targetedCard),
-                                    new RespondablePlayCardEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new ConvertLocationByRaisingToTopEffect(action, targetedCard, true));
-                                        }
-                                    }
-                            );
+                                    new PlaceAtLocationFromLostPileEffect(action, playerId, cardLost, location, false, true));
                         }
                     }
             );

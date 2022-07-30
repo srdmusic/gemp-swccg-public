@@ -10,9 +10,11 @@ import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.RestoreCardToNormalEffect;
 import com.gempukku.swccgo.logic.effects.StackCardFromTableEffect;
@@ -21,6 +23,7 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
 import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
 import com.gempukku.swccgo.logic.timing.results.AboutToPlaceCardOutOfPlayFromTableResult;
+import com.gempukku.swccgo.logic.timing.results.StackedCardResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -132,5 +135,27 @@ public class Card216_024 extends AbstractEpicEventDeployable {
             }
         }
         return actions;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        // track which Jedi was initially stacked
+        if (!GameConditions.cardHasWhileInPlayDataSet(self)
+                && TriggerConditions.justStackedCardOn(game, effectResult, Filters.Jedi, self)) {
+            PhysicalCard stacked = ((StackedCardResult)effectResult).getCard();
+            if (stacked != null) {
+                self.setWhileInPlayData(new WhileInPlayData());
+                String communer = stacked.getBlueprint().getTitle();
+                if (communer.equals(Title.Master_QuiGon_Jinn_An_Old_Friend))
+                    communer = "Qui-Gon";
+                else if (communer.equals(Title.Master_Kenobi))
+                    communer = "Obi-Wan";
+                else if (communer.equals(Title.Master_Yoda))
+                    communer = "Yoda";
+
+                game.getModifiersQuerying().setExtraInformationForArchetypeLabel(self.getOwner(), communer);
+            }
+        }
+        return null;
     }
 }

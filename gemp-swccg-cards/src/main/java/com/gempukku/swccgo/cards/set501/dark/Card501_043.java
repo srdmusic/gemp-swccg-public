@@ -1,85 +1,104 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.LookAtLostPileEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardsOutOfPlayFromOffTableEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeExcludedFromBattle;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Set: Set 18
- * Type: Effect
- * Title: Ni Chuba Na?? (V)
+ * Set: Set 20
+ * Type: Character
+ * Subtype: Alien
+ * Title: Black Krrsantan
  */
-public class Card501_043 extends AbstractNormalEffect {
+public class Card501_043 extends AbstractAlien {
     public Card501_043() {
-        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Ni Chuba Na??", Uniqueness.UNIQUE);
-        setVirtualSuffix(true);
-        setLore("'Your buddy here was about to be turned into orange goo. He picked a fight with a Dug. An especially dangerous Dug called Sebulba.'");
-        setGameText("Deploy on table. Once per game, may deploy Sebulba from Reserve Deck; reshuffle. Once per turn, may deploy Malastare or Podrace Arena from Reserve Deck; reshuffle. While present with Sebulba, Jar Jar’s game text is canceled. [Immune to Alter.]");
-        addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
-        addImmuneToCardTitle(Title.Alter);
-        setTestingText("Ni Chuba Na?? (V)");
+        super(Side.DARK, 2, 4, 7, 2, 5, "Black Krrsantan", Uniqueness.UNIQUE);
+        setLore("Wookiee bounty hunter.");
+        setGameText("May not be excluded from battle. If a battle was just initiated here, each player with four or " +
+                "more characters here must return one of those characters to hand (owner's choice). " +
+                "Opponent’s characters of ability < 3 are power -1 here.");
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
+        setSpecies(Species.WOOKIEE);
+        addKeywords(Keyword.BOUNTY_HUNTER);
+        setTestingText("~Black Krrsantan");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.Jar_Jar, Filters.presentWith(self, Filters.Sebulba))));
+        modifiers.add(new MayNotBeExcludedFromBattle(self, self));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.opponents(self), Filters.here(self), Filters.character, Filters.abilityLessThan(3)), -1));
         return modifiers;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new ArrayList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.NI_CHUBA_NA_V__DEPLOY_LOCATION;
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+
+        Filter charactersHere = Filters.and(Filters.here(self), Filters.character);
+
+        Filter opponentsCharactersHere = Filters.and(Filters.opponents(playerId), charactersHere);
+        Filter yourCharactersHere = Filters.and(Filters.your(playerId), charactersHere);
+
+        int numOpponentCharactersHere = Filters.countActive(game, self, opponentsCharactersHere);
+        int numYourCharactersHere = Filters.countActive(game, self, yourCharactersHere);
 
         // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Malastare)
-                    || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Podrace_Arena))) {
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.here(self))
+                && numOpponentCharactersHere >= 4) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Malastare or Podrace Arena");
-            action.setActionMsg("Deploy Malastare or Podrace Arena from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, GameTextActionId.OTHER_CARD_ACTION_1);
+            action.setText("Return a character to Hand");
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Malastare, Filters.Podrace_Arena), true));
+                    new ChooseCardOnTableEffect(action, opponent, "Choose character to return to your hand", opponentsCharactersHere) {
+                        @Override
+                        protected void cardSelected(PhysicalCard selectedCard) {
+                            action.appendEffect(
+                                    new ReturnCardToHandFromTableEffect(action, selectedCard)
+                            );
+                        }
+                    }
+            );
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.NI_CHUBA_NA__DOWNLOAD_SEBULBA;
-
         // Check condition(s)
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Sebulba)) {
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.here(self))
+                && numYourCharactersHere >= 4) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Sebulba from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, GameTextActionId.OTHER_CARD_ACTION_2);
+            action.setText("Return a character to Hand");
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Sebulba, true));
+                    new ChooseCardOnTableEffect(action, playerId, "Choose character to return to your hand", yourCharactersHere) {
+                        @Override
+                        protected void cardSelected(PhysicalCard selectedCard) {
+                            action.appendEffect(
+                                    new ReturnCardToHandFromTableEffect(action, selectedCard)
+                            );
+                        }
+                    }
+            );
             actions.add(action);
         }
         return actions;

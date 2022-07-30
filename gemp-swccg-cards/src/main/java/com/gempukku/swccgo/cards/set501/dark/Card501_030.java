@@ -3,29 +3,22 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
-import com.gempukku.swccgo.cards.evaluators.OccupiesWithEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
-import com.gempukku.swccgo.game.DeployAsCaptiveOption;
-import com.gempukku.swccgo.game.DeploymentRestrictionsOption;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.ForRemainderOfGameData;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToSystemFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -33,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Objective
  * Title: A Great Tactician Creates Plans / The Result Is Often Resentment
  */
@@ -41,11 +34,11 @@ public class Card501_030 extends AbstractObjective {
     public Card501_030() {
         super(Side.DARK, 0, Title.A_Great_Tactician_Creates_Plans);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Lothal system, Lothal: Imperial Complex, and Thrawn's Art Collection. " +
-                "For remainder of game, your [Episode I] (or [Episode VII]) cards with ability or a [Presence] icon and your admirals (except Thrawn) are deploy +3. " +
+        setGameText("Deploy Lothal system, Lothal: Imperial Complex, Lothal: Advanced Projects Laboratory, and Thrawn's Art Collection. " +
+                "For remainder of game, you may not deploy admirals, [EI], or [E7] cards with ability or [Presence] (except Thrawn) " +
                 "While this side up, Imperial Star Destroyers deploy -1 (-3 if Chimaera). Once per turn, may deploy a battleground system (or a site to Lothal) from Reserve Deck; reshuffle. " +
-                "Flip this card if Thrawn at a system and you have three cards stacked on Thrawn's Art Collection.");
-        addIcons(Icon.VIRTUAL_SET_18);
+                "Flip this card if Thrawn at a battleground and there are two or more cards stacked on Thrawn’s Art Collection.");
+        addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("A Great Tactician Creates Plans");
     }
 
@@ -60,10 +53,17 @@ public class Card501_030 extends AbstractObjective {
                     }
                 });
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.title("Lothal: Imperial Complex"), true, false) {
+                new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Lothal_Imperial_Complex), true, false) {
                     @Override
                     public String getChoiceText() {
                         return "Choose Lothal: Imperial Complex to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Lothal_Advanced_Projects_Laboratory), true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Lothal: Advanced Projects Laboratory to deploy";
                     }
                 });
         action.appendRequiredEffect(
@@ -79,9 +79,9 @@ public class Card501_030 extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostModifier(self, Filters.or(Filters.and(Filters.your(self), Filters.admiral, Filters.except(Filters.Thrawn)),
-                Filters.and(Filters.your(self), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.hasAbilityOrHasPermanentPilotWithAbility, Icon.PRESENCE))), 3));
-
+        Filter mayNotPlayFilter = Filters.or(Filters.and(Filters.your(self), Filters.admiral, Filters.except(Filters.Thrawn)),
+                Filters.and(Filters.your(self), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.hasAbilityOrHasPermanentPilotWithAbility, Icon.PRESENCE)));
+        modifiers.add(new MayNotPlayModifier(self, mayNotPlayFilter, self.getOwner()));
         modifiers.add(new DeployCostModifier(self, Filters.and(Filters.Imperial_starship, Filters.Star_Destroyer), new CardMatchesEvaluator(-1, -3, Filters.Chimaera)));
         return modifiers;
     }
@@ -114,9 +114,9 @@ public class Card501_030 extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.Thrawn, Filters.at(Filters.system)))) {
+                && GameConditions.canSpot(game, self, Filters.and(Filters.Thrawn, Filters.at(Filters.battleground)))) {
             PhysicalCard thrawnsArtCollection = Filters.findFirstActive(game, self, Filters.Thrawns_Art_Collection);
-            if (thrawnsArtCollection != null && GameConditions.hasStackedCards(game, thrawnsArtCollection, 3)) {
+            if (thrawnsArtCollection != null && GameConditions.hasStackedCards(game, thrawnsArtCollection, 2)) {
 
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setSingletonTrigger(true);

@@ -1,72 +1,79 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.AbstractPermanentWeapon;
+import com.gempukku.swccgo.cards.conditions.AtCondition;
+import com.gempukku.swccgo.cards.conditions.BlownAwayCondition;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.actions.FireWeaponAction;
+import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.evaluators.ConstantEvaluator;
+import com.gempukku.swccgo.logic.evaluators.Evaluator;
+import com.gempukku.swccgo.logic.modifiers.*;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
- * Type: Effect
- * Title: Crush The Rebellion (V)
+ * Set: Set 19
+ * Type: Character
+ * Subtype: Alien
+ * Title: Tusken Raider With Hunting Rifle
  */
-public class Card501_009 extends AbstractNormalEffect {
+public class Card501_009 extends AbstractAlien {
     public Card501_009() {
-        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Crush The Rebellion", Uniqueness.UNIQUE);
-        setVirtualSuffix(true);
-        setLore("After dueling his son and seizing control of a city in the clouds, Vader resumed his quest to destroy the Alliance.");
-        setGameText("If your Executor (or Scarif) site on table, deploy on table. Once per turn, may deploy Devastator, Mustafar, or a private platform from Reserve Deck; reshuffle. While Devastator at Mustafar or Scarif, it is immune to attrition < 6. [Immune to Alter.]");
-        addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_18);
-        addImmuneToCardTitle(Title.Alter);
-        setTestingText("Crush The Rebellion (V)");
+        super(Side.DARK, 2, 2, 2, 2, 3, "Tusken Raider With Hunting Rifle");
+        setGameText("Permanent weapon is Hunting Rifle (may target a character or creature; draw destiny; target hit and forfeit -2 if destiny +1 > defense value). If firing from Dune Sea, Jundland Wastes, or a canyon, target at an adjacent site or add 1 to weapon destiny.");
+        setSpecies(Species.TUSKEN_RAIDER);
+        addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_19);
+        setTestingText("Tusken Raider With Hunting Rifle");
+    }
+
+
+    @Override
+    public final boolean hasSpecialDefenseValueAttribute() {
+        return true;
     }
 
     @Override
-    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.and(Filters.your(self), Filters.or(Filters.Executor_site, Filters.Scarif_site)));
+    public final float getSpecialDefenseValue() {
+        return 2;
+    }
+
+    @Override
+    protected AbstractPermanentWeapon getGameTextPermanentWeapon() {
+        AbstractPermanentWeapon permanentWeapon = new AbstractPermanentWeapon("Hunting Rifle") {
+            @Override
+            public List<FireWeaponAction> getGameTextFireWeaponActions(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, int extraForceRequired, PhysicalCard sourceCard, boolean repeatedFiring, Filter targetedAsCharacter, Float defenseValueAsCharacter, Filter fireAtTargetFilter, boolean ignorePerAttackOrBattleLimit) {
+                FireWeaponActionBuilder actionBuilder = FireWeaponActionBuilder.startBuildPrep(playerId, game, sourceCard, self, this, forFree, extraForceRequired, repeatedFiring, targetedAsCharacter, defenseValueAsCharacter, fireAtTargetFilter, ignorePerAttackOrBattleLimit)
+                        .targetForFree(Filters.or(Filters.character, targetedAsCharacter, Filters.vehicle), TargetingReason.TO_BE_HIT).finishBuildPrep();
+                if (actionBuilder != null) {
+
+                    // Build action using common utility
+                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 1, Statistic.DEFENSE_VALUE, false, -2);
+                    return Collections.singletonList(action);
+                }
+                return null;
+            }
+        };
+        permanentWeapon.addKeyword(Keyword.RIFLE);
+        return permanentWeapon;
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, Filters.and(Filters.Devastator, Filters.at(Filters.or(Filters.Mustafar_system, Filters.Scarif_system))), 6));
+        Condition highGroundCondition = new AtCondition(self, Filters.or(Filters.Dune_Sea, Filters.Jundland_Wastes, Filters.canyon));
+
+        modifiers.add(new MayTargetAdjacentSiteModifier(self, Filters.permanentWeaponOf(self), highGroundCondition));
+        modifiers.add(new TotalWeaponDestinyModifier(self, Filters.permanentWeaponOf(self), highGroundCondition, self, new ConstantEvaluator(1), Filters.here(self)));
+
         return modifiers;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
-
-        GameTextActionId gameTextActionId = GameTextActionId.CRUSH_THE_REBELLION_V__DOWNLOAD_CARD;
-
-        // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy Devastator, Mustafar, or a private platform from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Devastator, Filters.Mustafar_system, Filters.titleContains("Private Platform")), true));
-            actions.add(action);
-        }
-
-        return actions;
     }
 }

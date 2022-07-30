@@ -2,21 +2,23 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.AddDuelDestinyEffect;
-import com.gempukku.swccgo.cards.effects.CancelWeaponTargetingEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfLightsaberCombatModifierEffect;
+import com.gempukku.swccgo.logic.effects.ModifyPowerUntilEndOfBattleEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.NumLightsaberCombatDestinyDrawsModifier;
 import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -24,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Surely You Can Do Better
@@ -32,16 +34,16 @@ import java.util.List;
 public class Card501_054 extends AbstractUsedOrLostInterrupt {
     public Card501_054() {
         super(Side.DARK, 4, "Surely You Can Do Better", Uniqueness.UNIQUE);
-        setGameText("USED: During battle, target a character present with [Set 13] Dooku. Target is power -3. LOST: Cancel Clash Of Sabers or Projection Of A Skywalker. OR If lightsaber combat was just initiated, lose 1 force (free if involving [Set 13] Dooku) to add one destiny to your total.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
+        setGameText("USED: During battle, target a character present with [Set 13] Dooku. Target is power -3. LOST: If lightsaber combat was just initiated, add one destiny to your total. OR If [Set 13] Dooku on table, deploy Dooku’s Lightsaber from Lost Pile.");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_19);
         setTestingText("Surely You Can Do Better");
     }
 
-
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
-        Filter targetFilter = Filters.and(Filters.character, Filters.presentWith(self, Filters.and(Icon.VIRTUAL_SET_13, Filters.Dooku)), Filters.canBeTargetedBy(self));
+        List<PlayInterruptAction> actions = new LinkedList<>();
+        Filter set13Dooku = Filters.and(Icon.VIRTUAL_SET_13, Filters.Dooku);
+        Filter targetFilter = Filters.and(Filters.character, Filters.presentWith(self, set13Dooku), Filters.canBeTargetedBy(self));
         // Check condition(s)
         if (GameConditions.isDuringBattleWithParticipant(game, targetFilter)) {
 
@@ -68,21 +70,25 @@ public class Card501_054 extends AbstractUsedOrLostInterrupt {
             actions.add(action);
         }
 
-        // Check condition(s)
-        if (GameConditions.canTargetToCancel(game, self, Filters.Clash_Of_Sabers)) {
+        // OR If [Set 13] Dooku on table, deploy Dooku’s Lightsaber from Lost Pile
+        if (GameConditions.canSpot(game, self, set13Dooku)
+            && GameConditions.hasLostPile(game, playerId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Clash_Of_Sabers, Title.Clash_Of_Sabers);
-            actions.add(action);
-        }
+            action.setText("Deploy Dooku’s Lightsaber from Lost Pile");
+            action.setActionMsg("Deploy Dooku’s Lightsaber from Lost Pile");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            action.appendEffect(
+                                    new DeployCardFromLostPileEffect(action, Filters.title("Dooku's Lightsaber"), false)
+                            );
+                        }
+                    }
+            );
 
-        // Check condition(s)
-        if (GameConditions.canTargetToCancel(game, self, Filters.title(Title.Projection_Of_A_Skywalker))) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.title(Title.Projection_Of_A_Skywalker), Title.Projection_Of_A_Skywalker);
             actions.add(action);
         }
 
@@ -91,29 +97,12 @@ public class Card501_054 extends AbstractUsedOrLostInterrupt {
 
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self) {
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Clash_Of_Sabers, Filters.title(Title.Projection_Of_A_Skywalker)))
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
         // Check condition(s)
         if (TriggerConditions.lightsaberCombatInitiated(game, effectResult)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setText("Add one destiny");
-
-            if (!GameConditions.isDuringLightsaberCombatWithParticipant(game, Filters.and(Icon.VIRTUAL_SET_13, Filters.Dooku)))
-                action.appendCost(new LoseForceEffect(action, playerId, 1));
 
             // Allow response(s)
             action.allowResponses(

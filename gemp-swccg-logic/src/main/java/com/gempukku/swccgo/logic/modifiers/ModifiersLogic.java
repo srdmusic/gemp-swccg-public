@@ -114,6 +114,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private Map<String, Map<Integer, List<PhysicalCard>>> _cardPlayedToLocationThisTurn = new HashMap<String, Map<Integer, List<PhysicalCard>>>();
     private boolean _bluffCardStacked;
     private boolean _deathStarPowerShutDown;
+    private boolean _senateIsInSession;
     private Set<String> _usedCombatCard = new HashSet<String>();
     private Map<Integer, List<PhysicalCard>> _targetedByWeaponsMap = new HashMap<Integer, List<PhysicalCard>>();
     private Map<Integer, List<SwccgBuiltInCardBlueprint>> _targetedByPermanentWeaponsMap = new HashMap<Integer, List<SwccgBuiltInCardBlueprint>>();
@@ -125,6 +126,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private Set<Persona> _personasCrossedOver = new HashSet<Persona>();
     private Map<String, List<PhysicalCard>> _completedUtinniEffect = new HashMap<String, List<PhysicalCard>>();
     private Map<Integer, PhysicalCard> _completedJediTest = new HashMap<Integer, PhysicalCard>();
+    private Map<String, String> _extraInformationForArchetypeLabel = new HashMap<>();
 
     /**
      * Needed to generate snapshot.
@@ -452,6 +454,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         snapshot._bluffCardStacked = _bluffCardStacked;
         snapshot._deathStarPowerShutDown = _deathStarPowerShutDown;
+        snapshot._senateIsInSession = _senateIsInSession;
 
         snapshot._usedCombatCard.addAll(_usedCombatCard);
         for (Integer cardId : _targetedByWeaponsMap.keySet()) {
@@ -492,6 +495,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
         for (Map.Entry<Integer, PhysicalCard> entry : _completedJediTest.entrySet()) {
             snapshot._completedJediTest.put(entry.getKey(), snapshotData.getDataForSnapshot(entry.getValue()));
+        }
+        for (String playerId : _extraInformationForArchetypeLabel.keySet()) {
+            snapshot._extraInformationForArchetypeLabel.put(playerId, _extraInformationForArchetypeLabel.get(playerId));
         }
     }
 
@@ -3610,6 +3616,25 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     }
 
     /**
+     * Records that the Senate is in session.
+     */
+    @Override
+    public void declareSenateIsInSession() {
+        _senateIsInSession = true;
+    }
+
+    /**
+     * Determines if the Senate is in session.
+     *
+     * @return true or false
+     */
+    @Override
+    public boolean isSenateInSession() {
+        return _senateIsInSession;
+    }
+
+
+    /**
      * Records that the specified card being played (or being deployed).
      * @param card the card
      */
@@ -5281,8 +5306,18 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             Integer curMinLimit = null;
             Integer curMaxLimit = null;
 
-            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
+            boolean destiniesMayNotBeLimitedByOpponent = false;
+
+            // check if the number of battle destiny draws for a player can't be limited by the opponent
+            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.BATTLE_DESTINY_DRAWS_MAY_NOT_BE_LIMITED_BY_OPPONENT, battleState.getBattleLocation())) {
                 if (modifier.isForPlayer(player)) {
+                    destiniesMayNotBeLimitedByOpponent = true;
+                }
+            }
+
+            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
+                if (modifier.isForPlayer(player)
+                        && (!destiniesMayNotBeLimitedByOpponent || modifier.getSource(gameState) == null || player.equals(modifier.getSource(gameState).getOwner()))) {
                     int limit = modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this);
                     if (curMaxLimit == null || limit < curMaxLimit) {
                         curMaxLimit = limit;
@@ -5314,8 +5349,18 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             // Do not check MAX_BATTLE_DESTINY_DRAWS if not checking drawing limit or not for showing on user interface
 
             if (isForGui) {
-                for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
+                boolean destiniesMayNotBeLimitedByOpponent = false;
+
+                // check if the number of battle destiny draws for a player can't be limited by the opponent
+                for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.BATTLE_DESTINY_DRAWS_MAY_NOT_BE_LIMITED_BY_OPPONENT, battleState.getBattleLocation())) {
                     if (modifier.isForPlayer(player)) {
+                        destiniesMayNotBeLimitedByOpponent = true;
+                    }
+                }
+
+                for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
+                    if (modifier.isForPlayer(player)
+                            && (!destiniesMayNotBeLimitedByOpponent || modifier.getSource(gameState) == null || player.equals(modifier.getSource(gameState).getOwner()))) {
                         result = Math.min(result, modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this));
                     }
                 }
@@ -16721,5 +16766,16 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
 
         return false;
+    }
+
+    public void setExtraInformationForArchetypeLabel(String playerId, String text) {
+        _extraInformationForArchetypeLabel.put(playerId, text);
+    }
+
+    public String getExtraInformationForArchetypeLabel(String playerId) {
+        if (_extraInformationForArchetypeLabel.containsKey(playerId))
+            return _extraInformationForArchetypeLabel.get(playerId);
+
+        return null;
     }
 }
