@@ -1,86 +1,59 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromLostPileEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
- * Type: Interrupt
- * Subtype: Used
- * Title: Seal Off The Bridge
+ * Set: Set 19
+ * Type: Effect
+ * Title: No Escape (V)
  */
-public class Card501_008 extends AbstractUsedInterrupt {
+public class Card501_008 extends AbstractNormalEffect {
     public Card501_008() {
-        super(Side.DARK, 5, "Seal Off The Bridge", Uniqueness.UNIQUE);
-        setGameText("Use 3 Force to take a Neimoidian or an Effect of any kind into hand from Reserve Deck; reshuffle. OR Deploy Blockade Flagship: Bridge from Reserve Deck; reshuffle.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_18);
-        setTestingText("Seal Off The Bridge");
+        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.No_Escape, Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
+        setLore("Jabba's influence is not easily ignored. Neither are his voracious and vile appetites. Even Jedi soon learn this lesson.");
+        setGameText("Deploy on table. When deployed, may take the top card of Lost Pile into hand. Opponent's starships may not 'attach.' Elis Helrot and Nabrun Leids are unique (•) and are Lost Interrupts. [Immune to Alter.]");
+        addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_19);
+        addImmuneToCardTitle(Title.Alter);
+        setTestingText("No Escape (V)");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
-
-        GameTextActionId gameTextActionId = GameTextActionId.SEAL_OFF_THE_BRIDGE__UPLOAD_CARD;
-
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)
-                && GameConditions.canUseForceToPlayInterrupt(game, playerId, self, 3)) {
+        if (TriggerConditions.justDeployed(game, effectResult, self)
+                && GameConditions.hasLostPile(game, playerId)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Take a Neimoidian or Effect into hand");
-            // Pay cost(s)
-            action.appendCost(
-                    new UseForceEffect(action, playerId, 3));
-            // Allow response(s)
-            action.allowResponses("Take a Neimoidian or an Effect of any kind into hand from Reserve Deck",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.Neimoidian, Filters.Effect_of_any_Kind), true));
-                        }
-                    }
-            );
-            actions.add(action);
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Take top card of Lost Pile into hand");
+            // Perform result(s)
+            action.appendEffect(
+                    new DrawCardIntoHandFromLostPileEffect(action, playerId));
+            return Collections.singletonList(action);
         }
+        return null;
+    }
 
-        gameTextActionId = GameTextActionId.SEAL_OFF_THE_BRIDGE__DOWNLOAD_BRIDGE;
-
-        // Check condition(s)
-        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.BlockadeFlagshipBridge)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Deploy Blockade Flagship: Bridge");
-            // Allow response(s)
-            action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.BlockadeFlagshipBridge, true));
-                        }
-                    }
-            );
-            actions.add(action);
-        }
-
-        return actions;
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new MayNotAttachModifier(self, Filters.and(Filters.opponents(self), Filters.starship)));
+        modifiers.add(new UniqueModifier(self, Filters.or(Filters.Elis_Helrot, Filters.Nabrun_Leids)));
+        modifiers.add(new LostInterruptModifier(self, Filters.or(Filters.Elis_Helrot, Filters.Nabrun_Leids)));
+        return modifiers;
     }
 }

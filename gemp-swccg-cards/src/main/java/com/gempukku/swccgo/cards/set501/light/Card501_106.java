@@ -4,11 +4,13 @@ import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.KeywordModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -17,23 +19,28 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Effect
- * Title: Phoenix Squadron
+ * Title: Phoenix Squadron Operations
  */
 public class Card501_106 extends AbstractNormalEffect {
     public Card501_106() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Phoenix Squadron", Uniqueness.UNIQUE);
-        setGameText("Deploy on table. Chopper, Ezra, Hera, Kanan, Sabine, and Zeb are Phoenix Squadron members. Once per turn, may deploy Hobbie, Wedge or an A-wing to a Lothal location from Reserve Deck; reshuffle. [Immune to Alter.]");
-        addIcons(Icon.VIRTUAL_SET_18);
+        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Phoenix Squadron Operations", Uniqueness.UNIQUE);
+        setGameText("If Lothal on table, deploy on table. Your Phoenix Squadron characters are deploy -1. Once per turn, may deploy Malachor, Mandalor, or Seelos (or Wedge, Zeb, Chopper, or an A-wing to a Lothal location) from Reserve Deck; reshuffle. [Immune to Alter.]");
+        addIcons(Icon.VIRTUAL_SET_19);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 19] Phoenix Squadron");
+        setTestingText("Phoenix Squadron Operations");
+    }
+
+    @Override
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.canSpot(game, self, Filters.Lothal_system);
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new KeywordModifier(self, Filters.or(Filters.Chopper, Filters.Ezra, Filters.Hera, Filters.Kanan, Filters.Sabine, Filters.Zeb), Keyword.PHOENIX_SQUADRON));
+        modifiers.add(new DeployCostModifier(self, Filters.and(Keyword.PHOENIX_SQUADRON, Filters.character), -1));
         return modifiers;
     }
 
@@ -47,12 +54,17 @@ public class Card501_106 extends AbstractNormalEffect {
                 && GameConditions.canSpotLocation(game, Filters.Lothal_location)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Hobbie, Wedge, or an A-wing");
-            action.setActionMsg("Deploy Hobbie, Wedge, or an A-wing to a Lothal location from Reserve Deck");
+            action.setText("Deploy a location or a card to Lothal");
+            action.setActionMsg("Deploy Malachor, Mandalor, or Seelos (or Wedge, Zeb, Chopper, or an A-wing to a Lothal location) from Reserve Deck");
+
+            Filter systems = Filters.or(Filters.Malachor_system, Filters.Mandalore_system, Filters.Seelos_system);
+            Filter other = Filters.or(Filters.Wedge, Filters.Zeb, Filters.Chopper, Filters.A_wing);
             action.appendUsage(
                     new OncePerTurnEffect(action));
             action.appendEffect(
-                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.or(Filters.Hobbie, Filters.Wedge, Filters.A_wing), Filters.locationAndCardsAtLocation(Filters.Lothal_location), true));
+                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.or(systems, other),
+                            Filters.locationAndCardsAtLocation(Filters.Lothal_location),
+                            systems, Filters.none, false, true));
 
             return Collections.singletonList(action);
         }

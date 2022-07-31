@@ -18,7 +18,10 @@ import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.StandardEffect;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Set 18
@@ -63,9 +66,23 @@ public class Card218_015 extends AbstractNormalEffect {
             boolean canDeployCardFromReserveDeck = GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Azure_Angel)
                     || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.FALCON)
                     || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.RED_5);
+
             final List<PhysicalCard> cardsInHand = game.getGameState().getHand(playerId);
+
+
+
             final List<PhysicalCard> validStarfighters = new ArrayList<PhysicalCard>();
             Collection<PhysicalCard> starfighters = Filters.filter(cardsInHand, game, Filters.and(Filters.unpiloted, Filters.or(Filters.Azure_Angel, Filters.Falcon, Filters.Red_5)));
+
+            if(GameConditions.canSpot(game, self, Filters.title(Title.My_Parents_Were_Strong))){
+                final List<PhysicalCard> cardsStacked = game.getGameState().getStackedCards(Filters.findFirstActive(game, self, Filters.title(Title.My_Parents_Were_Strong)));
+                for(PhysicalCard stackedCard : cardsStacked){
+                    if (Filters.Falcon.accepts(game.getGameState(), game.getModifiersQuerying(), stackedCard)){
+                        starfighters.add(stackedCard);
+                    }
+                }
+            }
+
             for (PhysicalCard starfighter : starfighters) {
                 if (Filters.canSpot(cardsInHand, game, Filters.and(Filters.matchingPilot(starfighter), Filters.deployableSimultaneouslyWith(self, starfighter, false, 0, false, 0)))) {
                     validStarfighters.add(starfighter);
@@ -82,16 +99,16 @@ public class Card218_015 extends AbstractNormalEffect {
                 if (!validStarfighters.isEmpty() && canDeployCardFromReserveDeck) {
                     action.appendTargeting(
                             new PlayoutDecisionEffect(action, playerId,
-                                    new YesNoDecision("You have valid starship and pilot combinations in hand. Do you want to search Reserve Deck as well?") {
+                                    new YesNoDecision("You have valid starship and pilot combinations that can deploy from (or as if from) hand. Do you want to search Reserve Deck as well?") {
                                         @Override
                                         protected void yes() {
-                                            action.setActionMsg("Deploy Azure Angel, Falcon, or Red 5 and a matching pilot from hand and/or Reserve Deck");
+                                            action.setActionMsg("Deploy Azure Angel, Falcon, or Red 5 and a matching pilot from (or as if from) hand and/or Reserve Deck");
                                             // Perform result(s)
                                             action.appendEffect(getChooseCardsEffect(action));
                                         }
                                         @Override
                                         protected void no() {
-                                            action.setActionMsg("Deploy Azure Angel, Falcon, or Red 5 and a matching pilot from hand");
+                                            action.setActionMsg("Deploy Azure Angel, Falcon, or Red 5 and a matching pilot from (or as if from) hand");
                                             action.appendTargeting(
                                                     new ChooseCardFromHandEffect(action, playerId, Filters.in(validStarfighters)) {
                                                         @Override

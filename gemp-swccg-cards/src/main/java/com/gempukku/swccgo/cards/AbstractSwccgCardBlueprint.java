@@ -1938,6 +1938,11 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
         return null;
     }
 
+    @Override
+    public MagneticSuctionTubeAction getMagneticSuctionTubeAction(SwccgGame game, PhysicalCard self){
+        return null;
+    };
+
     /**
      * Determines if the card is inactive due to specific conditions even when the card would normally be active.
      * @param game the game

@@ -12,27 +12,32 @@ import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.FlipCardEffect;
+import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Objective
  * Title: Zero Hour / Liberation of Lothal
  */
 public class Card501_105_BACK extends AbstractObjective {
     public Card501_105_BACK() {
         super(Side.LIGHT, 7, "Liberation of Lothal");
-        setGameText("While this side up, if you have Force drained this turn, your other Force drains are +1. Once per turn, may add or subtract X from a just drawn battle destiny (or opponent's weapon destiny), where X = number of battlegrounds occupied by Phoenix Squadron characters. If you just won a battle, may retrieve a Phoenix Squadron character. During battle at Lothal system, opponent may not limit the number of battle destinies you may draw. " +
-                "Flip this card if opponent controls two Lothal locations.");
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Liberation of Lothal");
+        setGameText("While this side up, if you have Force drained this turn, your other Force drains are +1. Once per turn, may add or subtract X from a just drawn battle destiny (or opponent's weapon destiny), where X = number of battlegrounds occupied by Phoenix Squadron characters. During battle at Lothal system, the number of battle destinies players may draw may not be limited. " +
+                "Flip this card if opponent controls more Lothal locations than you.");
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Liberation of Lothal");
     }
 
     @Override
@@ -40,7 +45,30 @@ public class Card501_105_BACK extends AbstractObjective {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ForceDrainModifier(self, Filters.location, new InPlayDataEqualsCondition(self, true), 1, self.getOwner()));
         modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier(self, Filters.Lothal_system, self.getOwner()));
+        modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier(self, Filters.Lothal_system, game.getOpponent(self.getOwner())));
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.ZERO_HOUR__DEPLOY_LOCATION;
+
+        // Check condition(s)
+        if (GameConditions.isOnceDuringYourTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy a Lothal site from Reserve Deck");
+            action.setActionMsg("Deploy a Lothal site from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.Lothal_site, true));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
     @Override
@@ -78,17 +106,6 @@ public class Card501_105_BACK extends AbstractObjective {
             actions.add(action2);
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-
-        if (TriggerConditions.wonBattle(game, effectResult, playerId)) {
-
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Retrieve a Phoenix Squadron character");
-            action.appendEffect(
-                    new RetrieveCardEffect(action, playerId, Filters.and(Keyword.PHOENIX_SQUADRON, Filters.character)));
-            actions.add(action);
-        }
-
         return actions;
     }
 
@@ -110,7 +127,8 @@ public class Card501_105_BACK extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && GameConditions.controls(game, opponent, 2, Filters.Lothal_location)) {
+                && (Filters.countTopLocationsOnTable(game, Filters.and(Filters.Lothal_location, Filters.controls(opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))) >
+                Filters.countTopLocationsOnTable(game, Filters.and(Filters.Lothal_location, Filters.controls(playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))))) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setSingletonTrigger(true);
@@ -120,7 +138,6 @@ public class Card501_105_BACK extends AbstractObjective {
             action.appendEffect(
                     new FlipCardEffect(action, self));
             return Collections.singletonList(action);
-
         }
         return null;
     }

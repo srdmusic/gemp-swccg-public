@@ -3,9 +3,11 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.AbstractActionProxy;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -19,10 +21,9 @@ import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameActionProxyEffect;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToSystemFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.KeywordModifier;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -30,9 +31,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Objective
  * Title: Zero Hour / Liberation of Lothal
  */
@@ -41,11 +41,10 @@ public class Card501_105 extends AbstractObjective {
         super(Side.LIGHT, 0, "Zero Hour");
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Lothal system and a Lothal site. " +
-                "For remainder of game, Menace Fades and Projection Of A Skywalker are canceled. Jedi (except Ahsoka and Kanan), Resistance characters, and [Resistance] starships are deploy +1. Phoenix Squadron characters are deploy -1. " +
-                "While this side up, once per turn, may deploy a Lothal site, Malachor, Mandalore, or Seelos from Reserve Deck; reshuffle. " +
-                "Flip this card if you control three Lothal locations (or occupy three Lothal locations with Phoenix Squadron characters) and opponent control no Lothal locations.");
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Zero Hour");
+                "For remainder of game, Menace Fades and Projection Of A Skywalker are canceled. Jedi (except Ahsoka and Kanan), Resistance characters, and [Resistance] starships are deploy +1. Chopper, Ezra, Hera, Kanan, Sabine, and Zeb are Phoenix Squadron members. Once per turn, may deploy a Lothal site from Reserve Deck; reshuffle. " +
+                "Flip this card if you control three Lothal locations with Rebels (or occupy three Lothal locations with Phoenix Squadron characters) and opponent control no Lothal locations.");
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Zero Hour");
     }
 
     @Override
@@ -77,7 +76,7 @@ public class Card501_105 extends AbstractObjective {
                         null));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new DeployCostModifier(self, Filters.and(Keyword.PHOENIX_SQUADRON, Filters.character), -1),
+                        new KeywordModifier(self, Filters.or(Filters.Chopper, Filters.Ezra, Filters.Hera, Filters.Kanan, Filters.Sabine, Filters.Zeb), Keyword.PHOENIX_SQUADRON),
                         null));
         final int permCardId = self.getPermanentCardId();
         action.appendEffect(
@@ -138,14 +137,14 @@ public class Card501_105 extends AbstractObjective {
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy a Lothal site, Malachor, Mandalore, or Seelos from Reserve Deck");
+            action.setText("Deploy a Lothal site from Reserve Deck");
+            action.setActionMsg("Deploy a Lothal site from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Lothal_site, Filters.Malachor_system, Filters.Mandalore_system, Filters.Seelos_system), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.Lothal_site, true));
             return Collections.singletonList(action);
         }
         return null;
@@ -169,7 +168,7 @@ public class Card501_105 extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && (GameConditions.controls(game, playerId, 3, Filters.Lothal_location)
+                && (GameConditions.controlsWith(game, self, playerId, 3, Filters.Lothal_location, Filters.Rebel)
                     || GameConditions.occupiesWith(game, self, playerId, 3, Filters.Lothal_location, Filters.and(Keyword.PHOENIX_SQUADRON, Filters.character)))
                 && !GameConditions.controls(game, opponent, Filters.Lothal_location)) {
 

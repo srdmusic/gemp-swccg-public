@@ -1,72 +1,68 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractSith;
+import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.cards.evaluators.*;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.ExchangeCardInHandWithCardInLostPileEffect;
-import com.gempukku.swccgo.logic.evaluators.Evaluator;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 7
+ * Set: Set 19
  * Type: Character
- * Subtype: Sith
- * Title: Savage Opress
+ * Subtype: Imperial
+ * Title: Vader (V)
  */
-public class Card501_001 extends AbstractSith {
+public class Card501_001 extends AbstractImperial {
     public Card501_001() {
-        super(Side.DARK, 1, 6, 8, 4, 5, "Savage Opress", Uniqueness.UNIQUE);
-        setLore("Dathomirian.");
-        setGameText("Deploys -1 for each other Sith character on table (limit -4). Once per game, may exchange a card in hand with a Sith character in Lost Pile. Immune to attrition < 3.");
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.SEPARATIST, Icon.EPISODE_I, Icon.VIRTUAL_SET_7);
-        setSpecies(Species.DATHOMIRIAN);
-        setTestingText("Savage Opress (ERRATA)");
-    }
-
-    @Override
-    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeployCostModifier(self, new NegativeEvaluator(new MaxLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.other(self), Filters.Sith)), 4))));
-        return modifiers;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.SAVAGE_OPRESS__EXCHANGE_CARD_IN_HAND_WITH_SITH_IN_LOST_PILE;
-
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.hasHand(game, playerId)
-                && GameConditions.hasLostPile(game, playerId)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Exchange card in hand with card in Lost Pile");
-            action.setActionMsg("Exchange a card in hand with a Sith character in Lost Pile");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new ExchangeCardInHandWithCardInLostPileEffect(action, playerId, Filters.any, Filters.Sith));
-            return Collections.singletonList(action);
-        }
-        return null;
+        super(Side.DARK, 1, 6, 6, 6, 8, Title.Vader, Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
+        setLore("Sought to extinguish all Jedi. Former student of Obi-Wan Kenobi. Seduced by the dark side of the Force.");
+        setGameText("Adds 3 to power of anything he pilots. While alone, if a battle just initiated here, may take Lightsaber Parry, Physical Choke, or Vader's Anger into hand from Reserve Deck; reshuffle. Opponent's non-Jedi characters here are power and forfeit -1. Immune to attrition < 5 (< 7 if with a Jedi).");
+        addPersona(Persona.VADER);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
+        setTestingText("Vader (V)");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.opponents(self), Filters.non_Jedi_character, Filters.here(self)), -1));
+        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.opponents(self), Filters.non_Jedi_character, Filters.here(self)), -1));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, new ConditionEvaluator(5, 7, new WithCondition(self, Filters.Jedi))));
         return modifiers;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+
+        GameTextActionId gameTextActionId = GameTextActionId.VADER__UPLOAD_CARD;
+
+        // Check condition(s)
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.here(self))
+                && GameConditions.isAlone(game, self)
+                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take card into hand from Reserve Deck");
+            action.setActionMsg("Take Lightsaber Parry, Physical Choke, or Vader's Anger into hand from Reserve Deck");
+            // Perform result(s)
+            action.appendEffect(
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.title("Lightsaber Parry"), Filters.title("Physical Choke"), Filters.title("Vader's Anger")), true));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }

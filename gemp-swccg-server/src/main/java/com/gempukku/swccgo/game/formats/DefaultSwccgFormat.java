@@ -181,25 +181,25 @@ public class DefaultSwccgFormat implements SwccgFormat {
             if (skipIfNotExists)
                 return;
 
-            throw new DeckInvalidException("Deck contains invalid card id : " + blueprintId);
+            throw new DeckInvalidException("<span class=\"validate-invalid-card\">" + blueprintId + "</span> card not permitted in this format.");
         }
 
         String fullName = GameUtils.getFullName(_library.getSwccgoCardBlueprint(blueprintId));
 
         if (blueprint.getCardCategory() == CardCategory.GAME_AID)
-            throw new DeckInvalidException("Deck contains card that is not a valid card type: " + fullName);
+            throw new DeckInvalidException("Deck contains card type, from card <span class=\"validate-invalid-card-type\">" + fullName + "</span>, not permitted in this format.");
 
         if (_validCards.contains(blueprintId))
             return;
 
         if (!_validSets.isEmpty() && !isValidInSets(blueprintId))
-            throw new DeckInvalidException("Deck contains card not from valid set: " + fullName);
+            throw new DeckInvalidException("Deck contains card, <span class=\"validate-invalid-card-set\">" + fullName + "</span>, from set banned in this format.");
 
         // Banned icons
         for (String iconName : _bannedIcons) {
             Icon icon = Icon.getIconFromName(iconName);
             if (icon != null && blueprint.hasIcon(icon))
-                throw new DeckInvalidException("Deck contains a copy of a card with an [" + icon.getHumanReadable() + "] icon: " + fullName);
+                throw new DeckInvalidException("<span class=\"validate-invalid-icon\">" + icon.getHumanReadable() + "</span> icon, from card <span class=\"validate-invalid-icon-cardname\">"+fullName+"</span> not permitted in this format.");
         }
 
         // Banned rarity
@@ -210,7 +210,7 @@ public class DefaultSwccgFormat implements SwccgFormat {
                         || _library.hasAlternateInSet(blueprintId, validSet)) {
                     SetRarity setRarity = _rarity.get(validSet);
                     if (setRarity.getCardRarity(blueprintId).equals(rarity))
-                        throw new DeckInvalidException("Deck contains a card with a banned rarity: " + fullName);
+                        throw new DeckInvalidException("Deck contains a card with a banned rarity: <span class=\"validate-invalid-rarity\">" + fullName + "</span>");
                 }
         }
 
@@ -218,7 +218,7 @@ public class DefaultSwccgFormat implements SwccgFormat {
         Set<String> allAlternates = _library.getAllAlternates(blueprintId);
         for (String bannedBlueprintId : _bannedCards) {
             if (bannedBlueprintId.equals(blueprintId) || (allAlternates != null && allAlternates.contains(bannedBlueprintId)))
-                throw new DeckInvalidException("Deck contains a copy of an X-listed card: " + fullName);
+                throw new DeckInvalidException("Deck contains a copy of banned card: <span class=\"validate-invalid-card\">" + fullName + "</span>");
         }
     }
 
@@ -238,8 +238,11 @@ public class DefaultSwccgFormat implements SwccgFormat {
             int light = 0;
             int numObjectives = 0;
             int numStartingEffects = 0;
+            int numFlipFalcons = 0;
+            int numMythrol = 0;
             int numJabbasPrize = 0;
             int numCCT = 0;
+
             for (String blueprintId : deck.getCards()) {
                 SwccgCardBlueprint card = _library.getSwccgoCardBlueprint(blueprintId);
                 if (card.getSide() == Side.DARK)
@@ -247,13 +250,19 @@ public class DefaultSwccgFormat implements SwccgFormat {
                 else if (card.getSide() == Side.LIGHT)
                     light++;
                 else
-                    throw new DeckInvalidException("Deck contains non-dark, non-light card");
+                    throw new DeckInvalidException("Deck contains a card that is neither Dark nor Light.");
 
                 if (card.getCardCategory()== CardCategory.OBJECTIVE)
                     numObjectives++;
 
                 if (card.getCardCategory()== CardCategory.EFFECT && card.getCardSubtype()== CardSubtype.STARTING)
                     numStartingEffects++;
+
+                if(Title.The_Falcon_Junkyard_Garbage.equals(card.getTitle()))
+                    numFlipFalcons++;
+
+                if(Title.The_Mythrol.equals(card.getTitle()))
+                    numMythrol++;
 
                 if (Title.Jabbas_Prize.equals(card.getTitle()))
                     numJabbasPrize++;
@@ -271,7 +280,7 @@ public class DefaultSwccgFormat implements SwccgFormat {
                 else if (card.getSide() == Side.LIGHT)
                     light++;
                 else
-                    throw new DeckInvalidException("Deck contains non-dark, non-light card");
+                    throw new DeckInvalidException("Deck contains a card that is neither Dark nor Light.");
             }
             if (light > 0 && dark > 0)
                 throw new DeckInvalidException("Deck contains both light side and dark side cards");
@@ -281,6 +290,12 @@ public class DefaultSwccgFormat implements SwccgFormat {
 
             if (numStartingEffects > 1)
                 throw new DeckInvalidException("Deck contains more than one Starting Effect");
+
+            if (numFlipFalcons > 1)
+                throw new DeckInvalidException("Deck contains more than one The Falcon, Junkyard Garbage");
+
+            if (numMythrol > 1)
+                throw new DeckInvalidException("Deck contains more than one of The Mythrol");
 
             if (numJabbasPrize > 1)
                 throw new DeckInvalidException("Deck contains more than one Jabba's Prize");
@@ -309,11 +324,11 @@ public class DefaultSwccgFormat implements SwccgFormat {
             for (String blueprintId : _restrictedCards) {
                 Integer count = cardCountByBaseBlueprintId.get(blueprintId);
                 if (count != null && count > 1)
-                    throw new DeckInvalidException("Deck contains more than one copy of an R-listed card: " + GameUtils.getFullName(_library.getSwccgoCardBlueprint(blueprintId)));
+                    throw new DeckInvalidException("Deck contains more than one copy of an restricted card: " + GameUtils.getFullName(_library.getSwccgoCardBlueprint(blueprintId)));
             }
 
             if (deck.getCards().size() != _requiredDeckSize)
-                throw new DeckInvalidException("Deck does not contain required number of cards: " + deck.getCards().size() + "!=" + _requiredDeckSize);
+                throw new DeckInvalidException("Deck contains <span class=\"validate-deck-size\">" + deck.getCards().size() + "</span> cards, however <span class=\"validate-required-deck-size\">" + _requiredDeckSize + "</span> cards are required.");
 
         } catch (IllegalArgumentException exp) {
             throw new DeckInvalidException("Deck contains unrecognizable card");

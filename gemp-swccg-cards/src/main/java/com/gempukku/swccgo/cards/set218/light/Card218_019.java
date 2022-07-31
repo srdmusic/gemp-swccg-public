@@ -43,7 +43,7 @@ public class Card218_019 extends AbstractUsedInterrupt {
         final String opponent = game.getOpponent(playerId);
 
         final GameTextActionId gameTextActionId = GameTextActionId.FALL_OF_THE_LEGEND_V__SEARCH_USED_PILE;
-        if (TriggerConditions.justLost(game, effectResult, opponent, Filters.or(Filters.Dark_Jedi, Filters.leader))
+        if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.opponents(self), Filters.or(Filters.Dark_Jedi, Filters.leader)))
                 && GameConditions.canTakeCardsIntoHandFromUsedPile(game, playerId, self, gameTextActionId)) {
 
             final PhysicalCard justLostCharacter = ((LostFromTableResult) effectResult).getCard();
@@ -66,10 +66,9 @@ public class Card218_019 extends AbstractUsedInterrupt {
 
         // Check condition(s)
         if (TriggerConditions.justRetrievedForce(game, effectResult, opponent)) {
-            final int numForceToLose = Math.max(1, ((RetrieveForceResult) effectResult).getAmountOfForceRetrieved() / 2);
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Make opponent lose " + numForceToLose + " Force");
+            action.setText("Make opponent lose 1 Force");
             // Allow response(s)
             action.allowResponses(
                     new RespondablePlayCardEffect(action) {
@@ -77,7 +76,7 @@ public class Card218_019 extends AbstractUsedInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new LoseForceEffect(action, opponent, numForceToLose));
+                                    new LoseForceEffect(action, opponent, 1));
                         }
                     }
             );

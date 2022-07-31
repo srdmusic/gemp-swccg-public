@@ -114,6 +114,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private Map<String, Map<Integer, List<PhysicalCard>>> _cardPlayedToLocationThisTurn = new HashMap<String, Map<Integer, List<PhysicalCard>>>();
     private boolean _bluffCardStacked;
     private boolean _deathStarPowerShutDown;
+    private boolean _senateIsInSession;
     private Set<String> _usedCombatCard = new HashSet<String>();
     private Map<Integer, List<PhysicalCard>> _targetedByWeaponsMap = new HashMap<Integer, List<PhysicalCard>>();
     private Map<Integer, List<SwccgBuiltInCardBlueprint>> _targetedByPermanentWeaponsMap = new HashMap<Integer, List<SwccgBuiltInCardBlueprint>>();
@@ -125,6 +126,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     private Set<Persona> _personasCrossedOver = new HashSet<Persona>();
     private Map<String, List<PhysicalCard>> _completedUtinniEffect = new HashMap<String, List<PhysicalCard>>();
     private Map<Integer, PhysicalCard> _completedJediTest = new HashMap<Integer, PhysicalCard>();
+    private Map<String, String> _extraInformationForArchetypeLabel = new HashMap<>();
 
     /**
      * Needed to generate snapshot.
@@ -452,6 +454,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         snapshot._bluffCardStacked = _bluffCardStacked;
         snapshot._deathStarPowerShutDown = _deathStarPowerShutDown;
+        snapshot._senateIsInSession = _senateIsInSession;
 
         snapshot._usedCombatCard.addAll(_usedCombatCard);
         for (Integer cardId : _targetedByWeaponsMap.keySet()) {
@@ -492,6 +495,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
         for (Map.Entry<Integer, PhysicalCard> entry : _completedJediTest.entrySet()) {
             snapshot._completedJediTest.put(entry.getKey(), snapshotData.getDataForSnapshot(entry.getValue()));
+        }
+        for (String playerId : _extraInformationForArchetypeLabel.keySet()) {
+            snapshot._extraInformationForArchetypeLabel.put(playerId, _extraInformationForArchetypeLabel.get(playerId));
         }
     }
 
@@ -3608,6 +3614,25 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     public boolean isDeathStarPowerShutDown() {
         return _deathStarPowerShutDown;
     }
+
+    /**
+     * Records that the Senate is in session.
+     */
+    @Override
+    public void declareSenateIsInSession() {
+        _senateIsInSession = true;
+    }
+
+    /**
+     * Determines if the Senate is in session.
+     *
+     * @return true or false
+     */
+    @Override
+    public boolean isSenateInSession() {
+        return _senateIsInSession;
+    }
+
 
     /**
      * Records that the specified card being played (or being deployed).
@@ -16741,5 +16766,16 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
 
         return false;
+    }
+
+    public void setExtraInformationForArchetypeLabel(String playerId, String text) {
+        _extraInformationForArchetypeLabel.put(playerId, text);
+    }
+
+    public String getExtraInformationForArchetypeLabel(String playerId) {
+        if (_extraInformationForArchetypeLabel.containsKey(playerId))
+            return _extraInformationForArchetypeLabel.get(playerId);
+
+        return null;
     }
 }

@@ -15,29 +15,31 @@ import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.NotCondition;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeForfeitedInBattleModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Character
  * Subtype: Imperial
- * Title: Arihnda Pryce
+ * Title: Governor Pryce
  */
 public class Card501_028 extends AbstractImperial {
     public Card501_028() {
-        super(Side.DARK, 2, 3, 2, 3, 5, "Arihnda Pryce", Uniqueness.UNIQUE);
-        setPolitics(1);
+        super(Side.DARK, 2, 3, 2, 3, 5, "Governor Pryce", Uniqueness.UNIQUE);
+        setPolitics(2);
         setLore("Female miner. Leader.");
         setGameText("If you just captured a Rebel here (or stacked a card as 'artwork') you may take a card without ability into hand from Reserve Deck; reshuffle. If you just lost a battle here, Pryce may not be forfeited unless 'hit' or no other Imperials present. Immune to attrition < 4.");
         addKeywords(Keyword.FEMALE, Keyword.MINER, Keyword.LEADER);
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Arihnda Pryce");
+        addIcons(Icon.VIRTUAL_SET_19, Icon.CORUSCANT);
+        setTestingText("Governor Pryce");
     }
 
     @Override

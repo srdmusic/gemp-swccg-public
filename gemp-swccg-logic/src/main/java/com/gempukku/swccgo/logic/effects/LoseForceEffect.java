@@ -41,7 +41,8 @@ public class LoseForceEffect extends AbstractSubActionEffect {
     private float _currentAmountLeft;
     private float _maxForceLossAllowed;
     private boolean _forceLossComplete;
-    private PhysicalCard _stackFaceDownOn;
+    private PhysicalCard _stackOn;
+    private boolean _stackFaceDown;
     private boolean _asLiberationCard;
     private float _cannotBeReducedBelow;
     private LoseForceEffect _loseForceEffect;
@@ -64,7 +65,7 @@ public class LoseForceEffect extends AbstractSubActionEffect {
      * @param cannotBeReduced true if Force loss cannot be reduced, otherwise false
      */
     public LoseForceEffect(Action action, String playerToLoseForce, float amount, boolean cannotBeReduced) {
-        this(action, playerToLoseForce, amount, cannotBeReduced, false, false, false, false, false, null, false);
+        this(action, playerToLoseForce, amount, cannotBeReduced, false, false, false, false, false, null, false, false);
     }
 
     /**
@@ -75,7 +76,7 @@ public class LoseForceEffect extends AbstractSubActionEffect {
      * @param cannotBeReducedBelow the amount below which the force loss cannot be reduced (if the initial amount is less than that then it will +)
      */
     public LoseForceEffect(Action action, String playerToLoseForce, float amount, float cannotBeReducedBelow) {
-        this(action, playerToLoseForce, amount, false, false, false, false, false, false, null, false, false, cannotBeReducedBelow);
+        this(action, playerToLoseForce, amount, false, false, false, false, false, false, null, false, false, false, cannotBeReducedBelow);
     }
 
     /**
@@ -88,7 +89,7 @@ public class LoseForceEffect extends AbstractSubActionEffect {
      * @param fromLifeForceOnly true if Force must be lost from Life Force, otherwise false
      */
     public LoseForceEffect(Action action, String playerToLoseForce, float amount, boolean cannotBeReduced, boolean fromLifeForceOnly) {
-        this(action, playerToLoseForce, amount, cannotBeReduced, false, false, false, false, fromLifeForceOnly, null, false);
+        this(action, playerToLoseForce, amount, cannotBeReduced, false, false, false, false, fromLifeForceOnly, null, false, false);
     }
 
     /**
@@ -102,14 +103,15 @@ public class LoseForceEffect extends AbstractSubActionEffect {
      * @param fromHandOnly true if Force must be lost from hand, otherwise false
      * @param fromReserveDeckOnly true if Force must be lost from Reserve Deck, otherwise false
      * @param fromLifeForceOnly true if Force must be lost from Life Force, otherwise false
-     * @param stackFaceDownOn card that lost Force is instead stacked face down on, otherwise null
+     * @param stackOn card that lost Force is instead stacked on, otherwise null
+     * @param stackFaceDown card that lost Force is stacked face down
      * @param asLiberationCard the card lost as Force is stacked as a liberation card
      */
-    protected LoseForceEffect(Action action, String playerToLoseForce, float amount, boolean cannotBeReduced, boolean isFromForceDrain, boolean isFromInsertCard, boolean fromHandOnly, boolean fromReserveDeckOnly, boolean fromLifeForceOnly, PhysicalCard stackFaceDownOn, boolean asLiberationCard) {
-        this(action, playerToLoseForce, amount, cannotBeReduced, isFromForceDrain, isFromInsertCard, fromHandOnly, fromReserveDeckOnly, fromLifeForceOnly, stackFaceDownOn, asLiberationCard, false, Float.MIN_VALUE);
+    protected LoseForceEffect(Action action, String playerToLoseForce, float amount, boolean cannotBeReduced, boolean isFromForceDrain, boolean isFromInsertCard, boolean fromHandOnly, boolean fromReserveDeckOnly, boolean fromLifeForceOnly, PhysicalCard stackOn, boolean stackFaceDown, boolean asLiberationCard) {
+        this(action, playerToLoseForce, amount, cannotBeReduced, isFromForceDrain, isFromInsertCard, fromHandOnly, fromReserveDeckOnly, fromLifeForceOnly, stackOn, stackFaceDown, asLiberationCard, false, Float.MIN_VALUE);
     }
 
-    protected LoseForceEffect(Action action, String playerToLoseForce, float amount, boolean cannotBeReduced, boolean isFromForceDrain, boolean isFromInsertCard, boolean fromHandOnly, boolean fromReserveDeckOnly, boolean fromLifeForceOnly, PhysicalCard stackFaceDownOn, boolean asLiberationCard, boolean fromForcePileOnly, float cannotBeReducedBelow) {
+    protected LoseForceEffect(Action action, String playerToLoseForce, float amount, boolean cannotBeReduced, boolean isFromForceDrain, boolean isFromInsertCard, boolean fromHandOnly, boolean fromReserveDeckOnly, boolean fromLifeForceOnly, PhysicalCard stackOn, boolean stackFaceDown, boolean asLiberationCard, boolean fromForcePileOnly, float cannotBeReducedBelow) {
         super(action);
         _playerToLoseForce = playerToLoseForce;
         _initialAmount = amount;
@@ -120,7 +122,8 @@ public class LoseForceEffect extends AbstractSubActionEffect {
         _fromReserveDeckOnly = fromReserveDeckOnly;
         _fromForcePileOnly = fromForcePileOnly;
         _fromLifeForceOnly = fromLifeForceOnly;
-        _stackFaceDownOn = stackFaceDownOn;
+        _stackOn = stackOn;
+        _stackFaceDown = stackFaceDown;
         _asLiberationCard = asLiberationCard;
         _loseForceEffect = this;
         _cannotBeReducedBelow = cannotBeReducedBelow;
@@ -142,7 +145,7 @@ public class LoseForceEffect extends AbstractSubActionEffect {
      * @return true or false
      */
     public boolean isCannotBeReduced(SwccgGame game) {
-        return _isCannotBeReduced || (_stackFaceDownOn != null) || (getForceLossRemaining(game) <= _cannotBeReducedBelow);
+        return _isCannotBeReduced || (_stackOn != null) || (getForceLossRemaining(game) <= _cannotBeReducedBelow);
     }
 
     /**
@@ -507,7 +510,7 @@ public class LoseForceEffect extends AbstractSubActionEffect {
                                                 _amountLostSoFar++;
                                             }
                                             subAction.appendEffect(
-                                                    new LoseOneForceEffect(subAction, cards.get(0), _amountLostSoFar, false, _isFromForceDrain, _stackFaceDownOn, _asLiberationCard) {
+                                                    new LoseOneForceEffect(subAction, cards.get(0), _amountLostSoFar, false, _isFromForceDrain, _stackOn, _stackFaceDown, _asLiberationCard) {
                                                         @Override
                                                         public boolean isShownIfLostFromHand() {
                                                             return _loseForceEffect.isShownIfLostFromHand();

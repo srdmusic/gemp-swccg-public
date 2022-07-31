@@ -1,73 +1,96 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractRebel;
+import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.HereCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.cards.effects.CancelWeaponTargetingEffect;
+import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.AndCondition;
-import com.gempukku.swccgo.logic.conditions.InBattleCondition;
-import com.gempukku.swccgo.logic.conditions.UnlessCondition;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromLostPileEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
+import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.Effect;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
- * Type: Character
- * Subtype: Rebel
- * Title: Master Luke (V)
+ * Set: Set 19
+ * Type: Interrupt
+ * Subtype: Used
+ * Title: This Is Our Rebellion
  */
-public class Card501_104 extends AbstractRebel {
+public class Card501_104 extends AbstractUsedInterrupt {
     public Card501_104() {
-        super(Side.LIGHT, 1, 5, 5, 5, 8, "Master Luke", Uniqueness.UNIQUE);
-        setVirtualSuffix(true);
-        setLore("Until being reunited with Yoda, Luke suspected that he had completed his training. Has a strong influence on the weak minded.");
-        setGameText("While at a site, unless opponent's character of ability > 3 here, reset opponent's total battle destiny here to 0. Once per game, may deploy a lightsaber on Luke from Lost Pile. Opponent's aliens deploy +1 to same and related Tatooine sites. Immune to attrition < 4.");
-        addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_18);
-        addPersona(Persona.LUKE);
-        setTestingText("Master Luke (V)");
+        super(Side.LIGHT, 5, "This Is Our Rebellion", Uniqueness.UNIQUE);
+        setGameText("Peek at up to X cards from the top of your Reserve Deck, where X = number of your Lothal sites on table; take one into hand and shuffle your Reserve Deck. OR Cancel an attempt to target your starship with a weapon.");
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("This Is Our Rebellion");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        String opponent = game.getOpponent(self.getOwner());
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
 
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ResetTotalBattleDestinyModifier(self, Filters.sameSite(self), new AndCondition(new InBattleCondition(self),
-                new UnlessCondition(new HereCondition(self, Filters.and(Filters.opponents(self), Filters.character,
-                        Filters.abilityMoreThan(3))))), 0, opponent));
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.opponents(self), Filters.alien), 1, Filters.and(Filters.Tatooine_site, Filters.sameOrRelatedSite(self))));
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
-        return modifiers;
-    }
 
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.MASTER_LUKE__DEPLOY_LIGHTSABER_FROM_LOST_PILE;
+        final int yourLothalSiteCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.your(self), Filters.Lothal_site));
 
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-            && GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)) {
+        // Check condition(s)
+        if (yourLothalSiteCount > 0
+                && GameConditions.hasReserveDeck(game, playerId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy lightsaber from Lost Pile");
-            action.setActionMsg("Deploy a lightsaber on Luke from Lost Pile");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            action.appendEffect(
-                    new DeployCardToTargetFromLostPileEffect(action, Filters.lightsaber, Filters.Luke, false));
-
-            return Collections.singletonList(action);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Peek at top " + yourLothalSiteCount + " card" + GameUtils.s(yourLothalSiteCount)+ " of Reserve Deck");
+            // Allow response(s)
+            action.allowResponses("Peek at top " + yourLothalSiteCount + " card" + GameUtils.s(yourLothalSiteCount)+ " of Reserve Deck and take one into hand",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, yourLothalSiteCount, 1, 1));
+                            action.appendEffect(
+                                    new ShuffleReserveDeckEffect(action));
+                        }
+                    }
+            );
+            actions.add(action);
         }
-        return null;
+
+        return actions;
+    }
+
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
+
+        // Check condition(s)
+        if (TriggerConditions.isTargetedByWeapon(game, effect, Filters.and(Filters.your(self), Filters.starship), Filters.character_weapon)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Cancel weapon targeting");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new CancelWeaponTargetingEffect(action));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+        return actions;
     }
 }

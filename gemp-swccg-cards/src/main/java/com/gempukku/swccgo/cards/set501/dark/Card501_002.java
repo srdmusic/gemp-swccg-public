@@ -20,17 +20,17 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 20
  * Type: Effect
  * Title: Blast Door Controls & Search And Destroy
  */
 public class Card501_002 extends AbstractNormalEffect {
     public Card501_002() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Blast Door Controls & Search And Destroy", Uniqueness.UNIQUE);
-        addComboCardTitles("Blast Door Controls", Title.Search_And_Destroy);
+        addComboCardTitles(Title.Blast_Door_Controls, Title.Search_And_Destroy);
         setGameText("Deploy on table. Blast The Door, Kid!, Into The Garbage Chute, Flyboy, and Rebel Barrier are canceled. During your draw phase, if you occupy two battleground sites and opponent does not occupy a battleground site, opponent loses 1 Force.");
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Blast Door Controls & Search And Destroy");
+        addIcons(Icon.VIRTUAL_SET_20);
+        setTestingText("~Blast Door Controls & Search And Destroy");
     }
 
 

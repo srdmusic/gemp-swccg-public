@@ -49,7 +49,7 @@ public class Card217_020 extends AbstractEpicEventDeployable {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new ArrayList<>();
 
         if (TriggerConditions.justDeployed(game, effectResult, self)) {
@@ -112,6 +112,8 @@ public class Card217_020 extends AbstractEpicEventDeployable {
                             action.appendEffect(
                                     new SetWhileInPlayDataEffect(action, self, new WhileInPlayData(result))
                             );
+
+                            game.getModifiersQuerying().setExtraInformationForArchetypeLabel(self.getOwner(), result);
                         }
                     })
             );

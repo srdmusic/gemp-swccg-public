@@ -1,126 +1,66 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
+import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.InPlayDataEqualsCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.WhileInPlayData;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
-import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.PassthruEffect;
-import com.gempukku.swccgo.logic.timing.results.ChoiceMadeResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 17
- * Type: Objective
- * Title: The Force Is Strong In My Family
+ * Set: Set 19
+ * Type: Character
+ * Subtype: Rebel
+ * Title: Ezra, Hero Of Phoenix Squadron
  */
-public class Card501_075 extends AbstractEpicEventDeployable {
+public class Card501_075 extends AbstractRebel {
     public Card501_075() {
-        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.The_Force_Is_Strong_In_My_Family);
-        setGameText("Deploy on table (only at start of game) and choose: " +
-                "My Father Has It: Anakin (and [Episode I] Obi-Wan) " +
-                "I Have It: Luke (and [Set 1] Obi-Wan) " +
-                "You Have That Power, Too: Rey (and [Episode VII] Luke) " +
-                "[Set 16] Anakin is deploy -1. Your total Force generation is +1. You may not deploy Boss Nass' Chambers or Jedi (except Yoda and the chosen characters). If you just initiated battle involving a Skywalker (or if opponent's Sidious just lost from table), may retrieve 1 Force.");
-        addIcons(Icon.SKYWALKER, Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
-        setTestingText("The Force Is Strong In My Family (ERRATA)");
-    }
-
-    final String MY_FATHER_HAS_IT = "My Father Has It";
-    final String I_HAVE_IT = "I Have It";
-    final String YOU_HAVE_THAT_POWER_TOO = "You Have That Power, Too";
-
-    @Override
-    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return GameConditions.isDuringStartOfGame(game);
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
-
-        final String playerId = self.getOwner();
-        if (TriggerConditions.justDeployed(game, effectResult, self)) {
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setPerformingPlayer(self.getOwner());
-
-            action.appendEffect(
-                    new PlayoutDecisionEffect(action, playerId, new MultipleChoiceAwaitingDecision("Choose an option", new String[]{MY_FATHER_HAS_IT, I_HAVE_IT, YOU_HAVE_THAT_POWER_TOO}) {
-                        @Override
-                        protected void validDecisionMade(int index, final String result) {
-                            self.setWhileInPlayData(new WhileInPlayData(result));
-                            action.appendEffect(
-                                    new SendMessageEffect(action, playerId + " chooses "+result));
-                            action.appendEffect(new PassthruEffect(action) {
-                                @Override
-                                protected void doPlayEffect(SwccgGame game) {
-                                    game.getActionsEnvironment().emitEffectResult(new ChoiceMadeResult(playerId, self, result));
-                                }
-                            });
-                        }
-                    }));
-
-            actions.add(action);
-        }
-
-        return actions;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-
-        if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious))
-                || (TriggerConditions.battleInitiated(game, effectResult, playerId)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker))) {
-
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Retrieve 1 Force");
-            // Perform result(s)
-            action.appendEffect(
-                    new RetrieveForceEffect(action, playerId, 1));
-            return Collections.singletonList(action);
-        }
-
-        return null;
+        super(Side.LIGHT, 1, 5, 4, 5, 6, "Ezra, Hero Of Phoenix Squadron", Uniqueness.UNIQUE);
+        setLore("Padawan. Commander.");
+        setGameText("Other Phoenix Squadron characters here are forfeit and defense value +2. Once per game, may retrieve a Phoenix Squadron character into hand. [Set 13] Maul may not modify destinies. Immune to attrition < 3.");
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
+        addPersona(Persona.EZRA);
+        addKeywords(Keyword.PADAWAN, Keyword.COMMANDER, Keyword.PHOENIX_SQUADRON);
+        setTestingText("Ezra, Hero Of Phoenix Squadron");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        Filter myFatherHasItFilter = Filters.or(Filters.Anakin, Filters.and(Icon.EPISODE_I, Filters.ObiWan));
-        Filter iHaveItFilter = Filters.or(Filters.Luke, Filters.and(Icon.VIRTUAL_SET_1, Filters.ObiWan));
-        Filter youHaveThatPowerTooFilter = Filters.or(Filters.Rey, Filters.and(Icon.EPISODE_VII, Filters.Luke));
-
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new TotalForceGenerationModifier(self, 1, self.getOwner()));
-        modifiers.add(new MayNotDeployModifier(self, Filters.Boss_Nass_Chambers, self.getOwner()));
-        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, myFatherHasItFilter))), new InPlayDataEqualsCondition(self, MY_FATHER_HAS_IT), self.getOwner()));
-        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, iHaveItFilter))), new InPlayDataEqualsCondition(self, I_HAVE_IT), self.getOwner()));
-        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Yoda, youHaveThatPowerTooFilter))), new InPlayDataEqualsCondition(self, YOU_HAVE_THAT_POWER_TOO), self.getOwner()));
-        modifiers.add(new DeployCostModifier(self, Filters.and(Icon.VIRTUAL_SET_16, Filters.Anakin), -1));
+        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.other(self), Filters.here(self), Filters.Phoenix_Squadron_character), 2));
+        modifiers.add(new DefenseValueModifier(self, Filters.and(Filters.other(self), Filters.here(self), Filters.Phoenix_Squadron_character), 2));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.and(Icon.VIRTUAL_SET_13, Filters.Maul), ModifyGameTextType.MAUL__MAY_NOT_MODIFIY_DESTINIES));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
         return modifiers;
     }
 
+
     @Override
-    public String getDisplayableInformation(SwccgGame game, PhysicalCard self) {
-        if (self.getWhileInPlayData() == null)
-            return null;
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.EZRA_HERO_OF_PHOENIX_SQUADRON__RETRIEVE_PHOENIX_SQUADRON_CHARACTER_INTO_HAND;
 
-        String text = "Chosen option: " + self.getWhileInPlayData().getTextValue();
+        // Check condition(s)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)) {
 
-        return text;
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Retrieve a character into hand");
+            action.setActionMsg("Retrieve a Phoenix Squadron character into hand");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new RetrieveCardIntoHandEffect(action, playerId, Filters.Phoenix_Squadron_character));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }

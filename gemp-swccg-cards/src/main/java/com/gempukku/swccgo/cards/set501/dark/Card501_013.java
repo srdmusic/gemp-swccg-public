@@ -11,7 +11,9 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.AddToBlownAwayForceLossEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.IsPoweredModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.UnderHothEnergyShieldModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -19,7 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 20
  * Type: Location
  * Subtype: Site
  * Title: Hoth: Main Power Generators (1st Marker)
@@ -29,9 +31,9 @@ public class Card501_013 extends AbstractSite {
         super(Side.DARK, Title.Main_Power_Generators, Title.Hoth);
         setLocationDarkSideGameText("If 'blown away,' Light Side loses 4 Force (may not be reduced).");
         setLocationLightSideGameText("'Hoth Energy Shield Rules' in effect. Your artillery weapons on Hoth are powered.");
-        addIcons(Icon.VIRTUAL_SET_18, Icon.EXTERIOR_SITE, Icon.PLANET);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.HOTH, Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.MARKER_1);
-        setTestingText("[Set 19] Hoth: Main Power Generators (1st Marker)");
+        setTestingText("~Hoth: Main Power Generators (1st Marker)");
     }
 
     @Override

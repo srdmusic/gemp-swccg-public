@@ -2,24 +2,24 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 20
  * Type: Effect
  * Title: You May Start Your Landing (V)
  */
@@ -28,15 +28,10 @@ public class Card501_012 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.You_May_Start_Your_Landing, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Echo Base was no match for the Imperial war machine.");
-        setGameText("If The Shield Will Be Down In Moments on table, deploy on table. Once per turn, may deploy a Hoth site from Reserve Deck; reshuffle. During your control phase, opponent loses 1 Force for each marker site you control with a piloted AT-AT. [Immune to Alter.]");
-        addIcons(Icon.TATOOINE, Icon.HOTH, Icon.VIRTUAL_SET_18);
+        setGameText("Deploy on table. If you just deployed an AT-AT, may peek at top two cards of Reserve Deck and take one into hand. During your control phase, opponent loses 1 Force for each marker site your AT-AT controls (limit 1 unless you occupy Hoth system). [Immune to Alter.]");
+        addIcons(Icon.TATOOINE, Icon.HOTH, Icon.VIRTUAL_SET_20);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("[Set 19] You May Start Your Landing (V)");
-    }
-
-    @Override
-    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.The_Shield_Will_Be_Down_In_Moments);
+        setTestingText("~You May Start Your Landing (V)");
     }
 
     @Override
@@ -49,9 +44,13 @@ public class Card501_012 extends AbstractNormalEffect {
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
                 && GameConditions.controlsWith(game, self, playerId, Filters.marker_site, Filters.and(Filters.piloted, Filters.AT_AT))) {
-            
+
             int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.marker_site, Filters.controlsWith(playerId, self, Filters.and(Filters.piloted, Filters.AT_AT))));
             if (numForce > 0) {
+                final boolean occupiesHoth = GameConditions.occupies(game, playerId, Filters.Hoth_system);
+                if (!occupiesHoth) {
+                    numForce = 1;
+                }
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Make opponent lose " + numForce + " Force");
                 // Update usage limit(s)
@@ -64,22 +63,6 @@ public class Card501_012 extends AbstractNormalEffect {
             }
         }
 
-        gameTextActionId = GameTextActionId.YOU_MAY_START_YOUR_LANDING_V__DOWNLOAD_CARD;
-        // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy a Hoth site from Reserve Deck");
-            action.setActionMsg("Deploy a Hoth site from Reserve Deck");
-
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Hoth_site, true));
-
-            actions.add(action);
-        }
         return actions;
     }
 
@@ -100,6 +83,10 @@ public class Card501_012 extends AbstractNormalEffect {
             int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.marker_site, Filters.controlsWith(playerId, self, Filters.and(Filters.piloted, Filters.AT_AT))));
 
             if (numForce > 0) {
+                final boolean occupiesHoth = GameConditions.occupies(game, playerId, Filters.Hoth_system);
+                if (!occupiesHoth) {
+                    numForce = 1;
+                }
                 final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Make opponent lose " + numForce + " Force");
                 // Perform result(s)
@@ -108,6 +95,27 @@ public class Card501_012 extends AbstractNormalEffect {
                 actions.add(action);
             }
         }
+        return actions;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Just deployed AT-AT trigger
+        if(TriggerConditions.justDeployed(game, effectResult, playerId, Filters.AT_AT)
+                && GameConditions.hasReserveDeck(game, playerId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Peek at top two cards of Reserve Deck and take one into hand");
+            action.appendEffect(
+                    new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, 2, 1, 1));
+
+            actions.add(action);
+        }
+
         return actions;
     }
 }

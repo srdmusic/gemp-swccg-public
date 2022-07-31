@@ -96,6 +96,9 @@ public class LocationsLayout implements Snapshotable<LocationsLayout> {
             else if (system.getTitle().equals(Title.Jakku)) {
                 systemLayout = new JakkuLayout(system.getTitle(), system.getParsec());
             }
+            else if (system.getTitle().equals(Title.Lothal)) {
+                systemLayout = new LothalLayout(system.getTitle(), system.getParsec());
+            }
             else if (system.getTitle().equals(Title.Naboo)) {
                 systemLayout = new NabooLayout(system.getTitle(), system.getParsec());
             }

@@ -1,146 +1,148 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.effects.complete.ChooseExistingCardPileEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromLostPileEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeCanceledModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeStolenModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.StealCardIntoHandFromLostPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
- * Type: Effect
- * Title: A Good Blaster At Your Side & Restricted Deployment
+ * Set: Set 20
+ * Type: Interrupt
+ * Subtype: Used or Lost
+ * Title: My Sister Has It
  */
-public class Card501_061 extends AbstractNormalEffect {
+public class Card501_061 extends AbstractUsedOrLostInterrupt {
     public Card501_061() {
-        super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Good Blaster At Your Side & Restricted Deployment", Uniqueness.UNIQUE);
-        addComboCardTitles("A Good Blaster At Your Side", Title.Restricted_Deployment);
-        setGameText("Deploy on table. Non-lightsaber weapons carried by your non-Jedi characters may not be stolen. During your control phase, if you control a battleground site with a non-unique, non-[Permanent Weapon] blaster present, opponent loses 1 Force. Rebel Artillery is a Lost Interrupt. During your deploy phase, may [download] a blaster (or use 2 Force to deploy a non-unique blaster from Lost Pile) on your character at a Death Star site. May not be canceled. [Immune to Alter.]");
-        addIcons(Icon.VIRTUAL_SET_18);
-        addImmuneToCardTitle(Title.Alter);
-        setTestingText("A Good Blaster At Your Side & Restricted Deployment");
+        super(Side.LIGHT, 4, "My Sister Has It", Uniqueness.UNIQUE);
+        setGameText("USED: If a [Skywalker] Epic Event on table, take a lightsaber or [Endor] Leia into hand from Reserve Deck; reshuffle. OR If [Endor] Leia on table, add or subtract 1 from a just drawn weapon or battle destiny. LOST: Search a Lost Pile; take your lightsaber or a 'stolen' lightsaber into hand.");
+        addIcons(Icon.VIRTUAL_SET_20);
+        setTestingText("~My Sister Has It");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        Filter weapons = Filters.and(Filters.weapon, Filters.not(Filters.lightsaber), Filters.attachedTo(Filters.and(Filters.your(self), Filters.character, Filters.not(Filters.Jedi))));
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
 
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotBeStolenModifier(self, weapons));
-        modifiers.add(new LostInterruptModifier(self, Filters.Rebel_Artillery));
-        modifiers.add(new MayNotBeCanceledModifier(self, self));
-        return modifiers;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<>();
-        final String opponent = game.getOpponent(playerId);
-
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionId = GameTextActionId.MY_SISTER_HAS_IT__UPLOAD_LIGHTSABER_OR_LEIA;
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
-            int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.battleground_site, Filters.controls(playerId),
-                    Filters.wherePresent(self, Filters.and(Filters.your(self), Filters.non_unique, Filters.blaster, Filters.not(Icon.PERMANENT_WEAPON)))));
-            if (numForce > 0) {
+        if (GameConditions.canTarget(game, self, Filters.and(Icon.SKYWALKER, Filters.Epic_Event))
+                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Make opponent lose 1 Force");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerPhaseEffect(action));
-                // Perform result(s)
-                action.appendEffect(
-                        new LoseForceEffect(action, opponent, 1));
-                actions.add(action);
-            }
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
+            action.setText("Take a lightsaber or Leia into hand");
+
+            // Allow response(s)
+            action.allowResponses("Take a lightsaber or [Endor] Leia into hand from Reserve Deck",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.lightsaber, Filters.and(Icon.ENDOR, Filters.Leia)), true));
+                        }
+                    }
+            );
+            actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.A_GOOD_BLASTER_AT_YOUR_SIDE_COMBO__DEPLOY_BLASTER;
-        if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
-            && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.character, Filters.at(Filters.Death_Star_site)))) {
 
-            if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        gameTextActionId = GameTextActionId.MY_SISTER_HAS_IT__SEARCH_LOST_PILE;
 
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Deploy blaster from Reserve Deck");
-                action.setActionMsg("Deploy a non-unique blaster from Reserve Deck on your character at a Death Star site");
+        // Check condition(s)
+        if (GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)
+            || GameConditions.canSearchOpponentsLostPile(game, playerId, self, gameTextActionId)) {
 
-                action.appendUsage(
-                        new OncePerTurnEffect(action));
-                action.appendEffect(
-                        new DeployCardToTargetFromReserveDeckEffect(action, Filters.and(Filters.non_unique, Filters.blaster), Filters.and(Filters.your(self), Filters.character, Filters.at(Filters.Death_Star_site)), true));
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+            action.setText("Search a lost pile");
 
-                actions.add(action);
-            }
+            // Allow response(s)
+            action.appendTargeting(new ChooseExistingCardPileEffect(action, playerId, Zone.LOST_PILE) {
+                @Override
+                protected void pileChosen(final SwccgGame game, final String cardPileOwner, final Zone cardPile) {
+                    action.allowResponses("Search a lost pile and take your lightsaber or a stolen lightsaber into hand",
+                            new RespondablePlayCardEffect(action) {
+                                @Override
+                                protected void performActionResults(Action targetingAction) {
+                                    Filter lightsaberFilter = Filters.and(Filters.lightsaber, Filters.or(Filters.your(self), Filters.stolen));
+                                    // Perform result(s)
+                                    if (cardPileOwner.equals(playerId)) {
+                                        action.appendEffect(
+                                                new TakeCardIntoHandFromLostPileEffect(action, playerId, lightsaberFilter, false));
+                                    } else if (cardPileOwner.equals(game.getOpponent(playerId))) {
+                                        action.appendEffect(
+                                                new StealCardIntoHandFromLostPileEffect(action, playerId, lightsaberFilter));
+                                    }
+                                }
+                            }
+                    );
+                }
+            });
 
-            if (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)
-                    && GameConditions.canUseForce(game, playerId, 2)) {
-
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Deploy blaster from Lost Pile");
-                action.setActionMsg("Deploy a non-unique blaster from Lost Pile on your character at a Death Star site");
-
-                action.appendUsage(
-                        new OncePerTurnEffect(action));
-                action.appendCost(
-                        new UseForceEffect(action, playerId, 2));
-                action.appendEffect(
-                        new DeployCardToTargetFromLostPileEffect(action, Filters.and(Filters.non_unique, Filters.blaster), Filters.and(Filters.your(self), Filters.character, Filters.at(Filters.Death_Star_site)), false, false));
-
-                actions.add(action);
-            }
-
+            actions.add(action);
         }
+
         return actions;
     }
 
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        final String playerId = self.getOwner();
-        final String opponent = game.getOpponent(playerId);
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
+        String opponent = game.getOpponent(playerId);
 
         // Check condition(s)
-        if (TriggerConditions.isEndOfYourPhase(game, self, effectResult, Phase.CONTROL)
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
-            int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.battleground_site, Filters.controls(playerId),
-                    Filters.wherePresent(self, Filters.and(Filters.your(self), Filters.non_unique, Filters.blaster, Filters.not(Icon.PERMANENT_WEAPON)))));
-            if (numForce > 0) {
+        if (GameConditions.canTarget(game, self, Filters.and(Icon.ENDOR, Filters.Leia))
+                && (TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult)
+                || TriggerConditions.isBattleDestinyJustDrawn(game, effectResult))) {
 
-                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Make opponent lose 1 Force");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerPhaseEffect(action));
-                // Perform result(s)
-                action.appendEffect(
-                        new LoseForceEffect(action, opponent, 1));
-                return Collections.singletonList(action);
-            }
+            final PlayInterruptAction action1 = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action1.setText("Add 1 to destiny");
+            // Allow response(s)
+            action1.allowResponses(
+                    new RespondablePlayCardEffect(action1) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action1.appendEffect(
+                                    new ModifyDestinyEffect(action1, 1));
+                        }
+                    }
+            );
+            actions.add(action1);
+
+            final PlayInterruptAction action2 = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action2.setText("Subtract 1 from destiny");
+            // Allow response(s)
+            action2.allowResponses(
+                    new RespondablePlayCardEffect(action2) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action2.appendEffect(
+                                    new ModifyDestinyEffect(action2, -1));
+                        }
+                    }
+            );
+            actions.add(action2);
+
         }
-        return null;
+        return actions;
     }
 }

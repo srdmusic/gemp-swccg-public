@@ -68,6 +68,19 @@ public class Card217_050 extends AbstractEpicEventDeployable {
                                 @Override
                                 protected void doPlayEffect(SwccgGame game) {
                                     game.getActionsEnvironment().emitEffectResult(new ChoiceMadeResult(playerId, self, result));
+                                    String hero = null;
+                                    switch(result) {
+                                        case MY_FATHER_HAS_IT:
+                                            hero = "Anakin";
+                                            break;
+                                        case I_HAVE_IT:
+                                            hero = "Luke";
+                                            break;
+                                        case YOU_HAVE_THAT_POWER_TOO:
+                                            hero = "Rey";
+                                            break;
+                                    }
+                                    game.getModifiersQuerying().setExtraInformationForArchetypeLabel(playerId, hero);
                                 }
                             });
                         }

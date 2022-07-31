@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 18
+ * Set: Set 20
  * Type: Character
  * Subtype: Rebel
  * Title: Son Of Skywalker (V)
@@ -34,10 +34,10 @@ public class Card501_100 extends AbstractRebel {
         setGameText("Adds 2 to power of anything he pilots. Deploys -3 to Dagobah. " +
                 "Your Destiny is suspended. Luke's training destiny draws are +1. " +
                 "If Luke alone, characters Luke 'hits' are lost. Immune to attrition < 4.");
-        addIcons(Icon.DAGOBAH, Icon.CLOUD_CITY, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.DAGOBAH, Icon.CLOUD_CITY, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
         addPersona(Persona.LUKE);
         setVirtualSuffix(true);
-        setTestingText("[Set 19] Son Of Skywalker (V)");
+        setTestingText("~Son Of Skywalker (V)");
     }
 
     @Override

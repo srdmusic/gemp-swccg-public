@@ -1,9 +1,7 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
@@ -12,23 +10,21 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.ExchangeCardFromLostPileWithStackedCardEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.HyperspeedModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 18
+ * Set: Set 19
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Thrawn Pincer
@@ -36,35 +32,52 @@ import java.util.List;
 public class Card501_038 extends AbstractUsedOrLostInterrupt {
     public Card501_038() {
         super(Side.DARK, 4, "Thrawn Pincer", Uniqueness.UNIQUE);
-        setGameText("USED: Exchange a card stacked on Thrawn's Art Collection with a card in opponent’s Lost Pile. LOST: Once per game, during battle at a system, if you just revealed a starship as ‘artwork’, relocate a Star Destroyer on table to that system.");
-        addIcons(Icon.VIRTUAL_SET_18);
-        setTestingText("[Set 19] Thrawn Pincer");
+        setGameText("USED: Add 1 to the hyperspeed of a dredanuaght or star destroyer for each ‘artwork’ on table for remainder of turn. " +
+                "LOST: Once per game, if a starship was just revealed as ‘artwork’ during battle at a system, relocate a Star Destroyer from anywhere on table to that battle");
+        addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Thrawn Pincer");
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
-        final String opponent = game.getOpponent(playerId);
 
-        GameTextActionId gameTextActionId = GameTextActionId.THRAWN_PINCER__EXCHANGE_CARD;
+        Filter dreadnaughtOrStarDestroyer = Filters.or(Filters.Dreadnaught_class_cruisers, Filters.Star_Destroyer);
 
         // Check condition(s)
         if (GameConditions.canSpot(game, self, Filters.and(Filters.Thrawns_Art_Collection, Filters.hasStacked(Filters.any)))
-                && GameConditions.hasLostPile(game, opponent)
-                && GameConditions.canSearchOpponentsLostPile(game, playerId, self, gameTextActionId)) {
+                && GameConditions.canTarget(game, self, dreadnaughtOrStarDestroyer)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
-            action.setText("Exchange card");
-            // Choose target(s)
-            action.allowResponses(new RespondablePlayCardEffect(action) {
-                @Override
-                protected void performActionResults(Action targetingAction) {
-                    action.appendEffect(
-                            new ExchangeCardFromLostPileWithStackedCardEffect(action, opponent, Filters.any, Filters.Thrawns_Art_Collection, Filters.any, true));
-                }
-            });
+            final int numArtworkOnTable = Filters.filterStacked(game, Filters.stackedOn(Filters.findFirstActive(game, self, Filters.Thrawns_Art_Collection))).size();
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Add " + numArtworkOnTable + " to hyperspeed");
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose starship to add hyperspeed to", dreadnaughtOrStarDestroyer) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Target " + GameUtils.getCardLink(targetedCard),
+                                    new RespondablePlayCardEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Get the targeted card(s) from the action using the targetGroupId.
+                                            // This needs to be done in case the target(s) were changed during the responses.
+                                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+
+                                            action.appendEffect(
+                                                    new AddUntilEndOfTurnModifierEffect(action,
+                                                            new HyperspeedModifier(self, finalTarget, numArtworkOnTable),
+                                                            "Makes " + GameUtils.getCardLink(finalTarget) + " hyperspeed +" + numArtworkOnTable));
+
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
             actions.add(action);
-
         }
 
         return actions;

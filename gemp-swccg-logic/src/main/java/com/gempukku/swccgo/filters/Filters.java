@@ -1315,6 +1315,22 @@ public class Filters {
         return outOfPlay;
     }
 
+
+    /**
+     * Filter that accepts aliens that are with another alien that shares the same species.
+     */
+    public static final Filter alienWithAnotherAlienOfSameSpecies = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            if (physicalCard.getBlueprint().hasSpeciesAttribute() && physicalCard.getBlueprint().getSpecies() != null) {
+                Species species = physicalCard.getBlueprint().getSpecies();
+                return Filters.canSpot(gameState.getGame(), physicalCard, Filters.with(physicalCard, Filters.species(species)));
+            }
+
+            return false;
+        }
+    };
+
     /**
      * Filter that accepts cards that are in the specified player's hand and there are duplicates in that player's hand.
      *
@@ -8669,6 +8685,24 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that are systems above the specified parsec number.
+     *
+     * @param parsec the parsec number
+     * @return Filter
+     */
+    public static Filter systemAboveParsec(final int parsec) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                if (physicalCard.getBlueprint().getCardSubtype() != CardSubtype.SYSTEM)
+                    return false;
+
+                return physicalCard.getParsec() > parsec;
+            }
+        };
+    }
+
+    /**
      * Filter that accepts cards that are the systems orbited by the specified mobile system.
      *
      * @param card the mobile system
@@ -10130,6 +10164,20 @@ public class Filters {
                             && permanentWeapon != null && Filters.sameCardId(permanentWeapon.getPhysicalCard(gameState.getGame())).accepts(gameState, modifiersQuerying, builtInCardBlueprint.getPhysicalCard(gameState.getGame()));
                 }
                 return false;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts cards that fired a weapon this battle.
+     *
+     * @return Filter
+     */
+    public static Filter didNotFireAPermanentWeaponThisBattle() {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                return modifiersQuerying.getPermanentWeaponsFiredInBattleByWeaponUser(physicalCard, false).isEmpty();
             }
         };
     }
@@ -17284,6 +17332,7 @@ public class Filters {
     public static final Filter Astromech_Shortage = Filters.title(Title.Astromech_Shortage);
     public static final Filter AT_AT = Filters.modelType(ModelType.AT_AT);
     public static final Filter AT_AT_Cannon = Filters.keyword(Keyword.AT_AT_CANNON);
+    public static final Filter AT_DP = Filters.modelType(ModelType.AT_DP);
     public static final Filter At_Last_The_Jedi_Are_No_More = Filters.title(Title.At_Last_The_Jedi_Are_No_More);
     public static final Filter At_Last_We_Will_Have_Revenge = Filters.title(Title.At_Last_We_Will_Have_Revenge);
     public static final Filter At_Peace = Filters.title(Title.At_Peace);
@@ -17736,6 +17785,7 @@ public class Filters {
     public static final Filter Fearless_And_Inventive = Filters.title(Title.Fearless_And_Inventive);
     public static final Filter Fel = Filters.title(Title.Fel);
     public static final Filter Feltipern_Trevagg = Filters.title(Title.Feltipern_Trevagg);
+    public static final Filter Fennec_Shand = Filters.persona(Persona.FENNEC_SHAND);
     public static final Filter Fett = Filters.or(Filters.persona(Persona.BOBA_FETT), Filters.persona(Persona.JANGO_FETT));
     public static final Filter female = Filters.and(CardCategory.CHARACTER, Keyword.FEMALE);
     public static final Filter Free_Ride = Filters.title(Title.Free_Ride);
@@ -18104,6 +18154,9 @@ public class Filters {
     public static final Filter Lor_San_Tekka = Filters.title(Title.Lor_San_Tekka);
     public static final Filter Losing_Track = Filters.title(Title.Losing_Track);
     public static final Filter Lost_In_The_Wilderness = Filters.title(Title.Lost_In_The_Wilderness);
+    public static final Filter Lothal_Capital_City = Filters.title(Title.Lothal_Capital_City);
+    public static final Filter Lothal_Imperial_Complex = Filters.title(Title.Lothal_Imperial_Complex);
+    public static final Filter Lothal_Jedi_Temple = Filters.title(Title.Lothal_Jedi_Temple);
     public static final Filter Lothal_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Lothal));
     public static final Filter Lothal_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Lothal));
     public static final Filter Lothal_system = Filters.and(CardSubtype.SYSTEM, Filters.partOfSystem(Title.Lothal));
@@ -18301,6 +18354,7 @@ public class Filters {
     public static final Filter Phantom = Filters.title(Title.Phantom);
     public static final Filter Phasma = Filters.title(Title.Phasma);
     public static final Filter Phennir = Filters.title(Title.Phennir);
+    public static final Filter Phoenix_Squadron_character = Filters.and(CardCategory.CHARACTER, Filters.or(Keyword.PHOENIX_SQUADRON, Filters.piloting(Filters.keyword(Keyword.PHOENIX_SQUADRON))));
     public static final Filter Piett = Filters.persona(Persona.PIETT);
     public static final Filter pilot = Filters.and(CardCategory.CHARACTER, Icon.PILOT);
     public static final Filter pilot_character = Filters.and(CardCategory.CHARACTER, Icon.PILOT);
@@ -18459,6 +18513,7 @@ public class Filters {
     public static final Filter Royal_Guard = Filters.keyword(Keyword.ROYAL_GUARD);
     public static final Filter Royal_Naboo_Security = Filters.keyword(Keyword.ROYAL_NABOO_SECURITY);
     public static final Filter Royal_Naboo_Security_Officer = Filters.title(Title.Royal_Naboo_Security_Officer);
+    public static final Filter Rukh = Filters.persona(Persona.RUKH);
     public static final Filter Run_Luke_Run = Filters.title(Title.Run_Luke_Run);
     public static final Filter Rya = Filters.title(Title.Rya);
     public static final Filter Rycar_Ryjerd = Filters.title(Title.Rycar_Ryjerd);
