@@ -19,6 +19,7 @@ public class DefaultSwccgFormat implements SwccgFormat {
     private boolean _jpSealedRule;
     private boolean _playtesting;
     private int _requiredDeckSize = 60;
+    private int _defaultGameTimerMinutes = 60;
     private List<String> _bannedIcons = new ArrayList<String>();
     private List<String> _bannedCards = new ArrayList<String>();
     private List<String> _restrictedCards = new ArrayList<String>();
@@ -27,7 +28,7 @@ public class DefaultSwccgFormat implements SwccgFormat {
     private List<String> _bannedRarity = new ArrayList<String>();
     private Map<Integer, SetRarity> _rarity = new HashMap<Integer, SetRarity>();
     private List<SwccgCardBlueprint> _allCardBlueprints;
-    private String _bannedListLink;
+    private String _tenetsLink;
 
     public DefaultSwccgFormat(SwccgCardBlueprintLibrary library, String name, boolean downloadBattlegroundRule, boolean jpSealedRule, boolean playtesting) {
         _library = library;
@@ -110,6 +111,17 @@ public class DefaultSwccgFormat implements SwccgFormat {
         _requiredDeckSize = requiredDeckSize;
     }
 
+    @Override
+    public int getDefaultGameTimerMinutes() {
+        return _defaultGameTimerMinutes;
+    }
+
+    protected void setDefaultGameTimerMinutes(int defaultGameTimerMinutes) {
+        _defaultGameTimerMinutes = defaultGameTimerMinutes;
+    }
+
+
+
     protected void addBannedCard(String baseBlueprintId) {
         if (baseBlueprintId.contains("-")) {
             String[] parts = baseBlueprintId.split("_");
@@ -122,12 +134,12 @@ public class DefaultSwccgFormat implements SwccgFormat {
             _bannedCards.add(baseBlueprintId);
     }
 
-    public void addBannedListLink(String bannedListLink) {
-        _bannedListLink = bannedListLink;
+    public void addTenetsLink(String tenetsLink) {
+        _tenetsLink = tenetsLink;
     }
 
-    public String getBannedListLink() {
-        return _bannedListLink;
+    public String getTenetsLink() {
+        return _tenetsLink;
     }
 
     protected void addRestrictedCard(String baseBlueprintId) {

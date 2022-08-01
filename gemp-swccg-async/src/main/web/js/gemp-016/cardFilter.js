@@ -152,13 +152,14 @@ var CardFilter = Class.extend({
         this.formatSelect = $("<select id='formatSelect' class='filterInput'>"
             + "<option value='all' selected='selected'>All</option>"
             + "<option value='open'>Open</option>"
-            + "<option value='jawa'>Jawa</option>"
-            + "<option value='jawa_galaxy'>Galaxy of Jawas</option>"
             + "<option value='open_no_shields'>Open (no shields)</option>"
             + "<option value='open_no_virtual'>Decipher Cards Only</option>"
             + "<option value='open_no_shields_no_virtual'>Open (no shields / no v-cards)</option>"
             + "<option value='classic'>Classic</option>"
             + "<option value='classic_no_virtual'>Classic (no virtual cards)</option>"
+            + "<option value='jawa'>Jawa</option>"
+            + "<option value='legacy'>Legacy</option>"
+            //+ "<option value='limited_resources'>Limited Resources</option>"
             + "<option value='premiere_ref2'>Premiere - Reflections II</option>"
             + "<option value='premiere_jpsd'>Premiere - JPSD</option>"
             + "<option value='premiere_ds2'>Premiere - Death Star II</option>"
@@ -171,8 +172,7 @@ var CardFilter = Class.extend({
             + "<option value='premiere_anh'>Premiere - A New Hope</option>"
             + "<option value='premiere'>Premiere</option>"
             + "<option value='scavenger_premiere_ds2'>Scavenger</option>"
-            + "<option value='limited_resources'>Limited Resources</option>"
-            + "<option value='legacy'>Legacy</option>"
+            + "<option value='utinni'>Utinni! (Jawas Only)</option>"
             + "</select>");
 
         this.setLabel = $("<label for='setSelect' class='filterLabel'>Set:</label>");
@@ -225,7 +225,7 @@ var CardFilter = Class.extend({
             + "<option value='218'>Set 18</option>"
             + "<option value='301'>Virtual Premium Set</option>"
             + "<option value='601'>Legacy</option>"
-            + "<option value='401'>Dream Cards</option>"
+            //+ "<option value='401'>Dream Cards</option>"
             + "<option value='501'>Playtesting</option>"
             + "</select>");
 

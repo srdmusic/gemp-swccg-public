@@ -207,7 +207,7 @@ li.format-details-set-icon {
 
 span.format-set-icons { display:none; }
 
-span.format-deck-size {
+span.format-deck-size, span.format-default-game-timer-minutes {
     color:#ffffff;
 }
 

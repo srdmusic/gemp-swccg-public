@@ -111,7 +111,11 @@ public class SwccgoServer extends AbstractServer {
                 _chatServer.createChatRoom(getChatRoomName(gameId), false, 30, allowedUsers, allowSpectatorsToChat, swccgFormat.isPlaytesting());
             }
 
-            int maxPlayerTime = timePerPlayerMinutes * 60;
+            /*
+             * This is the game timer.
+             * A standard game is 60 minutes, or: timePerPlayerMinutes * 60;
+             */
+            int maxPlayerTime = timePerPlayerMinutes * swccgFormat.getDefaultGameTimerMinutes(); // DPH
             SwccgGameMediator swccgGameMediator = new SwccgGameMediator(gameId, swccgFormat, league, participants, _swccgCardBlueprintLibrary,
                         maxPlayerTime, allowSpectators, cancelIfNoActions, allowCancelling, allowExtendGameTimer, decisionTimeoutSeconds, isPrivate);
 
