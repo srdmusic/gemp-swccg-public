@@ -115,7 +115,7 @@ public class SwccgoServer extends AbstractServer {
              * This is the game timer.
              * A standard game is 60 minutes, or: timePerPlayerMinutes * 60;
              */
-            int maxPlayerTime = timePerPlayerMinutes * swccgFormat.getDefaultGameTimerMinutes(); // DPH
+            int maxPlayerTime = timePerPlayerMinutes * swccgFormat.getDefaultGameTimerMinutes();
             SwccgGameMediator swccgGameMediator = new SwccgGameMediator(gameId, swccgFormat, league, participants, _swccgCardBlueprintLibrary,
                         maxPlayerTime, allowSpectators, cancelIfNoActions, allowCancelling, allowExtendGameTimer, decisionTimeoutSeconds, isPrivate);
 
