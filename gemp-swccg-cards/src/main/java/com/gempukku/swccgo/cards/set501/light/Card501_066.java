@@ -2,11 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractAlienRebel;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.DuringBattleAtCondition;
 import com.gempukku.swccgo.cards.conditions.InBattleWithCondition;
-import com.gempukku.swccgo.cards.conditions.PilotingCondition;
-import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
-import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -17,7 +13,9 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.decisions.YesNoDecision;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -35,7 +33,9 @@ public class Card501_066 extends AbstractAlienRebel {
         super(Side.LIGHT, 2, 4, 4, 3, 5, "Fenn Rau", Uniqueness.UNIQUE);
         setArmor(5);
         setLore("Mandalorian scout.");
-        setGameText("Adds 3 to power of anything he pilots. While with another Mandalorian in battle, opponent's total power is -3 here. During any draw phase, may take Fenn Rau into hand to activate 2 Force; may also retrieve 1 Force if Fenn Rau won a battle this turn.");
+        setGameText("[Pilot] 3. During battle, if another Mandalorian here, opponent’s total power is -3. " +
+                "At the end of a battle here, may return Fenn Rau to hand to activate 2 Force " +
+                "(if Fenn Rau won a battle this turn, may also retrieve 1 Force).");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
         addKeywords(Keyword.SCOUT);
         setSpecies(Species.MANDALORIAN);
@@ -53,7 +53,8 @@ public class Card501_066 extends AbstractAlienRebel {
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (GameConditions.isDuringEitherPlayersPhase(game, Phase.DRAW)
+        if (GameConditions.isDuringBattleWithParticipant(game, self)
+                && GameConditions.isDamageSegmentOfBattle(game)
                 && GameConditions.canActivateForce(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
@@ -74,7 +75,7 @@ public class Card501_066 extends AbstractAlienRebel {
                     @Override
                     protected void no() {
                         action.appendEffect(
-                                new SendMessageEffect(action, playerId+" chooses not to retrieve 1 Force"));
+                                new SendMessageEffect(action, playerId + " chooses not to retrieve 1 Force"));
                     }
                 }));
             }

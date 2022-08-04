@@ -6,10 +6,19 @@ import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.CancelCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromLostPileEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
+import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.UniqueModifier;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -26,10 +35,49 @@ public class Card501_008 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.No_Escape, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Jabba's influence is not easily ignored. Neither are his voracious and vile appetites. Even Jedi soon learn this lesson.");
-        setGameText("Deploy on table. When deployed, may take the top card of Lost Pile into hand. Opponent's starships may not 'attach.' Elis Helrot and Nabrun Leids are unique (•) and are Lost Interrupts. [Immune to Alter.]");
+        setGameText("Deploy on table. When deployed, may take the top card of Lost Pile into hand. " +
+                    "During your move phase, may place Landing Claw out of play. " +
+                    "Elis Helrot and Nabrun Leids are unique (•) and are Lost Interrupts. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_19);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("No Escape (V)");
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, Phase.MOVE)
+                && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_CONCEALED, Filters.Landing_Claw)
+                && GameConditions.canTargetToCancel(game, self, SpotOverride.INCLUDE_CONCEALED, Filters.Landing_Claw)) {
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+            action.setText("Cancel Landing Claw");
+            action.setActionMsg("Cancel Landing Claw");
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose landing claw to cancel",  SpotOverride.INCLUDE_CONCEALED, Filters.Landing_Claw) {
+                        @Override
+                        protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Cancel " + GameUtils.getCardLink(targetedCard),
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new CancelCardOnTableEffect(action, targetedCard)
+                                            );
+                                            action.appendEffect(
+                                                    new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, game.getOpponent(playerId), targetedCard, false)
+                                            );
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
     @Override
@@ -51,7 +99,6 @@ public class Card501_008 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotAttachModifier(self, Filters.and(Filters.opponents(self), Filters.starship)));
         modifiers.add(new UniqueModifier(self, Filters.or(Filters.Elis_Helrot, Filters.Nabrun_Leids)));
         modifiers.add(new LostInterruptModifier(self, Filters.or(Filters.Elis_Helrot, Filters.Nabrun_Leids)));
         return modifiers;

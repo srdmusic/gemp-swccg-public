@@ -32,7 +32,9 @@ public class Card501_079 extends AbstractDevice {
         super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, "Observation Holocam");
         setVirtualSuffix(true);
         setLore("Remote surveillance viewers with droid controllers supplement security. Can activate alarms and automated weapons when needed, bringing help to endangered locations.");
-        setGameText("Deploy on your interior site. If opponent just deployed a character or vehicle here, may lose 1 Force to move your character to here using landspeed (at normal use of the Force). Opponent may not 'react' to here. May place out of play to draw top card of Reserve Deck..");
+        setGameText("Deploy on your interior site. If opponent just deployed a character or vehicle here, " +
+                "may lose 1 Force to move your character to here using landspeed (at normal use of the Force). " +
+                "Opponent may not 'react' to here. May place out of play to draw top card of Reserve Dec");
         addKeywords(Keyword.DEPLOYS_ON_SITE);
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("Observation Holocam (V)");

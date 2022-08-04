@@ -23,12 +23,14 @@ import java.util.List;
  */
 public class Card501_075 extends AbstractRebel {
     public Card501_075() {
-        super(Side.LIGHT, 1, 5, 4, 5, 6, "Ezra, Hero Of Phoenix Squadron", Uniqueness.UNIQUE);
-        setLore("Padawan. Commander.");
-        setGameText("Other Phoenix Squadron characters here are forfeit and defense value +2. Once per game, may retrieve a Phoenix Squadron character into hand. [Set 13] Maul may not modify destinies. Immune to attrition < 3.");
+        super(Side.LIGHT, 2, 5, 4, 5, 6, "Ezra, Hero Of Phoenix Squadron", Uniqueness.UNIQUE);
+        setLore("Commander. Leader. Padawan");
+        setGameText("Other Phoenix Squadron characters here are forfeit and defense value +2. " +
+                "Once per game, may retrieve a Phoenix Squadron character into hand. " +
+                "[Set 13] Maul may not modify destiny draws. Immune to attrition < 4.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
         addPersona(Persona.EZRA);
-        addKeywords(Keyword.PADAWAN, Keyword.COMMANDER, Keyword.PHOENIX_SQUADRON);
+        addKeywords(Keyword.COMMANDER, Keyword.LEADER, Keyword.PADAWAN, Keyword.PHOENIX_SQUADRON);
         setTestingText("Ezra, Hero Of Phoenix Squadron");
     }
 
@@ -38,10 +40,9 @@ public class Card501_075 extends AbstractRebel {
         modifiers.add(new ForfeitModifier(self, Filters.and(Filters.other(self), Filters.here(self), Filters.Phoenix_Squadron_character), 2));
         modifiers.add(new DefenseValueModifier(self, Filters.and(Filters.other(self), Filters.here(self), Filters.Phoenix_Squadron_character), 2));
         modifiers.add(new ModifyGameTextModifier(self, Filters.and(Icon.VIRTUAL_SET_13, Filters.Maul), ModifyGameTextType.MAUL__MAY_NOT_MODIFIY_DESTINIES));
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
         return modifiers;
     }
-
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
