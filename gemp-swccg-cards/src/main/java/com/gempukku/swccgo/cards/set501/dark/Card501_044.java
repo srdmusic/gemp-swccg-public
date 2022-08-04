@@ -87,7 +87,7 @@ public class Card501_044 extends AbstractAlien {
                                                                 public List<TriggerAction> getRequiredAfterTriggers(final SwccgGame game, final EffectResult effectResult) {
                                                                     List<TriggerAction> actions = new LinkedList<>();
                                                                     if (TriggerConditions.justLost(game, effectResult, targetedCard)
-                                                                            && GameConditions.canSpot(game, self, Filters.Feltipern_Trevagg)
+                                                                            && GameConditions.canSpot(game, self, Filters.Fennec_Shand)
                                                                             && GameConditions.isOncePerTurn(game, self, self.getCardId())) {
                                                                         final RequiredGameTextTriggerAction action2 = new RequiredGameTextTriggerAction(self, self.getCardId());
                                                                         action2.setSingletonTrigger(true);

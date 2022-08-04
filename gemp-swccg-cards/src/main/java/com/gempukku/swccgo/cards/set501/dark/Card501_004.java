@@ -41,7 +41,7 @@ public class Card501_004 extends AbstractRebel {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new AddsDestinyToPowerModifier(self, new WithCondition(self, Filters.and(Filters.opponents(self.getOwner()), Filters.droid)), 1));
-        modifiers.add(new EachBattleDestinyModifier(self, Filters.here(self), new MultiplyEvaluator(0.25f, new HereEvaluator(self, Filters.or(Filters.device, Filters.droid, Filters.starship, Filters.vehicle, Filters.weapon_or_character_with_permanent_weapon))), self.getOwner()));
+        modifiers.add(new EachBattleDestinyModifier(self, Filters.here(self), new MultiplyEvaluator(0.25f, new HereEvaluator(self, Filters.or(Filters.device, Filters.droid, Filters.starship, Filters.vehicle, Filters.weapon))), self.getOwner()));
         return modifiers;
     }
 
