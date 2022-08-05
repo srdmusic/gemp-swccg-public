@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.CancelTractorBeamTargetingEffect;
 import com.gempukku.swccgo.cards.effects.CancelWeaponTargetingEffect;
 import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
 import com.gempukku.swccgo.common.CardSubtype;
@@ -31,7 +32,9 @@ import java.util.List;
 public class Card501_104 extends AbstractUsedInterrupt {
     public Card501_104() {
         super(Side.LIGHT, 5, "This Is Our Rebellion", Uniqueness.UNIQUE);
-        setGameText("Peek at up to X cards from the top of your Reserve Deck, where X = number of your Lothal sites on table; take one into hand and shuffle your Reserve Deck. OR Cancel an attempt to target your starship with a weapon.");
+        setGameText(" Peek at up to X cards from the top of your Reserve Deck, where X = number of your Lothal sites on table; " +
+                    "take one into hand and shuffle your Reserve Deck. " +
+                    "OR Cancel an attempt to target your starship with a weapon or tractor beam.");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("This Is Our Rebellion");
     }
@@ -70,7 +73,7 @@ public class Card501_104 extends AbstractUsedInterrupt {
 
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self) {
+    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, final SwccgGame game, final Effect effect, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         // Check condition(s)
@@ -78,6 +81,7 @@ public class Card501_104 extends AbstractUsedInterrupt {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
             action.setText("Cancel weapon targeting");
+            action.setActionMsg("Cancel weapon targeting");
             // Allow response(s)
             action.allowResponses(
                     new RespondablePlayCardEffect(action) {
@@ -86,6 +90,26 @@ public class Card501_104 extends AbstractUsedInterrupt {
                             // Perform result(s)
                             action.appendEffect(
                                     new CancelWeaponTargetingEffect(action));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
+        // Check condition(s)
+        if (TriggerConditions.isTargetedByTractorBeam(game, effect, Filters.and(Filters.your(self), Filters.starship))) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Cancel tractor beam targeting");
+            action.setActionMsg("Cancel tractor beam targeting");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new CancelTractorBeamTargetingEffect(action));
                         }
                     }
             );

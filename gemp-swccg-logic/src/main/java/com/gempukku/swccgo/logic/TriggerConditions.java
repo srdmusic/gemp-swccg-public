@@ -1138,6 +1138,27 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a card accepted by the target filter is being targeted by a tractor beam.
+     * @param game the game
+     * @param effect the effect
+     * @param targetFilter the target filter
+     * @return true or false
+     */
+    public static boolean isTargetedByTractorBeam(SwccgGame game, Effect effect, Filterable targetFilter) {
+        if (effect.getType() == Effect.Type.USING_TRACTOR_BEAM_EFFECT) {
+            if (!effect.isCanceled()) {
+                UsingTractorBeamState usingTractorBeamState = game.getGameState().getUsingTractorBeamState();
+
+                if (usingTractorBeamState != null) {
+                    Collection<PhysicalCard> targets = usingTractorBeamState.getTargets();
+                    return Filters.canSpot(targets, game, targetFilter);
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Determines if a card accepted by the target filter is being targeted by any of the specified reasons.
      * @param game the game
      * @param effect the effect

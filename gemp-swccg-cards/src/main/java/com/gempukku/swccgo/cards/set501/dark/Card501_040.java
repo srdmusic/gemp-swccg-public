@@ -34,7 +34,10 @@ import java.util.List;
 public class Card501_040 extends AbstractUsedOrLostInterrupt {
     public Card501_040() {
         super(Side.DARK, 4, "Understand Art, Understand A Species", Uniqueness.UNIQUE);
-        setGameText("USED: Target a character in battle. Target and characters that share a characteristic with target are power and forfeit -1. LOST: Once per game, during battle, if you just revealed a character as 'artwork,' add one battle destiny (two if its species is participating in battle).");
+        setGameText("USED: Target a character in battle. Target and opponent's cards that share any characteristic(s) " +
+                "with it are power and forfeit -1. " +
+                "LOST: Once per game, if your [Set 19] objective just ‘studied’ a character, " +
+                "add one battle destiny (two if a character of same species is in battle).");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("Understand Art, Understand A Species");
     }
@@ -42,7 +45,6 @@ public class Card501_040 extends AbstractUsedOrLostInterrupt {
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
-        final String opponent = game.getOpponent(playerId);
 
         // Check condition(s)
         if (GameConditions.isDuringBattle(game)
@@ -53,30 +55,30 @@ public class Card501_040 extends AbstractUsedOrLostInterrupt {
             // Choose target(s)
             action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a character in battle", Filters.and(Filters.character, Filters.participatingInBattle)) {
                 @Override
-                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                    action.allowResponses("Reduce power and forfeit of "+GameUtils.getCardLink(targetedCard)+" and characters that share a characteristic",new RespondablePlayCardEffect(action) {
+                protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
+                    action.allowResponses("Reduce power and forfeit of " + GameUtils.getCardLink(targetedCard) + " and characters that share a characteristic", new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
 
                             Filter toReduce = Filters.none;
-                            for(Keyword keyword: Keyword.values()) {
+                            for (Keyword keyword : Keyword.values()) {
                                 if (keyword.isCharacteristic()
                                         && game.getModifiersQuerying().hasKeyword(game.getGameState(), finalTarget, keyword)) {
                                     toReduce = Filters.or(toReduce, Filters.characteristic(keyword));
                                 }
                             }
-                            for(Species species: Species.values()) {
+                            for (Species species : Species.values()) {
                                 if (game.getModifiersQuerying().isSpecies(game.getGameState(), finalTarget, species)) {
                                     toReduce = Filters.or(toReduce, Filters.species(species));
                                 }
                             }
 
-                            Collection<PhysicalCard> characters = Filters.filterActive(game, self, Filters.and(Filters.canBeTargetedBy(self), Filters.character, Filters.participatingInBattle, toReduce));
+                            Collection<PhysicalCard> characters = Filters.filterActive(game, self, Filters.and(Filters.or(finalTarget, Filters.opponents(playerId)), Filters.canBeTargetedBy(self), Filters.character, Filters.participatingInBattle, toReduce));
                             action.appendEffect(
-                                    new AddUntilEndOfBattleModifierEffect(action, new PowerModifier(self, Filters.in(characters), -1), "Makes "+GameUtils.getAppendedNames(characters)+" power -1"));
+                                    new AddUntilEndOfBattleModifierEffect(action, new PowerModifier(self, Filters.in(characters), -1), "Makes " + GameUtils.getAppendedNames(characters) + " power -1"));
                             action.appendEffect(
-                                    new AddUntilEndOfBattleModifierEffect(action, new ForfeitModifier(self, Filters.in(characters), -1), "Makes "+GameUtils.getAppendedNames(characters)+" forfeit -1"));
+                                    new AddUntilEndOfBattleModifierEffect(action, new ForfeitModifier(self, Filters.in(characters), -1), "Makes " + GameUtils.getAppendedNames(characters) + " forfeit -1"));
                         }
                     });
                 }
@@ -105,18 +107,18 @@ public class Card501_040 extends AbstractUsedOrLostInterrupt {
 
                 final int destiniesToAdd = ((artwork.getBlueprint().hasSpeciesAttribute()
                         && artwork.getBlueprint().getSpecies() != null
-                        && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.character, Filters.species(artwork.getBlueprint().getSpecies()))))?2:1);
+                        && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.character, Filters.species(artwork.getBlueprint().getSpecies())))) ? 2 : 1);
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
-                if (destiniesToAdd==1)
+                if (destiniesToAdd == 1)
                     action.setText("Add one battle destiny");
                 else
-                    action.setText("Add "+destiniesToAdd+" battle destinies");
+                    action.setText("Add " + destiniesToAdd + " battle destinies");
 
                 action.appendUsage(
                         new OncePerGameEffect(action));
 
-                action.allowResponses("Add "+destiniesToAdd+" battle "+(destiniesToAdd==1?"destiny":"destinies"), new RespondablePlayCardEffect(action) {
+                action.allowResponses("Add " + destiniesToAdd + " battle " + (destiniesToAdd == 1 ? "destiny" : "destinies"), new RespondablePlayCardEffect(action) {
                     @Override
                     protected void performActionResults(Action targetingAction) {
                         action.appendEffect(
