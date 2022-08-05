@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class Card501_038 extends AbstractUsedOrLostInterrupt {
     public Card501_038() {
-        super(Side.DARK, 4, "Thrawn Pincer", Uniqueness.UNIQUE);
+        super(Side.DARK, 6, "Thrawn Pincer", Uniqueness.UNIQUE);
         setGameText("USED: Add 1 to the hyperspeed of a dredanuaght or star destroyer for each ‘artwork’ on table for remainder of turn. " +
                 "LOST: Once per game, if a starship was just revealed as ‘artwork’ during battle at a system, relocate a Star Destroyer from anywhere on table to that battle");
         addIcons(Icon.VIRTUAL_SET_19);
