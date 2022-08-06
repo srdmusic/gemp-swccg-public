@@ -7,6 +7,7 @@ import com.gempukku.swccgo.chat.ChatRoomMediator;
 import com.gempukku.swccgo.chat.ChatServer;
 import com.gempukku.swccgo.collection.CollectionsManager;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.ApplicationConfiguration;
 import com.gempukku.swccgo.db.GempSettingDAO;
 import com.gempukku.swccgo.db.IpBanDAO;
 import com.gempukku.swccgo.db.PlayerDAO;
@@ -688,7 +689,10 @@ public class HallServer extends AbstractServer {
     }
 
     private SwccgDeck validateUserAndDeck(SwccgFormat format, Player player, String deckName, CollectionType collectionType, boolean sampleDeck, Player librarian) throws HallException {
-        // Only show playtesting formats if player is a playtester or admin
+
+        /*
+         * Only show playtesting formats if player is a playtester or admin.
+         */
         if (format.isPlaytesting()
                 && !(player.hasType(Player.Type.ADMIN)
                 || player.hasType(Player.Type.PLAY_TESTER))) {
@@ -697,18 +701,47 @@ public class HallServer extends AbstractServer {
 
         SwccgDeck swccgDeck;
         if (sampleDeck)
+            /*
+             * Sample decks come from the Librarian user.
+             */
             swccgDeck = _swccgoServer.getParticipantDeck(librarian, deckName);
         else
+            /*
+             * All other decks come from the logged in user.
+             */
             swccgDeck = _swccgoServer.getParticipantDeck(player, deckName);
 
         if (swccgDeck == null)
             throw new HallException("You don't have a deck registered yet");
 
-        try {
-            swccgDeck = validateUserAndDeck(format, player, collectionType, swccgDeck);
-        } catch (DeckInvalidException e) {
-            throw new HallException("Your selected deck is not valid for this format: " + e.getMessage());
+        /*
+         * Pull playtestingNoLimitDeckLength from properties file.
+         * The properties file will pull the value from the environment variable: playtesting_no_limit_deck_length
+         * Or it will use the default value set in the file for parameter: playtesting.noLimitDeckLength
+         */
+        Boolean playtestingNoLimitDeckLength = Boolean.parseBoolean(ApplicationConfiguration.getProperty("playtesting.noLimitDeckLength"));
+        if (playtestingNoLimitDeckLength) {
+            System.out.println("Playtesting has no Deck Length Limit");
+        } else {
+            System.out.println("Playtesting deck length is restricted to the format limit");
         }
+
+        /*
+         * If playtestingNoLimitDeckLength is true:
+         *   Allow playtesters and admins to have decks with no limit.
+         *   This feature allows Playtesters, and developers, to create decks composed exclusively of the cards they are testing.
+         * If the playtestingNoLimitDeckLength is false:
+         *   Then the deck length limit is respected.
+         */
+        if (! (playtestingNoLimitDeckLength && (player.hasType(Player.Type.ADMIN) || player.hasType(Player.Type.PLAY_TESTER))) ) {
+
+            try {
+                swccgDeck = validateUserAndDeck(format, player, collectionType, swccgDeck);
+            } catch (DeckInvalidException e) {
+                throw new HallException("Your selected deck is not valid for this format: " + e.getMessage());
+            }
+
+        } // validate deck
 
         return swccgDeck;
     }
