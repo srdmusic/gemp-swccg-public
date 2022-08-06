@@ -16,12 +16,13 @@ public interface SwccgFormat {
     void validateDeck(SwccgDeck deck) throws DeckInvalidException;
     List<Integer> getValidSets();
     List<String> getBannedCards();
-    void addBannedListLink(String bannedListLink);
-    String getBannedListLink();
+    void addTenetsLink(String tenetsLink);
+    String getTenetsLink();
     List<String> getBannedIcons();
     List<String> getBannedRarities();
     List<String> getRestrictedCards();
     List<String> getValidCards();
     int getRequiredDeckSize();
+    int getDefaultGameTimerMinutes();
     List<SwccgCardBlueprint> getAllCardBlueprintsValidInFormat();
 }

@@ -371,7 +371,10 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
         //for(Integer setId : swccgFormat.getValidSets()) {
         //}
 
-        String formatCssId = swccgFormat.getName().replace(" ", "-").replace("(", "").replace(")", "").replace("/", "").replace("'", "");
+        /*
+         * The CSS ID can not have special characters like ! in it or else the selector will not work.
+         */
+        String formatCssId = swccgFormat.getName().replace(" ", "-").replace("(", "").replace(")", "").replace("/", "").replace("'", "").replace("!", "").replace(",", "");
 
         //result.append("<p /><strong>.knownSets</strong>:"+knownSets.getClass().getName()+"<pre style=\"border:2px red solid;padding:5px; margin:5px;\">");
         //result.append(knownSets);
@@ -386,9 +389,11 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
         result.append("<ul id=\""+formatCssId+"-details\" class=\"format-details\">");
 
         Integer deckSize = swccgFormat.getRequiredDeckSize();
-        if (deckSize != 60) {
-            result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-deck-size\">Deck size:</span> <span id=\""+formatCssId+"-format-deck-size-content\" class=\"format-deck-size\">" + deckSize +"</span></li>");
-        }
+        result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-deck-size\">Deck size:</span> <span id=\""+formatCssId+"-format-deck-size-content\" class=\"format-deck-size\">" + deckSize +"</span></li>");
+
+        Integer defaultGameTimerMinutes = swccgFormat.getDefaultGameTimerMinutes();
+        result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-default-game-timer-minutes\">Default Game Timer Minutes:</span> <span id=\""+formatCssId+"-format-default-game-timer-minutes-content\" class=\"format-default-game-timer-minutes\">" + defaultGameTimerMinutes +"</span></li>");
+
         result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-valid-sets\" class=\"format-valid-sets-label\" onclick=\"showFormat(this);\">Valid sets:</span> ");
 
         if (validSets.equals(knownSets)) {
@@ -432,7 +437,8 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
         result.append("</ul></li>"); /* valid sets */
 
         if (!swccgFormat.getBannedIcons().isEmpty()) {
-            result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-icons-not-allowed\" class=\"format-icons-not-allowed-label\" onclick=\"showFormat(this);\">Icons not allowed:</span> <ul id=\""+formatCssId+"-format-icons-not-allowed-content\" style=\"display:none;\">");
+            /* icons not allowed are displayed by default. To hide them by default, add display:none to the ul */
+            result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-icons-not-allowed\" class=\"format-icons-not-allowed-label\" onclick=\"showFormat(this);\">Icons not allowed:</span> <ul id=\""+formatCssId+"-format-icons-not-allowed-content\">");
             for (String iconName : swccgFormat.getBannedIcons()) {
                 Icon icon = Icon.getIconFromName(iconName);
                 if (icon != null) {
@@ -453,32 +459,31 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
             result.append("</ul></li>"); /* rarities */
         }
 
+        /* Provide a link to the tenets for this format. */
+        if (swccgFormat.getTenetsLink() != null) {
+            result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-x-listed\" class=\"format-x-listed-label\" >Get the Tenets for this format from:</span> <a target='_new' href='");
+            result.append(swccgFormat.getTenetsLink()).append("'>");
+            result.append(swccgFormat.getTenetsLink());
+            result.append("</a></li>");
+        }
+
+
         if (!swccgFormat.getBannedCards().isEmpty()) {
             /*
-             * The banned card list could be a link to somewhere else, like the forum.
-             * If the link is included, use that list here.
-             * Otherwise, just list all the cards.
+             * List all the banned cards.
              */
-            if(swccgFormat.getBannedListLink()==null) {
-                result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-x-listed\" class=\"format-x-listed-label\" onclick=\"showFormat(this);\">Banned cards:</span> <ul id=\""+formatCssId+"-format-x-listed-content\">");
-                /*
-                 * blueprintId is a gemp_id, such as 7_299.
-                 */
-                for (String blueprintId : swccgFormat.getBannedCards()) {
-                    SwccgCardBlueprint blueprint = _library.getSwccgoCardBlueprint(blueprintId);
-                    if(blueprint != null) {
-                        SwccgCardBlueprint backSideBlueprint = _library.getSwccgoCardBlueprintBack(blueprintId);
-                        result.append("<li name=\""+blueprintId+"\">"+GameUtils.getCardLink(blueprintId, blueprint, backSideBlueprint)+"</li>");
-                    }
+            result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-x-listed\" class=\"format-x-listed-label\" onclick=\"showFormat(this);\">Banned cards:</span> <ul id=\""+formatCssId+"-format-x-listed-content\">");
+            /*
+             * blueprintId is a gemp_id, such as 7_299.
+             */
+            for (String blueprintId : swccgFormat.getBannedCards()) {
+                SwccgCardBlueprint blueprint = _library.getSwccgoCardBlueprint(blueprintId);
+                if(blueprint != null) {
+                    SwccgCardBlueprint backSideBlueprint = _library.getSwccgoCardBlueprintBack(blueprintId);
+                    result.append("<li name=\""+blueprintId+"\">"+GameUtils.getCardLink(blueprintId, blueprint, backSideBlueprint)+"</li>");
                 }
-                result.append("</ul></li>");
-            } else {
-                /* The list is available elsewhere. Link to that location. */
-                result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-x-listed\" class=\"format-x-listed-label\" >Get the List of Banned cards from:</span> <a href='");
-                result.append(swccgFormat.getBannedListLink()).append("'>");
-                result.append(swccgFormat.getBannedListLink());
-                result.append("</a></li>");
             }
+            result.append("</ul></li>");
         }
         if (!swccgFormat.getRestrictedCards().isEmpty()) {
             result.append("<li class=\"format-detail\"><span id=\""+formatCssId+"-format-r-listed\" class=\"format-r-listed-label\" onclick=\"showFormat(this);\">Restricted:</span> <ul id=\""+formatCssId+"-format-r-listed-content\" style=\"display:none;\">");
