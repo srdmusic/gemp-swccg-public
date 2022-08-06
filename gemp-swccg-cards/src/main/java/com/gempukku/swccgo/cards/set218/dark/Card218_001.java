@@ -32,7 +32,7 @@ public class Card218_001 extends AbstractUsedInterrupt {
         super(Side.DARK, 4, "Imperial Command & In Range", Uniqueness.UNIQUE);
         addComboCardTitles(Title.Imperial_Command, "In Range");
         setGameText("Take an admiral or general into hand from Reserve Deck; reshuffle. OR If your admiral is in battle at a system (or your general is in battle at a site), prevent opponent from drawing more than one battle destiny (your total battle destiny is +1 if a moff in battle). OR Raise your converted location to the top.");
-        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.VIRTUAL_SET_18);
     }
 
     @Override

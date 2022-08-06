@@ -59,6 +59,7 @@ public enum Keyword implements Filterable {
     EWOK_DEVICE("Ewok Device", false),
     EWOK_VEHICLE("Ewok Vehicle", false),
     EWOK_WEAPON("Ewok Weapon", false),
+    EXECUTOR_SITE("Executor Site", true),
     FAMBAA("Fambaa", true),
     FARM("Farm", true),
     FEMALE("Female", true),
