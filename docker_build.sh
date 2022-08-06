@@ -3,6 +3,12 @@
 
 ## Build Gemp
 mvn clean install
+if [ $? == 1 ]; then
+  echo
+  echo "Java build failed. Not building Docker Container."
+  echo
+  exit 1
+fi
 
 ## Build Gemp Container Image
 docker build \

@@ -9,5 +9,6 @@ docker run -d \
   --name gemp \
   --link gempdb \
   -e db_hostname=gempdb \
+  -e playtesting_no_limit_deck_length=true \
   gemp:latest
 
