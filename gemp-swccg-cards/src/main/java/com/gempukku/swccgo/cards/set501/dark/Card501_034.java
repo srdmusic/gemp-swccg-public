@@ -11,6 +11,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.NotCondition;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -26,8 +27,8 @@ import java.util.List;
 public class Card501_034 extends AbstractSystem {
     public Card501_034() {
         super(Side.DARK, Title.Lothal, 6);
-        setLocationDarkSideGameText("While you control this system, your Force drains are +1 at related battlegrounds you control with an Imperial leader.");
-        setLocationLightSideGameText("If Ghost and Phantom here, Force drain +1 here.");
+        setLocationDarkSideGameText("While you control, at related battleground sites you control with an Imperial leader, your Force drains are +1.");
+        setLocationLightSideGameText("If Ghost and Phantom here, Force drain +1 here. If no Rebel starships piloted here, Force drain -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.PLANET, Icon.VIRTUAL_SET_19);
@@ -46,6 +47,7 @@ public class Card501_034 extends AbstractSystem {
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ForceDrainModifier(self, new AndCondition(new HereCondition(self, Filters.Ghost), new HereCondition(self, Filters.Phantom)), 1, playerOnLightSideOfLocation));
+        modifiers.add(new ForceDrainModifier(self, new NotCondition(new HereCondition(self, Filters.Rebel_starship)), -1, playerOnLightSideOfLocation));
         return modifiers;
     }
 }
