@@ -30,7 +30,8 @@ public class Card501_029 extends AbstractImperial {
     public Card501_029() {
         super(Side.DARK, 2, 3, 2, 3, 4, "Ensign Eli Vanto", Uniqueness.UNIQUE);
         setPolitics(1);
-        setGameText("Adds 2 to power of any capital starship he pilots. If with Thrawn, your starships here are power and hyperspeed +1. During your control phase, may use 1 Force to take a card with 'artwork' in game text into hand from Reserve Deck; reshuffle.");
+        setGameText("[Pilot] 2: any capital starship. While with Thrawn, your starships here are power and hyperspeed +1. " +
+                "During your control phase, may use 1 Force to [upload] a card with 'artwork' or 'studied' in game text.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
         setTestingText("Ensign Eli Vanto");
     }
@@ -55,7 +56,7 @@ public class Card501_029 extends AbstractImperial {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Take card into hand from Reserve Deck");
-            action.setActionMsg("Take card with 'artwork' in game text into hand from Reserve Deck");
+            action.setActionMsg("Take card with 'artwork' or 'studied' in game text into hand from Reserve Deck");
 
             action.appendUsage(
                     new OncePerPhaseEffect(action));
@@ -64,7 +65,7 @@ public class Card501_029 extends AbstractImperial {
                     new UseForceEffect(action, playerId, 1));
             // Perform result(s)
             action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.gameTextContains("artwork"), Filters.gameTextContains("artworks")), true));
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.gameTextContains("artwork"), Filters.gameTextContains("artworks"), Filters.gameTextContains("studied")), true));
             return Collections.singletonList(action);
         }
         return null;

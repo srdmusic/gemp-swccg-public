@@ -33,7 +33,7 @@ public class Card501_059 extends AbstractDroid {
         setAlternateDestiny(6);
         setVirtualSuffix(true);
         setLore("Counterpart to C-3PO. Spy. Obstinate, headstrong and always full of surprises. R2-D2 was an integral part of Luke Skywalker's rescue plans.");
-        setGameText("Once per game, may use 1 Force to either place opponent's just played Interrupt out of play or shuffle opponent's Reserve Deck. If in battle with Anakin or Luke, may draw destiny; subtract that amount from opponent's total attrition.");
+        setGameText("Once per game, may use 1 Force to shuffle opponent’s Reserve Deck or place opponent’s just-played Interrupt out of play. If in battle with Anakin or Luke, may draw one destiny and subtract that amount from opponent’s attrition.");
         addPersona(Persona.R2D2);
         addKeywords(Keyword.SPY);
         addModelType(ModelType.ASTROMECH);
