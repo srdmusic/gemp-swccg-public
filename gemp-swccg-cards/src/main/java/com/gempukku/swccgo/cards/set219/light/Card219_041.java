@@ -11,7 +11,10 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.MoveCostToLocationModifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -37,15 +40,12 @@ public class Card219_041 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        Condition unlessYouOccupyCondition = new UnlessCondition(new OccupiesCondition(playerOnLightSideOfLocation, self));
-
         modifiers.add(new DeployCostToLocationModifier(self, Filters.or(Filters.Ezra, Filters.Kanan),  -1, self));
-
+        Condition unlessYouOccupyCondition = new UnlessCondition(new OccupiesCondition(playerOnLightSideOfLocation, self));
+        Filter opponentsCharacterVehicleOrStarship = Filters.and(Filters.opponents(playerOnLightSideOfLocation), Filters.or(Filters.character, Filters.vehicle, Filters.starship));
         modifiers.add(new MayNotDeployToLocationModifier(self, Filters.Vader, unlessYouOccupyCondition, self));
-        Filter filter = Filters.and(Filters.opponents(playerOnLightSideOfLocation), Filters.or(Filters.character, Filters.vehicle, Filters.starship));
-        modifiers.add(new DeployCostToLocationModifier(self, filter, unlessYouOccupyCondition, 3, self));
-        modifiers.add(new MoveCostToLocationModifier(self, Filters.and(Filters.opponents(playerOnLightSideOfLocation), filter), unlessYouOccupyCondition, 3, self));
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.here(self), Filters.or(Filters.Ezra, Filters.Kanan)), 1));
+        modifiers.add(new DeployCostToLocationModifier(self, opponentsCharacterVehicleOrStarship, unlessYouOccupyCondition,3, self));
+        modifiers.add(new MoveCostToLocationModifier(self, opponentsCharacterVehicleOrStarship, unlessYouOccupyCondition, 3, self));
         return modifiers;
     }
 }

@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set219.dark;
 import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
-import com.gempukku.swccgo.cards.evaluators.EitherOrConditionEvaluator;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -48,8 +47,8 @@ public class Card219_010 extends AbstractSystem {
         List<Modifier> modifiers = new LinkedList<>();
         AndCondition ghostAndPhantomHereCondition = new AndCondition(new HereCondition(self, Filters.Ghost), new HereCondition(self, Filters.Phantom));
         NotCondition noPilotedRebelStarshipsHereCondition = new NotCondition(new HereCondition(self, Filters.and(Filters.piloted, Filters.Rebel_starship)));
-        EitherOrConditionEvaluator eitherOrConditionEvaluator = new EitherOrConditionEvaluator(ghostAndPhantomHereCondition, 1, noPilotedRebelStarshipsHereCondition, -1);
-        modifiers.add(new ForceDrainModifier(self, eitherOrConditionEvaluator, playerOnLightSideOfLocation));
+        modifiers.add(new ForceDrainModifier(self, ghostAndPhantomHereCondition, 1, playerOnLightSideOfLocation));
+        modifiers.add(new ForceDrainModifier(self, noPilotedRebelStarshipsHereCondition, -1, playerOnLightSideOfLocation));
         return modifiers;
     }
 }
