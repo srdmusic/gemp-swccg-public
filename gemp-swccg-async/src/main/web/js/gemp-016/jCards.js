@@ -3874,7 +3874,8 @@ var fixedImages = {
 "204_35ai_BACK":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/thefalconjunkyardgarbageback_ai.png",
 "205_17ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/iamyourfather_ai.png",
 "202_5ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/likemyfatherbeforeme_ai.png",
-
+"207_21ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/grandadmiralthrawn_ai.png",
+"219_2ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/chimaera_ai.png",
 };
 
 var packBlueprints = {
