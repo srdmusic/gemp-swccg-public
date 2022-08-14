@@ -25,7 +25,7 @@ import java.util.List;
  * Set: Set 20
  * Type: Character
  * Subtype: Imperial
- * Title: Captain Lennox
+ * Title: Captain Lennox (V)
  */
 public class Card501_015 extends AbstractImperial {
     public Card501_015() {
