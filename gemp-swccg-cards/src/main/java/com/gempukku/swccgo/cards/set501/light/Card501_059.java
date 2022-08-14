@@ -29,8 +29,8 @@ import java.util.List;
  * Subtype: Rebel
  * Title: Luke With Lightsaber (V)
  */
-public class Card501_078 extends AbstractRebel {
-    public Card501_078() {
+public class Card501_059 extends AbstractRebel {
+    public Card501_059() {
         super(Side.LIGHT, 1, 6, 6, 6, 8, "Luke With Lightsaber", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("'I've taken care of everything.'");

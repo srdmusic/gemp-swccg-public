@@ -27,8 +27,8 @@ import java.util.List;
  * Subtype: Used or Lost
  * Title: Show No Mercy
  */
-public class Card501_097 extends AbstractUsedInterrupt {
-    public Card501_097() {
+public class Card501_014 extends AbstractUsedInterrupt {
+    public Card501_014() {
         super(Side.DARK, 4, "Show No Mercy", Uniqueness.UNIQUE);
         setGameText("If Insidious Prisoner or your [Set 17] Epic Event on table: Take The Works or a Coruscant battleground site into hand from Reserve Deck; reshuffle. OR If your Dark Jedi controls opponent’s battleground site, cancel a Force drain at the related system.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);

@@ -27,8 +27,8 @@ import java.util.List;
  * Subtype: Imperial
  * Title: Captain Lennox
  */
-public class Card501_101 extends AbstractImperial {
-    public Card501_101() {
+public class Card501_015 extends AbstractImperial {
+    public Card501_015() {
         super(Side.DARK, 2, 2, 2, 2, 4, Title.Captain_Lennox, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Captain of the Imperial Star Destroyer Tyrant. An able leader. Unlike most Imperial officers, he is dedicated to his ship and crew. Finds political maneuvering distasteful.");

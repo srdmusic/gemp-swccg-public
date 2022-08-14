@@ -23,8 +23,8 @@ import java.util.List;
  * Subtype: Rebel
  * Title: Prisoner 2187 (V)
  */
-public class Card501_063 extends AbstractRebel {
-    public Card501_063() {
+public class Card501_056 extends AbstractRebel {
+    public Card501_056() {
         super(Side.LIGHT, 1, 0, 4, 3, 6, Title.Prisoner_2187, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Princess Leia Organa. Alderaanian senator. Targeted by Vader for capture and interrogation. The Dark Lord of the Sith wanted her alive.");

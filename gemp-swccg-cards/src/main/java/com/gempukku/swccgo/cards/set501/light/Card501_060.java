@@ -25,8 +25,8 @@ import java.util.List;
  * Subtype: Rebel
  * Title: Echo Base Trooper (V)
  */
-public class Card501_080 extends AbstractRebel {
-    public Card501_080() {
+public class Card501_060 extends AbstractRebel {
+    public Card501_060() {
         super(Side.LIGHT, 3, 2, 2, 2, 4, "Echo Base Trooper");
         setVirtualSuffix(true);
         setLore("The personnel assigned to protect Echo Base are veteran warriors. Troopers such as Jess Allashane are trained to counter Imperial tactics in cold environment.");

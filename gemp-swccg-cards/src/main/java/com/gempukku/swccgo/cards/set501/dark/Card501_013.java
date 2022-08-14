@@ -1,59 +1,116 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractSite;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Keyword;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.cards.AbstractDevice;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.AddToBlownAwayForceLossEffect;
-import com.gempukku.swccgo.logic.modifiers.IsPoweredModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.UnderHothEnergyShieldModifier;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.ExcludedFromBattleModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeExcludedFromBattle;
+import com.gempukku.swccgo.logic.modifiers.MayNotTargetToBeLostModifier;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * Set: Set 20
- * Type: Location
- * Subtype: Site
- * Title: Hoth: Main Power Generators (1st Marker)
+ * Type: Device
+ * Title: Laser Gate (V)
  */
-public class Card501_013 extends AbstractSite {
+public class Card501_013 extends AbstractDevice {
     public Card501_013() {
-        super(Side.DARK, Title.Main_Power_Generators, Title.Hoth);
-        setLocationDarkSideGameText("If 'blown away,' Light Side loses 4 Force (may not be reduced).");
-        setLocationLightSideGameText("'Hoth Energy Shield Rules' in effect. Your artillery weapons on Hoth are powered.");
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.HOTH, Icon.VIRTUAL_SET_20);
-        addKeywords(Keyword.MARKER_1);
-        setTestingText("Hoth: Main Power Generators (1st Marker)");
+        super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, "Laser Gate", Uniqueness.RESTRICTED_2);
+        hasVirtualSuffix();
+        setLore("Security corridors are guarded by a grid of laser emplacements which can be activated upon demand to seal off sensitive areas from intrusion.");
+        setGameText("Deploy on a non-exterior site. Lost if you control this site. If a battle was just initiated here, " +
+                "each player targets up to two of their characters here; they cannot be excluded from battle or lost " +
+                "before the damage segment. Other characters here excluded from battle.");
+        addKeywords(Keyword.DEPLOYS_ON_SITE);
+        addIcon(Icon.VIRTUAL_SET_20);
+        setTestingText("Laser Gate (V)");
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.and(Filters.site, Filters.not(Filters.exterior_site));
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new ArrayList<>();
+
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+        PhysicalCard siteAttachedTo = self.getAttachedTo();
+
         // Check condition(s)
-        if (TriggerConditions.isBlownAwayCalculateForceLossStep(game, effectResult, self)) {
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.skipInitialMessageAndAnimation();
+        if (TriggerConditions.isTableChanged(game, effectResult)
+                && GameConditions.controls(game, playerId, siteAttachedTo)) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText(GameUtils.getCardLink(self) + " is lost");
             // Perform result(s)
             action.appendEffect(
-                    new AddToBlownAwayForceLossEffect(action, game.getLightPlayer(), 4, true));
-            return Collections.singletonList(action);
+                    new LoseCardFromTableEffect(action, self));
+            actions.add(action);
         }
-        return null;
+
+        if(TriggerConditions.battleInitiatedAt(game, effectResult, siteAttachedTo)){
+            final RequiredGameTextTriggerAction yourAction = getAction(game, self, gameTextSourceCardId, playerId, GameTextActionId.OTHER_CARD_ACTION_1);
+            actions.add(yourAction);
+
+            final RequiredGameTextTriggerAction opponentsAction = getAction(game, self, gameTextSourceCardId, opponent,  GameTextActionId.OTHER_CARD_ACTION_2);
+            actions.add(opponentsAction);
+        }
+
+        return actions;
     }
-    @Override
-    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new IsPoweredModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.artillery_weapon, Filters.on(Title.Hoth))));
-        modifiers.add(new UnderHothEnergyShieldModifier(self, Filters.or(Filters.Echo_site, Filters.First_Marker, Filters.Second_Marker, Filters.Third_Marker)));
-        return modifiers;
+
+    private RequiredGameTextTriggerAction getAction(final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId, final String playerId, GameTextActionId gameTextActionId){
+        final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+        // Perform result(s)
+        action.setText(playerId + " chooses target characters");
+        action.setActionMsg(playerId + " chooses target characters");
+        action.appendTargeting(
+                new TargetCardsOnTableEffect(action, playerId, "Target up to two of your characters", 1, 2, Filters.and(Filters.your(playerId), Filters.character, Filters.inBattleWith(self))) {
+                    @Override
+                    protected void cardsTargeted(int targetGroupId, Collection<PhysicalCard> targetedCards) {
+                        Filter cardsAffected = Filters.in(targetedCards);
+                        final Collection<PhysicalCard> cardsToExclude = Filters.filterActive(game, self, Filters.and(Filters.your(playerId), Filters.character, Filters.inBattleWith(self), Filters.not(cardsAffected)));
+
+                        action.appendEffect(
+                                new AddUntilDamageSegmentOfBattleModifierEffect(action,
+                                        new MayNotBeExcludedFromBattle(self, cardsAffected),
+                                        "Makes " + GameUtils.getAppendedTextNames(targetedCards) + " not able to be excluded"));
+                        action.appendEffect(
+                                new AddUntilDamageSegmentOfBattleModifierEffect(action,
+                                        new MayNotTargetToBeLostModifier(self, cardsAffected),
+                                        "Makes " + GameUtils.getAppendedTextNames(targetedCards) + " not able to be lost"));
+                        // Allow response(s)
+                        action.allowResponses("Exclude " + GameUtils.getAppendedNames(cardsToExclude) + " from battle",
+                                new RespondableEffect(action) {
+                                    @Override
+                                    protected void performActionResults(Action targetingAction) {
+                                        // Perform result(s)
+                                        action.appendEffect(
+                                                new ExcludeFromBattleEffect(action, cardsToExclude));
+                                        action.appendEffect(
+                                                new AddUntilEndOfBattleModifierEffect(action,
+                                                        new ExcludedFromBattleModifier(self, Filters.in(cardsToExclude)), null));
+                                    }
+                                }
+                        );
+                    }
+                }
+        );
+        return action;
     }
 }

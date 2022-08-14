@@ -21,8 +21,8 @@ import java.util.List;
  * Type: Effect
  * Title: Hoth Blockade
  */
-public class Card501_022 extends AbstractNormalEffect {
-    public Card501_022() {
+public class Card501_007 extends AbstractNormalEffect {
+    public Card501_007() {
         super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, "Hoth Blockade", Uniqueness.UNIQUE);
         setLore("Death Squadron.");
         setGameText("Deploy on Hoth system. Death Squadron starships deploy -1 here (-5 if Executor). While your Star Destroyer here, your AT-ATs deploy -1 to Hoth sites and Rebel starships deploy +1 here. While you control two Hoth sites, Haven is suspended here. [Immune to Alter.]");

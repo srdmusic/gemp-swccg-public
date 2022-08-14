@@ -1,145 +1,62 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractObjective;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.conditions.AloneAtCondition;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
-import com.gempukku.swccgo.logic.effects.FlipCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.NotCondition;
+import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
+import com.gempukku.swccgo.logic.modifiers.EachWeaponDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Set: Set 20
- * Type: Objective
- * Title: The Shield Will Be Down In Moments / Imperial Troops Have Entered The Base!
+ * Type: Location
+ * Subtype: Site
+ * Title: Cloud City: Chasm Walkway (V)
  */
-public class Card501_010 extends AbstractObjective {
+public class Card501_010 extends AbstractSite {
     public Card501_010() {
-        super(Side.DARK, 0, Title.The_Shield_Will_Be_Down_In_Moments);
-        setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Hoth system, [Set 17] 4th Marker, 1st Marker, and [Set 18] You May Start Your Landing. " +
-                "For remainder of game, you may not play Sunsdown. Trample is a Lost Interrupt. X on Target The Main Generator is -2 (unless firing at or below the 3rd Marker) and maximum X = 3. " +
-                "While this side up, once per turn, may deploy an exterior Hoth site from Reserve Deck; reshuffle. " +
-                "Flip this card if Main Power Generators has been 'blown away' and you occupy Hoth system.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_20);
-        setTestingText("The Shield Will Be Down in Moments");
+        super(Side.DARK, "Cloud City: Chasm Walkway", Title.Bespin);
+        setVirtualSuffix(true);
+        setLocationDarkSideGameText("While Vader alone here, Force drain +1 and [Special Edition] Vader's weapon destiny draws are +1 here.");
+        setLocationLightSideGameText("If Vader alone here (and Luke not here), [Special Edition] Vader is defense value +1 here.");
+        addIcon(Icon.DARK_FORCE, 2);
+        addIcon(Icon.LIGHT_FORCE, 1);
+        addIcons(Icon.VIRTUAL_SET_20, Icon.CLOUD_CITY, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK);
+        addKeywords(Keyword.CLOUD_CITY_LOCATION);
+        setTestingText("Cloud City: Chasm Walkway (V)");
     }
 
     @Override
-    protected ObjectiveDeployedTriggerAction getGameTextWhenDeployedAction(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        ObjectiveDeployedTriggerAction action = new ObjectiveDeployedTriggerAction(self);
-        action.appendRequiredEffect(
-            new DeployCardFromReserveDeckEffect(action, Filters.Hoth_system, true, false) {
-                @Override
-                public String getChoiceText() {
-                    return "Choose Hoth system to deploy";
-                }
-            });
-        action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_17, Filters.Fourth_Marker), true, false) {
-                    @Override
-                    public String getChoiceText() {
-                        return "Choose [Set 17] 4th marker to deploy";
-                    }
-                });
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        Filter vaderAlone = Filters.and(Filters.Vader, Filters.alone);
+        Filter seVaderAlone = Filters.and(Icon.SPECIAL_EDITION, vaderAlone);
+        Condition vaderAloneHereCondition = new HereCondition(self, vaderAlone);
 
-        action.appendRequiredEffect(
-            new DeployCardFromReserveDeckEffect(action, Filters.First_Marker, true, false) {
-                @Override
-                public String getChoiceText() {
-                    return "Choose 1st marker to deploy";
-                }
-            });
-
-        action.appendRequiredEffect(
-            new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_19, Filters.You_May_Start_Your_Landing), true, false) {
-                @Override
-                public String getChoiceText() {
-                    return "Choose [Set 18] You May Start Your Landing to deploy";
-                }
-            });
-        return action;
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ForceDrainModifier(self, vaderAloneHereCondition, 1, playerOnDarkSideOfLocation));
+        modifiers.add(new EachWeaponDestinyModifier(self, Filters.any, vaderAloneHereCondition, Filters.and(seVaderAlone, Filters.here(self)), 1));
+        return modifiers;
     }
 
     @Override
-    protected RequiredGameTextTriggerAction getGameTextAfterDeploymentCompletedAction(String playerId, SwccgGame game, final PhysicalCard self, final int gameTextSourceCardId) {
-        RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-        action.appendEffect(
-                new AddUntilEndOfGameModifierEffect(action,
-                        new MayNotDeployModifier(self, Filters.Sunsdown, self.getOwner()), null));
-        action.appendEffect(
-                new AddUntilEndOfGameModifierEffect(action,
-                        new LostInterruptModifier(self, Filters.Trample), null));
-        action.appendEffect(
-                new AddUntilEndOfGameModifierEffect(action,
-                    new ModifyGameTextModifier(self, Filters.Target_The_Main_Generator, ModifyGameTextType.TARGET_THE_MAIN_GENERATOR__MODIFY_X), null));
-        return action;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.THE_SHIELD_WILL_BE_DOWN__DOWNLOAD_HOTH_SITE;
-
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy a Hoth site from Reserve Deck");
-            action.setActionMsg("Deploy an exterior Hoth site from Reserve Deck");
-
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.Hoth_site, Filters.exterior_site), true));
-
-            return Collections.singletonList(action);
-        }
-
-        return null;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
-
-        // Check condition(s)
-        if (GameConditions.canBeFlipped(game, self)
-                && (
-                    TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Main_Power_Generators, true)) ||
-                    GameConditions.isBlownAway(game, Filters.title(Title.Main_Power_Generators, true))
-                )
-                && GameConditions.occupies(game, playerId, Filters.Hoth_system)) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Flip");
-            action.setActionMsg(null);
-            // Perform result(s)
-            action.appendEffect(
-                    new FlipCardEffect(action, self));
-            actions.add(action);
-        }
-
-        return actions;
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DefenseValueModifier(self, Filters.and(Icon.SPECIAL_EDITION, Filters.Vader, Filters.here(self)), new AndCondition(new AloneAtCondition(self, Filters.Vader, self), new NotCondition(new HereCondition(self, Filters.Luke))), 1));
+        return modifiers;
     }
 }

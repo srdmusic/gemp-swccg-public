@@ -26,8 +26,8 @@ import java.util.List;
  * Subtype: Alien
  * Title: Black Krrsantan
  */
-public class Card501_043 extends AbstractAlien {
-    public Card501_043() {
+public class Card501_009 extends AbstractAlien {
+    public Card501_009() {
         super(Side.DARK, 2, 4, 7, 2, 5, "Black Krrsantan", Uniqueness.UNIQUE);
         setLore("Wookiee bounty hunter.");
         setGameText("May not be excluded from battle. If a battle was just initiated here, each player with four or " +

@@ -21,8 +21,8 @@ import java.util.List;
  * Type: Creature
  * Title: Porg
  */
-public class Card501_083 extends AbstractCreature {
-    public Card501_083() {
+public class Card501_061 extends AbstractCreature {
+    public Card501_061() {
         super(Side.LIGHT, 5, 2, 1, 3, 0, "Porg", Uniqueness.RESTRICTED_3);
         setGameText("Habitat: Ahch-To sites, either player's starship (uses no capacity). Does not attack. Characters present (or starship aboard) are power and defense value -1 (+2 if yours). While at your location, adds one [Light Side] icon.");
         addModelType(ModelType.SEADWELLING);
