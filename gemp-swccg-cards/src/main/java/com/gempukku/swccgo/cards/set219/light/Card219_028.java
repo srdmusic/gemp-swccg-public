@@ -38,7 +38,7 @@ public class Card219_028 extends AbstractDroid {
         addPersona(Persona.R2D2);
         addKeywords(Keyword.SPY);
         addModelType(ModelType.ASTROMECH);
-        addIcons(Icon.VIRTUAL_SET_19, Icon.JABBAS_PALACE);
+        addIcons(Icon.VIRTUAL_SET_19, Icon.NAV_COMPUTER, Icon.JABBAS_PALACE);
     }
 
     @Override
