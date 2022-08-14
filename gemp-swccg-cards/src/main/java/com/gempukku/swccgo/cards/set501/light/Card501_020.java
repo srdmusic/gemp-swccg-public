@@ -41,7 +41,7 @@ public class Card501_020 extends AbstractUsedInterrupt {
         setLore("'The Force is with you, young Skywalker. But you are not a Jedi yet.'");
         setGameText("If opponent just retrieved Force, opponent must lose 1 Force. OR Cancel Dark Strike, Stunning Leader or You Are Beaten. OR If your Skywalker defending a battle alone, add one destiny to your total power (if [CC] Luke, he is also immune to attrition).");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_20);
-        setTestingText("~Dark Approach (V)");
+        setTestingText("Dark Approach (V)");
     }
 
 

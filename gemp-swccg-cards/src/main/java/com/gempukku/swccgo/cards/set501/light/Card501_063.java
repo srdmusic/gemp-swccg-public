@@ -33,7 +33,7 @@ public class Card501_063 extends AbstractRebel {
         addIcons(Icon.PREMIUM, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.SENATOR, Keyword.FEMALE);
         setSpecies(Species.ALDERAANIAN);
-        setTestingText("~Prisoner 2187 (V)");
+        setTestingText("Prisoner 2187 (V)");
     }
 
     @Override

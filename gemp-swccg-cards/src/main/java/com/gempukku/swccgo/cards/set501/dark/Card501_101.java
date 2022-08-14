@@ -35,7 +35,7 @@ public class Card501_101 extends AbstractImperial {
         setGameText("Adds 2 to power of anything he pilots. While piloting a [Hoth], [Dagobah], or [Cloud City] Star Destroyer, it is immune to attrition < 4 and starships here may not ‘attach.’ During battle, if opponent drew destiny to subtract from your total attrition, opponent loses 1 Force.");
         addKeywords(Keyword.CAPTAIN, Keyword.LEADER);
         addIcons(Icon.HOTH, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
-        setTestingText("~Captain Lennox (V)");
+        setTestingText("Captain Lennox (V)");
     }
 
     @Override

@@ -33,7 +33,7 @@ public class Card501_013 extends AbstractSite {
         setLocationLightSideGameText("'Hoth Energy Shield Rules' in effect. Your artillery weapons on Hoth are powered.");
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.HOTH, Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.MARKER_1);
-        setTestingText("~Hoth: Main Power Generators (1st Marker)");
+        setTestingText("Hoth: Main Power Generators (1st Marker)");
     }
 
     @Override

@@ -33,7 +33,7 @@ public class Card501_080 extends AbstractRebel {
         setGameText("Power +1 on Hoth. Once per turn, may deploy a non-location card with 'Echo' in title from Reserve Deck; reshuffle. If on Hoth (or present with a Scomp link), once per turn, may reveal the top card of each player's Reserve Deck.");
         addIcons(Icon.HOTH, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.ECHO_BASE_TROOPER);
-        setTestingText("~Echo Base Trooper (V)");
+        setTestingText("Echo Base Trooper (V)");
     }
 
     @Override

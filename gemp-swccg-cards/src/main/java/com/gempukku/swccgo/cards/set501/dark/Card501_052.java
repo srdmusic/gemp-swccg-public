@@ -35,7 +35,7 @@ public class Card501_052 extends AbstractStarfighter {
         addIcons(Icon.TRADE_FEDERATION, Icon.EPISODE_I, Icon.INDEPENDENT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_20);
         addIcon(Icon.PILOT, 2);
         addModelType(ModelType.FIRESPRAY_CLASS_ATTACK_SHIP);
-        setTestingText("~Jango Fett & Boba Fett In Slave I");
+        setTestingText("Jango Fett & Boba Fett In Slave I");
     }
 
     @Override

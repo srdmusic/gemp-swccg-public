@@ -36,7 +36,7 @@ public class Card501_086 extends AbstractNormalEffect {
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.HOLOGRAM);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("~Order 66");
+        setTestingText("Order 66");
     }
 
     @Override

@@ -28,7 +28,7 @@ public class Card501_022 extends AbstractNormalEffect {
         setGameText("Deploy on Hoth system. Death Squadron starships deploy -1 here (-5 if Executor). While your Star Destroyer here, your AT-ATs deploy -1 to Hoth sites and Rebel starships deploy +1 here. While you control two Hoth sites, Haven is suspended here. [Immune to Alter.]");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_20);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("~Hoth Blockade");
+        setTestingText("Hoth Blockade");
     }
 
     @Override

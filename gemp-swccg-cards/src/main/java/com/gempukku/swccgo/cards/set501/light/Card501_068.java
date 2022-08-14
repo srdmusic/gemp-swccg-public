@@ -32,7 +32,7 @@ public class Card501_068 extends AbstractLostOrStartingInterrupt {
         super(Side.LIGHT, 4, "You Cannot Escape Your Destiny", Uniqueness.UNIQUE);
         setGameText("LOST: During your move phase, relocate Luke from a site to a battleground site. STARTING: If He Is The Chosen One on table, deploy His Destiny and two Effects that deploy for free and are always immune to Alter. Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_20);
-        setTestingText("~You Cannot Escape Your Destiny");
+        setTestingText("You Cannot Escape Your Destiny");
     }
 
     @Override

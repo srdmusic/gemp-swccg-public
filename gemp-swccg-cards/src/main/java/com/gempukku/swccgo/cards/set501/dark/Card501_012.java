@@ -31,7 +31,7 @@ public class Card501_012 extends AbstractNormalEffect {
         setGameText("Deploy on table. If you just deployed an AT-AT, may peek at top two cards of Reserve Deck and take one into hand. During your control phase, opponent loses 1 Force for each marker site your AT-AT controls (limit 1 unless you occupy Hoth system). [Immune to Alter.]");
         addIcons(Icon.TATOOINE, Icon.HOTH, Icon.VIRTUAL_SET_20);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("~You May Start Your Landing (V)");
+        setTestingText("You May Start Your Landing (V)");
     }
 
     @Override

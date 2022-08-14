@@ -36,7 +36,7 @@ public class Card501_093 extends AbstractDevice {
                 "before the damage segment. Other characters here excluded from battle.");
         addKeywords(Keyword.DEPLOYS_ON_SITE);
         addIcon(Icon.VIRTUAL_SET_20);
-        setTestingText("~Laser Gate (V)");
+        setTestingText("Laser Gate (V)");
     }
 
     @Override

@@ -47,7 +47,7 @@ public class Card501_069 extends AbstractEpicEventDeployable {
                 "If Luke and He Will Bring Balance on table at start of your turn, opponent loses 1 Force. " +
                 "During your move phase, if Luke present with a Dark Jedi, may initiate a duel. Each player draws destiny. Add power. Highest total wins. If Luke loses, lose 1 Force.");
         addIcons(Icon.VIRTUAL_SET_20);
-        setTestingText("~His Destiny");
+        setTestingText("His Destiny");
     }
 
     @Override

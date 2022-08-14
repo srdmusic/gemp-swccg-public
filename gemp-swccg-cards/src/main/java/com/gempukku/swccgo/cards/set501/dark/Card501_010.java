@@ -41,7 +41,7 @@ public class Card501_010 extends AbstractObjective {
                 "While this side up, once per turn, may deploy an exterior Hoth site from Reserve Deck; reshuffle. " +
                 "Flip this card if Main Power Generators has been 'blown away' and you occupy Hoth system.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_20);
-        setTestingText("~The Shield Will Be Down in Moments");
+        setTestingText("The Shield Will Be Down in Moments");
     }
 
     @Override

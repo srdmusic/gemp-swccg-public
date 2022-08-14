@@ -41,7 +41,7 @@ public class Card501_125 extends AbstractUsedOrLostInterrupt {
                 "You Are Beaten or Dr. Evazan. OR Cancel Overwhelmed or Lateral Damage if at same system as two " +
                 "smugglers piloting. OR If your smuggler defending a battle alone, add one battle destiny.");
         addIcons(Icon.VIRTUAL_SET_20);
-        setTestingText("~Where's Han and Solo Han");
+        setTestingText("Where's Han and Solo Han");
     }
 
     @Override

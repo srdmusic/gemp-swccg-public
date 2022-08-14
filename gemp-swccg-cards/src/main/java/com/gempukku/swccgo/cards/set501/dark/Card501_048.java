@@ -38,7 +38,7 @@ public class Card501_048 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.VIRTUAL_SET_20, Icon.CLOUD_CITY, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK);
         addKeywords(Keyword.CLOUD_CITY_LOCATION);
-        setTestingText("~Cloud City: Chasm Walkway (V)");
+        setTestingText("Cloud City: Chasm Walkway (V)");
     }
 
     @Override

@@ -36,7 +36,7 @@ public class Card501_043 extends AbstractAlien {
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
         setSpecies(Species.WOOKIEE);
         addKeywords(Keyword.BOUNTY_HUNTER);
-        setTestingText("~Black Krrsantan");
+        setTestingText("Black Krrsantan");
     }
 
     @Override
