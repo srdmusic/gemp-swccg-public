@@ -2960,6 +2960,7 @@ var fixedImages = {
 "207_27":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/specterofthesupremeleader.gif",
 "207_28":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/mesonmartinet.gif",
 "207_29":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/punishingone.gif",
+"207_30":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/grandadmiralthrawnai.gif",
 "208_1":"https://res.starwarsccg.org/cards/Virtual8-Light/hires/admiraluostatura.png",
 "208_2":"https://res.starwarsccg.org/cards/Virtual8-Light/hires/c110pchopper.png",
 "208_3":"https://res.starwarsccg.org/cards/Virtual8-Light/hires/cc2237oddball.png",
@@ -3982,7 +3983,7 @@ var fixedImages = {
 "204_35ai_BACK":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/thefalconjunkyardgarbageback_ai.png",
 "205_17ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/iamyourfather_ai.png",
 "202_5ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/likemyfatherbeforeme_ai.png",
-
+"219_2ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/chimaera_ai.png",
 };
 
 var packBlueprints = {
@@ -4451,6 +4452,10 @@ var Card = Class.extend({
                    (cardNo == 18) ||
                    (cardNo == 22) ||
                    (cardNo == 30);
+        }if(setNo == 219) {
+             return (cardNo >= 11 && cardNo <=14) ||
+                    (cardNo == 31) ||
+                    (cardNo >= 39 && cardNo <=42);
         }if (setNo == 501) {
             return (cardNo == 13) ||
                    (cardNo == 27) ||
