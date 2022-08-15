@@ -42,13 +42,12 @@ public class Card219_048_BACK extends AbstractObjective {
                 "At Lothal system, the number of battle destiny draws may not be limited for either player." +
                 "Flip this card if opponent controls more Lothal locations than you.");
         addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("Liberation of Lothal");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, Filters.location, new InPlayDataEqualsCondition(self, true), 1, self.getOwner()));
+        modifiers.add(new ForceDrainModifier(self, Filters.battleground, new InPlayDataEqualsCondition(self, true), 1, self.getOwner()));
         modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier(self, Filters.Lothal_system, self.getOwner()));
         modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier(self, Filters.Lothal_system, game.getOpponent(self.getOwner())));
         return modifiers;
