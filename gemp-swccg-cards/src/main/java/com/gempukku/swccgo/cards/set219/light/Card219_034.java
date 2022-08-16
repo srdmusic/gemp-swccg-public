@@ -42,7 +42,7 @@ public class Card219_034 extends AbstractCharacterWeapon {
         GameTextActionId gameTextActionId = GameTextActionId.ANY_CARD__CANCEL_AND_REDRAW_A_DESTINY;
 
         // Check condition(s)
-        if (TriggerConditions.isDestinyJustDrawnTargeting(game, effectResult, Filters.any, Filters.Rebel)
+        if (TriggerConditions.isDestinyJustDrawnTargeting(game, effectResult, Filters.any, Filters.and(Filters.Rebel, Filters.here(self)))
                 && GameConditions.canCancelDestinyAndCauseRedraw(game, playerId)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 

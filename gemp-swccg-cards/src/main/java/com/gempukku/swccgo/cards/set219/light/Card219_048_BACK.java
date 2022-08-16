@@ -42,13 +42,12 @@ public class Card219_048_BACK extends AbstractObjective {
                 "At Lothal system, the number of battle destiny draws may not be limited for either player." +
                 "Flip this card if opponent controls more Lothal locations than you.");
         addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("Liberation of Lothal");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, Filters.location, new InPlayDataEqualsCondition(self, true), 1, self.getOwner()));
+        modifiers.add(new ForceDrainModifier(self, Filters.battleground, new InPlayDataEqualsCondition(self, true), 1, self.getOwner()));
         modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier(self, Filters.Lothal_system, self.getOwner()));
         modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier(self, Filters.Lothal_system, game.getOpponent(self.getOwner())));
         return modifiers;
@@ -84,16 +83,12 @@ public class Card219_048_BACK extends AbstractObjective {
         //during battle add or subtract from a just drawn battle destiny (or opponent's weapon destiny)
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
-        if (GameConditions.isDuringBattle(game)
-                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && (TriggerConditions.isBattleDestinyJustDrawn(game, effectResult)
                 || TriggerConditions.isWeaponDestinyJustDrawnBy(game, effectResult, opponent))) {
-            //X = the number of battlegrounds occupied by Chopper, Ezra, Hera, Kanan, Sabine, or Zeb
+            //X = the number of battlegrounds occupied by Phoenix Squadron character
             int amount = Filters.countTopLocationsOnTable(game,
-                    Filters.and(Filters.battleground,
-                            Filters.or(Filters.occupiesWith(playerId, self, Filters.or(Filters.Chopper, Filters.Ezra, Filters.Hera, Filters.Kanan, Filters.Sabine, Filters.Zeb)),
-                                    Filters.occupiesWith(opponent, self, Filters.or(Filters.Chopper, Filters.Ezra, Filters.Hera, Filters.Kanan, Filters.Sabine, Filters.Zeb)))));
-
+                    Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.Phoenix_Squadron_character)));
 
             //add
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);

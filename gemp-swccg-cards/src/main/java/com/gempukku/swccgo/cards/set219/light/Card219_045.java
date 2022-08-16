@@ -76,7 +76,7 @@ public class Card219_045 extends AbstractUsedInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         // Check condition(s)
-        if (TriggerConditions.isTargetedByWeapon(game, effect, Filters.and(Filters.your(self), Filters.starship), Filters.character_weapon)) {
+        if (TriggerConditions.isTargetedByWeapon(game, effect, Filters.and(Filters.your(self), Filters.starship), Filters.weapon)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
             action.setText("Cancel weapon targeting");

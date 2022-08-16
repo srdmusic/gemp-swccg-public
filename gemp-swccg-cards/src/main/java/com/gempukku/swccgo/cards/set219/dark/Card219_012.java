@@ -10,7 +10,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextOnSideOfLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
+import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
@@ -36,9 +36,9 @@ public class Card219_012 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        Filter filter = Filters.or(Filters.Imperial, Filters.Rukh, Filters.AT_ST, Filters.AT_DP, Filters.speeder_bike, Filters.here(self));
+        Filter filter = Filters.and(Filters.here(self), Filters.or(Filters.Imperial, Filters.Rukh, Filters.AT_ST, Filters.AT_DP, Filters.speeder_bike));
         modifiers.add(new PowerModifier(self, filter, 1));
-        modifiers.add(new ForfeitModifier(self, filter,1 ));
+        modifiers.add(new DefenseValueModifier(self, filter,1 ));
         return modifiers;
     }
 
