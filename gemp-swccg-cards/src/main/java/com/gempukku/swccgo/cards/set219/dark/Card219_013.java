@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set219.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.ControlsWithCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -13,10 +12,8 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.AndCondition;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromHandEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.MayDeployOtherCardsAsReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -41,13 +38,6 @@ public class Card219_013 extends AbstractSite {
     }
 
     @Override
-    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayDeployOtherCardsAsReactToLocationModifier(self, "Deploy a card as a 'react'", new AndCondition(new ControlsWithCondition(playerOnDarkSideOfLocation, self, Filters.leader)), playerOnDarkSideOfLocation, Filters.any, Filters.battleLocation));
-        return modifiers;
-    }
-
-    @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.character, Filters.not(Filters.Rebel)),1, Filters.here(self)));
@@ -60,14 +50,14 @@ public class Card219_013 extends AbstractSite {
 
         if(TriggerConditions.battleInitiatedAt(game, effectResult, Filters.relatedSite(self))
                 && GameConditions.controlsWith(game, playerOnDarkSideOfLocation, self, Filters.leader)
-                && GameConditions.isOncePerBattle(game, self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId)){
+                && GameConditions.isOncePerBattle(game, self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.hasHand(game, playerOnDarkSideOfLocation)){
             OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.appendUsage(
                     new OncePerBattleEffect(action)
             );
             action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.any, Filters.battleLocation, false, true, true)
-            );
+                    new DeployCardToTargetFromHandEffect(action, playerOnDarkSideOfLocation, Filters.any, Filters.battleLocation, false, true));
             return Collections.singletonList(action);
         }
         return null;

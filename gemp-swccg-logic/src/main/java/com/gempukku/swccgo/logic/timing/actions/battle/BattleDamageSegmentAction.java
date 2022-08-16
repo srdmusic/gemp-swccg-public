@@ -211,9 +211,12 @@ public class BattleDamageSegmentAction extends SystemQueueAction {
                             float battleDamageRemaining = battleState.getBattleDamageRemaining(game, _playerId);
                             float attritionRemaining = battleState.getAttritionRemaining(game, _playerId);
 
+                            Collection<PhysicalCard> cardsInBattle = Filters.filterActive(game,
+                                    null, Filters.and(Filters.owner(_playerId), Filters.participatingInBattle));
+                            // Get cards from battle that may not be forfeited
+                            Collection<PhysicalCard> cardsThatMayNotBeForfeited = Filters.filter(cardsInBattle, game, Filters.mayNotBeForfeited);
                             // Get cards from battle that can be forfeited to satisfy battle damage and attrition
-                            Collection<PhysicalCard> cardsThatMayBeForfeited = Filters.filterActive(game,
-                                    null, Filters.and(Filters.owner(_playerId), Filters.participatingInBattle, Filters.mayBeForfeited));
+                            Collection<PhysicalCard> cardsThatMayBeForfeited = Filters.filter(cardsInBattle, game, Filters.mayBeForfeited);
                             // Get any cards that must be forfeited
                             Collection<PhysicalCard> cardsThatMustBeForfeited = Filters.filter(cardsThatMayBeForfeited, game, Filters.mustBeForfeited);
 
@@ -319,10 +322,17 @@ public class BattleDamageSegmentAction extends SystemQueueAction {
                                 _text = "Choose a card from battle to forfeit";
                                 game.getGameState().sendMessage(_playerId + " has cards remaining that must be forfeited");
                             }
-                            // Attrition remaining (and may be ignored)
+                            // Attrition remaining (and may be ignored, unless there is a card that can not be forfeited)
                             else if (!cardsThatMayBeForfeited.isEmpty()
                                     && attritionRemaining > 0) {
-                                isOptionalSelection = true;
+
+
+                                if(cardsThatMayNotBeForfeited.isEmpty()){
+                                    isOptionalSelection = true;
+                                    _text = "Choose a card from battle to forfeit (if desired)";
+                                }else{
+                                    _text = "Choose a card to forfeit to satisfy attrition. " + GameUtils.getAppendedTextNames(cardsThatMayNotBeForfeited) + " may not be chosen.";
+                                }
 
                                 // Add cards that may be forfeited
                                 selectableCards.addAll(cardsThatMayBeForfeited);

@@ -1922,6 +1922,12 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 && !hasKeyword(gameState, physicalCard, Keyword.MAY_NOT_BE_FORFEITED_IN_BATTLE);
     }
 
+    @Override
+    public boolean mayNotBeForfeitedInBattle(GameState gameState, PhysicalCard physicalCard) {
+        return hasKeyword(gameState, physicalCard, Keyword.MAY_NOT_BE_FORFEITED_IN_BATTLE);
+    }
+
+
     /**
      * Gets a card's current forfeit value to use when forfeiting card.
      * @param gameState the game state

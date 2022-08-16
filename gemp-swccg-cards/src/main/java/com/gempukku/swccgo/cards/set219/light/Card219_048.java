@@ -170,7 +170,7 @@ public class Card219_048 extends AbstractObjective {
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
                 && (GameConditions.controlsWith(game, self, playerId, 3, Filters.Lothal_location, Filters.Rebel)
-                || GameConditions.occupiesWith(game, self, playerId, 3, Filters.Lothal_location, Filters.and(Keyword.PHOENIX_SQUADRON, Filters.character)))
+                || GameConditions.occupiesWith(game, self, playerId, 3, Filters.Lothal_location, Filters.Phoenix_Squadron_character))
                 && !GameConditions.controls(game, opponent, Filters.Lothal_location)) {
 
 

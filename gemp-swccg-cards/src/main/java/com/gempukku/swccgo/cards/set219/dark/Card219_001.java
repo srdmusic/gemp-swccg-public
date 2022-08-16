@@ -5,6 +5,7 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
+import com.gempukku.swccgo.cards.evaluators.PerStarDestroyerEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -16,6 +17,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.evaluators.ConstantEvaluator;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -81,7 +83,8 @@ public class Card219_001 extends AbstractObjective {
         Filter mayNotPlayFilter = Filters.or(Filters.and(Filters.your(self), Filters.admiral, Filters.except(Filters.Thrawn)),
                 Filters.and(Filters.your(self), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.hasAbilityOrHasPermanentPilotWithAbility, Icon.PRESENCE)));
         modifiers.add(new MayNotPlayModifier(self, mayNotPlayFilter, self.getOwner()));
-        modifiers.add(new DeployCostModifier(self, Filters.and(Filters.Imperial_starship, Filters.Star_Destroyer), new CardMatchesEvaluator(-1, -3, Filters.Chimaera)));
+        modifiers.add(new DeployCostModifier(self, Filters.and(Filters.Imperial_starship, Filters.Star_Destroyer),
+        new CardMatchesEvaluator(new PerStarDestroyerEvaluator(-1), new ConstantEvaluator( -3), Filters.Chimaera)));
         return modifiers;
     }
 
