@@ -115,7 +115,7 @@ public class Card219_048_BACK extends AbstractObjective {
         String opponent = game.getOpponent(playerId);
 
         // Track if you have force drained this turn
-        if (TriggerConditions.forceDrainCompleted(game, effectResult, playerId)) {
+        if (TriggerConditions.forceDrainCompleted(game, effectResult, playerId, Filters.battleground)) {
             self.setWhileInPlayData(new WhileInPlayData(true));
         }
 
