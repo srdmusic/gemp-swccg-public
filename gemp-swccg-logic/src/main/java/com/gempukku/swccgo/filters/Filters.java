@@ -1649,29 +1649,6 @@ public class Filters {
             return modifiersQuerying.mayBeForfeitedInBattle(gameState, physicalCard);
         }
     };
-    /**
-     * Wrapper method to allow other static filters to access the wrapped filter.
-     */
-    private static Filter mayNotBeForfeited() {
-        return mayNotBeForfeited;
-    }
-
-    /**
-     * Filter that accepts cards that may not be forfeited in battle.
-     */
-    public static final Filter mayNotBeForfeited = new Filter() {
-        @Override
-        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-            return modifiersQuerying.mayNotBeForfeitedInBattle(gameState, physicalCard);
-        }
-    };
-
-    /**
-     * Wrapper method to allow other static filters to access the wrapped filter.
-     */
-    private static Filter mayBeForfeited() {
-        return mayBeForfeited;
-    }
 
     /**
      * Filter that accepts cards that must be forfeited in battle.

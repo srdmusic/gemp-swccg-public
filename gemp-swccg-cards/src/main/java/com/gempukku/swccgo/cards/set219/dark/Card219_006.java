@@ -33,12 +33,13 @@ import java.util.List;
 public class Card219_006 extends AbstractAlien {
     public Card219_006() {
         super(Side.DARK, 2, 3, 4, 2, 4, "Fennec Shand", Uniqueness.UNIQUE);
+        setArmor(4);
         setLore("Female assassin, bounty hunter, and mercenary.");
         setGameText("If you just initiated battle here, battle damage against you here this turn is canceled. " +
                     "Once per turn, may target opponent's non-'hit' character here. If Fennec on table when target lost this turn, opponent loses 1 Force.");
         addPersona(Persona.FENNEC_SHAND);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_19);
-        addKeywords(Keyword.FEMALE, Keyword.ASSASSIN, Keyword.BOUNTY_HUNTER, Keyword.MERCENARY);;
+        addKeywords(Keyword.FEMALE, Keyword.ASSASSIN, Keyword.BOUNTY_HUNTER, Keyword.MERCENARY);
     }
 
     @Override
