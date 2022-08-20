@@ -39,6 +39,8 @@ public class Card501_054 extends AbstractStarfighter {
                 "Din Djarin deploys -1 aboard. While Din piloting, immune to attrition < 5 " +
                 "and once per game may use 3 Force to cancel a battle just initiated here.");
         addIcons(Icon.NAV_COMPUTER, Icon.INDEPENDENT, Icon.VIRTUAL_SET_20);
+        setPilotCapacity(1);
+        setPassengerCapacity(1);
         setMatchingPilotFilter(Filters.Din);
         setTestingText("Din Djarin's Modified N-1");
     }
