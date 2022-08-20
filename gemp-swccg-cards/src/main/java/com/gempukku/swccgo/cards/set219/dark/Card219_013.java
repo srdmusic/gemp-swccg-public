@@ -7,12 +7,14 @@ import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.ReactActionOption;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromHandEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromHandEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -48,16 +50,21 @@ public class Card219_013 extends AbstractSite {
     protected List<OptionalGameTextTriggerAction> getGameTextDarkSideOptionalAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
+        final ReactActionOption reactActionOption = new ReactActionOption(self, false, 0, false, null, null, Filters.battleLocation, null, false);
+        final Filter filter = Filters.deployableToTarget(self, Filters.battleLocation, true, false, 0, null, null, null, null, reactActionOption);
+
         if(TriggerConditions.battleInitiatedAt(game, effectResult, Filters.relatedSite(self))
                 && GameConditions.controlsWith(game, playerOnDarkSideOfLocation, self, Filters.leader)
                 && GameConditions.isOncePerBattle(game, self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.hasHand(game, playerOnDarkSideOfLocation)){
+                && GameConditions.hasInHandOrDeployableAsIfFromHand(game, playerOnDarkSideOfLocation, filter)){
+
+
             OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.appendUsage(
                     new OncePerBattleEffect(action)
             );
             action.appendEffect(
-                    new DeployCardToTargetFromHandEffect(action, playerOnDarkSideOfLocation, Filters.any, Filters.battleLocation, false, true));
+                    new DeployCardToLocationFromHandEffect(action, playerOnDarkSideOfLocation, filter, Filters.battleLocation, false, true));
             return Collections.singletonList(action);
         }
         return null;

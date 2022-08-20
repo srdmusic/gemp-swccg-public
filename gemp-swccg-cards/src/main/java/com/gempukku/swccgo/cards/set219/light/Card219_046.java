@@ -9,6 +9,7 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.ReactActionOption;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
@@ -52,14 +53,16 @@ public class Card219_046 extends AbstractUsedInterrupt {
 
         GameTextActionId gameTextActionId = GameTextActionId.UTINNI__DOWNLOAD_OR_MOVE_JAWA;
 
-        final Filter yourJawa = Filters.and(Filters.your(playerId), Filters.Jawa);
+        final ReactActionOption reactActionOption = new ReactActionOption(self, false, -1, false, null, null, Filters.battleLocation, null, false);
+        final Filter filter = Filters.and(Filters.Jawa, Filters.deployableToTarget(self, Filters.battleLocation, true, false, -1, Filters.Jawa, null, null, null, reactActionOption));
 
         // Check condition(s)
         if ((TriggerConditions.battleInitiated(game, effectResult, opponent)
                 || TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent))
-                && GameConditions.hasInHand(game, playerId, Filters.Jawa)) {
+                && GameConditions.hasInHandOrDeployableAsIfFromHand(game, playerId, filter)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+
             action.setText("Deploy Jawa as 'react'");
             // Allow response(s)
             action.allowResponses("Deploy Jawa as a 'react'",
@@ -68,12 +71,14 @@ public class Card219_046 extends AbstractUsedInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardToTargetFromHandEffect(action, playerId, Filters.Jawa, Filters.any, false, true, -1));
-                        }
+                                    new DeployCardToTargetFromHandEffect(action, playerId, filter, Filters.battleLocation, false, true, -1));
+                    }
                     }
             );
             actions.add(action);
         }
+
+        final Filter yourJawa = Filters.and(Filters.your(playerId), Filters.Jawa);
 
         if ((TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent)
                 || TriggerConditions.battleInitiated(game, effectResult, opponent))
