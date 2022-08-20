@@ -25,17 +25,17 @@ import java.util.List;
  * Set: Set 20
  * Type: Character
  * Subtype: Imperial
- * Title: Captain Lennox
+ * Title: Captain Lennox (V)
  */
-public class Card501_101 extends AbstractImperial {
-    public Card501_101() {
+public class Card501_015 extends AbstractImperial {
+    public Card501_015() {
         super(Side.DARK, 2, 2, 2, 2, 4, Title.Captain_Lennox, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Captain of the Imperial Star Destroyer Tyrant. An able leader. Unlike most Imperial officers, he is dedicated to his ship and crew. Finds political maneuvering distasteful.");
         setGameText("Adds 2 to power of anything he pilots. While piloting a [Hoth], [Dagobah], or [Cloud City] Star Destroyer, it is immune to attrition < 4 and starships here may not ‘attach.’ During battle, if opponent drew destiny to subtract from your total attrition, opponent loses 1 Force.");
         addKeywords(Keyword.CAPTAIN, Keyword.LEADER);
         addIcons(Icon.HOTH, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
-        setTestingText("~Captain Lennox (V)");
+        setTestingText("Captain Lennox (V)");
     }
 
     @Override

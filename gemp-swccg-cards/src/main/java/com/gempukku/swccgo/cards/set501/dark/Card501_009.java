@@ -1,79 +1,106 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
-import com.gempukku.swccgo.cards.AbstractPermanentWeapon;
-import com.gempukku.swccgo.cards.conditions.AtCondition;
-import com.gempukku.swccgo.cards.conditions.BlownAwayCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.FireWeaponAction;
-import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
-import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.evaluators.ConstantEvaluator;
-import com.gempukku.swccgo.logic.evaluators.Evaluator;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeExcludedFromBattle;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Character
  * Subtype: Alien
- * Title: Tusken Raider With Hunting Rifle
+ * Title: Black Krrsantan
  */
 public class Card501_009 extends AbstractAlien {
     public Card501_009() {
-        super(Side.DARK, 2, 2, 2, 2, 3, "Tusken Raider With Hunting Rifle");
-        setGameText("Permanent weapon is Hunting Rifle (may target a character or creature; draw destiny; target hit and forfeit -2 if destiny +1 > defense value). If firing from Dune Sea, Jundland Wastes, or a canyon, target at an adjacent site or add 1 to weapon destiny.");
-        setSpecies(Species.TUSKEN_RAIDER);
-        addIcons(Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_19);
-        setTestingText("Tusken Raider With Hunting Rifle");
-    }
-
-
-    @Override
-    public final boolean hasSpecialDefenseValueAttribute() {
-        return true;
-    }
-
-    @Override
-    public final float getSpecialDefenseValue() {
-        return 2;
+        super(Side.DARK, 2, 4, 7, 2, 5, "Black Krrsantan", Uniqueness.UNIQUE);
+        setLore("Wookiee bounty hunter.");
+        setGameText("May not be excluded from battle. If a battle was just initiated here, each player with four or " +
+                "more characters here must return one of those characters to hand (owner's choice). " +
+                "Opponent’s characters of ability < 3 are power -1 here.");
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
+        setSpecies(Species.WOOKIEE);
+        addKeywords(Keyword.BOUNTY_HUNTER);
+        setTestingText("Black Krrsantan");
     }
 
     @Override
-    protected AbstractPermanentWeapon getGameTextPermanentWeapon() {
-        AbstractPermanentWeapon permanentWeapon = new AbstractPermanentWeapon("Hunting Rifle") {
-            @Override
-            public List<FireWeaponAction> getGameTextFireWeaponActions(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, int extraForceRequired, PhysicalCard sourceCard, boolean repeatedFiring, Filter targetedAsCharacter, Float defenseValueAsCharacter, Filter fireAtTargetFilter, boolean ignorePerAttackOrBattleLimit) {
-                FireWeaponActionBuilder actionBuilder = FireWeaponActionBuilder.startBuildPrep(playerId, game, sourceCard, self, this, forFree, extraForceRequired, repeatedFiring, targetedAsCharacter, defenseValueAsCharacter, fireAtTargetFilter, ignorePerAttackOrBattleLimit)
-                        .targetForFree(Filters.or(Filters.character, targetedAsCharacter, Filters.vehicle), TargetingReason.TO_BE_HIT).finishBuildPrep();
-                if (actionBuilder != null) {
-
-                    // Build action using common utility
-                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 1, Statistic.DEFENSE_VALUE, false, -2);
-                    return Collections.singletonList(action);
-                }
-                return null;
-            }
-        };
-        permanentWeapon.addKeyword(Keyword.RIFLE);
-        return permanentWeapon;
-    }
-
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        Condition highGroundCondition = new AtCondition(self, Filters.or(Filters.Dune_Sea, Filters.Jundland_Wastes, Filters.canyon));
-
-        modifiers.add(new MayTargetAdjacentSiteModifier(self, Filters.permanentWeaponOf(self), highGroundCondition));
-        modifiers.add(new TotalWeaponDestinyModifier(self, Filters.permanentWeaponOf(self), highGroundCondition, self, new ConstantEvaluator(1), Filters.here(self)));
-
+        modifiers.add(new MayNotBeExcludedFromBattle(self, self));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.opponents(self), Filters.here(self), Filters.character, Filters.abilityLessThan(3)), -1));
         return modifiers;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new ArrayList<>();
+
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+
+        Filter charactersHere = Filters.and(Filters.here(self), Filters.character);
+
+        Filter opponentsCharactersHere = Filters.and(Filters.opponents(playerId), charactersHere);
+        Filter yourCharactersHere = Filters.and(Filters.your(playerId), charactersHere);
+
+        int numOpponentCharactersHere = Filters.countActive(game, self, opponentsCharactersHere);
+        int numYourCharactersHere = Filters.countActive(game, self, yourCharactersHere);
+
+        // Check condition(s)
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.here(self))
+                && numOpponentCharactersHere >= 4) {
+
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, GameTextActionId.OTHER_CARD_ACTION_1);
+            action.setText("Return a character to Hand");
+            // Perform result(s)
+            action.appendEffect(
+                    new ChooseCardOnTableEffect(action, opponent, "Choose character to return to your hand", opponentsCharactersHere) {
+                        @Override
+                        protected void cardSelected(PhysicalCard selectedCard) {
+                            action.appendEffect(
+                                    new ReturnCardToHandFromTableEffect(action, selectedCard)
+                            );
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
+        // Check condition(s)
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.here(self))
+                && numYourCharactersHere >= 4) {
+
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, GameTextActionId.OTHER_CARD_ACTION_2);
+            action.setText("Return a character to Hand");
+            // Perform result(s)
+            action.appendEffect(
+                    new ChooseCardOnTableEffect(action, playerId, "Choose character to return to your hand", yourCharactersHere) {
+                        @Override
+                        protected void cardSelected(PhysicalCard selectedCard) {
+                            action.appendEffect(
+                                    new ReturnCardToHandFromTableEffect(action, selectedCard)
+                            );
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+        return actions;
     }
 }

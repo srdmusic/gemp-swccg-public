@@ -27,7 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Effect
  * Subtype: Immediate
  * Title: I Can't Believe He's Gone (V)
@@ -40,7 +40,7 @@ public class Card501_053 extends AbstractNormalEffect {
         setGameText("Deploy on table if Obi-Wan ‘communing.’ Opponent’s total battle destiny is -1. Once per game, " +
                 "if your Rebel was just forfeited, may return that Rebel to same site. During battle, " +
                 "may activate one Force or add 1 to a just drawn-destiny. Immune to Alter and Cold Feet.");
-        addIcons(Icon.TATOOINE, Icon.VIRTUAL_SET_19);
+        addIcons(Icon.TATOOINE, Icon.VIRTUAL_SET_20);
         addImmuneToCardTitle(Title.Alter);
         addImmuneToCardTitle(Title.Cold_Feet);
         setTestingText("I Can't Believe He's Gone (V)");
