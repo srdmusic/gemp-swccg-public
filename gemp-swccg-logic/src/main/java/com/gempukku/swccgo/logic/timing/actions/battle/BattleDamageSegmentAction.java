@@ -215,8 +215,14 @@ public class BattleDamageSegmentAction extends SystemQueueAction {
                                     null, Filters.and(Filters.owner(_playerId), Filters.participatingInBattle));
                             // Get cards from battle that can be forfeited to satisfy battle damage and attrition
                             Collection<PhysicalCard> cardsThatMayBeForfeited = Filters.filter(cardsInBattle, game, Filters.mayBeForfeited);
+
+                            Collection<PhysicalCard> cardsThatMayNotBeForfeited = Filters.filter(cardsInBattle, game, Filters.mayNotBeForfeited);
                             // Get any cards that must be forfeited
                             Collection<PhysicalCard> cardsThatMustBeForfeited = Filters.filter(cardsThatMayBeForfeited, game, Filters.mustBeForfeited);
+
+                            Collection<PhysicalCard> eligibleCards = new ArrayList<>();
+                            eligibleCards.addAll(cardsThatMayBeForfeited);
+                            eligibleCards.addAll(cardsThatMayNotBeForfeited);
 
                             // Determine if all cards present that can be forfeited are immune to the total attrition.
                             boolean attritionCanBeIgnored = false;
@@ -229,11 +235,11 @@ public class BattleDamageSegmentAction extends SystemQueueAction {
                                 // Immunity to attrition (exactly)
                                 boolean allHaveSufficentImmunityToAttritionOfExactly = true;
 
-                                for (PhysicalCard forfeitableCard : cardsInBattle) {
+                                for (PhysicalCard eligibleCard : eligibleCards) {
                                     // Only check cards present at the battle
-                                    if (Filters.wherePresent(forfeitableCard).accepts(gameState, modifiersQuerying, battleState.getBattleLocation())) {
+                                    if (Filters.wherePresent(eligibleCard).accepts(gameState, modifiersQuerying, battleState.getBattleLocation())) {
 
-                                        float exactImmunity = modifiersQuerying.getImmunityToAttritionOfExactly(gameState, forfeitableCard);
+                                        float exactImmunity = modifiersQuerying.getImmunityToAttritionOfExactly(gameState, eligibleCard);
                                         if (exactImmunity > 0) {
                                             if (exactImmunity != totalAttrition) {
                                                 allHaveSufficentImmunityToAttritionOfExactly = false;
@@ -241,7 +247,7 @@ public class BattleDamageSegmentAction extends SystemQueueAction {
                                             }
                                         }
                                         else {
-                                            float immunityToLessThan = modifiersQuerying.getImmunityToAttritionLessThan(gameState, forfeitableCard);
+                                            float immunityToLessThan = modifiersQuerying.getImmunityToAttritionLessThan(gameState, eligibleCard);
                                             if (immunityToLessThan <= totalAttrition) {
                                                 allHaveSufficentImmunityToAttritionLessThan = false;
                                                 break;

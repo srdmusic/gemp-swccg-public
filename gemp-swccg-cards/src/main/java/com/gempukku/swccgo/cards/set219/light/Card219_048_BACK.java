@@ -21,7 +21,7 @@ import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier;
+import com.gempukku.swccgo.logic.modifiers.NumberOfBattleDestinyDrawsMayNotBeLimitedForEitherPlayerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -48,8 +48,7 @@ public class Card219_048_BACK extends AbstractObjective {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ForceDrainModifier(self, Filters.battleground, new InPlayDataEqualsCondition(self, true), 1, self.getOwner()));
-        modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier(self, Filters.Lothal_system, self.getOwner()));
-        modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedByOpponentModifier(self, Filters.Lothal_system, game.getOpponent(self.getOwner())));
+        modifiers.add(new NumberOfBattleDestinyDrawsMayNotBeLimitedForEitherPlayerModifier(self, Filters.Lothal_system));
         return modifiers;
     }
 
