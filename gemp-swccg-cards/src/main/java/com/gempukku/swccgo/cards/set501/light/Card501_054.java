@@ -5,7 +5,10 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.HasPilotingCondition;
 import com.gempukku.swccgo.cards.effects.CancelBattleEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -42,7 +45,7 @@ public class Card501_054 extends AbstractStarfighter {
 
     @Override
     protected Filter getGameTextValidPassengerFilter(String playerId, SwccgGame game, PhysicalCard self) {
-        return Filters.persona(Persona.GROGU);
+        return Filters.Grogu;
     }
 
     @Override
