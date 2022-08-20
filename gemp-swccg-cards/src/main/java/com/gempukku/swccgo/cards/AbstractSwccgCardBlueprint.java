@@ -876,6 +876,19 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
     }
 
     /**
+     * Gets a filter for the cards that are valid to be passengers of the specified card.
+     * @param playerId the player
+     * @param game the game
+     * @param self the card
+     * @param forDeployment true if checking for deployment, otherwise false
+     * @return the filter
+     */
+    @Override
+    public Filter getValidPassengerFilter(String playerId, SwccgGame game, PhysicalCard self, boolean forDeployment) {
+        throw new UnsupportedOperationException("This method, getValidPassengersFilter(), should not be called on this card: " + _title);
+    }
+
+    /**
      * Gets the pilot capacity.
      * @return the pilot capacity
      */

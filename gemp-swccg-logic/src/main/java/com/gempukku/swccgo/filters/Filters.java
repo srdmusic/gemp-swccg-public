@@ -8254,6 +8254,9 @@ public class Filters {
                 if (card.getBlueprint().getCardCategory() != CardCategory.CHARACTER)
                     return false;
 
+                if (!physicalCard.getBlueprint().getValidPassengerFilter(physicalCard.getOwner(), gameState.getGame(), physicalCard, false).accepts(gameState, modifiersQuerying, card))
+                    return false;
+
                 if(physicalCard.getBlueprint().getCardCategory() == CardCategory.VEHICLE
                         && physicalCard.getBlueprint().getCardCategory() == CardCategory.STARSHIP){
                     int numCaptives = gameState.getCaptivesOfEscort(card).size();
