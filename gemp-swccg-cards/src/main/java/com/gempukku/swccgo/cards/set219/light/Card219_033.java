@@ -48,7 +48,8 @@ public class Card219_033 extends AbstractRebel {
         GameTextActionId gameTextActionId = GameTextActionId.EZRA_HERO_OF_PHOENIX_SQUADRON__RETRIEVE_PHOENIX_SQUADRON_CHARACTER_INTO_HAND;
 
         // Check condition(s)
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)) {
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+            && GameConditions.hasLostPile(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Retrieve a character into hand");
