@@ -40,7 +40,6 @@ public class Card501_051 extends AbstractCharacterDevice {
         addIcons(Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
         setTestingText("Mercenary Armor (V)");
-        hideFromDeckBuilder();
     }
 
     @Override
