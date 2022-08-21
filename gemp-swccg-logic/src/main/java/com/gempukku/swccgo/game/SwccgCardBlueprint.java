@@ -1634,16 +1634,6 @@ public interface SwccgCardBlueprint {
     Filter getValidPilotFilter(String playerId, SwccgGame game, PhysicalCard self, boolean forDeployment);
 
     /**
-     * Gets a filter for the cards that are valid to be passengers of the specified card.
-     * @param playerId the player
-     * @param game the game
-     * @param self the card
-     * @param forDeployment true if checking for deployment, otherwise false
-     * @return the filter
-     */
-    Filter getValidPassengerFilter(String playerId, SwccgGame game, PhysicalCard self, boolean forDeployment);
-
-    /**
      * Gets a filter for the cards that are matching characters for this.
      * @return the filter
      */
