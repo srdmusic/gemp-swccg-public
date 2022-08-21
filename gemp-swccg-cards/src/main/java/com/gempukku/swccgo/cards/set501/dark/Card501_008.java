@@ -1,7 +1,23 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.DrawDestinyState;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Set: Set 20
@@ -22,6 +38,43 @@ public class Card501_008 extends AbstractAlien {
         addKeywords(Keyword.BOUNTY_HUNTER, Keyword.SCOUT);
         setSpecies(Species.GAND);
         setTestingText("Zuckuss (V)");
-        hideFromDeckBuilder();
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new ArrayList<>();
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
+        modifiers.add(new PowerModifier(self, new WithCondition(self, Filters._4_LOM), 2));
+        modifiers.add(new DefenseValueModifier(self, new WithCondition(self, Filters._4_LOM), 2));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
+        return modifiers;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, final EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        if(TriggerConditions.isWeaponDestinyJustDrawnBy(game, effectResult, game.getOpponent(playerId))
+            || TriggerConditions.isBattleDestinyJustDrawnBy(game, effectResult, game.getOpponent(playerId))
+            && GameConditions.isOncePerBattle(game, self, gameTextSourceCardId, gameTextActionId)){
+
+            final DrawDestinyState opponentDestinyState = game.getGameState().getTopDrawDestinyState();
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.appendUsage(
+                    new OncePerBattleEffect(action)
+            );
+            action.appendEffect(
+                    new DrawDestinyEffect(action, "") {
+                        @Override
+                        protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
+                            float newValue = destinyDrawValues.get(0);
+                            opponentDestinyState.getDrawDestinyEffect().resetDestiny(newValue);
+                        }
+                    }
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }
