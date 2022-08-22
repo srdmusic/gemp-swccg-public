@@ -4346,6 +4346,10 @@ var Card = Class.extend({
                    (cardNo == 18) ||
                    (cardNo == 22) ||
                    (cardNo == 30);
+        }if(setNo == 219) {
+            return (cardNo >= 11 && cardNo <=14) ||
+                   (cardNo == 31) ||
+                   (cardNo >= 39 && cardNo <=42);
         }if (setNo == 501) {
             return (cardNo == 6) ||
                    (cardNo == 10);
