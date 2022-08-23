@@ -3520,6 +3520,7 @@ var fixedImages = {
 "501_59":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
 "501_60":"https://res.starwarsccg.org/cards/Hoth-Light/large/echobasetrooper.gif",
 "501_61":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/scurrier.gif",
+"501_62":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/antillesmaneuver.gif",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",
@@ -4345,6 +4346,10 @@ var Card = Class.extend({
                    (cardNo == 18) ||
                    (cardNo == 22) ||
                    (cardNo == 30);
+        }if(setNo == 219) {
+            return (cardNo >= 11 && cardNo <=14) ||
+                   (cardNo == 31) ||
+                   (cardNo >= 39 && cardNo <=42);
         }if (setNo == 501) {
             return (cardNo == 6) ||
                    (cardNo == 10);
