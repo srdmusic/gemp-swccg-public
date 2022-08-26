@@ -17767,7 +17767,7 @@ public class Filters {
     public static final Filter Ewok_Village = Filters.title(Title.Ewok_Village);
     public static final Filter Ewok_weapon = Filters.keyword(Keyword.EWOK_WEAPON);
     public static final Filter Executor = Filters.persona(Persona.EXECUTOR);
-    public static final Filter Executor_site = Filters.siteOfStarshipOrVehicle(Persona.EXECUTOR, false);
+    public static final Filter Executor_site = Filters.siteOfStarshipOrVehicle(Persona.EXECUTOR, true);
     public static final Filter Expand_The_Empire = Filters.title(Title.Expand_The_Empire);
     public static final Filter Explosive_Charge = Filters.title(Title.Explosive_Charge);
     public static final Filter exterior_battleground_site = Filters.and(Filters.icon(Icon.EXTERIOR_SITE), Filters.battleground());

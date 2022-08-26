@@ -15,6 +15,8 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.decisions.IntegerAwaitingDecision;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -32,7 +34,7 @@ import java.util.List;
 public class Card219_045 extends AbstractUsedInterrupt {
     public Card219_045() {
         super(Side.LIGHT, 5, "This Is Our Rebellion", Uniqueness.UNIQUE);
-        setGameText(" Peek at up to X cards from the top of your Reserve Deck, where X = number of your Lothal sites on table; " +
+        setGameText("Peek at up to X cards from the top of your Reserve Deck, where X = number of your Lothal sites on table; " +
                 "take one into hand and shuffle your Reserve Deck. " +
                 "OR Cancel an attempt to target your starship with a weapon or tractor beam.");
         addIcons(Icon.VIRTUAL_SET_19);
@@ -58,12 +60,22 @@ public class Card219_045 extends AbstractUsedInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, yourLothalSiteCount, 1, 1));
-                            action.appendEffect(
-                                    new ShuffleReserveDeckEffect(action));
+                                    new PlayoutDecisionEffect(action, playerId,
+                                            new IntegerAwaitingDecision("Choose number of cards to peek at", 1, yourLothalSiteCount, yourLothalSiteCount) {
+                                                @Override
+                                                public void decisionMade(final int numToDraw) {
+                                                    action.appendEffect(
+                                                            new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, yourLothalSiteCount, 1, 1));
+                                                    action.appendEffect(
+                                                            new ShuffleReserveDeckEffect(action));
+                                                }
+                                            }
+                                    ));
                         }
                     }
             );
+
+
             actions.add(action);
         }
 
