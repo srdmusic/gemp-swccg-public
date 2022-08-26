@@ -10174,7 +10174,7 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that fired a weapon this battle.
+     * Filter that accepts cards that did not fire a permanent weapon this battle.
      *
      * @return Filter
      */

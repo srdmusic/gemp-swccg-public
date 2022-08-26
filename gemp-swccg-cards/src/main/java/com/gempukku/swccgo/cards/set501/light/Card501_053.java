@@ -14,10 +14,11 @@ import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
-import com.gempukku.swccgo.logic.effects.PlaceAtLocationFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
@@ -37,12 +38,11 @@ public class Card501_053 extends AbstractNormalEffect {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.I_Cant_Believe_Hes_Gone, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Even though Luke felt the pain of losing his mentor, Obi-Wan continued to give him strength and guidance through the Force.");
-        setGameText("Deploy on table if Obi-Wan ‘communing.’ Opponent’s total battle destiny is -1. Once per game, " +
-                "if your Rebel was just forfeited, may return that Rebel to same site. During battle, " +
-                "may activate one Force or add 1 to a just drawn-destiny. Immune to Alter and Cold Feet.");
+        setGameText("If Obi-Wan ‘communing,’ deploy on table. " +
+                    "If Master Kenobi just modified your power, opponent’s total battle destiny is -1. " +
+                    "Once per game, may take your just lost Rebel into hand. Once per battle, may activate 1 Force or add 1 to a just drawn destiny. [Immune to Alter.]");
         addIcons(Icon.TATOOINE, Icon.VIRTUAL_SET_20);
         addImmuneToCardTitle(Title.Alter);
-        addImmuneToCardTitle(Title.Cold_Feet);
         setTestingText("I Can't Believe He's Gone (V)");
     }
 
@@ -54,7 +54,7 @@ public class Card501_053 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new TotalBattleDestinyModifier(self, -1, game.getOpponent(self.getOwner())));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.title(Title.Master_Kenobi), ModifyGameTextType.MASTER_KENOBI__SUBTRACT_FROM_BATTLE_DESTINY_IF_POWER_MODIFIED));
         return modifiers;
     }
 
@@ -104,25 +104,24 @@ public class Card501_053 extends AbstractNormalEffect {
 
         gameTextActionId = GameTextActionId.I_CANT_BELIEVE_HES_GONE__RETURN_A_REBEL;
         // Check condition(s)
-        if (TriggerConditions.justForfeitedToLostPileFromLocation(game, effectResult, Filters.and(Filters.your(self), Filters.Rebel), Filters.site)
+        if (TriggerConditions.justLost(game, effectResult, playerId, Filters.and(Filters.your(self), Filters.Rebel))
             && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
             LostFromTableResult lostFromTableResult = (LostFromTableResult) effectResult;
             final PhysicalCard cardLost = lostFromTableResult.getCard();
-            final PhysicalCard location = lostFromTableResult.getFromLocation();
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Revive " + GameUtils.getFullName(cardLost));
+            action.setText("Take " + GameUtils.getFullName(cardLost) + " into hand");
             // Pay cost(s)
             action.appendUsage(
                     new OncePerGameEffect(action));
             // Allow response(s)
-            action.allowResponses("Revive " + GameUtils.getCardLink(cardLost),
+            action.allowResponses("Take " + GameUtils.getCardLink(cardLost) + " into hand",
                     new RespondableEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new PlaceAtLocationFromLostPileEffect(action, playerId, cardLost, location, false, true));
+                                    new TakeCardIntoHandFromLostPileEffect(action, playerId, cardLost, false, true));
                         }
                     }
             );
