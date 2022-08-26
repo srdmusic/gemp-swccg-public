@@ -1170,7 +1170,8 @@ public class TriggerConditions {
     public static boolean isTargetedForReason(SwccgGame game, Effect effect, String playerId, Filterable targetFilter, Collection<TargetingReason> targetingReasons) {
         if (effect.getType() == Effect.Type.PLAYING_CARD_EFFECT
                 || effect.getType() == Effect.Type.RESPONDABLE_EFFECT
-                || effect.getType() == Effect.Type.WEAPON_FIRING_EFFECT) {
+                || effect.getType() == Effect.Type.WEAPON_FIRING_EFFECT
+                || effect.getType() == Effect.Type.USING_TRACTOR_BEAM_EFFECT) {
             if (!effect.isCanceled()) {
                 Action targetingAction = effect.getAction();
                 if (playerId.equals(targetingAction.getPerformingPlayer())) {
