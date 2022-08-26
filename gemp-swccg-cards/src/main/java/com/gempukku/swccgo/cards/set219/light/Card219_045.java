@@ -52,9 +52,9 @@ public class Card219_045 extends AbstractUsedInterrupt {
                 && GameConditions.hasReserveDeck(game, playerId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Peek at top " + yourLothalSiteCount + " card" + GameUtils.s(yourLothalSiteCount)+ " of Reserve Deck");
+            action.setText("Peek at up to top " + yourLothalSiteCount + " card" + GameUtils.s(yourLothalSiteCount)+ " of Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Peek at top " + yourLothalSiteCount + " card" + GameUtils.s(yourLothalSiteCount)+ " of Reserve Deck and take one into hand",
+            action.allowResponses("Peek at up to top " + yourLothalSiteCount + " card" + GameUtils.s(yourLothalSiteCount)+ " of Reserve Deck and take one into hand",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
@@ -65,7 +65,7 @@ public class Card219_045 extends AbstractUsedInterrupt {
                                                 @Override
                                                 public void decisionMade(final int numToDraw) {
                                                     action.appendEffect(
-                                                            new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, yourLothalSiteCount, 1, 1));
+                                                            new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, numToDraw, 1, 1));
                                                     action.appendEffect(
                                                             new ShuffleReserveDeckEffect(action));
                                                 }
