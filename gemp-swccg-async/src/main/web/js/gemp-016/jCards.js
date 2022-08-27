@@ -3521,6 +3521,23 @@ var fixedImages = {
 "501_60":"https://res.starwarsccg.org/cards/Hoth-Light/large/echobasetrooper.gif",
 "501_61":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/scurrier.gif",
 "501_62":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/antillesmaneuver.gif",
+"501_65": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/republicatwar.gif",
+"501_65_BACK": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/aggressivenegotiations.gif",
+"501_66": "https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/coloclawfish.gif",
+"501_67": "https://res.starwarsccg.org/cards/Virtual11-Light/large/kaminoclonebirthingcenter.gif",
+"501_68": "https://res.starwarsccg.org/cards/Tatooine-Light/large/tatooinemosespa.gif",
+"501_69": "https://res.starwarsccg.org/cards/JabbasPalaceSealedDeck-Light/large/tatooinehutttraderoutedesert.gif",
+"501_70": "https://res.starwarsccg.org/cards/Premiere-Light/large/tatooine.gif",
+"501_71": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/geonosisrockyplains.gif",
+"501_72": "https://res.starwarsccg.org/cards/Coruscant-Light/large/secureroute.gif",
+"501_73": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/muunilinst.gif",
+"501_74": "https://res.starwarsccg.org/cards/Premiere-Light/large/tatooinemoseisley.gif",
+"501_75": "https://res.starwarsccg.org/cards/Coruscant-Light/large/secureroute.gif",
+"501_76": "https://res.starwarsccg.org/cards/TheedPalace-Light/large/gettoyourships.gif",
+"501_77": "https://res.starwarsccg.org/cards/DeathStarII-Light/large/homeone.gif",
+"501_78": "https://res.starwarsccg.org/cards/DeathStarII-Light/large/independence.gif",
+"501_79": "https://res.starwarsccg.org/cards/legacy/VirtualBlock6-Light/large/jedipilot.gif",
+"501_80": "https://res.starwarsccg.org/cards/legacy/VirtualBlock5-Light/large/clonepilot.gif",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",
@@ -4351,8 +4368,14 @@ var Card = Class.extend({
                    (cardNo == 31) ||
                    (cardNo >= 39 && cardNo <=42);
         }if (setNo == 501) {
-            return (cardNo == 6) ||
-                   (cardNo == 10);
+            return (cardNo == 6)  ||
+                   (cardNo == 10) ||
+                   (cardNo == 67) ||
+                   (cardNo == 68) ||
+                   (cardNo == 69) ||
+                   (cardNo == 71) ||
+                   (cardNo == 74)
+                   ;
         }
         if (setNo == 601) {
              return (cardNo == 14) ||

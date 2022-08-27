@@ -17494,6 +17494,8 @@ public class Filters {
     public static final Filter Chiraneau = Filters.title(Title.Chiraneau);
     public static final Filter Chirrut = Filters.title(Title.Chirrut);
     public static final Filter Chopper = Filters.persona(Persona.CHOPPER);
+    public static final Filter Christophsis_location = Filters.partOfSystem(Title.Christophsis);
+    public static final Filter Christophsis_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Christophsis));
     public static final Filter City_In_The_Clouds = Filters.title(Title.City_In_The_Clouds);
     public static final Filter City_Outskirts = Filters.title(Title.City_Outskirts);
     public static final Filter Civil_Disorder = Filters.title(Title.Civil_Disorder);
@@ -17844,6 +17846,8 @@ public class Filters {
     public static final Filter General_Calrissian = Filters.title(Title.General_Calrissian);
     public static final Filter General_Dodonna = Filters.title(Title.General_Dodonna);
     public static final Filter generic_site = Filters.and(Filters.subtype(CardSubtype.SITE), Filters.generic());
+    public static final Filter Geonosis_location = Filters.partOfSystem(Title.Geonosis);
+    public static final Filter Geonosis_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Geonosis));
     public static final Filter Get_Alongside_That_One = Filters.title(Title.Get_Alongside_That_One);
     public static final Filter Ghhhk = Filters.title(Title.Ghhhk);
     public static final Filter Ghost = Filters.title(Title.Ghost);
