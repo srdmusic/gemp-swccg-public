@@ -421,19 +421,34 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         } else {
             List<String> playerNames = getItems(players);
 
-            for (String playerName : playerNames) {
-                Player player = _playerDao.getPlayer(playerName);
+            List<String> invalidUsernames = validateUsernameList(playerNames);
 
-                _collectionManager.addItemsToPlayerCollection(true, "Administrator action ("+getResourceOwnerSafely(request,null).getName()+")", player, createCollectionType(collectionType), productItems);
+            if (!invalidUsernames.isEmpty()) {
+                responseWriter.writeHtmlResponse(usernameListToString(invalidUsernames));
+            } else {
+
+                for (String playerName : playerNames) {
+                    Player player = _playerDao.getPlayer(playerName);
+
+                    _collectionManager.addItemsToPlayerCollection(true, "Administrator action (" + getResourceOwnerSafely(request, null).getName() + ")", player, createCollectionType(collectionType), productItems);
+                }
+
+                responseWriter.writeHtmlResponse("OK");
             }
-
-            responseWriter.writeHtmlResponse("OK");
         }
     }
 
     private String listToString(List<String> cannotAdd) {
         StringBuilder stringBuilder = new StringBuilder("Did not add any items. Unable to add:");
         for (String s : cannotAdd) {
+            stringBuilder.append("<br>" + s);
+        }
+        return stringBuilder.toString();
+    }
+
+    private String usernameListToString(List<String> invalidUsernames) {
+        StringBuilder stringBuilder = new StringBuilder("Did not add any items. Invalid usernames:");
+        for (String s : invalidUsernames) {
             stringBuilder.append("<br>" + s);
         }
         return stringBuilder.toString();
@@ -478,6 +493,20 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         return cannotAdd;
     }
 
+    private List<String> validateUsernameList(Collection<String> playerNames) {
+        List<String> cannotAdd = new ArrayList<>();
+        for(String playerName: playerNames) {
+            try {
+                Player player = _playerDao.getPlayer(playerName);
+                if (player==null)
+                    cannotAdd.add(playerName);
+            } catch(Exception e) {
+                cannotAdd.add(playerName);
+            }
+        }
+        return cannotAdd;
+    }
+
     private void addCurrency(HttpRequest request, ResponseWriter responseWriter) throws HttpProcessingException, Exception {
         validateAdmin(request);
 
@@ -493,12 +522,18 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
 
             List<String> playerNames = getItems(players);
 
-            for (String playerName : playerNames) {
-                Player player = _playerDao.getPlayer(playerName);
-                _collectionManager.addCurrencyToPlayerCollection(true, "Administrator action ("+getResourceOwnerSafely(request,null).getName()+")", player, createCollectionType("permanent"), currencyAmount);
-            }
+            List<String> invalidUsernames = validateUsernameList(playerNames);
 
-            responseWriter.writeHtmlResponse("OK");
+            if (!invalidUsernames.isEmpty()) {
+                responseWriter.writeHtmlResponse(usernameListToString(invalidUsernames));
+            } else {
+                for (String playerName : playerNames) {
+                    Player player = _playerDao.getPlayer(playerName);
+                    _collectionManager.addCurrencyToPlayerCollection(true, "Administrator action (" + getResourceOwnerSafely(request, null).getName() + ")", player, createCollectionType("permanent"), currencyAmount);
+                }
+
+                responseWriter.writeHtmlResponse("OK");
+            }
         }
     }
 
