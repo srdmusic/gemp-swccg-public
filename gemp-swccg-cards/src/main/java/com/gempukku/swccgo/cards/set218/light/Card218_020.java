@@ -56,7 +56,7 @@ public class Card218_020 extends AbstractResistance {
         String opponent = game.getOpponent(playerId);
 
         // Check condition(s)
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.here(self))
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.here(self))
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Icon.FIRST_ORDER, Filters.starship))
                 && GameConditions.canTarget(game, self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY, Filters.Ackbar)) {
 

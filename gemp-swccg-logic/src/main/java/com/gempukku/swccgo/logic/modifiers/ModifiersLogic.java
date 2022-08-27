@@ -5322,8 +5322,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             }
 
             for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
-                if (modifier.isForPlayer(player)
-                        && (destiniesMayBeLimited || modifier.getSource(gameState) == null || player.equals(modifier.getSource(gameState).getOwner()))) {
+                if (destiniesMayBeLimited && modifier.isForPlayer(player)
+                        && (modifier.getSource(gameState) == null || player.equals(modifier.getSource(gameState).getOwner()))) {
                     int limit = modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this);
                     if (curMaxLimit == null || limit < curMaxLimit) {
                         curMaxLimit = limit;
@@ -5365,8 +5365,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 }
 
                 for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
-                    if (modifier.isForPlayer(player)
-                            && (destiniesMayBeLimited || modifier.getSource(gameState) == null || player.equals(modifier.getSource(gameState).getOwner()))) {
+                    if (destiniesMayBeLimited && modifier.isForPlayer(player)
+                            && (modifier.getSource(gameState) == null || player.equals(modifier.getSource(gameState).getOwner()))) {
                         result = Math.min(result, modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this));
                     }
                 }

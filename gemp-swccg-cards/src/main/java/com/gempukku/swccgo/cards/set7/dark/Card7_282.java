@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set7.dark;
 import com.gempukku.swccgo.cards.AbstractUniqueStarshipSite;
 import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.filters.Filters;
@@ -28,7 +27,6 @@ public class Card7_282 extends AbstractUniqueStarshipSite {
         setLocationLightSideGameText("Your docking bay transit from here requires 7 Force. Your transit to here requires +9 Force.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.SPECIAL_EDITION, Icon.INTERIOR_SITE, Icon.EXTERIOR_SITE, Icon.STARSHIP_SITE, Icon.MOBILE, Icon.SCOMP_LINK);
-        addKeywords(Keyword.DOCKING_BAY, Keyword.EXECUTOR_SITE);
     }
 
     @Override
