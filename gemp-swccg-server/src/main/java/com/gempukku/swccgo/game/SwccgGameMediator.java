@@ -1387,6 +1387,10 @@ public class SwccgGameMediator {
                 // Hunt Down
                 objectiveLabel = "Hunt Down";
             }
+            if (Filters.or(Filters.title("Hunt For The Droid General"), Filters.title("Grievous Will Run And Hide")).accepts(_swccgoGame, objective)) {
+                // Hunt For The Droid General
+                objectiveLabel = "Hunt For The Droid General";
+            }
             if (Filters.or(Filters.The_Hyperdrive_Generators_Gone, Filters.Well_Need_A_New_One).accepts(_swccgoGame, objective)) {
                 // The Hyperdrive Generators Gone
                 objectiveLabel = "Hyperdrive";
