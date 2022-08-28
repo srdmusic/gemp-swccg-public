@@ -118,7 +118,7 @@ public interface SwccgCardBlueprint {
      * @param name the system name
      * @return true if generic location may be part of system, otherwise false
      */
-    boolean mayNotBePartOfSystem(String name);
+    boolean mayNotBePartOfSystem(SwccgGame game, String name);
 
     /**
      * Determines if a special rule is in effect at this location.

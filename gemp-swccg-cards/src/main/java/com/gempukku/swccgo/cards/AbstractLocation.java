@@ -73,7 +73,7 @@ public abstract class AbstractLocation extends AbstractSwccgCardBlueprint {
     }
 
     @Override
-    public boolean mayNotBePartOfSystem(String system) {
+    public boolean mayNotBePartOfSystem(SwccgGame game, String system) {
         return _mayNotBePartOfSystem.contains(system);
     }
 

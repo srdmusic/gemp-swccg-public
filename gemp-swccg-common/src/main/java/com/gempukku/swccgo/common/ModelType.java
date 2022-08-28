@@ -110,6 +110,7 @@ public enum ModelType implements Filterable {
     V_4X("V-4X"),
     V_19_TORRENT_STARFIGHTER("V-19 Torrent starfighter"),
     VEHICLE("Vehicle"),
+    VENATOR_CLASS_ATTACK_CRUISER("Venator-Class Attack Cruiser"),
     VICTORY_CLASS_STAR_DESTROYER("Victory-Class Star Destroyer"),
     VT_49_DECIMATOR("VT-49 Decimator"),
     WTK_85A_INTERSTELLAR_TRANSPORT("WTK-85A Interstellar Transport"),
