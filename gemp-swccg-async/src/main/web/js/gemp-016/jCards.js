@@ -3508,6 +3508,8 @@ var fixedImages = {
 "501_13":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/lasergate.gif",
 "501_14":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/nomatchforasith.gif",
 "501_15":"https://res.starwarsccg.org/cards/Hoth-Dark/large/captainlennox.gif",
+"501_16":"https://res.starwarsccg.org/cards/Virtual13-Dark/large/seventhsister.gif",
+"501_18":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/vaderspersonalshuttle.gif",
 "501_50":"https://res.starwarsccg.org/cards/Premiere-Light/large/lightsaberproficiency.gif",
 "501_51":"https://res.starwarsccg.org/cards/ReflectionsII-Light/large/mercenaryarmor.gif",
 "501_52":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/blasterdeflection.gif",
