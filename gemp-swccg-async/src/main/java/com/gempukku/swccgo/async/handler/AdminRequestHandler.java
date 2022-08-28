@@ -7,7 +7,6 @@ import com.gempukku.swccgo.cache.CacheManager;
 import com.gempukku.swccgo.collection.CollectionsManager;
 import com.gempukku.swccgo.db.LeagueDAO;
 import com.gempukku.swccgo.db.PlayerDAO;
-import com.gempukku.swccgo.db.GempSettingDAO;
 import com.gempukku.swccgo.db.vo.CollectionType;
 import com.gempukku.swccgo.db.vo.League;
 import com.gempukku.swccgo.game.CardCollection;
@@ -421,10 +420,10 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         } else {
             List<String> playerNames = getItems(players);
 
-            List<String> invalidUsernames = validateUsernameList(playerNames);
+            List<String> invalidUsernames = getInvalidUsernameList(playerNames);
 
             if (!invalidUsernames.isEmpty()) {
-                responseWriter.writeHtmlResponse(usernameListToString(invalidUsernames));
+                responseWriter.writeHtmlResponse(invalidUsernameListToString(invalidUsernames));
             } else {
 
                 for (String playerName : playerNames) {
@@ -446,7 +445,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         return stringBuilder.toString();
     }
 
-    private String usernameListToString(List<String> invalidUsernames) {
+    private String invalidUsernameListToString(List<String> invalidUsernames) {
         StringBuilder stringBuilder = new StringBuilder("Did not add any items. Invalid usernames:");
         for (String s : invalidUsernames) {
             stringBuilder.append("<br>" + s);
@@ -493,7 +492,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         return cannotAdd;
     }
 
-    private List<String> validateUsernameList(Collection<String> playerNames) {
+    private List<String> getInvalidUsernameList(Collection<String> playerNames) {
         List<String> cannotAdd = new ArrayList<>();
         for(String playerName: playerNames) {
             try {
@@ -522,10 +521,10 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
 
             List<String> playerNames = getItems(players);
 
-            List<String> invalidUsernames = validateUsernameList(playerNames);
+            List<String> invalidUsernames = getInvalidUsernameList(playerNames);
 
             if (!invalidUsernames.isEmpty()) {
-                responseWriter.writeHtmlResponse(usernameListToString(invalidUsernames));
+                responseWriter.writeHtmlResponse(invalidUsernameListToString(invalidUsernames));
             } else {
                 for (String playerName : playerNames) {
                     Player player = _playerDao.getPlayer(playerName);
