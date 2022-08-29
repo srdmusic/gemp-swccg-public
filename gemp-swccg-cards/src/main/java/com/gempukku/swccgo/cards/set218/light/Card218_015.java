@@ -9,7 +9,6 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.decisions.YesNoDecision;
 import com.gempukku.swccgo.logic.effects.DeployCardsSimultaneouslyEffect;
@@ -59,7 +58,6 @@ public class Card218_015 extends AbstractNormalEffect {
             actions.add(action);
         }
 
-
         gameTextActionId = GameTextActionId.BEST_STARPILOT_IN_THE_GALAXY__DEPLOY_STARSHIP_AND_PILOT;
 
         // Check condition(s)
@@ -81,16 +79,11 @@ public class Card218_015 extends AbstractNormalEffect {
             final List<PhysicalCard> validStarfighters = new ArrayList<PhysicalCard>();
             Collection<PhysicalCard> starfighters = Filters.filter(cardsToChooseFrom, game, Filters.and(Filters.unpiloted, Filters.or(Filters.Azure_Angel, Filters.Falcon, Filters.Red_5)));
 
-            game.getGameState().sendMessage("Cards: " + GameUtils.getAppendedTextNames(cardsToChooseFrom));
-            game.getGameState().sendMessage("Starfighters: " + GameUtils.getAppendedTextNames(starfighters));
-
             for (PhysicalCard starfighter : starfighters) {
                 if (Filters.canSpot(cardsToChooseFrom, game, Filters.and(Filters.matchingPilot(starfighter), Filters.deployableSimultaneouslyWith(self, starfighter, false, 0, false, 0)))) {
                     validStarfighters.add(starfighter);
                 }
             }
-
-            game.getGameState().sendMessage("Valid Starfighters: " + GameUtils.getAppendedTextNames(validStarfighters));
 
             if (!validStarfighters.isEmpty() || canDeployCardFromReserveDeck) {
 
