@@ -890,6 +890,10 @@ public class SwccgGameMediator {
                         sb.append("Interior, ");
                     if (blueprint.hasIcon(Icon.SCOMP_LINK))
                         sb.append("Scomp link, ");
+                    if (blueprint.hasIcon(Icon.SEPARATIST))
+                        sb.append("Separatist, ");
+                    if (blueprint.hasIcon(Icon.CLONE_ARMY))
+                        sb.append("Clone Army, ");
 
 
                     if (blueprint.getCardSubtype().equals(CardSubtype.SYSTEM)) {
@@ -1478,6 +1482,10 @@ public class SwccgGameMediator {
             if (Filters.or(Filters.Plead_My_Case_To_The_Senate, Filters.Sanity_And_Compassion, Filters.My_Lord_Is_That_Legal, Filters.I_Will_Make_It_Legal).accepts(_swccgoGame, objective)) {
                 // Senate
                 objectiveLabel = "Senate";
+            }
+            if (Filters.or(Filters.title("More And More Systems Are Joining The Separatists"), Filters.title("The Galaxy Torn Apart")).accepts(_swccgoGame, objective)) {
+                // Separatists
+                objectiveLabel = "Joining The Separatists";
             }
             if (Filters.or(Filters.The_Force_Is_Strong_In_My_Family, Filters.Rise_Of_Skywalker).accepts(_swccgoGame, objective)) {
                 // The Force Is Strong In My Family

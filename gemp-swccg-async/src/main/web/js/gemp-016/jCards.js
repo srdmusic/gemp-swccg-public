@@ -3510,6 +3510,25 @@ var fixedImages = {
 "501_15":"https://res.starwarsccg.org/cards/Hoth-Dark/large/captainlennox.gif",
 "501_16":"https://res.starwarsccg.org/cards/Virtual13-Dark/large/seventhsister.gif",
 "501_18":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/vaderspersonalshuttle.gif",
+"501_19": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Dark/large/separatistuprising.gif",
+"501_19_BACK": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Dark/large/atwarwithitself.gif",
+"501_20": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Dark/large/geonosis.gif",
+"501_20_BACK": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Dark/large/geonosis.gif",
+"501_21": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Dark/large/geonosispetranakiarena.gif",
+"501_22": "https://res.starwarsccg.org/cards/Virtual12-Dark/large/admiraltrench.gif",
+"501_23": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Dark/large/muunilinst.gif",
+"501_23_BACK": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Dark/large/muunilinst.gif",
+"501_24": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Dark/large/muunilinstcityofharnaidan.gif",
+"501_25": "https://res.starwarsccg.org/cards/Coruscant-Dark/large/passelargente.gif",
+"501_26": "https://res.starwarsccg.org/cards/Virtual18-Dark/hires/malastare.png",
+"501_26_BACK": "https://res.starwarsccg.org/cards/Virtual18-Dark/hires/malastare.png",
+"501_27": "https://res.starwarsccg.org/cards/legacy/VirtualBlock7-Dark/large/corulagisblogisticsoffice.gif",
+"501_28": "https://res.starwarsccg.org/cards/Coruscant-Dark/large/aksmoe.gif",
+"501_29": "https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/isbsectoroffice.gif",
+"501_30": "https://res.starwarsccg.org/cards/Dagobah-Dark/large/misthunter.gif",
+"501_31": "https://res.starwarsccg.org/cards/TheedPalace-Dark/large/fightersstraightahead.gif",
+"501_32": "https://res.starwarsccg.org/cards/TheedPalace-Dark/large/3b321.gif",
+"501_33": "https://res.starwarsccg.org/cards/Virtual4-Dark/hires/kylorenscommandshuttle.png",
 "501_50":"https://res.starwarsccg.org/cards/Premiere-Light/large/lightsaberproficiency.gif",
 "501_51":"https://res.starwarsccg.org/cards/ReflectionsII-Light/large/mercenaryarmor.gif",
 "501_52":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/blasterdeflection.gif",
@@ -4372,6 +4391,10 @@ var Card = Class.extend({
         }if (setNo == 501) {
             return (cardNo == 6)  ||
                    (cardNo == 10) ||
+                   (cardNo == 21) ||
+                   (cardNo == 24) ||
+                   (cardNo == 27) ||
+                   (cardNo == 29) ||
                    (cardNo == 67) ||
                    (cardNo == 68) ||
                    (cardNo == 69) ||
