@@ -65,7 +65,7 @@ public class Card219_005 extends AbstractImperial {
                     new UseForceEffect(action, playerId, 1));
             // Perform result(s)
             action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.gameTextContains("artwork"), Filters.gameTextContains("artworks")), true));
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.gameTextContains("artwork"), Filters.gameTextContains("artworks"), Filters.gameTextContains("studied")), true));
             return Collections.singletonList(action);
         }
         return null;
