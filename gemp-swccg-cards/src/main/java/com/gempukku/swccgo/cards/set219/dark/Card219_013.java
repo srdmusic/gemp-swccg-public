@@ -53,7 +53,7 @@ public class Card219_013 extends AbstractSite {
         final ReactActionOption reactActionOption = new ReactActionOption(self, false, 0, false, null, null, Filters.battleLocation, null, false);
         final Filter filter = Filters.deployableToTarget(self, Filters.battleLocation, true, false, 0, null, null, null, null, reactActionOption);
 
-        if(TriggerConditions.battleInitiatedAt(game, effectResult, Filters.relatedSite(self))
+        if(TriggerConditions.battleInitiatedAt(game, effectResult, game.getOpponent(playerOnDarkSideOfLocation), Filters.relatedSite(self))
                 && GameConditions.controlsWith(game, playerOnDarkSideOfLocation, self, Filters.leader)
                 && GameConditions.isOncePerBattle(game, self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.hasInHandOrDeployableAsIfFromHand(game, playerOnDarkSideOfLocation, filter)){

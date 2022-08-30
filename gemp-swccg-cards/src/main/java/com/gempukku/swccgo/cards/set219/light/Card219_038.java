@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set219.light;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
-import com.gempukku.swccgo.cards.conditions.PresentAtCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -45,7 +44,7 @@ public class Card219_038 extends AbstractSystem {
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeployCostToLocationModifier(self, Filters.Ghost, -2, Filters.here(self)));
-        modifiers.add(new EachBattleDestinyModifier(self, self, new PresentAtCondition(Filters.Ghost, Filters.here(self)), -1, game.getOpponent(playerOnLightSideOfLocation)));
+        modifiers.add(new EachBattleDestinyModifier(self, self, new HereCondition(self, Filters.and(Filters.Ghost, Filters.piloted)), -1, game.getOpponent(playerOnLightSideOfLocation)));
         return modifiers;
     }
 }
