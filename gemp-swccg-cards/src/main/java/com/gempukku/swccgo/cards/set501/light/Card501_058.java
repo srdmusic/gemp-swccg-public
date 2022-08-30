@@ -115,7 +115,7 @@ public class Card501_058 extends AbstractEpicEventDeployable {
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)) {
-            final PhysicalCard luke = Filters.findFirstActive(game, self, SpotOverride.INCLUDE_CAPTIVE, Filters.Luke);
+            final PhysicalCard luke = Filters.findFirstActive(game, self, SpotOverride.INCLUDE_CAPTIVE, Filters.and(Filters.Luke, Filters.not(Filters.frozenCaptive)));
             if (luke != null) {
                 Filter characterToDuel = Filters.and(Filters.Dark_Jedi, Filters.presentWith(self, Filters.sameCardId(luke)));
                 TargetingReason targetingReason = TargetingReason.TO_BE_DUELED;
