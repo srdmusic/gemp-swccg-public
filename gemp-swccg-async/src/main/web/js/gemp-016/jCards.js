@@ -3897,6 +3897,23 @@ var fixedImages = {
 "202_5ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/likemyfatherbeforeme_ai.png",
 "207_21ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/grandadmiralthrawn_ai.png",
 "219_2ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/chimaera_ai.png",
+"208_30ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/darthvaderemperorsenforcer_ai.png",
+"204_29ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/jakkureysencampment_ai.png",
+"208_49ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/hothiceplains_ai.png",
+"207_5ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/generalleiaorgana_ai.png",
+"207_20ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/directororsonkrennic_ai.png",
+"201_6ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/r2d2_ai.png",
+"206_4ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/jynerso_ai.png",
+"210_46ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/thegrandinquisitor_ai.png",
+"204_6ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/finn_ai.png",
+"213_17ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/alawlesstime_ai.png",
+"213_58ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/leiasresistancetransport_ai.png",
+"213_20ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/ivebeensearchingforyouforsometime_ai.png",
+"204_31ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/jakkutuanulvillage_ai.png",
+"215_2ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/apowerloss_ai.png",
+"209_40ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/vanee_ai.png",
+"204_41ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/generalhux_ai.png",
+
 };
 
 var packBlueprints = {
@@ -3964,6 +3981,7 @@ var packBlueprints = {
     "Virtual Alternate Image Booster Pack Series 1":"https://res.starwarsccg.org/packs/virtualalternateimageboosterpackseries1.png",
     "Virtual Alternate Image Booster Pack Series 2":"https://res.starwarsccg.org/packs/virtualalternateimageboosterpackseries2.jpg",
     "Virtual Alternate Image Booster Pack Series 3":"https://res.starwarsccg.org/packs/virtualalternateimageboosterpackseries3.png",
+    "Virtual Alternate Image Booster Pack Series 4":"https://res.starwarsccg.org/packs/virtualalternateimageboosterpackseries4.png",
 
     "First Anthology Box":"https://res.starwarsccg.org/packs/first_anthology_box.png",
     "Second Anthology Box":"https://res.starwarsccg.org/packs/second_anthology_box.png",
