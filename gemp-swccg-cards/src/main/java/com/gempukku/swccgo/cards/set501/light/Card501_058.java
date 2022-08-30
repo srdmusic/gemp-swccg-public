@@ -2,11 +2,10 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.cards.conditions.PlayersTurnCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.evaluators.MaxLimitEvaluator;
 import com.gempukku.swccgo.cards.evaluators.PowerEvaluator;
 import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.*;
@@ -16,15 +15,11 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.DuelState;
 import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.evaluators.Evaluator;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.SuspendsCardModifier;
 import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -41,11 +36,11 @@ import java.util.List;
 public class Card501_058 extends AbstractEpicEventDeployable {
     public Card501_058() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "His Destiny", Uniqueness.UNIQUE);
-        setGameText("Deploy on table if He Is The Chosen One on table. Once per turn, may deploy a Death Star II site from Reserve Deck; reshuffle. " +
-                "While you occupy a Death Star II site, Emperor’s Power is suspended during your turn. " +
-                "While Luke is alone, your total power at other locations is +1 for each card stacked on I Feel The Conflict. " +
-                "If Luke and He Will Bring Balance on table at start of your turn, opponent loses 1 Force. " +
-                "During your move phase, if Luke present with a Dark Jedi, may initiate a duel. Each player draws destiny. Add power. Highest total wins. If Luke loses, lose 1 Force.");
+        setGameText("If He Is The Chosen One on table, deploy on table. " +
+                "While Luke is alone, your total power at other locations is +1 (limit +3) for each card stacked on I Feel The Conflict. " +
+                "During opponent's draw phase, if He Will Bring Balance on table, you occupy two battlegrounds, and no battles occurred this turn, opponent loses 1 Force. " +
+                "During your draw phase, if Luke present with a Dark Jedi (even as a non-frozen captive), may initiate a duel between them. " +
+                "Each player draws two destiny. Add power. Highest total wins. If Luke loses, lose 1 Force.");
         addIcons(Icon.VIRTUAL_SET_20);
         setTestingText("His Destiny");
     }
@@ -61,8 +56,7 @@ public class Card501_058 extends AbstractEpicEventDeployable {
         Filter lukeAlone = Filters.and(Filters.Luke, Filters.alone);
 
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new SuspendsCardModifier(self, Filters.Emperors_Power, new AndCondition(new PlayersTurnCondition(playerId), new OccupiesCondition(playerId, Filters.Death_Star_II_site))));
-        modifiers.add(new TotalPowerModifier(self, Filters.otherLocation(self), new OnTableCondition(self, lukeAlone), new StackedEvaluator(self, Filters.I_Feel_The_Conflict), playerId));
+        modifiers.add(new TotalPowerModifier(self, Filters.otherLocation(self), new OnTableCondition(self, lukeAlone), new MaxLimitEvaluator(new StackedEvaluator(self, Filters.I_Feel_The_Conflict), 3), playerId));
         return modifiers;
     }
 
@@ -74,9 +68,11 @@ public class Card501_058 extends AbstractEpicEventDeployable {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (TriggerConditions.isStartOfYourTurn(game, effectResult, self)
-                && GameConditions.canSpot(game, self, Filters.Luke)
-                && GameConditions.canSpot(game, self, Filters.He_Will_Bring_Balance)) {
+        if (GameConditions.isOnceDuringOpponentsPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)
+                && GameConditions.canSpot(game, self, Filters.He_Will_Bring_Balance)
+                && GameConditions.occupies(game, playerId, 2, Filters.battleground)
+                && !GameConditions.hasInitiatedBattleThisTurn(game, playerId)
+                && !GameConditions.hasInitiatedBattleThisTurn(game, game.getOpponent(playerId))) {
 
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Make opponent lose 1 Force");
@@ -95,30 +91,31 @@ public class Card501_058 extends AbstractEpicEventDeployable {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new ArrayList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.HIS_DESTINY__DOWNLOAD_DSII_SITE;
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        //"During opponent's draw phase, if He Will Bring Balance on table, you occupy two battlegrounds, and no battles occurred this turn, opponent loses 1 Force. " +
 
         // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (GameConditions.isOnceDuringOpponentsPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)
+                && GameConditions.canSpot(game, self, Filters.He_Will_Bring_Balance)
+                && GameConditions.occupies(game, playerId, 2, Filters.battleground)
+                && !GameConditions.hasInitiatedBattleThisTurn(game, playerId)
+                && !GameConditions.hasInitiatedBattleThisTurn(game, game.getOpponent(playerId))) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Death Star II site from Reserve Deck");
-            action.setActionMsg("Deploy a Death Star II site from Reserve Deck");
-
+            TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Make opponent lose 1 Force");
             // Update usage limit(s)
             action.appendUsage(
-                    new OncePerTurnEffect(action));
-
+                    new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Death_Star_II_site, true));
-
+                    new LoseForceEffect(action, game.getOpponent(playerId), 1));
             actions.add(action);
         }
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)) {
-            final PhysicalCard luke = Filters.findFirstActive(game, self, Filters.Luke);
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)) {
+            final PhysicalCard luke = Filters.findFirstActive(game, self, SpotOverride.INCLUDE_CAPTIVE, Filters.Luke);
             if (luke != null) {
                 Filter characterToDuel = Filters.and(Filters.Dark_Jedi, Filters.presentWith(self, Filters.sameCardId(luke)));
                 TargetingReason targetingReason = TargetingReason.TO_BE_DUELED;
@@ -158,7 +155,7 @@ public class Card501_058 extends AbstractEpicEventDeployable {
 
                                                                 @Override
                                                                 public int getBaseNumDuelDestinyDraws(String playerId, DuelState duelState) {
-                                                                    return 1;
+                                                                    return 2;
                                                                 }
 
                                                                 @Override
