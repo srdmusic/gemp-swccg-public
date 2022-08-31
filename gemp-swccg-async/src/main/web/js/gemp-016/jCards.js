@@ -3536,7 +3536,7 @@ var fixedImages = {
 "501_54":"https://res.starwarsccg.org/cards/Coruscant-Light/large/naboodefensefighter.gif",
 "501_55":"https://res.starwarsccg.org/cards/Virtual11-Light/large/ahsokatano.gif",
 "501_56":"https://res.starwarsccg.org/cards/ThirdAnthology-Light/large/prisoner2187.gif",
-"501_57":"https://res.starwarsccg.org/cards/Endor-Light/large/ewokandroll.gif",
+"501_57":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/ifeeltheconflict.gif",
 "501_58":"https://res.starwarsccg.org/cards/Tatooine-Light/large/ididit.gif",
 "501_59":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
 "501_60":"https://res.starwarsccg.org/cards/Hoth-Light/large/echobasetrooper.gif",
