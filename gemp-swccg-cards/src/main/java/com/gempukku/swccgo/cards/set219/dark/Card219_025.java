@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set219.dark;
 
-import com.gempukku.swccgo.cards.AbstractRebel;
+import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
@@ -26,7 +26,7 @@ import java.util.List;
  * Subtype: Alien
  * Title: Unkar Plutt
  */
-public class Card219_025 extends AbstractRebel {
+public class Card219_025 extends AbstractAlien {
     public Card219_025() {
         super(Side.DARK, 4, 2, 2, 2, 4, "Unkar Plutt", Uniqueness.UNIQUE);
         setLore("Crolute scavenger and thief.");
