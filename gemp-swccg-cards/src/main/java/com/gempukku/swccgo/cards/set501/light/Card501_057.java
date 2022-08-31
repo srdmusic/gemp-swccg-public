@@ -15,6 +15,7 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.SuspendsCardModifier;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -48,7 +49,7 @@ public class Card501_057 extends AbstractNormalEffect {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionId = GameTextActionId.YOU_CANNOT_ESCAPE_YOUR_DESTINY__DEPLOY_CARD_FROM_RESERVE_DECK;
 
         if(GameConditions.isDuringYourPhase(game, playerId, Phase.DEPLOY)
             && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
@@ -62,6 +63,7 @@ public class Card501_057 extends AbstractNormalEffect {
             action.appendEffect(
                     new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.title(Title.His_Destiny), Filters.and(Filters.mobile_site, Filters.docking_bay)), true)
             );
+            return Collections.singletonList(action);
         }
 
         return null;
