@@ -55,7 +55,6 @@ public class Card501_078 extends AbstractCapitalStarship {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
-        modifiers.add(new DeployCostToTargetModifier(self, Filters.or(Filters.title("Admiral Kilian"), Filters.Mace, Filters.clone),  -1, self));
         modifiers.add(new ShuttlesFreeFromLocationModifier(self, Filters.or(Filters.title("Admiral Kilian"), Filters.Mace, Filters.clone), Filters.here(self)));
         return modifiers;
     }

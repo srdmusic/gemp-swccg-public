@@ -4075,7 +4075,6 @@ public class TriggerConditions {
      * Determines if a destiny draw was just completed during a weapon destiny draw by the specified player.
      * @param game the game
      * @param effectResult the effect result
-     * @param playerId the player
      * @return true or false
      */
     public static boolean isWeaponDestinyDrawComplete(SwccgGame game, EffectResult effectResult) {
@@ -5528,6 +5527,19 @@ public class TriggerConditions {
     public static boolean justMadeChoice(SwccgGame game, EffectResult effectResult, String playerId, Filterable filter) {
         if (effectResult.getType() == EffectResult.Type.CHOICE_MADE) {
             return playerId.equals(effectResult.getPerformingPlayerId()) && Filters.and(filter).accepts(game, ((ChoiceMadeResult)effectResult).getCard());
+        }
+        return false;
+    }
+
+    /**
+     * Determines if a location was just converted
+     * @param game the game
+     * @param effectResult the effect result
+     * @return true or false
+     */
+    public static boolean justConvertedLocation(SwccgGame game, EffectResult effectResult) {
+        if (effectResult.getType() == EffectResult.Type.CONVERT_LOCATION) {
+            return true;
         }
         return false;
     }
