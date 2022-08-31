@@ -28,7 +28,7 @@ public class Card501_032 extends AbstractDroid {
         super(Side.DARK, 2, 2, 1, 2, "B-1 Battle Droid");
         setArmor(3);
         setLore("Infantry battle droid.");
-        setGameText("While with a Republic leader (or another battle droid), draws one battle destiny if unable to otherwise.");
+        setGameText("While with your Republic leader (or another battle droid), draws one battle destiny if unable to otherwise.");
         addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PRESENCE, Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.INFANTRY_BATTLE_DROID);
         addModelType(ModelType.BATTLE);
@@ -38,7 +38,7 @@ public class Card501_032 extends AbstractDroid {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, new WithCondition(self, Filters.or(Filters.and(Filters.Republic_character, Filters.leader), Filters.battle_droid)), 1));
+        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, new WithCondition(self, Filters.or(Filters.and(Filters.your(self), Filters.Republic_character, Filters.leader), Filters.battle_droid)), 1));
         return modifiers;
     }
 }

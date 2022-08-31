@@ -17,17 +17,17 @@ import java.util.List;
  * Set: Set 20
  * Type: Location
  * Subtype: Site
- * Title: Geonosis: Battle Arena
+ * Title: Geonosis: Petranaki Arena
  */
 public class Card501_021 extends AbstractSite {
     public Card501_021() {
-        super(Side.DARK, "Geonosis: Battle Arena", Title.Geonosis);
+        super(Side.DARK, "Geonosis: Petranaki Arena", Title.Geonosis);
         setLocationDarkSideGameText("Your total power here is +1 for each opponent's character here.");
         setLocationLightSideGameText("Your characters are defense value -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
-        setTestingText("Geonosis: Battle Arena");
+        setTestingText("Geonosis: Petranaki Arena");
     }
 
     @Override
