@@ -12,6 +12,7 @@ import com.gempukku.swccgo.game.state.DrawDestinyState;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
+import com.gempukku.swccgo.logic.effects.ResetDestinyEffect;
 import com.gempukku.swccgo.logic.modifiers.*;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -60,20 +61,24 @@ public class Card501_008 extends AbstractAlien {
 
             final DrawDestinyState opponentDestinyState = game.getGameState().getTopDrawDestinyState();
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.appendUsage(
-                    new OncePerBattleEffect(action)
-            );
-            action.appendEffect(
-                    new DrawDestinyEffect(action, "") {
-                        @Override
-                        protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
-                            float newValue = destinyDrawValues.get(0);
-                            opponentDestinyState.getDrawDestinyEffect().resetDestiny(newValue);
+            if(opponentDestinyState != null){
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Draw destiny and reset opponent's destiny draw");
+                action.appendUsage(
+                        new OncePerBattleEffect(action)
+                );
+                action.appendEffect(
+                        new DrawDestinyEffect(action, playerId) {
+                            @Override
+                            protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
+                                action.appendEffect(
+                                        new ResetDestinyEffect(action, totalDestiny, opponentDestinyState)
+                                );
+                            }
                         }
-                    }
-            );
-            return Collections.singletonList(action);
+                );
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }
