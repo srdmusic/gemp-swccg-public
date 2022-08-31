@@ -2960,7 +2960,7 @@ var fixedImages = {
 "207_27":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/specterofthesupremeleader.gif",
 "207_28":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/mesonmartinet.gif",
 "207_29":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/punishingone.gif",
-"207_30":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/grandadmiralthrawnai.gif",
+"207_30":"https://res.starwarsccg.org/cards/Virtual7-Dark/large/grandadmiralthrawn_ai.gif",
 "208_1":"https://res.starwarsccg.org/cards/Virtual8-Light/hires/admiraluostatura.png",
 "208_2":"https://res.starwarsccg.org/cards/Virtual8-Light/hires/c110pchopper.png",
 "208_3":"https://res.starwarsccg.org/cards/Virtual8-Light/hires/cc2237oddball.png",
