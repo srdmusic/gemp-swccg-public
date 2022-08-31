@@ -40,7 +40,7 @@ public class Card501_057 extends AbstractNormalEffect {
     }
 
     @Override
-    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new IgnoresDeploymentRestrictionsFromCardModifier(self, Filters.Amidala,  null, self.getOwner(), Filters.and(Filters.your(self.getOwner()), Filters.Objective)));
         modifiers.add(new SuspendsCardModifier(self, Filters.Emperors_Power, new PlayersTurnCondition(self.getOwner())));
@@ -53,7 +53,7 @@ public class Card501_057 extends AbstractNormalEffect {
 
         if(GameConditions.isDuringYourPhase(game, playerId, Phase.DEPLOY)
             && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
-            && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, GameTextActionId.OTHER_CARD_ACTION_1)){
+            && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)){
             TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy His Destiny or a Mobile Docking Bay");
             action.setActionMsg("Deploy His Destiny or a Mobile Docking Bay");
