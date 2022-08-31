@@ -828,7 +828,7 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
      * @return true if generic location may be part of system, otherwise false
      */
     @Override
-    public boolean mayNotBePartOfSystem(String system) {
+    public boolean mayNotBePartOfSystem(SwccgGame game, String system) {
         throw new UnsupportedOperationException("This method, mayNotBePartOfSystem(), should not be called on this card: " + _title);
     }
 

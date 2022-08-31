@@ -801,6 +801,13 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             }
         }
 
+        for (Modifier modifier : getKeywordModifiersAffectingCard(gameState, ModifierType.REMOVE_KEYWORD, keyword, physicalCard)) {
+            if (modifier.hasKeyword(gameState, this, physicalCard, keyword)) {
+                retVal = false;
+                modifierCollector.addModifier(modifier);
+            }
+        }
+
         return retVal;
     }
 
@@ -5321,14 +5328,11 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 }
             }
 
-            if(destiniesMayBeLimited){
-                for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
-                    if (modifier.isForPlayer(player)
-                            && (modifier.getSource(gameState) == null || player.equals(modifier.getSource(gameState).getOwner()))) {
-                        int limit = modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this);
-                        if (curMaxLimit == null || limit < curMaxLimit) {
-                            curMaxLimit = limit;
-                        }
+            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
+                if (destiniesMayBeLimited && modifier.isForPlayer(player)) {
+                    int limit = modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this);
+                    if (curMaxLimit == null || limit < curMaxLimit) {
+                        curMaxLimit = limit;
                     }
                 }
             }
@@ -5366,12 +5370,9 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                     }
                 }
 
-                if(destiniesMayBeLimited){
-                    for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
-                        if (modifier.isForPlayer(player)
-                                && (modifier.getSource(gameState) == null || player.equals(modifier.getSource(gameState).getOwner()))) {
-                            result = Math.min(result, modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this));
-                        }
+                for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAX_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
+                    if (destiniesMayBeLimited && modifier.isForPlayer(player)) {
+                        result = Math.min(result, modifier.getMaximumBattleDestinyDrawsModifier(player, gameState, this));
                     }
                 }
             }

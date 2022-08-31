@@ -2,12 +2,15 @@ package com.gempukku.swccgo.cards.set219.light;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
+import com.gempukku.swccgo.cards.conditions.ControlsWithCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.modifiers.EachWeaponDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotApplyAbilityForBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
@@ -42,8 +45,9 @@ public class Card219_036 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new PowerModifier(self, Filters.Vader, new ControlsCondition(playerOnLightSideOfLocation, self), -2));
-        modifiers.add(new MayNotApplyAbilityForBattleDestinyModifier(self, Filters.Vader, new ControlsCondition(playerOnLightSideOfLocation, self)));
+        Condition controlsWithAPhoenixSquadronCharacter = new ControlsWithCondition(playerOnLightSideOfLocation, self, Filters.Phoenix_Squadron_character);
+        modifiers.add(new PowerModifier(self, Filters.Vader, controlsWithAPhoenixSquadronCharacter, -2));
+        modifiers.add(new EachWeaponDestinyModifier(self, Filters.weapon, controlsWithAPhoenixSquadronCharacter, Filters.Vader, -1));
         return modifiers;
     }
 }

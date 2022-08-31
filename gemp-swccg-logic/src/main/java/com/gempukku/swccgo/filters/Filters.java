@@ -1324,7 +1324,7 @@ public class Filters {
         public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
             if (physicalCard.getBlueprint().hasSpeciesAttribute() && physicalCard.getBlueprint().getSpecies() != null) {
                 Species species = physicalCard.getBlueprint().getSpecies();
-                return Filters.canSpot(gameState.getGame(), physicalCard, Filters.with(physicalCard, Filters.species(species)));
+                return Filters.canSpot(gameState.getGame(), physicalCard, Filters.with(physicalCard, Filters.and(Filters.alien, Filters.other(physicalCard), Filters.species(species))));
             }
 
             return false;
@@ -10177,7 +10177,7 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards that fired a weapon this battle.
+     * Filter that accepts cards that did not fire a permanent weapon this battle.
      *
      * @return Filter
      */
@@ -17497,6 +17497,9 @@ public class Filters {
     public static final Filter Chiraneau = Filters.title(Title.Chiraneau);
     public static final Filter Chirrut = Filters.title(Title.Chirrut);
     public static final Filter Chopper = Filters.persona(Persona.CHOPPER);
+    public static final Filter Christophsis_location = Filters.partOfSystem(Title.Christophsis);
+    public static final Filter Christophsis_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Christophsis));
+    public static final Filter Christophsis_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Christophsis));
     public static final Filter City_In_The_Clouds = Filters.title(Title.City_In_The_Clouds);
     public static final Filter City_Outskirts = Filters.title(Title.City_Outskirts);
     public static final Filter Civil_Disorder = Filters.title(Title.Civil_Disorder);
@@ -17847,6 +17850,9 @@ public class Filters {
     public static final Filter General_Calrissian = Filters.title(Title.General_Calrissian);
     public static final Filter General_Dodonna = Filters.title(Title.General_Dodonna);
     public static final Filter generic_site = Filters.and(Filters.subtype(CardSubtype.SITE), Filters.generic());
+    public static final Filter Geonosis_location = Filters.partOfSystem(Title.Geonosis);
+    public static final Filter Geonosis_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Geonosis));
+    public static final Filter Geonosis_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Geonosis));
     public static final Filter Get_Alongside_That_One = Filters.title(Title.Get_Alongside_That_One);
     public static final Filter Ghhhk = Filters.title(Title.Ghhhk);
     public static final Filter Ghost = Filters.title(Title.Ghost);
@@ -18256,6 +18262,9 @@ public class Filters {
     public static final Filter Mustafar_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Mustafar));
     public static final Filter Mustafar_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Mustafar));
     public static final Filter Mustafar_system = Filters.and(CardSubtype.SYSTEM, Filters.partOfSystem(Title.Mustafar));
+    public static final Filter Muunilinst_location = Filters.partOfSystem(Title.Muunilinst);
+    public static final Filter Muunilinst_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Muunilinst));
+    public static final Filter Muunilinst_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Muunilinst));
     public static final Filter My_Favorite_Decoration = Filters.title(Title.My_Favorite_Decoration);
     public static final Filter My_Kind_Of_Scum = Filters.title(Title.My_Kind_Of_Scum);
     public static final Filter My_Lord_Is_That_Legal = Filters.title(Title.My_Lord_Is_That_Legal);
@@ -18598,7 +18607,7 @@ public class Filters {
     public static final Filter Shoo_Shoo = Filters.title(Title.Shoo_Shoo);
     public static final Filter Shot_In_The_Dark = Filters.title(Title.Shot_In_The_Dark);
     public static final Filter Shut_Him_Up_Or_Shut_Him_Down = Filters.title(Title.Shut_Him_Up_Or_Shut_Him_Down);
-    public static final Filter shuttle = Filters.or(ModelType.LAMBDA_CLASS_SHUTTLE, ModelType.MODIFIED_VCX_SHUTTLE, ModelType.UPSILON_CLASS_SHUTTLE);
+    public static final Filter shuttle = Filters.or(ModelType.LAMBDA_CLASS_SHUTTLE, ModelType.MODIFIED_VCX_SHUTTLE, ModelType.UPSILON_CLASS_SHUTTLE, ModelType.SHEATHIPEDE_CLASS_SHUTTLE);
     public static final Filter shuttle_vehicle = Filters.and(CardType.VEHICLE, CardSubtype.SHUTTLE);
     public static final Filter Sidious = Filters.persona(Persona.SIDIOUS);
     public static final Filter Sidon = Filters.title(Title.Sidon);
@@ -18881,6 +18890,7 @@ public class Filters {
     public static final Filter vehicle_site = Filters.icon(Icon.VEHICLE_SITE);
     public static final Filter vehicle_weapon = Filters.and(CardType.WEAPON, CardSubtype.VEHICLE);
     public static final Filter Vengeance_Of_The_Dark_Prince = Filters.title(Title.Vengeance_Of_The_Dark_Prince);
+    public static final Filter Ventress = Filters.persona(Persona.VENTRESS);
     public static final Filter Vibro_Ax = Filters.keyword(Keyword.VIBRO_AX);
     public static final Filter Victory_class_Star_Destroyer = Filters.modelType(ModelType.VICTORY_CLASS_STAR_DESTROYER);
     public static final Filter Vigo = Filters.title(Title.Vigo);

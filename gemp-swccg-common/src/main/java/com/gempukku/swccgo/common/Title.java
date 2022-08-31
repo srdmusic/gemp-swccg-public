@@ -177,6 +177,7 @@ public interface Title {
     String Chiraneau = "Admiral Chiraneau";
     String Chirrut = "Chirrut Imwe";
     String Chopper = "Chopper";
+    String Christophsis = "Christophsis";
     String City_In_The_Clouds = "City In The Clouds";
     String City_Outskirts = "Tatooine: City Outskirts";
     String Civil_Disorder = "Civil Disorder";
@@ -414,6 +415,7 @@ public interface Title {
     String Garrison_Destroyed = "Garrison Destroyed";
     String General_Calrissian = "General Calrissian";
     String General_Dodonna = "General Dodonna";
+    String Geonosis = "Geonosis";
     String Get_Alongside_That_One = "Get Alongside That One";
     String Ghhhk = "Ghhhk";
     String Ghost = "Ghost";
@@ -708,6 +710,7 @@ public interface Title {
     String Mouse_Droid = "MSE-6 'Mouse' Droid";
     String Momaw_Nadon = "Momaw Nadon";
     String Mustafar = "Mustafar";
+    String Muunilinst = "Muunilinst";
     String My_Favorite_Decoration = "My Favorite Decoration";
     String My_Kind_Of_Scum = "My Kind Of Scum";
     String My_Lord_Is_That_Legal = "My Lord, Is That Legal?";
