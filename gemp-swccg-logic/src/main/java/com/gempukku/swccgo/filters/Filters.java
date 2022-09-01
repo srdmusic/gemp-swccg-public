@@ -8254,15 +8254,9 @@ public class Filters {
                 if (card.getBlueprint().getCardCategory() != CardCategory.CHARACTER)
                     return false;
 
-                if (!physicalCard.getBlueprint().getValidPassengerFilter(physicalCard.getOwner(), gameState.getGame(), card, true).accepts(gameState, modifiersQuerying, card))
-                    return false;
-
                 if(physicalCard.getBlueprint().getCardCategory() == CardCategory.VEHICLE
-                        && physicalCard.getBlueprint().getCardCategory() == CardCategory.STARSHIP){
-                    int numCaptives = gameState.getCaptivesOfEscort(card).size();
-                    int pilotOrPassengerCapacity = physicalCard.getBlueprint().getPilotOrPassengerCapacity();
-
-                    if (pilotOrPassengerCapacity > 0 && pilotOrPassengerCapacity < 1 + numCaptives)
+                        || physicalCard.getBlueprint().getCardCategory() == CardCategory.STARSHIP){
+                    if (!physicalCard.getBlueprint().getValidPassengerFilter(physicalCard.getOwner(), gameState.getGame(), card, true).accepts(gameState, modifiersQuerying, card))
                         return false;
                 }
 
