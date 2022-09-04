@@ -24,6 +24,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Set: Set 20
+ * Type: Interrupt
+ * Subtype: Lost
+ * Title: A Jedi's Fury
+ */
 public class Card501_063 extends AbstractLostInterrupt {
     protected Card501_063() {
         super(Side.LIGHT, 4, "A Jedi's Fury", Uniqueness.UNIQUE);
@@ -32,6 +38,7 @@ public class Card501_063 extends AbstractLostInterrupt {
                 "battle or duel destiny for each card stacked on I Feel The Conflict (limit 3). " +
                 "OR During your move phase, relocate Luke from a site to a battleground site " +
                 "(or your site that opponent occupies).");
+        addIcon(Icon.VIRTUAL_SET_20);
         setTestingText("A Jedi's Fury");
     }
 
