@@ -38,6 +38,7 @@ import java.util.List;
 public class Card219_046 extends AbstractUsedInterrupt {
     public Card219_046() {
         super(Side.LIGHT, 4, Title.Utinni);
+        setVirtualSuffix(true);
         setLore("Jawa trade language word for 'Come here!' Jawas work communally and scavenge for equipment.");
         setGameText("Deploy or move a Jawa as a 'react' (for -1 Force). " +
                     "OR If a battle was just initiated where you have three Jawas, choose: " +
