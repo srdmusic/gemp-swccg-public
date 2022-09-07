@@ -4,6 +4,7 @@ import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 
@@ -107,5 +108,33 @@ public abstract class AbstractCombatVehicle extends AbstractVehicle {
     @Override
     public final Filter getValidPilotFilter(String playerId, SwccgGame game, PhysicalCard self, boolean forDeployment) {
         return super.getValidPilotFilter(playerId, game, self, forDeployment);
+    }
+
+    /**
+     * Gets a filter for the cards that are valid to be passengers of the specified card.
+     * @param playerId the player
+     * @param game the game
+     * @param self the card
+     * @param forDeployment true if checking for deployment, otherwise false
+     * @return the filter
+     */
+    @Override
+    public final Filter getValidPassengerFilter(String playerId, SwccgGame game, PhysicalCard self, boolean forDeployment) {
+        Filter filter =  Filters.and(Filters.notProhibitedFromHavingAtTarget(self), getGameTextValidPassengerFilter(playerId, game, self));
+        if (forDeployment) {
+            filter = Filters.and(filter, Filters.notProhibitedFromHavingDeployedTo(self));
+        }
+        return filter;
+    }
+
+    /**
+     * This method is overridden by individual cards to provide a filter for valid pilots.
+     * @param playerId the player
+     * @param game the game
+     * @param self the card
+     * @return the filter
+     */
+    protected Filter getGameTextValidPassengerFilter(String playerId, SwccgGame game, PhysicalCard self) {
+        return Filters.any;
     }
 }
