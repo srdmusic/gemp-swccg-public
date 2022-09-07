@@ -26,6 +26,7 @@ import java.util.List;
 public class Card219_030 extends AbstractAlien {
     public Card219_030() {
         super(Side.LIGHT, 2, 4, 4, 2, 5, "Cara Dune With Heavy Blaster Rifle", Uniqueness.UNIQUE);
+        setArmor(5);
         setLore("Female Alderaanian. Gambler. Trooper.");
         setGameText(" If Alderaan has been 'blown away,' Force drain +1 here. " +
                 "Permanent weapon is •Cara's Heavy Blaster Rifle (twice per battle, may target a character or vehicle; " +
