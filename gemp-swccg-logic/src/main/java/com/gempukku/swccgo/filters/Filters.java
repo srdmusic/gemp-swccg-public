@@ -18256,9 +18256,6 @@ public class Filters {
     public static final Filter Mustafar_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Mustafar));
     public static final Filter Mustafar_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Mustafar));
     public static final Filter Mustafar_system = Filters.and(CardSubtype.SYSTEM, Filters.partOfSystem(Title.Mustafar));
-    public static final Filter Muunilinst_location = Filters.partOfSystem(Title.Muunilinst);
-    public static final Filter Muunilinst_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Muunilinst));
-    public static final Filter Muunilinst_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Muunilinst));
     public static final Filter My_Favorite_Decoration = Filters.title(Title.My_Favorite_Decoration);
     public static final Filter My_Kind_Of_Scum = Filters.title(Title.My_Kind_Of_Scum);
     public static final Filter My_Lord_Is_That_Legal = Filters.title(Title.My_Lord_Is_That_Legal);
@@ -18868,6 +18865,9 @@ public class Filters {
     public static final Filter Uplink_Station = Filters.title(Title.Uplink_Station);
     public static final Filter Upper_Walkway = Filters.title(Title.Upper_Walkway);
     public static final Filter URoRRuRRR = Filters.title(Title.URoRRuRRR);
+    public static final Filter Utapau_location = Filters.partOfSystem(Title.Utapau);
+    public static final Filter Utapau_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Utapau));
+    public static final Filter Utapau_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Utapau));
     public static final Filter Utinni = Filters.title(Title.Utinni);
     public static final Filter Utinni_Effect = Filters.and(CardType.EFFECT, CardSubtype.UTINNI);
     public static final Filter Utinni_Effect_that_retrieves_Force = Filters.and(CardType.EFFECT, CardSubtype.UTINNI, Keyword.UTINNI_EFFECT_THAT_RETRIEVES_FORCE);
