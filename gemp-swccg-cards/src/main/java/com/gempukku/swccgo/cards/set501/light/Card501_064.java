@@ -31,7 +31,7 @@ import java.util.List;
  * Title: Luke's Acceptance
  */
 public class Card501_064 extends AbstractUsedOrLostInterrupt {
-    protected Card501_064() {
+    public Card501_064() {
         super(Side.LIGHT, 5, "Luke's Acceptance");
         setLore("");
         setGameText("USED: Once per game, if battle was just initiated where Luke is alone, weapons may not be fired." +
@@ -61,7 +61,7 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
                     new ChooseStackedCardEffect(action, playerId, Filters.findFirstActive(game, self, Filters.Insignificant_Rebellion), Filters.any) {
                         @Override
                         protected void cardSelected(PhysicalCard selectedCard) {
-                            action.appendEffect(
+                            action.allowResponses(
                                     new RespondablePlayCardEffect(action) {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
@@ -96,7 +96,7 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
             action.appendUsage(
                     new OncePerGameEffect(action)
             );
-            action.appendEffect(
+            action.allowResponses(
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
@@ -122,7 +122,7 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
             action.appendUsage(
                     new OncePerGameEffect(action)
             );
-            action.appendEffect(
+            action.allowResponses(
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
