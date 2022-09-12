@@ -31,7 +31,7 @@ public class Card501_066 extends AbstractNormalEffect {
     public Card501_066() {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, "He Is A Coward", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("Deploy on a battleground. [Episode I] Jedi deploy -1 here. If you just won a battle (or just Force drained here), relocate this card to your [Clone Army] objective. If opponent just won a battle, opponent may relocate this Effect to an [Episode I] battleground. [Immune to Alter.]");
+        setGameText("Deploy on a battleground. [Clone Army] Jedi deploy -1 here. If you just won a battle (or just Force drained here), relocate this card to your [Clone Army] objective. If opponent just won a battle, opponent may relocate this Effect to an [Episode I] battleground. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_20, Icon.EPISODE_I);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("He Is A Coward");
@@ -45,7 +45,7 @@ public class Card501_066 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Icon.EPISODE_I, Filters.Jedi), -1, Filters.hasAttached(self)));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Icon.CLONE_ARMY, Filters.Jedi), -1, Filters.hasAttached(self)));
         return modifiers;
     }
 

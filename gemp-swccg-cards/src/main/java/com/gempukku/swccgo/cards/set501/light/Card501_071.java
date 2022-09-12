@@ -24,7 +24,7 @@ public class Card501_071 extends AbstractSite {
         super(Side.LIGHT, "Geonosis: Badlands Of N'g'zi", Title.Geonosis);
         setLocationDarkSideGameText("Your non-[Separatist] characters and non-[Separatist] vehicles are power -1 here.");
         setLocationLightSideGameText("Your [Clone Army] characters and [Clone Army] vehicles are power +1 here.");
-        addIcon(Icon.DARK_FORCE, 2);
+        addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EPISODE_I, Icon.CLONE_ARMY, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_20);
         setTestingText("Geonosis: Badlands Of N'g'zi");

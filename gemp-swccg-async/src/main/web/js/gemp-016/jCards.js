@@ -3549,7 +3549,7 @@ var fixedImages = {
 "501_68": "https://res.starwarsccg.org/cards/Tatooine-Light/large/tatooinemosespa.gif",
 "501_69": "https://res.starwarsccg.org/cards/JabbasPalaceSealedDeck-Light/large/tatooinehutttraderoutedesert.gif",
 "501_70": "https://res.starwarsccg.org/cards/Premiere-Light/large/tatooine.gif",
-"501_71": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/geonosisrockyplains.gif",
+"501_71": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/geonosispetranakiarena.gif",
 "501_72": "https://res.starwarsccg.org/cards/Coruscant-Light/large/secureroute.gif",
 "501_73": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/muunilinst.gif",
 "501_74": "https://res.starwarsccg.org/cards/Premiere-Light/large/tatooinemoseisley.gif",
