@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -31,7 +32,7 @@ import java.util.List;
  * Title: A Jedi's Fury
  */
 public class Card501_063 extends AbstractLostInterrupt {
-    protected Card501_063() {
+    public Card501_063() {
         super(Side.LIGHT, 4, "A Jedi's Fury", Uniqueness.UNIQUE);
         setLore("");
         setGameText("If Luke alone in a battle or duel, add 1 to a just drawn weapon, " +
