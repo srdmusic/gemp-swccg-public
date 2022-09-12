@@ -28,7 +28,7 @@ public class Card501_025 extends AbstractRepublic {
     public Card501_025() {
         super(Side.DARK, 2, 3, 3, 3, 5, "San Hill", Uniqueness.UNIQUE);
         setLore("Muun leader. Banking Clan.");
-        setGameText("Your battle droids at same site are deploy -1 and forfeit +1. Once per game may deploy Grievous here from Reserve Deck; reshuffle. While on Muunilinst and The Galaxy Torn Apart on table, for opponent to initiate a Force drain, opponent must use +2 Force.");
+        setGameText("Your battle droids at same site are deploy -1 and forfeit +1. Once per game may deploy Grievous here from Reserve Deck; reshuffle. While on Utapau and The Galaxy Torn Apart on table, you initiate battle for free.");
         addKeywords(Keyword.LEADER);
         setSpecies(Species.MUUN);
         addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.VIRTUAL_SET_20);
@@ -40,7 +40,7 @@ public class Card501_025 extends AbstractRepublic {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeployCostToLocationModifier(self,  Filters.battle_droid, -1, Filters.here(self)));
         modifiers.add(new ForfeitModifier(self, Filters.and(Filters.your(self), Filters.battle_droid, Filters.here(self)), 1));
-        modifiers.add(new InitiateForceDrainCostModifier(self, new AndCondition(new OnCondition(self, Title.Muunilinst), new OnTableCondition(self, Filters.title("The Galaxy Torn Apart"))),2, game.getOpponent(self.getOwner())));
+        modifiers.add(new InitiateBattlesForFreeModifier(self, Filters.any, new AndCondition(new OnCondition(self, Title.Utapau), new OnTableCondition(self, Filters.title("The Galaxy Torn Apart"))), self.getOwner()));
         return modifiers;
     }
 

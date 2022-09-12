@@ -17,17 +17,17 @@ import java.util.List;
  * Set: Set 20
  * Type: Location
  * Subtype: Site
- * Title: Muunilinst: Harnaidan
+ * Title: Utapau: Pau City
  */
 public class Card501_024 extends AbstractSite {
     public Card501_024() {
-        super(Side.DARK, "Muunilinst: Harnaidan", Title.Muunilinst);
+        super(Side.DARK, "Utapau: Pau City", Title.Utapau);
         setLocationDarkSideGameText("If you control with a [Separatist] leader, Force drain + 1 here.");
         setLocationLightSideGameText("You must first use 1 Force to fire a weapon here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
-        setTestingText("Muunilinst: Harnaidan");
+        setTestingText("Utapau: Pau City");
     }
 
     @Override
