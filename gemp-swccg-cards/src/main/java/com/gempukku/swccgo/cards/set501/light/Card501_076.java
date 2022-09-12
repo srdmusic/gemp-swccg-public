@@ -27,7 +27,7 @@ import java.util.List;
 public class Card501_076 extends AbstractNormalEffect {
     public Card501_076() {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Galactic Republic Navy", Uniqueness.UNIQUE);
-        setGameText("Deploy on table. Your [Clone Army] starships with a Jedi or clone aboard are power +1 (+2 if both). Once per turn, may reveal a [Clone Army] starship from hand to take a [Clone Army] pilot character from Reserve Deck (or vice versa) and deploy both simultaneously; reshuffle. [Immune to Alter.]");
+        setGameText("Deploy on table. Your [Clone Army] starships with a Jedi or clone aboard are power +1 (+2 if both). Once per turn, may reveal a [Clone Army] starship from hand to take a [Episode I] pilot character from Reserve Deck (or vice versa) and deploy both simultaneously; reshuffle. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Galactic Republic Navy");
@@ -45,7 +45,7 @@ public class Card501_076 extends AbstractNormalEffect {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
         final Filter starship = Filters.and(Icon.CLONE_ARMY, Filters.starship);
-        final Filter pilot = Filters.and(Icon.CLONE_ARMY, Filters.pilot);
+        final Filter pilot = Filters.and(Icon.EPISODE_I, Filters.pilot);
         Filter filter = Filters.and(Filters.or(pilot, starship), Filters.isUniquenessOnTableNotReached);
 
         GameTextActionId gameTextActionId = GameTextActionId.GALACTIC_REPUBLIC_NAVY__DEPLOY_CLONE_ARMY_STARSHIP_AND_PILOT;
@@ -71,7 +71,7 @@ public class Card501_076 extends AbstractNormalEffect {
                                 searchFilter = starship;
                             }
                             else {
-                                action.setActionMsg("Take a [Clone Army] pilot into hand from Reserve Deck and deploy both simultaneously");
+                                action.setActionMsg("Take an [Episode I] pilot into hand from Reserve Deck and deploy both simultaneously");
                                 searchFilter = pilot;
                             }
                             // Perform result(s)
