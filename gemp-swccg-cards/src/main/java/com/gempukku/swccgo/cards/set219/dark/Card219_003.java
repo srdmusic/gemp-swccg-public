@@ -38,7 +38,7 @@ public class Card219_003 extends AbstractRepublic {
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new TotalBattleDestinyModifier(self, Filters.site, new InBattleEvaluator(self,
-                Filters.and(Icon.PRESENCE, Filters.droid, Icon.PERMANENT_WEAPON, Filters.didNotFireAPermanentWeaponThisBattle())), self.getOwner(), true));
+                Filters.and(Icon.PRESENCE, Filters.droid, Icon.PERMANENT_WEAPON, Filters.didNotFireAPermanentWeaponThisBattle(true))), self.getOwner(), true));
         modifiers.add(new EachWeaponDestinyModifier(self, Filters.at(Filters.sameSystem(self)), -1));
         return modifiers;
     }
