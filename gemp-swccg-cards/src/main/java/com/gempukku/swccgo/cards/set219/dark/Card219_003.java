@@ -23,6 +23,7 @@ import java.util.List;
 public class Card219_003 extends AbstractRepublic {
     public Card219_003() {
         super(Side.DARK, 2, 3, 3, 3, 6, "Daultay Dofine", Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
         setLore("Neimoidian Trade Federation captain who gained his current position through political backstabbing and family connections. Not favored by Darth Sidious.");
         setGameText("[Pilot] 2. Your total battle destiny at sites is +1 for each of your participating " +
                     "[Presence] droids that has a [Permanent Weapon] weapon but did not fire it in that battle. " +
