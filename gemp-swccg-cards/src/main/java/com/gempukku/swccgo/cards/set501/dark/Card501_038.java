@@ -1,127 +1,66 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
+import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.PilotingCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
-import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.HyperspeedModifier;
-import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.InBattleCondition;
+import com.gempukku.swccgo.logic.effects.ShowCardOnScreenEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromOutsideOfGameSimultaneouslyWithCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToSystemFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.AddsDestinyToPowerModifier;
+import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.DeploysFreeAboardModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
- * Type: Interrupt
- * Subtype: Used or Lost
- * Title: Thrawn Pincer
+ * Set: Set 20
+ * Type: Character
+ * Subtype: Imperial
+ * Title: TD-4445
  */
-public class Card501_038 extends AbstractUsedOrLostInterrupt {
+public class Card501_038 extends AbstractImperial {
     public Card501_038() {
-        super(Side.DARK, 4, "Thrawn Pincer", Uniqueness.UNIQUE);
-        setGameText("USED: Add 1 to the hyperspeed of a dredanuaght or star destroyer for each ‘artwork’ on table for remainder of turn. " +
-                "LOST: Once per game, if a starship was just revealed as ‘artwork’ during battle at a system, relocate a Star Destroyer from anywhere on table to that battle");
-        addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("Thrawn Pincer");
+        super(Side.DARK, 3, 2, 2, 2, 4, "TD-4445", Uniqueness.UNIQUE);
+        setArmor(4);
+        setLore("Sandtrooper.");
+        setGameText("Once per game, may reveal from hand to take a Dewback into hand from outside the game and deploy both simultaneously.");
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_20);
+        addKeywords(Keyword.SANDTROOPER);
+        setTestingText("TD-4445");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
+    protected List<TopLevelGameTextAction> getGameTextTopLevelInHandActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.TK_4445__DEPLOY_WITH_DEWBACK;
 
-        Filter dreadnaughtOrStarDestroyer = Filters.or(Filters.Dreadnaught_class_cruisers, Filters.Star_Destroyer);
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+            && GameConditions.isDuringYourPhase(game, playerId, Phase.DEPLOY)) {
 
-        // Check condition(s)
-        if (GameConditions.canSpot(game, self, Filters.and(Filters.Thrawns_Art_Collection, Filters.hasStacked(Filters.any)))
-                && GameConditions.canTarget(game, self, dreadnaughtOrStarDestroyer)) {
-
-            final int numArtworkOnTable = Filters.filterStacked(game, Filters.stackedOn(Filters.findFirstActive(game, self, Filters.Thrawns_Art_Collection))).size();
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-            action.setText("Add " + numArtworkOnTable + " to hyperspeed");
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose starship to add hyperspeed to", dreadnaughtOrStarDestroyer) {
-                        @Override
-                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                            action.addAnimationGroup(targetedCard);
-                            // Allow response(s)
-                            action.allowResponses("Target " + GameUtils.getCardLink(targetedCard),
-                                    new RespondablePlayCardEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            // Get the targeted card(s) from the action using the targetGroupId.
-                                            // This needs to be done in case the target(s) were changed during the responses.
-                                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
-
-                                            action.appendEffect(
-                                                    new AddUntilEndOfTurnModifierEffect(action,
-                                                            new HyperspeedModifier(self, finalTarget, numArtworkOnTable),
-                                                            "Makes " + GameUtils.getCardLink(finalTarget) + " hyperspeed +" + numArtworkOnTable));
-
-                                        }
-                                    }
-                            );
-                        }
-                    }
-            );
-            actions.add(action);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Reveal to deploy a Dewback");
+            action.setActionMsg("Reveal to deploy simultaneously with a Dewback from outside the game");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new ShowCardOnScreenEffect(action, self));
+            action.appendEffect(
+                    new DeployCardFromOutsideOfGameSimultaneouslyWithCardEffect(action, self, playerId, Filters.Dewback));
+            return Collections.singletonList(action);
         }
-
-        return actions;
-    }
-
-    @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
-        GameTextActionId gameTextActionId = GameTextActionId.THRAWN_PINCER__RELOCATE_STAR_DESTROYER;
-
-        if (effectResult.getType() == EffectResult.Type.ARTWORK_CARD_REVEALED
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.isDuringBattleAt(game, Filters.system)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.Star_Destroyer, Filters.canBeTargetedBy(self), Filters.canBeRelocatedToLocation(Filters.battleLocation, true, 0)))) {
-
-            PhysicalCard artwork = ((ArtworkCardRevealedResult) effectResult).getCard();
-
-            if (artwork != null
-                    && Filters.starship.accepts(game, artwork)) {
-
-                final PhysicalCard battleLocation = Filters.findFirstFromTopLocationsOnTable(game, Filters.battleLocation);
-                if (battleLocation != null) {
-                    final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
-                    action.setText("Relocate Star Destroyer");
-
-                    action.appendUsage(
-                            new OncePerGameEffect(action));
-                    action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a Star Destroyer to relocate to " + GameUtils.getCardLink(battleLocation), Filters.and(Filters.your(self), Filters.Star_Destroyer, Filters.canBeRelocatedToLocation(battleLocation, true, 0))) {
-                        @Override
-                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                            action.allowResponses("Relocate "+GameUtils.getCardLink(targetedCard)+" to "+GameUtils.getCardLink(battleLocation), new RespondablePlayCardEffect(action) {
-                                @Override
-                                protected void performActionResults(Action targetingAction) {
-                                    PhysicalCard starDestroyer = action.getPrimaryTargetCard(targetGroupId);
-                                    action.appendEffect(new RelocateBetweenLocationsEffect(action, starDestroyer, battleLocation));
-                                }
-                            });
-                        }
-                    });
-
-                    return Collections.singletonList(action);
-                }
-            }
-        }
-
         return null;
     }
 }

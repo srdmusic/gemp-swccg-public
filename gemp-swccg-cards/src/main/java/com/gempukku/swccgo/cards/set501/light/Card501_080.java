@@ -1,90 +1,73 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractRebel;
+import com.gempukku.swccgo.cards.AbstractRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OnCondition;
-import com.gempukku.swccgo.cards.effects.RevealTopCardOfReserveDeckEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.conditions.PilotingCondition;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.ChooseEffectOrderEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
-import com.gempukku.swccgo.logic.timing.StandardEffect;
+import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.Action;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+
 
 /**
  * Set: Set 20
  * Type: Character
- * Subtype: Rebel
- * Title: Echo Base Trooper (V)
+ * Subtype: Republic
+ * Title: Clone Pilot
  */
-public class Card501_080 extends AbstractRebel {
+public class Card501_080 extends AbstractRepublic {
     public Card501_080() {
-        super(Side.LIGHT, 3, 2, 2, 2, 4, "Echo Base Trooper");
-        setVirtualSuffix(true);
-        setLore("The personnel assigned to protect Echo Base are veteran warriors. Troopers such as Jess Allashane are trained to counter Imperial tactics in cold environment.");
-        setGameText("Power +1 on Hoth. Once per turn, may deploy a non-location card with 'Echo' in title from Reserve Deck; reshuffle. If on Hoth (or present with a Scomp link), once per turn, may reveal the top card of each player's Reserve Deck.");
-        addIcons(Icon.HOTH, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
-        addKeywords(Keyword.ECHO_BASE_TROOPER);
-        setTestingText("~Echo Base Trooper (V)");
+        super(Side.LIGHT, 3, 2, 1, 2, 3, "Clone Pilot");
+        setArmor(3);
+        setLore("Clone trooper.");
+        setGameText("Adds 2 to power and 1 to defense value of anything he pilots. While piloting a [Clone Army] starship or vehicle, forfeit +1 and draws one battle destiny if unable to otherwise. If stacked face up on Cloning Cylinders, may turn him face down to cancel Lateral Damage.");
+        addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.WARRIOR, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_20);
+        addKeywords(Keyword.CLONE_TROOPER);
+        setTestingText("Clone Pilot");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new PowerModifier(self, new OnCondition(self, Title.Hoth), 1));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
+        modifiers.add(new DefenseValueModifier(self, Filters.hasPiloting(self), 1));
+        modifiers.add(new ForfeitModifier(self, new PilotingCondition(self, Filters.and(Icon.CLONE_ARMY, Filters.or(Filters.starship, Filters.vehicle))), 1));
+        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, new PilotingCondition(self, Filters.and(Icon.CLONE_ARMY, Filters.or(Filters.starship, Filters.vehicle))), 1));
         return modifiers;
     }
 
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+
+    public List<TopLevelGameTextAction> getGameTextTopLevelWhileStackedActions(String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
-        GameTextActionId gameTextActionId = GameTextActionId.ECHO_BASE_TROOPER_V__DEPLOY_ECHO_CARD;
 
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-            && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy card with 'Echo' in title");
-            action.setActionMsg("Deploy a non-location card with 'Echo' in title from Reserve Deck");
-
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.not(Filters.location), Filters.or(Filters.titleContains("Echo"), Filters.titleContains("Echos"), Filters.titleContains("Echoes"))), true));
-
-            actions.add(action);
-        }
-
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        String opponent = game.getOpponent(playerId);
-
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.hasReserveDeck(game, playerId)
-                && GameConditions.hasReserveDeck(game, opponent)) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.title("Cloning Cylinders"), Filters.hasStacked(self)))
+                && GameConditions.canTarget(game, self, TargetingReason.TO_BE_CANCELED, Filters.Lateral_Damage)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Reveal top card of Reserve Decks");
-            action.setActionMsg("Reveal top card of each player's Reserve Deck");
+            action.setText("Cancel Lateral Damage");
+            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target Lateral Damage", TargetingReason.TO_BE_CANCELED, Filters.Lateral_Damage) {
+                @Override
+                protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
 
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-
-            List<StandardEffect> effects = new LinkedList<>();
-            effects.add(
-                    new RevealTopCardOfReserveDeckEffect(action, playerId, playerId));
-            effects.add(
-                    new RevealTopCardOfReserveDeckEffect(action, playerId, opponent));
-
-            action.appendEffect(
-                    new ChooseEffectOrderEffect(action, effects));
+                    action.appendCost(new FlipSingleSidedStackedCard(action, self));
+                    action.allowResponses(new RespondableEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+                            action.appendEffect(new CancelCardOnTableEffect(action, finalTarget));
+                        }
+                    });
+                }
+            });
 
             actions.add(action);
         }

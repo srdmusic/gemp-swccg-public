@@ -26,7 +26,7 @@ public class Card209_043 extends AbstractNormalEffect {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Shadows Of The Empire", Uniqueness.UNIQUE);
         setLore("");
         setGameText ("If Agents Of Black Sun on table, deploy on table. Once per turn, may use 1 Force to [download] Imperial Square. Once per turn, if Emperor on Coruscant, may draw top card of Force Pile (if during your turn and you occupy three battlegrounds, opponent also loses 1 Force). [Immune to Alter.]");
-        addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_9);
+        addIcons(Icon.VIRTUAL_SET_9);
         addImmuneToCardTitle(Title.Alter);
     }
 

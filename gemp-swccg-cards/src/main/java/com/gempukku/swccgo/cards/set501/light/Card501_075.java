@@ -1,66 +1,86 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractRebel;
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.effects.AddDestinyToTotalPowerEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.choose.DrawCardsIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
- * Type: Character
- * Subtype: Rebel
- * Title: Ezra, Hero Of Phoenix Squadron
+ * Set: Set 20
+ * Type: Effect
+ * Title: Battle Of Christophsis
  */
-public class Card501_075 extends AbstractRebel {
+public class Card501_075 extends AbstractNormalEffect {
     public Card501_075() {
-        super(Side.LIGHT, 1, 5, 4, 5, 6, "Ezra, Hero Of Phoenix Squadron", Uniqueness.UNIQUE);
-        setLore("Padawan. Commander.");
-        setGameText("Other Phoenix Squadron characters here are forfeit and defense value +2. Once per game, may retrieve a Phoenix Squadron character into hand. [Set 13] Maul may not modify destinies. Immune to attrition < 3.");
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
-        addPersona(Persona.EZRA);
-        addKeywords(Keyword.PADAWAN, Keyword.COMMANDER, Keyword.PHOENIX_SQUADRON);
-        setTestingText("Ezra, Hero Of Phoenix Squadron");
+        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Of Christophsis", Uniqueness.UNIQUE);
+        setGameText("If a Christophsis location on table, deploy on table. Once per turn, if you just deployed a clone or starship to Christophsis, may draw top card of Reserve Deck. Once per turn, if your Jedi/clone pair in battle, may lose 1 Force to add one destiny to total power. [Immune to Alter.]");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        addImmuneToCardTitle(Title.Alter);
+        setTestingText("Battle Of Christophsis");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.other(self), Filters.here(self), Filters.Phoenix_Squadron_character), 2));
-        modifiers.add(new DefenseValueModifier(self, Filters.and(Filters.other(self), Filters.here(self), Filters.Phoenix_Squadron_character), 2));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.and(Icon.VIRTUAL_SET_13, Filters.Maul), ModifyGameTextType.MAUL__MAY_NOT_MODIFIY_DESTINIES));
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
-        return modifiers;
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.canSpot(game, self, Filters.Christophsis_location);
     }
 
-
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.EZRA_HERO_OF_PHOENIX_SQUADRON__RETRIEVE_PHOENIX_SQUADRON_CHARACTER_INTO_HAND;
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        // Check condition(s)
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)) {
+        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.Jedi, Filters.with(self, Filters.and(Filters.your(self), Filters.clone))))
+                && GameConditions.canAddDestinyDrawsToPower(game, playerId)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Retrieve a character into hand");
-            action.setActionMsg("Retrieve a Phoenix Squadron character into hand");
-            // Update usage limit(s)
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Add one destiny to total power");
+
             action.appendUsage(
-                    new OncePerGameEffect(action));
-            // Perform result(s)
+                    new OncePerTurnEffect(action));
+            action.appendCost(
+                    new LoseForceEffect(action, playerId, 1, true));
             action.appendEffect(
-                    new RetrieveCardIntoHandEffect(action, playerId, Filters.Phoenix_Squadron_character));
+                    new AddDestinyToTotalPowerEffect(action, 1, playerId));
+
             return Collections.singletonList(action);
         }
+        return null;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+
+        if (TriggerConditions.justDeployedToLocation(game, effectResult, playerId, Filters.or(Filters.clone, Filters.and(Icon.CLONE_ARMY, Filters.starship)), Filters.Christophsis_location)
+                && GameConditions.hasReserveDeck(game, playerId)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Draw top card of Reserve Deck");
+
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+
+            action.appendEffect(
+                    new DrawCardsIntoHandFromReserveDeckEffect(action, playerId, 1));
+
+            return Collections.singletonList(action);
+        }
+
         return null;
     }
 }

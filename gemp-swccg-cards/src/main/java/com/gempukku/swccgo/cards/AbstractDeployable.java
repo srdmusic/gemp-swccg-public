@@ -849,8 +849,12 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
      */
     @Override
     public Action getLandAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, Filter moveTargetFilter) {
-        if (!checkRegularMoveRequirements(playerId, game, self, asAdditionalMove))
+        if (game.getModifiersQuerying().landsAsUnlimitedMove(game.getGameState(), self)) {
+            if (!checkUnlimitedMoveRequirements(playerId, game, self, asAdditionalMove))
+                return null;
+        } else if(!checkRegularMoveRequirements(playerId, game, self, asAdditionalMove)) {
             return null;
+        }
 
         if (!asReact && !skipPhaseCheck
                 && !GameConditions.isPhaseForPlayer(game, Phase.MOVE, game.getModifiersQuerying().isDeploysAndMovesLikeUndercoverSpy(game.getGameState(), self) ? game.getOpponent(self.getOwner()) : self.getOwner())) {
@@ -899,8 +903,12 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
      */
     @Override
     public Action getTakeOffAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, Filter moveTargetFilter) {
-        if (!checkRegularMoveRequirements(playerId, game, self, asAdditionalMove))
+        if (game.getModifiersQuerying().takesOffAsUnlimitedMove(game.getGameState(), self)) {
+            if (!checkUnlimitedMoveRequirements(playerId, game, self, asAdditionalMove))
+                return null;
+        } else if(!checkRegularMoveRequirements(playerId, game, self, asAdditionalMove)) {
             return null;
+        } 
 
         if (!asReact && !skipPhaseCheck
                 && !GameConditions.isPhaseForPlayer(game, Phase.MOVE, game.getModifiersQuerying().isDeploysAndMovesLikeUndercoverSpy(game.getGameState(), self) ? game.getOpponent(self.getOwner()) : self.getOwner())) {

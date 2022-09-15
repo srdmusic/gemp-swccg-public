@@ -1,19 +1,21 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractDroid;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.SubtractFromOpponentsAttritionEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.AbstractPermanentWeapon;
+import com.gempukku.swccgo.cards.AbstractRebel;
+import com.gempukku.swccgo.cards.conditions.InPlayDataSetCondition;
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.BattleState;
-import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.actions.FireWeaponAction;
+import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.NotCondition;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -22,108 +24,67 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Character
- * Subtype: Droid
- * Title: Artoo (V)
+ * Subtype: Rebel
+ * Title: Luke With Lightsaber (V)
  */
-public class Card501_059 extends AbstractDroid {
-    public Card501_059 () {
-        super(Side.LIGHT, 1, 2, 1, 4, "Artoo", Uniqueness.UNIQUE);
-        setAlternateDestiny(6);
+public class Card501_059 extends AbstractRebel {
+    public Card501_059() {
+        super(Side.LIGHT, 1, 6, 6, 6, 8, "Luke With Lightsaber", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
-        setLore("Counterpart to C-3PO. Spy. Obstinate, headstrong and always full of surprises. R2-D2 was an integral part of Luke Skywalker's rescue plans.");
-        setGameText("Once per game, may use 1 Force to either place opponent's just played Interrupt out of play or shuffle opponent's Reserve Deck. If in battle with Anakin or Luke, may draw destiny; subtract that amount from opponent's total attrition.");
-        addPersona(Persona.R2D2);
-        addKeywords(Keyword.SPY);
-        addModelType(ModelType.ASTROMECH);
-        addIcons(Icon.VIRTUAL_SET_19, Icon.JABBAS_PALACE);
-        setTestingText("Artoo (V)");
+        setLore("'I've taken care of everything.'");
+        setGameText("Permanent weapon is •Luke's Lightsaber (may target a character or creature for free; draw two destiny; target 'hit,' and its forfeit = 0, if total destiny > defense value). If Luke has not fired a weapon this turn, he is immune to attrition.");
+        addPersona(Persona.LUKE);
+        addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_20);
+        setTestingText("Luke With Lightsaber (V)");
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalBeforeTriggers(final String playerId, SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.ARTOO__SHUFFLE_OR_PLACE_INTERRUPT_OUT_OF_PLAY;
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.and(Filters.opponents(self), Filters.Interrupt))
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
-            PhysicalCard cardBeingPlayed = ((RespondablePlayingCardEffect) effect).getCard();
-            if (GameConditions.interruptCanBePlacedOutOfPlay(game, cardBeingPlayed)
-                    && GameConditions.canUseForce(game, playerId, 1)) {
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ImmuneToAttritionModifier(self, new NotCondition(new InPlayDataSetCondition(self))));
+        return modifiers;
+    }
 
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Place " + GameUtils.getFullName(cardBeingPlayed) + " out of play");
-                action.setActionMsg("Place " + GameUtils.getCardLink(cardBeingPlayed) + " out of play");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerGameEffect(action));
-                // Pay cost(s)
-                action.appendCost(
-                        new UseForceEffect(action, playerId, 1));
-                // Perform result(s)
-                action.appendEffect(
-                        new PlaceCardFromVoidOutOfPlayEffect(action, cardBeingPlayed));
-                return Collections.singletonList(action);
+    // Define "Luke's Lightsaber" permanent weapon
+    @Override
+    protected AbstractPermanentWeapon getGameTextPermanentWeapon() {
+        AbstractPermanentWeapon permanentWeapon = new AbstractPermanentWeapon(Persona.LUKES_LIGHTSABER) {
+            @Override
+            public List<FireWeaponAction> getGameTextFireWeaponActions(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, int extraForceRequired, PhysicalCard sourceCard, boolean repeatedFiring, Filter targetedAsCharacter, Float defenseValueAsCharacter, Filter fireAtTargetFilter, boolean ignorePerAttackOrBattleLimit) {
+                FireWeaponActionBuilder actionBuilder = FireWeaponActionBuilder.startBuildPrep(playerId, game, sourceCard, self, this, forFree, extraForceRequired, repeatedFiring, targetedAsCharacter, defenseValueAsCharacter, fireAtTargetFilter, ignorePerAttackOrBattleLimit)
+                        .targetForFree(Filters.or(Filters.character, targetedAsCharacter, Filters.creature), TargetingReason.TO_BE_HIT).finishBuildPrep();
+                if (actionBuilder != null) {
+
+                    // Build action using common utility
+                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(2, Statistic.DEFENSE_VALUE, true, 0);
+                    return Collections.singletonList(action);
+                }
+                return null;
             }
+        };
+        permanentWeapon.addKeyword(Keyword.LIGHTSABER);
+        return permanentWeapon;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
+        // Track if he targeted with a weapon this turn
+        if (TriggerConditions.isFiringWeapon(game, effect, Filters.any, self)) {
+            self.setWhileInPlayData(new WhileInPlayData(true));
         }
         return null;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<>();
-
-        GameTextActionId gameTextActionId = GameTextActionId.ARTOO__SHUFFLE_OR_PLACE_INTERRUPT_OUT_OF_PLAY;
-        String opponent = game.getOpponent(playerId);
-
-        if (GameConditions.hasReserveDeck(game, opponent)
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canUseForce(game, playerId, 1)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-
-            action.setText("Shuffle opponent's Reserve Deck");
-            action.setActionMsg("Shuffle opponent's Reserve Deck");
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            // Pay cost(s)
-            action.appendCost(
-                    new UseForceEffect(action, playerId, 1));
-            // Perform result(s)
-            action.appendEffect (
-                    new ShufflePileEffect(action, opponent, Zone.RESERVE_DECK));
-
-            actions.add(action);
-        }
-
-        return actions;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.isInitialAttritionJustCalculated(game, effectResult)
-                && GameConditions.isInBattleWith(game, self, Filters.or(Filters.Luke,Filters.Anakin))
-                && GameConditions.canDrawDestiny(game, playerId)) {
-            final BattleState battleState = game.getGameState().getBattleState();
-            if (battleState.hasAttritionTotal(game.getOpponent(playerId))) {
-
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-                action.setText("Reduce opponent's attrition");
-                // Perform result(s)
-                action.appendEffect(
-                        new DrawDestinyEffect(action, playerId, 1, DestinyType.DESTINY_TO_REDUCE_ATTRITION) {
-                            @Override
-                            protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
-                                if (totalDestiny != null && totalDestiny > 0) {
-                                    action.appendEffect(
-                                            new SubtractFromOpponentsAttritionEffect(action, totalDestiny));
-                                }
-                            }
-                        });
-                return Collections.singletonList(action);
-            }
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        // Reset at the end of each turn
+        if (TriggerConditions.isEndOfEachTurn(game, effectResult)) {
+            self.setWhileInPlayData(null);
         }
         return null;
     }
 }
+
+

@@ -1,51 +1,85 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.cards.conditions.ControlsCondition;
-import com.gempukku.swccgo.cards.conditions.HereCondition;
-import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
+import com.gempukku.swccgo.cards.AbstractRepublic;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.SuspendsCardModifier;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Set: Set 20
- * Type: Effect
- * Title: Hoth Blockade
+ * Type: Character
+ * Subtype: Republic
+ * Title: Poggle The Lesser
  */
-public class Card501_022 extends AbstractNormalEffect {
+public class Card501_022 extends AbstractRepublic {
     public Card501_022() {
-        super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, "Hoth Blockade", Uniqueness.UNIQUE);
-        setLore("Death Squadron.");
-        setGameText("Deploy on Hoth system. Death Squadron starships deploy -1 here (-5 if Executor). While your Star Destroyer here, your AT-ATs deploy -1 to Hoth sites and Rebel starships deploy +1 here. While you control two Hoth sites, Haven is suspended here. [Immune to Alter.]");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_20);
-        addImmuneToCardTitle(Title.Alter);
-        setTestingText("~Hoth Blockade");
-    }
-
-    @Override
-    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.Hoth_system;
+        super(Side.DARK, 2, 3, 4, 2, 5, "Poggle The Lesser", Uniqueness.UNIQUE);
+        setLore("Geonosian leader.");
+        setGameText("While with a battle droid, opponent may not draw more than one battle destiny here. Once per game, may deploy Dooku here from Reserve Deck; reshuffle. While on Geonosis and The Galaxy Torn Apart on table, opponent's Force retrieval is canceled.");
+        addKeywords(Keyword.LEADER);
+        setSpecies(Species.GEONOSIAN);
+        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.VIRTUAL_SET_20);
+        setTestingText("Poggle The Lesser");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        Filter here = Filters.here(self);
-        String playerId = self.getOwner();
-        
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.Death_Squadron_starship, new CardMatchesEvaluator(-1, -5, Filters.Executor), here));
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self), Filters.AT_AT), new HereCondition(self, Filters.and(Filters.your(playerId), Filters.Star_Destroyer)), -1, Filters.relatedLocation(self)));
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.Rebel_starship, new HereCondition(self, Filters.and(Filters.your(playerId), Filters.Star_Destroyer)), 1, here));
-        modifiers.add(new SuspendsCardModifier(self, Filters.and(Filters.Haven, here), new ControlsCondition(playerId, 2, Filters.Hoth_site)));
+        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, Filters.here(self), new WithCondition(self, Filters.battle_droid), 1, game.getOpponent(self.getOwner())));
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.POGGLE_THE_LESSER__DEPLOY_DOOKU_FROM_RESERVE_DECK;
+
+        // Check condition(s)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Dooku from Reserve Deck");
+            action.setActionMsg("Deploy Dooku here from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.Dooku, Filters.here(self), true));
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        if (TriggerConditions.isAboutToRetrieveForce(game, effectResult, game.getOpponent(self.getOwner()))
+                && GameConditions.isOnSystem(game, self, Title.Geonosis)
+                && GameConditions.canSpot(game, self, Filters.title("The Galaxy Torn Apart"))) {
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Cancel retrieval");
+            action.setActionMsg("Force retrieval is canceled");
+            action.appendEffect(
+                    new CancelForceRetrievalEffect(action)
+            );
+            return Collections.singletonList(action);
+        }
+
+        return null;
     }
 }

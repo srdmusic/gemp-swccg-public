@@ -828,7 +828,7 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
      * @return true if generic location may be part of system, otherwise false
      */
     @Override
-    public boolean mayNotBePartOfSystem(String system) {
+    public boolean mayNotBePartOfSystem(SwccgGame game, String system) {
         throw new UnsupportedOperationException("This method, mayNotBePartOfSystem(), should not be called on this card: " + _title);
     }
 
@@ -874,6 +874,20 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
     public Filter getValidPilotFilter(String playerId, SwccgGame game, PhysicalCard self, boolean forDeployment) {
         throw new UnsupportedOperationException("This method, getValidPilotFilter(), should not be called on this card: " + _title);
     }
+
+    /**
+     * Gets a filter for the cards that are valid to be passengers of the specified card.
+     * @param playerId the player
+     * @param game the game
+     * @param self the card
+     * @param forDeployment true if checking for deployment, otherwise false
+     * @return the filter
+     */
+    @Override
+    public Filter getValidPassengerFilter(String playerId, SwccgGame game, PhysicalCard self, boolean forDeployment) {
+        throw new UnsupportedOperationException("This method, getValidPassengerFilter(), should not be called on this card: " + _title);
+    }
+
 
     /**
      * Gets the pilot capacity.

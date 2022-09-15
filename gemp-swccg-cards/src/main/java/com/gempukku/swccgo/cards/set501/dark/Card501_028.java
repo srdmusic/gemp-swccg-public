@@ -1,79 +1,69 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractImperial;
+import com.gempukku.swccgo.cards.AbstractRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.HitCondition;
-import com.gempukku.swccgo.cards.conditions.PresentAtCondition;
+import com.gempukku.swccgo.cards.conditions.OnCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
-import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.conditions.NotCondition;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeForfeitedInBattleModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Character
- * Subtype: Imperial
- * Title: Governor Pryce
+ * Subtype: Republic
+ * Title: General Whorm Loathsom
  */
-public class Card501_028 extends AbstractImperial {
+public class Card501_028 extends AbstractRepublic {
     public Card501_028() {
-        super(Side.DARK, 2, 3, 2, 3, 5, "Governor Pryce", Uniqueness.UNIQUE);
-        setPolitics(2);
-        setLore("Female miner. Leader.");
-        setGameText("If you just captured a Rebel here (or stacked a card as 'artwork') you may take a card without ability into hand from Reserve Deck; reshuffle. If you just lost a battle here, Pryce may not be forfeited unless 'hit' or no other Imperials present. Immune to attrition < 4.");
-        addKeywords(Keyword.FEMALE, Keyword.MINER, Keyword.LEADER);
-        addIcons(Icon.VIRTUAL_SET_19, Icon.CORUSCANT);
-        setTestingText("Governor Pryce");
+        super(Side.DARK, 2, 3, 3, 3, 5, "General Whorm Loathsom", Uniqueness.UNIQUE);
+        setLore("Kerkoiden leader.");
+        setGameText("While with a battle droid, adds one battle destiny. Once per game, may deploy Ventress here from Reserve Deck; reshuffle. While on Christophsis and The Galaxy Torn Apart on table, your Force drains (and Force drain bonuses) may not be canceled or reduced.");
+        addKeywords(Keyword.LEADER, Keyword.GENERAL);
+        setSpecies(Species.KERKOIDEN);
+        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.VIRTUAL_SET_20);
+        setTestingText("General Whorm Loathsom");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(final SwccgGame game, final PhysicalCard self) {
-        final String opponent = game.getOpponent(self.getOwner());
-        Condition inLosingBattle = new Condition(){
-            @Override
-            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
-                return GameConditions.isDuringBattleWonBy(game, opponent);
-            }
-        };
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotBeForfeitedInBattleModifier(self, self, new AndCondition(inLosingBattle, new NotCondition(new HitCondition(self)), new PresentAtCondition(Filters.and(Filters.other(self), Filters.Imperial), Filters.here(self)))));
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.battle_droid), 1, self.getOwner()));
+        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.location, new AndCondition(new OnCondition(self, Title.Christophsis), new OnTableCondition(self, Filters.title("The Galaxy Torn Apart"))), null, self.getOwner()));
+        modifiers.add(new ForceDrainsMayNotBeReducedModifier(self, Filters.location, new AndCondition(new OnCondition(self, Title.Christophsis), new OnTableCondition(self, Filters.title("The Galaxy Torn Apart"))), null, self.getOwner()));
+        modifiers.add(new ForceDrainModifiersMayNotBeCanceledModifier(self, new AndCondition(new OnCondition(self, Title.Christophsis), new OnTableCondition(self, Filters.title("The Galaxy Torn Apart"))), Filters.your(self)));
         return modifiers;
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.ARIHNDA_PRYCE__UPLOAD_CARD;
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.GENERAL_WHORM_LOATHSOM__DEPLOY_VENTRESS_FROM_RESERVE_DECK;
 
-        if (GameConditions.canSearchReserveDeck(game, playerId, self, gameTextActionId)
-                && (TriggerConditions.captured(game, effectResult, playerId, Filters.and(Filters.Rebel, Filters.here(self)))
-                || TriggerConditions.justStackedCardOn(game, effectResult, Filters.any, Filters.Thrawns_Art_Collection))) {
+        // Check condition(s)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take card into hand from Reserve Deck");
-            action.setActionMsg("Take a card without ability into hand from Reserve Deck");
-
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Ventress from Reserve Deck");
+            action.setActionMsg("Deploy Ventress here from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.not(Filters.hasAbilityOrHasPermanentPilotWithAbility), true, true));
+                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.Ventress, Filters.here(self), true));
             return Collections.singletonList(action);
-
         }
         return null;
     }

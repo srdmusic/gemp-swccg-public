@@ -1,18 +1,11 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractImperial;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.WithCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
-import com.gempukku.swccgo.logic.modifiers.HyperspeedModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
@@ -21,52 +14,37 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
- * Type: Character
- * Subtype: Imperial
- * Title: Ensign Eli Vanto
+ * Set: Set 20
+ * Type: Location
+ * Subtype: Site
+ * Title: Separatist Command Center
  */
-public class Card501_029 extends AbstractImperial {
+public class Card501_029 extends AbstractSite {
     public Card501_029() {
-        super(Side.DARK, 2, 3, 2, 3, 4, "Ensign Eli Vanto", Uniqueness.UNIQUE);
-        setPolitics(1);
-        setGameText("Adds 2 to power of any capital starship he pilots. If with Thrawn, your starships here are power and hyperspeed +1. During your control phase, may use 1 Force to take a card with 'artwork' in game text into hand from Reserve Deck; reshuffle.");
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
-        setTestingText("Ensign Eli Vanto");
+        super(Side.DARK, "Separatist Command Center", Uniqueness.DIAMOND_1);
+        setLocationDarkSideGameText("Your battle droids are power +1 here.");
+        setLocationLightSideGameText("Deploys only to a [Clone Army] or [Separatist] system. Immune to Ounee Ta.");
+        addIcon(Icon.DARK_FORCE, 2);
+        addIcon(Icon.LIGHT_FORCE, 1);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_20);
+        setTestingText("Separatist Command Center");
+    }
+    @Override
+    public boolean mayNotBePartOfSystem(SwccgGame game, String system) {
+        return Filters.filterTopLocationsOnTable(game, Filters.and(Filters.system, Filters.or(Icon.SEPARATIST, Icon.CLONE_ARMY), Filters.partOfSystem(system))).isEmpty();
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2, Filters.capital_starship));
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(self), Filters.starship, Filters.here(self)), new WithCondition(self, Filters.Thrawn), 1));
-        modifiers.add(new HyperspeedModifier(self, Filters.and(Filters.your(self), Filters.starship, Filters.here(self)), new WithCondition(self, Filters.Thrawn), 1));
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.battle_droid, Filters.here(self)), 1));
         return modifiers;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.ENSIGN_ELI_VANTO__UPLOAD_CARD;
-
-        // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)
-                && GameConditions.canUseForce(game, playerId, 1)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take card into hand from Reserve Deck");
-            action.setActionMsg("Take card with 'artwork' in game text into hand from Reserve Deck");
-
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
-            // Pay cost(s)
-            action.appendCost(
-                    new UseForceEffect(action, playerId, 1));
-            // Perform result(s)
-            action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.gameTextContains("artwork"), Filters.gameTextContains("artworks")), true));
-            return Collections.singletonList(action);
-        }
-        return null;
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ImmuneToTitleModifier(self, Title.Ounee_Ta));
+        return modifiers;
     }
 }

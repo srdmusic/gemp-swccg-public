@@ -26,7 +26,7 @@ import java.util.List;
  * Set: Set 13
  * Type: Location
  * Subtype: Site
- * Title: Executor: Control Station (v)
+ * Title: Executor: Control Station (V)
  */
 public class Card213_024 extends AbstractUniqueStarshipSite {
     public Card213_024() {

@@ -1,136 +1,94 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.conditions.OnCondition;
+import com.gempukku.swccgo.cards.effects.RevealTopCardOfReserveDeckEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.decisions.YesNoDecision;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromPileEffect;
-import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.effects.ChooseEffectOrderEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.timing.StandardEffect;
 
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
+ * Set: Set 20
  * Type: Character
- * Subtype: Alien
- * Title: Babu Frik
+ * Subtype: Rebel
+ * Title: Echo Base Trooper (V)
  */
-public class Card501_060 extends AbstractAlien {
+public class Card501_060 extends AbstractRebel {
     public Card501_060() {
-        super(Side.LIGHT, 4, 1, 0, 2, 3, "Babu Frik", Uniqueness.UNIQUE);
-        setLore("Droidsmith. Spice Runner. Anzellan.");
-        setGameText("When deployed, may search your Lost Pile and move one card there to the top of that pile (if that card is a droid, may retrieve it into hand). Once per game, may use 2 Force to cancel a droid's game text here for remainder of turn.");
-        addKeywords(Keyword.DROIDSMITH, Keyword.SPICE_RUNNER);
-        setSpecies(Species.ANZELLAN);
-        addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("Babu Frik");
+        super(Side.LIGHT, 3, 2, 2, 2, 4, "Echo Base Trooper");
+        setVirtualSuffix(true);
+        setLore("The personnel assigned to protect Echo Base are veteran warriors. Troopers such as Jess Allashane are trained to counter Imperial tactics in cold environment.");
+        setGameText("Power +1 on Hoth. Once per turn, may deploy a non-location card with 'Echo' in title from Reserve Deck; reshuffle. If on Hoth (or present with a Scomp link), once per turn, may reveal the top card of each player's Reserve Deck.");
+        addIcons(Icon.HOTH, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
+        addKeywords(Keyword.ECHO_BASE_TROOPER);
+        setTestingText("Echo Base Trooper (V)");
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.BABU_FRIK__SEARCH_LOST_PILE;
-
-        // Check condition(s)
-        if (TriggerConditions.justDeployed(game, effectResult, self)
-                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
-
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Search your Lost Pile");
-            // Perform result(s)
-            action.appendEffect(
-                    new ChooseCardFromPileEffect(action, playerId, Zone.LOST_PILE, playerId) {
-                        @Override
-                        public String getChoiceText(int numCardsToChoose) {
-                            return "Choose card" + GameUtils.s(numCardsToChoose) + " to put on top of " + Zone.LOST_PILE.getHumanReadable();
-                        }
-                        @Override
-                        protected void cardSelected(final SwccgGame game, final PhysicalCard selectedCard) {
-                            if (selectedCard != null) {
-                                String cardInfo = GameUtils.getCardLink(selectedCard);
-                                action.setActionMsg("Move " + cardInfo + " to the top of " + Zone.LOST_PILE.getHumanReadable());
-                                action.appendEffect(
-                                        new PutCardFromLostPileOnTopOfCardPileEffect(action, selectedCard, Zone.LOST_PILE, false));
-
-                                if (Filters.droid.accepts(game, selectedCard)) {
-                                    action.appendEffect(
-                                            new PlayoutDecisionEffect(action, playerId,
-                                                    new YesNoDecision("Do you want retrieve " + GameUtils.getCardLink(selectedCard) + " into hand?") {
-                                                        @Override
-                                                        protected void yes() {
-                                                            action.setActionMsg("Retrieve " + GameUtils.getCardLink(selectedCard) + " into hand");
-                                                            action.appendEffect(
-                                                                    new RetrieveCardIntoHandEffect(action, playerId, false));
-                                                        }
-                                                        @Override
-                                                        protected void no() {
-                                                            game.getGameState().sendMessage(playerId + " chooses to not to retrieve " + GameUtils.getCardLink(selectedCard) + " into hand");
-                                                        }
-                                                    }
-                                            )
-                                    );
-                                }
-                            }
-                        }
-                    }
-            );
-            return Collections.singletonList(action);
-        }
-        return null;
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new PowerModifier(self, new OnCondition(self, Title.Hoth), 1));
+        return modifiers;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.BABU_FRIK__CANCEL_DROID_GAME_TEXT;
-        final Filter targetFilter = Filters.and(Filters.droid, Filters.here(self));
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
+        GameTextActionId gameTextActionId = GameTextActionId.ECHO_BASE_TROOPER_V__DEPLOY_ECHO_CARD;
 
-        // Check condition(s)
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canUseForce(game, playerId, 2)
-                && GameConditions.canTarget(game, self, targetFilter)) {
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+            && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Cancel a droid's game text");
-            action.setActionMsg("Cancel the game text of a droid here for remainder of turn");
-            // Update usage limit(s)
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy card with 'Echo' in title");
+            action.setActionMsg("Deploy a non-location card with 'Echo' in title from Reserve Deck");
+
             action.appendUsage(
-                    new OncePerGameEffect(action));
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Target droid", targetFilter) {
-                        @Override
-                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                            action.addAnimationGroup(targetedCard);
-                            action.appendCost(
-                                    new UseForceEffect(action, playerId, 2));
-                            // Allow response(s)
-                            action.allowResponses("Cancel " + GameUtils.getCardLink(targetedCard) + "'s game text for remainder of turn",
-                                    new UnrespondableEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new CancelGameTextUntilEndOfTurnEffect(action, finalTarget));
-                                        }
-                                    }
-                            );
-                        }
-                    }
-            );
-            return Collections.singletonList(action);
+                    new OncePerTurnEffect(action));
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.not(Filters.location), Filters.or(Filters.titleContains("Echo"), Filters.titleContains("Echos"), Filters.titleContains("Echoes"))), true));
+
+            actions.add(action);
         }
-        return null;
+
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        String opponent = game.getOpponent(playerId);
+
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.hasReserveDeck(game, playerId)
+                && GameConditions.hasReserveDeck(game, opponent)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Reveal top card of Reserve Decks");
+            action.setActionMsg("Reveal top card of each player's Reserve Deck");
+
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+
+            List<StandardEffect> effects = new LinkedList<>();
+            effects.add(
+                    new RevealTopCardOfReserveDeckEffect(action, playerId, playerId));
+            effects.add(
+                    new RevealTopCardOfReserveDeckEffect(action, playerId, opponent));
+
+            action.appendEffect(
+                    new ChooseEffectOrderEffect(action, effects));
+
+            actions.add(action);
+        }
+
+        return actions;
     }
 }

@@ -103,7 +103,7 @@ public class SimpleMerchant implements Merchant {
         Rarity cardRarity = rarity.getCardRarity(blueprintId);
         if (cardRarity == Rarity.UR) // Ultra Rare (UR)
             return BASE_PRICE * 10;
-        if (cardRarity == Rarity.XR) // Extra Rare (XR)
+        if (cardRarity == Rarity.XR) // Exclusive Rare (XR)
             return BASE_PRICE * 3;
         if (cardRarity == Rarity.PM) // Premium (P)
             return BASE_PRICE * 2;

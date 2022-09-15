@@ -32,7 +32,7 @@ public class Card218_005 extends AbstractUsedInterrupt {
         super(Side.LIGHT, 4, "Rebel Leadership & Critical Error Revealed", Uniqueness.UNIQUE);
         addComboCardTitles("Rebel Leadership", "Critical Error Revealed");
         setGameText("Take an admiral or general into hand from Reserve Deck; reshuffle. OR If your admiral is in battle at a system (or your general is in battle at a site), prevent opponent from drawing more than one battle destiny (your total battle destiny is +1 if Ackbar or Leia in battle). OR Raise your converted location to the top.");
-        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_18);
+        addIcons(Icon.VIRTUAL_SET_18);
     }
 
     @Override

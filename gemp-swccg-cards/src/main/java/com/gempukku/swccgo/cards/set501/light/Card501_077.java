@@ -1,102 +1,55 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.cards.AbstractCapitalStarship;
+import com.gempukku.swccgo.cards.AbstractPermanentAboard;
+import com.gempukku.swccgo.cards.AbstractPermanentPilot;
+import com.gempukku.swccgo.cards.conditions.HasPilotingCondition;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.ModelType;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.modifiers.*;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
- * Set: Set 19
- * Type: Effect
- * Title: A Cunning Warrior
+ * Set: Set 20
+ * Type: Starship
+ * Subtype: Capital
+ * Title: Resolute
  */
-public class Card501_077 extends AbstractNormalEffect {
+public class Card501_077 extends AbstractCapitalStarship {
     public Card501_077() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, "A Cunning Warrior", Uniqueness.UNIQUE);
-        setGameText("Deploy on your [Skywalker] Epic Event at start of game; may deploy Lars' Moisture Farm. Once per turn, may deploy Lower Corridor or a weapon on your lone Skywalker from Reserve Deck; reshuffle. Courage Of A Skywalker and Higher Ground are destiny +2. [Immune to Alter.]");
-        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_19);
-        addImmuneToCardTitle(Title.Alter);
-        setTestingText("A Cunning Warrior");
-        hideFromDeckBuilder();
+        super(Side.LIGHT, 2, 6, 7, 6, null, 4, 7, "Resolute", Uniqueness.UNIQUE);
+        setGameText("May add 5 pilots, 5 passengers, 5 vehicles, and 5 starfighters. Permanent pilot provides ability of 2. While Anakin or Yularen piloting, immune to attrition < 5 and your [Clone Army] cards at related sites are power +1.");
+        addModelType(ModelType.VENATOR_CLASS_ATTACK_CRUISER);
+        addIcons(Icon.EPISODE_I, Icon.REPUBLIC, Icon.PILOT, Icon.NAV_COMPUTER, Icon.CLONE_ARMY, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_20);
+        setPilotCapacity(5);
+        setPassengerCapacity(5);
+        setVehicleCapacity(5);
+        setStarfighterCapacity(5);
+        setMatchingPilotFilter(Filters.or(Filters.Anakin, Filters.title("Admiral Yularen")));
+        setTestingText("Resolute");
     }
 
     @Override
-    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return GameConditions.isDuringStartOfGame(game);
-    }
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        String opponent = game.getOpponent(self.getOwner());
 
-    @Override
-    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Epic_Event);
-    }
-
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DestinyModifier(self, Filters.or(Filters.title("Courage Of A Skywalker"), Filters.title("Higher Ground")), 2));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, new HasPilotingCondition(self, Filters.or(Filters.Anakin, Filters.title("Admiral Yularen"))), 5));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(self), Icon.CLONE_ARMY, Filters.at(Filters.relatedSite(self))), new HasPilotingCondition(self, Filters.or(Filters.Anakin, Filters.title("Admiral Yularen"))), 1));
         return modifiers;
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.A_CUNNING_WARRIOR__DEPLOY_LARS_MOISTURE_FARM;
-        if (TriggerConditions.justDeployed(game, effectResult, self)
-            && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Lars_Moisture_Farm, true)) {
-
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Lars' Moisture Farm from Reserve Deck");
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Lars_Moisture_Farm, true));
-            return Collections.singletonList(action);
-
-        }
-
-        return null;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<>();
-
-        GameTextActionId gameTextActionId = GameTextActionId.A_CUNNING_WARRIOR__DEPLOY_CARD;
-
-        Filter loneSkywalkerFilter = Filters.and(Filters.your(self), Filters.alone, Filters.Skywalker);
-        // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Lower_Corridor)
-                    || (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
-                        && GameConditions.canTarget(game, self, loneSkywalkerFilter)))) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy Lower Corridor or a weapon on your lone Skywalker from Reserve Deck");
-
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-
-            action.appendEffect(new DeployCardToTargetFromReserveDeckEffect(action, Filters.or(Filters.title(Title.Lower_Corridor), Filters.weapon), loneSkywalkerFilter, Filters.title(Title.Lower_Corridor), Filters.none, false, true));
-
-            actions.add(action);
-        }
-
-        return actions;
+    protected List<? extends AbstractPermanentAboard> getGameTextPermanentsAboard() {
+        return Collections.singletonList(new AbstractPermanentPilot(2) {});
     }
 }

@@ -1,91 +1,77 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractRepublic;
+import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.decisions.YesNoDecision;
-import com.gempukku.swccgo.logic.effects.DoNothingEffect;
-import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
-import com.gempukku.swccgo.logic.effects.ShowCardOnScreenEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromForcePileEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromForcePileEffect;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Set: Set 20
  * Type: Character
- * Subtype: Republic
- * Title: Lott Dod (V)
+ * SubType: Imperial
+ * Title: Third Sister
  */
-public class Card501_016 extends AbstractRepublic {
+public class Card501_016 extends AbstractImperial {
     public Card501_016() {
-        super(Side.DARK, 2, 3, 1, 3, 5, "Lott Dod", Uniqueness.UNIQUE);
-        setPolitics(4);
-        setLore("Primary Neimoidian senator who represents the Trade Federation in the Galactic Senate. Thwarted attempts by Amidala to end the blockade of Naboo.");
-        setGameText("While present at Theed Palace Throne Room, during your deploy phase, may search your Force pile to reveal a [Presence] droid; if you do, may take that card (or another) into hand; reshuffle.");
-        addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
-        addKeywords(Keyword.SENATOR);
-        setSpecies(Species.NEIMOIDIAN);
-        addPersona(Persona.LOTT);
-        setTestingText("~Lott Dodd (V)");
+        super(Side.DARK, 3, 3, 4, 4, 5, "Third Sister", Uniqueness.UNIQUE);
+        setLore("Female Inquisitor.");
+        setGameText("Deploys +3 to your location. Obi-Wan is not a general. Once per turn, if opponent's card just moved from here, opponent loses 1 Force. Your characters here move (using landspeed) to sites opponent occupies for free. Immune to attrition < 4.");
+        addKeywords(Keyword.INQUISITOR, Keyword.FEMALE);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
+        setTestingText("Third Sister");
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.LOTT_DOD__UPLOAD_PRESENCE_DROID_FROM_FORCE_PILE;
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
-                && GameConditions.hasForcePile(game, playerId)
-                && GameConditions.isPresentAt(game, self, Filters.Theed_Palace_Throne_Room)) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Reveal card from Force Pile");
-            action.setText("Reveal [Presence] droid from Force Pile");
-            action.appendUsage(
-                    new OncePerPhaseEffect(action)
-            );
-            action.appendTargeting(
-                    new ChooseCardFromForcePileEffect(action, playerId, Filters.and(Filters.droid, Filters.icon(Icon.PRESENCE))) {
-                        @Override
-                        protected void cardSelected(SwccgGame game, final PhysicalCard selectedCard) {
-                            if (selectedCard != null) {
-                                action.appendEffect(
-                                        new ShowCardOnScreenEffect(action, selectedCard)
-                                );
-                                action.appendEffect(
-                                        new PlayoutDecisionEffect(action, playerId, new YesNoDecision("Take " + GameUtils.getCardLink(selectedCard) + " into hand?") {
-                                            @Override
-                                            protected void yes() {
-                                                action.appendEffect(
-                                                        new TakeCardIntoHandFromForcePileEffect(action, playerId, selectedCard, true)
-                                                );
-                                            }
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DeployCostToLocationModifier(self, 3, Filters.and(Filters.your(self), Filters.location)));
+        return modifiers;
+    }
 
-                                            @Override
-                                            protected void no() {
-                                                action.appendEffect(
-                                                        new TakeCardIntoHandFromForcePileEffect(action, playerId, Filters.not(selectedCard), true)
-                                                );
-                                            }
-                                        })
-                                );
-                            } else {
-                                action.appendEffect(
-                                        new DoNothingEffect(action)
-                                );
-                            }
-                        }
-                    }
-            );
-            return Collections.singletonList(action);
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new RemoveKeywordModifier(self, Filters.ObiWan, Keyword.GENERAL));
+        modifiers.add(new MovesFreeToLocationUsingLandspeedModifier(self, Filters.and(Filters.your(self), Filters.character, Filters.here(self)), Filters.and(Filters.site, Filters.occupies(game.getOpponent(self.getOwner())))));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
+        return modifiers;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
+
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (TriggerConditions.movedFromLocation(game, effectResult, Filters.opponents(self), Filters.here(self))
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setPerformingPlayer(playerId);
+            action.setText("Make opponent lose 1 Force");
+
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new LoseForceEffect(action, opponent, 1));
+            actions.add(action);
         }
 
-        return null;
+        return actions;
     }
 }

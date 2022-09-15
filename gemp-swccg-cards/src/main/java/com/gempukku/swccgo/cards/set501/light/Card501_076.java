@@ -1,59 +1,88 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractCharacterWeapon;
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.FireWeaponAction;
-import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.ShowCardOnScreenEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckSimultaneouslyWithCardEffect;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
- * Type: Weapon
- * Subtype: Character
- * Title: Ezra's Blaster Lightsaber
+ * Set: Set 20
+ * Type: Effect
+ * Title: Galactic Republic Navy
  */
-public class Card501_076 extends AbstractCharacterWeapon {
+public class Card501_076 extends AbstractNormalEffect {
     public Card501_076() {
-        super(Side.LIGHT, 1, "Ezra's Blaster Lightsaber", Uniqueness.UNIQUE);
-        setLore("");
-        setGameText(" Deploy on Ezra. Once per turn, may return to hand to cancel and redraw a destiny targeting a Rebel here." +
-                "May target a character for free. Draw destiny. " +
-                "If destiny +3 > defense value, target hit, its forfeit = 0 and, if target’s ability > 4, " +
-                "Ezra is power +2 until end of turn.");
-        addPersona(Persona.EZRAS_BLADER_LIGHTSABER);
-        addIcons(Icon.VIRTUAL_SET_19);
-        addKeywords(Keyword.BLASTER, Keyword.LIGHTSABER);
-        setMatchingCharacterFilter(Filters.Ezra);
-        setTestingText("Ezra's Blaster Lightsaber");
+        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Galactic Republic Navy", Uniqueness.UNIQUE);
+        setGameText("Deploy on table. Your [Clone Army] starships with a Jedi or clone aboard are power +1 (+2 if both). Once per turn, may reveal a [Clone Army] starship from hand to take a [Episode I] pilot character from Reserve Deck (or vice versa) and deploy both simultaneously; reshuffle. [Immune to Alter.]");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        addImmuneToCardTitle(Title.Alter);
+        setTestingText("Galactic Republic Navy");
     }
 
     @Override
-    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.and(Filters.your(self), Filters.Ezra);
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(self), Icon.CLONE_ARMY, Filters.starship, Filters.hasAboard(self, Filters.or(Filters.clone, Filters.Jedi))), new CardMatchesEvaluator(1, 2, Filters.and(Filters.hasAboard(self, Filters.clone), Filters.hasAboard(self, Filters.Jedi)))));
+        return modifiers;
     }
 
     @Override
-    protected Filter getGameTextValidToUseWeaponFilter(final SwccgGame game, final PhysicalCard self) {
-        return Filters.Ezra;
-    }
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
 
+        final Filter starship = Filters.and(Icon.CLONE_ARMY, Filters.starship);
+        final Filter pilot = Filters.and(Icon.EPISODE_I, Filters.pilot);
+        Filter filter = Filters.and(Filters.or(pilot, starship), Filters.isUniquenessOnTableNotReached);
 
-    @Override
-    protected List<FireWeaponAction> getGameTextFireWeaponActions(String playerId, final SwccgGame game, final PhysicalCard self, boolean forFree, int extraForceRequired, PhysicalCard sourceCard, boolean repeatedFiring, Filter targetedAsCharacter, Float defenseValueAsCharacter, Filter fireAtTargetFilter, boolean ignorePerAttackOrBattleLimit) {
-        FireWeaponActionBuilder actionBuilder = FireWeaponActionBuilder.startBuildPrep(playerId, game, sourceCard, self, forFree, extraForceRequired, repeatedFiring, targetedAsCharacter, defenseValueAsCharacter, fireAtTargetFilter, ignorePerAttackOrBattleLimit)
-                .target(Filters.or(Filters.character, targetedAsCharacter), TargetingReason.TO_BE_HIT).finishBuildPrep();
-        if (actionBuilder != null) {
+        GameTextActionId gameTextActionId = GameTextActionId.GALACTIC_REPUBLIC_NAVY__DEPLOY_CLONE_ARMY_STARSHIP_AND_PILOT;
 
-            // Build action using common utility
-            FireWeaponAction action = actionBuilder.buildFireWeaponEzrasBlasterLightsaberAction();
-            return Collections.singletonList(action);
+        // Check condition(s)
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
+                && GameConditions.hasInHand(game, playerId, filter)
+                && GameConditions.canSearchReserveDeck(game, playerId, self, gameTextActionId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Reveal pilot or starship from hand");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerPhaseEffect(action));
+            // Choose target(s)
+            action.appendTargeting(
+                    new ChooseCardFromHandEffect(action, playerId, filter) {
+                        @Override
+                        protected void cardSelected(SwccgGame game, final PhysicalCard selectedCard) {
+                            final Filter searchFilter;
+                            if (pilot.accepts(game, selectedCard)) {
+                                action.setActionMsg("Take a [Clone Army] starship into hand from Reserve Deck and deploy both simultaneously");
+                                searchFilter = starship;
+                            }
+                            else {
+                                action.setActionMsg("Take an [Episode I] pilot into hand from Reserve Deck and deploy both simultaneously");
+                                searchFilter = pilot;
+                            }
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new ShowCardOnScreenEffect(action, selectedCard));
+                            action.appendEffect(
+                                    new DeployCardFromReserveDeckSimultaneouslyWithCardEffect(action, selectedCard, searchFilter, true));
+                        }
+                    });
+            actions.add(action);
         }
-        return null;
+        return actions;
     }
 }

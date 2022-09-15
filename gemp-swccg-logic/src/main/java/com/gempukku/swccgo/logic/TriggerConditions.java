@@ -1138,6 +1138,27 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a card accepted by the target filter is being targeted by a tractor beam.
+     * @param game the game
+     * @param effect the effect
+     * @param targetFilter the target filter
+     * @return true or false
+     */
+    public static boolean isTargetedByTractorBeam(SwccgGame game, Effect effect, Filterable targetFilter) {
+        if (effect.getType() == Effect.Type.USING_TRACTOR_BEAM_EFFECT) {
+            if (!effect.isCanceled()) {
+                UsingTractorBeamState usingTractorBeamState = game.getGameState().getUsingTractorBeamState();
+
+                if (usingTractorBeamState != null) {
+                    Collection<PhysicalCard> targets = usingTractorBeamState.getTargets();
+                    return Filters.canSpot(targets, game, targetFilter);
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * Determines if a card accepted by the target filter is being targeted by any of the specified reasons.
      * @param game the game
      * @param effect the effect
@@ -1149,7 +1170,8 @@ public class TriggerConditions {
     public static boolean isTargetedForReason(SwccgGame game, Effect effect, String playerId, Filterable targetFilter, Collection<TargetingReason> targetingReasons) {
         if (effect.getType() == Effect.Type.PLAYING_CARD_EFFECT
                 || effect.getType() == Effect.Type.RESPONDABLE_EFFECT
-                || effect.getType() == Effect.Type.WEAPON_FIRING_EFFECT) {
+                || effect.getType() == Effect.Type.WEAPON_FIRING_EFFECT
+                || effect.getType() == Effect.Type.USING_TRACTOR_BEAM_EFFECT) {
             if (!effect.isCanceled()) {
                 Action targetingAction = effect.getAction();
                 if (playerId.equals(targetingAction.getPerformingPlayer())) {
@@ -4053,7 +4075,6 @@ public class TriggerConditions {
      * Determines if a destiny draw was just completed during a weapon destiny draw by the specified player.
      * @param game the game
      * @param effectResult the effect result
-     * @param playerId the player
      * @return true or false
      */
     public static boolean isWeaponDestinyDrawComplete(SwccgGame game, EffectResult effectResult) {
@@ -5506,6 +5527,19 @@ public class TriggerConditions {
     public static boolean justMadeChoice(SwccgGame game, EffectResult effectResult, String playerId, Filterable filter) {
         if (effectResult.getType() == EffectResult.Type.CHOICE_MADE) {
             return playerId.equals(effectResult.getPerformingPlayerId()) && Filters.and(filter).accepts(game, ((ChoiceMadeResult)effectResult).getCard());
+        }
+        return false;
+    }
+
+    /**
+     * Determines if a location was just converted
+     * @param game the game
+     * @param effectResult the effect result
+     * @return true or false
+     */
+    public static boolean justConvertedLocation(SwccgGame game, EffectResult effectResult) {
+        if (effectResult.getType() == EffectResult.Type.CONVERT_LOCATION) {
+            return true;
         }
         return false;
     }

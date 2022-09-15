@@ -1,167 +1,46 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractAlien;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.AtCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.evaluators.HereEvaluator;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
-import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
-import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.modifiers.*;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 19
- * Type: Character
- * Subtype: Alien
- * Title: Elan Sleazebaggano
+ * Set: Set 20
+ * Type: Location
+ * Subtype: Site
+ * Title: Geonosis: Petranaki Arena
  */
-public class Card501_021 extends AbstractAlien {
+public class Card501_021 extends AbstractSite {
     public Card501_021() {
-        super(Side.DARK, 5, 2, 2, 1, 3, "Elan Sleazebaggano", Uniqueness.UNIQUE);
-        setLore("Balosar information broker.");
-        setGameText("Power and forfeit +2 at a Coruscant location. If present with opponent’s character at the beginning of their control phase, ‘sell death sticks’ (opponent must use or lose 1 Force; if a Jedi present, also place Elan in Used Pile).");
-        addKeywords(Keyword.INFORMATION_BROKER);
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_19);
-        setSpecies(Species.BALOSAR);
-        setTestingText("Elan Sleazebaggano");
+        super(Side.DARK, "Geonosis: Petranaki Arena", Title.Geonosis);
+        setLocationDarkSideGameText("Your total power here is +1 for each opponent's character here.");
+        setLocationLightSideGameText("Your characters are defense value -1 here.");
+        addIcon(Icon.DARK_FORCE, 2);
+        addIcon(Icon.LIGHT_FORCE, 1);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        setTestingText("Geonosis: Petranaki Arena");
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        AtCondition atCoruscantLocationCondition = new AtCondition(self, Filters.Coruscant_location);
-        modifiers.add(new PowerModifier(self, atCoruscantLocationCondition, 2));
-        modifiers.add(new ForfeitModifier(self, atCoruscantLocationCondition, 2));
+        modifiers.add(new TotalPowerModifier(self, self, new HereEvaluator(self, Filters.and(Filters.opponents(playerOnDarkSideOfLocation), Filters.character)), playerOnDarkSideOfLocation));
         return modifiers;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<>();
-
-        final String opponent = game.getOpponent(playerId);
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        // Check condition(s)
-        if (GameConditions.isPresentWith(game, self, Filters.and(Filters.opponents(self), Filters.character))
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Sell death sticks");
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
-
-            final String USE_FORCE = "Use 1 Force";
-            final String LOSE_FORCE = "Lose 1 Force";
-            List<String> optionsTextList = new ArrayList<>();
-            if (GameConditions.canUseForce(game, opponent, 1)) {
-                optionsTextList.add(USE_FORCE);
-            }
-            optionsTextList.add(LOSE_FORCE);
-            String[] optionTextArray = new String[optionsTextList.size()];
-            optionsTextList.toArray(optionTextArray);
-            // Perform result(s)
-            action.appendEffect(
-                    new PlayoutDecisionEffect(action, opponent,
-                            new MultipleChoiceAwaitingDecision("Buy death sticks (use or lose 1 Force)", optionTextArray) {
-                                @Override
-                                protected void validDecisionMade(int index, String result) {
-                                    if (result.equals(USE_FORCE)) {
-                                        game.getGameState().sendMessage(opponent + " chooses to use 1 Force");
-                                        action.appendEffect(
-                                                new UseForceEffect(action, opponent, 1));
-                                    } else if (result.equals(LOSE_FORCE)) {
-                                        game.getGameState().sendMessage(opponent + " chooses to lose 1 Force");
-                                        action.appendEffect(
-                                                new LoseForceEffect(action, opponent, 1, true));
-                                    }
-                                    if(GameConditions.isPresentWith(game, self, Filters.Jedi)){
-                                        action.appendEffect(
-                                                new PlaceCardInUsedPileFromTableEffect(action, self)
-                                        );
-                                    }
-                                }
-                            }
-                    )
-            );
-            actions.add(action);
-
-        }
-
-        return actions;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
-
-        final String playerId = self.getOwner();
-        final String opponent = game.getOpponent(playerId);
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        // Check condition(s)
-        // Check if reached end of each control phase and action was not performed yet.
-        if (GameConditions.isPresentWith(game, self, Filters.and(Filters.opponents(self), Filters.character))
-                && TriggerConditions.isEndOfYourPhase(game, effectResult, Phase.CONTROL, playerId)
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setPerformingPlayer(playerId);
-            action.setText("Sell death sticks");
-
-            final String USE_FORCE = "Use 1 Force";
-            final String LOSE_FORCE = "Lose 1 Force";
-            List<String> optionsTextList = new ArrayList<>();
-            if (GameConditions.canUseForce(game, opponent, 1)) {
-                optionsTextList.add(USE_FORCE);
-            }
-            optionsTextList.add(LOSE_FORCE);
-            String[] optionTextArray = new String[optionsTextList.size()];
-            optionsTextList.toArray(optionTextArray);
-            // Perform result(s)
-            action.appendEffect(
-                    new PlayoutDecisionEffect(action, opponent,
-                            new MultipleChoiceAwaitingDecision("Buy death sticks (use or lose 1 Force)", optionTextArray) {
-                                @Override
-                                protected void validDecisionMade(int index, String result) {
-                                    if (result.equals(USE_FORCE)) {
-                                        game.getGameState().sendMessage(opponent + " chooses to use 1 Force");
-                                        action.appendEffect(
-                                                new UseForceEffect(action, opponent, 1));
-                                    } else if (result.equals(LOSE_FORCE)) {
-                                        game.getGameState().sendMessage(opponent + " chooses to lose 1 Force");
-                                        action.appendEffect(
-                                                new LoseForceEffect(action, opponent, 1, true));
-                                    }
-                                    if(GameConditions.isPresentWith(game, self, Filters.Jedi)){
-                                        action.appendEffect(
-                                                new PlaceCardInUsedPileFromTableEffect(action, self)
-                                        );
-                                    }
-                                }
-                            }
-                    )
-            );
-            actions.add(action);
-
-        }
-
-        return actions;
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(final String playerOnLightSideOfLocation, final SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DefenseValueModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.character, Filters.here(self)), -1));
+        return modifiers;
     }
 }
