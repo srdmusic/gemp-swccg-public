@@ -25,7 +25,7 @@ import java.util.List;
 public class Card219_043 extends AbstractNormalEffect {
     public Card219_043() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Phoenix Squadron Operations", Uniqueness.UNIQUE);
-        setGameText("If Lothal on table, deploy on table. Your Phoenix Squadron characters are deploy -1. " +
+        setGameText("If Lothal on table, deploy on table. Chopper, Sabine, and Zeb are deploy -1. " +
                     "Once per turn, may [download] Malachor, Mandalore, or Seelos (or Chopper, Wedge, Zeb, or an A-wing to a Lothal location). [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_19);
         addImmuneToCardTitle(Title.Alter);
@@ -39,7 +39,7 @@ public class Card219_043 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeployCostModifier(self, Filters.and(Keyword.PHOENIX_SQUADRON, Filters.character), -1));
+        modifiers.add(new DeployCostModifier(self, Filters.or(Filters.Chopper, Filters.Sabine, Filters.Zeb), -1));
         return modifiers;
     }
 

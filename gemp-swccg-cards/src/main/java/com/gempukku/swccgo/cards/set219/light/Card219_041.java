@@ -31,7 +31,7 @@ public class Card219_041 extends AbstractSite {
         setLocationDarkSideGameText("");
         setLocationLightSideGameText("Ezra and Kanan deploy -1 here. " +
                                      "Unless you occupy, Vader may not deploy here and opponent's characters, vehicles, " +
-                                     "and starships deploy and move to here for +3 Force.");
+                                     "and starships deploy and move to here for +2 Force.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 3);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_19);
@@ -44,8 +44,8 @@ public class Card219_041 extends AbstractSite {
         Condition unlessYouOccupyCondition = new UnlessCondition(new OccupiesCondition(playerOnLightSideOfLocation, self));
         Filter opponentsCharacterVehicleOrStarship = Filters.and(Filters.opponents(playerOnLightSideOfLocation), Filters.or(Filters.character, Filters.vehicle, Filters.starship));
         modifiers.add(new MayNotDeployToLocationModifier(self, Filters.Vader, unlessYouOccupyCondition, self));
-        modifiers.add(new DeployCostToLocationModifier(self, opponentsCharacterVehicleOrStarship, unlessYouOccupyCondition,3, self));
-        modifiers.add(new MoveCostToLocationModifier(self, opponentsCharacterVehicleOrStarship, unlessYouOccupyCondition, 3, self));
+        modifiers.add(new DeployCostToLocationModifier(self, opponentsCharacterVehicleOrStarship, unlessYouOccupyCondition,2, self));
+        modifiers.add(new MoveCostToLocationModifier(self, opponentsCharacterVehicleOrStarship, unlessYouOccupyCondition, 2, self));
         return modifiers;
     }
 }
