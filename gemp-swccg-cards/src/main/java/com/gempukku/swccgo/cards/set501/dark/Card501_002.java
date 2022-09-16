@@ -15,6 +15,7 @@ import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromLostPileEffect;
+import com.gempukku.swccgo.logic.modifiers.MayDeployToTargetModifier;
 import com.gempukku.swccgo.logic.modifiers.MayUseWeaponModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
@@ -59,10 +60,13 @@ public class Card501_002 extends AbstractUsedOrLostInterrupt {
                                         protected void performActionResults(Action targetingAction) {
                                             // Perform result(s)
                                             action.appendEffect(
-                                                    new DeployCardToTargetFromLostPileEffect(action, selectedCard, Filters.Grievous, false,false)
+                                                    new AddUntilEndOfGameModifierEffect(action, new MayDeployToTargetModifier(self, selectedCard, Filters.Grievous), "")
                                             );
                                             action.appendEffect(
                                                     new AddUntilEndOfGameModifierEffect(action, new MayUseWeaponModifier(self, Filters.Grievous, selectedCard), "Grievous may use " + GameUtils.getCardLink(selectedCard))
+                                            );
+                                            action.appendEffect(
+                                                    new DeployCardToTargetFromLostPileEffect(action, selectedCard, Filters.Grievous, false,false)
                                             );
                                         }
                                     }
