@@ -3509,6 +3509,7 @@ var fixedImages = {
 "501_14":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/nomatchforasith.gif",
 "501_15":"https://res.starwarsccg.org/cards/Hoth-Dark/large/captainlennox.gif",
 "501_16":"https://res.starwarsccg.org/cards/Virtual13-Dark/large/seventhsister.gif",
+"501_17":"https://res.starwarsccg.org/cards/Virtual12-Dark/large/eviliseverywhere.gif",
 "501_18":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/vaderspersonalshuttle.gif",
 "501_19": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Dark/large/separatistuprising.gif",
 "501_19_BACK": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Dark/large/atwarwithitself.gif",
