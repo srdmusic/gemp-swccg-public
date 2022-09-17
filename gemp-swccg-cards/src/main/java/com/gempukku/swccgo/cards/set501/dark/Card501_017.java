@@ -28,6 +28,7 @@ public class Card501_017 extends AbstractNormalEffect {
         setTestingText("Deploy on your character. While you have two or fewer characters here, opponent may not cancel or reduce Force drains at same battleground. " +
                 "While character armed with a lightsaber, weapon and battle destiny draws (and this character's game text) may not be canceled here.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        addKeyword(Keyword.DEPLOYS_ON_CHARACTERS);
         setTestingText("Trained In Your Jedi Arts");
     }
 
