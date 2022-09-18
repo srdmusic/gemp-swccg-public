@@ -23,17 +23,17 @@ import java.util.List;
  * Set: Set 20
  * Type: Location
  * Subtype: System
- * Title: Muunilinst
+ * Title: Utapau
  */
 public class Card501_023_BACK extends AbstractSystem {
     public Card501_023_BACK() {
-        super(Side.DARK, Title.Muunilinst, 6);
+        super(Side.DARK, Title.Utapau, 2);
         setLocationDarkSideGameText("Force drain +1 here.");
-        setLocationLightSideGameText("If you just Force drained (or won a battle) at a Muunilinst site, 'conquer' (flip) Muunilinst.");
+        setLocationLightSideGameText("If you just Force drained (or won a battle) at a Utapau site, 'conquer' (flip) Utapau.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_20);
-        setTestingText("Muunilinst (Separatist controlled)");
+        setTestingText("Utapau (Separatist controlled)");
     }
 
     @Override
@@ -46,11 +46,11 @@ public class Card501_023_BACK extends AbstractSystem {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         if (GameConditions.canBeFlipped(game, self)
-                && (TriggerConditions.forceDrainCompleted(game, effectResult,  playerOnLightSideOfLocation, Filters.Muunilinst_site)
-                || TriggerConditions.wonBattleAt(game, effectResult, playerOnLightSideOfLocation, Filters.Muunilinst_site))) {
+                && (TriggerConditions.forceDrainCompleted(game, effectResult,  playerOnLightSideOfLocation, Filters.Utapau_site)
+                || TriggerConditions.wonBattleAt(game, effectResult, playerOnLightSideOfLocation, Filters.Utapau_site))) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Conquer Muunilinst");
+            action.setText("Conquer Utapau");
             action.appendEffect(new FlipCardEffect(action, self));
             return Collections.singletonList(action);
         }

@@ -266,7 +266,7 @@ public class Card209_048 extends AbstractUsedInterrupt {
 
         //check conditions
         if (TriggerConditions.isAboutToBeHit(game, effectResult, yourCharacter)
-                && GameConditions.canUseForce(game, playerId, TriggerConditions.isAboutToBeHitBy(game, effectResult, yourCharacter, Filters.character_with_permanent_character_weapon) ? 0 : 1))
+                && GameConditions.canUseForceToPlayInterrupt(game, playerId, self, TriggerConditions.isAboutToBeHitBy(game, effectResult, yourCharacter, Filters.character_with_permanent_character_weapon) ? 0 : 1))
         {
             final PhysicalCard cardAboutToBeHit = ((AboutToBeHitResult) effectResult).getCardToBeHit();
             if (GameConditions.canTarget(game, self, cardAboutToBeHit)) {

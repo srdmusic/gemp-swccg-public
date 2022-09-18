@@ -4628,4 +4628,6 @@ public interface ModifiersQuerying {
 
     void setExtraInformationForArchetypeLabel(String playerId, String text);
     String getExtraInformationForArchetypeLabel(String playerId);
+    boolean landsAsUnlimitedMove(GameState gameState, PhysicalCard card);
+    boolean takesOffAsUnlimitedMove(GameState gameState, PhysicalCard card);
 }

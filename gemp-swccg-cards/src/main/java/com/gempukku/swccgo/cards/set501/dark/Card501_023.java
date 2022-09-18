@@ -23,28 +23,28 @@ import java.util.List;
  * Set: Set 20
  * Type: Location
  * Subtype: System
- * Title: Muunilinst
+ * Title: Utapau
  */
 public class Card501_023 extends AbstractSystem {
     public Card501_023() {
-        super(Side.DARK, Title.Muunilinst, 6);
+        super(Side.DARK, Title.Utapau, 2);
         setFrontOfDoubleSidedCard(true);
-        setLocationDarkSideGameText("If you just Force drained (or won a battle) at a Muunilinst site, 'conquer' (flip) Muunilinst.");
+        setLocationDarkSideGameText("If you just Force drained (or won a battle) at a Utapau site, 'conquer' (flip) Utapau.");
         setLocationLightSideGameText("Starships piloted by Anakin or Obi-Wan are immune to attrition here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_20);
-        setTestingText("Muunilinst (Republic controlled)");
+        setTestingText("Utapau (Republic controlled)");
     }
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         if (GameConditions.canBeFlipped(game, self)
-                && (TriggerConditions.forceDrainCompleted(game, effectResult,  playerOnDarkSideOfLocation, Filters.Muunilinst_site)
-                || TriggerConditions.wonBattleAt(game, effectResult, playerOnDarkSideOfLocation, Filters.Muunilinst_site))) {
+                && (TriggerConditions.forceDrainCompleted(game, effectResult,  playerOnDarkSideOfLocation, Filters.Utapau_site)
+                || TriggerConditions.wonBattleAt(game, effectResult, playerOnDarkSideOfLocation, Filters.Utapau_site))) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Conquer Muunilinst");
+            action.setText("Conquer Utapau");
             action.appendEffect(new FlipCardEffect(action, self));
             return Collections.singletonList(action);
         }

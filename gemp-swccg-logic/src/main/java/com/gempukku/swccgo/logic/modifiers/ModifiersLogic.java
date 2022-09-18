@@ -16789,4 +16789,14 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         return null;
     }
+
+    @Override
+    public boolean landsAsUnlimitedMove(GameState gameState, PhysicalCard card) {
+        return !getModifiersAffectingCard(gameState, ModifierType.LANDS_AS_UNLIMITED_MOVE, card).isEmpty();
+    }
+
+    @Override
+    public boolean takesOffAsUnlimitedMove(GameState gameState, PhysicalCard card) {
+        return !getModifiersAffectingCard(gameState, ModifierType.TAKES_OFF_AS_UNLIMITED_MOVE, card).isEmpty();
+    }
 }

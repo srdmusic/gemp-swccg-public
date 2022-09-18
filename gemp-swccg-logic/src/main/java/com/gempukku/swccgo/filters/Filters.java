@@ -8255,11 +8255,8 @@ public class Filters {
                     return false;
 
                 if(physicalCard.getBlueprint().getCardCategory() == CardCategory.VEHICLE
-                        && physicalCard.getBlueprint().getCardCategory() == CardCategory.STARSHIP){
-                    int numCaptives = gameState.getCaptivesOfEscort(card).size();
-                    int pilotOrPassengerCapacity = physicalCard.getBlueprint().getPilotOrPassengerCapacity();
-
-                    if (pilotOrPassengerCapacity > 0 && pilotOrPassengerCapacity < 1 + numCaptives)
+                        || physicalCard.getBlueprint().getCardCategory() == CardCategory.STARSHIP){
+                    if (!physicalCard.getBlueprint().getValidPassengerFilter(physicalCard.getOwner(), gameState.getGame(), card, true).accepts(gameState, modifiersQuerying, card))
                         return false;
                 }
 
@@ -17770,7 +17767,7 @@ public class Filters {
     public static final Filter Ewok_Village = Filters.title(Title.Ewok_Village);
     public static final Filter Ewok_weapon = Filters.keyword(Keyword.EWOK_WEAPON);
     public static final Filter Executor = Filters.persona(Persona.EXECUTOR);
-    public static final Filter Executor_site = Filters.siteOfStarshipOrVehicle(Persona.EXECUTOR, false);
+    public static final Filter Executor_site = Filters.siteOfStarshipOrVehicle(Persona.EXECUTOR, true);
     public static final Filter Expand_The_Empire = Filters.title(Title.Expand_The_Empire);
     public static final Filter Explosive_Charge = Filters.title(Title.Explosive_Charge);
     public static final Filter exterior_battleground_site = Filters.and(Filters.icon(Icon.EXTERIOR_SITE), Filters.battleground());
@@ -17879,6 +17876,7 @@ public class Filters {
     public static final Filter Green_Squadron_3 = Filters.persona(Persona.GREEN_SQUADRON_3);
     public static final Filter Grievous = Filters.persona(Persona.GRIEVOUS);
     public static final Filter Grimtaash = Filters.title(Title.Grimtaash);
+    public static final Filter Grogu = Filters.persona(Persona.GROGU);
     public static final Filter Grond = Filters.title(Title.Grond);
     public static final Filter guard = Filters.or(Keyword.GUARD, Keyword.BODYGUARD, Keyword.MAGNAGUARD, Keyword.ROYAL_GUARD, Keyword.CORUSCANT_GUARD, Keyword.IMPERIAL_TROOPER_GUARD);
     public static final Filter Gungan = Filters.species(Species.GUNGAN);
@@ -18258,9 +18256,6 @@ public class Filters {
     public static final Filter Mustafar_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Mustafar));
     public static final Filter Mustafar_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Mustafar));
     public static final Filter Mustafar_system = Filters.and(CardSubtype.SYSTEM, Filters.partOfSystem(Title.Mustafar));
-    public static final Filter Muunilinst_location = Filters.partOfSystem(Title.Muunilinst);
-    public static final Filter Muunilinst_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Muunilinst));
-    public static final Filter Muunilinst_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Muunilinst));
     public static final Filter My_Favorite_Decoration = Filters.title(Title.My_Favorite_Decoration);
     public static final Filter My_Kind_Of_Scum = Filters.title(Title.My_Kind_Of_Scum);
     public static final Filter My_Lord_Is_That_Legal = Filters.title(Title.My_Lord_Is_That_Legal);
@@ -18870,6 +18865,9 @@ public class Filters {
     public static final Filter Uplink_Station = Filters.title(Title.Uplink_Station);
     public static final Filter Upper_Walkway = Filters.title(Title.Upper_Walkway);
     public static final Filter URoRRuRRR = Filters.title(Title.URoRRuRRR);
+    public static final Filter Utapau_location = Filters.partOfSystem(Title.Utapau);
+    public static final Filter Utapau_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Utapau));
+    public static final Filter Utapau_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Utapau));
     public static final Filter Utinni = Filters.title(Title.Utinni);
     public static final Filter Utinni_Effect = Filters.and(CardType.EFFECT, CardSubtype.UTINNI);
     public static final Filter Utinni_Effect_that_retrieves_Force = Filters.and(CardType.EFFECT, CardSubtype.UTINNI, Keyword.UTINNI_EFFECT_THAT_RETRIEVES_FORCE);

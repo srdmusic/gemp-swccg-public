@@ -37,7 +37,7 @@ public class Card501_065 extends AbstractObjective {
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy a [Clone Army] battleground and ♢Clone Command Center (to same system). Deploy He Is A Coward. \n" +
                 "For remainder of game, you may not deploy non-[Episode I] Jedi. Your non-[Episode I] cards with ability are deploy +2. Jedi gain [Pilot] skill. Your [Episode I] sites are immune to No Escape. May lose 1 Force to cancel You Are Beaten. At end of opponent's turn, if you occupy more battlegrounds than opponent, opponent loses 1 Force. \n" +
-                "Flip this card if He Is A Coward here (unless Grievous present at a battleground).");
+                "Flip this card if He Is A Coward here (unless Grievous alone at a battleground).");
         addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
         setTestingText("Hunt For The Droid General");
     }
@@ -148,7 +148,7 @@ public class Card501_065 extends AbstractObjective {
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
                 && GameConditions.hasAttached(game, self, Filters.title("He Is A Coward"))
-                && !GameConditions.canSpot(game, self, Filters.and(Filters.Grievous, Filters.presentAt(Filters.battleground)))) {
+                && !GameConditions.canSpot(game, self, Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground)))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setSingletonTrigger(true);

@@ -38,6 +38,7 @@ import java.util.List;
 public class Card219_046 extends AbstractUsedInterrupt {
     public Card219_046() {
         super(Side.LIGHT, 4, Title.Utinni);
+        setVirtualSuffix(true);
         setLore("Jawa trade language word for 'Come here!' Jawas work communally and scavenge for equipment.");
         setGameText("Deploy or move a Jawa as a 'react' (for -1 Force). " +
                     "OR If a battle was just initiated where you have three Jawas, choose: " +
@@ -71,7 +72,7 @@ public class Card219_046 extends AbstractUsedInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardToTargetFromHandEffect(action, playerId, filter, Filters.battleLocation, false, true, -1));
+                                    new DeployCardToTargetFromHandEffect(action, playerId, filter, Filters.or(Filters.forceDrainLocation, Filters.battleLocation), false, true, -1));
                     }
                     }
             );
@@ -145,12 +146,14 @@ public class Card219_046 extends AbstractUsedInterrupt {
             );
             actions.add(action);
 
-            if(GameConditions.isDuringBattleWithParticipant(game, Filters.Magnetic_Suction_Tube)){
+            Filter yourMagneticSuctionTube = Filters.and(Filters.your(playerId), Filters.Magnetic_Suction_Tube, Filters.attachedTo(Filters.driven));
+
+            if(GameConditions.isDuringBattleWithParticipant(game, yourMagneticSuctionTube)){
                 final PlayInterruptAction action2 = new PlayInterruptAction(game, self);
                 action2.setText("Use a Magnetic Suction Tube");
                 // Choose target(s)
                 action2.appendTargeting(
-                        new TargetCardOnTableEffect(action2, playerId, "Choose a Magnetic Suction Tube", Filters.and(Filters.participatingInBattle, Filters.Magnetic_Suction_Tube)) {
+                        new TargetCardOnTableEffect(action2, playerId, "Choose a Magnetic Suction Tube", Filters.and(Filters.participatingInBattle, yourMagneticSuctionTube)) {
                             @Override
                             protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                                 action2.addAnimationGroup(targetedCard);

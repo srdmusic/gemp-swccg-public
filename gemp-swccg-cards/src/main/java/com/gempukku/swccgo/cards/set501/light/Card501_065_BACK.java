@@ -38,7 +38,7 @@ public class Card501_065_BACK extends AbstractObjective {
     public Card501_065_BACK() {
         super(Side.LIGHT, 7, "Grievous Will Run And Hide");
         setGameText("While this side up, your Force drains are +1 where you have a clone/Jedi pair. X = number of battlegrounds your [Clone Army] cards occupy. If you just initiated a battle: peek at the top card of your Reserve Deck or Used Pile (may take it into hand or place it on bottom of Reserve Deck), then if X > 1, retrieve a [Clone Army] card (or Cloning Cylinders) into hand, then if X > 2, your clone may make a regular move (for free) to the battle location. \n" +
-                "Flip this card if Grievous (or He Is A Coward) present at a battleground.");
+                "Flip this card if He Is A Coward at a battleground or Grievous alone at a battleground.");
         addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
         setTestingText("Grievous Will Run And Hide");
     }
@@ -185,7 +185,7 @@ public class Card501_065_BACK extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && (GameConditions.canSpot(game, self, Filters.and(Filters.Grievous, Filters.presentAt(Filters.battleground)))
+                && (GameConditions.canSpot(game, self, Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground)))
                 || !GameConditions.hasAttached(game, self, Filters.title("He Is A Coward")))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
