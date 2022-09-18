@@ -10175,11 +10175,11 @@ public class Filters {
      *
      * @return Filter
      */
-    public static Filter didNotFireAPermanentWeaponThisBattle() {
+    public static Filter didNotFireAPermanentWeaponThisBattle(final boolean completeOnly) {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-                return modifiersQuerying.getPermanentWeaponsFiredInBattleByWeaponUser(physicalCard, false).isEmpty();
+                return modifiersQuerying.getPermanentWeaponsFiredInBattleByWeaponUser(physicalCard, completeOnly).isEmpty();
             }
         };
     }

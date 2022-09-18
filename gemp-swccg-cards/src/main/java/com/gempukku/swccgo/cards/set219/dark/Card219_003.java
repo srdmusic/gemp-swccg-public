@@ -23,6 +23,7 @@ import java.util.List;
 public class Card219_003 extends AbstractRepublic {
     public Card219_003() {
         super(Side.DARK, 2, 3, 3, 3, 6, "Daultay Dofine", Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
         setLore("Neimoidian Trade Federation captain who gained his current position through political backstabbing and family connections. Not favored by Darth Sidious.");
         setGameText("[Pilot] 2. Your total battle destiny at sites is +1 for each of your participating " +
                     "[Presence] droids that has a [Permanent Weapon] weapon but did not fire it in that battle. " +
@@ -37,7 +38,7 @@ public class Card219_003 extends AbstractRepublic {
         List<Modifier> modifiers = new ArrayList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new TotalBattleDestinyModifier(self, Filters.site, new InBattleEvaluator(self,
-                Filters.and(Icon.PRESENCE, Filters.droid, Icon.PERMANENT_WEAPON, Filters.didNotFireAPermanentWeaponThisBattle())), self.getOwner(), true));
+                Filters.and(Icon.PRESENCE, Filters.droid, Icon.PERMANENT_WEAPON, Filters.didNotFireAPermanentWeaponThisBattle(true))), self.getOwner(), true));
         modifiers.add(new EachWeaponDestinyModifier(self, Filters.at(Filters.sameSystem(self)), -1));
         return modifiers;
     }
