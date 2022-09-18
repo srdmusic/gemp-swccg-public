@@ -3548,6 +3548,7 @@ var fixedImages = {
 "501_61":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/scurrier.gif",
 "501_62":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/antillesmaneuver.gif",
 "501_63":"https://res.starwarsccg.org/cards/Tatooine-Light/large/ajedisfocus.gif",
+"501_64":"https://res.starwarsccg.org/cards/Tatooine-Light/large/ajedisconcentration.gif",
 "501_65": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/republicatwar.gif",
 "501_65_BACK": "https://res.starwarsccg.org/cards/legacy/VirtualBlock9-Light/large/aggressivenegotiations.gif",
 "501_66": "https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/coloclawfish.gif",
