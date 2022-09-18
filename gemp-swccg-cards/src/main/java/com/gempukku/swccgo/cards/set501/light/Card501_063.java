@@ -17,12 +17,10 @@ import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -49,15 +47,16 @@ public class Card501_063 extends AbstractLostInterrupt {
 
         Filter lukeAlone = Filters.and(Filters.Luke, Filters.alone);
 
-        final int numCardsStacked = GameConditions.canSpot(game, self, Filters.I_Feel_The_Conflict) ?
-                Math.min(3, Filters.filterStacked(game, Filters.stackedOn(self, Filters.I_Feel_The_Conflict)).size()) : 0;
-
-        if((GameConditions.isDuringBattleWithParticipant(game, lukeAlone)
-            || GameConditions.isDuringDuelWithParticipant(game, lukeAlone))
-            && (TriggerConditions.isBattleDestinyJustDrawn(game, effectResult)
-            || TriggerConditions.isDuelDestinyJustDrawn(game, effectResult)
-            || TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult))){
+        if(GameConditions.canSpot(game, self, Filters.I_Feel_The_Conflict)
+                && (GameConditions.isDuringBattleWithParticipant(game, lukeAlone)
+                || GameConditions.isDuringDuelWithParticipant(game, lukeAlone))
+                && (TriggerConditions.isBattleDestinyJustDrawn(game, effectResult)
+                || TriggerConditions.isDuelDestinyJustDrawn(game, effectResult)
+                || TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult))){
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
+
+            final int numCardsStacked =
+                    Math.min(3, Filters.filterStacked(game, Filters.stackedOn(self, Filters.I_Feel_The_Conflict)).size());
 
             action.setText("Add " + numCardsStacked + " to your destiny");
             action.allowResponses(
@@ -99,20 +98,21 @@ public class Card501_063 extends AbstractLostInterrupt {
                             @Override
                             protected void cardTargeted(final int targetGroupId, final PhysicalCard luke) {
                                 action.addAnimationGroup(luke);
-                                Collection<PhysicalCard> otherSites = Filters.filterTopLocationsOnTable(game, Filters.and(siteFilter, Filters.locationCanBeRelocatedTo(luke, false, false, true, 0, false)));
+                                Filter locationFilter = Filters.and(siteFilter, Filters.locationCanBeRelocatedTo(luke, false, false, true, 0, false));
                                 action.appendTargeting(
-                                        new ChooseCardOnTableEffect(action, playerId, "Choose a site", otherSites) {
+                                        new TargetCardOnTableEffect(action, playerId, "Target a site", locationFilter) {
                                             @Override
-                                            protected void cardSelected(final PhysicalCard location) {
+                                            protected void cardTargeted(final int targetGroupId, final PhysicalCard location) {
                                                 action.addAnimationGroup(location);
                                                 // Allow response(s)
                                                 action.allowResponses("Relocate " + GameUtils.getCardLink(luke) + " to " + GameUtils.getCardLink(location),
                                                         new RespondablePlayCardEffect(action) {
                                                             @Override
                                                             protected void performActionResults(Action targetingAction) {
+                                                                final PhysicalCard finalTarget = targetingAction.getPrimaryTargetCard(targetGroupId);
                                                                 // Perform result(s)
                                                                 action.appendEffect(
-                                                                        new RelocateBetweenLocationsEffect(action, luke, location));
+                                                                        new RelocateBetweenLocationsEffect(action, luke, finalTarget));
                                                             }
                                                         }
                                                 );
