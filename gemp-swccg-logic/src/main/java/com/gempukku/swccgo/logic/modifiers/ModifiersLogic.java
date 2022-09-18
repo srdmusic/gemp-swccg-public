@@ -6225,8 +6225,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     }
 
     @Override
-    public boolean ignoreDuringEpicEventCalculation(GameState gameState, PhysicalCard card) {
-        if (Filters.and(Filters.generic, Filters.location).accepts(gameState, this, card)) {
+    public boolean ignoreDuringEpicEventCalculation(GameState gameState, PhysicalCard card, boolean isForBlownAway) {
+        if (isForBlownAway && Filters.and(Filters.generic, Filters.location).accepts(gameState, this, card)) {
             return true;
         }
         return (!getModifiersAffectingCard(gameState, ModifierType.IGNORE_DURING_EPIC_EVENT_CALCULATION, card).isEmpty());

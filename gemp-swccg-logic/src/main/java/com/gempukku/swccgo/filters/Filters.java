@@ -13890,19 +13890,14 @@ public class Filters {
     /**
      * Filter that accepts representing cards not ignored during Epic Event calculations.
      */
-    public static final Filter notIgnoredDuringEpicEventCalculation = new Filter() {
-        @Override
-        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-            return !modifiersQuerying.ignoreDuringEpicEventCalculation(gameState, physicalCard);
-        }
-    };
-    /**
-     * Wrapper method to allow other static filters to access the wrapped filter.
-     */
-    private static Filter notIgnoredDuringEpicEventCalculation() {
-        return notIgnoredDuringEpicEventCalculation;
+    public static  Filter notIgnoredDuringEpicEventCalculation(final boolean isForBlownAway){
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                return !modifiersQuerying.ignoreDuringEpicEventCalculation(gameState, physicalCard, isForBlownAway);
+            }
+        };
     }
-
 
     //
     //

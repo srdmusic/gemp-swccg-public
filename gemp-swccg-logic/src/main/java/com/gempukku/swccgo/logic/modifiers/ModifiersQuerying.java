@@ -4276,7 +4276,7 @@ public interface ModifiersQuerying {
     // Card variables
     float getVariableValue(GameState gameState, PhysicalCard physicalCard, Variable variable, float baseValue);
 
-    boolean ignoreDuringEpicEventCalculation(GameState gameState, PhysicalCard card);
+    boolean ignoreDuringEpicEventCalculation(GameState gameState, PhysicalCard card, boolean isForBlownAway);
 
     float getEpicEventCalculationTotal(GameState gameState, PhysicalCard physicalCard, float baseTotal);
 
