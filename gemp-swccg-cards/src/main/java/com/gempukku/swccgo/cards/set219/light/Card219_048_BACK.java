@@ -37,7 +37,7 @@ public class Card219_048_BACK extends AbstractObjective {
     public Card219_048_BACK() {
         super(Side.LIGHT, 7, "Liberation of Lothal");
         setGameText("While this side up, if you Force drained at a battleground this turn, your other Force drains at battlegrounds are +1. " +
-                "Once per turn, may add or subtract X from a just drawn battle destiny (or opponent's weapon destiny), " +
+                "Once per turn during battle, may add or subtract X from a just drawn battle destiny (or opponent's weapon destiny), " +
                 "where X = number of battlegrounds you occupy with Phoenix Squadron characters. " +
                 "At Lothal system, the number of battle destiny draws may not be limited for either player." +
                 "Flip this card if opponent controls more Lothal locations than you.");
@@ -83,6 +83,7 @@ public class Card219_048_BACK extends AbstractObjective {
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isDuringBattle(game)
                 && (TriggerConditions.isBattleDestinyJustDrawn(game, effectResult)
                 || TriggerConditions.isWeaponDestinyJustDrawnBy(game, effectResult, opponent))) {
             //X = the number of battlegrounds occupied by Phoenix Squadron character
