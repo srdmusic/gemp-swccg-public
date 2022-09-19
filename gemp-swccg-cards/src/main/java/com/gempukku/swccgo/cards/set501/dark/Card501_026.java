@@ -35,6 +35,7 @@ public class Card501_026 extends AbstractSystem {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_20);
+        setMayNotBePlacedInReserveDeck(true);
         setTestingText("Christophsis (Republic controlled)");
     }
 

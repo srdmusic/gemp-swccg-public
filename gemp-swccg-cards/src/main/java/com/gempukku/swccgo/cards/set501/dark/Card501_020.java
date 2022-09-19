@@ -30,6 +30,7 @@ public class Card501_020 extends AbstractSystem {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_20);
+        setMayNotBePlacedInReserveDeck(true);
         setTestingText("Geonosis (Separatist controlled)");
     }
 
