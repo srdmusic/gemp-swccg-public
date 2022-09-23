@@ -27,9 +27,6 @@ public abstract class AbstractEpicEventPlayable extends AbstractSwccgCardBluepri
      */
     protected AbstractEpicEventPlayable(Side side, String title) {
         this(side, title,  null, null);
-        setCardCategory(CardCategory.EPIC_EVENT);
-        addCardType(CardType.EPIC_EVENT);
-        addIcon(Icon.EPIC_EVENT);
     }
 
     /**
