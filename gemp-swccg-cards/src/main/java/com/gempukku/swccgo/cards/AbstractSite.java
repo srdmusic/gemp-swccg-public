@@ -41,6 +41,7 @@ public abstract class AbstractSite extends AbstractLocation {
         super(side, title, uniqueness);
         _systemName = systemName;
         setCardSubtype(CardSubtype.SITE);
+        setAsHorizontal(true);
     }
 
     @Override

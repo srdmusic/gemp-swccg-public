@@ -1747,4 +1747,22 @@ public interface SwccgCardBlueprint {
      * @return true if this should be excluded from the deck buider
      */
     boolean excludeFromDeckBuilder();
+
+    /**
+     * Returns if card has a horizontal orientation
+     * @return true if this is a legacy card
+     */
+    boolean isHorizontal();
+
+    /**
+     * Returns the Expansion Set card belongs to
+     * @return true if this is a legacy card
+     */
+    ExpansionSet getExpansionSet();
+
+    /**
+     * Returns the Rarity card has
+     * @return true if this is a legacy card
+     */
+    Rarity getRarity();
 }
