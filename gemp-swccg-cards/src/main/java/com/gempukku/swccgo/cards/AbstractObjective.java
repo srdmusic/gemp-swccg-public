@@ -52,7 +52,6 @@ public abstract class AbstractObjective extends AbstractNonLocationPlaysToTable 
         addIcon(Icon.OBJECTIVE);
     }
 
-
     /**
      * Determines if the card can be played.
      * @param playerId the player
