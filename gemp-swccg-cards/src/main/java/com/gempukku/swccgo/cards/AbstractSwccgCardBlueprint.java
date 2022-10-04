@@ -55,6 +55,9 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
     private boolean _doesNotCountTowardDeckLimit;
     private boolean _isLegacy;
     private boolean _excludeFromDeckBuilder;
+    private boolean _isHorizontal;
+    private ExpansionSet _expansionSet;
+    private Rarity _rarity;
 
     /**
      * Creates an SWCCG card blueprint.
@@ -62,13 +65,17 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
      * @param destiny the destiny value
      * @param title the title
      * @param uniqueness the uniqueness
+     * @param expansionSet the expansion set
+     * @param rarity the rarity
      */
-    protected AbstractSwccgCardBlueprint(Side side, Float destiny, String title, Uniqueness uniqueness) {
+    protected AbstractSwccgCardBlueprint(Side side, Float destiny, String title, Uniqueness uniqueness, ExpansionSet expansionSet, Rarity rarity) {
         _side = side;
         _destiny = destiny;
         _alternateDestiny = destiny;
         _title = title;
         _uniqueness = uniqueness;
+        _expansionSet = expansionSet;
+        _rarity = rarity;
     }
 
     @Override
@@ -2847,6 +2854,25 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
     @Override
     public boolean excludeFromDeckBuilder() {
         return _excludeFromDeckBuilder;
+    }
+
+    @Override
+    public boolean isHorizontal() {
+        return _isHorizontal;
+    }
+
+    public void setAsHorizontal(boolean isHorizontal) {
+        _isHorizontal = isHorizontal;
+    }
+
+    @Override
+    public ExpansionSet getExpansionSet() {
+        return _expansionSet;
+    }
+
+    @Override
+    public Rarity getRarity() {
+        return _rarity;
     }
 
     /**
