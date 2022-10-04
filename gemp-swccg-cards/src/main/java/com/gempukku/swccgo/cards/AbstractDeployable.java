@@ -75,7 +75,6 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
         super(side, destiny, playCardZoneOption, deployCost, title, uniqueness, expansionSet, rarity);
     }
 
-
     /**
      * Determines if this type of card is deployed or played
      * @return true if card is "deployed", false if card is "played"
