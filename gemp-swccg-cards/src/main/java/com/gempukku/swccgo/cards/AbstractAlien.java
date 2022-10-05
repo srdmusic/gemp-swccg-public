@@ -131,6 +131,8 @@ public abstract class AbstractAlien extends AbstractCharacter {
      * @param forfeit the forfeit value
      * @param title the card title
      * @param uniqueness the uniqueness
+     * @param expansionSet the expansionSet
+     * @param rarity the rarity
      */
     protected AbstractAlien(Side side, float destiny, float deployCost, float power, float ability, float forfeit, String title, Uniqueness uniqueness, ExpansionSet expansionSet, Rarity rarity) {
         super(side, destiny, deployCost, power, ability, forfeit, title, uniqueness, expansionSet, rarity);
