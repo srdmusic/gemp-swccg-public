@@ -37,7 +37,7 @@ public abstract class AbstractCharacter extends AbstractDeployable {
      * @param forfeit the forfeit value
      * @param title the card title
      * @param uniqueness the uniqueness
-    */
+     */
     protected AbstractCharacter(Side side, Float destiny, Float deployCost, Float power, float ability, Float forfeit, String title, Uniqueness uniqueness) {
         this(side, destiny, deployCost, power, ability, forfeit, title, uniqueness, null, null);
     }
@@ -55,7 +55,7 @@ public abstract class AbstractCharacter extends AbstractDeployable {
      * @param uniqueness the uniqueness
      * @param expansionSet the expansionSet
      * @param rarity the rarity
-    */
+     */
     protected AbstractCharacter(Side side, Float destiny, Float deployCost, Float power, float ability, Float forfeit, String title, Uniqueness uniqueness, ExpansionSet expansionSet, Rarity rarity) {
         super(side, destiny, null, deployCost, title, uniqueness, expansionSet, rarity);
         _power = power;
