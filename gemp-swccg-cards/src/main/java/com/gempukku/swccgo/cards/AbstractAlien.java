@@ -63,7 +63,7 @@ public abstract class AbstractAlien extends AbstractCharacter {
      * @param uniqueness the uniqueness
      */
     protected AbstractAlien(Side side, double destiny, Float deployCost, Float power, float ability, Float forfeit, String title, Uniqueness uniqueness) {
-        this(side, (float) destiny, deployCost, power, ability, forfeit, title, uniqueness);
+        this(side, (float) destiny, deployCost, power, ability, forfeit, title, uniqueness, null, null);
     }
 
     /**
@@ -91,7 +91,7 @@ public abstract class AbstractAlien extends AbstractCharacter {
      * @param uniqueness the uniqueness
      */
     protected AbstractAlien(Side side, float destiny, Float deployCost, float power, float ability, float forfeit, String title, Uniqueness uniqueness) {
-        this(side, destiny, deployCost, power, ability, forfeit, title, uniqueness);
+        this(side, destiny, deployCost, power, ability, forfeit, title, uniqueness, null, null);
     }
 
     /**
@@ -105,7 +105,7 @@ public abstract class AbstractAlien extends AbstractCharacter {
      * @param uniqueness the uniqueness
      */
     protected AbstractAlien(Side side, float destiny, float deployCost, Float power, float ability, float forfeit, String title, Uniqueness uniqueness) {
-        this(side, destiny, deployCost, power, ability, forfeit, title, uniqueness);
+        this(side, destiny, deployCost, power, ability, forfeit, title, uniqueness, null, null);
     }
 
     /**
