@@ -12525,7 +12525,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             return false;
 
         Uniqueness uniqueness = getUniqueness(gameState, card);
-        if (uniqueness==null || uniqueness.isPerSystem())
+        if (uniqueness==null || uniqueness == Uniqueness.NON_UNIQUE || uniqueness.isPerSystem())
             return false;
 
         for (String title : card.getTitles()) {
