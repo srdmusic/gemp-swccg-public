@@ -32,6 +32,7 @@ public class Card501_052 extends AbstractUsedOrLostInterrupt {
         setLore("");
         setGameText("USED: If your Mandalorian was just 'hit' by a character weapon, opponent chooses: the character that fired that weapon is also 'hit' or restore target to normal. " +
                 "LOST: Once per game, if your Mandalorian is in battle, add 2 to a just drawn destiny.");
+        addIcons(Icon.VIRTUAL_SET_20);
         setTestingText("Might Of The Mandalorians");
     }
 
