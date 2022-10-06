@@ -20,7 +20,7 @@ public abstract class AbstractNonuniqueStarshipSite extends AbstractSite {
      * @param starshipFilter the filter for a starship this site can be related to
      */
     protected AbstractNonuniqueStarshipSite(Side side, String title, Filter starshipFilter, Uniqueness uniqueness) {
-        this(side, title, null, uniqueness, null, null);
+        this(side, title, starshipFilter, uniqueness, null, null);
     }
 
     /**

@@ -20,7 +20,7 @@ public abstract class AbstractNonuniqueVehicleSite extends AbstractSite {
      * @param vehicleFilter the filter for a vehicle this site can be related to
      */
     protected AbstractNonuniqueVehicleSite(Side side, String title, Filter vehicleFilter, Uniqueness uniqueness) {
-        this(side, title, null, uniqueness, null, null);
+        this(side, title, vehicleFilter, uniqueness, null, null);
     }
 
     /**
