@@ -44,7 +44,6 @@ public class Card203_011 extends AbstractDroid {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new ImmuneToTitleModifier(self, Title.A_Gift));
-        modifiers.add(new ImmuneToTitleModifier(self, Title.Firepower));
         modifiers.add(new MayNotBeTargetedByModifier(self, Filters.device));
         modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.opponents(self), Filters.Interrupt)));
         return modifiers;
@@ -88,7 +87,7 @@ public class Card203_011 extends AbstractDroid {
         // Check condition(s)
         if (TriggerConditions.isAboutToLeaveTable(game, effectResult, self)
                 && GameConditions.isAtLocation(game, self, Filters.Tatooine_system)
-                && GameConditions.canSpot(game, self, Filters.Diplomatic_Mission_To_Alderaan)) {
+                && GameConditions.canSpot(game, self, Filters.and(Filters.Stolen_Data_Tapes, Filters.or(Filters.here(self), Filters.at(Filters.Dune_Sea))))) {
             PhysicalCard duneSea = Filters.findFirstFromTopLocationsOnTable(game, Filters.and(Filters.Dune_Sea, Filters.locationCanBeRelocatedTo(self, false, false, true, 0, false)));
             if (duneSea != null) {
                 final AboutToLeaveTableResult result = (AboutToLeaveTableResult) effectResult;
