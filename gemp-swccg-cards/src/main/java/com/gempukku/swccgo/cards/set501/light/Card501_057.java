@@ -26,9 +26,8 @@ import java.util.List;
 public class Card501_057 extends AbstractNormalEffect {
     public Card501_057() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE,"You Cannot Escape Your Destiny", Uniqueness.UNIQUE);
-        setGameText("If He Is The Chosen One on table, deploy on table. Amidala ignores your objective deployment restrictions. " +
-                "During your turn, Emperor’s Power is suspended and may deploy His Destiny or a mobile docking bay from Reserve Deck; reshuffle. " +
-                "[Immune to Alter.]");
+        setGameText("If He Is The Chosen One on table, deploy on table. Amidala ignores Objective deployment restrictions. " +
+                "Once per turn, may deploy His Destiny or a mobile docking bay from Reserve Deck; reshuffle. During your turn, Emperor's Power is suspended. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_20);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("You Cannot Escape Your Destiny");
@@ -42,7 +41,7 @@ public class Card501_057 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new IgnoresDeploymentRestrictionsFromCardModifier(self, Filters.Amidala,  null, self.getOwner(), Filters.and(Filters.your(self.getOwner()), Filters.Objective)));
+        modifiers.add(new IgnoresDeploymentRestrictionsFromCardModifier(self, Filters.Amidala,  null, self.getOwner(), Filters.Objective));
         modifiers.add(new SuspendsCardModifier(self, Filters.Emperors_Power, new PlayersTurnCondition(self.getOwner())));
         return modifiers;
     }
@@ -51,12 +50,12 @@ public class Card501_057 extends AbstractNormalEffect {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.YOU_CANNOT_ESCAPE_YOUR_DESTINY__DEPLOY_CARD_FROM_RESERVE_DECK;
 
-        if(GameConditions.isDuringYourPhase(game, playerId, Phase.DEPLOY)
-            && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
+        if(GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
             && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)){
+
             TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy His Destiny or a Mobile Docking Bay");
-            action.setActionMsg("Deploy His Destiny or a Mobile Docking Bay");
+            action.setText("Deploy His Destiny or a mobile Docking Bay");
+
             action.appendUsage(
                     new OncePerTurnEffect(action)
             );
