@@ -56,7 +56,7 @@ public class Card501_058 extends AbstractEpicEventDeployable {
         Filter lukeAlone = Filters.and(Filters.Luke, Filters.alone);
 
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new TotalPowerModifier(self, Filters.otherLocation(self), new OnTableCondition(self, lukeAlone), new MaxLimitEvaluator(new StackedEvaluator(self, Filters.I_Feel_The_Conflict), 3), playerId));
+        modifiers.add(new TotalPowerModifier(self, Filters.not(Filters.sameLocationAs(self, lukeAlone)), new OnTableCondition(self, lukeAlone), new MaxLimitEvaluator(new StackedEvaluator(self, Filters.I_Feel_The_Conflict), 3), playerId));
         return modifiers;
     }
 
