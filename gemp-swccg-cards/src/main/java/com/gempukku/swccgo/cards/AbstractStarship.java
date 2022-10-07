@@ -67,7 +67,26 @@ public abstract class AbstractStarship extends AbstractDeployable {
      * @param uniqueness the uniqueness
      */
     protected AbstractStarship(Side side, Float destiny, Float deployCost, float power, Float armor, Float maneuver, Float hyperspeed, float forfeit, String title, Uniqueness uniqueness) {
-        super(side, destiny, null, deployCost, title, uniqueness);
+        this(side, destiny, deployCost, power, armor, maneuver, hyperspeed, forfeit, title, uniqueness, null, null);
+    }
+
+    /**
+     * Creates a blueprint for a starship.
+     * @param side the side of the Force
+     * @param destiny the destiny value
+     * @param deployCost the deploy cost
+     * @param power the power value
+     * @param armor the armor value
+     * @param maneuver the maneuver value
+     * @param hyperspeed the hyperspeed value
+     * @param forfeit the forfeit value
+     * @param title the card title
+     * @param uniqueness the uniqueness
+     * @param expansionSet the expansionSet
+     * @param rarity the rarity
+     */
+    protected AbstractStarship(Side side, Float destiny, Float deployCost, float power, Float armor, Float maneuver, Float hyperspeed, float forfeit, String title, Uniqueness uniqueness, ExpansionSet expansionSet, Rarity rarity) {
+        super(side, destiny, null, deployCost, title, uniqueness, expansionSet, rarity);
         _power = power;
         _armor = armor;
         _maneuver = maneuver;
