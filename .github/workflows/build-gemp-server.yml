@@ -6,7 +6,6 @@ on:
   push:
     branches:
       - master
-      - fix_autopush_action
 
 jobs:
   build-gemp:
@@ -41,30 +40,30 @@ jobs:
           ls gemp-swccg-private/gemp-swccg-async/target/web.jar ; true
           md5sum gemp-swccg-private/gemp-swccg-async/target/web.jar ; true
 
-      # - name: Replicate changes to public repo
-      #   run: |
-      #     cd "${STARTDIR}"
-      #     echo "${{ secrets.GEMP_SWCCG_PUBLIC_SSH }}" > gemp-swccg-public.pem
-      #     chmod 0600 gemp-swccg-public.pem
-      #     echo
-      #     echo "Setting GIT_SSH_COMMAND"
-      #     export GIT_SSH_COMMAND="ssh -i gemp-swccg-public.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-      #     echo "git clone gemp-swccg-public"
-      #     git clone git@github.com:PlayersCommittee/gemp-swccg-public.git gemp-swccg-public
-      #     echo "rsync changes to public"
-      #     # set501 is the playtesting cards and they must be excluded.
-      #     # .git and .github are specific to their repositories.
-      #     rsync --exclude=set501 --exclude=.git --exclude=.github -av gemp-swccg-private/ gemp-swccg-public/
-      #     cd gemp-swccg-public/
-      #     git config --local user.email "devon+github-actions[bot]@hubner.org"
-      #     git config --local user.name "github-actions[bot]"
-      #     git status
-      #     git add -A .
-      #     git commit -m "Merging changes from upstream" -a ; true
-      #     export GIT_SSH_COMMAND="ssh -i ../gemp-swccg-public.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-      #     echo "Pushing changes to gemp-swccg-public"
-      #     GIT_SSH_COMMAND="ssh -i ../gemp-swccg-public.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" git push ; true
-      #     rm ../gemp-swccg-public.pem
+      - name: Replicate changes to public repo
+        run: |
+          cd "${STARTDIR}"
+          echo "${{ secrets.GEMP_SWCCG_PUBLIC_SSH }}" > gemp-swccg-public.pem
+          chmod 0600 gemp-swccg-public.pem
+          echo
+          echo "Setting GIT_SSH_COMMAND"
+          export GIT_SSH_COMMAND="ssh -i gemp-swccg-public.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+          echo "git clone gemp-swccg-public"
+          git clone git@github.com:PlayersCommittee/gemp-swccg-public.git gemp-swccg-public
+          echo "rsync changes to public"
+          # set501 is the playtesting cards and they must be excluded.
+          # .git and .github are specific to their repositories.
+          rsync --exclude=set501 --exclude=.git --exclude=.github -av gemp-swccg-private/ gemp-swccg-public/
+          cd gemp-swccg-public/
+          git config --local user.email "devon+github-actions[bot]@hubner.org"
+          git config --local user.name "github-actions[bot]"
+          git status
+          git add -A .
+          git commit -m "Merging changes from upstream" -a ; true
+          export GIT_SSH_COMMAND="ssh -i ../gemp-swccg-public.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+          echo "Pushing changes to gemp-swccg-public"
+          GIT_SSH_COMMAND="ssh -i ../gemp-swccg-public.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" git push ; true
+          rm ../gemp-swccg-public.pem
 
 
 
