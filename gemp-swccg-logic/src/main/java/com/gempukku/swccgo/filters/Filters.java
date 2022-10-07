@@ -8256,7 +8256,7 @@ public class Filters {
 
                 if(physicalCard.getBlueprint().getCardCategory() == CardCategory.VEHICLE
                         || physicalCard.getBlueprint().getCardCategory() == CardCategory.STARSHIP){
-                    if (!physicalCard.getBlueprint().getValidPassengerFilter(physicalCard.getOwner(), gameState.getGame(), card, true).accepts(gameState, modifiersQuerying, card))
+                    if (!physicalCard.getBlueprint().getValidPassengerFilter(physicalCard.getOwner(), gameState.getGame(), physicalCard, true).accepts(gameState, modifiersQuerying, card))
                         return false;
                 }
 
