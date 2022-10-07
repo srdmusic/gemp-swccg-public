@@ -14,7 +14,6 @@ import com.gempukku.swccgo.logic.decisions.YesNoDecision;
 import com.gempukku.swccgo.logic.effects.DeployCardsSimultaneouslyEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardCombinationFromHandAndOrReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandOrDeployableAsIfFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.StandardEffect;
@@ -116,7 +115,7 @@ public class Card218_015 extends AbstractNormalEffect {
                                                             Collection<PhysicalCard> pilots = Filters.filter(cardsToChooseFrom, game, Filters.and(Filters.matchingPilot(starfighter), Filters.not(Icon.MAINTENANCE),
                                                                     Filters.deployableSimultaneouslyWith(self, starfighter, false, 0, false, 0)));
                                                             action.appendTargeting(
-                                                                    new ChooseCardFromHandEffect(action, playerId, Filters.in(pilots)) {
+                                                                    new ChooseCardFromHandOrDeployableAsIfFromHandEffect(action, playerId, Filters.in(pilots)) {
                                                                         @Override
                                                                         public String getChoiceText(int numCardsToChoose) {
                                                                             return "Choose matching pilot";
