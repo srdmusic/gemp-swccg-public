@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class Card102_004 extends AbstractShuttleVehicle {
     public Card102_004() {
-        super(Side.LIGHT, 4, 2, 2, 5, null, 4, Title.Lukes_T16_Skyhopper, Uniqueness.UNIQUE);
+        super(Side.LIGHT, 4, 2, 2, 5, null, 4, Title.Lukes_T16_Skyhopper, Uniqueness.UNIQUE, ExpansionSet.JEDI_PACK, Rarity.PM);
         setLore("Enclosed vehicle used by Luke Skywalker for his early pilot training. Often raced with Biggs Darklighter through Beggar's Canyon.");
         setGameText("Requires 1 pilot to use. May carry 1 passenger. May move as a 'react.' May 'bullseye' one Womp Rat per turn. *Landspeed = 4, OR 1 character may shuttle to or from same site for free.");
         addIcons(Icon.PREMIUM);

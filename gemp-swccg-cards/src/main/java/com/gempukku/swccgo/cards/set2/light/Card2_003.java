@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class Card2_003 extends AbstractAlienRebel {
     public Card2_003() {
-        super(Side.LIGHT, 1, 4, 6, 2, 6, "Chewbacca", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, 4, 6, 2, 6, "Chewbacca", Uniqueness.UNIQUE, ExpansionSet.A_NEW_HOPE, Rarity.R2);
         setLore("Wookiee smuggler from Kashyyyk. Over 200 years old. Top-notch mechanic and pilot. Jabba has large bounty on this 'walking carpet.' Friends call him Chewie...or Fuzzball.");
         setGameText("Power +1 at same location as Han. Adds 2 to power of anything he pilots. When piloting Falcon, also adds 1 to maneuver. Your vehicles, starships and droids at same site go to Used Pile (rather than Lost Pile) when they are 'hit.'");
         addPersona(Persona.CHEWIE);

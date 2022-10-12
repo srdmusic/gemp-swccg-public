@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class Card216_042 extends AbstractAlienRepublic {
     public Card216_042() {
-        super(Side.LIGHT, 3, 4, 6, 2, 5, "Tarfful", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 3, 4, 6, 2, 5, "Tarfful", Uniqueness.UNIQUE, ExpansionSet.SET_16, Rarity.V);
         setLore("Wookiee leader.");
         setGameText("If a battle was just initiated at same site, may name an Interrupt; for remainder of battle, Interrupts with that title may not be played unless they are [Immune to Sense]. Once per game, if Yoda about to be lost, may place him in owner's hand instead.");
         setSpecies(Species.WOOKIEE);

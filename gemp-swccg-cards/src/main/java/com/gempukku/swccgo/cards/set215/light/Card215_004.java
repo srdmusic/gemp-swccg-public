@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class Card215_004 extends AbstractRebelRepublic {
     public Card215_004() {
-        super(Side.LIGHT, 2, 4, 4, 4, 5, "Cal Kestis", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 2, 4, 4, 4, 5, "Cal Kestis", Uniqueness.UNIQUE, ExpansionSet.SET_15, Rarity.V);
         setLore("Padawan.");
         setGameText("Once per game, if you are about to draw a card for battle destiny here, may instead use Cal Kestis's ability number. During opponent's draw phase, may place one card from your hand under Reserve Deck; reshuffle and draw top card of Reserve Deck.");
         addPersona(Persona.CAL_KESTIS);

@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class Card219_035 extends AbstractAlienRebel {
     public Card219_035() {
-        super(Side.LIGHT, 2, 4, 4, 3, 5, "Fenn Rau", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 2, 4, 4, 3, 5, "Fenn Rau", Uniqueness.UNIQUE, ExpansionSet.SET_19, Rarity.V);
         setArmor(5);
         setLore("Mandalorian scout.");
         setGameText("[Pilot] 3. During battle, if another Mandalorian here, opponent's total power is -3. At the end of a battle here, " +

@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class Card216_023 extends AbstractAlienRepublic {
     public Card216_023() {
-        super(Side.LIGHT, 1, 4, 6, 2, 7, "Chewbacca, Defender Of Kashyyyk", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, 4, 6, 2, 7, "Chewbacca, Defender Of Kashyyyk", Uniqueness.UNIQUE, ExpansionSet.SET_16, Rarity.V);
         setLore("Wookiee scout. Volunteered for Han's Endor strike team. Keeps his distance, but doesn't look like he's keeping his distance. Always thinks with his stomach.");
         setGameText("[Pilot] 2. Your total power here is +1 for each opponent's character present. During battle, if all your ability here is provided by Yoda, smugglers, and/or Wookiees, may add one destiny to total power.");
         addPersona(Persona.CHEWIE);

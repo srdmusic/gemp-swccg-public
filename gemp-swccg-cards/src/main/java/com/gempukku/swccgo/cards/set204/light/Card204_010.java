@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class Card204_010 extends AbstractRebelRepublic {
     public Card204_010() {
-        super(Side.LIGHT, 1, 3, 2, 3, 5, "Senator Mon Mothma", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, 3, 2, 3, 5, "Senator Mon Mothma", Uniqueness.UNIQUE, ExpansionSet.SET_4, Rarity.V);
         setPolitics(1);
         setLore("Native of Chandrila. Leader of the Alliance. A former member of the Imperial Senate where she was a formidable opponent of then-Senator Palpatine. Friend of Bail Organa.");
         setGameText("Agenda: rebellion. Deploys -1 aboard your capital starship. Once per turn, while in a senate majority (or Stolen Data Tapes on table), may take your just drawn battle destiny into hand. Once per game, may [download] Chandrila.");

@@ -24,7 +24,7 @@ import java.util.List;
  */
 public class Card204_002 extends AbstractRebelRepublic {
     public Card204_002() {
-        super(Side.LIGHT, 3, 2, 3, 3, 5, "Bail Organa", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 3, 2, 3, 3, 5, "Bail Organa", Uniqueness.UNIQUE, ExpansionSet.SET_4, Rarity.V);
         setPolitics(1);
         setLore("Alderaanian senator and leader.");
         setGameText("Agenda: rebellion. While in a senate majority (or Stolen Data Tapes on table), your Force drains at battlegrounds with your Alderaanian of ability < 4 are +1. While aboard a corvette, adds one battle destiny and it may not be targeted by weapons.");
