@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class Card204_011 extends AbstractAlienResistance {
     public Card204_011() {
-        super(Side.LIGHT, 1, 4, 4, 3, 7, "Solo", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, 4, 4, 3, 7, "Solo", Uniqueness.UNIQUE, ExpansionSet.SET_4, Rarity.V);
         setLore("Smuggler.");
         setGameText("[Pilot] 3. Deploys -1 to Falcon. Draws one battle destiny if unable to otherwise. Adds one battle destiny if with Chewie or Rey. Once per game, may play an Interrupt from Lost Pile as if from hand (then place that card out of play).");
         addPersona(Persona.HAN);

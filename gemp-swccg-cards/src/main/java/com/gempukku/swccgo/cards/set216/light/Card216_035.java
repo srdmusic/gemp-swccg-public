@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class Card216_035 extends AbstractRebelResistance {
     public Card216_035() {
-        super(Side.LIGHT, 3, 3, 2, 3, 5, "Lando, Hero of the Rebellion", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 3, 3, 2, 3, 5, "Lando, Hero of the Rebellion", Uniqueness.UNIQUE, ExpansionSet.SET_16, Rarity.V);
         setLore("Leader. Resistance Agent.");
         setGameText("Adds one destiny to total power with Chewie or Jannah (or while piloting). During your turn, may reveal the top three cards of your Reserve Deck, take one starship with a deploy cost < 6 into hand (if possible), and shuffle your Reserve Deck.");
         addPersona(Persona.LANDO);

@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class Card204_004 extends AbstractAlienResistance {
     public Card204_004() {
-        super(Side.LIGHT, 1, 5, 6, 2, 6, "Chewie With Bowcaster", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, 5, 6, 2, 6, "Chewie With Bowcaster", Uniqueness.UNIQUE, ExpansionSet.SET_4, Rarity.V);
         setLore("Wookiee smuggler.");
         setGameText("Deploys -1 to Falcon. While 'hit', draws one battle destiny if unable to otherwise. Permanent weapon is •Chewbacca's Bowcaster (may target a character or vehicle for free; draw two destiny; target hit, and its forfeit = 0, if total destiny > defense value).");
         addPersona(Persona.CHEWIE);
