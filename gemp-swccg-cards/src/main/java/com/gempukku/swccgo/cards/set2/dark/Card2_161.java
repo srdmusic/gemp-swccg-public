@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class Card2_161 extends AbstractDeathStarWeapon {
     public Card2_161() {
-        super(Side.DARK, 3, Title.Superlaser, Uniqueness.UNIQUE);
+        super(Side.DARK, 3, Title.Superlaser, Uniqueness.UNIQUE, ExpansionSet.A_NEW_HOPE, Rarity.R2);
         setLore("The Death Star has more firepower than the combined might the entire Imperial fleet. Enormous generators power the devastating planetdestroying weapon.");
         setGameText("Deploy on Death Star system at parsec 0. May target a capital starship at Death Star system, or at a system it orbits, using 4 Force. Draw two destiny. Target hit if total destiny > defense value.");
         addIcons(Icon.A_NEW_HOPE);

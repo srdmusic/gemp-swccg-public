@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class Card3_115 extends AbstractEpicEventPlayable {
     public Card3_115() {
-        super(Side.DARK, Title.Target_The_Main_Generator);
+        super(Side.DARK, Title.Target_The_Main_Generator, ExpansionSet.HOTH, Rarity.R2);
         setGameText("During your control phase, fire your AT-AT Cannon (if within range of the Main Power Generators) as follows: Prepare To Target The Main Generator: Draw destiny. Maximum Firepower!: If (destiny + X + Y) > 8, Main Power Generators site is 'blown away' and this card is lost. Otherwise, this card is used. X = ability of one of your AT-AT's pilots. Y = total Hoth sites you control.");
         addIcons(Icon.HOTH);
     }

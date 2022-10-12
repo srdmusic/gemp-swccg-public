@@ -21,7 +21,7 @@ import java.util.List;
  */
 public class Card2_149 extends AbstractNonuniqueVehicleSite {
     public Card2_149() {
-        super(Side.DARK, Title.Droid_Junkheap, Filters.sandcrawler, Uniqueness.RESTRICTED_3);
+        super(Side.DARK, Title.Droid_Junkheap, Filters.sandcrawler, Uniqueness.RESTRICTED_3, ExpansionSet.A_NEW_HOPE, Rarity.R1);
         setLocationDarkSideGameText("Deploy on your sandcrawler. Each Jawa is forfeit +2 here. 'Nighttime conditions' here.");
         setLocationLightSideGameText("Your characters may enter/exit here for 1 Force each. 'Nighttime conditions' here.");
         addIcons(Icon.A_NEW_HOPE, Icon.INTERIOR_SITE);

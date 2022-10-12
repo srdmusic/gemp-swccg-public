@@ -24,15 +24,6 @@ public abstract class AbstractEpicEventPlayable extends AbstractSwccgCardBluepri
      * Creates a blueprint for an Epic Event that is played.
      * @param side the side of the Force
      * @param title the card title
-     */
-    protected AbstractEpicEventPlayable(Side side, String title) {
-        this(side, title,  null, null);
-    }
-
-    /**
-     * Creates a blueprint for an Epic Event that is played.
-     * @param side the side of the Force
-     * @param title the card title
      * @param expansionSet the expansionSet
      * @param rarity the rarity
      */
