@@ -12,16 +12,6 @@ public abstract class AbstractPodracer extends AbstractDeployable {
      * @param side the side of the Force
      * @param destiny the destiny value
      * @param title the card title
-     */
-    protected AbstractPodracer(Side side, float destiny, String title) {
-        this(side, destiny, title, null, null);
-    }
-
-    /**
-     * Creates a blueprint for an Effect.
-     * @param side the side of the Force
-     * @param destiny the destiny value
-     * @param title the card title
      * @param expansionSet the expansionSet
      * @param rarity the rarity
      */
