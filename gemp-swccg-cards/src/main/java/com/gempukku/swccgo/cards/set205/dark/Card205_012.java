@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class Card205_012 extends AbstractDarkJediMasterImperial {
     public Card205_012() {
-        super(Side.DARK, 1, 5, 4, 7, 9, "Emperor Palpatine, Foreseer", Uniqueness.UNIQUE);
+        super(Side.DARK, 1, 5, 4, 7, 9, "Emperor Palpatine, Foreseer", Uniqueness.UNIQUE, ExpansionSet.SET_5, Rarity.V);
         setLore("From his throne room aboard the second Death Star, Emperor Palpatine monitors activity throughout the galaxy. Leader.");
         setGameText("Never deploys or moves (even if carried) to a site opponent occupies. Once during your turn, may peek at the top three cards of your Reserve Deck; place one in Used Pile, one in Lost Pile, and take one into hand. Immune to attrition.");
         addPersona(Persona.SIDIOUS);

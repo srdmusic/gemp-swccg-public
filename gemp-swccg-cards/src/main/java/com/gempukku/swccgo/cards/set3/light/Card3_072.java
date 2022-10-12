@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class Card3_072 extends AbstractArtilleryWeapon {
     public Card3_072() {
-        super(Side.LIGHT, 5, 2, 2, "Atgar Laser Cannon");
+        super(Side.LIGHT, 5, 2, 2, "Atgar Laser Cannon", ExpansionSet.HOTH, Rarity.U2);
         setLore("Atgar 1.4 FD P-tower anti-vehicle cannon. Adapted to operate with minimal performance loss in the extremes of a cold environment.");
         setGameText("Deploy on an exterior planet site. Your warrior present may target a vehicle at same or adjacent site using 2 Force. Draw destiny. Target crashes if destiny +2 > armor. Target hit if destiny +1 > maneuver.");
         addIcons(Icon.HOTH);

@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class Card10_051 extends AbstractDarkJediMasterImperial {
     public Card10_051() {
-        super(Side.DARK, 1, 6, 4, 7, 9, "The Emperor", Uniqueness.UNIQUE);
+        super(Side.DARK, 1, 6, 4, 7, 9, "The Emperor", Uniqueness.UNIQUE, ExpansionSet.REFLECTIONS_II, Rarity.PM);
         setLore("Leader. Secretive manipulator of the galaxy. Played Darth Vader and Prince Xizor off against one another in his relentless pursuit of 'young Skywalker'.");
         setGameText("Deploys only to Coruscant or Death Star II. Never moves to a site occupied by opponent (even if carried). If Vader or Xizor here, and Luke is not on table, adds 2 to attrition against opponent at other locations. Immune to attrition.");
         addPersona(Persona.SIDIOUS);

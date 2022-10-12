@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class Card8_088 extends AbstractArtilleryWeapon {
     public Card8_088() {
-        super(Side.LIGHT, 7, 2, 4, "Ewok Catapult");
+        super(Side.LIGHT, 7, 2, 4, "Ewok Catapult", ExpansionSet.ENDOR, Rarity.U);
         setLore("Crowning achievement of Chirpa's engineers. Heavy stones from these weapons distracted Imperial AT-ST walkers.");
         setGameText("Deploy on an exterior Endor site. Does not require a power source. Your Ewok present may target a vehicle with armor at same or adjacent site for free. Draw destiny. Add 1 for each Ewok present. Target crashes if total destiny > defense value.");
         addIcons(Icon.ENDOR);
