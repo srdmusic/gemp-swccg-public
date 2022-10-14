@@ -1,10 +1,23 @@
 package com.gempukku.swccgo.cards.set216.light;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractAlienRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PreventEffectOnCardEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardType;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -18,9 +31,6 @@ import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayUnlessImmuneToSpecificTitleModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
-
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Set: Set 16

@@ -1,9 +1,19 @@
 package com.gempukku.swccgo.cards.set10.dark;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractDarkJediMasterImperial;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -14,9 +24,6 @@ import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Set: Reflections II

@@ -1,9 +1,19 @@
 package com.gempukku.swccgo.cards.set11.dark;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractPodracer;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerRaceTotalEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -16,10 +26,6 @@ import com.gempukku.swccgo.logic.modifiers.MayNotDrawRaceDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
 import com.gempukku.swccgo.logic.modifiers.RaceDestinyModifier;
-
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Set: Tatooine

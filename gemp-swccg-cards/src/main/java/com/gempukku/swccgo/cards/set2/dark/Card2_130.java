@@ -1,9 +1,19 @@
 package com.gempukku.swccgo.cards.set2.dark;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractEpicEventPlayable;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.UseWeaponEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.DestinyType;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Variable;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -12,16 +22,20 @@ import com.gempukku.swccgo.game.state.actions.CommencePrimaryIgnitionState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayEpicEventAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.BlowAwayEffect;
+import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromVoidInLostPileEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromVoidInUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TriggeringResultEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardToLoseFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
 import com.gempukku.swccgo.logic.timing.results.CalculatingEpicEventTotalResult;
-
-import java.util.Collections;
-import java.util.List;
 
 
 /**

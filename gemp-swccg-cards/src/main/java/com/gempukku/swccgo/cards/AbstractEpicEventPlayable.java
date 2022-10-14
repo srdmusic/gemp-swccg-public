@@ -1,19 +1,31 @@
 package com.gempukku.swccgo.cards;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.actions.PlayChoiceAction;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardType;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
-import com.gempukku.swccgo.game.*;
+import com.gempukku.swccgo.game.DeployAsCaptiveOption;
+import com.gempukku.swccgo.game.DeploymentOption;
+import com.gempukku.swccgo.game.DeploymentRestrictionsOption;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.PlayCardOption;
+import com.gempukku.swccgo.game.ReactActionOption;
+import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
 import com.gempukku.swccgo.logic.actions.PlayEpicEventAction;
 import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * The abstract class providing the common implementation for Epic Events that are played.

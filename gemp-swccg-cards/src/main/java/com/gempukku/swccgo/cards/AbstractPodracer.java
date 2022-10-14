@@ -1,6 +1,13 @@
 package com.gempukku.swccgo.cards;
 
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardType;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 
 /**
  * The abstract class providing the common implementation for Podracers.

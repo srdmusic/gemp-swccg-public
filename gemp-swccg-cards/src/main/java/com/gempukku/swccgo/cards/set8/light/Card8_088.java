@@ -1,8 +1,18 @@
 package com.gempukku.swccgo.cards.set8.light;
 
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractArtilleryWeapon;
 import com.gempukku.swccgo.cards.evaluators.PresentEvaluator;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -12,10 +22,6 @@ import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
 import com.gempukku.swccgo.logic.modifiers.DoesNotRequirePowerSourceModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalWeaponDestinyModifier;
-
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Set: Endor
