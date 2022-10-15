@@ -1,9 +1,5 @@
 package com.gempukku.swccgo.cards;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.actions.PlayChoiceAction;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardType;
@@ -26,6 +22,10 @@ import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * The abstract class providing the common implementation for Epic Events that are played.

@@ -1,9 +1,5 @@
 package com.gempukku.swccgo.cards.set209.dark;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractDarkJediMasterFirstOrder;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
@@ -26,6 +22,10 @@ import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.BattleInitiatedResult;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Set 9

@@ -1,9 +1,5 @@
 package com.gempukku.swccgo.cards.set601.light;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractNewRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
@@ -28,6 +24,10 @@ import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Set 14

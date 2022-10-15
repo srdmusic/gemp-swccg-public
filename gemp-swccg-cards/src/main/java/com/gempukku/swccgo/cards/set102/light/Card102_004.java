@@ -1,9 +1,5 @@
 package com.gempukku.swccgo.cards.set102.light;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractShuttleVehicle;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
@@ -29,6 +25,10 @@ import com.gempukku.swccgo.logic.modifiers.MayMoveAsReactModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.results.BullseyedResult;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 
 /**

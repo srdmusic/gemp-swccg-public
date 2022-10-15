@@ -1,9 +1,5 @@
 package com.gempukku.swccgo.cards.set216.dark;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractDeathStarWeapon;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -23,6 +19,10 @@ import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Set 16

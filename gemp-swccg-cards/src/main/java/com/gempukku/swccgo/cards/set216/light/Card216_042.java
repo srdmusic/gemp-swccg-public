@@ -1,8 +1,5 @@
 package com.gempukku.swccgo.cards.set216.light;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractAlienRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PreventEffectOnCardEffect;
@@ -31,6 +28,9 @@ import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayUnlessImmuneToSpecificTitleModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Set 16

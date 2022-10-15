@@ -1,8 +1,5 @@
 package com.gempukku.swccgo.cards.set217.light;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractAlienRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
@@ -25,6 +22,9 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Set 17

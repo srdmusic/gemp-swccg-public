@@ -1,8 +1,5 @@
 package com.gempukku.swccgo.cards.set2.dark;
 
-import java.util.Collections;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractDeathStarWeapon;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -20,6 +17,9 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.FireWeaponAction;
 import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
+
+import java.util.Collections;
+import java.util.List;
 
 
 /**

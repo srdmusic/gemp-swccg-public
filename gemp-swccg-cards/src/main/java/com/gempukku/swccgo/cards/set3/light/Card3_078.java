@@ -1,8 +1,5 @@
 package com.gempukku.swccgo.cards.set3.light;
 
-import java.util.Collections;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractArtilleryWeapon;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -19,6 +16,9 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.FireWeaponAction;
 import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Set: Hoth

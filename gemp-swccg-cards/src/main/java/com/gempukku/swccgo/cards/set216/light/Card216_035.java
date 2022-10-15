@@ -1,9 +1,5 @@
 package com.gempukku.swccgo.cards.set216.light;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractRebelResistance;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.PilotingCondition;
@@ -27,6 +23,10 @@ import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsDestinyToPowerModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Set 16

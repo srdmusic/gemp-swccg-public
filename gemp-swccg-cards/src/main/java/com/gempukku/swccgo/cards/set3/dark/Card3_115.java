@@ -1,8 +1,5 @@
 package com.gempukku.swccgo.cards.set3.dark;
 
-import java.util.Collections;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractEpicEventPlayable;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.UseWeaponEffect;
@@ -33,6 +30,9 @@ import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
+
+import java.util.Collections;
+import java.util.List;
 
 
 /**

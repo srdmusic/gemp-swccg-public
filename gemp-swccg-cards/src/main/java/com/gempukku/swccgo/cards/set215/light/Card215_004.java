@@ -1,8 +1,5 @@
 package com.gempukku.swccgo.cards.set215.light;
 
-import java.util.Collections;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractRebelRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
@@ -27,6 +24,9 @@ import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.SubstituteDestinyEffect;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Set: Set 15

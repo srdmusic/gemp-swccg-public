@@ -1,8 +1,5 @@
 package com.gempukku.swccgo.cards.set2.light;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractAlienRebel;
 import com.gempukku.swccgo.cards.conditions.AtSameLocationAsCondition;
 import com.gempukku.swccgo.cards.conditions.PilotingCondition;
@@ -29,6 +26,9 @@ import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
 import com.gempukku.swccgo.logic.timing.results.AboutToLoseCardFromTableResult;
+
+import java.util.LinkedList;
+import java.util.List;
 
 
 /**

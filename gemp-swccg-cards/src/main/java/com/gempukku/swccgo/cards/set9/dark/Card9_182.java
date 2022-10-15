@@ -1,8 +1,5 @@
 package com.gempukku.swccgo.cards.set9.dark;
 
-import java.util.Collections;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractDeathStarIIWeapon;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -21,6 +18,9 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.FireWeaponAction;
 import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Set: Death Star II

@@ -1,9 +1,5 @@
 package com.gempukku.swccgo.cards.set205.dark;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractDarkJediMasterImperial;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PeekAtTopThreeCardsOfReserveDeckAndChooseCardToPlaceInUsedPileLostPileAndHandEffect;
@@ -24,6 +20,10 @@ import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.NeverDeploysToLocationModifier;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Set 5

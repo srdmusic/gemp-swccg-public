@@ -1,8 +1,5 @@
 package com.gempukku.swccgo.cards.set219.dark;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractDarkJediMasterImperial;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.evaluators.MaxLimitEvaluator;
@@ -31,6 +28,9 @@ import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Set 19
