@@ -39,8 +39,6 @@ public abstract class AbstractEpicEventPlayable extends AbstractSwccgCardBluepri
      * @param title the card title
      * @param expansionSet the expansionSet
      * @param rarity the rarity
-     * @param expansionSet the expansionSet
-     * @param rarity the rarity
      */
     protected AbstractEpicEventPlayable(Side side, String title, ExpansionSet expansionSet, Rarity rarity) {
         super(side, 0f, title, Uniqueness.UNRESTRICTED, expansionSet, rarity);
