@@ -4456,7 +4456,10 @@ var Card = Class.extend({
                    (cardNo == 68) ||
                    (cardNo == 69) ||
                    (cardNo == 71) ||
-                   (cardNo == 74)
+                   (cardNo == 74) ||
+                   (cardNo == 89) ||
+                   (cardNo == 90) ||
+                   (cardNo == 93)
                    ;
         }
         if (setNo == 601) {
