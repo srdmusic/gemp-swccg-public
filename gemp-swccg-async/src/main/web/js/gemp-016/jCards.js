@@ -3542,7 +3542,7 @@ var fixedImages = {
 "501_43":"https://res.starwarsccg.org/cards/Virtual0-Dark/large/sithfury.gif",
 "501_44":"https://res.starwarsccg.org/cards/VirtualPremium-Dark/large/twinsunsoftatooine.gif",
 "501_44_BACK":"https://res.starwarsccg.org/cards/VirtualPremium-Dark/large/welltrainedinthejediarts.gif",
-"501_45":"https://res.starwarsccg.org/cards/Virtual8-Dark/hires/starkillerbase.png",
+"501_45":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/ralltiir.gif",
 "501_46":"https://res.starwarsccg.org/cards/Virtual10-Dark/large/ralltiiroperations.gif",
 "501_46_BACK":"https://res.starwarsccg.org/cards/Virtual10-Dark/large/inthehandsoftheempire.gif",
 "501_47":"https://res.starwarsccg.org/cards/Virtual10-Dark/large/insignificantrebellion.gif",
