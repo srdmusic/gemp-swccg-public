@@ -8,6 +8,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.DefinedByGameTextLandspeedModifier;
@@ -27,7 +28,7 @@ import java.util.List;
  */
 public class Card2_156 extends AbstractShuttleVehicle {
     public Card2_156() {
-        super(Side.DARK, 2, 2, 1, 4, null, 4, "Bespin Motors Void Spider THX 1138", ExpansionSet.A_NEW_HOPE, Rarity.C2);
+        super(Side.DARK, 2, 2, 1, 4, null, 4, "Bespin Motors Void Spider THX 1138", Uniqueness.UNRESTRICTED, ExpansionSet.A_NEW_HOPE, Rarity.C2);
         setLore("This light, enclosed shuttle is used for courier runs to large orbiting transports.");
         setGameText("May add 3 passengers.  Permanent pilot provides ability of 1. May move as a 'react.'  *Landspeed = 3.  OR  Up to 3 characters may shuttle to or from same site for free.");
         addIcons(Icon.A_NEW_HOPE, Icon.PILOT);
