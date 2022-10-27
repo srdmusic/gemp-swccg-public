@@ -2,38 +2,79 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractDefensiveShield;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.PutCardsFromHandOnReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardsFromHandEffect;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Set: Set 20
- * Type: Effect
- * Title: You Can't Wipe Them Off
+ * Type: Defensive Shield
+ * Title: Drop!
  */
 public class Card501_040 extends AbstractDefensiveShield {
     public Card501_040() {
-        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "You Can't Wipe Them Off");
-        setGameText("Plays on table. At the end of every turn, players lose 1 force if they have more than 12 cards in hand. At the end of the opponent’s control phase, a player loses 1 Force for each under cover spy they control. Grimtaash and Monnok are canceled.");
+        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Drop!");
+        setVirtualSuffix(true);
+        setGameText("Plays on table. During any move phase, may use 2 Force to target opponent’s hand of > 12 cards. Opponent selects 2 cards, you randomly select 10 cards; shuffle all other hand cards into opponent’s Reserve Deck. Grimtaash and Monnok are canceled.");
         addIcons(Icon.VIRTUAL_DEFENSIVE_SHIELD);
-        setTestingText("You Can't Wipe Them Off");
+        setTestingText("Drop! (V)");
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        final String opponent = game.getOpponent(playerId);
+
+        // Check condition(s)
+        if (GameConditions.isDuringEitherPlayersPhase(game, Phase.MOVE)
+                && GameConditions.numCardsInHand(game, opponent) > 12
+                && GameConditions.canUseForce(game, playerId, 2)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+            action.setText("Target opponent's hand");
+
+            action.appendCost(
+                    new UseForceEffect(action, playerId, 2));
+            // Perform result(s)
+            action.appendEffect(
+                    new ChooseCardsFromHandEffect(action, opponent, 2, 2) {
+                        @Override
+                        protected void cardsSelected(SwccgGame game, Collection<PhysicalCard> selectedCards) {
+                            List<PhysicalCard> toRemove = new LinkedList<>();
+                            toRemove.addAll(game.getGameState().getHand(opponent));
+                            toRemove.removeAll(selectedCards);
+                            Collection<PhysicalCard> random = GameUtils.getRandomCards(toRemove, 10);
+                            toRemove.removeAll(random);
+
+                            action.appendEffect(
+                                    new PutCardsFromHandOnReserveDeckEffect(action, opponent, toRemove.size(), toRemove.size(), Filters.in(toRemove), true));
+                            action.appendEffect(
+                                    new ShuffleReserveDeckEffect(action, opponent));
+                        }
+                    });
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
     @Override
@@ -72,53 +113,6 @@ public class Card501_040 extends AbstractDefensiveShield {
             }
         }
 
-
-        String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
-
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        // At the end of every turn, players lose 1 force if they have more than 12 cards in hand.
-        if (TriggerConditions.isEndOfEachTurn(game, effectResult)) {
-            if (GameConditions.numCardsInHand(game, playerId) > 12) {
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Lose 1 Force");
-                action.appendEffect(
-                        new LoseForceEffect(action, playerId, 1));
-                actions.add(action);
-            }
-
-            gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-            if (GameConditions.numCardsInHand(game, opponent) > 12) {
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Opponent loses 1 Force");
-                action.appendEffect(
-                        new LoseForceEffect(action, opponent, 1));
-                actions.add(action);
-            }
-        }
-
-        if (TriggerConditions.isEndOfOpponentsPhase(game, effectResult, Phase.CONTROL, playerId)) {
-            int playersUCspies = Filters.countActive(game, self, SpotOverride.INCLUDE_UNDERCOVER, Filters.and(Filters.your(playerId), Filters.undercover_spy));
-            int opponentUCspies = Filters.countActive(game, self, SpotOverride.INCLUDE_UNDERCOVER, Filters.and(Filters.your(opponent), Filters.undercover_spy));
-
-            gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
-            if (playersUCspies > 0) {
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Lose "+playersUCspies+" Force");
-                action.appendEffect(
-                        new LoseForceEffect(action, playerId, playersUCspies));
-                actions.add(action);
-            }
-
-            gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_4;
-            if (opponentUCspies > 0) {
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Opponent loses "+opponentUCspies+" Force");
-                action.appendEffect(
-                        new LoseForceEffect(action, opponent, opponentUCspies));
-                actions.add(action);
-            }
-        }
         return actions;
     }
 }
