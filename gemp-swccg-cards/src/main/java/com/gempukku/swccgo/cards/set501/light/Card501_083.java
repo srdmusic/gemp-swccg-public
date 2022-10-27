@@ -2,9 +2,11 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractDefensiveShield;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
@@ -34,7 +36,7 @@ import java.util.List;
  */
 public class Card501_083 extends AbstractDefensiveShield {
     public Card501_083() {
-        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Thrown Back");
+        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Thrown Back", ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
         setGameText("Plays on table. During any move phase, may use 2 Force to target opponent’s hand of > 12 cards. Opponent selects 2 cards, you randomly select 10 cards; shuffle all other hand cards into opponent’s Reserve Deck. Grimtaash and Monnok are canceled.");
         addIcons(Icon.VIRTUAL_DEFENSIVE_SHIELD);
