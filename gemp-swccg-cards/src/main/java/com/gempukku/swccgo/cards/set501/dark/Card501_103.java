@@ -1,14 +1,15 @@
-package com.gempukku.swccgo.cards.set219.dark;
+package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
-import com.gempukku.swccgo.cards.conditions.ControlsCondition;
-import com.gempukku.swccgo.cards.conditions.PresentCondition;
+import com.gempukku.swccgo.cards.conditions.OccupiesWithCondition;
+import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceGenerationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -21,20 +22,23 @@ import java.util.List;
  * Subtype: Site
  * Title: Lothal: Imperial Strip Mines
  */
-public class Card219_014 extends AbstractSite {
-    public Card219_014() {
+public class Card501_103 extends AbstractSite {
+    public Card501_103() {
         super(Side.DARK, "Lothal: Imperial Strip Mines", Title.Lothal);
-        setLocationDarkSideGameText("If your miner present, your Force generation is +2 here.");
-        setLocationLightSideGameText("If you control, your Force generation is +1 here.");
+        setLocationDarkSideGameText("If you occupy with an Imperial leader, Force generation +1 here (+2 if a miner).");
+        setLocationLightSideGameText("Force drain -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.UNDERGROUND, Icon.PLANET, Icon.VIRTUAL_SET_19);
+        setTestingText("Lothal: Imperial Strip Mines (ERRATA)");
     }
 
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceGenerationModifier(self, new PresentCondition(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.miner)), 2, playerOnDarkSideOfLocation));
+        modifiers.add(new ForceGenerationModifier(self, new OccupiesWithCondition(playerOnDarkSideOfLocation, self, Filters.Imperial_leader),
+                new ConditionEvaluator(1, 2, new OccupiesWithCondition(playerOnDarkSideOfLocation, self, Filters.and(Filters.Imperial_leader, Filters.miner))),
+                playerOnDarkSideOfLocation));
         return modifiers;
     }
 
@@ -42,7 +46,7 @@ public class Card219_014 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceGenerationModifier(self, new ControlsCondition(playerOnLightSideOfLocation, self), 1, playerOnLightSideOfLocation));
+        modifiers.add(new ForceDrainModifier(self, -1, playerOnLightSideOfLocation));
         return modifiers;
     }
 }
