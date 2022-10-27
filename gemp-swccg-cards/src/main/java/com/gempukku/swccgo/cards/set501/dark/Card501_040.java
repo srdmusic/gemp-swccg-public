@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class Card501_040 extends AbstractDefensiveShield {
     public Card501_040() {
-        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "You Can't Wipe Them Off");
+        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "You Can't Wipe Them Off", ExpansionSet.SET_20, Rarity.V);
         setGameText("Plays on table. At the end of every turn, players lose 1 force if they have more than 12 cards in hand. At the end of the opponent’s control phase, a player loses 1 Force for each under cover spy they control. Grimtaash and Monnok are canceled.");
         addIcons(Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setTestingText("You Can't Wipe Them Off");
