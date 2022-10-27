@@ -7,6 +7,7 @@ import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -28,7 +29,7 @@ import java.util.List;
  */
 public class Card9_002 extends AbstractAdmiralsOrder {
     public Card9_002() {
-        super(Side.LIGHT, "Combined Fleet Action");
+        super(Side.LIGHT, Title.Combined_Fleet_Action);
         setGameText("At each system where any player does not have both a starfighter and a capital starship present, that player's starships there are power -2. At sites related to systems you occupy, during each battle opponent may draw no more than one battle destiny. Once during each of your deploy phases, you may deploy one combat vehicle from your Reserve Deck; reshuffle.");
         addIcons(Icon.DEATH_STAR_II);
     }

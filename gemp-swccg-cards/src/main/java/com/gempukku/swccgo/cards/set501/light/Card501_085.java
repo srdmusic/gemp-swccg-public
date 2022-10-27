@@ -34,7 +34,7 @@ public class Card501_085 extends AbstractObjective {
     public Card501_085() {
         super(Side.LIGHT, 0, Title.City_In_The_Clouds);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Bespin system and a Cloud City battleground site. May deploy Weather Vane. While this side up, once per turn, may use 1 Force to [download] a Cloud City battleground site. Flip this card if you control two Cloud City battleground sites and occupy Bespin system, and opponent controls no Cloud City sites.");
+        setGameText("Deploy Bespin system and a Cloud City battleground site. May deploy Weather Vane. While this side up, once per turn, may use 1 Force to [download] a Cloud City battleground. Flip this card if you control two Cloud City battleground sites and occupy Bespin system, and opponent controls no Cloud City sites.");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_P);
         setTestingText("City In The Clouds (ERRATA)");
     }
@@ -75,8 +75,8 @@ public class Card501_085 extends AbstractObjective {
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Cloud City battleground site from Reserve Deck");
-            action.setActionMsg("Deploy a Cloud City battleground site from Reserve Deck");
+            action.setText("Deploy Cloud City battleground from Reserve Deck");
+            action.setActionMsg("Deploy a Cloud City battleground from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
@@ -85,7 +85,7 @@ public class Card501_085 extends AbstractObjective {
                     new UseForceEffect(action, playerId, 1));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Cloud_City_site, Filters.battleground, true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.Cloud_City_location, Filters.battleground, true));
             return Collections.singletonList(action);
         }
         return null;
