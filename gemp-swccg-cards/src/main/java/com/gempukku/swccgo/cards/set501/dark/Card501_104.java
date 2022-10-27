@@ -45,7 +45,7 @@ public class Card501_104 extends AbstractNormalEffect {
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_10);
         addImmuneToCardTitle(Title.Alter);
         addImmuneToCardTitle(Title.Levitation);
-        setTestingText("Silence Is Golden (V)");
+        setTestingText("Silence Is Golden (V) (ERRATA)");
     }
 
     @Override
