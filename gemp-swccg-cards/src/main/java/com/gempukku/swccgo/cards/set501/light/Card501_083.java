@@ -36,7 +36,7 @@ public class Card501_083 extends AbstractDefensiveShield {
     public Card501_083() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Thrown Back");
         setVirtualSuffix(true);
-        setGameText("Plays on table. At the end of every turn, players lose 1 force if they have more than 12 cards in hand. At the end of the opponent’s control phase, a player loses 1 Force for each under cover spy they control. Grimtaash and Monnok are canceled.");
+        setGameText("Plays on table. During any move phase, may use 2 Force to target opponent’s hand of > 12 cards. Opponent selects 2 cards, you randomly select 10 cards; shuffle all other hand cards into opponent’s Reserve Deck. Grimtaash and Monnok are canceled.");
         addIcons(Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setTestingText("Thrown Back (V)");
     }
