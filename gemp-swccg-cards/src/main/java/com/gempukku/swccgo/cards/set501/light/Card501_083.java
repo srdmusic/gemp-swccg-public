@@ -2,10 +2,12 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractDefensiveShield;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
@@ -26,11 +28,11 @@ import java.util.List;
 /**
  * Set: Set 20
  * Type: Effect
- * Title: You Can't Wipe Them Off
+ * Title: You Want To Make That Move?
  */
 public class Card501_083 extends AbstractDefensiveShield {
     public Card501_083() {
-        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "You Want To Make That Move?");
+        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "You Want To Make That Move?", ExpansionSet.SET_20, Rarity.V);
         setGameText("Plays on table. At the end of every turn, players lose 1 force if they have more than 12 cards in hand. At the end of the opponent’s control phase, a player loses 1 Force for each under cover spy they control. Grimtaash and Monnok are canceled.");
         addIcons(Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setTestingText("You Want To Make That Move?");
