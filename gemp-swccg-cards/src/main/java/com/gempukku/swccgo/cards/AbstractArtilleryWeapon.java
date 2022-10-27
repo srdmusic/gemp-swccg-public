@@ -28,21 +28,6 @@ public abstract class AbstractArtilleryWeapon extends AbstractWeapon {
      * @param expansionSet the ExpansionSet
      * @param rarity the Rarity
      */
-    protected AbstractArtilleryWeapon(Side side, float destiny, float deployCost, float forfeit, String title, ExpansionSet expansionSet, Rarity rarity) {
-        this(side, destiny, deployCost, forfeit, title, null, expansionSet, rarity);
-    }
-
-    /**
-     * Creates a blueprint for an artillery weapon.
-     * @param side the side of the Force
-     * @param destiny the destiny value
-     * @param deployCost the deploy cost
-     * @param forfeit the forfeit value
-     * @param title the card title
-     * @param uniqueness the uniqueness
-     * @param expansionSet the ExpansionSet
-     * @param rarity the Rarity
-     */
     protected AbstractArtilleryWeapon(Side side, float destiny, float deployCost, float forfeit, String title, Uniqueness uniqueness, ExpansionSet expansionSet, Rarity rarity) {
         super(side, destiny, PlayCardZoneOption.ATTACHED, deployCost, title, uniqueness, expansionSet, rarity);
         setCardSubtype(CardSubtype.ARTILLERY);

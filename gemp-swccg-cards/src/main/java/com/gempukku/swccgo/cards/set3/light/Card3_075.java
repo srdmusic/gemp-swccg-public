@@ -8,6 +8,7 @@ import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.TargetingReason;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -29,7 +30,7 @@ import java.util.List;
  */
 public class Card3_075 extends AbstractArtilleryWeapon {
     public Card3_075() {
-        super(Side.LIGHT, 4, 3, 3, "Golan Laser Battery", ExpansionSet.HOTH, Rarity.U1);
+        super(Side.LIGHT, 4, 3, 3, "Golan Laser Battery", Uniqueness.UNRESTRICTED, ExpansionSet.HOTH, Rarity.U1);
         setLore("Modified Golan Arms DForfeit: 9 anti-infantry battery. Proton-shielded control cylinder capped by one or more rotating turret-mounted laser cannons.");
         setGameText("Deploy on any exterior planet site. Your warrior present may target a creature, character or vehicle at same or adjacent site using 2 Force. Draw destiny. Add 2 if targeting a creature or character. Target hit if destiny > defense value.");
         addIcons(Icon.HOTH);

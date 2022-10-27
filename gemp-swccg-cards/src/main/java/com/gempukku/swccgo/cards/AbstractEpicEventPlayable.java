@@ -7,6 +7,7 @@ import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.game.DeployAsCaptiveOption;
@@ -40,7 +41,7 @@ public abstract class AbstractEpicEventPlayable extends AbstractSwccgCardBluepri
      * @param rarity the rarity
      */
     protected AbstractEpicEventPlayable(Side side, String title, ExpansionSet expansionSet, Rarity rarity) {
-        super(side, 0f, title, null, expansionSet, rarity);
+        super(side, 0f, title, Uniqueness.UNRESTRICTED, expansionSet, rarity);
         setCardCategory(CardCategory.EPIC_EVENT);
         addCardType(CardType.EPIC_EVENT);
         addIcon(Icon.EPIC_EVENT);
