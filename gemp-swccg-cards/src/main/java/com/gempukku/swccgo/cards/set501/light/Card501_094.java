@@ -48,7 +48,7 @@ public class Card501_094 extends AbstractStarfighter {
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActionsEvenIfUnpiloted(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.MILLENNIUM_FALCON__DOWNLOAD_HAN_OR_CHEWIE;
 
         if (GameConditions.canSpot(game, self, Filters.The_Force_Is_Strong_In_My_Family)
