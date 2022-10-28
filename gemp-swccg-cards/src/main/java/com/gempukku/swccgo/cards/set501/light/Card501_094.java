@@ -35,10 +35,11 @@ import java.util.List;
 public class Card501_094 extends AbstractStarfighter {
     public Card501_094() {
         super(Side.LIGHT, 2, 3, 3, null, 4, 6, 7, "Millennium Falcon", Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
         setLore("Modified YT-1300 freighter. Owned by Lando Calrissian until won by Han in a sabacc game. 26.7 meters long. 'She may not look like much, but she's got it where it counts.'");
         setGameText("May add 2 pilots and 2 passengers. If The Force is Strong in my Family on table, may deploy [0]Chewie or Han aboard from Reserve Deck; reshuffle. Immune to attrition < 5 if Han or Chewie piloting. (< 6 if both).");
         addPersona(Persona.FALCON);
-        addIcons(Icon.NAV_COMPUTER, Icon.SCOMP_LINK);
+        addIcons(Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_20);
         addModelType(ModelType.MODIFIED_LIGHT_FREIGHTER);
         setPilotCapacity(2);
         setPassengerCapacity(2);
@@ -51,7 +52,8 @@ public class Card501_094 extends AbstractStarfighter {
         GameTextActionId gameTextActionId = GameTextActionId.MILLENNIUM_FALCON__DOWNLOAD_HAN_OR_CHEWIE;
 
         if (GameConditions.canSpot(game, self, Filters.The_Force_Is_Strong_In_My_Family)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
+                && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.CHEWIE)
+                || (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.HAN)))) {
             
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
