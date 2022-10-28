@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set216.light;
+package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -27,18 +27,18 @@ import java.util.List;
  * Subtype: Site
  * Title: Dagobah: Yoda's Hut (V)
  */
-public class Card216_026 extends AbstractSite {
-    public Card216_026() {
+public class Card501_099 extends AbstractSite {
+    public Card501_099() {
         super(Side.LIGHT, Title.Yodas_Hut, Title.Dagobah);
         setVirtualSuffix(true);
-        setLocationDarkSideGameText("If Yoda here or [Set 16] Yoda 'communing,' once per turn, may subtract 2 from attrition against you.");
-        setLocationLightSideGameText("If Yoda here or [Set 16] Yoda 'communing,' Broken Concentration is canceled.");
+        setLocationLightSideGameText("If Yoda here or [Set 16] Yoda 'communing,' Broken Concentration is canceled and, once per turn, you may subtract 2 from attrition against you at a site.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.DAGOBAH, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_16);
+        setTestingText("Dagobah: Yoda's Hut (V) (ERRATA)");
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredBeforeTriggers(String playerOnDarkSideOfLocation, SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredBeforeTriggers(String playerOnLightSideOfLocation, SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
         if (TriggerConditions.isPlayingCard(game, effect, Filters.Broken_Concentration)
                 && (GameConditions.isHere(game, self, Filters.Yoda)
@@ -53,7 +53,7 @@ public class Card216_026 extends AbstractSite {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canSpot(game, self, Filters.Broken_Concentration)
                 && (GameConditions.isHere(game, self, Filters.Yoda)
@@ -71,7 +71,7 @@ public class Card216_026 extends AbstractSite {
     protected List<OptionalGameTextTriggerAction> getGameTextLightSideOptionalAfterTriggers(final String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
         if (TriggerConditions.isInitialAttritionJustCalculated(game, effectResult)
-                && GameConditions.isDuringBattle(game)
+                && GameConditions.isDuringBattleAt(game, Filters.site)
                 && GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId)
                 && (GameConditions.isHere(game, self, Filters.Yoda)
                 || game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.and(Icon.VIRTUAL_SET_16, Filters.Yoda)))) {
