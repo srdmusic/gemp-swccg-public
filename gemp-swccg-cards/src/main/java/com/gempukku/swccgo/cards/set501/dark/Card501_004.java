@@ -4,8 +4,11 @@ import com.gempukku.swccgo.cards.AbstractUsedOrStartingInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.MoveAsReactEffect;
 import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -33,7 +36,7 @@ import java.util.List;
  */
 public class Card501_004 extends AbstractUsedOrStartingInterrupt {
     public Card501_004() {
-        super(Side.DARK, 4, "That's It, The Rebels Are There!");
+        super(Side.DARK, 4, "That's It, The Rebels Are There!", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setGameText("USED: Move your AT-AT as a 'react.' STARTING: If 1st Marker on table, take [Set 6] Veers into hand. Deploy [Set 9] Prepare For A Surface Attack and up to two Effects that deploy for free and are always [Immune to Alter]. Place Interrupt in Lost Pile.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_20);

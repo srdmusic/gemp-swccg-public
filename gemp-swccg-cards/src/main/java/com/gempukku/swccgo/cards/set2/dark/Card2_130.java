@@ -39,7 +39,7 @@ import java.util.List;
 
 
 /**
- * Set: Hoth
+ * Set: A New Hope
  * Type: Epic Event
  * Title: Commence Primary Ignition
  */
