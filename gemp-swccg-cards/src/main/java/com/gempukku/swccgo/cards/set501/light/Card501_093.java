@@ -23,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 17
  * Type: Location
  * Subtype: Site
  * Title: Endor: Anakin's Funeral Pyre
@@ -34,7 +34,7 @@ public class Card501_093 extends AbstractSite {
         setLocationDarkSideGameText("");
         setLocationLightSideGameText("Deploys only at start of game. If you just chose I Have It on your [Skywalker] Epic Event, deploy Like My Father Before Me from Reserve Deck; reshuffle. If Anakin 'communing,' you may initiate battle for free.");
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.SKYWALKER, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.SKYWALKER, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
         setTestingText("Endor: Anakin's Funeral Pyre (ERRATA)");
     }
 
