@@ -56,8 +56,8 @@ public class Card501_094 extends AbstractStarfighter {
                 || (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.HAN)))) {
             
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Download Han or Chewie to Millennium Falcon");
+            action.setText("Deploy Chewie or Han aboard");
+            action.setActionMsg("Download [Set 0] Chewie or Han aboard from Reserve Deck");
             action.appendEffect(new DeployCardAboardFromReserveDeckEffect(action, Filters.or(Filters.Han, Filters.and(Icon.VIRTUAL_SET_0, Filters.Chewie)), Filters.sameCardId(self), true));
             return Collections.singletonList(action);
         }
