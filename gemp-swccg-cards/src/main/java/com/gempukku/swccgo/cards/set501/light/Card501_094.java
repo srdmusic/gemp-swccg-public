@@ -4,25 +4,22 @@ import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.HasPilotingCondition;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
-import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.ModelType;
 import com.gempukku.swccgo.common.Persona;
-import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.OrCondition;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardAboardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -59,7 +56,7 @@ public class Card501_094 extends AbstractStarfighter {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
             action.setActionMsg("Download Han or Chewie to Millennium Falcon");
-            action.appendEffect(new DeployCardToTargetFromReserveDeckEffect(action, Filters.or(Filters.Han, Filters.Chewie), Filters.sameCardId(self), true));
+            action.appendEffect(new DeployCardAboardFromReserveDeckEffect(action, Filters.or(Filters.Han, Filters.and(Icon.VIRTUAL_SET_0, Filters.Chewie)), Filters.sameCardId(self), true));
             return Collections.singletonList(action);
         }
         return null;
