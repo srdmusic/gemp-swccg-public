@@ -43,7 +43,7 @@ public class Card501_097 extends AbstractResistance {
     public Card501_097() {
         super(Side.LIGHT, 5, 1, 1, 2, 2, "Rose Tico", Uniqueness.UNIQUE);
         setLore("Female.");
-        setGameText("Resistance characters here are immune to Dr. Evazan. If Finn is about to be lost from same site, may place him in your Used Pile instead. If with a Resistance character at opponent's site (or Paige out of play and not on Jakku) Force drain +1 here.");
+        setGameText("Resistance characters here are immune to Dr. Evazan. If Finn is about to be lost from same site, may place him in your Used Pile instead. If with a Resistance character at opponent's site (or Paige out of play and Rose not on Jakku) Force drain +1 here.");
         addPersona(Persona.ROSE);
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_9);
         addKeywords(Keyword.FEMALE);
