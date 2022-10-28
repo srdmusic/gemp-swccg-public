@@ -3,10 +3,12 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractDefensiveShield;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerForceLossEffect;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filter;
@@ -36,7 +38,7 @@ import java.util.List;
  */
 public class Card501_082 extends AbstractDefensiveShield {
     public Card501_082() {
-        super(Side.LIGHT, PlayCardZoneOption.ATTACHED, Title.There_Is_Another);
+        super(Side.LIGHT, PlayCardZoneOption.ATTACHED, Title.There_Is_Another, ExpansionSet.SET_20, Rarity.V);
         setLore("Princess Leia Organa. Alderaanian senator. Targeted by Vader for capture and interrogation. The Dark Lord of the Sith wanted her alive.");
         setGameText("Plays on Your Destiny unless Leia or Luke has been deployed this game (even as a captive). We're The Bait is lost. Opponent's Objective and [Death Star II] Effects target Leia instead of Luke. Attempts to cross Leia are -2. Force loss from Take Your Father's Place is -1.");
         addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_SET_9);
