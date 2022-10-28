@@ -53,7 +53,7 @@ public class Card501_099 extends AbstractSite {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canSpot(game, self, Filters.Broken_Concentration)
                 && (GameConditions.isHere(game, self, Filters.Yoda)
