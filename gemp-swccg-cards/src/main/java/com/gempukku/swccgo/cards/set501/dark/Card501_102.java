@@ -59,4 +59,9 @@ public class Card501_102 extends AbstractSite {
         modifiers.add(new ForceDrainModifier(self, new UnlessCondition(new HereCondition(self, Filters.Rebel)), -1, playerOnLightSideOfLocation));
         return modifiers;
     }
+
+    @Override
+    public String getDisplayableInformation(SwccgGame game, PhysicalCard self) {
+        return "GameState.isForceDrain: " + game.getGameState().isDuringForceDrain();
+    }
 }
