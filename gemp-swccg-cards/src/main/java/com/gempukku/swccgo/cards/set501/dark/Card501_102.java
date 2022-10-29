@@ -2,8 +2,8 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
-import com.gempukku.swccgo.cards.conditions.ControlsWithoutCondition;
 import com.gempukku.swccgo.cards.conditions.DuringForceDrainAtCondition;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -13,6 +13,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifiersMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeCanceledModifier;
@@ -55,7 +56,7 @@ public class Card501_102 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, new ControlsWithoutCondition(playerOnLightSideOfLocation, self, Filters.Rebel), -1, playerOnLightSideOfLocation));
+        modifiers.add(new ForceDrainModifier(self, new UnlessCondition(new HereCondition(self, Filters.Rebel)), -1, playerOnLightSideOfLocation));
         return modifiers;
     }
 }
