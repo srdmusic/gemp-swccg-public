@@ -32,7 +32,7 @@ import java.util.List;
 public class Card501_102 extends AbstractSite {
     public Card501_102() {
         super(Side.DARK, Title.Lothal_Capital_City, Title.Lothal);
-        setLocationDarkSideGameText("If you control, your force drains and force drain bonuses at same and related sites may not be canceled or modified.");
+        setLocationDarkSideGameText("If you control, your force drains and force drain bonuses at same and related sites may not be modified or canceled.");
         setLocationLightSideGameText("Unless a Rebel here, force drain -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
