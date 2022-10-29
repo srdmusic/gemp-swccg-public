@@ -39,7 +39,7 @@ public class Card501_087 extends AbstractNormalEffect {
     public Card501_087() {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Make Ten Men Feel Like A Hundred", Uniqueness.UNIQUE);
         setLore("");
-        setGameText("If Stardust on table, deploy on table. Nightfall is canceled. Saw is a spy. Rebel spies deploy -1 to Scarif (may not be further reduced except by their own text). Once per battle, if you just drew a Rebel spy for destiny, may retrieve 1 Force. [Immune to Alter.]");
+        setGameText("If Stardust on table, deploy on table. Nightfall is canceled. Saw is a spy. Rebel spies deploy -1 to Scarif (may not be further modified except by their own text). Once per battle, if you just drew a Rebel spy for destiny, may retrieve 1 Force. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_11);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Make Ten Men Feel Like A Hundred (ERRATA)");
