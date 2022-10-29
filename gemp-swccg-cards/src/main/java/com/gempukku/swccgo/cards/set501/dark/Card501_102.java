@@ -45,11 +45,9 @@ public class Card501_102 extends AbstractSite {
         List<Modifier> modifiers = new LinkedList<>();
         String opponent = game.getOpponent(playerOnDarkSideOfLocation);
         Filter siteFilter = Filters.sameOrRelatedSite(self);
-        Condition darkSidControls = new ControlsCondition(playerOnDarkSideOfLocation, self);
-        Condition duringForceDrain = new DuringForceDrainAtCondition(siteFilter);
-        modifiers.add(new ForceDrainsMayNotBeModifiedModifier(self, siteFilter, new AndCondition(darkSidControls, duringForceDrain), opponent, playerOnDarkSideOfLocation));
-        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, siteFilter, new AndCondition(darkSidControls, duringForceDrain), opponent, playerOnDarkSideOfLocation));
-        modifiers.add(new ForceDrainModifiersMayNotBeCanceledModifier(self, new AndCondition(darkSidControls, duringForceDrain), Filters.your(playerOnDarkSideOfLocation)));
+        modifiers.add(new ForceDrainsMayNotBeModifiedModifier(self, siteFilter, new ControlsCondition(playerOnDarkSideOfLocation, self), opponent, playerOnDarkSideOfLocation));
+        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, siteFilter, new ControlsCondition(playerOnDarkSideOfLocation, self), opponent, playerOnDarkSideOfLocation));
+        modifiers.add(new ForceDrainModifiersMayNotBeCanceledModifier(self, new ControlsCondition(playerOnDarkSideOfLocation, self), Filters.your(playerOnDarkSideOfLocation)));
         return modifiers;
     }
 
