@@ -4,9 +4,12 @@ import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.conditions.DuringForceDrainAtCondition;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -30,7 +33,7 @@ import java.util.List;
  */
 public class Card501_102 extends AbstractSite {
     public Card501_102() {
-        super(Side.DARK, Title.Lothal_Capital_City, Title.Lothal);
+        super(Side.DARK, Title.Lothal_Capital_City, Title.Lothal, Uniqueness.UNIQUE, ExpansionSet.SET_19, Rarity.V);
         setLocationDarkSideGameText("If you control, your Force drains (and Force drain bonuses) at Lothal sites may not be canceled.");
         setLocationLightSideGameText("Unless a Rebel here, force drain -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
