@@ -5,10 +5,12 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PreventEffectOnCardEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
@@ -39,7 +41,7 @@ import java.util.List;
  */
 public class Card501_100 extends AbstractDarkJediMasterFirstOrder {
     public Card501_100() {
-        super(Side.DARK, 4, 4, 2, 7, 9, "Palpatine, Emperor Returned", Uniqueness.UNIQUE);
+        super(Side.DARK, 4, 4, 2, 7, 9, "Palpatine, Emperor Returned", Uniqueness.UNIQUE, ExpansionSet.SET_14, Rarity.V);
         setLore("Leader.");
         setGameText("Never deploys or moves (even if carried) except to an [Episode VII] location without a [Light Side] icon. Once per turn, may draw bottom card of your Force Pile. Once per game, if about to be lost, may take him into hand. Immune to attrition.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_14);
