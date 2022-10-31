@@ -17,8 +17,8 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainBonusesMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainModifiersMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -50,7 +50,7 @@ public class Card501_102 extends AbstractSite {
         Condition darkSideControls = new ControlsCondition(playerOnDarkSideOfLocation, self);
         Condition duringForceDrain = new DuringForceDrainAtCondition(siteFilter);
         modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, siteFilter, new ControlsCondition(playerOnDarkSideOfLocation, self), opponent, playerOnDarkSideOfLocation));
-        modifiers.add(new ForceDrainModifiersMayNotBeCanceledModifier(self, new AndCondition(darkSideControls, duringForceDrain), Filters.your(playerOnDarkSideOfLocation)));
+        modifiers.add(new ForceDrainBonusesMayNotBeCanceledModifier(self, new AndCondition(darkSideControls, duringForceDrain), Filters.your(playerOnDarkSideOfLocation), siteFilter));
         return modifiers;
     }
 
@@ -59,10 +59,5 @@ public class Card501_102 extends AbstractSite {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ForceDrainModifier(self, new UnlessCondition(new HereCondition(self, Filters.Rebel)), -1, playerOnLightSideOfLocation));
         return modifiers;
-    }
-
-    @Override
-    public String getDisplayableInformation(SwccgGame game, PhysicalCard self) {
-        return "GameState.isForceDrain: " + game.getGameState().isDuringForceDrain();
     }
 }
