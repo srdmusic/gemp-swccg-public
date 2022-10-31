@@ -4361,16 +4361,16 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         }
 
         // Check if Force drain modifier may not be canceled
-        for (Modifier m:getModifiersAffectingCard(gameState, ModifierType.FORCE_DRAIN_MODIFIERS_MAY_NOT_BE_CANCELED, source)) {
-            if (((ForceDrainModifiersMayNotBeCanceledModifier)m).isForceDrainAtLocationFilter(gameState.getGame(), location)) {
+        for (Modifier modifier:getModifiersAffectingCard(gameState, ModifierType.FORCE_DRAIN_MODIFIERS_MAY_NOT_BE_CANCELED, source)) {
+            if (((ForceDrainModifiersMayNotBeCanceledModifier)modifier).isForceDrainAtLocationFilter(gameState.getGame(), location)) {
                 return false;
             }
         }
 
         if (amount > 0) {
             // Check if Force drain bonus may not be canceled
-            for (Modifier m : getModifiersAffectingCard(gameState, ModifierType.FORCE_DRAIN_BONUSES_MAY_NOT_BE_CANCELED, source)) {
-                if (((ForceDrainBonusesMayNotBeCanceledModifier) m).isForceDrainAtLocationFilter(gameState.getGame(), location)) {
+            for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.FORCE_DRAIN_BONUSES_MAY_NOT_BE_CANCELED, source)) {
+                if (((ForceDrainBonusesMayNotBeCanceledModifier) modifier).isForceDrainAtLocationFilter(gameState.getGame(), location)) {
                     return false;
                 }
             }
