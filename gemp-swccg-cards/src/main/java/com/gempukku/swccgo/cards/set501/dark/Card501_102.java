@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
-import com.gempukku.swccgo.cards.conditions.DuringForceDrainAtCondition;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -14,8 +13,6 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.conditions.AndCondition;
-import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainBonusesMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
@@ -47,10 +44,8 @@ public class Card501_102 extends AbstractSite {
         List<Modifier> modifiers = new LinkedList<>();
         String opponent = game.getOpponent(playerOnDarkSideOfLocation);
         Filter siteFilter = Filters.sameOrRelatedSite(self);
-        Condition darkSideControls = new ControlsCondition(playerOnDarkSideOfLocation, self);
-        Condition duringForceDrain = new DuringForceDrainAtCondition(siteFilter);
         modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, siteFilter, new ControlsCondition(playerOnDarkSideOfLocation, self), opponent, playerOnDarkSideOfLocation));
-        modifiers.add(new ForceDrainBonusesMayNotBeCanceledModifier(self, new AndCondition(darkSideControls, duringForceDrain), Filters.your(playerOnDarkSideOfLocation), siteFilter));
+        modifiers.add(new ForceDrainBonusesMayNotBeCanceledModifier(self, new ControlsCondition(playerOnDarkSideOfLocation, self), Filters.your(playerOnDarkSideOfLocation), siteFilter));
         return modifiers;
     }
 
