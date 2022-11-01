@@ -29,6 +29,9 @@ public abstract class AbstractSeeker extends AbstractAutomatedWeapon {
      * @param side the side of the Force
      * @param destiny the destiny value
      * @param title the card title
+     * @param uniqueness the uniqueness
+     * @param expansionSet the expansionSet
+     * @param rarity the rarity
      */
     protected AbstractSeeker(Side side, float destiny, String title, Uniqueness uniqueness, ExpansionSet expansionSet, Rarity rarity) {
         super(side, destiny, PlayCardZoneOption.OPPONENTS_SIDE_OF_LOCATION, title, uniqueness, expansionSet, rarity);
