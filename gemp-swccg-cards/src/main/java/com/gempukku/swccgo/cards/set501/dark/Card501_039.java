@@ -3,10 +3,12 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractSith;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
@@ -34,7 +36,7 @@ import java.util.List;
  */
 public class Card501_039 extends AbstractSith {
     public Card501_039() {
-        super(Side.DARK, .5F, 4, 4, 6, 8, "Maul", Uniqueness.UNIQUE);
+        super(Side.DARK, .5F, 4, 4, 6, 8, "Maul", Uniqueness.UNIQUE, ExpansionSet.SET_13, Rarity.V);
         setLore("Gangster. Crimson Dawn leader.");
         setGameText("Never deploys to a battleground. Once per turn, may add or subtract 1 from a just drawn blaster weapon or battle destiny; that destiny draw may not be canceled. Immune to attrition < 5.");
         addPersona(Persona.MAUL);
