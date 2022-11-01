@@ -2,7 +2,15 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractDevice;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -10,7 +18,12 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.AddUntilDamageSegmentOfBattleModifierEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
+import com.gempukku.swccgo.logic.effects.ExcludeFromBattleEffect;
+import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
+import com.gempukku.swccgo.logic.effects.RespondableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardsOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ExcludedFromBattleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeExcludedFromBattle;
 import com.gempukku.swccgo.logic.modifiers.MayNotTargetToBeLostModifier;
@@ -28,7 +41,7 @@ import java.util.List;
  */
 public class Card501_013 extends AbstractDevice {
     public Card501_013() {
-        super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, "Laser Gate", Uniqueness.RESTRICTED_2);
+        super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, "Laser Gate", Uniqueness.RESTRICTED_2, ExpansionSet.PLAYTESTING, Rarity.V);
         hasVirtualSuffix();
         setLore("Security corridors are guarded by a grid of laser emplacements which can be activated upon demand to seal off sensitive areas from intrusion.");
         setGameText("Deploy on a non-exterior site. Lost if you control this site. If a battle was just initiated here, " +
