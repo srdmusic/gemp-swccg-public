@@ -5,9 +5,11 @@ import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.OnCondition;
 import com.gempukku.swccgo.cards.conditions.OutOfPlayCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -41,7 +43,7 @@ import java.util.List;
  */
 public class Card501_097 extends AbstractResistance {
     public Card501_097() {
-        super(Side.LIGHT, 5, 1, 1, 2, 2, "Rose Tico", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 5, 1, 1, 2, 2, "Rose Tico", Uniqueness.UNIQUE, ExpansionSet.SET_9, Rarity.V);
         setLore("Female.");
         setGameText("Resistance characters here are immune to Dr. Evazan. If Finn is about to be lost from same site, may place him in your Used Pile instead. If with a Resistance character at opponent's site (or Paige out of play and Rose not on Jakku) Force drain +1 here.");
         addPersona(Persona.ROSE);
