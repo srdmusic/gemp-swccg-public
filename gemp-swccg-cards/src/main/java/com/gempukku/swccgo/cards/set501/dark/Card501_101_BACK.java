@@ -56,7 +56,7 @@ public class Card501_101_BACK extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        Filter mayNotPlayFilter = Filters.or(Filters.and(Filters.your(self), Filters.admiral, Filters.except(Filters.Thrawn)),
+        Filter mayNotPlayFilter = Filters.or(Filters.Chiraneau,
                 Filters.and(Filters.your(self), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.hasAbilityOrHasPermanentPilotWithAbility, Icon.PRESENCE)));
         modifiers.add(new MayNotPlayModifier(self, mayNotPlayFilter, self.getOwner()));
         return modifiers;

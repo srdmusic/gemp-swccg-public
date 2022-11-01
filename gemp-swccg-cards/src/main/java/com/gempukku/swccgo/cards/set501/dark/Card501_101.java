@@ -86,8 +86,8 @@ public class Card501_101 extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        Filter mayNotPlayFilter = Filters.or(
-                Filters.and(Filters.your(self), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.hasAbilityOrHasPermanentPilotWithAbility, Icon.PRESENCE)), Filters.Chiraneau);
+        Filter mayNotPlayFilter = Filters.or(Filters.Chiraneau,
+                Filters.and(Filters.your(self), Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.hasAbilityOrHasPermanentPilotWithAbility, Icon.PRESENCE)));
         modifiers.add(new MayNotPlayModifier(self, mayNotPlayFilter, self.getOwner()));
         modifiers.add(new DeployCostModifier(self, Filters.and(Filters.Imperial_starship, Filters.Star_Destroyer),
         new CardMatchesEvaluator(new PerStarDestroyerEvaluator(-1), new ConstantEvaluator( -3), Filters.Chimaera)));
