@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class Card601_181 extends AbstractDarkJediMaster {
     public Card601_181() {
-        super(Side.DARK, 1, 6, 5, 7, 8, "Count Dooku", Uniqueness.UNIQUE, ExpansionSet.SET_9, Rarity.V);
+        super(Side.DARK, 1, 6, 5, 7, 8, "Count Dooku", Uniqueness.UNIQUE, ExpansionSet.LEGACY, Rarity.V);
         setLore("Serennoian leader. Trade Federation.");
         setGameText("Deploys -1 if Sidious (or Insidious Prisoner) on table. Power +1 for each Jedi here. May be targeted by Force Lightning. Once per game, if opponent just initiated battle here, may [upload] Force Lightning or Force Push. Immune to attrition < 6 (<8 if with a Jedi).");
         addPersona(Persona.DOOKU);
