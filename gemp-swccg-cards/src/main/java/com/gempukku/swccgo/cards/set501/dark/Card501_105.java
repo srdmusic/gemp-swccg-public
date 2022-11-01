@@ -36,8 +36,7 @@ import java.util.List;
  */
 public class Card501_105 extends AbstractDroid {
     public Card501_105() {
-        super(Side.DARK, 0.5, 2, 2, 4, "BB-9E", Uniqueness.UNIQUE);
-        setAlternateDestiny(5.5);
+        super(Side.DARK, 4.5, 2, 2, 4, "BB-9E", Uniqueness.UNIQUE);
         setGameText("If with a First Order Leader (or Luke out of play), Force drain +1 here. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any). Nabrun Leids may not transport characters to here. Immune to Restraining Bolt.");
         addIcons(Icon.EPISODE_VII, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_17);
         addModelType(ModelType.ASTROMECH);

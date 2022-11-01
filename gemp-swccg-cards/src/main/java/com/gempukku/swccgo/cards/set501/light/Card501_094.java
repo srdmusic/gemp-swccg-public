@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.HasPilotingCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -30,14 +31,14 @@ import java.util.List;
  * Set: Set 20
  * Type: Starship
  * Subtype: Starfighter
- * Title: Millennium Falcon
+ * Title: Millennium Falcon (V)
  */
 public class Card501_094 extends AbstractStarfighter {
     public Card501_094() {
         super(Side.LIGHT, 2, 3, 3, null, 4, 6, 7, "Millennium Falcon", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Modified YT-1300 freighter. Owned by Lando Calrissian until won by Han in a sabacc game. 26.7 meters long. 'She may not look like much, but she's got it where it counts.'");
-        setGameText("May add 2 pilots and 2 passengers. If The Force is Strong in my Family on table, may deploy [0]Chewie or Han aboard from Reserve Deck; reshuffle. Immune to attrition < 5 if Han or Chewie piloting. (< 6 if both).");
+        setGameText("May add 2 pilots and 2 passengers. Once per game, if your [Skywalker] Epic Event on table, may [download] Han or [Set 0] Chewie aboard. While Chewie or Han piloting, immune to attrition < 5 (< 6 if both).");
         addPersona(Persona.FALCON);
         addIcons(Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_20);
         addModelType(ModelType.MODIFIED_LIGHT_FREIGHTER);
@@ -51,14 +52,18 @@ public class Card501_094 extends AbstractStarfighter {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActionsEvenIfUnpiloted(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.MILLENNIUM_FALCON__DOWNLOAD_HAN_OR_CHEWIE;
 
-        if (GameConditions.canSpot(game, self, Filters.The_Force_Is_Strong_In_My_Family)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Icon.SKYWALKER, Filters.Epic_Event))
                 && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.CHEWIE)
                 || (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.HAN)))) {
             
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy Chewie or Han aboard");
-            action.setActionMsg("Download [Set 0] Chewie or Han aboard from Reserve Deck");
-            action.appendEffect(new DeployCardAboardFromReserveDeckEffect(action, Filters.or(Filters.Han, Filters.and(Icon.VIRTUAL_SET_0, Filters.Chewie)), Filters.sameCardId(self), true));
+            action.setActionMsg("Deploy [Set 0] Chewie or Han aboard from Reserve Deck");
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            action.appendEffect(
+                    new DeployCardAboardFromReserveDeckEffect(action, Filters.or(Filters.Han, Filters.and(Icon.VIRTUAL_SET_0, Filters.Chewie)), Filters.sameCardId(self), true));
             return Collections.singletonList(action);
         }
         return null;

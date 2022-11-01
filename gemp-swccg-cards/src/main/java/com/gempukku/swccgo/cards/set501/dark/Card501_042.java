@@ -33,7 +33,7 @@ public class Card501_042 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Crush The Rebellion", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("After dueling his son and seizing control of a city in the clouds, Vader resumed his quest to destroy the Alliance.");
-        setGameText("If Visage of The Emperor on table, deploy on table. At Mustafar, Devastator is deploy -3. Devastator is immune to attrition < 5. Once per turn, may deploy Mustafar or Private Platform (or take Devastator into hand) from Reserve Deck; reshuffle. [Immune to Alter]");
+        setGameText("If Visage of The Emperor on table, deploy on table. Devastator deploys -3 to Mustafar and is immune to attrition < 5. Once during your turn, may deploy Mustafar or a private platform (or take Devastator into hand) from Reserve Deck; reshuffle. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Crush The Rebellion (V) (ERRATA)");
@@ -59,7 +59,7 @@ public class Card501_042 extends AbstractNormalEffect {
         GameTextActionId gameTextActionId = GameTextActionId.CRUSH_THE_REBELLION_V__DOWNLOAD_CARD;
 
         // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+        if (GameConditions.isOnceDuringYourTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
@@ -74,7 +74,7 @@ public class Card501_042 extends AbstractNormalEffect {
             actions.add(action);
         }
 
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+        if (GameConditions.isOnceDuringYourTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
