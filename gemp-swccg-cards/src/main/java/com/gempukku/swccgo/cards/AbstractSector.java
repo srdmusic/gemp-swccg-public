@@ -18,29 +18,8 @@ public abstract class AbstractSector extends AbstractLocation {
      * @param title the card title
      * @param uniqueness the uniqueness
      */
-    protected AbstractSector(Side side, String title, Uniqueness uniqueness) {
-        this(side, title, null, uniqueness);
-    }
-
-    /**
-     * Creates a blueprint for a sector.
-     * @param side the side of the Force
-     * @param title the card title
-     * @param systemName the system the sector is related to, or null if a generic location
-     */
-    protected AbstractSector(Side side, String title, String systemName) {
-        this(side, title, systemName, Uniqueness.UNIQUE);
-    }
-
-    /**
-     * Creates a blueprint for a sector.
-     * @param side the side of the Force
-     * @param title the card title
-     * @param systemName the system the sector is related to, or null if a generic location
-     * @param uniqueness the uniqueness
-     */
-    protected AbstractSector(Side side, String title, String systemName, Uniqueness uniqueness) {
-        this(side, title, systemName, uniqueness, null, null);
+    protected AbstractSector(Side side, String title, Uniqueness uniqueness, ExpansionSet expansionSet, Rarity rarity) {
+        this(side, title, null, uniqueness, expansionSet, rarity);
     }
 
     /**
