@@ -4,10 +4,12 @@ import com.gempukku.swccgo.cards.AbstractJediMaster;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
@@ -37,7 +39,7 @@ import java.util.List;
  */
 public class Card501_081 extends AbstractJediMaster {
     public Card501_081() {
-        super(Side.LIGHT, 4, 6, 5, 7, 8, "Luke Skywalker, The Last Jedi", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 4, 6, 5, 7, 8, "Luke Skywalker, The Last Jedi", Uniqueness.UNIQUE, ExpansionSet.SET_10, Rarity.V);
         setLore("");
         setGameText("Never deploys to a site opponent occupies. Deploys -3 to Ahch-To. Once per turn, may [upload] Force Projection. During battle, may cancel an opponent's just drawn destiny to cause a re-draw. Immune to attrition.");
         addPersona(Persona.LUKE);
