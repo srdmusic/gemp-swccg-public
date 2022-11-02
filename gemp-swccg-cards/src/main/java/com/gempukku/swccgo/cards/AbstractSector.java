@@ -17,6 +17,8 @@ public abstract class AbstractSector extends AbstractLocation {
      * @param side the side of the Force
      * @param title the card title
      * @param uniqueness the uniqueness
+     * @param expansionSet the expansionSet
+     * @param rarity the rarity
      */
     protected AbstractSector(Side side, String title, Uniqueness uniqueness, ExpansionSet expansionSet, Rarity rarity) {
         this(side, title, null, uniqueness, expansionSet, rarity);
