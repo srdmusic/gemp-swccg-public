@@ -4,7 +4,12 @@ import com.gempukku.swccgo.cards.AbstractCapitalStarship;
 import com.gempukku.swccgo.cards.AbstractPermanentAboard;
 import com.gempukku.swccgo.cards.AbstractPermanentPilot;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.ModelType;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -24,7 +29,7 @@ import java.util.List;
  */
 public class Card501_030 extends AbstractCapitalStarship {
     public Card501_030() {
-        super(Side.DARK, 4, 4, 6, 5, null, 4, 6, "Munificent-Class Star Frigate", Uniqueness.RESTRICTED_2);
+        super(Side.DARK, 4, 4, 6, 5, null, 4, 6, "Munificent-Class Star Frigate", Uniqueness.RESTRICTED_2, ExpansionSet.SET_20, Rarity.V);
         setLore("Banking Clan.");
         setGameText("May add 2 pilots, 5 passengers, and 1 shuttle. Permanent pilot provides ability of 2. While at a [Clone Army] or [Separatist] system, immune to attrition < 6 and, if you control, opponent's Force drains at related sites are -1.");
         addIcons(Icon.NAV_COMPUTER, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_20);
