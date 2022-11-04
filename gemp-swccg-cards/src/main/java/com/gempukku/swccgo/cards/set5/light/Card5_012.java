@@ -1,10 +1,13 @@
-package com.gempukku.swccgo.cards.set5.dark;
+package com.gempukku.swccgo.cards.set5.light;
 
 import com.gempukku.swccgo.cards.AbstractCharacterDevice;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -14,7 +17,11 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RearmCharacterEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.DefinedByGameTextDeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.DeviceMayNotBeRemovedUnlessDisarmedModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.modifiers.TotalWeaponDestinyModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.LinkedList;
@@ -27,7 +34,7 @@ import java.util.List;
  */
 public class Card5_012 extends AbstractCharacterDevice {
     public Card5_012() {
-        super(Side.LIGHT, 7, "Bionic Hand");
+        super(Side.LIGHT, 7, "Bionic Hand", Uniqueness.UNRESTRICTED, ExpansionSet.CLOUD_CITY, Rarity.R);
         setLore("Uses state-of-the-art digital processors. Although Luke had lost his hand, the Alliance could rebuild it. They had the technology. They could make it better, stronger, faster.");
         setGameText("Use 2 Force to deploy on a Disarmed character. Cancels the disarming card. Character is power +1 and adds 1 to weapon destiny when firing character weapons. Device lost if character Disarmed again (otherwise, may not be removed).");
         addIcons(Icon.CLOUD_CITY);
