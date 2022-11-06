@@ -38,6 +38,7 @@ public class Card501_106 extends AbstractUsedInterrupt {
         addComboCardTitles("A Dark Time For The Rebellion", "Tarkin's Orders");
         setGameText("For remainder of turn, opponent may not cancel your battle destiny draws (or character weapon destiny draws if opponent’s character is out of play). OR During battle, if you have more battlegrounds on table than opponent, add X to your total power (where X = number of opponent's non-battleground locations on table, if opponent has no battleground locations also add one battle destiny). OR Cancel It Could Be Worse or Projection Of A Skywalker.");
         addIcons(Icon.VIRTUAL_SET_18);
+        setTestingText("A Dark Time For The Rebellion & Tarkin's Orders (ERRATA)");
     }
 
     @Override
