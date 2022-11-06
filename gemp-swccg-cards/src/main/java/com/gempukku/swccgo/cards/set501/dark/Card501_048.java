@@ -2,7 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
@@ -35,7 +35,7 @@ public class Card501_048 extends AbstractNormalEffect {
     public Card501_048() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Imperial Enforcement", Uniqueness.UNIQUE);
         setLore("When Vader's forces impose the New Order upon a region, Rebel resources and lifelines are quickly eliminated.");
-        setGameText("Deploy on table. Lost if your non-Imperial character (or starship) on table. Once per turn, may take an Imperial just drawn for destiny into hand to cancel and re-draw that destiny. (Immune to Alter.)");
+        setGameText("Deploy on table. Lost if your non-Imperial character (or starship) on table. Once per turn, may take an Imperial just drawn for destiny into hand to cancel and redraw that destiny. (Immune to Alter.)");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_1);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Imperial Enforcement (ERRATA)");
@@ -74,7 +74,7 @@ public class Card501_048 extends AbstractNormalEffect {
 
         // Check condition(s)
         if (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, playerId)
-                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canCancelDestinyAndCauseRedraw(game, playerId)
                 && GameConditions.isDestinyCardMatchTo(game, Filters.Imperial)
                 && GameConditions.canTakeDestinyCardIntoHand(game, playerId)) {
@@ -83,7 +83,7 @@ public class Card501_048 extends AbstractNormalEffect {
             action.setText("Take destiny card into hand and cause re-draw");
             // Update usage limit(s)
             action.appendUsage(
-                    new OncePerBattleEffect(action));
+                    new OncePerTurnEffect(action));
             // Pay cost(s)
             action.appendEffect(
                     new TakeDestinyCardIntoHandEffect(action));
