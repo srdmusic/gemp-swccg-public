@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OccupiesMoreThanOpponentCondition;
 import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
@@ -93,18 +94,26 @@ public class Card501_106 extends AbstractUsedInterrupt {
         } 
 
         int yourBattlegroundCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.your(self), Filters.battleground));
-        int opponentBattlegroundCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.opponents(self), Filters.battleground));
+        final int opponentBattlegroundCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.opponents(self), Filters.battleground));
 
         if (GameConditions.isDuringBattle(game) && (yourBattlegroundCount > opponentBattlegroundCount)) {
-            int opponentNonBattlegroundCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.opponents(self), Filters.non_battleground_location));
+            final int opponentNonBattlegroundCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.opponents(self), Filters.non_battleground_location));
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.appendEffect(new ModifyTotalPowerUntilEndOfBattleEffect(action, opponentNonBattlegroundCount, playerId,
-                "Adds " + opponentNonBattlegroundCount + " to total power"));
-            
-            if (opponentBattlegroundCount == 0) {
-                action.appendEffect(new AddBattleDestinyEffect(action, 1));
-            }
+
+            action.allowResponses(
+                new RespondablePlayCardEffect(action) {
+                    @Override
+                    protected void performActionResults(Action targetingAction) {
+                        action.appendEffect(new ModifyTotalPowerUntilEndOfBattleEffect(action, opponentNonBattlegroundCount, playerId,
+                            "Adds " + opponentNonBattlegroundCount + " to total power"));
+                        
+                        if (opponentBattlegroundCount == 0) {
+                            action.appendEffect(new AddBattleDestinyEffect(action, 1));
+                        }
+                    }
+                }
+            );
             actions.add(action);
         }
 
