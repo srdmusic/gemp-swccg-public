@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OccupiesMoreThanOpponentCondition;
 import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
@@ -142,7 +141,7 @@ public class Card501_106 extends AbstractUsedInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.It_Could_Be_Worse)
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.It_Could_Be_Worse, Filters.title(Title.Projection_Of_A_Skywalker)))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             PlayInterruptAction action = new PlayInterruptAction(game, self);
