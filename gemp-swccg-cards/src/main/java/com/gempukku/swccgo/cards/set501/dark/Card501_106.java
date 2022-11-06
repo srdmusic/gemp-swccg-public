@@ -50,7 +50,7 @@ public class Card501_106 extends AbstractUsedInterrupt {
         if (GameConditions.isOutOfPlay(game, Filters.and(Filters.opponents(self), Filters.character))) {
             final PlayInterruptAction protectBattleDestinyDrawsAction = new PlayInterruptAction(game, self);
             protectBattleDestinyDrawsAction.setText("Affect battle destiny draws");
-            protectBattleDestinyDrawsAction.setActionMsg("For remainder of turn, orevent opponent from canceling your battle destiny draws");
+            protectBattleDestinyDrawsAction.setActionMsg("For remainder of turn, prevent opponent from canceling your battle destiny draws");
 
             // Allow response(s)
             protectBattleDestinyDrawsAction.allowResponses(
