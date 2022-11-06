@@ -38,7 +38,7 @@ public class Card501_094 extends AbstractStarfighter {
         super(Side.LIGHT, 2, 3, 3, null, 4, 6, 7, "Millennium Falcon", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Modified YT-1300 freighter. Owned by Lando Calrissian until won by Han in a sabacc game. 26.7 meters long. 'She may not look like much, but she's got it where it counts.'");
-        setGameText("May add 2 pilots and 2 passengers. Once per game, if your [Skywalker] Epic Event on table, may [download] Han or [Set 0] Chewie aboard. While Chewie or Han piloting, immune to attrition < 5 (< 6 if both).");
+        setGameText("May add 2 pilots and 2 passengers. Once per game, if your [Skywalker] Epic Event on table, may [download] Han or [Set 0] Chewie aboard. While Chewie or Han piloting, immune to attrition < 5 (< 7 if both).");
         addPersona(Persona.FALCON);
         addIcons(Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_20);
         addModelType(ModelType.MODIFIED_LIGHT_FREIGHTER);
@@ -75,7 +75,7 @@ public class Card501_094 extends AbstractStarfighter {
         Condition chewiePiloting = new HasPilotingCondition(self, Filters.Chewie);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, new OrCondition(hanPiloting, chewiePiloting), new ConditionEvaluator(5, 6, new AndCondition(hanPiloting, chewiePiloting))));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, new OrCondition(hanPiloting, chewiePiloting), new ConditionEvaluator(5, 7, new AndCondition(hanPiloting, chewiePiloting))));
         return modifiers;
     }
 }

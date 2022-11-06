@@ -19,7 +19,6 @@ import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.CancelDestinyAndCauseRedrawEffect;
 import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeDestinyCardIntoHandEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -36,7 +35,7 @@ public class Card501_048 extends AbstractNormalEffect {
     public Card501_048() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Imperial Enforcement", Uniqueness.UNIQUE);
         setLore("When Vader's forces impose the New Order upon a region, Rebel resources and lifelines are quickly eliminated.");
-        setGameText("Deploy on table. Lost if your non-Imperial character (or starship) on table. If you just won a battle, opponent loses 1 Force. Once per turn, may take an Imperial just drawn for destiny into hand to cancel and re-draw that destiny. (Immune to Alter.)");
+        setGameText("Deploy on table. Lost if your non-Imperial character (or starship) on table. Once per turn, may take an Imperial just drawn for destiny into hand to cancel and re-draw that destiny. (Immune to Alter.)");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_1);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Imperial Enforcement (ERRATA)");
@@ -65,17 +64,6 @@ public class Card501_048 extends AbstractNormalEffect {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-
-        // Check condition(s)
-        if (TriggerConditions.wonBattle(game, effectResult, playerId)) {
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Opponent loses 1 Force");
-            // Perform result(s)
-            action.appendEffect(
-                    new LoseForceEffect(action, opponent, 1));
-            actions.add(action);
-        }
         return actions;
     }
 
