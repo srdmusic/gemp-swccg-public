@@ -36,7 +36,7 @@ public class Card501_106 extends AbstractUsedInterrupt {
     public Card501_106() {
         super(Side.DARK, 5, "A Dark Time For The Rebellion & Tarkin's Orders", Uniqueness.UNIQUE);
         addComboCardTitles("A Dark Time For The Rebellion", "Tarkin's Orders");
-        setGameText("For remainder of turn, opponent may not cancel your battle destiny draws (or character weapon destiny draws if opponent’s character is out of play). OR During battle, if you have more battlegrounds on table than opponent, add X to your total power (where X = number of opponent's non-battleground locations on table, if opponent has no battleground locations also add one battle destiny). OR Cancel It Could Be Worse or Projection Of A Skywalker.");
+        setGameText("For remainder of turn, opponent may not cancel your battle destiny draws (and your character weapon destiny draws if [Episode VII] Luke or a Rebel spy is out of play). OR During battle, if you have more battlegrounds on table than opponent, add X to your total power (where X = number of opponent's non-battleground locations on table, if opponent has no battleground locations also add one battle destiny). OR Cancel It Could Be Worse or Projection Of A Skywalker.");
         addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("A Dark Time For The Rebellion & Tarkin's Orders (ERRATA)");
     }
@@ -47,20 +47,19 @@ public class Card501_106 extends AbstractUsedInterrupt {
 
         List<PlayInterruptAction> actions = new LinkedList<>();
 
-        if (GameConditions.isOutOfPlay(game, Filters.and(Filters.opponents(self), Filters.character))) {
+        if (!GameConditions.isOutOfPlay(game, Filters.or(Filters.and(Icon.EPISODE_VII, Filters.Luke), Filters.and(Filters.Rebel, Filters.spy)))) {
             final PlayInterruptAction protectBattleDestinyDrawsAction = new PlayInterruptAction(game, self);
             protectBattleDestinyDrawsAction.setText("Affect battle destiny draws");
-            protectBattleDestinyDrawsAction.setActionMsg("For remainder of turn, prevent opponent from canceling your battle destiny draws");
 
             // Allow response(s)
-            protectBattleDestinyDrawsAction.allowResponses(
+            protectBattleDestinyDrawsAction.allowResponses("Prevent opponent from canceling your battle destiny draws for remainder of turn",
                     new RespondablePlayCardEffect(protectBattleDestinyDrawsAction) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             protectBattleDestinyDrawsAction.appendEffect(
                                     new AddUntilEndOfTurnModifierEffect(protectBattleDestinyDrawsAction,
                                             new MayNotCancelBattleDestinyModifier(self, playerId, opponent),
-                                            "Prevent "+opponent+" from canceling "+playerId+"'s battle destiny draws")
+                                            "Prevents "+opponent+" from canceling "+playerId+"'s battle destiny draws")
                             );
                         }
                     }
@@ -68,29 +67,28 @@ public class Card501_106 extends AbstractUsedInterrupt {
             actions.add(protectBattleDestinyDrawsAction);
         } else {
             final PlayInterruptAction protectBattleOrWeaponDestinyDrawsAction = new PlayInterruptAction(game, self);
-            protectBattleOrWeaponDestinyDrawsAction.setText("Affect battle or weapon destiny draws");
-            protectBattleOrWeaponDestinyDrawsAction.setActionMsg("For remainder of turn, prevent opponent from canceling your battle or weapon destiny draws.");
+            protectBattleOrWeaponDestinyDrawsAction.setText("Affect battle and weapon destiny draws");
 
             // Allow response(s)
-            protectBattleOrWeaponDestinyDrawsAction.allowResponses(
+            protectBattleOrWeaponDestinyDrawsAction.allowResponses("Prevent opponent from canceling your battle or charater weapon destiny draws for remainder of turn",
                     new RespondablePlayCardEffect(protectBattleOrWeaponDestinyDrawsAction) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             protectBattleOrWeaponDestinyDrawsAction.appendEffect(
                                     new AddUntilEndOfTurnModifierEffect(protectBattleOrWeaponDestinyDrawsAction,
                                             new MayNotCancelBattleDestinyModifier(self, playerId, opponent),
-                                            "Prevent "+opponent+" from canceling "+playerId+"'s battle destiny draws")
+                                            "Prevents "+opponent+" from canceling "+playerId+"'s battle destiny draws")
                             );
                             protectBattleOrWeaponDestinyDrawsAction.appendEffect(
                                     new AddUntilEndOfTurnModifierEffect(protectBattleOrWeaponDestinyDrawsAction,
-                                            new MayNotCancelWeaponDestinyModifier(self, opponent, Filters.character_weapon),
-                                            "Prevent "+opponent+" from canceling "+playerId+"'s weapon destiny draws")
+                                            new MayNotCancelWeaponDestinyModifier(self, opponent, Filters.and(Filters.your(self), Filters.character_weapon)),
+                                            "Prevents "+opponent+" from canceling "+playerId+"'s character weapon destiny draws")
                             );
                         }
                     }
             );
             actions.add(protectBattleOrWeaponDestinyDrawsAction);
-        } 
+        }
 
         int yourBattlegroundCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.your(self), Filters.battleground));
         final int opponentBattlegroundCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.opponents(self), Filters.battleground));
@@ -99,19 +97,20 @@ public class Card501_106 extends AbstractUsedInterrupt {
             final int opponentNonBattlegroundCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.opponents(self), Filters.non_battleground_location));
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Add " + opponentNonBattlegroundCount + " to total power");
 
             action.allowResponses(
-                new RespondablePlayCardEffect(action) {
-                    @Override
-                    protected void performActionResults(Action targetingAction) {
-                        action.appendEffect(new ModifyTotalPowerUntilEndOfBattleEffect(action, opponentNonBattlegroundCount, playerId,
-                            "Adds " + opponentNonBattlegroundCount + " to total power"));
-                        
-                        if (opponentBattlegroundCount == 0) {
-                            action.appendEffect(new AddBattleDestinyEffect(action, 1));
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            action.appendEffect(new ModifyTotalPowerUntilEndOfBattleEffect(action, opponentNonBattlegroundCount, playerId,
+                                    "Adds " + opponentNonBattlegroundCount + " to total power"));
+
+                            if (opponentBattlegroundCount == 0) {
+                                action.appendEffect(new AddBattleDestinyEffect(action, 1));
+                            }
                         }
                     }
-                }
             );
             actions.add(action);
         }
