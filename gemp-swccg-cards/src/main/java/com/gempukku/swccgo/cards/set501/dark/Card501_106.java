@@ -70,7 +70,7 @@ public class Card501_106 extends AbstractUsedInterrupt {
             protectBattleOrWeaponDestinyDrawsAction.setText("Affect battle and weapon destiny draws");
 
             // Allow response(s)
-            protectBattleOrWeaponDestinyDrawsAction.allowResponses("Prevent opponent from canceling your battle or charater weapon destiny draws for remainder of turn",
+            protectBattleOrWeaponDestinyDrawsAction.allowResponses("Prevent opponent from canceling your battle or character weapon destiny draws for remainder of turn",
                     new RespondablePlayCardEffect(protectBattleOrWeaponDestinyDrawsAction) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
