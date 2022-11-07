@@ -20,7 +20,7 @@ import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToDeployCostModifiersToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
+import com.gempukku.swccgo.logic.modifiers.MayInitiateBattlesForFreeModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -97,7 +97,7 @@ public class Card501_086 extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new InitiateBattlesForFreeModifier(self, self.getOwner()));
+        modifiers.add(new MayInitiateBattlesForFreeModifier(self, self.getOwner()));
         return modifiers;
     }
 

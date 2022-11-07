@@ -26,6 +26,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.DuelState;
 import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
@@ -84,7 +85,8 @@ public class Card501_058 extends AbstractEpicEventDeployable {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringOpponentsPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)
+        if (TriggerConditions.isEndOfOpponentsPhase(game, effectResult, Phase.DRAW, playerId)
+               && GameConditions.isOnceDuringOpponentsPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)
                 && GameConditions.canSpot(game, self, Filters.He_Will_Bring_Balance)
                 && GameConditions.occupies(game, playerId, 2, Filters.battleground)
                 && !GameConditions.hasInitiatedBattleThisTurn(game, playerId)
@@ -129,7 +131,7 @@ public class Card501_058 extends AbstractEpicEventDeployable {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)) {
             final PhysicalCard luke = Filters.findFirstActive(game, self, SpotOverride.INCLUDE_CAPTIVE, Filters.and(Filters.Luke, Filters.not(Filters.frozenCaptive)));
             if (luke != null) {
