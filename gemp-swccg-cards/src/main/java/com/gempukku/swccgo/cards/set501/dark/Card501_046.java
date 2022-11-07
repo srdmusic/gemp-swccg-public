@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -122,7 +123,7 @@ public class Card501_046 extends AbstractObjective {
 
     private AddUntilEndOfGameModifierEffect spaceportSitesImmuneToOuneeTaForRemainderOfGame(PhysicalCard self, RequiredGameTextTriggerAction action) {
         return new AddUntilEndOfGameModifierEffect(action,
-                new ImmuneToTitleModifier(self, Filters.spaceport_site, Title.Ounee_Ta), null);
+                new ImmuneToTitleModifier(self, Filters.spaceport_site, new OnTableCondition(self, Filters.and(Filters.not(Icon.VIRTUAL_SET_18), Filters.title(Title.Ounee_Ta))), Title.Ounee_Ta), null);
     }
 
     private AddUntilEndOfGameModifierEffect mayNotPlayAlwaysThinkingWithYourStomach(PhysicalCard self, RequiredGameTextTriggerAction action) {
