@@ -5,11 +5,13 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.CapturedOnlyCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.ModelType;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -40,7 +42,7 @@ import java.util.List;
  */
 public class Card501_111 extends AbstractDroid {
     public Card501_111() {
-        super(Side.LIGHT, Math.PI, 1, 1, 4, "BB-8 (Beebee-Ate)", Uniqueness.UNIQUE);
+        super(Side.LIGHT, Math.PI, 1, 1, 4, "BB-8 (Beebee-Ate)", Uniqueness.UNIQUE, ExpansionSet.SET_4, Rarity.V);
         setAlternateDestiny(2 * Math.PI);
         addPersona(Persona.BB8);
         setGameText("Elis Helrot may not target this site. Adds 1 to Force drains at same site with a Resistance character (or if a captive). During your control phase, if opponent's Undercover spy here, opponent loses 2 force (cannot be reduced).");
