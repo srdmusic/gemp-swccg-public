@@ -2,7 +2,14 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractCharacterDevice;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -31,7 +38,7 @@ import java.util.List;
  */
 public class Card501_051 extends AbstractCharacterDevice {
     public Card501_051() {
-        super(Side.LIGHT, 3, Title.Mercenary_Armor, Uniqueness.RESTRICTED_2);
+        super(Side.LIGHT, 3, Title.Mercenary_Armor, Uniqueness.RESTRICTED_2, ExpansionSet.SET_20, Rarity.V);
         setLore("Worn by hired guns throughout the galaxy. Often used by Rebels when infiltrating underworld organizations. Leia wore Boushh's armor when she infiltrated Black Sun.");
         setGameText("Deploy on your Rebel or Alien. Imperial Barrier is canceled. " +
                     "In battles here, opponent may not cancel destinies. " +
