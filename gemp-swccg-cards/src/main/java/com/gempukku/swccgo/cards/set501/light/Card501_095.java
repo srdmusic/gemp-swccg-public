@@ -15,8 +15,8 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.EachBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
@@ -32,8 +32,8 @@ import java.util.List;
 public class Card501_095 extends AbstractSystem {
     public Card501_095() {
         super(Side.LIGHT, Title.Lothal, 6);
-        setLocationDarkSideGameText("Unless Chimaera or Thrawn here, Force drain -1 here. While Ghost piloted here, your battle destiny draws are -1 here.");
-        setLocationLightSideGameText("Ghost deploys -2 here. Once per game may [upload] This is MY Ship!.");
+        setLocationDarkSideGameText("Unless Chimaera or Thrawn here, Force drain -1 here and This Is MY Ship! is [Immune to Sense].");
+        setLocationLightSideGameText("Ghost deploys -2 here. Once per game, may [upload] This is MY Ship!.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.PLANET, Icon.VIRTUAL_SET_19);
@@ -44,7 +44,7 @@ public class Card501_095 extends AbstractSystem {
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ForceDrainModifier(self, new UnlessCondition(new HereCondition(self, Filters.or(Filters.Thrawn, Filters.Chimaera))), -1, playerOnDarkSideOfLocation));
-        modifiers.add(new EachBattleDestinyModifier(self, self, new HereCondition(self, Filters.and(Filters.Ghost, Filters.piloted)), -1, playerOnDarkSideOfLocation));
+        modifiers.add(new ImmuneToTitleModifier(self, Filters.title(Title.This_Is_My_Ship), new UnlessCondition(new HereCondition(self, Filters.or(Filters.Thrawn, Filters.Chimaera))), Title.Sense));
         return modifiers;
     }
 
