@@ -5,9 +5,11 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.CommuningCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -32,7 +34,7 @@ import java.util.List;
  */
 public class Card501_108 extends AbstractJediMaster {
     public Card501_108() {
-        super(Side.LIGHT, 1, 5, 2, 7, 9, Title.Master_Yoda, Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, 5, 2, 7, 9, Title.Master_Yoda, Uniqueness.UNIQUE, ExpansionSet.SET_16, Rarity.V);
         setLore("");
         setGameText("While 'communing': You may not deploy [Permanent Weapon] or [Maintenance] cards; your immunity to attrition is limited to < 4; once per turn, may deploy a battleground with two [Dark Side] from Reserve Deck; reshuffle; once per game, may retrieve 1 Force.");
         addIcons(Icon.VIRTUAL_SET_16);
