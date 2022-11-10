@@ -318,6 +318,7 @@ public interface Title {
     String Droid_Shutdown = "Droid Shutdown";
     String Droid_Starfighter_Laser_Cannons = "Droid Starfighter Laser Cannons";
     String Droid_Workshop = "Jabba's Palace: Droid Workshop";
+    String Drop = "Drop!";
     String Dyden_Vos_s_Kyuzo_Petars = "Dryden Vos’s Kyuzo Petars";
     String DS_181_3 = "DS-181-3";
     String DS_181_4 = "DS-181-4";
@@ -1085,6 +1086,7 @@ public interface Title {
     String Thrawns_Art_Collection = "Thrawn's Art Collection";
     String Throne_Room = "Death Star II: Throne Room";
     String Throw_Me_Another_Charge = "Throw Me Another Charge";
+    String Thrown_Back = "Thrown Back";
     String Thunderflare = "Thunderflare";
     String Tibanna_Gas_Miner = "Tibanna Gas Miner";
     String Tibrin = "Tibrin";
