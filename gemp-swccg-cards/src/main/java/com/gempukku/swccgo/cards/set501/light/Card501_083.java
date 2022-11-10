@@ -38,7 +38,7 @@ public class Card501_083 extends AbstractDefensiveShield {
     public Card501_083() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Thrown_Back, ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
-        setGameText("Plays on table. During any move phase, may use 2 Force to target opponent’s hand of > 12 cards. Opponent selects 2 cards, you randomly select 10 cards; shuffle all other hand cards into opponent’s Reserve Deck. Grimtaash and Monnok are canceled.");
+        setGameText("Plays on table. May use 2 Force to target opponent's hand of > 12 cards; shuffle all but 9 random cards into opponent's Used Pile. If Monnok or Drop! just targeted your hand, may reveal two cards from hand to 'protect' them.");
         addIcons(Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setTestingText("Thrown Back (V)");
     }

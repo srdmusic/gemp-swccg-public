@@ -38,7 +38,7 @@ public class Card501_040 extends AbstractDefensiveShield {
     public Card501_040() {
         super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Drop, ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
-        setGameText("Plays on table. May use 2 Force to target opponent's hand of > 12 cards; shuffle all but 9 random cards into opponent's Used Pile. If Grimtaash or Thrown Back just finished placing cards in your Used Pile, may exchange 3 cards in hand with 2 cards in Used Pile.");
+        setGameText("Plays on table. May use 2 Force to target opponent's hand of > 12 cards; shuffle all but 9 random cards into opponent's Used Pile. If Grimtaash or Thrown Back just targeted your hand, may reveal two cards from hand to 'protect' them.");
         addIcons(Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setTestingText("Drop! (V)");
     }
