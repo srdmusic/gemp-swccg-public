@@ -19,6 +19,7 @@ import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.CancelReactEffect;
 import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.SuspendCardUntilEndOfTurnEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.SuspendsCardModifier;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -95,9 +96,20 @@ public class Card501_107 extends AbstractUsedInterrupt {
                 new RespondablePlayCardEffect(suspendCardsAction) {
                     @Override
                     protected void performActionResults(Action targetingAction) {
+                        PhysicalCard AMVCO = Filters.findFirstActive(game, self, Filters.title(Title.A_Million_Voices_Crying_Out));
+                        PhysicalCard Legion = Filters.findFirstActive(game, self, Filters.title(Title.An_Entire_Legion_Of_My_Best_Troops));
+
+                        // if these are on table need to do more than the modifier otherwise there is a delay in suspending the card
+                        if (AMVCO != null) {
+                            suspendCardsAction.appendEffect(new SuspendCardUntilEndOfTurnEffect(suspendCardsAction, AMVCO));
+                        }
+                        if (Legion != null) {
+                            suspendCardsAction.appendEffect(new SuspendCardUntilEndOfTurnEffect(suspendCardsAction, Legion));
+                        }
+
                         suspendCardsAction.appendEffect(
                                 new AddUntilEndOfTurnModifierEffect(suspendCardsAction,
-                                        new SuspendsCardModifier(self, Filters.or(Filters.title(Title.A_Million_Voices_Crying_Out), Filters.title("An Entire Legion Of My Best Troops"))),
+                                        new SuspendsCardModifier(self, Filters.or(Filters.title(Title.A_Million_Voices_Crying_Out), Filters.title(Title.An_Entire_Legion_Of_My_Best_Troops))),
                                         "Suspends A Million Voices Crying Out and An Entire Legion Of My Best Troops")
                         );
                     }

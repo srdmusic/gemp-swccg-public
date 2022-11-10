@@ -60,11 +60,14 @@ public class Card501_047 extends AbstractNormalEffect {
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.INSIGNIFICANT_REBELLION__LOST_PILE_SWAP;
-        final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
         // Check condition(s)
         if (TriggerConditions.isBattleDestinyJustDrawnBy(game, effectResult, game.getDarkPlayer())
-                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Exchange a card in hand with a card in Lost Pile");
+
             action.appendUsage(
                     new OncePerBattleEffect(action));
             action.appendEffect(
