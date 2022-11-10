@@ -37,12 +37,17 @@ import java.util.Set;
 public class Card501_047 extends AbstractNormalEffect {
     public Card501_047() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Insignificant_Rebellion, Uniqueness.UNIQUE);
+        setVirtualSuffix(true);
         setLore("'Your fleet is lost. And your friends on the Endor moon will not survive. There is no escape, my young apprentice.'");
         setGameText("If Ralltiir Operations on table, deploy on table. Once per battle, when you draw battle destiny, may exchange a card in hand with a card of same card type in Lost Pile. Your Lost Interrupts (except Ghhhk) are placed out of play when resolved. [Immune to Alter.]");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_10);
         addImmuneToCardTitle(Title.Alter);
-        setVirtualSuffix(true);
         setTestingText("Insignificant Rebellion (V) (ERRATA)");
+    }
+
+    @Override
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return GameConditions.canSpot(game, self, Filters.Ralltiir_Operations);
     }
 
     @Override
@@ -53,16 +58,12 @@ public class Card501_047 extends AbstractNormalEffect {
     }
 
     @Override
-    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return GameConditions.canSpot(game, self, Filters.Ralltiir_Operations);
-    }
-
-    @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.INSIGNIFICANT_REBELLION__LOST_PILE_SWAP;
         // Check condition(s)
         if (TriggerConditions.isBattleDestinyJustDrawnBy(game, effectResult, game.getDarkPlayer())
                 && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.hasHand(game, playerId)
                 && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
