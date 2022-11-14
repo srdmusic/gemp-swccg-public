@@ -34,7 +34,7 @@ public class Card501_106 extends AbstractUsedInterrupt {
     public Card501_106() {
         super(Side.DARK, 5, "A Dark Time For The Rebellion & Tarkin's Orders", Uniqueness.UNIQUE);
         addComboCardTitles("A Dark Time For The Rebellion", "Tarkin's Orders");
-        setGameText("For remainder of turn, opponent may not cancel your battle destiny draws or character weapon destiny draws. OR If you have two battlegrounds on table (and opponent does not), for remainder of turn, your total power in battles is +1 for each of opponent's non-battlegrounds on table. OR Cancel It Could Be Worse or Nabrun Leids. OR If opponent does not occupy a battleground site, cancel Projection Of A Skywalker.");
+        setGameText("For remainder of turn, opponent may not cancel your battle destiny draws or character weapon destiny draws. OR If you have two battlegrounds on table (and opponent does not), for remainder of turn, your total power in battles is +1 for each of opponent's non-battlegrounds on table. OR Cancel It Could Be Worse or Nabrun Leids. OR If Menace Fades on table or opponent does not occupy a battleground site, cancel Projection Of A Skywalker.");
         addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("A Dark Time For The Rebellion & Tarkin's Orders (ERRATA)");
     }
@@ -111,7 +111,8 @@ public class Card501_106 extends AbstractUsedInterrupt {
 
 
         if (GameConditions.canTargetToCancel(game, self, Filters.title(Title.Projection_Of_A_Skywalker))
-                && !GameConditions.occupies(game, opponent, Filters.battleground_site)) {
+                && (!GameConditions.occupies(game, opponent, Filters.battleground_site)
+                || GameConditions.canSpot(game, self, Filters.title(Title.Menace_Fades)))) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             // Build action using common utility
@@ -129,7 +130,8 @@ public class Card501_106 extends AbstractUsedInterrupt {
         // Check condition(s)
         if ((TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.It_Could_Be_Worse, Filters.Nabrun_Leids))
                 || (TriggerConditions.isPlayingCard(game, effect, Filters.title(Title.Projection_Of_A_Skywalker))
-                && !GameConditions.occupies(game, game.getOpponent(playerId), Filters.battleground_site)))
+                && (!GameConditions.occupies(game, game.getOpponent(playerId), Filters.battleground_site)
+                || GameConditions.canSpot(game, self, Filters.title(Title.Menace_Fades)))))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             PlayInterruptAction action = new PlayInterruptAction(game, self);

@@ -1,17 +1,14 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractResistance;
-import com.gempukku.swccgo.cards.conditions.AtCondition;
-import com.gempukku.swccgo.cards.conditions.OnCondition;
-import com.gempukku.swccgo.cards.conditions.OutOfPlayCondition;
-import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.PreventEffectOnCardEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -20,18 +17,14 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.AndCondition;
-import com.gempukku.swccgo.logic.conditions.NotCondition;
-import com.gempukku.swccgo.logic.conditions.OrCondition;
+import com.gempukku.swccgo.logic.effects.HitCardAndResetForfeitEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.effects.PreventableCardEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
+import com.gempukku.swccgo.logic.timing.results.AboutToBeHitResult;
 import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -45,25 +38,17 @@ public class Card501_097 extends AbstractResistance {
     public Card501_097() {
         super(Side.LIGHT, 5, 1, 1, 2, 2, "Rose Tico", Uniqueness.UNIQUE, ExpansionSet.SET_9, Rarity.V);
         setLore("Female.");
-        setGameText("Resistance characters here are immune to Dr. Evazan. If Finn is about to be lost from same site, may place him in your Used Pile instead. If with a Resistance character at opponent's site (or Paige out of play and Rose not on Jakku) Force drain +1 here.");
+        setGameText("If Finn is about to be lost from same site, may place him in your Used Pile instead. During battle, if your starship (or Resistance character) here is about to be hit (and Rose is not hit), may cause Rose to be hit (and forfeit = 0) instead.");
         addPersona(Persona.ROSE);
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_9);
         addKeywords(Keyword.FEMALE);
         setTestingText("Rose Tico (ERRATA)");
     }
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.Resistance_character, Filters.here(self)), Title.Dr_Evazan));
-        modifiers.add(new ForceDrainModifier(self, Filters.here(self),
-                new OrCondition(
-                        new AndCondition(new WithCondition(self, Filters.Resistance_character), new AtCondition(self, Filters.and(Filters.opponents(self), Filters.site))),
-                        new AndCondition(new OutOfPlayCondition(self, Filters.Paige), new NotCondition(new OnCondition(self, Title.Jakku)))),
-                1, self.getOwner()));
-        return modifiers;
-    }
+
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
+
         // Check condition(s)
         Filter finnAtSameSite = Filters.and(Filters.Finn, Filters.atSameSite(self));
         if (TriggerConditions.isAboutToBeLost(game, effectResult, finnAtSameSite)
@@ -83,8 +68,33 @@ public class Card501_097 extends AbstractResistance {
                                     new PlaceCardInUsedPileFromTableEffect(action, result.getCardAboutToLeaveTable()));
                         }
                     });
-            return Collections.singletonList(action);
+            actions.add(action);
         }
-        return null;
+
+        if (GameConditions.isDuringBattle(game)
+            && TriggerConditions.isAboutToBeHit(game, effectResult, Filters.and(Filters.your(self), Filters.here(self), Filters.other(self), Filters.or(Filters.starship, Filters.Resistance_character)))) {
+            // need to find a Rose card instead of using self because of Bane Malar
+            PhysicalCard rose = Filters.findFirstActive(game, self, Filters.Rose);
+
+            PreventableCardEffect preventableEffect = ((AboutToBeHitResult)effectResult).getPreventableCardEffect();
+            PhysicalCard cardToBeHit = ((AboutToBeHitResult)effectResult).getCardToBeHit();
+
+            if (rose != null
+                    && !GameConditions.isHit(game, rose)) {
+
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setText("Make Rose hit instead");
+
+                action.appendCost(
+                        new HitCardAndResetForfeitEffect(action, self, 0, self, null, null));
+
+                action.appendEffect(
+                        new PreventEffectOnCardEffect(action, preventableEffect, cardToBeHit, "Makes "+GameUtils.getCardLink(rose) + " hit instead of "+GameUtils.getCardLink(cardToBeHit)));
+
+                actions.add(action);
+            }
+
+        }
+        return actions;
     }
 }
