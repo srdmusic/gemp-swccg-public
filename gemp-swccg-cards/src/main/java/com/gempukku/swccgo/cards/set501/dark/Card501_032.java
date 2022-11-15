@@ -2,17 +2,19 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractDroid;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.ModelType;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,7 +27,7 @@ import java.util.List;
  */
 public class Card501_032 extends AbstractDroid {
     public Card501_032() {
-        super(Side.DARK, 2, 2, 1, 2, "B-1 Battle Droid");
+        super(Side.DARK, 2, 2, 1, 2, "B-1 Battle Droid", Uniqueness.UNRESTRICTED, ExpansionSet.SET_20, Rarity.V);
         setArmor(3);
         setLore("Infantry battle droid.");
         setGameText("While with your Republic leader (or another battle droid), draws one battle destiny if unable to otherwise.");
