@@ -38,7 +38,7 @@ public class Card501_040 extends AbstractDefensiveShield {
     public Card501_040() {
         super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Drop, ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
-        setGameText("Plays on table. May use 2 Force to target opponent's hand of > 12 cards; shuffle all but 9 random cards into opponent's Used Pile. If Grimtaash or Thrown Back just targeted your hand, may reveal two cards from hand to 'protect' them.");
+        setGameText("Plays on table. May use 2 Force to target opponent's hand of > 14 cards; shuffle all but 9 random cards into opponent's Used Pile. If Grimtaash or Thrown Back just targeted your hand, may reveal two cards from hand to 'protect' them.");
         addIcons(Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setTestingText("Drop! (V)");
     }
@@ -48,7 +48,7 @@ public class Card501_040 extends AbstractDefensiveShield {
         final String opponent = game.getOpponent(playerId);
 
         // Check condition(s)
-        if (GameConditions.numCardsInHand(game, opponent) > 12
+        if (GameConditions.numCardsInHand(game, opponent) > 14
                 && GameConditions.canUseForce(game, playerId, 2)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);

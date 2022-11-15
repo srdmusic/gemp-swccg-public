@@ -46,7 +46,7 @@ public class Card501_092 extends AbstractEpicEventDeployable {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.The_Force_Is_Strong_In_My_Family, Uniqueness.UNRESTRICTED, ExpansionSet.SET_17, Rarity.V);
         setGameText("Deploy on table (only at start of game) and choose: " +
                 "My Father Has It: Anakin (and [Episode I] Obi-Wan) " +
-                "I Have It: Luke (and non-[Episode I] Obi-Wan) " +
+                "I Have It: Luke (and [Set 1] Obi-Wan) " +
                 "You Have That Power, Too: Rey (and [Episode VII] Luke) " +
                 "[Set 16] Anakin is deploy -1. Your total Force generation is +1. You may not deploy Boss Nass' Chambers or Jedi (except Yoda and the chosen characters). If you just initiated battle involving a Skywalker (or if opponent's Sidious just lost from table), may retrieve 1 Force. Your lightsabers may not be stolen");
         addIcons(Icon.SKYWALKER, Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
@@ -127,7 +127,7 @@ public class Card501_092 extends AbstractEpicEventDeployable {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Filter myFatherHasItFilter = Filters.or(Filters.Anakin, Filters.and(Icon.EPISODE_I, Filters.ObiWan));
-        Filter iHaveItFilter = Filters.or(Filters.Luke, Filters.and(Filters.not(Icon.EPISODE_I), Filters.ObiWan));
+        Filter iHaveItFilter = Filters.or(Filters.Luke, Filters.and(Icon.VIRTUAL_SET_1, Filters.ObiWan));
         Filter youHaveThatPowerTooFilter = Filters.or(Filters.Rey, Filters.and(Icon.EPISODE_VII, Filters.Luke));
 
         List<Modifier> modifiers = new LinkedList<>();
