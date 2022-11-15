@@ -36,7 +36,7 @@ public class Card501_108 extends AbstractJediMaster {
     public Card501_108() {
         super(Side.LIGHT, 1, 5, 2, 7, 9, Title.Master_Yoda, Uniqueness.UNIQUE, ExpansionSet.SET_16, Rarity.V);
         setLore("");
-        setGameText("While 'communing': You may not deploy [Permanent Weapon] or [Maintenance] cards; your immunity to attrition is limited to < 4; once per turn, may deploy a battleground with two [Dark Side] from Reserve Deck; reshuffle; once per game, may retrieve 1 Force.");
+        setGameText("While 'communing': You may not deploy [Permanent Weapon] or [Maintenance] cards or Jedi Knights; your immunity to attrition is limited to < 4; once per turn, may deploy a battleground with two [Dark Side] from Reserve Deck; reshuffle; once per game, may retrieve 1 Force.");
         addIcons(Icon.VIRTUAL_SET_16);
         addPersona(Persona.YODA);
         setTestingText("Master Yoda (ERRATA)");
@@ -44,7 +44,7 @@ public class Card501_108 extends AbstractJediMaster {
 
     public List<Modifier> getWhileStackedModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotDeployModifier(self, Filters.or(Icon.PERMANENT_WEAPON, Icon.MAINTENANCE), new CommuningCondition(self), self.getOwner()));
+        modifiers.add(new MayNotDeployModifier(self, Filters.or(Icon.PERMANENT_WEAPON, Icon.MAINTENANCE, Filters.Jedi_Knight), new CommuningCondition(self), self.getOwner()));
         modifiers.add(new ImmunityToAttritionLimitedToModifier(self, Filters.your(self), new CommuningCondition(self),4));
         return modifiers;
     }

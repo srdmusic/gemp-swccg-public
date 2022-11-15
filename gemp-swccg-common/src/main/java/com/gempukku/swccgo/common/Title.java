@@ -45,6 +45,7 @@ public interface Title {
     String Always_Thinking_With_Your_Stomach = "Always Thinking With Your Stomach";
     String Always_Two_There_Are = "Always Two There Are";
     String Ambush = "Ambush";
+    String An_Entire_Legion_Of_My_Best_Troops = "An Entire Legion Of My Best Troops";
     String An_Inkling_Of_Its_Destructive_Potential = "An Inkling Of Its Destructive Potential";
     String Anakin_Skywalker = "Anakin Skywalker";
     String Anakins_Funeral_Pyre = "Endor: Anakin's Funeral Pyre";
@@ -318,6 +319,7 @@ public interface Title {
     String Droid_Shutdown = "Droid Shutdown";
     String Droid_Starfighter_Laser_Cannons = "Droid Starfighter Laser Cannons";
     String Droid_Workshop = "Jabba's Palace: Droid Workshop";
+    String Drop = "Drop!";
     String Dyden_Vos_s_Kyuzo_Petars = "Dryden Vos’s Kyuzo Petars";
     String DS_181_3 = "DS-181-3";
     String DS_181_4 = "DS-181-4";
@@ -692,6 +694,7 @@ public interface Title {
     String Mechanical_Failure = "Mechanical Failure";
     String Meditation = "Meditation";
     String Meditation_Chamber = "Executor: Meditation Chamber";
+    String Menace_Fades = "Menace Fades";
     String Mercenary_Armor = "Mercenary Armor";
     String Meson_Martinet = "Meson Martinet";
     String Mianda = "Major Mianda";
@@ -1085,6 +1088,7 @@ public interface Title {
     String Thrawns_Art_Collection = "Thrawn's Art Collection";
     String Throne_Room = "Death Star II: Throne Room";
     String Throw_Me_Another_Charge = "Throw Me Another Charge";
+    String Thrown_Back = "Thrown Back";
     String Thunderflare = "Thunderflare";
     String Tibanna_Gas_Miner = "Tibanna Gas Miner";
     String Tibrin = "Tibrin";

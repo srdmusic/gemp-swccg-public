@@ -2,8 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.RevealUsedPileEffect;
-import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
@@ -18,12 +16,12 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.CancelReactEffect;
 import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.ShuffleUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.SuspendCardUntilEndOfTurnEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.ForceRetrievalModifier;
+import com.gempukku.swccgo.logic.modifiers.SuspendsCardModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 
@@ -41,7 +39,7 @@ public class Card501_107 extends AbstractUsedInterrupt {
         super(Side.LIGHT, 5, "Free Ride & Endor Celebration", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         addComboCardTitles(Title.Free_Ride, Title.Endor_Celebration);
-        setGameText("Cancel Cloud City Occupation, Force Lightning, Rebel Base Occupation, or Tatooine Occupation. [Immune to Sense.] OR Opponent’s Force retrieval from A Million Voices Crying Out is -2 for remainder of turn. OR During your turn, target opponent's spy, non-[Immune to Alter] Effect, or unpiloted combat vehicle at a site you control; target is lost. (Immune to Oh, Switch Off.) OR Reveal opponent's Used Pile. If opponent has more than one card of printed destiny > 6, they lose 1 Force (2 Force if more than three); reshuffle.");
+        setGameText("Cancel Force Lightning, Cloud City Occupation, Rebel Base Occupation, or Tatooine Occupation. [Immune to Sense.] OR For remainder of turn, A Million Voices Crying Out and An Entire Legion Of My Best Troops are suspended. OR During your turn, target opponent's spy (or unpiloted combat vehicle) at a site you control; target is lost. (Immune to Oh, Switch Off.) OR Cancel an attempt to deploy or move a combat vehicle as a 'react.'");
         addIcons(Icon.CORUSCANT, Icon.VIRTUAL_SET_16);
         setTestingText("Free Ride & Endor Celebration (V) (ERRATA)");
     }
@@ -89,37 +87,47 @@ public class Card501_107 extends AbstractUsedInterrupt {
             actions.add(action);
         }
 
-        if (GameConditions.canTarget(game, self, Filters.title(Title.A_Million_Voices_Crying_Out))) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Make A Million Voices Crying Out retrieve -2");
 
-            // Allow response(s)
-            action.allowResponses("Make opponent's Force retrieval from A Million Voices Crying Out -2 for remainder of turn",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            action.appendEffect(
-                                    new AddUntilEndOfTurnModifierEffect(action,
-                                            new ForceRetrievalModifier(self, new CardMatchesEvaluator(0, -2, Filters.title(Title.A_Million_Voices_Crying_Out)),  opponent),
-                                            "Opponent's Force retrieval from A Million Voices Crying Out is -2")
-                            );
+        final PlayInterruptAction suspendCardsAction = new PlayInterruptAction(game, self);
+        suspendCardsAction.setText("Suspend cards for remainder of turn");
+
+        // Allow response(s)
+        suspendCardsAction.allowResponses("Suspend A Million Voices Crying Out and An Entire Legion Of My Best Troops for remainder of turn",
+                new RespondablePlayCardEffect(suspendCardsAction) {
+                    @Override
+                    protected void performActionResults(Action targetingAction) {
+                        PhysicalCard AMVCO = Filters.findFirstActive(game, self, Filters.title(Title.A_Million_Voices_Crying_Out));
+                        PhysicalCard Legion = Filters.findFirstActive(game, self, Filters.title(Title.An_Entire_Legion_Of_My_Best_Troops));
+
+                        // if these are on table need to do more than the modifier otherwise there is a delay in suspending the card
+                        if (AMVCO != null) {
+                            suspendCardsAction.appendEffect(new SuspendCardUntilEndOfTurnEffect(suspendCardsAction, AMVCO));
                         }
+                        if (Legion != null) {
+                            suspendCardsAction.appendEffect(new SuspendCardUntilEndOfTurnEffect(suspendCardsAction, Legion));
+                        }
+
+                        suspendCardsAction.appendEffect(
+                                new AddUntilEndOfTurnModifierEffect(suspendCardsAction,
+                                        new SuspendsCardModifier(self, Filters.or(Filters.title(Title.A_Million_Voices_Crying_Out), Filters.title(Title.An_Entire_Legion_Of_My_Best_Troops))),
+                                        "Suspends A Million Voices Crying Out and An Entire Legion Of My Best Troops")
+                        );
                     }
-            );
-            actions.add(action);
-        }
+                }
+        );
+        actions.add(suspendCardsAction);
 
         // Check condition(s)
         TargetingReason targetingReason = TargetingReason.TO_BE_LOST;
         Filter filter = Filters.and(Filters.at(Filters.and(Filters.controls(playerId), Filters.site)), Filters.opponents(playerId),
-                Filters.or(Filters.spy, Filters.and(Filters.unpiloted, Filters.combat_vehicle), Filters.and(Filters.Effect, Filters.not(Filters.immune_to_Alter))),
+                Filters.or(Filters.spy, Filters.and(Filters.unpiloted, Filters.combat_vehicle)),
                 Filters.canBeTargetedBy(self, targetingReason));
 
         if (GameConditions.isDuringYourTurn(game, playerId)
                 && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_UNDERCOVER, filter)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Make spy, Effect, or combat vehicle lost");
+            action.setText("Make spy or combat vehicle lost");
             action.setImmuneTo(Title.Oh_Switch_Off);
 
             // Allow response(s)
@@ -141,42 +149,6 @@ public class Card501_107 extends AbstractUsedInterrupt {
             actions.add(action);
         }
 
-        if (GameConditions.hasUsedPile(game, opponent)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Reveal opponent's Used Pile");
-
-            // Allow response(s)
-            action.allowResponses("Reveal opponent's Used Pile, if opponent has more than one card of printed destiny > 6 they lose 1 Force (2 Force if more than 3); reshuffle.",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            action.appendEffect(
-                                    new RevealUsedPileEffect(action, opponent) {
-                                        @Override
-                                        protected void cardsRevealed(List<PhysicalCard> revealedCards) {
-                                            int highDestinyCardCount = Filters.filter(revealedCards, game, Filters.printedDestinyGreaterThan(6)).size();
-
-                                            int forceLoss = 0;
-                                            if (highDestinyCardCount > 3)
-                                                forceLoss = 2;
-                                            else if (highDestinyCardCount > 1)
-                                                forceLoss = 1;
-
-                                            if (forceLoss > 0) {
-                                                action.appendEffect(
-                                                        new LoseForceEffect(action, opponent, forceLoss));
-                                            }
-
-                                            action.appendEffect(
-                                                    new ShuffleUsedPileEffect(action, self, opponent));
-                                        }
-                                    }
-                            );
-                        }
-                    }
-            );
-            actions.add(action);
-        }
 
         return actions;
     }
@@ -196,6 +168,24 @@ public class Card501_107 extends AbstractUsedInterrupt {
             actions.add(action);
         }
 
+
+        if (TriggerConditions.isReact(game, effect)
+                && (TriggerConditions.isMovingAsReact(game, effect, Filters.combat_vehicle)
+                || TriggerConditions.isDeployingAsReact(game, effect, Filters.combat_vehicle))) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Cancel 'react'");
+            // Allow responses
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform results
+                            action.appendEffect(new CancelReactEffect(action));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
 
         return actions;
     }
