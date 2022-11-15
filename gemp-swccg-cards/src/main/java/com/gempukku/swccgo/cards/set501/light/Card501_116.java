@@ -40,7 +40,7 @@ public class Card501_116 extends AbstractObjective {
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Scarif system, Data Vault (with Stardust there), and Massassi War Room. " +
                 "For remainder of game, you may not deploy Jedi or Taking Them With Us. Baze, Chirrut, and Rebel troopers are spies. " +
-                "While this side up, once per turn, may [download] Rogue One, a Corellian corvette, or a Scarif site. " +
+                "While this side up, once per turn, may [download] Rogue One, a corvette, or a Scarif site. " +
                 "Flip this card if you control two Scarif locations.");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_9);
         setTestingText("They Have No Idea We're Coming (ERRATA)");
@@ -116,11 +116,11 @@ public class Card501_116 extends AbstractObjective {
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-            Filter starshipOrSite = Filters.or(Filters.Rogue_One, Filters.Corellian_corvette, Filters.Scarif_site);
+            Filter starshipOrSite = Filters.or(Filters.Rogue_One, Filters.corvette, Filters.Scarif_site);
 
             TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy starship or location from Reserve Deck");
-            action.setActionMsg("Deploy Rogue One, a Corellian corvette, or a Scarif site from Reserve Deck");
+            action.setActionMsg("Deploy Rogue One, a corvette, or a Scarif site from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
