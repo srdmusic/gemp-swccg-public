@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractDroid;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OutOfPlayCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -18,7 +17,6 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.BreakCoversEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
@@ -39,7 +37,7 @@ import java.util.List;
 public class Card501_105 extends AbstractDroid {
     public Card501_105() {
         super(Side.DARK, 4.5, 2, 2, 4, "BB-9E", Uniqueness.UNIQUE, ExpansionSet.SET_17, Rarity.V);
-        setGameText("If with a First Order Leader (or Luke out of play), Force drain +1 here. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any). Nabrun Leids may not transport characters to here. Immune to Restraining Bolt.");
+        setGameText("If with a First Order leader at a battleground site, Force drain +1 here. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any). Nabrun Leids may not target this site. Immune to Restraining Bolt.");
         addIcons(Icon.EPISODE_VII, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_17);
         addModelType(ModelType.ASTROMECH);
         setTestingText("BB-9E (ERRATA)");
@@ -48,8 +46,7 @@ public class Card501_105 extends AbstractDroid {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, Filters.here(self), new OrCondition(new WithCondition(self, Filters.First_Order_leader), new OutOfPlayCondition(self, Filters.Luke)), 1, self.getOwner()));
-        //TODO fix this "Nabrun Leids may not transport characters to here" coded as "to or from" instead of "to"
+        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.here(self), Filters.battleground_site), new WithCondition(self, Filters.First_Order_leader), 1, self.getOwner()));
         modifiers.add(new MayNotUseCardToTransportToOrFromLocationModifier(self, Filters.Nabrun_Leids, Filters.here(self)));
         modifiers.add(new ImmuneToTitleModifier(self, Title.Restraining_Bolt));
         return modifiers;

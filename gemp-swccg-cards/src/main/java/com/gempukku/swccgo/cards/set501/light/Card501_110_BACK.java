@@ -41,7 +41,7 @@ public class Card501_110_BACK extends AbstractObjective {
     public Card501_110_BACK() {
         super(Side.LIGHT, 7, Title.We_Need_Luke_Skywalker);
         setGameText("Immediately place Luke out of play (ignore [Death Star II] objective restrictions, if any). For remainder of battle, weapons may not be fired. " +
-                "While this side up, opponent's immunity to attrition is limited to < 7. Once during your turn, may peek at the top card of your Force Pile and Reserve Deck; place both cards (in any order) on top of one of those piles. Where you have two unique (•) Resistance characters: once per turn during battle, may cancel an opponent's just drawn destiny to cause a re-draw, and once per turn, opponent loses 1 Force if you just Force drained.");
+                "While this side up, opponent's immunity to attrition is limited to < 6. Once during your turn, may peek at the top card of your Force Pile and Reserve Deck; place both cards (in any order) on top of one of those piles. Where you have two unique (•) Resistance characters: once per turn during battle, may cancel an opponent's just drawn destiny to cause a re-draw, and once per turn, opponent loses 1 Force if you just Force drained.");
         addIcons(Icon.VIRTUAL_SET_11, Icon.EPISODE_VII);
         setTestingText("We Need Luke Skywalker (ERRATA)");
     }
@@ -130,7 +130,7 @@ public class Card501_110_BACK extends AbstractObjective {
         List<Modifier> modifiers = new LinkedList<>();
 
         Filter uniqueResistanceCharacter = Filters.and(Filters.unique, Filters.Resistance_character, Filters.your(self));
-        modifiers.add(new ImmunityToAttritionLimitedToModifier(self, Filters.opponents(self), 7));
+        modifiers.add(new ImmunityToAttritionLimitedToModifier(self, Filters.opponents(self), 6));
         modifiers.add(new ForceDrainModifier(self, Filters.sameLocationAs(self, Filters.and(uniqueResistanceCharacter, Filters.with(self, uniqueResistanceCharacter))), 1, self.getOwner()));
         return modifiers;
     }

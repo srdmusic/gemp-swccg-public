@@ -2,9 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractDroid;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.CapturedOnlyCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -13,23 +11,21 @@ import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.SpotOverride;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.BreakCoversEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotUseCardToTransportToOrFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -42,82 +38,50 @@ import java.util.List;
  */
 public class Card501_111 extends AbstractDroid {
     public Card501_111() {
-        super(Side.LIGHT, Math.PI, 1, 1, 4, "BB-8 (Beebee-Ate)", Uniqueness.UNIQUE, ExpansionSet.SET_4, Rarity.V);
+        super(Side.LIGHT, Math.PI, 2, 1, 4, "BB-8 (Beebee-Ate)", Uniqueness.UNIQUE, ExpansionSet.SET_4, Rarity.V);
         setAlternateDestiny(2 * Math.PI);
         addPersona(Persona.BB8);
-        setGameText("Elis Helrot may not target this site. Adds 1 to Force drains at same site with a Resistance character (or if a captive). During your control phase, if opponent's Undercover spy here, opponent loses 2 force (cannot be reduced).");
+        setGameText("If with a Resistance leader at a battleground site, Force drain +1 here. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any). Elis Helrot may not target this site. Immune to Restraining Bolt.");
         addIcons(Icon.EPISODE_VII, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_4);
         addModelType(ModelType.ASTROMECH);
         setTestingText("BB-8 (Beebee-Ate) (ERRATA)");
     }
 
+
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, Filters.sameSite(self), new WithCondition(self, Filters.Resistance_character), 1, playerId));
-        modifiers.add(new ForceDrainModifier(self, Filters.sameSite(self), new WithCondition(self, Filters.Resistance_character), 1, opponent));
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.sameSite(self), Filters.Elis_Helrot));
+        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.here(self), Filters.battleground_site), new WithCondition(self, Filters.Resistance_leader), 1, self.getOwner()));
+        modifiers.add(new MayNotUseCardToTransportToOrFromLocationModifier(self, Filters.Elis_Helrot, Filters.here(self)));
+        modifiers.add(new ImmuneToTitleModifier(self, Title.Restraining_Bolt));
         return modifiers;
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileInactiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
-        Condition isCaptive = new CapturedOnlyCondition(self);
-        Filter sameSite = Filters.sameSite(self);
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
 
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceDrainModifier(self, sameSite, isCaptive, 1, playerId));
-        modifiers.add(new ForceDrainModifier(self, sameSite, isCaptive, 1, opponent));
-        return modifiers;
-    }
-
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        String opponent = game.getOpponent(playerId);
-
-        // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.isWith(game, self, SpotOverride.INCLUDE_UNDERCOVER, Filters.and(Filters.opponents(self), Filters.undercover_spy))) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Make opponent lose 2 Force");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new LoseForceEffect(action, opponent, 2, true));
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        // Check condition(s)
-        // Check if reached end of each control phase and action was not performed yet.
-        if (TriggerConditions.isEndOfYourPhase(game, effectResult, Phase.CONTROL, playerId)
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.isWith(game, self, SpotOverride.INCLUDE_UNDERCOVER, Filters.and(Filters.opponents(self), Filters.undercover_spy))) {
+        Filter targetFilter = Filters.and(Filters.undercover_spy, Filters.atSameSite(self));
 
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setPerformingPlayer(playerId);
-            action.setText("Make opponent lose 2 Force");
-            // Perform result(s)
+        // Check condition(s)
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Place in Used Pile");
+            action.setActionMsg("'Break cover' of all undercover spies here (if any)");
+
+            action.appendCost(
+                    new PlaceCardInUsedPileFromTableEffect(action, self));
+
+            Collection<PhysicalCard> undercoverSpies = Filters.filterAllOnTable(game, Filters.and(targetFilter, Filters.canBeTargetedBy(self)));
             action.appendEffect(
-                    new LoseForceEffect(action, opponent, 2, true));
-            return Collections.singletonList(action);
+                    new BreakCoversEffect(action, undercoverSpies));
+
+            actions.add(action);
         }
-        return null;
+
+        return actions;
     }
 }

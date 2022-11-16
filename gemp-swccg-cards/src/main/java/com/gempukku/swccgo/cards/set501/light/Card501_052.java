@@ -3,7 +3,11 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -11,12 +15,15 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.HitCardEffect;
+import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.RestoreCardToNormalEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.HitResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -24,16 +31,16 @@ import java.util.List;
  * Set: Set 20
  * Type: Interrupt
  * Subtype: Used or Lost
- * Title: Might Of The Mandalorians
+ * Title: Weapons Are Part Of My Religion
  */
 public class Card501_052 extends AbstractUsedOrLostInterrupt {
     public Card501_052() {
-        super(Side.LIGHT, 4, "Might Of The Mandalorians");
+        super(Side.LIGHT, 4, "Weapons Are Part Of My Religion");
         setLore("");
         setGameText("USED: If your Mandalorian was just 'hit' by a character weapon, opponent chooses: the character that fired that weapon is also 'hit' or restore target to normal. " +
                 "LOST: Once per game, if your Mandalorian is in battle, add 2 to a just drawn destiny.");
         addIcons(Icon.VIRTUAL_SET_20);
-        setTestingText("Might Of The Mandalorians");
+        setTestingText("Weapons Are Part Of My Religion");
     }
 
     @Override
