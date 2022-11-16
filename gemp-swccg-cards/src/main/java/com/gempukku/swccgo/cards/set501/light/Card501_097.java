@@ -87,7 +87,7 @@ public class Card501_097 extends AbstractResistance {
             if (rose != null
                     && !GameConditions.isHit(game, rose)) {
 
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Make Rose hit instead");
 
                 action.appendUsage(
