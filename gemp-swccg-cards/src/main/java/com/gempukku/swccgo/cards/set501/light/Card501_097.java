@@ -3,7 +3,9 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractResistance;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PreventEffectOnCardEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
@@ -71,8 +73,11 @@ public class Card501_097 extends AbstractResistance {
             actions.add(action);
         }
 
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         if (GameConditions.isDuringBattle(game)
-            && TriggerConditions.isAboutToBeHit(game, effectResult, Filters.and(Filters.your(self), Filters.here(self), Filters.other(self), Filters.or(Filters.starship, Filters.Resistance_character)))) {
+                && GameConditions.isOncePerBattle(game, self, gameTextSourceCardId, gameTextActionId)
+                && TriggerConditions.isAboutToBeHit(game, effectResult, Filters.and(Filters.your(self), Filters.here(self), Filters.other(self), Filters.or(Filters.starship, Filters.Resistance_character)))) {
+
             // need to find a Rose card instead of using self because of Bane Malar
             PhysicalCard rose = Filters.findFirstActive(game, self, Filters.Rose);
 
@@ -85,6 +90,8 @@ public class Card501_097 extends AbstractResistance {
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Make Rose hit instead");
 
+                action.appendUsage(
+                        new OncePerBattleEffect(action));
                 action.appendCost(
                         new HitCardAndResetForfeitEffect(action, self, 0, self, null, null));
 

@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -36,7 +37,7 @@ public class Card501_084 extends AbstractUsedOrLostInterrupt {
         setVirtualSuffix(true);
         setLore("A Jedi can adjust the force within and around an object, causing it to move as the Jedi wills.");
         setGameText("USED: If you just drew a character for destiny, choose: Take that card into hand OR Cancel that destiny and cause a re-draw. " +
-                "LOST: Use 4 Force to take a Jedi, Padawan, or [Dagobah] Luke into hand from Lost Pile.");
+                "LOST: Once per game, use 4 Force to take a character into hand from Lost Pile.");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_0);
         setTestingText("Jedi Levitation (V) (ERRATA)");
     }
@@ -93,25 +94,29 @@ public class Card501_084 extends AbstractUsedOrLostInterrupt {
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
-        GameTextActionId gameTextActionId = GameTextActionId.JEDI_LEVITATION__RETRIEVE_NON_MAINTENANCE_CHARACTER;
+        GameTextActionId gameTextActionId = GameTextActionId.JEDI_LEVITATION_V__TAKE_CHARACTER_INTO_HAND_FROM_LOST_PILE;
 
         // Check condition(s)
-        if (GameConditions.canUseForceToPlayInterrupt(game, playerId, self, 4)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canUseForceToPlayInterrupt(game, playerId, self, 4)
                 && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
             action.setText("Take a character into hand from Lost Pile");
+
+            action.appendUsage(
+                    new OncePerGameEffect(action));
             // Pay cost(s)
             action.appendCost(
                     new UseForceEffect(action, playerId, 4));
             // Allow response(s)
-            action.allowResponses("Take a Jedi, Padawan, or [Dagobah] Luke into hand from Lost Pile",
+            action.allowResponses("Take a character into hand from Lost Pile",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new TakeCardIntoHandFromLostPileEffect(action, playerId, Filters.or(Filters.Jedi, Filters.padawan, Filters.and(Icon.DAGOBAH, Filters.Luke)), false));
+                                    new TakeCardIntoHandFromLostPileEffect(action, playerId, Filters.character, false));
                         }
                     }
             );

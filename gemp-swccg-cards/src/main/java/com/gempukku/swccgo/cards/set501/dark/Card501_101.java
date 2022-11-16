@@ -42,8 +42,8 @@ public class Card501_101 extends AbstractObjective {
         super(Side.DARK, 0, Title.A_Great_Tactician_Creates_Plans);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Lothal system, Advanced Projects Laboratory, Imperial Complex, and Thrawn’s Art Collection." +
-                    "For remainder of game, you may not deploy [Episode I] (or [Episode VII]) cards with ability or [Presence], or Chiraneau. " +
-                    "While this side up, Imperial Star Destroyers deploy -1 (-3 if Chimaera). Once per turn, may [download] a battleground system (or a site to Lothal)." +
+                    "For remainder of game, you may not deploy [Episode I] (or [Episode VII]) cards with ability or [Presence], or Chiraneau. Once per turn, may [download] a battleground system (or a site to Lothal). " +
+                    "While this side up, Imperial Star Destroyers deploy -1 (-3 if Chimaera). " +
                     "Flip this card during any deploy phase if Thrawn at a battleground and two or more artwork cards on table.");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("A Great Tactician Creates Plans (ERRATA)");
