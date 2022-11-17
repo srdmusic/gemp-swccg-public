@@ -2,7 +2,11 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -12,7 +16,6 @@ import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -23,7 +26,7 @@ import java.util.List;
  */
 public class Card501_020 extends AbstractSystem {
     public Card501_020() {
-        super(Side.DARK, Title.Geonosis, 6);
+        super(Side.DARK, Title.Geonosis, 6, ExpansionSet.SET_20, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setLocationDarkSideGameText("If opponent just Force drained (or won a battle) here and no Geonosis sites on table, they 'conquer' (flip) Geonosis.");
         setLocationLightSideGameText("If you just Force drained (or won a battle) at a Geonosis site, 'conquer' (flip) Geonosis.");

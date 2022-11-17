@@ -3,7 +3,9 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
@@ -28,7 +30,7 @@ import java.util.List;
  */
 public class Card501_026 extends AbstractSystem {
     public Card501_026() {
-        super(Side.DARK, Title.Christophsis, 6);
+        super(Side.DARK, Title.Christophsis, 6, ExpansionSet.SET_20, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setLocationDarkSideGameText("If you just Force drained (or won a battle) at a Christophsis site, 'conquer' (flip) Christophsis.");
         setLocationLightSideGameText("If you control, your characters deploy -1 to Christophsis sites.");
