@@ -4,8 +4,10 @@ import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
@@ -31,7 +33,7 @@ import java.util.List;
  */
 public class Card501_095 extends AbstractSystem {
     public Card501_095() {
-        super(Side.LIGHT, Title.Lothal, 6);
+        super(Side.LIGHT, Title.Lothal, 6, ExpansionSet.SET_19, Rarity.V);
         setLocationDarkSideGameText("Unless Chimaera or Thrawn here, Force drain -1 here and This Is MY Ship! is [Immune to Sense].");
         setLocationLightSideGameText("Ghost deploys -2 here. Once per game, may [upload] This is MY Ship!.");
         addIcon(Icon.LIGHT_FORCE, 2);

@@ -1,13 +1,18 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayMoveOtherCardsAsReactToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.MovesFreeFromLocationToLocationModifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -20,7 +25,7 @@ import java.util.List;
  */
 public class Card501_070 extends AbstractSystem {
     public Card501_070() {
-        super(Side.LIGHT, Title.Geonosis, 6);
+        super(Side.LIGHT, Title.Geonosis, 6, ExpansionSet.SET_20, Rarity.V);
         setLocationDarkSideGameText("Your [Separatist] starships deploy -1 here and move for free to or from the nearest related asteroid sector.");
         setLocationLightSideGameText("Your [Clone Army] starships deploy -1 here. Your starships at the nearest related asteroid sector may move here as a 'react.'");
         addIcon(Icon.DARK_FORCE, 1);

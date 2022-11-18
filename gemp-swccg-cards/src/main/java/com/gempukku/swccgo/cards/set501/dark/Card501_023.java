@@ -2,7 +2,9 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
@@ -27,7 +29,7 @@ import java.util.List;
  */
 public class Card501_023 extends AbstractSystem {
     public Card501_023() {
-        super(Side.DARK, Title.Utapau, 2);
+        super(Side.DARK, Title.Utapau, 2, ExpansionSet.SET_20, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setLocationDarkSideGameText("If you just Force drained (or won a battle) at a Utapau site, 'conquer' (flip) Utapau.");
         setLocationLightSideGameText("Starships piloted by Anakin or Obi-Wan are immune to attrition here.");
