@@ -4,20 +4,26 @@ import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.IconModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -31,8 +37,8 @@ import java.util.List;
  */
 public class Card501_095 extends AbstractSystem {
     public Card501_095() {
-        super(Side.LIGHT, Title.Lothal, 6);
-        setLocationDarkSideGameText("Unless Chimaera or Thrawn here, Force drain -1 here and This Is MY Ship! is [Immune to Sense].");
+        super(Side.LIGHT, Title.Lothal, 6, ExpansionSet.SET_20, Rarity.V);
+        setLocationDarkSideGameText("Unless Thrawn here, Force drain -1 here and This Is MY Ship! is [Immune to Sense]. While Lothal converted, gains one [Dark Side] icon.");
         setLocationLightSideGameText("Ghost deploys -2 here. Once per game, may [upload] This is MY Ship!.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
@@ -41,10 +47,17 @@ public class Card501_095 extends AbstractSystem {
     }
 
     @Override
-    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, final SwccgGame game, PhysicalCard self) {
+        Condition isLothalConverted = new Condition() {
+            @Override
+            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
+                return GameConditions.canSpotConvertedLocation(game, Filters.Lothal_system);
+            }
+        };
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, new UnlessCondition(new HereCondition(self, Filters.or(Filters.Thrawn, Filters.Chimaera))), -1, playerOnDarkSideOfLocation));
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.title(Title.This_Is_My_Ship), new UnlessCondition(new HereCondition(self, Filters.or(Filters.Thrawn, Filters.Chimaera))), Title.Sense));
+        modifiers.add(new ForceDrainModifier(self, new UnlessCondition(new HereCondition(self, Filters.Thrawn)), -1, playerOnDarkSideOfLocation));
+        modifiers.add(new ImmuneToTitleModifier(self, Filters.title(Title.This_Is_My_Ship), new UnlessCondition(new HereCondition(self, Filters.Thrawn)), Title.Sense));
+        modifiers.add(new IconModifier(self, isLothalConverted, Icon.DARK_FORCE, 1));
         return modifiers;
     }
 
