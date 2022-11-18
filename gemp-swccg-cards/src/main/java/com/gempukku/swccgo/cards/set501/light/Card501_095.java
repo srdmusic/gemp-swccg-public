@@ -37,7 +37,7 @@ import java.util.List;
  */
 public class Card501_095 extends AbstractSystem {
     public Card501_095() {
-        super(Side.LIGHT, Title.Lothal, 6, ExpansionSet.SET_20, Rarity.V);
+        super(Side.LIGHT, Title.Lothal, 6, ExpansionSet.SET_19, Rarity.V);
         setLocationDarkSideGameText("Unless Thrawn here, Force drain -1 here and This Is MY Ship! is [Immune to Sense]. While Lothal converted, gains one [Dark Side] icon.");
         setLocationLightSideGameText("Ghost deploys -2 here. Once per game, may [upload] This is MY Ship!.");
         addIcon(Icon.LIGHT_FORCE, 2);

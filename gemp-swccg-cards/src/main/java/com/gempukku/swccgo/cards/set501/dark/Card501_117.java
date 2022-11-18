@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class Card501_117 extends AbstractSystem {
     public Card501_117() {
-        super(Side.DARK, Title.Lothal, 6, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, Title.Lothal, 6, ExpansionSet.SET_19, Rarity.V);
         setLocationDarkSideGameText("While you occupy with an admiral, gains one [Dark Side] icon.");
         setLocationLightSideGameText("While you control, opponent occupies with an admiral, or Lothal converted, gains one [Light Side] icon.");
         addIcon(Icon.DARK_FORCE, 2);
