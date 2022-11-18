@@ -2,7 +2,9 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
@@ -24,7 +26,7 @@ import java.util.List;
  */
 public class Card501_045 extends AbstractSystem {
     public Card501_045() {
-        super(Side.DARK, Title.Ralltiir, 3);
+        super(Side.DARK, Title.Ralltiir, 3, ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
         setLocationDarkSideGameText("If you control, add 1 to your total power at related sites.");
         setLocationLightSideGameText("You may shuttle characters to and from here for free.");
