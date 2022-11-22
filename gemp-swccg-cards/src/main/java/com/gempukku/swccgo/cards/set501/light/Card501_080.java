@@ -3,16 +3,29 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.PilotingCondition;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.TargetingReason;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.effects.CancelCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
+import com.gempukku.swccgo.logic.effects.RespondableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
+import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
+import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,7 +38,7 @@ import java.util.List;
  */
 public class Card501_080 extends AbstractRepublic {
     public Card501_080() {
-        super(Side.LIGHT, 3, 2, 1, 2, 3, "Clone Pilot");
+        super(Side.LIGHT, 3, 2, 1, 2, 3, "Clone Pilot", Uniqueness.UNRESTRICTED, ExpansionSet.SET_20, Rarity.V);
         setArmor(3);
         setLore("Clone trooper.");
         setGameText("Adds 2 to power and 1 to defense value of anything he pilots. While piloting a [Clone Army] starship or vehicle, forfeit +1 and draws one battle destiny if unable to otherwise. If stacked face up on Cloning Cylinders, may turn him face down to cancel Lateral Damage.");

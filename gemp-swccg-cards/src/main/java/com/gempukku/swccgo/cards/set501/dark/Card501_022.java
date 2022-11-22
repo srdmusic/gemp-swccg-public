@@ -5,7 +5,15 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -13,7 +21,8 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.MayNotDrawMoreThanBattleDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -28,7 +37,7 @@ import java.util.List;
  */
 public class Card501_022 extends AbstractRepublic {
     public Card501_022() {
-        super(Side.DARK, 2, 3, 4, 2, 5, "Poggle The Lesser", Uniqueness.UNIQUE);
+        super(Side.DARK, 2, 3, 4, 2, 5, "Poggle The Lesser", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         setLore("Geonosian leader.");
         setGameText("While with a battle droid, opponent may not draw more than one battle destiny here. Once per game, may deploy Dooku here from Reserve Deck; reshuffle. While on Geonosis and The Galaxy Torn Apart on table, opponent's Force retrieval is canceled.");
         addKeywords(Keyword.LEADER);
