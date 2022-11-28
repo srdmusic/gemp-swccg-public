@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class Card1_132 extends AbstractSite {
     public Card1_132() {
-        super(Side.LIGHT, Title.Lars_Moisture_Farm, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PREMIERE, Rarity.R2);
+        super(Side.LIGHT, Title.Lars_Moisture_Farm, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PREMIERE, Rarity.C1);
         setLocationDarkSideGameText("Add 1 to each of your weapon destiny draws here.");
         setLocationLightSideGameText("Beru Lars and Luke deploy -1 here.");
         addIcon(Icon.DARK_FORCE, 1);

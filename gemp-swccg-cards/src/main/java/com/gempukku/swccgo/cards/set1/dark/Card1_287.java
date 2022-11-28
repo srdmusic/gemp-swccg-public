@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class Card1_287 extends AbstractSite {
     public Card1_287() {
-        super(Side.DARK, "Death Star: War Room", Title.Death_Star, Uniqueness.UNIQUE, ExpansionSet.PREMIERE, Rarity.R2);
+        super(Side.DARK, "Death Star: War Room", Title.Death_Star, Uniqueness.UNIQUE, ExpansionSet.PREMIERE, Rarity.U2);
         setLocationDarkSideGameText("If you control, with a leader here, all Rebel Troopers and Y-wings on table are forfeit -1.");
         setLocationLightSideGameText("If you initiate a battle here, add one battle destiny.");
         addIcon(Icon.DARK_FORCE, 2);

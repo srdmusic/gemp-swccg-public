@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class Card1_123 extends AbstractSite {
     public Card1_123() {
-        super(Side.LIGHT, Title.Detention_Block_Control_Room, Title.Death_Star, Uniqueness.UNIQUE, ExpansionSet.PREMIERE, Rarity.R2);
+        super(Side.LIGHT, Title.Detention_Block_Control_Room, Title.Death_Star, Uniqueness.UNIQUE, ExpansionSet.PREMIERE, Rarity.U2);
         setLocationLightSideGameText("If you control, Force Drain +1 here and all imprisoned characters on Death Star are released.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK);
