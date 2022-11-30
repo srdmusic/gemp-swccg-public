@@ -6,15 +6,25 @@ import com.gempukku.swccgo.cards.conditions.PilotingCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeCanceledModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeReducedModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
 
 
 /**
@@ -25,7 +35,7 @@ import java.util.*;
  */
 public class Card501_079 extends AbstractRepublic {
     public Card501_079() {
-        super(Side.LIGHT, 1, 3, 3, 3, 5, "Admiral Yularen", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, 3, 3, 3, 5, "Admiral Yularen", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         setLore("Leader.");
         setGameText("Adds 2 to power of anything he pilots (3 if a capital starship). While piloting at a battleground system, your Force drains here may not be reduced or canceled. While piloting Resolute, attrition against opponent is +1 here (+2 if with a [Separatist] or [Trade Federation] starship).");
         addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.WARRIOR, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_20);

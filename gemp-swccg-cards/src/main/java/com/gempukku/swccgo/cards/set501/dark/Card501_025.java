@@ -5,14 +5,25 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OnCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
+import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -26,7 +37,7 @@ import java.util.List;
  */
 public class Card501_025 extends AbstractRepublic {
     public Card501_025() {
-        super(Side.DARK, 2, 3, 3, 3, 5, "San Hill", Uniqueness.UNIQUE);
+        super(Side.DARK, 2, 3, 3, 3, 5, "San Hill", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         setLore("Muun leader. Banking Clan.");
         setGameText("Your battle droids at same site are deploy -1 and forfeit +1. Once per game may deploy Grievous here from Reserve Deck; reshuffle. While on Utapau and The Galaxy Torn Apart on table, you initiate battle for free.");
         addKeywords(Keyword.LEADER);
