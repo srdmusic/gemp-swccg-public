@@ -19,6 +19,7 @@ import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.PreventDestinyFromBeingCanceledEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.modifiers.NeverDeploysToLocationModifier;
@@ -38,7 +39,7 @@ public class Card501_039 extends AbstractSith {
     public Card501_039() {
         super(Side.DARK, .5F, 4, 4, 6, 8, "Maul", Uniqueness.UNIQUE, ExpansionSet.SET_13, Rarity.V);
         setLore("Gangster. Crimson Dawn leader.");
-        setGameText("Never deploys to a battleground. Once per turn, may add or subtract 1 from a just drawn blaster weapon or battle destiny; that destiny draw may not be canceled. Immune to attrition < 5.");
+        setGameText("Never deploys to a battleground. Once per turn, may add or subtract 1 from a just drawn battle destiny or blaster weapon destiny. Battle destiny draws may not be canceled where you have a non-unique blaster. Immune to attrition < 5.");
         addPersona(Persona.MAUL);
         addKeywords(Keyword.GANGSTER, Keyword.CRIMSON_DAWN, Keyword.LEADER);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_13);
@@ -55,6 +56,7 @@ public class Card501_039 extends AbstractSith {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new MayNotCancelBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.non_unique, Filters.blaster))));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
         return modifiers;
     }

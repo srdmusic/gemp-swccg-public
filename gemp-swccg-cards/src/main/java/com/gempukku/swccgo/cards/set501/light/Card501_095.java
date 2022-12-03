@@ -39,7 +39,7 @@ public class Card501_095 extends AbstractSystem {
     public Card501_095() {
         super(Side.LIGHT, Title.Lothal, 6, ExpansionSet.SET_19, Rarity.V);
         setLocationDarkSideGameText("Unless Thrawn here, Force drain -1 here and This Is MY Ship! is [Immune to Sense]. While Lothal converted, gains one [Dark Side] icon.");
-        setLocationLightSideGameText("Ghost deploys -2 here. Once per game, may [upload] This is MY Ship!.");
+        setLocationLightSideGameText("Hera deploys -1 here. Once per game, may [upload] This is MY Ship!");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.PLANET, Icon.VIRTUAL_SET_19);
@@ -64,7 +64,7 @@ public class Card501_095 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.Ghost, -2, Filters.here(self)));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.Hera, -1, Filters.here(self)));
         return modifiers;
     }
 
