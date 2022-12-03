@@ -39,7 +39,7 @@ public class Card501_107 extends AbstractUsedInterrupt {
         super(Side.LIGHT, 5, "Free Ride & Endor Celebration", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         addComboCardTitles(Title.Free_Ride, Title.Endor_Celebration);
-        setGameText("Cancel Force Lightning, Cloud City Occupation, Rebel Base Occupation, or Tatooine Occupation. [Immune to Sense.] OR For remainder of turn, A Million Voices Crying Out and An Entire Legion Of My Best Troops are suspended. OR During your turn, target opponent's spy (or unpiloted combat vehicle) at a site you control; target is lost. (Immune to Oh, Switch Off.) OR Cancel an attempt to deploy or move a combat vehicle as a 'react.'");
+        setGameText("Cancel Cloud City Occupation, Rebel Base Occupation, or Tatooine Occupation. [Immune to Sense.] OR Cancel Force Lightning (unless targeting an Undercover spy). OR Cancel an attempt to deploy or move a combat vehicle as a 'react.' OR During your turn, target opponent's spy (or unpiloted combat vehicle) at a site you control; target is lost. (Immune to Oh, Switch Off.) OR For remainder of turn, suspend the following cards on table (if any): A Million Voices Crying Out and An Entire Legion Of My Best Troops.");
         addIcons(Icon.CORUSCANT, Icon.VIRTUAL_SET_16);
         setTestingText("Free Ride & Endor Celebration (V) (ERRATA)");
     }
@@ -83,7 +83,6 @@ public class Card501_107 extends AbstractUsedInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             // Build action using common utility
             CancelCardActionBuilder.buildCancelCardAction(action, Filters.Force_Lightning, Title.Force_Lightning);
-            action.setImmuneTo(Title.Sense);
             actions.add(action);
         }
 
@@ -158,13 +157,23 @@ public class Card501_107 extends AbstractUsedInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Force_Lightning, Filters.Tatooine_Occupation, Filters.Cloud_City_Occupation, Filters.Rebel_Base_Occupation))
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Tatooine_Occupation, Filters.Cloud_City_Occupation, Filters.Rebel_Base_Occupation))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             PlayInterruptAction action = new PlayInterruptAction(game, self);
             // Build action using common utility
             CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
             action.setImmuneTo(Title.Sense);
+            actions.add(action);
+        }
+
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.Force_Lightning)
+                && !TriggerConditions.isPlayingCardTargeting(game, effect, Filters.Force_Lightning, Filters.undercover_spy)
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
+
+            PlayInterruptAction action = new PlayInterruptAction(game, self);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
             actions.add(action);
         }
 

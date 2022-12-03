@@ -31,16 +31,16 @@ import java.util.List;
  * Set: Set 20
  * Type: Interrupt
  * Subtype: Used or Lost
- * Title: Weapons Are Part Of My Religion
+ * Title: Beskar Deflection
  */
 public class Card501_052 extends AbstractUsedOrLostInterrupt {
     public Card501_052() {
-        super(Side.LIGHT, 4, "Weapons Are Part Of My Religion");
+        super(Side.LIGHT, 4, "Beskar Deflection");
         setLore("");
-        setGameText("USED: If your Mandalorian was just 'hit' by a character weapon, opponent chooses: the character that fired that weapon is also 'hit' or restore target to normal. " +
+        setGameText("USED: Target your Mandalorian that was just 'hit' by a character weapon. Opponent chooses: Restore target to normal or the character that fired the weapon is also 'hit.' " +
                 "LOST: Once per game, if your Mandalorian is in battle, add 2 to a just drawn destiny.");
         addIcons(Icon.VIRTUAL_SET_20);
-        setTestingText("Weapons Are Part Of My Religion");
+        setTestingText("Beskar Deflection");
     }
 
     @Override
