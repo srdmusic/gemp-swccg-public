@@ -4,17 +4,20 @@ import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
-import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsDestinyToAttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -27,44 +30,26 @@ import java.util.List;
  * Set: Set 20
  * Type: Character
  * Subtype: Alien
- * Title: Bib Fortuna, Heir to the Empire
+ * Title: Bib Fortuna, Heir To The Palace
  */
 public class Card501_001 extends AbstractAlien {
     public Card501_001() {
-        super(Side.DARK, 1, 4, 2, 1, 3, "Bib Fortuna, Heir to the Empire", Uniqueness.UNIQUE);
-        setLore("Twi'lek leader. Gangster");
-        setGameText("Jabba is lost. While with two other aliens, adds a destiny to attrition. While at the Audience Chamber, " +
-                    "your Force Drains at other Tatooine battlegrounds are +1 and if opponent just deployed a character here, " +
+        super(Side.DARK, 1, 4, 2, 1, 3, "Bib Fortuna, Heir To The Palace", Uniqueness.UNIQUE);
+        setLore("Twi'lek gangster. Leader. Plotted to kill Jabba.");
+        setGameText("Jabba's game text is canceled. While with two aliens, adds one destiny to attrition. While at Audience Chamber, " +
+                    "your Force drains at other Tatooine battlegrounds are +1 and, if opponent just deployed a character here, " +
                     "may activate 1 Force.");
         addPersona(Persona.BIB);
         setSpecies(Species.TWILEK);
         addKeywords(Keyword.LEADER, Keyword.GANGSTER);
         addIcons(Icon.VIRTUAL_SET_20);
-        setTestingText("Bib Fortuna, Heir to the Empire");
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canSpot(game, self, Filters.Jabba)) {
-            PhysicalCard jabba = Filters.findFirstActive(game, self, Filters.Jabba);
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setSingletonTrigger(true);
-            action.setText("Make " + GameUtils.getCardLink(jabba) + " lost");
-            action.setActionMsg("Make " + GameUtils.getCardLink(jabba) + " lost");
-            // Perform result(s)
-            action.appendEffect(
-                    new LoseCardFromTableEffect(action, jabba));
-            return Collections.singletonList(action);
-        }
-        return null;
+        setTestingText("Bib Fortuna, Heir To The Palace");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new CancelsGameTextModifier(self, Filters.Jabba));
         modifiers.add(new AddsDestinyToAttritionModifier(self, new WithCondition(self, 2, Filters.and(Filters.your(self), Filters.alien)), 1));
         modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.other(self.getAtLocation()), Filters.Tatooine_battleground_site), new AtCondition(self, Filters.Audience_Chamber), 1, self.getOwner()));
         return modifiers;
