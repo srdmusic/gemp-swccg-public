@@ -36,7 +36,7 @@ public class Card501_090 extends AbstractSite {
     public Card501_090() {
         super(Side.LIGHT, Title.Detention_Block_Corridor, Title.Death_Star);
         setVirtualSuffix(true);
-        setLocationDarkSideGameText("If Leia is about to leave table (for any reason, even if inactive), imprison her here instead.");
+        setLocationDarkSideGameText("If [Set 20] Leia is about to leave table (for any reason, even if inactive), imprison her here instead.");
         setLocationLightSideGameText("If you control with a spy, may use 2 Force to release Leia here (retrieve 1 Force).");
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.SPECIAL_EDITION, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
@@ -69,7 +69,7 @@ public class Card501_090 extends AbstractSite {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.isAboutToLeaveTable(game, effectResult, Filters.and(Filters.at(Filters.Death_Star_site), Filters.Leia))) {
+        if (TriggerConditions.isAboutToLeaveTable(game, effectResult, Filters.and(Filters.at(Filters.Death_Star_site), Icon.VIRTUAL_SET_20, Filters.Leia))) {
             final AboutToLeaveTableResult result = (AboutToLeaveTableResult) effectResult;
             final PhysicalCard leia = result.getCardAboutToLeaveTable();
 
