@@ -2,7 +2,16 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
+import com.gempukku.swccgo.common.TargetingReason;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -15,7 +24,6 @@ import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -27,7 +35,7 @@ import java.util.List;
  */
 public class Card501_014 extends AbstractUsedOrLostInterrupt {
     public Card501_014() {
-        super(Side.DARK, 4, "Show No Mercy", Uniqueness.UNIQUE);
+        super(Side.DARK, 4, "Show No Mercy", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         setGameText("USED: If Revenge Of The Sith on table, take 500 Republica, The Works, or Unlimited Power! into hand from Reserve Deck; reshuffle. LOST: Target an undercover spy with your Sidious or Neimoidian. Target is lost.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
         setTestingText("Show No Mercy");
