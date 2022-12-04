@@ -4,7 +4,13 @@ import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.InBattleWithCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -14,7 +20,9 @@ import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.AddCardsToMoveUsingLandspeedSimultaneouslyEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardsOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.MovingUsingLandspeedResult;
@@ -32,7 +40,7 @@ import java.util.List;
  */
 public class Card501_037 extends AbstractImperial {
     public Card501_037() {
-        super(Side.DARK, 3, 2, 2, 2, 4, "Captain Mod Terrik", Uniqueness.UNIQUE);
+        super(Side.DARK, 3, 2, 2, 2, 4, "Captain Mod Terrik", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         setArmor(4);
         setLore("Leader. Sandtrooper.");
         setGameText("Power +1 if Stardust or Stolen Data Tapes on table. While in battle with another trooper, attrition against opponent is +1. When moving using landspeed in your move phase, two of your stormtroopers here may move as a regular move to same location for free.");
