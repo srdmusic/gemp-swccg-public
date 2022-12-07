@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class Card8_164 extends AbstractSite {
     public Card8_164() {
-        super(Side.DARK, "Endor: Forest Clearing", Title.Endor, Uniqueness.UNIQUE, ExpansionSet.ENDOR, Rarity.C);
+        super(Side.DARK, "Endor: Forest Clearing", Title.Endor, Uniqueness.UNIQUE, ExpansionSet.ENDOR, Rarity.U);
         setLocationDarkSideGameText("Your vehicles are each power +1 here. Force drain +1 here.");
         setLocationLightSideGameText("Your vehicles are each power +1 here.");
         addIcon(Icon.DARK_FORCE, 2);
