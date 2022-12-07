@@ -44,7 +44,7 @@ import java.util.Map;
  */
 public class Card6_164 extends AbstractSite {
     public Card6_164() {
-        super(Side.DARK, Title.Dungeon, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.JABBAS_PALACE, Rarity.C2);
+        super(Side.DARK, Title.Dungeon, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.JABBAS_PALACE, Rarity.U);
         setLocationDarkSideGameText("Whenever a bounty hunter delivers a captive here, retrieve 2 Force (once per captive).");
         setLocationLightSideGameText("If you control, may use 3 Force to release an imprisoned captive here.");
         addIcon(Icon.DARK_FORCE, 1);
