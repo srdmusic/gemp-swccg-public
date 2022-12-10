@@ -40,8 +40,8 @@ public class Card501_046 extends AbstractObjective {
         setVirtualSuffix(true);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy [Set 20] Ralltiir system. " +
-                "For remainder of game, spaceport sites are immune to Always Thinking With Your Stomach, He Hasn't Come Back Yet, and non-[Set 18] Ounee Ta. [Coruscant] Do They Have A Code Clearance? is canceled. Your Force generation is +1 at each Ralltiir site. " +
-                "While this side up, once per turn, may deploy a site (or non-unique Imperial) to Ralltiir from Reserve Deck; reshuffle. " +
+                "For remainder of game, spaceport sites are immune to Always Thinking With Your Stomach, He Hasn't Come Back Yet, and non-[Set 18] Ounee Ta. You may not play [Coruscant] Do They Have A Code Clearance?. Your Force generation is +1 at each Ralltiir site. " +
+                "While this side up, once per turn, may [download] a site (or non-unique Imperial) to Ralltiir. " +
                 "Flip this card if Imperials control at least three Ralltiir sites and opponent controls no Ralltiir locations.");
         addIcons(Icon.VIRTUAL_SET_10, Icon.SPECIAL_EDITION);
         setTestingText("Ralltiir Operations (V) (ERRATA)");
