@@ -28,8 +28,8 @@ public class Card501_113 extends AbstractSite {
     public Card501_113() {
         super(Side.LIGHT, Title.Theed_Palace_Generator, Title.Naboo);
         setVirtualSuffix(true);
-        setLocationDarkSideGameText("Dark Jedi are power +1 here. Force drain -1 here.");
-        setLocationLightSideGameText("While Qui-Gon communing, [Reflections II] objectives target Anakin instead of Luke and Jedi here are power +2.");
+        setLocationDarkSideGameText("Dark Jedi are power +1 here. Jedi are power +2 here. Force drain -1 here.");
+        setLocationLightSideGameText("While Qui-Gon 'communing,' opponent's [Reflections II] objective targets Anakin instead of Luke.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I, Icon.INTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_20);
@@ -41,6 +41,7 @@ public class Card501_113 extends AbstractSite {
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new PowerModifier(self, Filters.and(Filters.Dark_Jedi, Filters.here(self)), 1));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.Jedi, Filters.here(self)), 2));
         modifiers.add(new ForceDrainModifier(self, -1, playerOnDarkSideOfLocation));
         return modifiers;
     }
@@ -48,8 +49,7 @@ public class Card501_113 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.Jedi, Filters.here(self)), new CommuningCondition(Filters.QuiGon), 2));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.and(Icon.REFLECTIONS_II, Filters.Objective), new CommuningCondition(Filters.QuiGon), ModifyGameTextType.REFLECTIONS_II_OBJECTIVE__TARGETS_ANAKIN_INSTEAD_OF_LUKE));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.and(Filters.opponents(playerOnLightSideOfLocation), Icon.REFLECTIONS_II, Filters.Objective), new CommuningCondition(Filters.QuiGon), ModifyGameTextType.REFLECTIONS_II_OBJECTIVE__TARGETS_ANAKIN_INSTEAD_OF_LUKE));
         return modifiers;
     }
 }

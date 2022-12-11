@@ -29,7 +29,7 @@ public class Card501_114 extends AbstractStartingInterrupt {
     public Card501_114() {
         super(Side.LIGHT, 5, "I Am Part Of The Living Force", Uniqueness.UNIQUE, ExpansionSet.SET_16, Rarity.V);
         setLore("");
-        setGameText("If your starting location had 'communing' in game text, deploy Communing and stack a Jedi with 'communing' in game text on it. Deploy up to three Effects that deploy on table for free and are always immune to Alter. Place Interrupt in Lost Pile.");
+        setGameText("If your starting location had 'communing' in game text, deploy Communing and stack a Jedi with 'communing' in game text on it. Deploy up to three Effects that deploy on table, deploy for free, and are always immune to Alter. Place Interrupt in Lost Pile.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("I Am Part Of The Living Force (ERRATA)");
     }

@@ -47,13 +47,13 @@ import java.util.List;
 public class Card501_101_BACK extends AbstractObjective {
     public Card501_101_BACK() {
         super(Side.DARK, 7, Title.The_Result_Is_Often_Resentment);
-        setGameText("While this side up, if a battle was just initiated involving an Imperial leader or piloted TIE defender, may ‘study’ one artwork card. " +
-                    "If it is a weapon, cancel the battle. Otherwise, if possible, if its printed destiny number is:" +
-                    "(0-2) opponent’s immunity to attrition is canceled;" +
-                    "(3-4) opponent excludes their character from battle;" +
-                    "(5+) add 3 to your total power." +
-                    "Place artwork card in owner's Lost Pile." +
-                    "Flip this card if Thrawn not on table or (except during battle) if no artwork cards on table.");
+        setGameText("While this side up, if a battle was just initiated involving an Imperial leader or piloted TIE defender, may 'study' one artwork card. " +
+                    "If it is a weapon, cancel the battle. Otherwise, if possible, if its printed destiny number is: " +
+                    "(0-2) opponent's immunity to attrition is canceled; " +
+                    "(3-4) opponent excludes their character from battle; " +
+                    "(5+) add 3 to your total power. " +
+                    "Place artwork card in owner's Lost Pile. " +
+                    "Flip this card if Thrawn not on table or (except during battle) if no artwork cards on table. ");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("The Result Is Often Resentment");
     }

@@ -28,12 +28,10 @@ import java.util.List;
  */
 public class Card501_008 extends AbstractAlien {
     public Card501_008() {
-        super(Side.DARK, 1, 4, 3, 4, 4, "Zuckuss", Uniqueness.UNIQUE);
+        super(Side.DARK, 1, 3, 3, 4, 4, "Zuckuss", Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Male Gand. Practitioner of ancient religious findsman vocation. Bounty hunter and scout. Gains surprisingly accurate information through mystical visions during meditation.");
-        setGameText("Adds 2 power to anything he pilots. Once per battle, if opponent just drew weapon or battle destiny, " +
-                    "may draw destiny and reset opponent's destiny number with your drawn destiny number. " +
-                    "Power and defense value +2 with 4-LOM. Immune to attrition < 4.");
+        setGameText("Adds 2 to power of anything he pilots. Power and defense value +2 with 4-LOM. Once during battle, if opponent just drew weapon or battle destiny, may draw destiny; reset opponent's destiny number to your drawn destiny number. Immune to attrition < 3.");
         addPersona(Persona.ZUCKUSS);
         addIcons(Icon.DAGOBAH, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.BOUNTY_HUNTER, Keyword.SCOUT);
@@ -47,7 +45,7 @@ public class Card501_008 extends AbstractAlien {
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new PowerModifier(self, new WithCondition(self, Filters._4_LOM), 2));
         modifiers.add(new DefenseValueModifier(self, new WithCondition(self, Filters._4_LOM), 2));
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
         return modifiers;
     }
 
@@ -55,9 +53,10 @@ public class Card501_008 extends AbstractAlien {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, final EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        if(TriggerConditions.isWeaponDestinyJustDrawnBy(game, effectResult, game.getOpponent(playerId))
-            || TriggerConditions.isBattleDestinyJustDrawnBy(game, effectResult, game.getOpponent(playerId))
-            && GameConditions.isOncePerBattle(game, self, gameTextSourceCardId, gameTextActionId)){
+        if(GameConditions.isDuringBattleWithParticipant(game, self)
+                && (TriggerConditions.isWeaponDestinyJustDrawnBy(game, effectResult, game.getOpponent(playerId))
+                || TriggerConditions.isBattleDestinyJustDrawnBy(game, effectResult, game.getOpponent(playerId)))
+                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)){
 
             final DrawDestinyState opponentDestinyState = game.getGameState().getTopDrawDestinyState();
 
