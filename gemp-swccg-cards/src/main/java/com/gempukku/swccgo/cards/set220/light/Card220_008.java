@@ -2,10 +2,13 @@ package com.gempukku.swccgo.cards.set220.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.conditions.CommuningCondition;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -26,7 +29,7 @@ import java.util.List;
  */
 public class Card220_008 extends AbstractSite {
     public Card220_008() {
-        super(Side.LIGHT, Title.Theed_Palace_Generator, Title.Naboo);
+        super(Side.LIGHT, Title.Theed_Palace_Generator, Title.Naboo, Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
         setLocationDarkSideGameText("Dark Jedi are power +1 here. Jedi are power +2 here. Force drain -1 here.");
         setLocationLightSideGameText("While Qui-Gon 'communing,' opponent's [Reflections II] objective targets Anakin instead of Luke.");

@@ -3,9 +3,11 @@ package com.gempukku.swccgo.cards.set220.light;
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.conditions.ImprisonedOnlyCondition;
 import com.gempukku.swccgo.cards.conditions.OnCondition;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Title;
@@ -33,7 +35,7 @@ import java.util.List;
  */
 public class Card220_009 extends AbstractRebel {
     public Card220_009() {
-        super(Side.LIGHT, 1, 6, 4, 3, 6, Title.Prisoner_2187, Uniqueness.UNIQUE);
+        super(Side.LIGHT, 1, 6, 4, 3, 6, Title.Prisoner_2187, Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
         setLore("Princess Leia Organa. Alderaanian senator. Targeted by Vader for capture and interrogation. The Dark Lord of the Sith wanted her alive.");
         setGameText("While on Death Star (even if imprisoned): Force drain +1 where you have a Rebel stormtrooper, Leia may not be transferred, moves using landspeed for free, draws one battle destiny if unable to otherwise, and her game text may not be canceled.");
