@@ -36,7 +36,7 @@ public class Card200_054 extends AbstractUsedOrLostInterrupt {
         super(Side.LIGHT, 4, "Jedi Levitation");
         setVirtualSuffix(true);
         setLore("A Jedi can adjust the force within and around an object, causing it to move as the Jedi wills.");
-        setGameText("USED: If you just drew a character for destiny, choose: Take that card into hand OR Cancel that destiny and cause a re-draw. " +
+        setGameText("USED: If you just drew a character for destiny, choose: Take that card into hand. OR Cancel and redraw that destiny. " +
                 "LOST: Once per game, use 4 Force to take a character into hand from Lost Pile.");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_0);
     }

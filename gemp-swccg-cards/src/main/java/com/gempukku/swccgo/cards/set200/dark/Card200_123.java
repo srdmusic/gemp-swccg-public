@@ -38,7 +38,7 @@ public class Card200_123 extends AbstractUsedOrLostInterrupt {
         super(Side.DARK, 4, Title.Sith_Fury, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("At his peak, no one could stand up to the Dark Lord of the Sith. His superior tactics devastated those who opposed him.");
-        setGameText("USED: If you just drew a character for destiny, choose: Take that card into hand OR Cancel that destiny and cause a re-draw. " +
+        setGameText("USED: If you just drew a character for destiny, choose: Take that card into hand. OR Cancel and redraw that destiny. " +
                 "LOST: Once per game, use 4 Force to take a character into hand from Lost Pile.");
         addIcons(Icon.TATOOINE, Icon.VIRTUAL_SET_0);
     }
