@@ -40,7 +40,7 @@ public class Card501_097 extends AbstractResistance {
     public Card501_097() {
         super(Side.LIGHT, 5, 1, 1, 2, 2, "Rose Tico", Uniqueness.UNIQUE, ExpansionSet.SET_9, Rarity.V);
         setLore("Female.");
-        setGameText("If Finn is about to be lost from same site, may place him in your Used Pile instead. During battle, if your starship (or Resistance character) here is about to be hit (and Rose is not hit), may cause Rose to be hit (and forfeit = 0) instead.");
+        setGameText("If Finn is about to be lost from same site, may place him in Used Pile instead. Once during battle, if your starship (or your other Resistance character) here is about to be 'hit' (and Rose is not 'hit'), may cause Rose to be 'hit' (and forfeit = 0) instead.");
         addPersona(Persona.ROSE);
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_9);
         addKeywords(Keyword.FEMALE);

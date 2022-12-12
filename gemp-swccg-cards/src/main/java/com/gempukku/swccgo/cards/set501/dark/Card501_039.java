@@ -17,7 +17,6 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
-import com.gempukku.swccgo.logic.effects.PreventDestinyFromBeingCanceledEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -83,8 +82,6 @@ public class Card501_039 extends AbstractSith {
             // Perform result(s)
             action1.appendEffect(
                     new ModifyDestinyEffect(action1, 1));
-            action1.appendEffect(
-                    new PreventDestinyFromBeingCanceledEffect(action1));
             actions.add(action1);
 
 
@@ -97,8 +94,6 @@ public class Card501_039 extends AbstractSith {
             // Perform result(s)
             action2.appendEffect(
                     new ModifyDestinyEffect(action2, -1));
-            action2.appendEffect(
-                    new PreventDestinyFromBeingCanceledEffect(action2));
             actions.add(action2);
         }
 

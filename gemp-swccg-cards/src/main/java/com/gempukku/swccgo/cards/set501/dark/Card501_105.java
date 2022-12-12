@@ -37,7 +37,7 @@ import java.util.List;
 public class Card501_105 extends AbstractDroid {
     public Card501_105() {
         super(Side.DARK, 4.5, 2, 2, 4, "BB-9E", Uniqueness.UNIQUE, ExpansionSet.SET_17, Rarity.V);
-        setGameText("If with a First Order leader at a battleground site, Force drain +1 here. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any). Nabrun Leids may not target this site. Immune to Restraining Bolt.");
+        setGameText("If with a First Order leader at a battleground site, Force drain +1 here. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any). Nabrun Leids may not transport cards to or from here. Immune to Restraining Bolt.");
         addIcons(Icon.EPISODE_VII, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_17);
         addModelType(ModelType.ASTROMECH);
         setTestingText("BB-9E (ERRATA)");

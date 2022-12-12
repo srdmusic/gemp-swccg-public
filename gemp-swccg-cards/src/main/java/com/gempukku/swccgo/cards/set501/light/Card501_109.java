@@ -38,7 +38,7 @@ public class Card501_109 extends AbstractJediMaster {
     public Card501_109() {
         super(Side.LIGHT, 1, 7, 6, 7, 8, Title.Master_QuiGon_Jinn_An_Old_Friend, Uniqueness.UNIQUE, ExpansionSet.SET_16, Rarity.V);
         setLore("");
-        setGameText("While 'communing': You may not deploy Rebels or non-Jedi Council Member Jedi; [Episode I] Jedi are destiny +1; your total power in battles is +1 for each Jedi 'communing'; once per turn, may place a card from hand on Used Pile to draw top card of Force Pile.");
+        setGameText("While 'communing': You may not deploy Jedi (except Jedi Council members) or Rebels; Jedi are destiny +1; your total power in battles is +1 for each Jedi 'communing'; once per turn, may place a card from hand on Used Pile to draw top card of Force Pile.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_16, Icon.EPISODE_I);
         addPersona(Persona.QUIGON);
         setTestingText("Master Qui-Gon Jinn, An Old Friend (ERRATA)");
@@ -46,9 +46,9 @@ public class Card501_109 extends AbstractJediMaster {
 
     public List<Modifier> getWhileStackedModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotDeployModifier(self, Filters.or(Filters.Rebel, Filters.and(Filters.not(Filters.Jedi_Council_member), Filters.Jedi)), new CommuningCondition(self), self.getOwner()));
+        modifiers.add(new MayNotDeployModifier(self, Filters.or(Filters.Rebel, Filters.and(Filters.except(Filters.Jedi_Council_member), Filters.Jedi)), new CommuningCondition(self), self.getOwner()));
         modifiers.add(new TotalPowerModifier(self, Filters.battleLocation, new CommuningCondition(self), new StackedEvaluator(self, Filters.Communing), self.getOwner()));
-        modifiers.add(new DestinyModifier(self, Filters.and(Icon.EPISODE_I, Filters.Jedi), new CommuningCondition(self), 1));
+        modifiers.add(new DestinyModifier(self, Filters.Jedi, new CommuningCondition(self), 1));
         return modifiers;
     }
 

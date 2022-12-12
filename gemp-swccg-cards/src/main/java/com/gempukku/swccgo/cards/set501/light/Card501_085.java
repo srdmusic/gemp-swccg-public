@@ -35,7 +35,7 @@ public class Card501_085 extends AbstractObjective {
         super(Side.LIGHT, 0, Title.City_In_The_Clouds);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Bespin system and a Cloud City battleground site. May deploy Weather Vane. While this side up, once per turn, may use 1 Force to [download] a Cloud City battleground. Flip this card if you control two Cloud City battleground sites and occupy Bespin system, and opponent controls no Cloud City sites.");
-        addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_P);
+        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_P);
         setTestingText("City In The Clouds (ERRATA)");
     }
 

@@ -28,8 +28,8 @@ public class Card501_045 extends AbstractSystem {
     public Card501_045() {
         super(Side.DARK, Title.Ralltiir, 3, ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
-        setLocationDarkSideGameText("If you control, add 1 to your total power at related sites.");
-        setLocationLightSideGameText("You may shuttle characters to and from here for free.");
+        setLocationDarkSideGameText("If you control, your total power is +1 at Ralltiir sites.");
+        setLocationLightSideGameText("Your characters shuttle to and from here for free.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcons(Icon.A_NEW_HOPE, Icon.PLANET, Icon.VIRTUAL_SET_20);
         setTestingText("Ralltiir (DARK) (V)");

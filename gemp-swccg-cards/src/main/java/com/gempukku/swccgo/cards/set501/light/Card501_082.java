@@ -40,7 +40,7 @@ public class Card501_082 extends AbstractDefensiveShield {
         super(Side.LIGHT, PlayCardZoneOption.ATTACHED, Title.There_Is_Another, ExpansionSet.SET_20, Rarity.V);
         setLore("Princess Leia Organa. Alderaanian senator. Targeted by Vader for capture and interrogation. The Dark Lord of the Sith wanted her alive.");
         setGameText("Plays on Your Destiny unless Leia or Luke has been deployed this game (even as a captive). We're The Bait is lost. Opponent's Objective and [Death Star II] Effects target Leia instead of Luke. Attempts to cross Leia over are -2. Opponent loses no Force to their Objective.");
-        addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_SET_9);
+        addIcons(Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setTestingText("There Is Another (ERRATA)");
     }
 
@@ -58,8 +58,6 @@ public class Card501_082 extends AbstractDefensiveShield {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, final int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
         String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
-        //final GameState gameState = game.getGameState();
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
         // We're The Bait is lost.

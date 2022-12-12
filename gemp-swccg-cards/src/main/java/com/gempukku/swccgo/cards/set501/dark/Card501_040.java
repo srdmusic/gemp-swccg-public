@@ -15,7 +15,6 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.PutRandomCardsFromHandOnUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.ShuffleUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
@@ -24,6 +23,7 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -38,21 +38,22 @@ public class Card501_040 extends AbstractDefensiveShield {
     public Card501_040() {
         super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Drop, ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
-        setGameText("Plays on table. May use 2 Force to target opponent's hand of > 14 cards; shuffle all but 9 random cards into opponent's Used Pile. If Grimtaash or Thrown Back just targeted your hand, may reveal two cards from hand to 'protect' them.");
-        addIcons(Icon.VIRTUAL_DEFENSIVE_SHIELD);
+        setGameText("Plays on table. At end of a turn, if opponent has 15 or more cards in hand, may use 2 Force to shuffle all but 9 (random selection) into Used Pile. If Grimtaash or Thrown Back just targeted your hand, may reveal 2 cards from hand; they cannot be removed or checked for duplicates.");
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setTestingText("Drop! (V)");
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         final String opponent = game.getOpponent(playerId);
 
         // Check condition(s)
-        if (GameConditions.numCardsInHand(game, opponent) > 14
+        if (TriggerConditions.isEndOfEachTurn(game, effectResult)
+                && GameConditions.numCardsInHand(game, opponent) >= 15
                 && GameConditions.canUseForce(game, playerId, 2)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
-            action.setText("Target opponent's hand");
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Remove cards from opponent's hand");
             action.setActionMsg("Shuffle all but 9 random cards from opponent's hand into opponent's Used Pile");
 
             action.appendCost(

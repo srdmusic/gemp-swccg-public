@@ -41,7 +41,7 @@ public class Card501_118 extends AbstractSite {
     @Override
     protected List<TopLevelGameTextAction> getGameTextDarkSideTopLevelActions(String playerOnDarkSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new ArrayList<>();
-        GameTextActionId gameTextActionId = GameTextActionId.LOTHAL_ADVANCED_PROJECTS_LABORATORY__DOWNLOAD_THRAWN_OR_TIE_DEFENDER_PROJECT;
+        GameTextActionId gameTextActionId = GameTextActionId.LOTHAL_ADVANCED_PROJECTS_LABORATORY__DOWNLOAD_CARD;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId)
