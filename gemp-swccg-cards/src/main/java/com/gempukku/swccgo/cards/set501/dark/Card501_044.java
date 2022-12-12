@@ -36,7 +36,7 @@ public class Card501_044 extends AbstractObjective {
         super(Side.DARK, 0, Title.Twin_Suns_Of_Tatooine);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Tatooine system and a non-Jabba's Palace Tatooine site. For remainder of game, you may not deploy Jabba's Palace sites or Sandwhirl. While this side up, once per turn, may use 1 Force to [download] a Tatooine battleground site. Flip this card if you control two Tatooine battleground sites (at least one with a Dark Jedi) and occupy Tatooine system, and opponent controls no Tatooine sites.");
-        addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_P);
+        addIcons(Icon.EPISODE_I, Icon.TATOOINE, Icon.VIRTUAL_SET_P);
         setTestingText("Twin Suns Of Tatooine (ERRATA)");
     }
 

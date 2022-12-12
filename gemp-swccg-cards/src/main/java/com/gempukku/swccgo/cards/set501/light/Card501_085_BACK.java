@@ -43,8 +43,8 @@ import java.util.List;
 public class Card501_085_BACK extends AbstractObjective {
     public Card501_085_BACK() {
         super(Side.LIGHT, 7, Title.You_Truly_Belong_Here_With_Us);
-        setGameText("While this side up, once per game, may [download] Cloud City Celebration. Once during your control phase, may use 2 Force to [upload] one Interrupt. Once per turn, may move your character as a 'react' to a battle or Force drain at a Cloud City site. Flip this card if opponent controls more Cloud City sites than you.");
-        addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_P);
+        setGameText("While this side up, once per game, may [download] Cloud City Celebration. Once during your control phase, may use 2 Force to [upload] an Interrupt. Once per turn, may move your character as a 'react' to a battle or Force drain at a Cloud City site. Flip this card if opponent controls more Cloud City sites than you.");
+        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_P);
         setTestingText("You Truly Belong Here With Us");
     }
 

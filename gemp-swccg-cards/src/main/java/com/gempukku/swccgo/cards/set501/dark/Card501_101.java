@@ -41,8 +41,8 @@ public class Card501_101 extends AbstractObjective {
     public Card501_101() {
         super(Side.DARK, 0, Title.A_Great_Tactician_Creates_Plans);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Lothal system, Advanced Projects Laboratory, Imperial Complex, and Thrawn’s Art Collection." +
-                    "For remainder of game, you may not deploy [Episode I] (or [Episode VII]) cards with ability or [Presence], or Chiraneau. Once per turn, may [download] a battleground system (or a site to Lothal). " +
+        setGameText("Deploy Lothal system, Advanced Projects Laboratory, Imperial Complex, and Thrawn's Art Collection. " +
+                    "For remainder of game, you may not deploy Chiraneau or [Episode I] (or [Episode VII]) cards with ability or [Presence]. Once per turn, may [download] a battleground system (or a site to Lothal). " +
                     "While this side up, Imperial Star Destroyers deploy -1 (-3 if Chimaera). " +
                     "Flip this card during any deploy phase if Thrawn at a battleground and two or more artwork cards on table.");
         addIcons(Icon.VIRTUAL_SET_19);
@@ -60,17 +60,17 @@ public class Card501_101 extends AbstractObjective {
                     }
                 });
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Lothal_Imperial_Complex), true, false) {
-                    @Override
-                    public String getChoiceText() {
-                        return "Choose Lothal: Imperial Complex to deploy";
-                    }
-                });
-        action.appendRequiredEffect(
                 new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Lothal_Advanced_Projects_Laboratory), true, false) {
                     @Override
                     public String getChoiceText() {
                         return "Choose Lothal: Advanced Projects Laboratory to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Lothal_Imperial_Complex), true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Lothal: Imperial Complex to deploy";
                     }
                 });
         action.appendRequiredEffect(

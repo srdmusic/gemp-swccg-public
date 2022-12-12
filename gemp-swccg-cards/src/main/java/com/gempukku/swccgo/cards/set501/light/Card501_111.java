@@ -41,7 +41,7 @@ public class Card501_111 extends AbstractDroid {
         super(Side.LIGHT, Math.PI, 2, 1, 4, "BB-8 (Beebee-Ate)", Uniqueness.UNIQUE, ExpansionSet.SET_4, Rarity.V);
         setAlternateDestiny(2 * Math.PI);
         addPersona(Persona.BB8);
-        setGameText("If with a Resistance leader at a battleground site, Force drain +1 here. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any). Elis Helrot may not target this site. Immune to Restraining Bolt.");
+        setGameText("If with a Resistance leader at a battleground site, Force drain +1 here. During your move phase, may place in Used Pile; 'break cover' of all Undercover spies here (if any). Elis Helrot may not transport cards to or from here. Immune to Restraining Bolt.");
         addIcons(Icon.EPISODE_VII, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_4);
         addModelType(ModelType.ASTROMECH);
         setTestingText("BB-8 (Beebee-Ate) (ERRATA)");

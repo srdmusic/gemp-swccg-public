@@ -48,7 +48,7 @@ public class Card501_092 extends AbstractEpicEventDeployable {
                 "My Father Has It: Anakin (and [Episode I] Obi-Wan) " +
                 "I Have It: Luke (and [Set 1] Obi-Wan) " +
                 "You Have That Power, Too: Rey (and [Episode VII] Luke) " +
-                "[Set 16] Anakin is deploy -1. Your total Force generation is +1. You may not deploy Boss Nass' Chambers or Jedi (except Yoda and the chosen characters). If you just initiated battle involving a Skywalker (or if opponent's Sidious just lost from table), may retrieve 1 Force. Your lightsabers may not be stolen");
+                "[Set 16] Anakin is deploy -1. Your total Force generation is +1. You may not deploy Boss Nass' Chambers or Jedi (except Yoda and the chosen characters). If you just initiated battle involving a Skywalker (or if opponent's Sidious just lost from table), may retrieve 1 Force. Your lightsabers may not be stolen.");
         addIcons(Icon.SKYWALKER, Icon.EPISODE_I, Icon.EPISODE_VII, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_17);
         setTestingText("The Force Is Strong In My Family (ERRATA)");
     }

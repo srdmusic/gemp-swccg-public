@@ -36,7 +36,7 @@ public class Card501_056 extends AbstractRebel {
         super(Side.LIGHT, 1, 6, 4, 3, 6, Title.Prisoner_2187, Uniqueness.UNIQUE);
         setVirtualSuffix(true);
         setLore("Princess Leia Organa. Alderaanian senator. Targeted by Vader for capture and interrogation. The Dark Lord of the Sith wanted her alive.");
-        setGameText("While on Death Star (even if imprisoned): Leia may not be transferred, moves using landspeed for free, adds 1 to your Force drains where you have a Rebel stormtrooper, draws one battle destiny if unable to otherwise, and her game text may not be canceled.");
+        setGameText("While on Death Star (even if imprisoned): Force drain +1 where you have a Rebel stormtrooper, Leia may not be transferred, moves using landspeed for free, draws one battle destiny if unable to otherwise, and her game text may not be canceled.");
         addPersona(Persona.LEIA);
         addIcons(Icon.PREMIUM, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.SENATOR, Keyword.FEMALE);
@@ -54,7 +54,7 @@ public class Card501_056 extends AbstractRebel {
         modifiers.add(new MayNotHaveGameTextCanceledModifier(self, onDeathStarAndImprisonedCondition));
         modifiers.add(new MayNotBeTransferredModifier(self, onDeathStarAndImprisonedCondition));
         modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, onDeathStarAndImprisonedCondition, 1));
-        modifiers.add(new ForceDrainModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.Rebel, Filters.stormtrooper)), onDeathStarAndImprisonedCondition, 1, playerId));
+        modifiers.add(new ForceDrainModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.Rebel, Filters.stormtrooper)), onDeathStarAndImprisonedCondition, 1, playerId));
         return modifiers;
     }
 
@@ -68,7 +68,7 @@ public class Card501_056 extends AbstractRebel {
         modifiers.add(new MayNotHaveGameTextCanceledModifier(self, onDeathStarCondition));
         modifiers.add(new MayNotBeTransferredModifier(self, onDeathStarCondition));
         modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, onDeathStarCondition, 1));
-        modifiers.add(new ForceDrainModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.Rebel, Filters.stormtrooper)), onDeathStarCondition, 1, playerId));
+        modifiers.add(new ForceDrainModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.Rebel, Filters.stormtrooper)), onDeathStarCondition, 1, playerId));
         return modifiers;
     }
 }

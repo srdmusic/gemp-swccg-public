@@ -32,7 +32,7 @@ public class Card501_093 extends AbstractSite {
     public Card501_093() {
         super(Side.LIGHT, Title.Anakins_Funeral_Pyre, Title.Endor);
         setLocationDarkSideGameText("");
-        setLocationLightSideGameText("If you just chose I Have It on your [Skywalker] Epic Event, deploy Like My Father Before Me from Reserve Deck; reshuffle. If Anakin 'communing,' you may initiate battles for free.");
+        setLocationLightSideGameText("If you just chose I Have It on your [Skywalker] Epic Event, [download] Like My Father Before Me. If Anakin 'communing,' you may initiate battles for free.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.SKYWALKER, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
         setTestingText("Endor: Anakin's Funeral Pyre (ERRATA)");
@@ -59,7 +59,7 @@ public class Card501_093 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new InitiateBattlesForFreeModifier(self, Filters.any, new CommuningCondition(Filters.Anakin), self.getOwner()));
+        modifiers.add(new InitiateBattlesForFreeModifier(self, Filters.any, new CommuningCondition(Filters.Anakin), playerOnLightSideOfLocation));
         return modifiers;
     }
 }

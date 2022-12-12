@@ -50,7 +50,7 @@ public class Card501_001 extends AbstractAlien {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new CancelsGameTextModifier(self, Filters.Jabba));
-        modifiers.add(new AddsDestinyToAttritionModifier(self, new WithCondition(self, 2, Filters.and(Filters.your(self), Filters.alien)), 1));
+        modifiers.add(new AddsDestinyToAttritionModifier(self, new WithCondition(self, 2, Filters.alien), 1));
         modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.other(self.getAtLocation()), Filters.Tatooine_battleground_site), new AtCondition(self, Filters.Audience_Chamber), 1, self.getOwner()));
         return modifiers;
     }
@@ -60,7 +60,10 @@ public class Card501_001 extends AbstractAlien {
         if(TriggerConditions.justDeployedToLocation(game, effectResult, game.getOpponent(playerId), Filters.character, Filters.here(self))
             && GameConditions.isAtLocation(game, self, Filters.Audience_Chamber)
             && GameConditions.canActivateForce(game, playerId)){
+
             OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+
+            action.setText("Activate 1 Force");
             action.appendEffect(
                     new ActivateForceEffect(action, playerId, 1)
             );
