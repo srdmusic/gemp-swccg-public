@@ -38,8 +38,9 @@ import java.util.List;
 public class Card501_088_BACK extends AbstractObjective {
     public Card501_088_BACK() {
         super(Side.LIGHT, 7, Title.We_Need_Your_Help);
-        setGameText("While this side up, once per turn may [download] a Jakku location. Once during opponent's control phase, if you control two Jakku battlegrounds and are about to lose Force (except to a Force drain at a Jakku location), may reduce that Force loss to 1 (may not be further reduced). Once per turn, during battle involving your Resistance character, may subtract 2 from a just drawn destiny. While with Han, your [Episode VII] characters and [Episode VII] starships are defense value +2. Flip this card if you do not occupy two battlegrounds.");
-        addIcons(Icon.PREMIUM, Icon.EPISODE_VII, Icon.VIRTUAL_SET_4);
+        setGameText("While this side up, once during opponent's control phase, if you control two Jakku battlegrounds and are about to lose Force (except to a Force drain at a Jakku location), may reduce that Force loss to 1 (may not be further reduced). Once per turn, during battle involving your Resistance character, may subtract 2 from a just drawn destiny. While with Han, your [Episode VII] characters and [Episode VII] starships are defense value +2. " +
+                "Flip this card if you do not occupy two battlegrounds.");
+        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_4);
         setTestingText("We Need Your Help (ERRATA)");
     }
     @Override

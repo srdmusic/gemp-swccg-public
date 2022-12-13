@@ -40,9 +40,9 @@ public class Card501_086 extends AbstractObjective {
         super(Side.LIGHT, 0, Title.He_Is_The_Chosen_One);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Anakin's Funeral Pyre (with Prophecy Of The Force there), Ewok Village, and I Feel The Conflict. " +
-                "For remainder of game, you may not deploy [Episode I] or [Episode VII] characters or locations (except Obi-Wan, Yoda, and Lars' Moisture Farm) If Luke just won a battle, may re-circulate and reshuffle. Emperor's Power may not increase your deploy cost at battlegrounds. " +
+                "For remainder of game, you may not deploy [Episode I] or [Episode VII] characters or locations (except Obi-Wan, Yoda, and Lars' Moisture Farm). If Luke just won a battle, may re-circulate and shuffle Reserve Deck. Emperor's Power does not increase deploy costs at battlegrounds. " +
                 "While this side up, you may initiate battles for free. " +
-                "Flip this card if Luke (or a Jedi) at a battleground site and opponent has no characters of ability > 4 at battleground sites.");
+                "Flip this card if Luke or a Jedi at a battleground site (unless an opponent's character of ability > 4 is).");
         addIcons(Icon.VIRTUAL_SET_8);
         setTestingText("He Is The Chosen One (ERRATA)");
     }
@@ -89,7 +89,7 @@ public class Card501_086 extends AbstractObjective {
                         new MayNotDeployModifier(self, Filters.and(Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.or(Filters.and(Filters.character, Filters.except(Filters.or(Filters.ObiWan, Filters.Yoda))), Filters.and(Filters.location, Filters.except(Filters.Lars_Moisture_Farm)))), playerId), null));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new ImmuneToDeployCostModifiersToLocationModifier(self, Filters.your(self), Filters.Emperors_Power, Filters.battleground), null));
+                        new ImmuneToDeployCostModifiersToLocationModifier(self, Filters.any, Filters.Emperors_Power, Filters.battleground), null));
 
         return action;
     }

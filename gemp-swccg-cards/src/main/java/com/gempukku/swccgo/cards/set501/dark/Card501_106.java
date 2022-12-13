@@ -34,7 +34,7 @@ public class Card501_106 extends AbstractUsedInterrupt {
     public Card501_106() {
         super(Side.DARK, 5, "A Dark Time For The Rebellion & Tarkin's Orders", Uniqueness.UNIQUE);
         addComboCardTitles("A Dark Time For The Rebellion", "Tarkin's Orders");
-        setGameText("For remainder of turn, opponent may not cancel your battle destiny draws or character weapon destiny draws. OR If you have two battlegrounds on table (and opponent does not), for remainder of turn, your total power in battles is +1 for each of opponent's non-battlegrounds on table. OR Cancel It Could Be Worse or Nabrun Leids. OR If Menace Fades on table or opponent does not occupy a battleground site, cancel Projection Of A Skywalker.");
+        setGameText("For remainder of turn, opponent may not cancel your battle destiny draws or character weapon destiny draws. OR If you have two battlegrounds on table (and opponent does not), for remainder of turn, your total power in battles is +1 for each opponent's non-battleground location on table. OR Cancel It Could Be Worse or Nabrun Leids. OR If opponent does not occupy a battleground site (or if Menace Fades on table), cancel Projection Of A Skywalker.");
         addIcons(Icon.VIRTUAL_SET_18);
         setTestingText("A Dark Time For The Rebellion & Tarkin's Orders (ERRATA)");
     }
@@ -71,7 +71,7 @@ public class Card501_106 extends AbstractUsedInterrupt {
         int yourBattlegroundCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.your(self), Filters.battleground));
         int opponentBattlegroundCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.opponents(self), Filters.battleground));
 
-        if (yourBattlegroundCount > 2
+        if (yourBattlegroundCount >= 2
                 && opponentBattlegroundCount < 2) {
             final int opponentNonBattlegroundCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.opponents(self), Filters.non_battleground_location));
 

@@ -41,7 +41,7 @@ public class Card501_104 extends AbstractNormalEffect {
         super(Side.DARK, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Silence Is Golden");
         setVirtualSuffix(true);
         setLore("'Excuse me, sir, might I in--'");
-        setGameText("Deploy on table. Your droids are destiny +1. Once per turn, if you just drew a non-[Presence] droid for destiny, may take that droid into hand. Once per turn, may deploy Droid Workshop, Incinerator, or Wuher from Reserve Deck; reshuffle. Forced Servitude is canceled. (Immune to Alter and Levitation.)");
+        setGameText("Deploy on table. Your droids are destiny +1. Once per turn, if you just drew a non-[Presence] droid for destiny, may take that droid into hand. Once per turn, may [download] Droid Workshop, Incinerator, or Wuher. Forced Servitude is canceled. Immune to Levitation. [Immune to Alter.]");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_10);
         addImmuneToCardTitle(Title.Alter);
         addImmuneToCardTitle(Title.Levitation);
@@ -65,7 +65,7 @@ public class Card501_104 extends AbstractNormalEffect {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy a Droid Workshop, Incinerator, or Wuher from Reserve Deck");
+            action.setActionMsg("Deploy Droid Workshop, Incinerator, or Wuher from Reserve Deck");
 
             // Update usage limit(s)
             action.appendUsage(
