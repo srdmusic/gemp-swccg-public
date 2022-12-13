@@ -74,7 +74,7 @@ public class Card501_094 extends AbstractStarfighter {
         Condition hanPiloting = new HasPilotingCondition(self, Filters.Han);
         Condition chewiePiloting = new HasPilotingCondition(self, Filters.Chewie);
 
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, new OrCondition(hanPiloting, chewiePiloting), new ConditionEvaluator(5, 7, new AndCondition(hanPiloting, chewiePiloting))));
         return modifiers;
     }

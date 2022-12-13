@@ -39,7 +39,7 @@ public class Card501_116 extends AbstractObjective {
         super(Side.LIGHT, 0, Title.They_Have_No_Idea_Were_Coming);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Scarif system, Data Vault (with Stardust there), and Massassi War Room. " +
-                "For remainder of game, you may not deploy Jedi or Taking Them With Us. Baze, Chirrut, and Rebel troopers are spies. " +
+                "For remainder of game, Baze, Chirrut, and Rebel troopers are spies. You may not deploy Taking Them With Us or Jedi. " +
                 "While this side up, once per turn, may [download] Rogue One, a corvette, or a Scarif site. " +
                 "Flip this card if you control two Scarif locations.");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_9);
@@ -93,7 +93,7 @@ public class Card501_116 extends AbstractObjective {
         // Cannot deploy Jedi
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new MayNotDeployModifier(self, Filters.or(Filters.Jedi, Filters.title("Taking Them With Us")), playerId), null));
+                        new MayNotDeployModifier(self, Filters.or(Filters.Jedi, Filters.title(Title.Taking_Them_With_Us)), playerId), null));
 
         // Baze, Chirrut and Rebel Troopers are Spies
         action.appendEffect(

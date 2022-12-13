@@ -3,7 +3,9 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
@@ -33,7 +35,7 @@ import java.util.List;
  */
 public class Card501_062 extends AbstractUsedOrLostInterrupt {
     public Card501_062() {
-        super(Side.LIGHT, 4, "Antilles Maneuver & Moving To Attack Position", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 4, "Antilles Maneuver & Moving To Attack Position", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         addComboCardTitles("Antilles Maneuver", "Moving To Attack Position");
         setGameText("USED: For remainder of turn, opponent must first use 1 force to fire a weapon (and their weapon destiny draws targeting your starships are -1). " +
                 "LOST: During battle at a system where you have two or more starships, draw two battle destiny if unable to otherwise. OR During battle your snub fighter is immune to attrition and draws battle destiny if unable to otherwise.");

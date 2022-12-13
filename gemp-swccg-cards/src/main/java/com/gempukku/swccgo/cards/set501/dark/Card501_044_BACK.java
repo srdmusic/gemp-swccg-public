@@ -37,8 +37,8 @@ import java.util.List;
 public class Card501_044_BACK extends AbstractObjective {
     public Card501_044_BACK() {
         super(Side.DARK, 7, Title.Well_Trained_In_The_Jedi_Arts);
-        setGameText("While this side up, once per game, may [download] Tatooine Occupation. Once during your control phase, may peek at the top two cards of your Reserve Deck; take one in to hand and shuffle Reserve Deck. For opponent to move a character or vehicle from site site as your Dark Jedi requires +1 Force. Flip this card if opponent controls more Tatooine sites than you.");
-        addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_P);
+        setGameText("While this side up, once per game, may [download] Tatooine Occupation. Once during your control phase, may peek at the top two cards of your Reserve Deck; take one into hand and shuffle Reserve Deck. For opponent to move a character or vehicle from same site as your Dark Jedi requires +1 Force. Flip this card if opponent controls more Tatooine sites than you.");
+        addIcons(Icon.EPISODE_I, Icon.TATOOINE, Icon.VIRTUAL_SET_P);
         setTestingText("Well Trained In The Jedi Arts And Crafts");
     }
 
