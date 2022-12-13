@@ -3,7 +3,14 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.PilotingCondition;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Filterable;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -29,7 +36,7 @@ import java.util.List;
  */
 public class Card501_015 extends AbstractImperial {
     public Card501_015() {
-        super(Side.DARK, 2, 2, 2, 2, 4, Title.Captain_Lennox, Uniqueness.UNIQUE);
+        super(Side.DARK, 2, 2, 2, 2, 4, Title.Captain_Lennox, Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
         setLore("Captain of the Imperial Star Destroyer Tyrant. An able leader. Unlike most Imperial officers, he is dedicated to his ship and crew. Finds political maneuvering distasteful.");
         setGameText("Adds 2 to power of anything he pilots. While piloting a [Hoth], [Dagobah], or [Cloud City] Star Destroyer, it is immune to attrition < 4 and starships here may not ‘attach.’ During battle, if opponent drew destiny to subtract from your total attrition, opponent loses 1 Force.");

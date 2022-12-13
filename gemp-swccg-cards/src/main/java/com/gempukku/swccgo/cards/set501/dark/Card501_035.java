@@ -3,17 +3,23 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.RecirculateEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ResetArmorModifier;
 import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,7 +31,7 @@ import java.util.List;
  */
 public class Card501_035 extends AbstractImperial {
     public Card501_035() {
-        super(Side.DARK, 1, 3, 3, 3, 5, Title.Tagge, Uniqueness.UNIQUE);
+        super(Side.DARK, 1, 3, 3, 3, 5, Title.Tagge, Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
         setLore("Oversees defense operations of Death Star. Outstanding tactician. No-nonsense leader. Member of the House of Tagge, a powerful noble family and corporate conglomerate.");
         setGameText("Your non-[Maintenance] troopers are armor = 4. Your power at adjacent sites where you have a non-biker scout trooper is +3. Once per game, if with two non-unique troopers, may recirculate.");
