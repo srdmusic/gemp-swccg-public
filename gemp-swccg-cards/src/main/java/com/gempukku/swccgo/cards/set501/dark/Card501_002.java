@@ -4,7 +4,13 @@ import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.cards.effects.CancelWeaponTargetingEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -32,7 +38,7 @@ import java.util.List;
  */
 public class Card501_002 extends AbstractUsedOrLostInterrupt {
     public Card501_002() {
-        super(Side.DARK, 5, "A Fine Addition to my Collection", Uniqueness.UNIQUE);
+        super(Side.DARK, 5, "A Fine Addition to my Collection", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         setLore("");
         setGameText("USED: If Grievous just swung a stolen lightsaber, add one battle destiny. " +
                 "LOST: Cancel an attempt to target Grievous with a lightsaber. " +

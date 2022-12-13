@@ -4,9 +4,12 @@ import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -32,7 +35,7 @@ import java.util.List;
  */
 public class Card501_064 extends AbstractUsedOrLostInterrupt {
     public Card501_064() {
-        super(Side.LIGHT, 5, "Luke's Acceptance");
+        super(Side.LIGHT, 5, "Luke's Acceptance", Uniqueness.UNRESTRICTED, ExpansionSet.SET_20, Rarity.V);
         setLore("");
         setGameText("USED: Once per game, if battle was just initiated where Luke is alone, weapons may not be fired." +
                 "LOST: Once per game, if you have two cards stacked on I Feel The Conflict, " +
