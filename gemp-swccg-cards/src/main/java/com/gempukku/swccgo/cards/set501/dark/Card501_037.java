@@ -33,18 +33,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Character
  * Subtype: Imperial
  * Title: Captain Mod Terrik
  */
 public class Card501_037 extends AbstractImperial {
     public Card501_037() {
-        super(Side.DARK, 3, 2, 2, 2, 4, "Captain Mod Terrik", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, 3, 2, 2, 2, 4, "Captain Mod Terrik", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setArmor(4);
         setLore("Leader. Sandtrooper.");
         setGameText("Power +1 if Stardust or Stolen Data Tapes on table. While in battle with another trooper, attrition against opponent is +1. When moving using landspeed in your move phase, two of your stormtroopers here may move as a regular move to same location for free.");
-        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.SANDTROOPER, Keyword.LEADER);
         setTestingText("Captain Mod Terrik");
     }

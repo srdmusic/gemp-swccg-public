@@ -20,19 +20,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Location
  * Subtype: System
  * Title: Christophsis
  */
 public class Card501_073 extends AbstractSystem {
     public Card501_073() {
-        super(Side.LIGHT, Title.Christophsis, 7, ExpansionSet.SET_20, Rarity.V);
+        super(Side.LIGHT, Title.Christophsis, 7, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("If you occupy with a [Separatist] starship, opponent must use +1 Force to move or deploy a starship to here.");
         setLocationLightSideGameText("If you occupy with a [Clone Army] starship, opponent must use +1 Force to move or deploy a starship to here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.CLONE_ARMY, Icon.VIRTUAL_SET_20, Icon.PLANET, Icon.EPISODE_I);
+        addIcons(Icon.CLONE_ARMY, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("Christophsis");
     }
 

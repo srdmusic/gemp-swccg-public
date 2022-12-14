@@ -28,18 +28,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Antilles Maneuver & Moving To Attack Position
  */
 public class Card501_062 extends AbstractUsedOrLostInterrupt {
     public Card501_062() {
-        super(Side.LIGHT, 4, "Antilles Maneuver & Moving To Attack Position", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
+        super(Side.LIGHT, 4, "Antilles Maneuver & Moving To Attack Position", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         addComboCardTitles("Antilles Maneuver", "Moving To Attack Position");
         setGameText("USED: For remainder of turn, opponent must first use 1 force to fire a weapon (and their weapon destiny draws targeting your starships are -1). " +
                 "LOST: During battle at a system where you have two or more starships, draw two battle destiny if unable to otherwise. OR During battle your snub fighter is immune to attrition and draws battle destiny if unable to otherwise.");
-        addIcons(Icon.VIRTUAL_SET_20);
+        addIcons(Icon.VIRTUAL_SET_21);
         setTestingText("Antilles Maneuver & Moving To Attack Position");
     }
 

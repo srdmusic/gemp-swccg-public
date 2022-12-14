@@ -1,7 +1,12 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -19,9 +24,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Character
  * Subtype: Alien
  * Title: Black Krrsantan
@@ -33,7 +37,7 @@ public class Card501_009 extends AbstractAlien {
         setGameText("May not be excluded from battle. If a battle was just initiated here, each player with four or " +
                 "more characters here must return one of those characters to hand (owner's choice). " +
                 "Opponent’s characters of ability < 3 are power -1 here.");
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         setSpecies(Species.WOOKIEE);
         addKeywords(Keyword.BOUNTY_HUNTER);
         setTestingText("Black Krrsantan");

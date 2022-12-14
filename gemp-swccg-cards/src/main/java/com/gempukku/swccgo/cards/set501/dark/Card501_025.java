@@ -30,19 +30,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Character
  * Subtype: Republic
  * Title: San Hill
  */
 public class Card501_025 extends AbstractRepublic {
     public Card501_025() {
-        super(Side.DARK, 2, 3, 3, 3, 5, "San Hill", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, 2, 3, 3, 3, 5, "San Hill", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Muun leader. Banking Clan.");
         setGameText("Your battle droids at same site are deploy -1 and forfeit +1. Once per game may deploy Grievous here from Reserve Deck; reshuffle. While on Utapau and The Galaxy Torn Apart on table, you initiate battle for free.");
         addKeywords(Keyword.LEADER);
         setSpecies(Species.MUUN);
-        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.VIRTUAL_SET_21);
         setTestingText("San Hill");
     }
 

@@ -31,18 +31,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Character
  * Subtype: Imperial
  * Title: Commander Praji (V)
  */
 public class Card501_036 extends AbstractImperial {
     public Card501_036() {
-        super(Side.DARK, 2, 2, 2, 2, 4, "Commander Praji", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, 2, 2, 2, 2, 4, "Commander Praji", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Vader's aide on the Devastator. Personally supervised search for Death Star plans on Tatooine by Vader's order. Was graduated with honors from Imperial Navy Academy on Carida.");
         setGameText("Adds 2 to power of anything he pilots. While aboard Devastator, adds 1 to armor and hyperspeed and, at the beginning of opponent's battle phase, you may move one trooper at a related site using landspeed.");
-        addIcons(Icon.PILOT, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.PILOT, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.COMMANDER);
         setMatchingStarshipFilter(Filters.Devastator);
         setTestingText("Commander Praji (V)");

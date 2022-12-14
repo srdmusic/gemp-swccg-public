@@ -24,19 +24,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Location
  * Subtype: System
  * Title: Christophsis
  */
 public class Card501_026_BACK extends AbstractSystem {
     public Card501_026_BACK() {
-        super(Side.DARK, Title.Christophsis, 6, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, Title.Christophsis, 6, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Dooku, Quinlan Vos, and Ventress deploy -1 (and are power +1) at Christophsis sites.");
         setLocationLightSideGameText("If you just Force drained (or won a battle) at a Christophsis site, 'conquer' (flip) Christophsis.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_21);
         setTestingText("Christophsis (Separatist controlled)");
     }
 

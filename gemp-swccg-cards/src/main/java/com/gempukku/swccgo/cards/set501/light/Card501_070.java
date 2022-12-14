@@ -18,19 +18,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Location
  * Subtype: System
  * Title: Geonosis
  */
 public class Card501_070 extends AbstractSystem {
     public Card501_070() {
-        super(Side.LIGHT, Title.Geonosis, 6, ExpansionSet.SET_20, Rarity.V);
+        super(Side.LIGHT, Title.Geonosis, 6, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Your [Separatist] starships deploy -1 here and move for free to or from the nearest related asteroid sector.");
         setLocationLightSideGameText("Your [Clone Army] starships deploy -1 here. Your starships at the nearest related asteroid sector may move here as a 'react.'");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_21);
         setTestingText("Geonosis");
     }
 

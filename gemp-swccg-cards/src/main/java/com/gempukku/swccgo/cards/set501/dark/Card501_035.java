@@ -24,19 +24,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Character
  * Subtype: Imperial
  * Title: General Tagge (V)
  */
 public class Card501_035 extends AbstractImperial {
     public Card501_035() {
-        super(Side.DARK, 1, 3, 3, 3, 5, Title.Tagge, Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, 1, 3, 3, 3, 5, Title.Tagge, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Oversees defense operations of Death Star. Outstanding tactician. No-nonsense leader. Member of the House of Tagge, a powerful noble family and corporate conglomerate.");
         setGameText("Your non-[Maintenance] troopers are armor = 4. Your power at adjacent sites where you have a non-biker scout trooper is +3. Once per game, if with two non-unique troopers, may recirculate.");
         addKeywords(Keyword.GENERAL, Keyword.LEADER);
-        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         setTestingText("General Tagge (V)");
     }
 

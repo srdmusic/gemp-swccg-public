@@ -2,8 +2,10 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
@@ -24,20 +26,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Interrupt
  * Subtype: Lost
  * Title: A Jedi's Fury
  */
 public class Card501_063 extends AbstractLostInterrupt {
     public Card501_063() {
-        super(Side.LIGHT, 4, "A Jedi's Fury", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 4, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("If Luke alone in a battle or duel, add 1 to a just drawn weapon, " +
                 "battle or duel destiny for each card stacked on I Feel The Conflict (limit 3). " +
                 "OR During your move phase, relocate Luke from a site to a battleground site " +
                 "(or your site that opponent occupies).");
-        addIcon(Icon.VIRTUAL_SET_20);
+        addIcon(Icon.VIRTUAL_SET_21);
         setTestingText("A Jedi's Fury");
     }
 

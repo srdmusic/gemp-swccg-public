@@ -24,19 +24,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Location
  * Subtype: System
  * Title: Geonosis
  */
 public class Card501_020_BACK extends AbstractSystem {
     public Card501_020_BACK() {
-        super(Side.DARK, Title.Geonosis, 6, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, Title.Geonosis, 6, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("If you just Force drained (or won a battle) at a Geonosis site, 'conquer' (flip) Geonosis.");
         setLocationLightSideGameText("While you occupy with a [Republic] starship, your clones are destiny +1 and power +1.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_21);
         setTestingText("Geonosis (Republic controlled)");
     }
 

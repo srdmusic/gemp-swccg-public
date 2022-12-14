@@ -30,19 +30,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Character
  * Subtype: Republic
  * Title: Poggle The Lesser
  */
 public class Card501_022 extends AbstractRepublic {
     public Card501_022() {
-        super(Side.DARK, 2, 3, 4, 2, 5, "Poggle The Lesser", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, 2, 3, 4, 2, 5, "Poggle The Lesser", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Geonosian leader.");
         setGameText("While with a battle droid, opponent may not draw more than one battle destiny here. Once per game, may deploy Dooku here from Reserve Deck; reshuffle. While on Geonosis and The Galaxy Torn Apart on table, opponent's Force retrieval is canceled.");
         addKeywords(Keyword.LEADER);
         setSpecies(Species.GEONOSIAN);
-        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.VIRTUAL_SET_21);
         setTestingText("Poggle The Lesser");
     }
 

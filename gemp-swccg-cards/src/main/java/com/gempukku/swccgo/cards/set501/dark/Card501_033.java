@@ -4,7 +4,12 @@ import com.gempukku.swccgo.cards.AbstractPermanentAboard;
 import com.gempukku.swccgo.cards.AbstractPermanentPilot;
 import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.ModelType;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -12,7 +17,11 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.LandsAsUnlimitedMoveModifier;
+import com.gempukku.swccgo.logic.modifiers.LandsForFreeModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.TakesOffAsUnlimitedMoveModifier;
+import com.gempukku.swccgo.logic.modifiers.TakesOffForFreeModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
@@ -20,9 +29,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Starship
  * Subtype: Starfighter
  * Title: CIS Transport Shuttle
@@ -31,7 +39,7 @@ public class Card501_033 extends AbstractStarfighter {
     public Card501_033() {
         super(Side.DARK, 4, 2, 3, null, 5, 4, 4, "CIS Transport Shuttle", Uniqueness.UNIQUE);
         setGameText("May add 1 pilot and 2 passengers. Permanent pilot provides ability of 2. When deployed, may deploy a battle droid aboard from Reserve Deck; reshuffle. Takes off and lands as an unlimited move (for free).");
-        addIcons(Icon.NAV_COMPUTER, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.NAV_COMPUTER, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_21);
         addIcon(Icon.PILOT, 1);
         addModelType(ModelType.SHEATHIPEDE_CLASS_SHUTTLE);
         setPilotCapacity(1);

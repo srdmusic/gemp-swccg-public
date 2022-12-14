@@ -19,20 +19,20 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Location
  * Subtype: System
  * Title: Geonosis
  */
 public class Card501_020 extends AbstractSystem {
     public Card501_020() {
-        super(Side.DARK, Title.Geonosis, 6, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, Title.Geonosis, 6, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setLocationDarkSideGameText("If opponent just Force drained (or won a battle) here and no Geonosis sites on table, they 'conquer' (flip) Geonosis.");
         setLocationLightSideGameText("If you just Force drained (or won a battle) at a Geonosis site, 'conquer' (flip) Geonosis.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_21);
         setMayNotBePlacedInReserveDeck(true);
         setTestingText("Geonosis (Separatist controlled)");
     }

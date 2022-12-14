@@ -22,20 +22,20 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Location
  * Subtype: System
  * Title: Utapau
  */
 public class Card501_023 extends AbstractSystem {
     public Card501_023() {
-        super(Side.DARK, Title.Utapau, 2, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, Title.Utapau, 2, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setLocationDarkSideGameText("If you just Force drained (or won a battle) at a Utapau site, 'conquer' (flip) Utapau.");
         setLocationLightSideGameText("Starships piloted by Anakin or Obi-Wan are immune to attrition here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_21);
         setMayNotBePlacedInReserveDeck(true);
         setTestingText("Utapau (Republic controlled)");
     }

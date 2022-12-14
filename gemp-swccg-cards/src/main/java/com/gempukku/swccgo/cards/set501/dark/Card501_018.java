@@ -4,19 +4,24 @@ import com.gempukku.swccgo.cards.AbstractPermanentAboard;
 import com.gempukku.swccgo.cards.AbstractPermanentPilot;
 import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.ModelType;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Starship
  * Subtype: Starfighter
  * Title: Colonel Jendon In Vader's Personal Shuttle
@@ -25,7 +30,7 @@ public class Card501_018 extends AbstractStarfighter {
     public Card501_018() {
         super(Side.DARK, 2, 5, 5, null, 5, 3, 5, "Colonel Jendon In Vader's Personal Shuttle", Uniqueness.UNIQUE);
         setGameText("Deploy -3 to Mustafar. May add 1 pilot and 3 passengers. Permanent pilot is •Colonel Jendon, who provides ability of 2. While Vader armed with a lightsaber weapon card at a battleground, Force drain +1 here.");
-        addIcons(Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_21);
         addModelTypes(ModelType.LAMBDA_CLASS_SHUTTLE);
         setPilotCapacity(1);
         setPassengerCapacity(3);

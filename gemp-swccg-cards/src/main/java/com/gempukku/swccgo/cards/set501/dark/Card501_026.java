@@ -23,20 +23,20 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Location
  * Subtype: System
  * Title: Christophsis
  */
 public class Card501_026 extends AbstractSystem {
     public Card501_026() {
-        super(Side.DARK, Title.Christophsis, 6, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, Title.Christophsis, 6, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setLocationDarkSideGameText("If you just Force drained (or won a battle) at a Christophsis site, 'conquer' (flip) Christophsis.");
         setLocationLightSideGameText("If you control, your characters deploy -1 to Christophsis sites.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_21);
         setMayNotBePlacedInReserveDeck(true);
         setTestingText("Christophsis (Republic controlled)");
     }

@@ -22,19 +22,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Location
  * Subtype: System
  * Title: Utapau
  */
 public class Card501_023_BACK extends AbstractSystem {
     public Card501_023_BACK() {
-        super(Side.DARK, Title.Utapau, 2, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, Title.Utapau, 2, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Force drain +1 here.");
         setLocationLightSideGameText("If you just Force drained (or won a battle) at a Utapau site, 'conquer' (flip) Utapau.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_21);
         setTestingText("Utapau (Separatist controlled)");
     }
 

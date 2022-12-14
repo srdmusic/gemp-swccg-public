@@ -3,7 +3,14 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.DestinyType;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -26,7 +33,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Character
  * Subtype: Alien
  * Title: Ahsoka, Friend Of The Family
@@ -38,7 +45,7 @@ public class Card501_055 extends AbstractAlien {
         setGameText("Ignores [Sk] Epic Event deployment restrictions. " +
                     "Once per turn, may subtract 1 from a non-weapon destiny targeting your character's ability or defense value. " +
                     "Characters she hits are forfeit = 0. Immune to non-lightsaber weapons and attrition < 5.");
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.FEMALE);
         setSpecies(Species.TOGRUTA);
         addPersona(Persona.AHSOKA);

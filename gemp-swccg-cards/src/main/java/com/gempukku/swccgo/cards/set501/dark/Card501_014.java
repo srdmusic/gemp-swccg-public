@@ -28,16 +28,16 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Show No Mercy
  */
 public class Card501_014 extends AbstractUsedOrLostInterrupt {
     public Card501_014() {
-        super(Side.DARK, 4, "Show No Mercy", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, 4, "Show No Mercy", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("USED: If Revenge Of The Sith on table, take 500 Republica, The Works, or Unlimited Power! into hand from Reserve Deck; reshuffle. LOST: Target an undercover spy with your Sidious or Neimoidian. Target is lost.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("Show No Mercy");
     }
 

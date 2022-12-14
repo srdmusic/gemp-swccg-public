@@ -1,9 +1,12 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -14,19 +17,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Location
  * Subtype: Site
  * Title: Geonosis: Badlands Of N'g'zi
  */
 public class Card501_071 extends AbstractSite {
     public Card501_071() {
-        super(Side.LIGHT, "Geonosis: Badlands Of N'g'zi", Title.Geonosis);
+        super(Side.LIGHT, "Geonosis: Badlands Of N'g'zi", Title.Geonosis, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Your non-[Separatist] characters and non-[Separatist] vehicles are power -1 here.");
         setLocationLightSideGameText("Your [Clone Army] characters and [Clone Army] vehicles are power +1 here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.EPISODE_I, Icon.CLONE_ARMY, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.CLONE_ARMY, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_21);
         setTestingText("Geonosis: Badlands Of N'g'zi");
     }
 
