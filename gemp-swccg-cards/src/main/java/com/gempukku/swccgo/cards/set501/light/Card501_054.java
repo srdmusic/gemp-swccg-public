@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Starship
  * Subtype: Starfighter
  * Title: Din Djarin's Modified N-1
@@ -38,7 +38,7 @@ public class Card501_054 extends AbstractStarfighter {
         setGameText("May add 1 pilot and Grogu as a passenger. " +
                 "Din Djarin deploys -1 aboard. While Din piloting, immune to attrition < 5 " +
                 "and once per game may use 3 Force to cancel a battle just initiated here.");
-        addIcons(Icon.NAV_COMPUTER, Icon.INDEPENDENT, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.NAV_COMPUTER, Icon.INDEPENDENT, Icon.VIRTUAL_SET_21);
         setPilotCapacity(1);
         setPassengerCapacity(1);
         setMatchingPilotFilter(Filters.Din);

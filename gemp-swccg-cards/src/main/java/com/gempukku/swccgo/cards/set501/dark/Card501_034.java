@@ -3,7 +3,14 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -21,19 +28,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Effect
  * Subtype: Effect
  * Title: Send A Detachment Down (V)
  */
 public class Card501_034 extends AbstractNormalEffect {
     public Card501_034() {
-        super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, "Send A Detachment Down", Uniqueness.UNIQUE);
+        super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, "Send A Detachment Down", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Vader sent Imperial stormtroopers to the surface of Tatooine in search of the stolen Death Star plans. 'There'll be no one to stop us this time.'");
         setGameText("Deploy on Tatooine system. Tatooine Occupation is canceled. While you occupy, at related sites where you have two troopers (or a sandtrooper) your Force drains are +1. [Immune to Alter.]");
         addImmuneToCardTitle(Title.Alter);
-        addIcons(Icon.VIRTUAL_SET_20);
+        addIcons(Icon.VIRTUAL_SET_21);
         setTestingText("Send A Detachment Down (V)");
     }
 

@@ -1,33 +1,44 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.conditions.ArmedWithCondition;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.NotCondition;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeCanceledModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeReducedModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotCancelWeaponDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotHaveGameTextCanceledModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Effect
  * Title: Trained In Your Jedi Arts
  */
 public class Card501_017 extends AbstractNormalEffect {
     public Card501_017() {
-        super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, "Trained In Your Jedi Arts", Uniqueness.UNIQUE);
+        super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, "Trained In Your Jedi Arts", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("Deploy on your character. While you have two or fewer characters here, opponent may not cancel or reduce Force drains at same battleground. " +
                 "While character armed with a lightsaber, weapon and battle destiny draws (and this character's game text) may not be canceled here.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         addKeyword(Keyword.DEPLOYS_ON_CHARACTERS);
         setTestingText("Trained In Your Jedi Arts");
     }

@@ -5,8 +5,10 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
 import com.gempukku.swccgo.cards.effects.ConvertLocationByRaisingToTopEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -16,7 +18,9 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ConvertLocationResult;
 
@@ -24,21 +28,20 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Objective
  * Title: More And More Systems Are Joining The Separatists / The Galaxy Torn Apart
  */
 public class Card501_019 extends AbstractObjective {
     public Card501_019() {
-        super(Side.DARK, 0, "More And More Systems Are Joining The Separatists");
+        super(Side.DARK, 0, "More And More Systems Are Joining The Separatists", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy [Separatist] Geonosis, two [Clone Army] systems, and Droid Racks. \n" +
                 "For remainder of game, you may not deploy non-[Episode I] characters, non-[Episode I] starships, or non-[Episode I] vehicles. Once per turn, may deploy an [Episode I] battleground site from Reserve Deck; reshuffle. If your [Episode I] system was just converted, raise it to the top.\n" +
                 "While this side up, opponent loses no more than 1 Force from your Force drains. \n" +
                 "Flip this card if two [Separatist] systems on table.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("More And More Systems Are Joining The Separatists");
     }
 

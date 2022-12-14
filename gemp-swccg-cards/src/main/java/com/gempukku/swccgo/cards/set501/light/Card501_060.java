@@ -5,7 +5,14 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OnCondition;
 import com.gempukku.swccgo.cards.effects.RevealTopCardOfReserveDeckEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -20,18 +27,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Character
  * Subtype: Rebel
  * Title: Echo Base Trooper (V)
  */
 public class Card501_060 extends AbstractRebel {
     public Card501_060() {
-        super(Side.LIGHT, 3, 2, 2, 2, 4, "Echo Base Trooper");
+        super(Side.LIGHT, 3, 2, 2, 2, 4, "Echo Base Trooper", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("The personnel assigned to protect Echo Base are veteran warriors. Troopers such as Jess Allashane are trained to counter Imperial tactics in cold environment.");
         setGameText("Power +1 on Hoth. Once per turn, may deploy a non-location card with 'Echo' in title from Reserve Deck; reshuffle. If on Hoth (or present with a Scomp link), once per turn, may reveal the top card of each player's Reserve Deck.");
-        addIcons(Icon.HOTH, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.HOTH, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.ECHO_BASE_TROOPER);
         setTestingText("Echo Base Trooper (V)");
     }

@@ -4,7 +4,15 @@ import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -20,15 +28,15 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Effect
  * Title: Galactic Republic Navy
  */
 public class Card501_076 extends AbstractNormalEffect {
     public Card501_076() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Galactic Republic Navy", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Galactic Republic Navy", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on table. Your [Clone Army] starships with a Jedi or clone aboard are power +1 (+2 if both). Once per turn, may reveal a [Clone Army] starship from hand to take a [Episode I] pilot character from Reserve Deck (or vice versa) and deploy both simultaneously; reshuffle. [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Galactic Republic Navy");
     }

@@ -4,7 +4,15 @@ import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -28,20 +36,20 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Effect
  * Subtype: Immediate
  * Title: I Can't Believe He's Gone (V)
  */
 public class Card501_053 extends AbstractNormalEffect {
     public Card501_053() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.I_Cant_Believe_Hes_Gone, Uniqueness.UNIQUE);
+        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.I_Cant_Believe_Hes_Gone, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Even though Luke felt the pain of losing his mentor, Obi-Wan continued to give him strength and guidance through the Force.");
         setGameText("If Obi-Wan ‘communing,’ deploy on table. " +
                     "If Master Kenobi just modified your power, opponent’s total battle destiny is -1. " +
                     "Once per game, may take your just lost Rebel into hand. Once per battle, may activate 1 Force or add 1 to a just drawn destiny. [Immune to Alter.]");
-        addIcons(Icon.TATOOINE, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.TATOOINE, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("I Can't Believe He's Gone (V)");
     }

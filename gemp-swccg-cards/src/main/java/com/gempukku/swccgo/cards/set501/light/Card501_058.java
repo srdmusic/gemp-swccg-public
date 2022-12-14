@@ -46,19 +46,19 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Epic Event
  * Title: His Destiny
  */
 public class Card501_058 extends AbstractEpicEventDeployable {
     public Card501_058() {
-        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "His Destiny", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
+        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "His Destiny", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("If He Is The Chosen One on table, deploy on table. " +
                 "While Luke is alone, your total power at other locations is +1 (limit +3) for each card stacked on I Feel The Conflict. " +
                 "During opponent's draw phase, if He Will Bring Balance on table, you occupy two battlegrounds, and no battles occurred this turn, opponent loses 1 Force. " +
                 "During your draw phase, if Luke present with a Dark Jedi (even as a non-frozen captive), may initiate a duel between them. " +
                 "Each player draws two destiny. Add power. Highest total wins. If Luke loses, lose 1 Force.");
-        addIcons(Icon.VIRTUAL_SET_20);
+        addIcons(Icon.VIRTUAL_SET_21);
         setTestingText("His Destiny");
     }
 

@@ -22,19 +22,18 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Starship
  * Subtype: Capital
  * Title: Endurance
  */
 public class Card501_078 extends AbstractCapitalStarship {
     public Card501_078() {
-        super(Side.LIGHT, 2, 6, 7, 6, null, 4, 7, "Endurance", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
+        super(Side.LIGHT, 2, 6, 7, 6, null, 4, 7, "Endurance", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("May add 5 pilots, 5 passengers, 5 vehicles, and 5 starfighters. Permanent pilot provides ability of 2. Kilian, Mace, and clones deploy -1 aboard and shuttle from here for free. Immune to attrition < 3.");
         addModelType(ModelType.VENATOR_CLASS_ATTACK_CRUISER);
-        addIcons(Icon.EPISODE_I, Icon.REPUBLIC, Icon.PILOT, Icon.NAV_COMPUTER, Icon.CLONE_ARMY, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.REPUBLIC, Icon.PILOT, Icon.NAV_COMPUTER, Icon.CLONE_ARMY, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_21);
         setPilotCapacity(5);
         setPassengerCapacity(5);
         setVehicleCapacity(5);

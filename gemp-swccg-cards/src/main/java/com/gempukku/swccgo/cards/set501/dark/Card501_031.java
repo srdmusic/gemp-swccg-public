@@ -1,9 +1,17 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
-import com.gempukku.swccgo.game.*;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.choose.StackCardsFromOutsideDeckEffect;
@@ -17,15 +25,15 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Effect
  * Title: Battle Droid Reinforcements
  */
 public class Card501_031 extends AbstractNormalEffect {
     public Card501_031() {
-        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Droid Reinforcements", Uniqueness.UNIQUE);
+        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Droid Reinforcements", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("If Geonosis on table, deploy on table. When deployed, stack two B-1 Battle Droids face up here from outside your deck. B-1 Battle Droids may deploy from here as if from hand (for -1 Force). [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Battle Droid Reinforcements");
     }

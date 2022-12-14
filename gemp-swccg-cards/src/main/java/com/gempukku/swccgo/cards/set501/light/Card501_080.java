@@ -29,20 +29,19 @@ import com.gempukku.swccgo.logic.timing.Action;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Character
  * Subtype: Republic
  * Title: Clone Pilot
  */
 public class Card501_080 extends AbstractRepublic {
     public Card501_080() {
-        super(Side.LIGHT, 3, 2, 1, 2, 3, "Clone Pilot", Uniqueness.UNRESTRICTED, ExpansionSet.SET_20, Rarity.V);
+        super(Side.LIGHT, 3, 2, 1, 2, 3, "Clone Pilot", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setArmor(3);
         setLore("Clone trooper.");
         setGameText("Adds 2 to power and 1 to defense value of anything he pilots. While piloting a [Clone Army] starship or vehicle, forfeit +1 and draws one battle destiny if unable to otherwise. If stacked face up on Cloning Cylinders, may turn him face down to cancel Lateral Damage.");
-        addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.WARRIOR, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.WARRIOR, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.CLONE_TROOPER);
         setTestingText("Clone Pilot");
     }

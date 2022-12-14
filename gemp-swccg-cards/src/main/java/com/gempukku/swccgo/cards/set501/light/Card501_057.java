@@ -4,7 +4,15 @@ import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.PlayersTurnCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -19,16 +27,16 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Effect
  * Title: You Cannot Escape Your Destiny
  */
 public class Card501_057 extends AbstractNormalEffect {
     public Card501_057() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE,"You Cannot Escape Your Destiny", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE,"You Cannot Escape Your Destiny", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("If He Is The Chosen One on table, deploy on table. Amidala ignores Objective deployment restrictions. " +
                 "Once per turn, may deploy His Destiny or a mobile docking bay from Reserve Deck; reshuffle. During your turn, Emperor's Power is suspended. [Immune to Alter.]");
-        addIcons(Icon.VIRTUAL_SET_20);
+        addIcons(Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("You Cannot Escape Your Destiny");
     }

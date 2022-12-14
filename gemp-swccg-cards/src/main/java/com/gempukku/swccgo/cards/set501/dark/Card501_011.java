@@ -5,7 +5,12 @@ import com.gempukku.swccgo.cards.AbstractPermanentPilot;
 import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.ModelType;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -20,7 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Starship
  * Subtype: Starfighter
  * Title: Jango Fett & Boba Fett In Slave I
@@ -32,7 +37,7 @@ public class Card501_011 extends AbstractStarfighter {
         setGameText("Permanent pilots are •Jango and •Boba, who provide ability of 6. May add 2 passengers. Power +2 at Nal Hutta or with Falcon. Immune to Eject, Eject! and attrition < 5.");
         addPersonas(Persona.SLAVE_I);
         setPassengerCapacity(2);
-        addIcons(Icon.TRADE_FEDERATION, Icon.EPISODE_I, Icon.INDEPENDENT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.TRADE_FEDERATION, Icon.EPISODE_I, Icon.INDEPENDENT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_21);
         addIcon(Icon.PILOT, 2);
         addModelType(ModelType.FIRESPRAY_CLASS_ATTACK_SHIP);
         setTestingText("Jango Fett & Boba Fett In Slave I");

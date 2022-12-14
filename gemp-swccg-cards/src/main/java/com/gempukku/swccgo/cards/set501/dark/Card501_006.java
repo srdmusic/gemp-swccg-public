@@ -1,10 +1,13 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -21,17 +24,17 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Location
  * Subtype: Site
  * Title: Hoth: Main Power Generators (1st Marker)
  */
 public class Card501_006 extends AbstractSite {
     public Card501_006() {
-        super(Side.DARK, Title.Main_Power_Generators, Title.Hoth);
+        super(Side.DARK, Title.Main_Power_Generators, Title.Hoth, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("If 'blown away,' Light Side loses 4 Force (may not be reduced).");
         setLocationLightSideGameText("'Hoth Energy Shield Rules' in effect. Your artillery weapons on Hoth are powered.");
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.HOTH, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.HOTH, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.MARKER_1);
         setTestingText("Hoth: Main Power Generators (1st Marker)");
     }

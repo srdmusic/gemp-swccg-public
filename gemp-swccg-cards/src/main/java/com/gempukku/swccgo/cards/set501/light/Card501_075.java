@@ -4,7 +4,15 @@ import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddDestinyToTotalPowerEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -16,19 +24,18 @@ import com.gempukku.swccgo.logic.effects.choose.DrawCardsIntoHandFromReserveDeck
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Effect
  * Title: Battle Of Christophsis
  */
 public class Card501_075 extends AbstractNormalEffect {
     public Card501_075() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Of Christophsis", Uniqueness.UNIQUE);
+        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Of Christophsis", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("If a Christophsis location on table, deploy on table. Once per turn, if you just deployed a clone or starship to Christophsis, may draw top card of Reserve Deck. Once per turn, if your Jedi/clone pair in battle, may lose 1 Force to add one destiny to total power. [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Battle Of Christophsis");
     }

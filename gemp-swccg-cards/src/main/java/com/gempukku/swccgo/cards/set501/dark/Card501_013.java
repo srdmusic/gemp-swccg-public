@@ -35,7 +35,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Device
  * Title: Laser Gate (V)
  */
@@ -48,7 +48,7 @@ public class Card501_013 extends AbstractDevice {
                 "each player targets up to two of their characters here; they cannot be excluded from battle or lost " +
                 "before the damage segment. Other characters here excluded from battle.");
         addKeywords(Keyword.DEPLOYS_ON_SITE);
-        addIcon(Icon.VIRTUAL_SET_20);
+        addIcon(Icon.VIRTUAL_SET_21);
         setTestingText("Laser Gate (V)");
     }
 

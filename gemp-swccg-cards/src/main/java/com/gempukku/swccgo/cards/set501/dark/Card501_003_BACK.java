@@ -5,7 +5,13 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -16,7 +22,11 @@ import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.conditions.NotCondition;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromBottomOfLostPileEffect;
-import com.gempukku.swccgo.logic.modifiers.*;
+import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifiersMayNotBeCanceledModifier;
+import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -24,16 +34,16 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Objective
  * Title: The Shield Will Be Down In Moments / Imperial Troops Have Entered The Base!
  */
 public class Card501_003_BACK extends AbstractObjective {
     public Card501_003_BACK() {
-        super(Side.DARK, 7, Title.Imperial_Troops_Have_Entered_The_Base);
+        super(Side.DARK, 7, Title.Imperial_Troops_Have_Entered_The_Base, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("While this side up, attrition against opponent is +1 for each Imperial leader in battle. Rebel Leadership and We're Doomed are Lost Interrupts. Your Force drains are +1 at opponent's sites (and Echo sites) where your snowtrooper or non-unique AT-AT is present. Unless opponent controls a Hoth location, your Force drain bonuses may not be canceled. Once per turn, if opponent just lost Force to You May Start Your Landing, may take bottom card of Lost Pile into hand. " +
                 "Flip this card if opponent controls Hoth system.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_21);
         setTestingText("Imperial Troops Have Entered the Base!");
     }
 

@@ -28,19 +28,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: Luke's Acceptance
  */
 public class Card501_064 extends AbstractUsedOrLostInterrupt {
     public Card501_064() {
-        super(Side.LIGHT, 5, "Luke's Acceptance", Uniqueness.UNRESTRICTED, ExpansionSet.SET_20, Rarity.V);
+        super(Side.LIGHT, 5, "Luke's Acceptance", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("USED: Once per game, if battle was just initiated where Luke is alone, weapons may not be fired." +
                 "LOST: Once per game, if you have two cards stacked on I Feel The Conflict, " +
                 "make a just drawn destiny = 2 or take a card into hand from Insignificant Rebellion.");
-        addIcon(Icon.VIRTUAL_SET_20);
+        addIcon(Icon.VIRTUAL_SET_21);
         setTestingText("Luke's Acceptance");
     }
 

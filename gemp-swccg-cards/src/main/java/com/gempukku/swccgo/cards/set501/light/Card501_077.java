@@ -21,19 +21,18 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Starship
  * Subtype: Capital
  * Title: Resolute
  */
 public class Card501_077 extends AbstractCapitalStarship {
     public Card501_077() {
-        super(Side.LIGHT, 2, 6, 7, 6, null, 4, 7, "Resolute", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
+        super(Side.LIGHT, 2, 6, 7, 6, null, 4, 7, "Resolute", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("May add 5 pilots, 5 passengers, 5 vehicles, and 5 starfighters. Permanent pilot provides ability of 2. While Anakin or Yularen piloting, immune to attrition < 5 and your [Clone Army] cards at related sites are power +1.");
         addModelType(ModelType.VENATOR_CLASS_ATTACK_CRUISER);
-        addIcons(Icon.EPISODE_I, Icon.REPUBLIC, Icon.PILOT, Icon.NAV_COMPUTER, Icon.CLONE_ARMY, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.REPUBLIC, Icon.PILOT, Icon.NAV_COMPUTER, Icon.CLONE_ARMY, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_21);
         setPilotCapacity(5);
         setPassengerCapacity(5);
         setVehicleCapacity(5);

@@ -4,8 +4,10 @@ import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
@@ -28,19 +30,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Objective
  * Title: The Shield Will Be Down In Moments / Imperial Troops Have Entered The Base!
  */
 public class Card501_003 extends AbstractObjective {
     public Card501_003() {
-        super(Side.DARK, 0, Title.The_Shield_Will_Be_Down_In_Moments);
+        super(Side.DARK, 0, Title.The_Shield_Will_Be_Down_In_Moments, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Hoth system, [Set 17] 4th Marker, 1st Marker, and [Set 18] You May Start Your Landing. " +
+        setGameText("Deploy Hoth system, [Set 17] 4th Marker, 1st Marker, and [Set 21] You May Start Your Landing. " +
                 "For remainder of game, you may not play Sunsdown. Trample is a Lost Interrupt. X on Target The Main Generator is -2 (unless firing at or below the 3rd Marker) and maximum X = 3. " +
                 "While this side up, once per turn, may deploy an exterior Hoth site from Reserve Deck; reshuffle. " +
                 "Flip this card if Main Power Generators has been 'blown away' and you occupy Hoth system.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_21);
         setTestingText("The Shield Will Be Down in Moments");
     }
 
@@ -71,10 +73,10 @@ public class Card501_003 extends AbstractObjective {
             });
 
         action.appendRequiredEffect(
-            new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_19, Filters.You_May_Start_Your_Landing), true, false) {
+            new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_21, Filters.You_May_Start_Your_Landing), true, false) {
                 @Override
                 public String getChoiceText() {
-                    return "Choose [Set 18] You May Start Your Landing to deploy";
+                    return "Choose [Set 21] You May Start Your Landing to deploy";
                 }
             });
         return action;

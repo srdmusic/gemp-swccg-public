@@ -22,18 +22,18 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Character
  * Subtype: Imperial
  * Title: TD-4445
  */
 public class Card501_038 extends AbstractImperial {
     public Card501_038() {
-        super(Side.DARK, 3, 2, 2, 2, 4, "TD-4445", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, 3, 2, 2, 2, 4, "TD-4445", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setArmor(4);
         setLore("Sandtrooper.");
         setGameText("Once per game, may reveal from hand to take a Dewback into hand from outside the game and deploy both simultaneously.");
-        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.SANDTROOPER);
         setTestingText("TD-4445");
     }

@@ -3,7 +3,15 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -22,18 +30,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Effect
  * Title: Order 66
  */
 public class Card501_012 extends AbstractNormalEffect {
     public Card501_012() {
-        super(Side.DARK, 6, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Order 66", Uniqueness.UNIQUE);
+        super(Side.DARK, 6, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Order 66", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Hologram.");
         setGameText("Deploy on table. Once per game, may 'execute Order 66' (relocate this Effect to a site). " +
                 "Whenever this Effect relocates to a site, immunity to attrition of Jedi here is canceled for remainder of turn. " +
                 "May not be canceled. [Immune to Alter].");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.HOLOGRAM);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Order 66");

@@ -31,19 +31,19 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: A Fine Addition to my Collection
  */
 public class Card501_002 extends AbstractUsedOrLostInterrupt {
     public Card501_002() {
-        super(Side.DARK, 5, "A Fine Addition to my Collection", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
+        super(Side.DARK, 5, "A Fine Addition to my Collection", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("USED: If Grievous just swung a stolen lightsaber, add one battle destiny. " +
                 "LOST: Cancel an attempt to target Grievous with a lightsaber. " +
                 "OR Deploy any lightsaber from your Lost Pile on Grievous (who may use that lightsaber).");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("A Fine Addition to my Collection");
     }
 

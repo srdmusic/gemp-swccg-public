@@ -3,7 +3,12 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -17,19 +22,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 20
+ * Set: Set 21
  * Type: Location
  * Subtype: Site
  * Title: Supply Route
  */
 public class Card501_069 extends AbstractSite {
     public Card501_069() {
-        super(Side.LIGHT, "Supply Route", Uniqueness.DIAMOND_1);
+        super(Side.LIGHT, "Supply Route", Uniqueness.DIAMOND_1, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Deploys only to same system as Clone Command Center. Your vehicles are power +1 here.");
         setLocationLightSideGameText("Once during opponent's turn, if you occupy with a Jedi/clone pair, may activate 1 Force.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_21);
         setTestingText("Supply Route");
     }
 
