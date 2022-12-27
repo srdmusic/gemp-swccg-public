@@ -1,9 +1,7 @@
 package com.gempukku.swccgo.cards.set1.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
-import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -24,7 +22,7 @@ import java.util.List;
  */
 public class Card1_061 extends AbstractNormalEffect {
     public Card1_061() {
-        super(Side.LIGHT, 3, PlayCardZoneOption.OPPONENTS_SIDE_OF_TABLE, Title.Restricted_Deployment, Uniqueness.UNIQUE, ExpansionSet.PREMIERE, Rarity.U1);
+        super(Side.LIGHT, 3, PlayCardZoneOption.OPPONENTS_SIDE_OF_TABLE, Title.Restricted_Deployment, Uniqueness.UNIQUE);
         setLore("The Empire is too bureaucratic to deploy troops efficiently except under favorable circumstances. Rebel actions across the galaxy force Imperials to split their forces.");
         setGameText("Use 3 Force to deploy on opponent's side of table. All opponent's warriors are deploy +1.");
     }

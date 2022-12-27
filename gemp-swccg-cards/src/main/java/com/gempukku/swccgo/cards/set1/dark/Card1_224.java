@@ -3,11 +3,8 @@ package com.gempukku.swccgo.cards.set1.dark;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckEffect;
-import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
-import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -27,7 +24,7 @@ import java.util.List;
  */
 public class Card1_224 extends AbstractNormalEffect {
     public Card1_224() {
-        super(Side.DARK, 3, PlayCardZoneOption.OPPONENTS_SIDE_OF_TABLE, "Macroscan", Uniqueness.UNRESTRICTED, ExpansionSet.PREMIERE, Rarity.C2);
+        super(Side.DARK, 3, PlayCardZoneOption.OPPONENTS_SIDE_OF_TABLE, "Macroscan");
         setLore("Electrobinocular view. Readouts list object's true and relative azimuth, elevation and range. Built-in night vision.");
         setGameText("Use 2 Force to deploy near opponent's Reserve Deck. At any time, you may use 1 Force to peek at the top card of that deck. If 'nighttime conditions' exist anywhere on table, you may peek at the top three cards.");
     }
