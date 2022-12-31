@@ -4,9 +4,11 @@ import com.gempukku.swccgo.cards.AbstractPermanentAboard;
 import com.gempukku.swccgo.cards.AbstractPermanentPilot;
 import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.ModelType;
 import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
@@ -28,7 +30,7 @@ import java.util.List;
  */
 public class Card501_018 extends AbstractStarfighter {
     public Card501_018() {
-        super(Side.DARK, 2, 5, 5, null, 5, 3, 5, "Colonel Jendon In Vader's Personal Shuttle", Uniqueness.UNIQUE);
+        super(Side.DARK, 2, 5, 5, null, 5, 3, 5, "Colonel Jendon In Vader's Personal Shuttle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy -3 to Mustafar. May add 1 pilot and 3 passengers. Permanent pilot is •Colonel Jendon, who provides ability of 2. While Vader armed with a lightsaber weapon card at a battleground, Force drain +1 here.");
         addIcons(Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_21);
         addModelTypes(ModelType.LAMBDA_CLASS_SHUTTLE);
