@@ -4,10 +4,12 @@ import com.gempukku.swccgo.cards.AbstractPermanentAboard;
 import com.gempukku.swccgo.cards.AbstractPermanentPilot;
 import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.ModelType;
 import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
@@ -37,7 +39,7 @@ import java.util.List;
  */
 public class Card501_033 extends AbstractStarfighter {
     public Card501_033() {
-        super(Side.DARK, 4, 2, 3, null, 5, 4, 4, "CIS Transport Shuttle", Uniqueness.UNIQUE);
+        super(Side.DARK, 4, 2, 3, null, 5, 4, 4, "CIS Transport Shuttle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("May add 1 pilot and 2 passengers. Permanent pilot provides ability of 2. When deployed, may deploy a battle droid aboard from Reserve Deck; reshuffle. Takes off and lands as an unlimited move (for free).");
         addIcons(Icon.NAV_COMPUTER, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_21);
         addIcon(Icon.PILOT, 1);
