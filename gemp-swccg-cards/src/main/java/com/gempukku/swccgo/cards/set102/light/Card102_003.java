@@ -19,7 +19,7 @@ import com.gempukku.swccgo.common.Uniqueness;
  */
 public class Card102_003 extends AbstractRebel {
     public Card102_003() {
-        super(Side.LIGHT, 1, 4, 2, 2, 3, "Leia", Uniqueness.UNIQUE, ExpansionSet.ESB_INTRO_TWO_PLAYER, Rarity.PM);
+        super(Side.LIGHT, 1, 4, 2, 2, 3, "Leia", Uniqueness.UNIQUE, ExpansionSet.JEDI_PACK, Rarity.PM);
         setLore("Adopted daughter of the Viceroy and First Chairman of Alderaan. Became a political leader at a young age. The injustices of the New Order led her to join the Rebellion.");
         addPersona(Persona.LEIA);
         addIcons(Icon.PREMIUM);
