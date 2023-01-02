@@ -2,16 +2,7 @@ package com.gempukku.swccgo.cards.set2.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.ExpansionSet;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Keyword;
-import com.gempukku.swccgo.common.PlayCardOptionId;
-import com.gempukku.swccgo.common.PlayCardZoneOption;
-import com.gempukku.swccgo.common.Rarity;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.TargetingReason;
-import com.gempukku.swccgo.common.Title;
-import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -34,7 +25,7 @@ import java.util.List;
  */
 public class Card2_124 extends AbstractNormalEffect {
     public Card2_124() {
-        super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, Title.Program_Trap, Uniqueness.UNIQUE, ExpansionSet.A_NEW_HOPE, Rarity.U1);
+        super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, Title.Program_Trap, Uniqueness.UNIQUE);
         setLore("Imperial slicers imbed a secret command in a droid's primary performance banks. A predetermined trigger causes a power overload, destroying the droid and anything nearby.");
         setGameText("Use 2 Force to deploy on an opponent's droid (except R2-D2 and C-3PO), 1 on your droid. When either player draws a destiny matching the number of characters at same site, droid 'explodes' (all characters present are lost).");
         addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
