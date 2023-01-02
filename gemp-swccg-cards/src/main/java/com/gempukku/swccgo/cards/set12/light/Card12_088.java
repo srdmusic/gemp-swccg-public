@@ -48,7 +48,7 @@ import java.util.List;
  */
 public class Card12_088 extends AbstractObjective {
     public Card12_088() {
-        super(Side.LIGHT, 0, Title.Plead_My_Case_To_The_Senate, ExpansionSet.CORUSCANT, Rarity.R);
+        super(Side.LIGHT, 0, Title.Plead_My_Case_To_The_Senate, ExpansionSet.CORUSCANT, Rarity.U);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Galactic Senate and any other [Episode I] location. For remainder of game, Rebel and Imperial leaders of ability < 4 are politics +2. Counter Assault and Surprise Assault are canceled. You may deploy cards on your Political Effects to table. At Galactic Senate, weapon destiny draws are -6, creatures are lost and game text of non-Republic characters is canceled. Flip this card if you have 3 senators (or 2 senators, at least one with a peace agenda) at Galactic Senate.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I);

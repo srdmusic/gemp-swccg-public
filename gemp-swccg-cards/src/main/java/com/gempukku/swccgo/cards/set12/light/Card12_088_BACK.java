@@ -48,7 +48,7 @@ import java.util.List;
  */
 public class Card12_088_BACK extends AbstractObjective {
     public Card12_088_BACK() {
-        super(Side.LIGHT, 7, Title.Sanity_And_Compassion, ExpansionSet.CORUSCANT, Rarity.R);
+        super(Side.LIGHT, 7, Title.Sanity_And_Compassion, ExpansionSet.CORUSCANT, Rarity.U);
         setGameText("While this side up, once during your control phase may use 3 Force to place up to two random cards from opponent's hand into their Used Pile. Once per turn may take a Political Effect into hand from Reserve Deck; reshuffle. Your senators are destiny +2 (or +3 for any character with an order agenda) when drawn for battle or weapon destiny. May use 2 Force at end of a turn to place all cards on your Political Effects into Used Pile. Flip this card if you have less than two senators at Galactic Senate.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I);
     }

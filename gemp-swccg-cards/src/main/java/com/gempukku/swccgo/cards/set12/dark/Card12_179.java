@@ -49,7 +49,7 @@ import java.util.List;
  */
 public class Card12_179 extends AbstractObjective {
     public Card12_179() {
-        super(Side.DARK, 0, Title.My_Lord_Is_That_Legal, ExpansionSet.CORUSCANT, Rarity.R);
+        super(Side.DARK, 0, Title.My_Lord_Is_That_Legal, ExpansionSet.CORUSCANT, Rarity.U);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Galactic Senate and any other [Episode I] location. For remainder of game, Rebel and Imperial leaders of ability < 4 are politics +2. Counter Assault and Surprise Assault are canceled. Your Republic characters are immune to Goo Nee Tay. Cards on your Political Effects may deploy to table. At Galactic Senate, weapon destiny draws are -6, creatures are lost and game text of non-Republicans is canceled. Flip this card if you have 3 senators (or 2 senators, at least 1 with a blockade agenda) at Galactic Senate.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I);

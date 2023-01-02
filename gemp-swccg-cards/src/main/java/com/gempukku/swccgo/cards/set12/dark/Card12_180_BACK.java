@@ -55,7 +55,7 @@ import java.util.List;
  */
 public class Card12_180_BACK extends AbstractObjective {
     public Card12_180_BACK() {
-        super(Side.DARK, 7, Title.Youre_A_Slave, ExpansionSet.CORUSCANT, Rarity.R);
+        super(Side.DARK, 7, Title.Youre_A_Slave, ExpansionSet.CORUSCANT, Rarity.U);
         setGameText("While this side up, once during each of your deploy phases, may place a card from hand face down on your side of the table and opponent must choose to lose 2 Force (you place card in Used Pile) or use 2 Force (you deploy that card for free). If opponent uses 2 Force and you cannot deploy card, lose 2 Force and card is lost. Opponent's non-unique aliens are each deploy +3. Flip this card if Watto not present at Watto's Junkyard or you do not occupy Mos Espa.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I);
     }

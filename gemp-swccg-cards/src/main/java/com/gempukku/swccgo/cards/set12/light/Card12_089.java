@@ -39,7 +39,7 @@ import java.util.List;
  */
 public class Card12_089 extends AbstractObjective {
     public Card12_089() {
-        super(Side.LIGHT, 0, Title.The_Hyperdrive_Generators_Gone, ExpansionSet.CORUSCANT, Rarity.R);
+        super(Side.LIGHT, 0, Title.The_Hyperdrive_Generators_Gone, ExpansionSet.CORUSCANT, Rarity.U);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Watto's Junkyard, City Outskirts, and Credits Will Do Fine. For remainder of game, you may not deploy cards with ability except unique (•) aliens, Republic characters and starships, and [Episode I] Jedi. Your Destiny is suspended. While this side up, once per game may take Coruscant and/or Tatooine system into hand from Reserve Deck; reshuffle. You may not deploy any systems. Maul is immune to attrition. Flip this card if there are 4 or more cards beneath Credits Will Do Fine.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I);

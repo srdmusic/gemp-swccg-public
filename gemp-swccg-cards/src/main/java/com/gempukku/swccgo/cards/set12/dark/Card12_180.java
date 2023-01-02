@@ -49,7 +49,7 @@ import java.util.List;
  */
 public class Card12_180 extends AbstractObjective {
     public Card12_180() {
-        super(Side.DARK, 0, Title.No_Money_No_Parts_No_Deal, ExpansionSet.CORUSCANT, Rarity.R);
+        super(Side.DARK, 0, Title.No_Money_No_Parts_No_Deal, ExpansionSet.CORUSCANT, Rarity.U);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Watto's Junkyard and Mos Espa. For remainder of game, Watto's Junkyard is immune to Revolution. If Watto at Watto's Junkyard, opponent may use 8 Force to place Watto in Used Pile and you may retrieve up to 4 Force. While this side up, Qui-Gon is power +3. Opponent loses no more than 1 Force from your Force drains at Tatooine sites. Flip this card if Watto present at Watto's Junkyard and you occupy Mos Espa.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I);

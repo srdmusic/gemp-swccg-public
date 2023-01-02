@@ -45,7 +45,7 @@ import java.util.List;
  */
 public class Card12_089_BACK extends AbstractObjective {
     public Card12_089_BACK() {
-        super(Side.LIGHT, 7, Title.Well_Need_A_New_One, ExpansionSet.CORUSCANT, Rarity.R);
+        super(Side.LIGHT, 7, Title.Well_Need_A_New_One, ExpansionSet.CORUSCANT, Rarity.U);
         setGameText("While this side up, your unique (•) Republic characters are power +1 and forfeit +2. Aliens may not have their deploy cost modified and Imperials deploy +1 to Tatooine sites. Whenever you draw battle destiny (unless canceled), may retrieve 1 Force (Force retrieved in this way may be taken into hand.) While Queen's Royal Starship at a planet system, once during each of opponent's control phases may activate up to 2 Force. Once during each of your control phases, opponent loses 1 Force for each battleground site you occupy with a senator.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I);
     }
