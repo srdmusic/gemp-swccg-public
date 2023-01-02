@@ -41,7 +41,7 @@ import java.util.List;
  */
 public class Card14_052 extends AbstractObjective {
     public Card14_052() {
-        super(Side.LIGHT, 0, Title.We_Have_A_Plan, ExpansionSet.THEED_PALACE, Rarity.R);
+        super(Side.LIGHT, 0, Title.We_Have_A_Plan, ExpansionSet.THEED_PALACE, Rarity.U);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Theed Palace Throne Room, Theed Palace Hallway, and Theed Palace Courtyard. For remainder of game, you may not deploy cards with ability except [Episode I] Jedi, aliens, [Episode I] vehicles, Republic characters and [Republic] starships. Your Destiny is suspended. You lose no Force to Vengeance Of The Dark Prince. While this side up, you may not deploy characters to interior Naboo sites. Once per turn, may activate 1 Force. Flip this card if you control Theed Palace Throne Room (with Amidala there).");
         addIcons(Icon.THEED_PALACE, Icon.EPISODE_I);

@@ -45,7 +45,7 @@ import java.util.List;
  */
 public class Card14_113 extends AbstractObjective {
     public Card14_113() {
-        super(Side.DARK, 0, Title.Invasion, ExpansionSet.THEED_PALACE, Rarity.R);
+        super(Side.DARK, 0, Title.Invasion, ExpansionSet.THEED_PALACE, Rarity.U);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Naboo system with Blockade Flagship there, swamp, and Droid Racks. For remainder of game, you may not deploy cards with ability except [Trade Federation] starships and characters with 'Trade Federation' in lore. Civil Disorder is canceled. {While} this side up, once during your deploy phase may deploy a Naboo site from Reserve Deck; reshuffle. Opponent's Force icons at Naboo system are canceled. Flip this card if you control Theed Palace Throne Room (with a Neimoidian there) and Naboo system.");
         addIcons(Icon.THEED_PALACE, Icon.EPISODE_I);

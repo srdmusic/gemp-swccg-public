@@ -42,7 +42,7 @@ import java.util.List;
  */
 public class Card14_113_BACK extends AbstractObjective {
     public Card14_113_BACK() {
-        super(Side.DARK, 7, Title.In_Complete_Control, ExpansionSet.THEED_PALACE, Rarity.R);
+        super(Side.DARK, 7, Title.In_Complete_Control, ExpansionSet.THEED_PALACE, Rarity.U);
         setGameText("While this side up, you lose no more than 2 Force to any Force drain. Your battle droids deploy -1. If you have two [Presence] droids with different card titles (or a [Presence] droid and a Neimoidian) in battle at a site, draw two battle destiny if unable to otherwise. Your droid starfighters are immune to attrition < 3. If opponent just drew an Interrupt for battle destiny, once per battle you may place that card out of play. Flip this card if opponent controls Naboo system or Theed Palace Throne Room.");
         addIcons(Icon.THEED_PALACE, Icon.EPISODE_I);
     }

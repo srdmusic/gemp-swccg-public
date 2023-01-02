@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class Card14_052_BACK extends AbstractObjective {
     public Card14_052_BACK() {
-        super(Side.LIGHT, 7, Title.They_Will_Be_Lost_And_Confused, ExpansionSet.THEED_PALACE, Rarity.R);
+        super(Side.LIGHT, 7, Title.They_Will_Be_Lost_And_Confused, ExpansionSet.THEED_PALACE, Rarity.U);
         setGameText("While this side up, you lose no more than 2 Force to any Force drain. Your [Republic] starships are power +2 and immunity to attrition of [Trade Federation] starships is canceled. If opponent just drew a battle destiny greater than three, you may use 1 Force to cancel that battle destiny. During your control phase, opponent loses 2 Force for each battleground site you control with Amidala or Panaka. Flip this card if opponent controls Theed Palace Throne Room.");
         addIcons(Icon.THEED_PALACE, Icon.EPISODE_I);
     }
