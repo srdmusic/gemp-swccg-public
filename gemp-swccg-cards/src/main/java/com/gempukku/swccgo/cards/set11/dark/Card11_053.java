@@ -36,7 +36,7 @@ import java.util.List;
  */
 public class Card11_053 extends AbstractAlien {
     public Card11_053() {
-        super(Side.DARK, 3, 2, 2, 2, 3, "Daroe", Uniqueness.UNIQUE, ExpansionSet.TATOOINE, Rarity.U);
+        super(Side.DARK, 3, 2, 2, 2, 3, "Daroe", Uniqueness.UNIQUE, ExpansionSet.TATOOINE, Rarity.R);
         setLore("Jawa who has inside connections with the Empire. Frequently speaks with his Imperial contact, whom he reports to regarding Rebel activity in the Outer Rim.");
         setGameText("Adds 2 to power of anything he pilots. If opponent initiates a battle at same system, may reveal the top card of your Reserve Deck. If it is a Star Destroyer, may deploy it here for free. Otherwise, card is lost.");
         addIcons(Icon.TATOOINE, Icon.PILOT);

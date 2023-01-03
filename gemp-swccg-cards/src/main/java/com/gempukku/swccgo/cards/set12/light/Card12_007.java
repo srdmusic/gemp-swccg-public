@@ -29,7 +29,7 @@ import java.util.List;
  */
 public class Card12_007 extends AbstractAlien {
     public Card12_007() {
-        super(Side.LIGHT, 3, 2, 2, 1, 3, "Gungan Warrior", Uniqueness.UNRESTRICTED, ExpansionSet.CORUSCANT, Rarity.U);
+        super(Side.LIGHT, 3, 2, 2, 1, 3, "Gungan Warrior", Uniqueness.UNRESTRICTED, ExpansionSet.CORUSCANT, Rarity.C);
         setLore("Residing in the underwater city of Otoh Gunga, the Gungans established an alliance with the Naboo to fight the Trade Federation's forceful occupation of their planet.");
         setGameText("Deploys -1 to a Naboo site opponent occupies. While with another Gungan, draws one battle destiny if unable to otherwise. Power +3 while armed with an electropole.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.WARRIOR);

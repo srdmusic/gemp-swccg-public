@@ -37,7 +37,7 @@ import java.util.List;
  */
 public class Card12_009 extends AbstractAlien {
     public Card12_009() {
-        super(Side.LIGHT, 3, null, 1, 1, 1, "Jawa", Uniqueness.UNRESTRICTED, ExpansionSet.CORUSCANT, Rarity.U);
+        super(Side.LIGHT, 3, null, 1, 1, 1, "Jawa", Uniqueness.UNRESTRICTED, ExpansionSet.CORUSCANT, Rarity.C);
         setLore("Always on the prowl, Jawas work hard for every credit they earn.");
         setGameText("Deploys only on Tatooine. *To deploy, requires 1 Force from each players' Force Pile. Power +1 on Tatooine. While with another Jawa, if opponent just initiated a Force drain at adjacent site, may use 2 Force to reduce it by 1.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I);
