@@ -36,7 +36,7 @@ import java.util.List;
  */
 public class Card105_004 extends AbstractAlien {
     public Card105_004() {
-        super(Side.DARK, 1, 5, 3, 2, 4, "Boba Fett", Uniqueness.UNIQUE, ExpansionSet.FIRST_ANTHOLOGY, Rarity.PM);
+        super(Side.DARK, 1, 5, 3, 2, 4, "Boba Fett", Uniqueness.UNIQUE, ExpansionSet.FIRST_ANTHOLOGY, Rarity.PV);
         setArmor(5);
         setLore("Infamous bounty hunter. Hired to help Jabba intimidate debtors and smugglers. Crack shot. Mandalorian armor and jet pack provide protection and flight capability.");
         setGameText("Adds 2 to power and 1 to maneuver of anything he pilots. May deploy -1 as a 'react' to same site as a gangster or smuggler. When firing weapons, any 'hit' characters are forfeit = 0. May 'fly' (landspeed = 3). Immune to attrition < 3.");
