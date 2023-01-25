@@ -29,14 +29,14 @@ import java.util.List;
  */
 public class Card501_010 extends AbstractSite {
     public Card501_010() {
-        super(Side.DARK, Title.Cantina, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PREMIERE, Rarity.R2);
+        super(Side.DARK, Title.Cantina, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLocationDarkSideGameText("Your Force generation here is -1 for each pair of aliens (or smugglers) opponent has here.");
         setLocationLightSideGameText("Your Force generation here is -1 for each pair of aliens (or sandtroopers) opponent has here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_21);
-        setTestingText("Tatooine: Cantina (V)");
+        setTestingText("Tatooine: Cantina (DARK) (V)");
     }
 
     @Override
