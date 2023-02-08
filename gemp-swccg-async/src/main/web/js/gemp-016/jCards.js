@@ -3554,7 +3554,7 @@ var fixedImages = {
 "501_45":"https://res.starwarsccg.org/cards/Virtual0-Dark/large/aratechcorporation.gif",
 "501_46":"https://res.starwarsccg.org/cards/Endor-Dark/large/corporaloberk.gif",
 "501_47":"https://res.starwarsccg.org/cards/Endor-Dark/large/corporalavarik.gif",
-"501_48":"https://res.starwarsccg.org/cards/Virtual1-Dark/large/imperialenforcement.gif",
+"501_48":"https://res.starwarsccg.org/cards/TheedPalace-Dark/large/theretheyare.gif",
 "501_50":"https://res.starwarsccg.org/cards/Premiere-Light/large/lightsaberproficiency.gif",
 "501_51":"https://res.starwarsccg.org/cards/ReflectionsII-Light/large/mercenaryarmor.gif",
 "501_52":"https://res.starwarsccg.org/cards/Tatooine-Light/large/ajedispatience.gif",

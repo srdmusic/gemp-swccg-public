@@ -25,7 +25,7 @@ import java.util.List;
 public class Card501_071 extends AbstractSite {
     public Card501_071() {
         super(Side.LIGHT, "Geonosis: Badlands Of N'g'zi", Title.Geonosis, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("Your non-[Separatist] characters and non-[Separatist] vehicles are power -1 here.");
+        setLocationDarkSideGameText("Your [Separatist] characters and [Separatist] vehicles are power +1 here.");
         setLocationLightSideGameText("Your [Clone Army] characters and [Clone Army] vehicles are power +1 here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
@@ -36,7 +36,7 @@ public class Card501_071 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.not(Icon.SEPARATIST), Filters.or(Filters.character, Filters.vehicle), Filters.here(self)), -1));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Icon.SEPARATIST, Filters.or(Filters.character, Filters.vehicle), Filters.here(self)), 1));
         return modifiers;
     }
 
