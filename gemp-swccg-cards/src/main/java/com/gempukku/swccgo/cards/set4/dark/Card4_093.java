@@ -41,7 +41,7 @@ public class Card4_093 extends AbstractImperial {
     public Card4_093() {
         super(Side.DARK, 1, 3, 3, 3, 5, "Captain Needa", Uniqueness.UNIQUE, ExpansionSet.DAGOBAH, Rarity.R);
         setLore("Able leader and captain of the Avenger. Was given his command by Admiral Ozzel. Treated with suspicion by Darth Vader and the Emperor, who distrust Ozzel's close advisors.");
-        setGameText("Adds 2 to power of anything he pilots. When piloting Avenger, that starship is also immune to attrition < 4. You may re-target applicable Utinni Effects to Needa. If in a battle where you choose to forfeit characters, you must forfeit Needa first.");
+        setGameText("Adds 2 to power of anything he pilots. When piloting Avenger, that starship is also immune to attrition < 4. You may re-target applicable Utinni Effects to Needa. While Needa in battle, your other non-'hit' characters here may not be forfeited.");
         addKeywords(Keyword.LEADER, Keyword.CAPTAIN);
         addIcons(Icon.DAGOBAH, Icon.PILOT, Icon.WARRIOR);
         setMatchingStarshipFilter(Filters.Avenger);
