@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class Card501_070 extends AbstractSystem {
     public Card501_070() {
-        super(Side.LIGHT, Title.Geonosis, 6, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, Title.Geonosis, 7, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Unless your Fett (or [Separatist] starship) here or at a related asteroid sector, Force drain -1 here.");
         setLocationLightSideGameText("Your [Clone Army] starships are power +1 here. Your starships at the nearest related asteroid sector may move here as a 'react.'");
         addIcon(Icon.DARK_FORCE, 1);
