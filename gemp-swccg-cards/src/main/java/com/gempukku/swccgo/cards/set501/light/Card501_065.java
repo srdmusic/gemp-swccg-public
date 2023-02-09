@@ -107,8 +107,8 @@ public class Card501_065 extends AbstractObjective {
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         if (TriggerConditions.isEndOfOpponentsTurn(game, effectResult, playerId)) {
-            int battlegroundsYouOccupy = Filters.filterTopLocationsOnTable(game, Filters.occupies(playerId)).size();
-            int battlegroundsOpponentOccupies = Filters.filterTopLocationsOnTable(game, Filters.occupies(opponent)).size();
+            int battlegroundsYouOccupy = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.battleground, Filters.occupies(playerId))).size();
+            int battlegroundsOpponentOccupies = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.battleground, Filters.occupies(opponent))).size();
 
             if (battlegroundsYouOccupy > battlegroundsOpponentOccupies) {
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
