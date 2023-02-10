@@ -3590,47 +3590,15 @@ var fixedImages = {
 "501_81":"https://res.starwarsccg.org/cards/Coruscant-Light/large/securitycontrol.gif",
 "501_82":"https://res.starwarsccg.org/cards/Hoth-Light/large/echotrooperbackpack.gif",
 "501_83":"https://res.starwarsccg.org/cards/CloudCity-Light/large/falloftheempire.gif",
-"501_84":"https://res.starwarsccg.org/cards/Virtual0-Light/large/jedilevitation.gif",
-"501_85":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/cityintheclouds.gif",
-"501_85_BACK":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/youtrulybelongherewithus.gif",
-"501_86":"https://res.starwarsccg.org/cards/Virtual8-Light/hires/heisthechosenone.png",
-"501_86_BACK":"https://res.starwarsccg.org/cards/Virtual8-Light/hires/hewillbringbalance.png",
-"501_87":"https://res.starwarsccg.org/cards/Virtual11-Light/large/maketenmenfeellikeahundred.gif",
-"501_88":"https://res.starwarsccg.org/cards/Virtual4-Light/hires/oldallies.png",
-"501_88_BACK":"https://res.starwarsccg.org/cards/Virtual4-Light/hires/weneedyourhelp.png",
-"501_89":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/jakkureysencampment_ai.png",
-"501_90":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/deathstardetentionblockcorridor.png",
-"501_91":"https://res.starwarsccg.org/cards/Virtual15-Light/hires/cell2187.png",
-"501_92":"https://res.starwarsccg.org/cards/Virtual17-Light/large/theforceisstronginmyfamily.gif",
-"501_93":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/endoranakinsfuneralpyre.png",
-"501_94":"https://res.starwarsccg.org/cards/Premiere-Light/large/millenniumfalcon.gif",
-"501_95":"https://res.starwarsccg.org/cards/Virtual19-Light/hires/lothal.png",
-"501_96":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/kananjarrusjediknight.png",
-"501_97":"https://res.starwarsccg.org/cards/Virtual9-Light/hires/rosetico.png",
-"501_98":"https://res.starwarsccg.org/cards/Virtual13-Light/large/quigonjinnserenejedi.gif",
-"501_99":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/dagobahyodashut.png",
-"501_100":"https://res.starwarsccg.org/cards/Virtual14-Dark/hires/palpatineemperorreturned.png",
-"501_101":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/agreattacticiancreatesplans.png",
-"501_101_BACK":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/theresultisoftenresentment.png",
-"501_102":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/lothalcapitalcity.png",
-"501_103":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/lothalimperialstripmines.png",
-"501_104":"https://res.starwarsccg.org/cards/Hoth-Dark/large/silenceisgolden.gif",
-"501_105":"https://res.starwarsccg.org/cards/Virtual17-Dark/large/bb9e.gif",
-"501_106":"https://res.starwarsccg.org/cards/Virtual18-Dark/hires/adarktimefortherebelliontarkinsorders.png",
-"501_107":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/freerideendorcelebration.png",
-"501_108":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/masteryoda.png",
-"501_109":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/masterquigonjinnanoldfriend.png",
-"501_110":"https://res.starwarsccg.org/cards/Virtual11-Light/hires/thegalaxymayneedalegend.png",
-"501_110_BACK":"https://res.starwarsccg.org/cards/Virtual11-Light/hires/weneedlukeskywalker.png",
-"501_111":"https://res.starwarsccg.org/cards/Virtual4-Light/hires/bb8.png",
-"501_112":"https://res.starwarsccg.org/cards/Virtual8-Light/hires/endorewokvillage.png",
-"501_113":"https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/nabootheedpalacegenerator.gif",
-"501_114":"https://res.starwarsccg.org/cards/Virtual16-Light/hires/iampartofthelivingforce.png",
-"501_115":"https://res.starwarsccg.org/cards/Virtual4-Dark/hires/bowtothefirstorder.png",
-"501_116":"https://res.starwarsccg.org/cards/Virtual9-Light/hires/theyhavenoideawerecoming.png",
-"501_116_BACK":"https://res.starwarsccg.org/cards/Virtual9-Light/hires/untilwewinorthechancesarespent.png",
-"501_117":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/lothal.png",
-"501_118":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/lothaladvancedprojectslaboratory.png",
+"501_84":"https://res.starwarsccg.org/cards/JabbasPalace-Dark/large/wellguarded.gif",
+"501_85":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/resistance.gif",
+"501_86":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/bomarrmonk.gif",
+"501_87":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/strikeplanning.gif",
+"501_88":"https://res.starwarsccg.org/cards/EnhancedJabbasPalace-Light/large/youcaneitherprofitbythis.gif",
+"501_88_BACK":"https://res.starwarsccg.org/cards/EnhancedJabbasPalace-Light/large/orbedestroyed.gif",
+"501_89":"https://res.starwarsccg.org/cards/Endor-Light/large/endorbackdoor.gif",
+"501_90":"https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/ultimatum.gif",
+
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",
@@ -4504,15 +4472,7 @@ var Card = Class.extend({
                    (cardNo == 69) ||
                    (cardNo == 71) ||
                    (cardNo == 74) ||
-                   (cardNo == 89) ||
-                   (cardNo == 90) ||
-                   (cardNo == 93) ||
-                   (cardNo == 99) ||
-                   (cardNo == 102) ||
-                   (cardNo == 103) ||
-                   (cardNo == 112) ||
-                   (cardNo == 113) ||
-                   (cardNo == 118)
+                   (cardNo == 89)
                    ;
         }
         if (setNo == 601) {
