@@ -3598,6 +3598,28 @@ var fixedImages = {
 "501_88_BACK":"https://res.starwarsccg.org/cards/EnhancedJabbasPalace-Light/large/orbedestroyed.gif",
 "501_89":"https://res.starwarsccg.org/cards/Endor-Light/large/endorbackdoor.gif",
 "501_90":"https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/ultimatum.gif",
+"501_91":"https://res.starwarsccg.org/cards/ThirdAnthology-Light/large/massassibaseoperations.gif",
+"501_91_BACK":"https://res.starwarsccg.org/cards/ThirdAnthology-Light/large/oneinamillion.gif",
+"501_92":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/deathstar.gif",
+"501_93":"https://res.starwarsccg.org/cards/ANewHope-Light/large/attackrun.gif",
+"501_94":"https://res.starwarsccg.org/cards/Endor-Light/large/rebelstriketeam.gif",
+"501_94_BACK":"https://res.starwarsccg.org/cards/Endor-Light/large/garrisondestroyed.gif",
+"501_95":"https://res.starwarsccg.org/cards/Endor-Light/large/deactivatetheshieldgenerator.gif",
+"501_100":"https://res.starwarsccg.org/cards/EnhancedPremiere-Dark/large/bobafettwithblasterrifle.gif",
+"501_101":"https://res.starwarsccg.org/cards/PremiereIntroductoryTwoPlayerGame-Dark/large/vadersobsession.gif",
+"501_102":"https://res.starwarsccg.org/cards/Virtual8-Dark/large/captainpeavey.gif",
+"501_103":"https://res.starwarsccg.org/cards/Virtual11-Dark/large/ltpoldinlehuse.gif",
+"501_104":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/large/kylorenwithlightsaber_ai.gif",
+"501_105":"https://res.starwarsccg.org/cards/Virtual4-Dark/large/bowtothefirstorder.gif",
+"501_106":"https://res.starwarsccg.org/cards/Tatooine-Dark/large/ifthetracewascorrect.gif",
+"501_107":"https://res.starwarsccg.org/cards/Hoth-Dark/large/hoth.gif",
+"501_108":"https://res.starwarsccg.org/cards/Hoth-Dark/large/hothiceplains.gif",
+"501_109":"https://res.starwarsccg.org/cards/Virtual11-Dark/large/invisiblehandbridge.gif",
+"501_111":"https://res.starwarsccg.org/cards/Virtual8-Dark/large/iwantthatmap.gif",
+"501_111_BACK":"https://res.starwarsccg.org/cards/Virtual8-Dark/large/andnowyoullgiveittome.gif",
+"501_112":"https://res.starwarsccg.org/cards/OfficialTournamentSealedDeck-Dark/large/dreadnaughtclassheavycruiser.gif",
+"501_113":"https://res.starwarsccg.org/cards/Dagobah-Dark/large/executor.gif",
+"501_114":"https://res.starwarsccg.org/cards/EmpireStrikesBackIntroductoryTwoPlayerGame-Dark/large/imperialwalker.gif",
 
 
 //legacy
@@ -4472,7 +4494,10 @@ var Card = Class.extend({
                    (cardNo == 69) ||
                    (cardNo == 71) ||
                    (cardNo == 74) ||
-                   (cardNo == 89)
+                   (cardNo == 89) ||
+                   (cardNo == 108) ||
+                   (cardNo == 109) ||
+                   (cardNo == 113)
                    ;
         }
         if (setNo == 601) {
