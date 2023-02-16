@@ -22,18 +22,18 @@ import java.util.List;
  * Set: Set 21
  * Type: Character
  * Subtype: Droid
- * Title: B-1 Battle Droid
+ * Title: B-1 Clanker
  */
 public class Card501_032 extends AbstractDroid {
     public Card501_032() {
-        super(Side.DARK, 2, 2, 1, 2, "B-1 Battle Droid", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 2, 2, 1, 2, "B-1 Clanker", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setArmor(3);
         setLore("Infantry battle droid.");
         setGameText("While with your Republic leader (or another battle droid), draws one battle destiny if unable to otherwise.");
         addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PRESENCE, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.INFANTRY_BATTLE_DROID);
         addModelType(ModelType.BATTLE);
-        setTestingText("B-1 Battle Droid");
+        setTestingText("B-1 Clanker");
     }
 
     @Override

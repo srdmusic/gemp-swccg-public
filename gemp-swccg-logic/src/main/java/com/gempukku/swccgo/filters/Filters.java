@@ -17400,7 +17400,7 @@ public class Filters {
     public static final Filter Bespin_location = Filters.partOfSystem(Title.Bespin);
     public static final Filter Bespin_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Bespin));
     public static final Filter Bestoon_Legacy = Filters.persona(Persona.BESTOON_LEGACY);
-    public static final Filter Bib = Filters.title(Title.Bib);
+    public static final Filter Bib = Filters.persona(Persona.BIB);
     public static final Filter biker_scout = Filters.keyword(Keyword.BIKER_SCOUT);
     public static final Filter Big_One = Filters.title(Title.Big_One);
     public static final Filter Big_One_Asteroid_Cave_Or_Space_Slug_Belly = Filters.or(Filters.title(Title.Big_One_Asteroid_Cave_Or_Space_Slug_Belly), Filters.title(Title.Big_One_Asteroid_Cave), Filters.title(Title.Space_Slug_Belly));
@@ -18113,6 +18113,7 @@ public class Filters {
     public static final Filter KalFalnl_Cndros = Filters.title(Title.KalFalnl_Cndros);
     public static final Filter Kalit = Filters.title(Title.Kalit);
     public static final Filter Kamino_location = Filters.partOfSystem(Title.Kamino);
+    public static final Filter Kamino_site = Filters.and(Filters.partOfSystem(Title.Kamino), CardSubtype.SITE);
     public static final Filter Kanan = Filters.persona(Persona.KANAN);
     public static final Filter Karie_Neth = Filters.title(Title.Karie_Neth);
     public static final Filter Kashyyyk_location = Filters.partOfSystem(Title.Kashyyyk);

@@ -5,9 +5,11 @@ import com.gempukku.swccgo.cards.AbstractPermanentPilot;
 import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.ModelType;
 import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -32,7 +34,7 @@ import java.util.List;
  */
 public class Card501_011 extends AbstractStarfighter {
     public Card501_011() {
-        super(Side.DARK, 2, 7, 8, null, 6, 5, 8, "Jango Fett & Boba Fett In Slave I", Uniqueness.UNIQUE);
+        super(Side.DARK, 2, 7, 8, null, 6, 5, 8, "Jango Fett & Boba Fett In Slave I", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setComboCard(true);
         setGameText("Permanent pilots are •Jango and •Boba, who provide ability of 6. May add 2 passengers. Power +2 at Nal Hutta or with Falcon. Immune to Eject, Eject! and attrition < 5.");
         addPersonas(Persona.SLAVE_I);

@@ -28,7 +28,7 @@ public class Card501_067 extends AbstractSite {
     public Card501_067() {
         super(Side.LIGHT, "Clone Command Center", Uniqueness.DIAMOND_1, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Deploys only if a [Clone Army] objective on table. Deploys only at start of game.");
-        setLocationLightSideGameText("Once per turn, may deploy related system (or a [Clone Army] battleground) from Reserve Deck; reshuffle.");
+        setLocationLightSideGameText("Once per turn, may deploy a Kamino site or [Clone Army] battleground from Reserve Deck; reshuffle.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_21);
         setTestingText("Clone Command Center");
@@ -50,14 +50,14 @@ public class Card501_067 extends AbstractSite {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy a location");
-            action.setActionMsg("Deploy related system (or a [Clone Army] battleground) from Reserve Deck");
+            action.setActionMsg("Deploy a Kamino site or a [Clone Army] battleground from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
 
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.relatedSystem(self), Filters.and(Icon.CLONE_ARMY, Filters.location)), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Kamino_site, Filters.and(Icon.CLONE_ARMY, Filters.battleground)), true));
             return Collections.singletonList(action);
         }
         return null;

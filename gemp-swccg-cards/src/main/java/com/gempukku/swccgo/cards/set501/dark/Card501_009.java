@@ -1,9 +1,11 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -32,11 +34,9 @@ import java.util.List;
  */
 public class Card501_009 extends AbstractAlien {
     public Card501_009() {
-        super(Side.DARK, 2, 4, 7, 2, 5, "Black Krrsantan", Uniqueness.UNIQUE);
+        super(Side.DARK, 2, 4, 7, 2, 5, "Black Krrsantan", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Wookiee bounty hunter.");
-        setGameText("May not be excluded from battle. If a battle was just initiated here, each player with four or " +
-                "more characters here must return one of those characters to hand (owner's choice). " +
-                "Opponent’s characters of ability < 3 are power -1 here.");
+        setGameText("May not be excluded from battle. Opponent's characters of ability < 3 are power -1 here. If a battle was just initiated here, each player with four or more characters here must choose one of their characters here (except Krrsantan) to return to hand.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         setSpecies(Species.WOOKIEE);
         addKeywords(Keyword.BOUNTY_HUNTER);
@@ -71,10 +71,10 @@ public class Card501_009 extends AbstractAlien {
                 && numOpponentCharactersHere >= 4) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, GameTextActionId.OTHER_CARD_ACTION_1);
-            action.setText("Return a character to Hand");
+            action.setText(opponent + " returns a character to hand");
             // Perform result(s)
             action.appendEffect(
-                    new ChooseCardOnTableEffect(action, opponent, "Choose character to return to your hand", opponentsCharactersHere) {
+                    new ChooseCardOnTableEffect(action, opponent, "Choose character to return to your hand", Filters.and(opponentsCharactersHere, Filters.except(Filters.title("Black Krrsantan")))) {
                         @Override
                         protected void cardSelected(PhysicalCard selectedCard) {
                             action.appendEffect(
@@ -91,10 +91,10 @@ public class Card501_009 extends AbstractAlien {
                 && numYourCharactersHere >= 4) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, GameTextActionId.OTHER_CARD_ACTION_2);
-            action.setText("Return a character to Hand");
+            action.setText(playerId + " returns a character to hand");
             // Perform result(s)
             action.appendEffect(
-                    new ChooseCardOnTableEffect(action, playerId, "Choose character to return to your hand", yourCharactersHere) {
+                    new ChooseCardOnTableEffect(action, playerId, "Choose character to return to your hand", Filters.and(yourCharactersHere, Filters.except(Filters.title("Black Krrsantan")))) {
                         @Override
                         protected void cardSelected(PhysicalCard selectedCard) {
                             action.appendEffect(

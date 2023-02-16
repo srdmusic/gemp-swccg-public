@@ -14,10 +14,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
@@ -27,10 +24,8 @@ import com.gempukku.swccgo.logic.modifiers.IconModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,8 +38,8 @@ public class Card501_065 extends AbstractObjective {
     public Card501_065() {
         super(Side.LIGHT, 0, "Hunt For The Droid General", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy a [Clone Army] battleground and ♢Clone Command Center (to same system). Deploy He Is A Coward. \n" +
-                "For remainder of game, you may not deploy non-[Episode I] Jedi. Your non-[Episode I] cards with ability are deploy +2. Jedi gain [Pilot] skill. Your [Episode I] sites are immune to No Escape. May lose 1 Force to cancel You Are Beaten. At end of opponent's turn, if you occupy more battlegrounds than opponent, opponent loses 1 Force. \n" +
+        setGameText("Deploy a [Clone Army] battleground, ♢Clone Command Center (to same planet), Cloning Cylinders, and He Is A Coward. \n" +
+                "For remainder of game, you may not deploy non-[Episode I] Jedi. Your non-[Episode I] cards with ability are deploy +2. Jedi gain [Pilot] skill. Your [Episode I] sites are immune to No Escape. At end of opponent's turn, if you occupy more battlegrounds than opponent, opponent loses 1 Force. \n" +
                 "Flip this card if He Is A Coward here (unless Grievous alone at a battleground).");
         addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("Hunt For The Droid General");
@@ -71,15 +66,25 @@ public class Card501_065 extends AbstractObjective {
                                         return "Choose Clone Command Center to deploy";
                                     }
                                 });
-                    }
-                });
-        action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.title("He Is A Coward"), true, false) {
-                    @Override
-                    public String getChoiceText() {
-                        return "Deploy He Is A Coward";
-                    }
 
+                        // put this here so they are deployed after Clone Command Center
+                        action.appendRequiredEffect(
+                                new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Cloning_Cylinders), true, false) {
+                                    @Override
+                                    public String getChoiceText() {
+                                        return "Deploy Cloning Cylinders";
+                                    }
+
+                                });
+                        action.appendRequiredEffect(
+                                new DeployCardFromReserveDeckEffect(action, Filters.title("He Is A Coward"), true, false) {
+                                    @Override
+                                    public String getChoiceText() {
+                                        return "Deploy He Is A Coward";
+                                    }
+
+                                });
+                    }
                 });
         return action;
     }
@@ -95,42 +100,6 @@ public class Card501_065 extends AbstractObjective {
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<>();
-
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        // Check condition(s)
-        if (GameConditions.canTargetToCancel(game, self, Filters.You_Are_Beaten)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.You_Are_Beaten, Title.You_Are_Beaten);
-            action.appendCost(new LoseForceEffect(action, playerId, 1, true));
-            actions.add(action);
-        }
-
-        return actions;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalBeforeTriggers(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.You_Are_Beaten)
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
-
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            action.appendCost(new LoseForceEffect(action, playerId, 1, true));
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
         String playerId = self.getOwner();
@@ -138,8 +107,8 @@ public class Card501_065 extends AbstractObjective {
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         if (TriggerConditions.isEndOfOpponentsTurn(game, effectResult, playerId)) {
-            int battlegroundsYouOccupy = Filters.filterTopLocationsOnTable(game, Filters.occupies(playerId)).size();
-            int battlegroundsOpponentOccupies = Filters.filterTopLocationsOnTable(game, Filters.occupies(opponent)).size();
+            int battlegroundsYouOccupy = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.battleground, Filters.occupies(playerId))).size();
+            int battlegroundsOpponentOccupies = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.battleground, Filters.occupies(opponent))).size();
 
             if (battlegroundsYouOccupy > battlegroundsOpponentOccupies) {
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);

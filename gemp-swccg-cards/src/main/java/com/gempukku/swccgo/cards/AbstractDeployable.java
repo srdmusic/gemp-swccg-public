@@ -1,14 +1,66 @@
 package com.gempukku.swccgo.cards;
 
-import com.gempukku.swccgo.cards.actions.*;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.cards.actions.ChoiceAction;
+import com.gempukku.swccgo.cards.actions.ConvertByReplacingCharacterAction;
+import com.gempukku.swccgo.cards.actions.DeliverCaptiveToPrisonAction;
+import com.gempukku.swccgo.cards.actions.DisembarkAction;
+import com.gempukku.swccgo.cards.actions.DrawAsteroidDestinyAction;
+import com.gempukku.swccgo.cards.actions.EmbarkAction;
+import com.gempukku.swccgo.cards.actions.EnterStarshipOrVehicleSiteAction;
+import com.gempukku.swccgo.cards.actions.ExitStarshipOrVehicleSiteAction;
+import com.gempukku.swccgo.cards.actions.LandAction;
+import com.gempukku.swccgo.cards.actions.LeaveFrozenCaptiveUnattendedAction;
+import com.gempukku.swccgo.cards.actions.MoveAsReactAction;
+import com.gempukku.swccgo.cards.actions.MoveAtEndOfAttackRunAction;
+import com.gempukku.swccgo.cards.actions.MoveAtStartOfAttackRunAction;
+import com.gempukku.swccgo.cards.actions.MoveBetweenCapacitySlotsAction;
+import com.gempukku.swccgo.cards.actions.MoveStarshipUsingHyperspeedAction;
+import com.gempukku.swccgo.cards.actions.MoveStarshipWithoutUsingHyperspeedAction;
+import com.gempukku.swccgo.cards.actions.MoveToEndBombingRunAction;
+import com.gempukku.swccgo.cards.actions.MoveToRelatedStarshipOrVehicleAction;
+import com.gempukku.swccgo.cards.actions.MoveToRelatedStarshipOrVehicleSiteAction;
+import com.gempukku.swccgo.cards.actions.MoveToStartBombingRunAction;
+import com.gempukku.swccgo.cards.actions.MoveUsingLandspeedAction;
+import com.gempukku.swccgo.cards.actions.MoveUsingSectorMovementAction;
+import com.gempukku.swccgo.cards.actions.PersonaReplaceCharacterAction;
+import com.gempukku.swccgo.cards.actions.ReplacementAction;
+import com.gempukku.swccgo.cards.actions.ShipdockingAction;
+import com.gempukku.swccgo.cards.actions.ShuttleAction;
+import com.gempukku.swccgo.cards.actions.ShuttleDownUsingShuttleVehicleAction;
+import com.gempukku.swccgo.cards.actions.ShuttleUpUsingShuttleVehicleAction;
+import com.gempukku.swccgo.cards.actions.TakeImprisonedCaptiveIntoCustodyAction;
+import com.gempukku.swccgo.cards.actions.TakeOffAction;
+import com.gempukku.swccgo.cards.actions.TakeUnattendedFrozenCaptiveIntoCustodyAction;
+import com.gempukku.swccgo.cards.actions.TransferBetweenDockedStarshipsAction;
+import com.gempukku.swccgo.cards.actions.TransferDeviceOrWeaponAction;
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.InactiveReason;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
+import com.gempukku.swccgo.common.TargetingReason;
+import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
-import com.gempukku.swccgo.game.*;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.PlayCardOption;
+import com.gempukku.swccgo.game.ReactActionOption;
+import com.gempukku.swccgo.game.SwccgBuiltInCardBlueprint;
+import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.AttackRunState;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.*;
+import com.gempukku.swccgo.logic.actions.FireWeaponAction;
+import com.gempukku.swccgo.logic.actions.PlayCardAction;
+import com.gempukku.swccgo.logic.actions.RequiredRuleTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.effects.BreakCoverEffect;
 import com.gempukku.swccgo.logic.effects.DrawAsteroidDestinyEffect;
 import com.gempukku.swccgo.logic.effects.StackActionEffect;
@@ -19,7 +71,12 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.rules.DeathStarIISectorRule;
 import com.gempukku.swccgo.logic.timing.rules.DrawAsteroidDestinyRule;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The abstract class providing the common implementation for cards that are either deployed to the table (or side of table),
@@ -34,31 +91,6 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
     protected String _matchingSystem;
     private Integer _replacementCountForSquadron;
     private Filter _replacementFilterForSquadron;
-
-    /**
-     * Creates a blueprint for a deployable card.
-     * @param side the side of the Force
-     * @param destiny the destiny value
-     * @param playCardZoneOption the zone option for playing the card, or null if card has multiple play options
-     * @param deployCost the deploy cost
-     * @param title the card title
-     */
-    protected AbstractDeployable(Side side, Float destiny, PlayCardZoneOption playCardZoneOption, Float deployCost, String title) {
-        this(side, destiny, playCardZoneOption, deployCost, title, null);
-    }
-
-    /**
-     * Creates a blueprint for a deployable card.
-     * @param side the side of the Force
-     * @param destiny the destiny value
-     * @param playCardZoneOption the zone option for playing the card, or null if card has multiple play options
-     * @param deployCost the deploy cost
-     * @param title the card title
-     * @param uniqueness the uniqueness
-     */
-    protected AbstractDeployable(Side side, Float destiny, PlayCardZoneOption playCardZoneOption, Float deployCost, String title, Uniqueness uniqueness) {
-        this(side, destiny, playCardZoneOption, deployCost, title, uniqueness, null, null);
-    }
 
     /**
      * Creates a blueprint for a deployable card.
@@ -421,14 +453,14 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
         }
 
         // Move as 'react' by landing
-        Action landAction = getLandAction(playerId, game, self, isReactForFree, true, true, false, completeMoveTargetFilter);
+        Action landAction = getLandAction(playerId, game, self, isReactForFree, true, true, false, false, completeMoveTargetFilter);
         if (landAction != null) {
             Filter landTargetFilter = getLandFilter(playerId, game, self, isReactForFree, true, completeMoveTargetFilter);
             moveAsReactActions.add(new MoveAsReactAction(playerId, self, reactActionOption, Effect.Type.LANDING_AS_REACT, landTargetFilter));
         }
 
         // Move as 'react' by taking off
-        Action takeOffAction = getTakeOffAction(playerId, game, self, isReactForFree, true, true, false, completeMoveTargetFilter);
+        Action takeOffAction = getTakeOffAction(playerId, game, self, isReactForFree, true, true, false, false, completeMoveTargetFilter);
         if (takeOffAction != null) {
             Filter takeOffTargetFilter = getTakeOffFilter(playerId, game, self, isReactForFree, true, completeMoveTargetFilter);
             moveAsReactActions.add(new MoveAsReactAction(playerId, self, reactActionOption, Effect.Type.TAKING_OFF_AS_REACT, takeOffTargetFilter));
@@ -552,13 +584,13 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
         }
 
         // Land
-        Action landAction = getLandAction(playerId, game, self, forFree, false, skipPhaseCheck, asAdditionalMove, moveTargetFilter);
+        Action landAction = getLandAction(playerId, game, self, forFree, false, skipPhaseCheck, asAdditionalMove, false, moveTargetFilter);
         if (landAction != null) {
             regularMoveActions.add(landAction);
         }
 
         // Take off
-        Action takeOffAction = getTakeOffAction(playerId, game, self, forFree, false, skipPhaseCheck, asAdditionalMove, moveTargetFilter);
+        Action takeOffAction = getTakeOffAction(playerId, game, self, forFree, false, skipPhaseCheck, asAdditionalMove, false, moveTargetFilter);
         if (takeOffAction != null) {
             regularMoveActions.add(takeOffAction);
         }
@@ -863,8 +895,9 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
      * @return the action, or null
      */
     @Override
-    public Action getLandAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, Filter moveTargetFilter) {
-        if (game.getModifiersQuerying().landsAsUnlimitedMove(game.getGameState(), self)) {
+    public Action getLandAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, boolean asUnlimitedMove, Filter moveTargetFilter) {
+        if (asUnlimitedMove
+                || game.getModifiersQuerying().landsAsUnlimitedMove(game.getGameState(), self)) {
             if (!checkUnlimitedMoveRequirements(playerId, game, self, asAdditionalMove))
                 return null;
         } else if(!checkRegularMoveRequirements(playerId, game, self, asAdditionalMove)) {
@@ -884,7 +917,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
 
         // Check that a valid location to move to can be found
         if (Filters.canSpotFromTopLocationsOnTable(game, completeTargetFilter)) {
-            return new LandAction(playerId, self, forFree, asReact, completeTargetFilter);
+            return new LandAction(playerId, self, forFree, asReact, asUnlimitedMove, completeTargetFilter);
         }
 
         return null;
@@ -917,8 +950,9 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
      * @return the action, or null
      */
     @Override
-    public Action getTakeOffAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, Filter moveTargetFilter) {
-        if (game.getModifiersQuerying().takesOffAsUnlimitedMove(game.getGameState(), self)) {
+    public Action getTakeOffAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, boolean asUnlimitedMove, Filter moveTargetFilter) {
+        if (asUnlimitedMove
+                || game.getModifiersQuerying().takesOffAsUnlimitedMove(game.getGameState(), self)) {
             if (!checkUnlimitedMoveRequirements(playerId, game, self, asAdditionalMove))
                 return null;
         } else if(!checkRegularMoveRequirements(playerId, game, self, asAdditionalMove)) {
@@ -938,7 +972,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
 
         // Check that a valid location to move to can be found
         if (Filters.canSpotFromTopLocationsOnTable(game, completeTargetFilter)) {
-            return new TakeOffAction(playerId, self, forFree, asReact, completeTargetFilter);
+            return new TakeOffAction(playerId, self, forFree, asReact, asUnlimitedMove, completeTargetFilter);
         }
 
         return null;
@@ -1591,13 +1625,13 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
         }
 
         // Land
-        Action landAction = getLandAction(playerId, game, self, false, false, false, false, Filters.any);
+        Action landAction = getLandAction(playerId, game, self, false, false, false, false, false, Filters.any);
         if (landAction != null) {
             actions.add(landAction);
         }
 
         // Take off
-        Action takeOffAction = getTakeOffAction(playerId, game, self, false, false, false, false, Filters.any);
+        Action takeOffAction = getTakeOffAction(playerId, game, self, false, false, false, false, false, Filters.any);
         if (takeOffAction != null) {
             actions.add(takeOffAction);
         }

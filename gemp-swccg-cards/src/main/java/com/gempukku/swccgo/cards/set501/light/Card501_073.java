@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
+import com.gempukku.swccgo.cards.conditions.ControlsWithCondition;
 import com.gempukku.swccgo.cards.conditions.OccupiesWithCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -27,8 +28,8 @@ import java.util.List;
  */
 public class Card501_073 extends AbstractSystem {
     public Card501_073() {
-        super(Side.LIGHT, Title.Christophsis, 7, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("If you occupy with a [Separatist] starship, opponent must use +1 Force to move or deploy a starship to here.");
+        super(Side.LIGHT, Title.Christophsis, 6, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLocationDarkSideGameText("If you control with a [Separatist] starship, opponent must use +1 Force to move or deploy a starship to here.");
         setLocationLightSideGameText("If you occupy with a [Clone Army] starship, opponent must use +1 Force to move or deploy a starship to here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
@@ -38,7 +39,7 @@ public class Card501_073 extends AbstractSystem {
 
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
-        Condition condition = new OccupiesWithCondition(playerOnDarkSideOfLocation, self, Filters.and(Icon.SEPARATIST, Filters.starship));
+        Condition condition = new ControlsWithCondition(playerOnDarkSideOfLocation, self, Filters.and(Icon.SEPARATIST, Filters.starship));
         Filter opponentsStarships = Filters.and(Filters.opponents(playerOnDarkSideOfLocation), Filters.starship);
 
         List<Modifier> modifiers = new LinkedList<>();
