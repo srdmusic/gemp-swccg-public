@@ -6,7 +6,6 @@ import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.ModelType;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
@@ -37,9 +36,8 @@ public class Card501_113 extends AbstractCapitalStarship {
         setAsHorizontal(true);
         setGameText("May add unlimited pilots, passengers, [First Order] TIEs, shuttles, and vehicles. If Hux aboard, hyperspeed +2 and may not be targeted by weapons. Immune to attrition < 10 (< 5 if with a Resistance ship).");
         addPersona(Persona.SUPREMACY);
-        addIcons(Icon.VIRTUAL_SET_22, Icon.NAV_COMPUTER, Icon.SCOMP_LINK);
+        addIcons(Icon.VIRTUAL_SET_22, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.FIRST_ORDER, Icon.EPISODE_VII);
         addModelType(ModelType.MEGA_CLASS_DREADNAUGHT);
-        addKeywords(Keyword.DEATH_SQUADRON);
         setPilotCapacity(Integer.MAX_VALUE);
         setPassengerCapacity(Integer.MAX_VALUE);
         setVehicleCapacity(Integer.MAX_VALUE);
