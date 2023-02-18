@@ -19,7 +19,6 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromUsedPileEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +40,7 @@ public class Card501_114 extends AbstractCombatVehicle {
         addKeywords(Keyword.ENCLOSED);
         setPilotCapacity(1);
         setPassengerCapacity(6);
+        setTestingText("First Order AT-M6");
     }
 
     @Override
@@ -64,7 +64,7 @@ public class Card501_114 extends AbstractCombatVehicle {
                     new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromUsedPileEffect(action, playerId, Filters.First_Order_trooper, true));
+                    new DeployCardFromUsedPileEffect(action, Filters.First_Order_trooper, true));
             return Collections.singletonList(action);
         }
         return null;
