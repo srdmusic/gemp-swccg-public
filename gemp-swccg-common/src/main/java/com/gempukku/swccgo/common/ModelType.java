@@ -13,6 +13,7 @@ public enum ModelType implements Filterable {
     ASTROMECH("Astromech"),
     AT_AT("AT-AT"),
     AT_DP("AT_DP"),
+    AT_M6("AT-M6"),
     AT_ST("AT-ST"),
     AUTOMATION("Automation"),
     AUZITUCK_GUNSHIP("Auzituck Gunship"),
