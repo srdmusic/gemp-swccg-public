@@ -18769,6 +18769,7 @@ public class Filters {
     public static final Filter Superlaser = Filters.title(Title.Superlaser);
     public static final Filter Superlaser_Mark_II = Filters.title(Title.Superlaser_Mark_II);
     public static final Filter superlaser_weapon = Filters.or(Filters.title(Title.Superlaser), Filters.title(Title.Superlaser_Mark_II));
+    public static final Filter Supremacy = Filters.title(Title.Supremacy);
     public static final Filter Surface_Defense_Cannon = Filters.title(Title.Surface_Defense_Cannon);
     public static final Filter Surprise = Filters.title(Title.Surprise);
     public static final Filter Surprise_Assault = Filters.title(Title.Surprise_Assault);
@@ -18894,6 +18895,7 @@ public class Filters {
     public static final Filter torpedo = Filters.or(Keyword.PROTON_TORPEDOES);
     public static final Filter Torture = Filters.title(Title.Torture);
     public static final Filter Toche_Station = Filters.title(Title.Toche_Station);
+    public static final Filter Tracked_Fleet = Filters.title(Title.Tracked_Fleet);
     public static final Filter tractor_beam = Filters.keyword(Keyword.TRACTOR_BEAM);
     public static final Filter trade_agenda = Filters.agenda(Agenda.TRADE);
     public static final Filter Trade_Federation_starfighter = Filters.and(Icon.TRADE_FEDERATION, CardSubtype.STARFIGHTER);

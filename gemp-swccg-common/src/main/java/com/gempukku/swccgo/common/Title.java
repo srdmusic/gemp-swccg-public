@@ -998,6 +998,7 @@ public interface Title {
     String Sunsdown = "Sunsdown";
     String Superlaser = "Superlaser";
     String Superlaser_Mark_II = "Superlaser Mark II";
+    String Supremacy = "Supremacy";
     String Surface_Defense_Cannon = "Surface Defense Cannon";
     String Surprise = "Surprise";
     String Surprise_Assault = "Surprise Assault";
@@ -1101,6 +1102,7 @@ public interface Title {
     String Tonnika_Sisters = "Tonnika Sisters";
     String Torture = "Torture";
     String Toche_Station = "Tatooine: Tosche Station";
+    String Tracked_Fleet = "Tracked Fleet";
     String Trample = "Trample";
     String Transmission_Terminated = "Transmission Terminated";
     String Trap_Door = "Trap Door";
