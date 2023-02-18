@@ -17870,6 +17870,7 @@ public class Filters {
     public static final Filter First_Order_character = Filters.and(Icon.FIRST_ORDER, CardCategory.CHARACTER);
     public static final Filter First_Order_leader = Filters.and(Icon.FIRST_ORDER, CardCategory.CHARACTER, Keyword.LEADER);
     public static final Filter First_Order_pilot = Filters.and(Icon.FIRST_ORDER, CardCategory.CHARACTER, Icon.PILOT);
+    public static final Filter First_Order_TIE = Filters.and(Icon.FIRST_ORDER, Filters.TIE);
     public static final Filter First_Order_warrior = Filters.and(Icon.FIRST_ORDER, CardCategory.CHARACTER, Icon.WARRIOR);
     public static final Filter Fixer = Filters.title(Title.Fixer);
     public static final Filter Flagship = Filters.title(Title.Flagship);
@@ -18555,6 +18556,7 @@ public class Filters {
     public static final Filter Resistance_character = Filters.and(CardCategory.CHARACTER, Icon.RESISTANCE);
     public static final Filter Resistance_leader = Filters.and(Icon.RESISTANCE, Keyword.LEADER);
     public static final Filter Resistance_pilot = Filters.and(CardCategory.CHARACTER, Icon.RESISTANCE, Icon.PILOT);
+    public static final Filter Resistance_starship = Filters.and(CardCategory.STARSHIP, Icon.RESISTANCE);
     public static final Filter Responsibility_Of_Command = Filters.title(Title.Responsibility_Of_Command);
     public static final Filter Restore_Freedom_To_The_Galaxy = Filters.title(Title.Restore_Freedom_To_The_Galaxy);
     public static final Filter Restraining_Bolt = Filters.title(Title.Restraining_Bolt);
