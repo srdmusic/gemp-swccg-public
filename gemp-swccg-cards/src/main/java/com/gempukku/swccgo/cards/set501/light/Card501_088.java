@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
-import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -14,17 +13,16 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.DeployAsCaptiveOption;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.DeploysFreeToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
@@ -48,7 +46,7 @@ public class Card501_088 extends AbstractObjective {
         super(Side.LIGHT, 0, Title.You_Can_Either_Profit_By_This, ExpansionSet.ENHANCED_JABBAS_PALACE, Rarity.PM);
         setVirtualSuffix(true);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Tatooine: Jabba's Palace and Audience Chamber (with Han frozen there, he may not be moved when frozen). Opponent may deploy up to two aliens at Audience Chamber. While this side up, opponent may not Force Drain at Audience Chamber and you may not Force drain at Tatooine locations. You may not play Frozen Assets. Luke, C-3PO and R2-D2 are deploy -2 at Jabba's Palace sites (Master Luke deploys for free instead). Flip this card if Han is on Tatooine and not a captive. Place out of play if Tatooine is 'blown away.'");
+        setGameText("Deploy Tatooine: Jabba's Palace and Audience Chamber (with Han frozen there; he may not be moved while frozen). Opponent may deploy up to two aliens to Audience Chamber. For remainder of game, you may not cancel battles. While this side up, opponent may not Force drain at Audience Chamber and you may not Force drain at Tatooine locations. You may not play Frozen Assets. Luke, R2-D2, and C-3PO are deploy -2 at Jabba's Palace sites (Master Luke deploys for free instead). Flip this card if Han is on Tatooine and not a captive.");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_21);
         setTestingText("You Can Either Profit By This... (V)");
     }
@@ -115,6 +113,7 @@ public class Card501_088 extends AbstractObjective {
         String opponent = game.getOpponent(playerId);
 
         List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new MayNotCancelBattleModifier(self, null, self.getOwner()));
         modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.Audience_Chamber, opponent));
         modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.Tatooine_location, playerId));
         modifiers.add(new MayNotPlayModifier(self, Filters.Frozen_Assets, playerId));
@@ -126,18 +125,6 @@ public class Card501_088 extends AbstractObjective {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Tatooine, true)))) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Place out of play");
-            action.setActionMsg("Place " + GameUtils.getCardLink(self) + " out of play");
-            // Perform result(s)
-            action.appendEffect(
-                    new PlaceCardOutOfPlayFromTableEffect(action, self));
-            return Collections.singletonList(action);
-        }
-
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
