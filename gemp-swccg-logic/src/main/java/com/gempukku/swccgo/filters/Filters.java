@@ -17759,6 +17759,7 @@ public class Filters {
     public static final Filter Double_Agent = Filters.title(Title.Double_Agent);
     public static final Filter Double_Back = Filters.title(Title.Double_Back);
     public static final Filter Downtown_Plaza = Filters.title(Title.Downtown_Plaza);
+    public static final Filter Dqar = Filters.title(Title.Dqar);
     public static final Filter Dr_Evazan = Filters.title(Title.Dr_Evazan);
     public static final Filter Dreadnaught_class_cruisers = Filters.modelType(ModelType.DREADNAUGHT_CLASS_HEAVY_CRUISER);
     public static final Filter droid = Filters.icon(Icon.DROID);
