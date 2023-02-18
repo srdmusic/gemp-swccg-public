@@ -47,7 +47,7 @@ public class Card501_088_BACK extends AbstractObjective {
         super(Side.LIGHT, 7, Title.Or_Be_Destroyed, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setGameText("Immediately retrieve 3 Force (cannot be canceled) once per game. " +
-                "While this side up, you may not cancel battles. While Han with an un-'hit' Chewie, Lando or Luke, he may not be 'choked,' or targeted by Force Lightning, Set For Stun, or weapons. During your control phase, opponent loses 1 Force for each battleground location you occupy with Han, Luke, Leia, Chewie, or Lando (limit 3, cannot be reduced). Han's weapon destiny draws are +1. " +
+                "While this side up, Han's weapon destiny draws are +1. While Han with your non-'hit' Chewie, Lando, or Luke, Han may not be 'choked' or targeted by Force Lightning, Set For Stun, or weapons. During your control phase, opponent loses 1 Force for each battleground location occupied by Han, Luke, Leia, Chewie, or your Lando (limit 3 and cannot be reduced). " +
                 "Flip this card if Han is captured or not on table.");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_21);
         setTestingText("Or Be Destroyed (V)");
@@ -131,7 +131,7 @@ public class Card501_088_BACK extends AbstractObjective {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        Filter hanFilter = Filters.and(Filters.Han, Filters.with(self, Filters.and(Filters.not(Filters.hit), Filters.or(Filters.Chewie, Filters.Lando, Filters.Luke))));
+        Filter hanFilter = Filters.and(Filters.Han, Filters.with(self, Filters.and(Filters.your(self), Filters.not(Filters.hit), Filters.or(Filters.Chewie, Filters.Lando, Filters.Luke))));
 
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotCancelBattleModifier(self, null, self.getOwner()));
