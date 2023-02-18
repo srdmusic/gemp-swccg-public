@@ -30,7 +30,8 @@ public class Card501_107 extends AbstractSystem {
         setLocationLightSideGameText("Your capital starships are armor and hyperspeed +1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_20);
+        addIcons(Icon.PLANET, Icon.VIRTUAL_SET_22);
+        setTestingText("Crait");
     }
 
     @Override
