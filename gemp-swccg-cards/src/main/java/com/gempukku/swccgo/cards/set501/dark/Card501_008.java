@@ -2,7 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfUsedPileAndChooseCardsToTakeIntoHandEffect;
+import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -38,7 +38,7 @@ public class Card501_008 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Juri_Juice, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Popular beverage served in many cantinas and tapcafes. Has intoxicating effect on many species. Favorite drink of Kabe, Chadra-Fan thief of Mos Eisley.");
-        setGameText("Deploy on table. Once per turn, may deploy Baniss or Cantina from Reserve Deck; reshuffle. During your draw phase, may peek at up to X cards from the top of your Used Pile; take one into hand, where X = number of your aliens at Cantina. Immune to Blue Milk. [Immune to Alter.]");
+        setGameText("Deploy on table. Once per turn, may deploy Baniss or Cantina from Reserve Deck; reshuffle. Once during your draw phase, may peek at up to X cards from the top of your Reserve Deck, where X = number of your aliens at Cantina; take one into hand. Immune to Blue Milk. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         addImmuneToCardTitle(Title.Blue_Milk);
@@ -72,19 +72,19 @@ public class Card501_008 extends AbstractNormalEffect {
         gameTextActionId = GameTextActionId.JURI_JUICE_V__TAKE_CARD_INTO_HAND_FROM_USED_PILE;
 
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)
-                && GameConditions.hasUsedPile(game, playerId)
+                && GameConditions.hasReserveDeck(game, playerId)
                 && GameConditions.canTarget(game, self, Filters.Cantina)) {
 
             int alienCount = Filters.countActive(game, self, Filters.and(Filters.your(self), Filters.alien, Filters.at(Filters.Cantina)));
 
             final int maxValueOfX = (int) Math.min(game.getModifiersQuerying().getVariableValue(game.getGameState(), self, Variable.X,
-                            alienCount), game.getGameState().getUsedPile(playerId).size());
+                            alienCount), game.getGameState().getReserveDeckSize(playerId));
 
             if (maxValueOfX > 0) {
 
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Peek at up to "+alienCount+" card"+ GameUtils.s(alienCount)+" from Used Pile");
-                action.setActionMsg("Peek at up to "+alienCount+" card"+ GameUtils.s(alienCount)+" from the top of Used Pile and take one into hand");
+                action.setText("Peek at up to "+alienCount+" card"+ GameUtils.s(alienCount)+" from Reserve Deck");
+                action.setActionMsg("Peek at up to "+alienCount+" card"+ GameUtils.s(alienCount)+" from the top of Reserve Deck and take one into hand");
 
                 // Update usage limit(s)
                 action.appendUsage(
@@ -96,7 +96,7 @@ public class Card501_008 extends AbstractNormalEffect {
                                     @Override
                                     public void decisionMade(final int num) {
                                         action.appendEffect(
-                                                new PeekAtTopCardsOfUsedPileAndChooseCardsToTakeIntoHandEffect(action, playerId, num, 1, 1));
+                                                new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, num, 1, 1));
                                     }
                                 }
                         ));
