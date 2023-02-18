@@ -48,7 +48,7 @@ public enum ModelType implements Filterable {
     LAMBDA_CLASS_SHUTTLE("Lambda-Class Shuttle"),
     MAINTENANCE("Maintenance"),
     MEDICAL("Medical"),
-    MEGA_CLASS_DREADNAUGHT("Mega-Class Dreadnaught"),
+    MEGA_CLASS_DREADNOUGHT("Mega-Class Dreadnought"),
     MESSENGER("Messenger"),
     MINING("Mining"),
     MODIFIED_ACTION_VI_FREIGHTER("Modified Action VI Freighter"),
