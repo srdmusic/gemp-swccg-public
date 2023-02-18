@@ -195,6 +195,9 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
         TURN_OFF_BINARY_DROID,
         TURN_ON_BINARY_DROID,
 
+        // Examined any cards in card pile
+        EXAMINED_CARDS_IN_CARD_PILE,
+
         // Verify card pile
         VERIFY_CARD_PILE,
 

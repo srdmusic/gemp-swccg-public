@@ -1814,6 +1814,22 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if the cards in a pile owned by the specified player were just examined (doesn't have to use the word examined)
+     * @param game the game
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @return true or false
+     */
+    public static boolean justExaminedCardsInCardPile(SwccgGame game, EffectResult effectResult, String playerId, Zone cardPile) {
+        if (effectResult.getType() == EffectResult.Type.EXAMINED_CARDS_IN_CARD_PILE) {
+            ExaminedCardsInCardPileResult result = (ExaminedCardsInCardPileResult) effectResult;
+            return playerId.equals(result.getZoneOwner())
+                    && result.getCardPile() == cardPile;
+        }
+        return false;
+    }
+
+    /**
      * Determines if Force loss was just initiated.
      * @param game the game
      * @param effectResult the effect result
