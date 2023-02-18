@@ -42,6 +42,7 @@ public class Card501_113 extends AbstractCapitalStarship {
         setPassengerCapacity(Integer.MAX_VALUE);
         setVehicleCapacity(Integer.MAX_VALUE);
         setStarfighterCapacity(Integer.MAX_VALUE, Filters.or(Filters.shuttle,Filters.and(Filters.First_Order_TIE)));
+        setTestingText(Title.Supremacy);
     }
 
     @Override

@@ -30,7 +30,6 @@ import java.util.List;
 public class Card501_109 extends AbstractUniqueStarshipSite {
     public Card501_109() {
         super(Side.DARK, "Supremacy: Bridge", Persona.SUPREMACY, ExpansionSet.PLAYTESTING, Rarity.V);
-        setVirtualSuffix(true);
         setLocationDarkSideGameText("If you occupy with a First Order character and Tracked Fleet in play, Supremacy deploys -9.");
         setLocationLightSideGameText("Unless your Resistance ship at a system, force drain -1.");
         addIcon(Icon.DARK_FORCE, 2);

@@ -25,7 +25,6 @@ import java.util.List;
 public class Card501_107 extends AbstractSystem {
     public Card501_107() {
         super(Side.DARK, "Crait", 8, ExpansionSet.PLAYTESTING, Rarity.V);
-        setVirtualSuffix(true);
         setLocationDarkSideGameText("Your characters shuttle from here for free.");
         setLocationLightSideGameText("Your capital starships are armor and hyperspeed +1 here.");
         addIcon(Icon.DARK_FORCE, 2);

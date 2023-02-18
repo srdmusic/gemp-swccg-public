@@ -26,7 +26,6 @@ import java.util.List;
 public class Card501_108 extends AbstractSite {
     public Card501_108() {
         super(Side.DARK, "Crait: Salt Plateau", "Crait", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setVirtualSuffix(true);
         setLocationDarkSideGameText("Your combat vehicles are defense value +1 here.");
         setLocationLightSideGameText("Gains [Light icon] while The Resistance Is Doomed on table.");
         addIcon(Icon.DARK_FORCE, 2);
