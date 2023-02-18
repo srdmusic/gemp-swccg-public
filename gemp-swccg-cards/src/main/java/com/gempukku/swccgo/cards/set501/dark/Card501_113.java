@@ -18,6 +18,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.modifiers.HyperspeedModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -50,6 +51,7 @@ public class Card501_113 extends AbstractCapitalStarship {
         List<Modifier> modifiers = new LinkedList<>();
         Condition huxAboard = new HasAboardCondition(self, Filters.Hux);
         modifiers.add(new HyperspeedModifier(self, self, huxAboard, 2));
+        modifiers.add(new MayNotBeTargetedByWeaponsModifier(self, self, huxAboard));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, self, new ConditionEvaluator(10, 5, new WithCondition(self, Filters.Resistance_starship))));
         return modifiers;
     }

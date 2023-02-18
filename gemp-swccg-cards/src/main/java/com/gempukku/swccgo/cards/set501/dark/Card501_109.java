@@ -48,7 +48,8 @@ public class Card501_109 extends AbstractUniqueStarshipSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, self, new UnlessCondition(new AtCondition(self, Filters.and(Filters.starship,Filters.resistance), Filters.system)), -1, playerOnLightSideOfLocation));
+        modifiers.add(new ForceDrainModifier(self, self, new UnlessCondition(new AtCondition(self, Filters.and(Filters.starship,Filters.resistance), 
+                        Filters.system)), -1, playerOnLightSideOfLocation));
         return modifiers;
     }
 }
