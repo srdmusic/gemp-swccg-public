@@ -1056,6 +1056,7 @@ public interface Title {
     String The_Phantom_Menace = "The Phantom Menace";
     String The_Planet_That_Its_Farthest_From = "The Planet That It's Farthest From";
     String The_Professor = "The Professor";
+    String The_Resistance_Is_Doomed = "The Resistance Is Doomed";
     String The_Result_Is_Often_Resentment = "The Result Is Often Resentment";
     String The_Rise_Of_Skywalker = "The Rise Of Skywalker";
     String The_Shield_Doors_Must_Be_Closed = "The Shield Doors Must Be Closed";

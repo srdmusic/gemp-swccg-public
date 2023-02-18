@@ -1,8 +1,46 @@
 package com.gempukku.swccgo.filters;
 
-import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.game.*;
-import com.gempukku.swccgo.game.state.*;
+import com.gempukku.swccgo.common.Agenda;
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.CardType;
+import com.gempukku.swccgo.common.Filterable;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.InactiveReason;
+import com.gempukku.swccgo.common.IonizationType;
+import com.gempukku.swccgo.common.JediTestStatus;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.ModelType;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpecialRule;
+import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.SpotOverride;
+import com.gempukku.swccgo.common.TargetId;
+import com.gempukku.swccgo.common.TargetingReason;
+import com.gempukku.swccgo.common.TargetingType;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.UtinniEffectStatus;
+import com.gempukku.swccgo.common.Zone;
+import com.gempukku.swccgo.game.CompletePhysicalCardVisitor;
+import com.gempukku.swccgo.game.DeployAsCaptiveOption;
+import com.gempukku.swccgo.game.DeploymentOption;
+import com.gempukku.swccgo.game.DeploymentRestrictionsOption;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.PhysicalCardVisitor;
+import com.gempukku.swccgo.game.PlayCardOption;
+import com.gempukku.swccgo.game.ReactActionOption;
+import com.gempukku.swccgo.game.SwccgBuiltInCardBlueprint;
+import com.gempukku.swccgo.game.SwccgCardBlueprint;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.AttackRunState;
+import com.gempukku.swccgo.game.state.AttackState;
+import com.gempukku.swccgo.game.state.BattleState;
+import com.gempukku.swccgo.game.state.EpicEventState;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.game.state.MoveAsReactState;
+import com.gempukku.swccgo.game.state.WeaponFiringState;
 import com.gempukku.swccgo.game.state.actions.PlayCardState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
@@ -14,7 +52,15 @@ import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.TargetingActionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -18791,6 +18837,7 @@ public class Filters {
     public static final Filter The_Phantom_Menace = Filters.title(Title.The_Phantom_Menace);
     public static final Filter The_Planet_That_Its_Farthest_From = Filters.title(Title.The_Planet_That_Its_Farthest_From);
     public static final Filter The_Professor = Filters.title(Title.The_Professor);
+    public static final Filter The_Resistance_Is_Doomed = Filters.title(Title.The_Resistance_Is_Doomed);
     public static final Filter The_Shield_Doors_Must_Be_Closed = Filters.title(Title.The_Shield_Doors_Must_Be_Closed);
     public static final Filter The_Shield_Will_Be_Down_In_Moments = Filters.title(Title.The_Shield_Will_Be_Down_In_Moments);
     public static final Filter The_Time_To_Fight_Is_Now = Filters.title(Title.The_Time_To_Fight_Is_Now);
