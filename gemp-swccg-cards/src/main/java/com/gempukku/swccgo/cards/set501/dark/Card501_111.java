@@ -44,14 +44,14 @@ public class Card501_111 extends AbstractObjective {
     protected ObjectiveDeployedTriggerAction getGameTextWhenDeployedAction(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         ObjectiveDeployedTriggerAction action = new ObjectiveDeployedTriggerAction(self);
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.Dqar, true, false) {
+                new DeployCardFromReserveDeckEffect(action, Filters.Dqar_system, true, false) {
                     @Override
                     public String getChoiceText() {
                         return "Choose D'Qar System to deploy";
                     }
                 });
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.Crait, true, false) {
+                new DeployCardFromReserveDeckEffect(action, Filters.Crait_system, true, false) {
                         @Override
                         public String getChoiceText() {
                         return "Choose Crait System to deploy";

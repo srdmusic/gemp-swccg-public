@@ -61,7 +61,7 @@ public class Card501_106 extends AbstractEpicEventDeployable {
 
     @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.Dqar;
+        return Filters.Dqar_system;
     }
 
     @Override

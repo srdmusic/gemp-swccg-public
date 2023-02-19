@@ -135,7 +135,7 @@ public class Card501_111_BACK extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, Filters.Kylo, new AtCondition(self, Filters.Kylo, Filters.Crait), 2));
+        modifiers.add(new PowerModifier(self, Filters.Kylo, new AtCondition(self, Filters.Kylo, Filters.Crait_system), 2));
         return modifiers;
     }
 

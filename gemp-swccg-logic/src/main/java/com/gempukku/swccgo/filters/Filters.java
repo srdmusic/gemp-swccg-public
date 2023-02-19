@@ -17619,7 +17619,7 @@ public class Filters {
     public static final Filter Courage_Of_A_Skywalker = Filters.title(Title.Courage_Of_A_Skywalker);
     public static final Filter Court_Of_The_Vile_Gangster = Filters.title(Title.Court_Of_The_Vile_Gangster);
     public static final Filter Cracken = Filters.persona(Persona.CRACKEN);
-    public static final Filter Crait = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Crait));
+    public static final Filter Crait_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Crait));
     public static final Filter Crait_Salt_Plateau = Filters.and(CardSubtype.SITE, Filters.title(Title.Crait_Salt_Plateau));
     public static final Filter Crash_Site_Memorial = Filters.title(Title.Crash_Site_Memorial);
     public static final Filter crashed_vehicle = Filters.and(CardType.VEHICLE, Filters.crashed());
@@ -17761,7 +17761,7 @@ public class Filters {
     public static final Filter Double_Agent = Filters.title(Title.Double_Agent);
     public static final Filter Double_Back = Filters.title(Title.Double_Back);
     public static final Filter Downtown_Plaza = Filters.title(Title.Downtown_Plaza);
-    public static final Filter Dqar = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Dqar));
+    public static final Filter Dqar_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Dqar));
     public static final Filter Dr_Evazan = Filters.title(Title.Dr_Evazan);
     public static final Filter Dreadnaught_class_cruisers = Filters.modelType(ModelType.DREADNAUGHT_CLASS_HEAVY_CRUISER);
     public static final Filter droid = Filters.icon(Icon.DROID);
