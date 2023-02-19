@@ -37,6 +37,7 @@ public class Card501_111 extends AbstractObjective {
                 "While this side up, once per turn may deploy an [Episode VII] battleground system (or Plateau) from Reserve Deck; reshuffle. Opponent loses no more than 1 Force to Force drains at your locations.\n" +
                 "Flip if Tracked Fleet is 'blown away.'");
         addIcons(Icon.VIRTUAL_SET_22, Icon.EPISODE_VII);
+        setTestingText("The First Order Reigns");
     }
 
     @Override

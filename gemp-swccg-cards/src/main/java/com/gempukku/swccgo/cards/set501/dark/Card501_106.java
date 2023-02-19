@@ -56,7 +56,7 @@ public class Card501_106 extends AbstractEpicEventDeployable {
                 "Once during opponent's move phase, if less than three cards here, opponent may stack a card from hand here to move Tracked Fleet (for free) as if a capital " +
                 "starship (hyperspeed = 3).  If you control this system at the start of your turn, Tracked Fleet 'blown away' (place this card out of play).");
         addIcons(Icon.VIRTUAL_SET_22, Icon.EPISODE_VII);
-        setTestingText("Tracked Fleet");
+        setTestingText(Title.Tracked_Fleet);
     }
 
     @Override

@@ -35,7 +35,7 @@ public class Card501_109 extends AbstractUniqueStarshipSite {
         setLocationLightSideGameText("Unless your Resistance ship at a system, force drain -1.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcons(Icon.INTERIOR_SITE, Icon.STARSHIP_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.VIRTUAL_SET_22);
-        setTestingText("Crait: Salt Plateau");
+        setTestingText(Title.Supremacy_Bridge);
     }
 
     @Override

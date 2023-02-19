@@ -30,7 +30,7 @@ public class Card501_108 extends AbstractSite {
         setLocationLightSideGameText("Gains [Light icon] while The Resistance Is Doomed on table.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_22);
-        setTestingText("Crait: Salt Plateau");
+        setTestingText(Title.Crait_Salt_Plateau);
     }
 
     @Override

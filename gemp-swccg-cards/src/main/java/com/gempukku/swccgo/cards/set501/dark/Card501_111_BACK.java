@@ -48,6 +48,7 @@ public class Card501_111_BACK extends AbstractObjective {
                     "of your Reserve Deck and take one into hand, where X = number of locations both players occupy; shuffle Reserve Deck. Kylo is power +2 on Crait. " +
                     "Place out of play if Kylo lost a battle involving Luke.");
         addIcons(Icon.VIRTUAL_SET_11, Icon.EPISODE_VII);
+        setTestingText(Title.The_Resistance_Is_Doomed);
     }
 
     // Out of play logic goes in this section - trigger on kylo losing a battle with luke
