@@ -64,7 +64,7 @@ public class Card501_114 extends AbstractCombatVehicle {
                     new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromUsedPileEffect(action, Filters.First_Order_trooper, true));
+                    new DeployCardToTargetFromUsedPileEffect(action, Filters.and(Icon.FIRST_ORDER, Filter.trooper), Filters.locationAndCardsAtLocation(Filters.here(self)), true));
             return Collections.singletonList(action);
         }
         return null;

@@ -17873,8 +17873,7 @@ public class Filters {
     public static final Filter First_Order_leader = Filters.and(Icon.FIRST_ORDER, CardCategory.CHARACTER, Keyword.LEADER);
     public static final Filter First_Order_pilot = Filters.and(Icon.FIRST_ORDER, CardCategory.CHARACTER, Icon.PILOT);
     public static final Filter First_Order_starship = Filters.and(Icon.FIRST_ORDER, CardCategory.STARSHIP);
-    public static final Filter First_Order_TIE = Filters.and(Icon.FIRST_ORDER, Filters.TIE);
-    public static final Filter First_Order_trooper = Filters.and(Icon.FIRST_ORDER, Keyword.TROOPER);
+    public static final Filter First_Order_TIE = Filters.and(Icon.FIRST_ORDER, Filters.tie());
     public static final Filter First_Order_warrior = Filters.and(Icon.FIRST_ORDER, CardCategory.CHARACTER, Icon.WARRIOR);
     public static final Filter Fixer = Filters.title(Title.Fixer);
     public static final Filter Flagship = Filters.title(Title.Flagship);
@@ -18040,7 +18039,6 @@ public class Filters {
     public static final Filter Imperial_Artillery = Filters.title(Title.Imperial_Artillery);
     public static final Filter Imperial_Atrocity = Filters.title(Title.Imperial_Atrocity);
     public static final Filter Imperial_Barrier = Filters.title(Title.Imperial_Barrier);
-    public static final Filter Imperial_character = Filters.and(Icon.IMPERIAL, CardCategory.CHARACTER);
     public static final Filter Imperial_City = Filters.title(Title.Imperial_City);
     public static final Filter Imperial_class_Star_Destroyer = Filters.modelType(ModelType.IMPERIAL_CLASS_STAR_DESTROYER);
     public static final Filter Imperial_Code_Cylinder = Filters.title(Title.Imperial_Code_Cylinder);
@@ -18058,7 +18056,6 @@ public class Filters {
     public static final Filter Imperial_Trooper_Guard = Filters.keyword(Keyword.IMPERIAL_TROOPER_GUARD);
     public static final Filter Imperial_Troops_Have_Entered_The_Base = Filters.title(Title.Imperial_Troops_Have_Entered_The_Base);
     public static final Filter Imperial_Tyranny = Filters.title(Title.Imperial_Tyranny);
-    public static final Filter Imperial_vehicle = Filters.and(Icon.IMPERIAL, CardCategory.VEHICLE);
     public static final Filter Imperial_veteran = Filters.and(Icon.IMPERIAL, Filters.or(Keyword.LEADER, Filters.and(Filters.or(Keyword.TROOPER, Keyword.STORMTROOPER, Keyword.SNOWTROOPER, Keyword.SANDTROOPER, Keyword.CLOUD_CITY_TROOPER, Keyword.DEATH_STAR_TROOPER, Keyword.IMPERIAL_TROOPER_GUARD, Keyword.BIKER_SCOUT), Filters.not(Filters.keyword(Keyword.CADET)))));
     public static final Filter imprisoned_character = Filters.and(CardCategory.CHARACTER, Filters.imprisoned());
     public static final Filter In_Complete_Control = Filters.title(Title.In_Complete_Control);
