@@ -225,6 +225,8 @@ public interface Title {
     String Courage_Of_A_Skywalker = "Courage Of A Skywalker";
     String Court_Of_The_Vile_Gangster = "Court Of The Vile Gangster";
     String Covert_Landing = "Covert Landing";
+    String Crait = "Crait";
+    String Crait_Salt_Plateau = "Crait: Salt Plateau";
     String Crash_Site_Memorial = "Crash Site Memorial";
     String Credits_Will_Do_Fine = "Credits Will Do Fine";
     String Crimson_Dawn_Blaster = "Crimson Dawn Blaster";
@@ -999,6 +1001,7 @@ public interface Title {
     String Superlaser = "Superlaser";
     String Superlaser_Mark_II = "Superlaser Mark II";
     String Supremacy = "Supremacy";
+    String Supremacy_Bridge = "Supremacy: Bridge";
     String Surface_Defense_Cannon = "Surface Defense Cannon";
     String Surprise = "Surprise";
     String Surprise_Assault = "Surprise Assault";

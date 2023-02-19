@@ -17619,6 +17619,8 @@ public class Filters {
     public static final Filter Courage_Of_A_Skywalker = Filters.title(Title.Courage_Of_A_Skywalker);
     public static final Filter Court_Of_The_Vile_Gangster = Filters.title(Title.Court_Of_The_Vile_Gangster);
     public static final Filter Cracken = Filters.persona(Persona.CRACKEN);
+    public static final Filter Crait = Filters.title(Title.Crait);
+    public static final Filter Crait_Salt_Plateau = Filters.title(Title.Crait_Salt_Plateau);
     public static final Filter Crash_Site_Memorial = Filters.title(Title.Crash_Site_Memorial);
     public static final Filter crashed_vehicle = Filters.and(CardType.VEHICLE, Filters.crashed());
     public static final Filter creature = Filters.type(CardType.CREATURE);
@@ -18038,6 +18040,7 @@ public class Filters {
     public static final Filter Imperial_Artillery = Filters.title(Title.Imperial_Artillery);
     public static final Filter Imperial_Atrocity = Filters.title(Title.Imperial_Atrocity);
     public static final Filter Imperial_Barrier = Filters.title(Title.Imperial_Barrier);
+    public static final Filter Imperial_character = Filters.and(Icon.IMPERIAL, CardCategory.CHARACTER);
     public static final Filter Imperial_City = Filters.title(Title.Imperial_City);
     public static final Filter Imperial_class_Star_Destroyer = Filters.modelType(ModelType.IMPERIAL_CLASS_STAR_DESTROYER);
     public static final Filter Imperial_Code_Cylinder = Filters.title(Title.Imperial_Code_Cylinder);
@@ -18055,6 +18058,7 @@ public class Filters {
     public static final Filter Imperial_Trooper_Guard = Filters.keyword(Keyword.IMPERIAL_TROOPER_GUARD);
     public static final Filter Imperial_Troops_Have_Entered_The_Base = Filters.title(Title.Imperial_Troops_Have_Entered_The_Base);
     public static final Filter Imperial_Tyranny = Filters.title(Title.Imperial_Tyranny);
+    public static final Filter Imperial_vehicle = Filters.and(Icon.IMPERIAL, CardCategory.VEHICLE);
     public static final Filter Imperial_veteran = Filters.and(Icon.IMPERIAL, Filters.or(Keyword.LEADER, Filters.and(Filters.or(Keyword.TROOPER, Keyword.STORMTROOPER, Keyword.SNOWTROOPER, Keyword.SANDTROOPER, Keyword.CLOUD_CITY_TROOPER, Keyword.DEATH_STAR_TROOPER, Keyword.IMPERIAL_TROOPER_GUARD, Keyword.BIKER_SCOUT), Filters.not(Filters.keyword(Keyword.CADET)))));
     public static final Filter imprisoned_character = Filters.and(CardCategory.CHARACTER, Filters.imprisoned());
     public static final Filter In_Complete_Control = Filters.title(Title.In_Complete_Control);
@@ -18775,6 +18779,7 @@ public class Filters {
     public static final Filter Superlaser_Mark_II = Filters.title(Title.Superlaser_Mark_II);
     public static final Filter superlaser_weapon = Filters.or(Filters.title(Title.Superlaser), Filters.title(Title.Superlaser_Mark_II));
     public static final Filter Supremacy = Filters.title(Title.Supremacy);
+    public static final Filter Supremacy_Bridge = Filters.title(Title.Supremacy_Bridge);
     public static final Filter Surface_Defense_Cannon = Filters.title(Title.Surface_Defense_Cannon);
     public static final Filter Surprise = Filters.title(Title.Surprise);
     public static final Filter Surprise_Assault = Filters.title(Title.Surprise_Assault);

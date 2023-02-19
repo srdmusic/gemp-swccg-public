@@ -9,6 +9,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -29,7 +30,7 @@ import java.util.List;
  */
 public class Card501_109 extends AbstractUniqueStarshipSite {
     public Card501_109() {
-        super(Side.DARK, "Supremacy: Bridge", Persona.SUPREMACY, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, Title.Supremacy_Bridge, Persona.SUPREMACY, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("If you occupy with a First Order character and Tracked Fleet in play, Supremacy deploys -9.");
         setLocationLightSideGameText("Unless your Resistance ship at a system, force drain -1.");
         addIcon(Icon.DARK_FORCE, 2);
