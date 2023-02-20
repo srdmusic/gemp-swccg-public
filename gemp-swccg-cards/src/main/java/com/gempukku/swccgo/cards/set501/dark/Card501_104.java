@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractFirstOrder;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
@@ -13,12 +14,19 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.choose.TakeDestinyCardIntoHandEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.DestinyDrawnResult;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -47,6 +55,7 @@ public class Card501_104 extends AbstractFirstOrder {
         modifiers.add(new ForfeitModifier(self, Filters.Snoke, -6));
         modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, 2, Filters.and(Filters.your(self), Filters.First_Order_character)), 1));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
+        modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, 2, Filters.and(Filters.your(self), Filters.First_Order_character)), 1));
         return modifiers;
     }
 
@@ -56,9 +65,9 @@ public class Card501_104 extends AbstractFirstOrder {
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId) 
-                && GameConditions.canSpot(game, self, Filters.and(Filters.EPISODE_VII, Filters.Objective))
+                && GameConditions.canSpot(game, self, Filters.and(Icon.EPISODE_VII, Filters.Objective))
                 && TriggerConditions.isDestinyJustDrawnBy(game, effectResult, playerId)
-                && GameConditions.isDestinyCardMatchTo(game, Filters.and(Filters.EPISODE_VII, Filters.or(Filters.character, Filters.starship)))
+                && GameConditions.isDestinyCardMatchTo(game, Filters.and(Icon.EPISODE_VII, Filters.or(Filters.character, Filters.starship)))
                 && GameConditions.canTakeDestinyCardIntoHand(game, playerId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
@@ -70,12 +79,5 @@ public class Card501_104 extends AbstractFirstOrder {
             return Collections.singletonList(action);
         }
         return null;
-    }
-
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, 2, Filters.and(Filters.your(self), Filters.First_Order_character)), 1));
-        return modifiers;
     }
 }
