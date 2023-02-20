@@ -18,7 +18,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromUsedPileEffect;
 
 import java.util.Collections;
 import java.util.List;
@@ -64,7 +64,7 @@ public class Card501_114 extends AbstractCombatVehicle {
                     new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardToTargetFromUsedPileEffect(action, Filters.and(Icon.FIRST_ORDER, Filter.trooper), Filters.locationAndCardsAtLocation(Filters.here(self)), true));
+                    new DeployCardToTargetFromUsedPileEffect(action, Filters.and(Icon.FIRST_ORDER, Filters.trooper), Filters.locationAndCardsAtLocation(Filters.here(self)), true));
             return Collections.singletonList(action);
         }
         return null;
