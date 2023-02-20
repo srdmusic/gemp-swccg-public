@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractFirstOrder;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -49,6 +50,32 @@ public class Card501_104 extends AbstractFirstOrder {
         return modifiers;
     }
 
-    //TODO Once Per Turn Logic
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
 
+        // Check condition(s)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId) 
+                && GameConditions.canSpot(game, self, Filters.and(Filters.EPISODE_VII, Filters.Objective))
+                && TriggerConditions.isDestinyJustDrawnBy(game, effectResult, playerId)
+                && GameConditions.isDestinyCardMatchTo(game, Filters.and(Filters.EPISODE_VII, Filters.or(Filters.character, Filters.starship)))
+                && GameConditions.canTakeDestinyCardIntoHand(game, playerId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take destiny card into hand");
+            action.setActionMsg("Take just drawn destiny card, " + GameUtils.getCardLink(((DestinyDrawnResult) effectResult).getCard()) + ", into hand");
+            // Perform result(s)
+            action.appendEffect(
+                    new TakeDestinyCardIntoHandEffect(action));
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, 2, Filters.and(Filters.your(self), Filters.First_Order_character)), 1));
+        return modifiers;
+    }
 }
