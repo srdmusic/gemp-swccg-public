@@ -55,7 +55,6 @@ public class Card501_104 extends AbstractFirstOrder {
         modifiers.add(new ForfeitModifier(self, Filters.Snoke, -6));
         modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, 2, Filters.and(Filters.your(self), Filters.First_Order_character)), 1));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
-        modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, 2, Filters.and(Filters.your(self), Filters.First_Order_character)), 1));
         return modifiers;
     }
 
