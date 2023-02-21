@@ -180,7 +180,7 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
         REORDER_CARD_PILE,
         STACKED_FROM_CARD_PILE,
         STACKED_FROM_HAND,
-        LOOKED_AT_OWN_CARD_PILE,
+        LOOKED_AT_CARDS_IN_CARD_PILE,
         RECIRCULATED,
 
         // Canceling/restoring game text
@@ -194,9 +194,6 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
         // Binary turn off/on
         TURN_OFF_BINARY_DROID,
         TURN_ON_BINARY_DROID,
-
-        // Examined any cards in card pile
-        EXAMINED_CARDS_IN_CARD_PILE,
 
         // Verify card pile
         VERIFY_CARD_PILE,

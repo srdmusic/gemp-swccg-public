@@ -1754,8 +1754,26 @@ public class TriggerConditions {
      * @return true or false
      */
     public static boolean justLookedAtCardsInOwnCardPile(SwccgGame game, EffectResult effectResult, String playerId) {
-        if (effectResult.getType() == EffectResult.Type.LOOKED_AT_OWN_CARD_PILE) {
-            return playerId.equals(effectResult.getPerformingPlayerId());
+        if (effectResult.getType() == EffectResult.Type.LOOKED_AT_CARDS_IN_CARD_PILE) {
+            LookedAtCardsInCardPileResult result = (LookedAtCardsInCardPileResult) effectResult;
+            return playerId.equals(result.getZoneOwner())
+                    && effectResult.getPerformingPlayerId().equals(result.getZoneOwner());
+        }
+        return false;
+    }
+
+    /**
+     * Determines if the cards in a pile owned by the specified player were just examined (doesn't have to use the word examined)
+     * @param game the game
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @return true or false
+     */
+    public static boolean justLookedAtCardsInCardPile(SwccgGame game, EffectResult effectResult, String playerId, Zone cardPile) {
+        if (effectResult.getType() == EffectResult.Type.LOOKED_AT_CARDS_IN_CARD_PILE) {
+            LookedAtCardsInCardPileResult result = (LookedAtCardsInCardPileResult) effectResult;
+            return playerId.equals(result.getZoneOwner())
+                    && cardPile.equals(result.getCardPile());
         }
         return false;
     }
@@ -1809,22 +1827,6 @@ public class TriggerConditions {
             return playerId.equals(result.getPerformingPlayerId())
                     && result.getZoneOwner().equals(game.getOpponent(playerId))
                     && result.getCardPile() == Zone.RESERVE_DECK;
-        }
-        return false;
-    }
-
-    /**
-     * Determines if the cards in a pile owned by the specified player were just examined (doesn't have to use the word examined)
-     * @param game the game
-     * @param effectResult the effect result
-     * @param playerId the player
-     * @return true or false
-     */
-    public static boolean justExaminedCardsInCardPile(SwccgGame game, EffectResult effectResult, String playerId, Zone cardPile) {
-        if (effectResult.getType() == EffectResult.Type.EXAMINED_CARDS_IN_CARD_PILE) {
-            ExaminedCardsInCardPileResult result = (ExaminedCardsInCardPileResult) effectResult;
-            return playerId.equals(result.getZoneOwner())
-                    && result.getCardPile() == cardPile;
         }
         return false;
     }

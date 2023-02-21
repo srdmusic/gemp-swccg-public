@@ -8,7 +8,7 @@ import com.gempukku.swccgo.logic.decisions.ArbitraryCardsSelectionDecision;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import com.gempukku.swccgo.logic.timing.AbstractSuccessfulEffect;
 import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.results.ExaminedCardsInCardPileResult;
+import com.gempukku.swccgo.logic.timing.results.LookedAtCardsInCardPileResult;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,7 +56,7 @@ class LookAtCardPileEffect extends AbstractSuccessfulEffect {
 
         if (!cardsInZone.isEmpty()) {
             game.getActionsEnvironment().emitEffectResult(
-                    new ExaminedCardsInCardPileResult(_playerId, _cardPileOwner, _cardPile));
+                    new LookedAtCardsInCardPileResult(_playerId, _cardPileOwner, _cardPile, _action.getActionSource()));
         }
     }
 

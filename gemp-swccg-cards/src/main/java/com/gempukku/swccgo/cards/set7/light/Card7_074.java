@@ -28,6 +28,7 @@ import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckE
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.LookedAtCardsInCardPileResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -81,18 +82,23 @@ public class Card7_074 extends AbstractNormalEffect {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
 
-        if (TriggerConditions.justExaminedCardsInCardPile(game, effectResult, self.getOwner(), Zone.USED_PILE)
-                || TriggerConditions.justExaminedCardsInCardPile(game, effectResult, self.getOwner(), Zone.FORCE_PILE)) {
+        if (TriggerConditions.justLookedAtCardsInCardPile(game, effectResult, self.getOwner(), Zone.USED_PILE)
+                || TriggerConditions.justLookedAtCardsInCardPile(game, effectResult, self.getOwner(), Zone.FORCE_PILE)) {
+
+            PhysicalCard source = ((LookedAtCardsInCardPileResult)effectResult).getSource();
 
             PlayCardState playCardState = game.getGameState().getTopPlayCardState(self);
 
             if (playCardState != null
-                    && Filters.Interrupt.accepts(game, playCardState.getPlayCardAction().getPlayedCard())) {
+                    && Filters.Interrupt.accepts(game, playCardState.getPlayCardAction().getPlayedCard())
+                    && source!=null
+                    && Filters.sameCardId(source).accepts(game, playCardState.getPlayCardAction().getPlayedCard())) {
                 PlayInterruptAction playInterruptAction = (PlayInterruptAction) playCardState.getPlayCardAction();
 
                 final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setSingletonTrigger(true);
                 action.setText("Make "+ GameUtils.getCardLink(playCardState.getPlayCardAction().getPlayedCard()) + " a Lost Interrupt");
                 action.appendEffect(
                         new ChangePlayedInterruptSubtypeEffect(action, playInterruptAction, CardSubtype.LOST));
