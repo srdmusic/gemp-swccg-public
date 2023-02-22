@@ -2,8 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.AtCondition;
-import com.gempukku.swccgo.cards.effects.PeekAtTopCardOfForcePileAndReserveDeckAndReturnCardsToOnePileEffect;
+import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -19,16 +18,13 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeFiredModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -53,8 +49,6 @@ public class Card501_111_BACK extends AbstractObjective {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
-        final String playerId = self.getOwner();
-
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
@@ -76,16 +70,16 @@ public class Card501_111_BACK extends AbstractObjective {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
         final String opponent = game.getOpponent(playerId);
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionId2 = GameTextActionId.OTHER_CARD_ACTION_2;
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId2, Phase.CONTROL)
             && GameConditions.controls(game, playerId, Filters.Crait_Salt_Plateau)) {
             
             int numForce = Filters.countTopLocationsOnTable(game, Filters.controlsWith(playerId, self, Filters.and(Icon.FIRST_ORDER, Filters.leader, Filters.with(self, Filters.First_Order_character))));
             if (numForce > 0) {
 
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId2);
                 action.setText("Make opponent lose " + numForce + " Force");
                 // Update usage limit(s)
                 action.appendUsage(
@@ -93,35 +87,36 @@ public class Card501_111_BACK extends AbstractObjective {
                 // Perform result(s)
                 action.appendEffect(
                         new LoseForceEffect(action, opponent, numForce));
-                return Collections.singletonList(action);
+                actions.add(action);
             }
         }
 
-        GameTextActionId gameTextActionId2 = GameTextActionId.OTHER_CARD_ACTION_2;
+        GameTextActionId gameTextActionId3 = GameTextActionId.OTHER_CARD_ACTION_3;
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && GameConditions.hasReserveDeck(game, playerId)) {
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId3, Phase.CONTROL)
+            && GameConditions.controls(game, playerId, Filters.Crait_Salt_Plateau)
+            && GameConditions.hasReserveDeck(game, playerId)) {
 
             int numSitesOccupiedByBothPlayers = Filters.countTopLocationsOnTable(game, Filters.and(Filters.occupies(playerId), Filters.occupies(opponent)));
             if (numSitesOccupiedByBothPlayers > 0) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId2);
-                action.setText("Peek at top card of Force Pile and Reserve Deck");
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId3);
+                action.setText("Peek at top " + numSitesOccupiedByBothPlayers + " card of Reserve Deck");
                 // Update usage limit(s)
                 action.appendUsage(
                         new OncePerTurnEffect(action));
                 action.appendEffect(
-                        new PeekAtTopCardOfForcePileAndReserveDeckAndReturnCardsToOnePileEffect(action, playerId)
+                        new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, numSitesOccupiedByBothPlayers, 1, 1)
                 );
                 actions.add(action);
             }
         }
 
-        GameTextActionId gameTextActionId3 = GameTextActionId.THE_RESISTANCE_IS_DOOMED__DOWNLOAD_FIRST_ORDER_VEHICLE;
+        GameTextActionId gameTextActionId4 = GameTextActionId.THE_RESISTANCE_IS_DOOMED__DOWNLOAD_FIRST_ORDER_VEHICLE;
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId4, Phase.DEPLOY)
+            && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId4)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId3);
             action.setText("Deploy vehicle from Reserve Deck");
@@ -141,7 +136,7 @@ public class Card501_111_BACK extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, Filters.Kylo, new AtCondition(self, Filters.Kylo, Filters.Crait_system), 2));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.Kylo, Filters.on(Title.Crait)), 2));
         return modifiers;
     }
 
