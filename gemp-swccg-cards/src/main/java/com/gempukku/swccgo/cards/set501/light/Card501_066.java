@@ -34,16 +34,16 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Effect
- * Title: He Is A Coward
+ * Title: Grievous Will Run And Hide
  */
 public class Card501_066 extends AbstractNormalEffect {
     public Card501_066() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, "He Is A Coward", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, "Grievous Will Run And Hide", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("Deploy on a battleground. [Clone Army] Jedi deploy -1 here. If you just won a battle (or just Force drained here), relocate this card to your [Clone Army] objective. If opponent just won a battle, opponent may relocate this Effect to an [Episode I] battleground. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("He Is A Coward");
+        setTestingText("Grievous Will Run And Hide");
     }
 
     @Override
