@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.cards.set216.dark;
 
 import com.gempukku.swccgo.cards.AbstractDevice;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -38,6 +39,11 @@ public class Card216_018 extends AbstractDevice {
         setLore("");
         setGameText("Deploy on Scarif system. If a starship was just lost from here or opponent just Force drained here, opponent may draw destiny. Add 1 for each Scarif location opponent occupies. If total destiny > 8, Shield Gate 'blown away' (place out of play).");
         addIcons(Icon.VIRTUAL_SET_16);
+    }
+
+    @Override
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return !GameConditions.isBlownAway(game, Filters.Shield_Gate);
     }
 
     @Override
