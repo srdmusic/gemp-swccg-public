@@ -17,11 +17,12 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
+import com.gempukku.swccgo.logic.effects.BlowAwayEffect;
 import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
-import com.gempukku.swccgo.logic.modifiers.ShieldGateBlownAwayModifier;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.StandardEffect;
 
 import java.util.Collections;
 import java.util.List;
@@ -71,12 +72,14 @@ public class Card216_018 extends AbstractDevice {
                             attemptTotal = attemptTotal + scarifLocationsOccupiedByOpponent;
                             game.getGameState().sendMessage("Total: " + attemptTotal);
                             if (attemptTotal > 8) {
-                                game.getGameState().sendMessage("Result: Success. " + GameUtils.getCardLink(self) + " is 'blown away'");
+                                game.getGameState().sendMessage("Result: Success.");
                                 action.appendEffect(
-                                        new AddUntilEndOfGameModifierEffect(action, new ShieldGateBlownAwayModifier(self), null));
-                                action.appendEffect(
-                                        new PlaceCardOutOfPlayFromTableEffect(action, self)
-                                );
+                                        new BlowAwayEffect(action, self) {
+                                            @Override
+                                            protected StandardEffect getAdditionalGameTextEffect(SwccgGame game, Action blowAwaySubAction) {
+                                                return new PlaceCardOutOfPlayFromTableEffect(action, self);
+                                            }
+                                        });
                             } else {
                                 game.getGameState().sendMessage("Result: Failed.");
                             }
