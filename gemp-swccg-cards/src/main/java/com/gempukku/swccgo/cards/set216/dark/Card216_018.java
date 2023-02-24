@@ -77,7 +77,7 @@ public class Card216_018 extends AbstractDevice {
                                         new BlowAwayEffect(action, self) {
                                             @Override
                                             protected StandardEffect getAdditionalGameTextEffect(SwccgGame game, Action blowAwaySubAction) {
-                                                return new PlaceCardOutOfPlayFromTableEffect(action, self);
+                                                return new PlaceCardOutOfPlayFromTableEffect(blowAwaySubAction, self);
                                             }
                                         });
                             } else {
