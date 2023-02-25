@@ -103,7 +103,7 @@ public class Card501_111_BACK extends AbstractObjective {
                 action.setText("Peek at top " + numSitesOccupiedByBothPlayers + " card" + GameUtils.s(numSitesOccupiedByBothPlayers) + " of Reserve Deck");
                 // Update usage limit(s)
                 action.appendUsage(
-                        new OncePerTurnEffect(action));
+                        new OncePerPhaseEffect(action));
                 action.appendEffect(
                         new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, numSitesOccupiedByBothPlayers, 1, 1)
                 );
