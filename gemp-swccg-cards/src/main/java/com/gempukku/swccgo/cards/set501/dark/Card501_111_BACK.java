@@ -15,6 +15,7 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
@@ -98,8 +99,8 @@ public class Card501_111_BACK extends AbstractObjective {
 
             int numSitesOccupiedByBothPlayers = Filters.countTopLocationsOnTable(game, Filters.and(Filters.occupies(playerId), Filters.occupies(opponent)));
             if (numSitesOccupiedByBothPlayers > 0) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId2);
-                action.setText("Peek at top " + numSitesOccupiedByBothPlayers + " card of Reserve Deck");
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId2);
+                action.setText("Peek at top " + numSitesOccupiedByBothPlayers + " card" + GameUtils.s(numSitesOccupiedByBothPlayers) + " of Reserve Deck");
                 // Update usage limit(s)
                 action.appendUsage(
                         new OncePerTurnEffect(action));
