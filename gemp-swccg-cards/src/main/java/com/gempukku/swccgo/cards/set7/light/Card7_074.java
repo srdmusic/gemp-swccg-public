@@ -59,14 +59,14 @@ public class Card7_074 extends AbstractNormalEffect {
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take Shocking Revelation into hand from Reserve Deck");
-            action.setActionMsg("Take Shocking Revelation into hand from Reserve Deck");
+            action.setText("Take Shocking Information into hand from Reserve Deck");
+            action.setActionMsg("Take Shocking Information into hand from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Shocking_Revelation, true));
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Shocking_Information, true));
             actions.add(action);
         }
 

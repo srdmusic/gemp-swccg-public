@@ -7,12 +7,15 @@ import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.decisions.ArbitraryCardsSelectionDecision;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
-import com.gempukku.swccgo.logic.effects.TriggeringResultEffect;
 import com.gempukku.swccgo.logic.timing.AbstractSuccessfulEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.results.LookedAtCardsInCardPileResult;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An effect for revealing the top card of a specified card piles.
@@ -77,7 +80,7 @@ public class RevealTopCardOfCardPilesEffect extends AbstractSuccessfulEffect {
                             cardsRevealed(topCards);
 
                             for (Zone cardPile : _cardPiles) {
-                                _action.appendAfterEffect(new TriggeringResultEffect(_action, new LookedAtCardsInCardPileResult(_playerId, _cardPileOwner, cardPile, _action.getActionSource())));
+                                game.getActionsEnvironment().emitEffectResult(new LookedAtCardsInCardPileResult(_playerId, _cardPileOwner, cardPile, _action.getActionSource()));
                             }
                         }
                     });
