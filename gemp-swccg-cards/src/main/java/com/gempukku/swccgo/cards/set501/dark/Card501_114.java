@@ -33,10 +33,10 @@ import java.util.List;
 public class Card501_114 extends AbstractCombatVehicle {
     public Card501_114() {
         super(Side.DARK, 2, 5, 6, 6, null, 1, 7, "First Order AT-M6", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("May add 1 pilot and 6 passengers. Permanent pilot provides ability of 2. Once during your deploy phase, may deploy a First Order trooper here from your Used Pile; reshuffle.");
+        setLore("Enclosed.");
+        setGameText("May add 1 pilot and 6 passengers. Permanent pilot provides ability of 2. Once during your deploy phase, may deploy a First Order trooper here from Used Pile; reshuffle.");
         addModelType(ModelType.AT_M6);
-        addIcons(Icon.VIRTUAL_SET_22, Icon.PILOT, Icon.SCOMP_LINK, Icon.EPISODE_VII);
-        addIcon(Icon.PILOT, 1);
+        addIcons(Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.FIRST_ORDER, Icon.PILOT, Icon.VIRTUAL_SET_22);
         addKeywords(Keyword.ENCLOSED);
         setPilotCapacity(1);
         setPassengerCapacity(6);
