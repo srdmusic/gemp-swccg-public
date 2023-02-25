@@ -3,11 +3,10 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.filters.Filters;
@@ -84,7 +83,7 @@ public class Card501_111 extends AbstractObjective {
         RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new MayNotDeployModifier(self, Filters.or(Filters.and(Filters.Dark_Jedi_Master, Filters.not(Icon.EPISODE_VII)), Filters.Imperial, Filters.Imperial_starship, Filters.and(Filters.Imperial, Filters.vehicle)), playerId), null));
+                        new MayNotDeployModifier(self, Filters.or(Filters.and(Filters.Dark_Jedi, Filters.not(Icon.EPISODE_VII)), Filters.Imperial, Filters.Imperial_starship, Filters.and(Filters.Imperial, Filters.vehicle)), playerId), null));
         return action;
     }
 
@@ -95,15 +94,15 @@ public class Card501_111 extends AbstractObjective {
         GameTextActionId gameTextActionId = GameTextActionId.THE_FIRST_ORDER_REIGNS__DOWNLOAD_BATTLEGROUND_SYSTEM;
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy location from Reserve Deck");
+            action.setActionMsg("Deploy an [Episode VII] battledground system (or Plateau) from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
-                    new OncePerPhaseEffect(action));
+                    new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.and(Filters.battleground_system, Icon.EPISODE_VII), Filters.Crait_Salt_Plateau), true));
@@ -126,7 +125,7 @@ public class Card501_111 extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && !GameConditions.canSpot(game, self, Filters.Tracked_Fleet)) {
+                && GameConditions.isBlownAway(game, Filters.Tracked_Fleet)) {
 
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Flip");

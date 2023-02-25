@@ -22,8 +22,8 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.AttachCardFromTableEffect;
+import com.gempukku.swccgo.logic.effects.BlowAwayEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
@@ -31,9 +31,9 @@ import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.MovesFreeFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.TrackedFleetBlownAwayModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.StandardEffect;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -74,18 +74,22 @@ public class Card501_106 extends AbstractEpicEventDeployable {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
-
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         final String playerId = self.getOwner();
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-
         if (TriggerConditions.isStartOfYourTurn(game, effectResult, self)
             && GameConditions.controls(game, playerId, Filters.here(self))) {
-                action.appendEffect(new AddUntilEndOfGameModifierEffect(action, new TrackedFleetBlownAwayModifier(self), null));
-                action.appendEffect(new PlaceCardOutOfPlayFromTableEffect(action, self));
+                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setPerformingPlayer(playerId);
+                action.setText("Tracked Fleet blown away.");
+                action.appendEffect(
+                    new BlowAwayEffect(action, self){
+                        @Override
+                        protected StandardEffect getAdditionalGameTextEffect(SwccgGame game, Action blowAwaySubAction){
+                            return new PlaceCardOutOfPlayFromTableEffect(blowAwaySubAction, self);
+                        }
+                    });
                 return Collections.singletonList(action);
         }
 
@@ -94,7 +98,6 @@ public class Card501_106 extends AbstractEpicEventDeployable {
 
     @Override
     protected List<TopLevelGameTextAction> getOpponentsCardGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        final String opponent = game.getOpponent(self.getOwner());
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         Filter systemToRelocateTo = Filters.and(Filters.system, Filters.withinParsecsOf(self, 3), Filters.not(Filters.here(self)));
 

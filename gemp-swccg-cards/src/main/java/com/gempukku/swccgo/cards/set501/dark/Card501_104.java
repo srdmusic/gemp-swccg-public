@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractFirstOrder;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -43,7 +44,7 @@ public class Card501_104 extends AbstractFirstOrder {
         setLore("Leader.");
         setGameText("Adds 2 to power of anything he pilots. Snoke is forfeit -6. Once per turn, if an [E7] Objective on table, may take an [E7] character or starship drawn for destiny into hand. While with two First Order characters, adds one battle destiny. Immune to attrition < 5.");
         addPersona(Persona.KYLO);
-        addIcons(Icon.EPISODE_VII, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
         addKeywords(Keyword.LEADER);
         setTestingText("Supreme Leader Kylo Ren");
     }
@@ -53,7 +54,7 @@ public class Card501_104 extends AbstractFirstOrder {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new ForfeitModifier(self, Filters.Snoke, -6));
-        modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, 2, Filters.and(Filters.your(self), Filters.First_Order_character)), 1));
+        modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, 2, Filters.First_Order_character), 1));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
         return modifiers;
     }
@@ -72,6 +73,8 @@ public class Card501_104 extends AbstractFirstOrder {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Take destiny card into hand");
             action.setActionMsg("Take just drawn destiny card, " + GameUtils.getCardLink(((DestinyDrawnResult) effectResult).getCard()) + ", into hand");
+            action.appendUsage(
+                new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new TakeDestinyCardIntoHandEffect(action));
