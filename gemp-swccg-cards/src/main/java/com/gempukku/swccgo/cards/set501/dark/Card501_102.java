@@ -35,7 +35,7 @@ import java.util.List;
  */
 public class Card501_102 extends AbstractFirstOrder {
     public Card501_102() {
-        super(Side.LIGHT, 2, 3, 2, 2, 5, "Captain Moden Canaday", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 2, 3, 2, 2, 5, "Captain Moden Canaday", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Leader.");
         setGameText("Adds 2 to power of anything he pilots (3 if Fulminatrix). While all your ability here is provided Fulminatrix pilots: opponent's immunity to attrition (and reacts), Hit And Run and Alternatives To Fighting are canceled here.");
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.VIRTUAL_SET_22);
