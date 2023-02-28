@@ -14,10 +14,17 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.MovingResult;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -30,7 +37,7 @@ import java.util.List;
 public class Card501_112 extends AbstractCapitalStarship {
     public Card501_112() {
         super(Side.DARK, 3, 9, 10, 8, null, 3, 9, Title.Fulminatrix, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("May add 5 pilots, 4 passengers, 3 TIEs, and 2 vehicles. Permanent pilot provides ability of 2. Deploy -3 to same system as Tracked Fleet. Opponent must lose 1 force to move a starship from here.");
+        setGameText("May add 5 pilots, 4 passengers, 3 TIEs, and 2 vehicles. Permanent pilot provides ability of 2. Deploy -3 if Tracked Fleet on tablew. Opponent must lose 1 force to move a starship from here.");
         addIcons(Icon.NAV_COMPUTER, Icon.EPISODE_VII, Icon.SCOMP_LINK, Icon.FIRST_ORDER, Icon.VIRTUAL_SET_22);
         addIcon(Icon.PILOT, 1);
         addModelType(ModelType.MANDATOR_IV_CLASS_DREADNAUGHT);
@@ -55,5 +62,20 @@ public class Card501_112 extends AbstractCapitalStarship {
         return modifiers;
     }
 
-    // ADD LOGIC FOR "Lose 1 Force to move"
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if (TriggerConditions.movingFromLocation(game, effectResult, Filters.and(Filters.opponents(self), Filters.starship), Filters.here(self))) {
+            String opponent = game.getOpponent(self.getOwner());
+            final PhysicalCard starship = ((MovingResult) effectResult).getCardMoving();
+
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Lose 1 Force to move " + GameUtils.getFullName(starship));
+            action.setActionMsg("Make " + opponent + " lose 1 Force to move " + GameUtils.getCardLink(starship));
+            // Build action using common utility
+            action.appendCost(new LoseForceEffect(action, opponent, 1));
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
 }
