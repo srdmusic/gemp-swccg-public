@@ -73,7 +73,7 @@ public class Card501_112 extends AbstractCapitalStarship {
             action.setText("Lose 1 Force to move " + GameUtils.getFullName(starship));
             action.setActionMsg("Make " + opponent + " lose 1 Force to move " + GameUtils.getCardLink(starship));
             // Build action using common utility
-            action.appendCost(new LoseForceEffect(action, opponent, 1));
+            action.appendEffect(new LoseForceEffect(action, opponent, 1));
             return Collections.singletonList(action);
         }
         return null;
