@@ -38,7 +38,7 @@ public class Card9_056 extends AbstractSystem {
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new DeployCostModifier(self, Filters.and(Filters.opponents(playerOnLightSideOfLocation),
-                Filters.Dreadnaught), controlWithStarfighter, 3));
+                Filters.Dreadnaught_class_cruisers), controlWithStarfighter, 3));
         modifiers.add(new ForceGenerationModifier(self, controlWithStarfighter, 3, playerOnLightSideOfLocation));
         return modifiers;
     }

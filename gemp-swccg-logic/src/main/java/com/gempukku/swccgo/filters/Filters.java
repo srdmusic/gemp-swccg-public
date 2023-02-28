@@ -17764,6 +17764,7 @@ public class Filters {
     public static final Filter Dqar_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Dqar));
     public static final Filter Dr_Evazan = Filters.title(Title.Dr_Evazan);
     public static final Filter Dreadnaught = Filters.or(Filters.modelType(ModelType.DREADNAUGHT_CLASS_HEAVY_CRUISER), Filters.modelType(ModelType.MANDATOR_IV_CLASS_DREADNAUGHT), Filters.modelType(ModelType.MEGA_CLASS_DREADNAUGHT));
+    public static final Filter Dreadnaught_class_cruisers = Filters.modelType(ModelType.DREADNAUGHT_CLASS_HEAVY_CRUISER);
     public static final Filter droid = Filters.icon(Icon.DROID);
     public static final Filter droid_control_ship = Filters.keyword(Keyword.DROID_CONTROL_SHIP);
     public static final Filter Droid_Junkheap = Filters.title(Title.Droid_Junkheap);
