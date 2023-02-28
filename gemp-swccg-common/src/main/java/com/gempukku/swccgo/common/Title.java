@@ -220,6 +220,7 @@ public interface Title {
     String Coruscant = "Coruscant";
     String Coruscant_Imperial_Square = "Coruscant: Imperial Square";
     String Coruscant_Celebration = "Coruscant Celebration";
+    String Coruscant_The_Works = "Coruscant: The Works";
     String Count_Me_In = "Count Me In";
     String Counter_Assault = "Counter Assault";
     String Courage_Of_A_Skywalker = "Courage Of A Skywalker";
