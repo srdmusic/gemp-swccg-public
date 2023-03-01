@@ -38,7 +38,7 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Objective
- * Title: More And More Systems Are Joining The Separatists / The Galaxy Torn Apart
+ * Title: More Systems Will Rally To Our Cause / The Galaxy Torn Apart
  */
 public class Card501_019_BACK extends AbstractObjective {
     public Card501_019_BACK() {
