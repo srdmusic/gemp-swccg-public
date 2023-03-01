@@ -26,10 +26,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Premium (Premiere Introductory Two Player Game)
+ * Set: Set 22
  * Type: Interrupt
  * Subtype: Lost
- * Title: Vader's Obsession
+ * Title: Vader's Obsession (V)
  */
 public class Card501_101 extends AbstractLostInterrupt {
     public Card501_101() {
