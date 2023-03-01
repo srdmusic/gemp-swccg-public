@@ -21,6 +21,7 @@ import com.gempukku.swccgo.logic.effects.choose.MoveCardUsingLandspeedEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -40,13 +41,14 @@ public class Card501_101 extends AbstractLostInterrupt {
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
         GameTextActionId gameTextActionId = GameTextActionId.VADERS_OBSESSION__UPLOAD_THE_WORKS;
 
         // Check condition(s)
-        if (GameConditions.canSpot(game, self, Filters.and(Filters.Revenge_Of_The_Sith, Filters.I_Am_Your_Father))
+        if (GameConditions.canSpot(game, self, Filters.Revenge_Of_The_Sith)
+            && GameConditions.canSpot(game, self, Filters.I_Am_Your_Father)
             && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
@@ -88,21 +90,27 @@ public class Card501_101 extends AbstractLostInterrupt {
                             return true;
                         }
                         @Override
-                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                            action.addAnimationGroup(targetedCard);
-                            // Allow response(s)
-                            action.allowResponses("Move " + GameUtils.getCardLink(targetedCard) + " during battle phase using landspeed.",
-                                    new RespondablePlayCardEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            // Get the final targeted card(s)
-                                            final PhysicalCard finalTarget = targetingAction.getPrimaryTargetCard(targetGroupId);
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new MoveCardUsingLandspeedEffect(action, playerId, finalTarget, false, Filters.and(Filters.site, Filters.not(Filters.occupies(playerId)))));
-                                        }
-                                    });
-                                    
+                        protected void cardTargeted(final int targetGroupId, final PhysicalCard vader) {
+                            action.addAnimationGroup(vader);
+                            Collection<PhysicalCard> unoccupiedSites = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.site, Filters.adjacentSite(vader), Filters.not(Filters.occupies(playerId)), Filters.locationCanBeRelocatedTo(vader, false, false, true, 0, false)));
+                            action.appendTargeting(
+                                new TargetCardOnTableEffect(action, playerId, "Choose adjacent site you don't occupy", Filters.in(unoccupiedSites)) {
+                                    @Override
+                                    protected void cardTargeted(final int targetGroupId2, PhysicalCard location) {
+                                        action.addAnimationGroup(location);
+                                        action.allowResponses("Move " + GameUtils.getCardLink(vader) + " to " + GameUtils.getCardLink(location),
+                                            new RespondablePlayCardEffect(action) {
+                                                @Override
+                                                protected void performActionResults(Action targetAction) {
+                                                    PhysicalCard finalVader = action.getPrimaryTargetCard(targetGroupId);
+                                                    PhysicalCard finalLocation = action.getPrimaryTargetCard(targetGroupId2);
+                                                    action.appendEffect(new MoveCardUsingLandspeedEffect(action, playerId, finalVader, false, finalLocation));
+                                                }
+                                            }
+                                        );
+                                    }                                    
+                                }                              
+                            );
                         }
                     });
             actions.add(action);
