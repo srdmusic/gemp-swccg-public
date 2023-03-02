@@ -1621,6 +1621,96 @@ public class FireWeaponActionBuilder {
     }
 
     /**
+     * Builds a fire weapon action for EPP Boba Fett (V).
+     * @return the action
+     */
+    public FireSingleWeaponAction buildFireWeaponEPPBobaFettVAction() {
+        final FireSingleWeaponAction action = new FireSingleWeaponAction(_sourceCard, _weaponOrCardWithPermanentWeapon, _permanentWeapon, _repeatedFiring, _targetedAsCharacter, _defenseValueAsCharacter, _fireAtTargetFilter, _ignorePerAttackOrBattleLimit);
+        action.setText("Fire " + action.getWeaponTitle(_game));
+
+        // Choose target(s)
+        action.appendTargeting(
+                new TargetCardOnTableEffect(action, _playerId, "Choose target", getTargetFiltersMap(action.getCardFiringWeapon())) {
+                    @Override
+                    protected boolean isIncludeStackedCardsTargetedByWeaponsAsIfPresent() {
+                        return true;
+                    }
+                    @Override
+                    protected void cardTargeted(final int targetGroupId, PhysicalCard cardTargeted) {
+                        action.addAnimationGroup(cardTargeted);
+                        _game.getGameState().getWeaponFiringState().setTarget(cardTargeted);
+
+                        // Pay cost(s)
+                        float forceToUse = getUseForceCost(action.getCardFiringWeapon(), cardTargeted);
+                        if (forceToUse > 0) {
+                            action.appendCost(
+                                    new UseForceEffect(action, _playerId, forceToUse));
+                        }
+
+                        // Allow response(s)
+                        action.allowResponses("Fire " + GameUtils.getCardLink(action.getWeaponToFire()) + " at " + GameUtils.getCardLink(cardTargeted),
+                                new RespondableWeaponFiringEffect(action) {
+                                    @Override
+                                    protected void performActionResults(Action targetingAction) {
+                                        // Get the targeted card(s) from the action using the targetGroupId.
+                                        // This needs to be done in case the target(s) were changed during the responses.
+                                        final PhysicalCard cardFiredAt = targetingAction.getPrimaryTargetCard(targetGroupId);
+                                        _game.getGameState().getWeaponFiringState().setTarget(cardFiredAt);
+
+                                        // Perform result(s)
+                                        action.appendEffect(
+                                                new DrawDestinyEffect(action, _playerId, 1, DestinyType.WEAPON_DESTINY) {
+                                                    @Override
+                                                    protected Collection<PhysicalCard> getGameTextAbilityManeuverOrDefenseValueTargeted() {
+                                                        return Collections.singletonList(cardFiredAt);
+                                                    }
+                                                    @Override
+                                                    protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
+                                                        GameState gameState = game.getGameState();
+                                                        if (totalDestiny == null) {
+                                                            gameState.sendMessage("Result: Failed due to failed weapon destiny draw");
+                                                            return;
+                                                        }
+
+                                                        gameState.sendMessage("Total destiny: " + GuiUtils.formatAsString(totalDestiny));
+                                                        float valueToCompare;
+                                                        if (_targetedAsCharacter != null && _targetedAsCharacter.accepts(game, cardFiredAt)) {
+                                                            valueToCompare = _defenseValueAsCharacter;
+                                                        }
+                                                        else {
+                                                            valueToCompare = game.getModifiersQuerying().getDefenseValue(game.getGameState(), cardFiredAt);
+                                                        }
+                                                        gameState.sendMessage("Defense value: " + GuiUtils.formatAsString(valueToCompare));
+
+                                                        if (Filters.character.accepts(game, cardFiredAt)
+                                                                || (_targetedAsCharacter != null && _targetedAsCharacter.accepts(game, cardFiredAt))) {
+                                                            if (totalDestiny > valueToCompare) {
+                                                                gameState.sendMessage("Result: Succeeded");
+                                                                action.appendEffect(
+                                                                        new CaptureCharacterOnTableEffect(action, cardFiredAt, action.getCardFiringWeapon()));
+                                                            } 
+                                                            else if ((totalDestiny + 2) > valueToCompare) {
+                                                                gameState.sendMessage("Result: Succeeded");
+                                                                action.appendEffect(
+                                                                        new HitCardResetForfeitAndOpponentLosesForceEffect(action, cardFiredAt, -2, 1, _weaponOrCardWithPermanentWeapon, _permanentWeapon, action.getCardFiringWeapon()));
+                                                            }
+                                                            else {
+                                                                gameState.sendMessage("Result: Failed");
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                        );
+                                    }
+                                });
+                    }
+                }
+        );
+
+        return action;
+    }
+
+    /**
      * Builds a fire weapon action that targets a character, landed starfighter, or vehicle for free; if targeting a starfighter or vehicle, add one destiny to attrition; otherwise, subtract 3 from target's immunity to attrition (if any) until end of turn
      * @return the action
      */
