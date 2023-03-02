@@ -1692,7 +1692,7 @@ public class FireWeaponActionBuilder {
                                                             else if ((totalDestiny + 2) > valueToCompare) {
                                                                 gameState.sendMessage("Result: Succeeded");
                                                                 action.appendEffect(
-                                                                        new HitCardResetForfeitAndOpponentLosesForceEffect(action, cardFiredAt, -2, 1, _weaponOrCardWithPermanentWeapon, _permanentWeapon, action.getCardFiringWeapon()));
+                                                                        new HitCardModifyForfeitAndOpponentLosesForceEffect(action, cardFiredAt, -2, 1, _weaponOrCardWithPermanentWeapon, _permanentWeapon, action.getCardFiringWeapon()));
                                                             }
                                                             else {
                                                                 gameState.sendMessage("Result: Failed");
