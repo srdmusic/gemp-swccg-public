@@ -48,14 +48,13 @@ public class Card501_101 extends AbstractLostInterrupt {
 
         // Check condition(s)
         if (GameConditions.canSpot(game, self, Filters.Revenge_Of_The_Sith)
-            && GameConditions.canSpot(game, self, Filters.I_Am_Your_Father)
-            && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Take The Works into hand from Reserve Deck");
-            action.setActionMsg("Take Coruscant: The Works into hand from Reserve Deck.");
-            // Allow response(s)
-            action.allowResponses(
+            && GameConditions.canSpot(game, self, Filters.I_Am_Your_Father)) {
+            if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+                action.setText("Take The Works into hand from Reserve Deck");
+                action.setActionMsg("Take Coruscant: The Works into hand from Reserve Deck.");
+                // Allow response(s)
+                action.allowResponses(
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
@@ -64,26 +63,26 @@ public class Card501_101 extends AbstractLostInterrupt {
                                     new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Coruscant_The_Works, true));
                         }
                     }
-            );
-            actions.add(action);
-        }
+                );
+                actions.add(action);
+            }
 
-        if (GameConditions.canTargetToCancel(game, self, Filters.Uncontrollable_Fury)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            // Build action using common utility
-            action.isImmuneTo(Title.Run_Luke_Run);
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Glancing_Blow, Title.Glancing_Blow);
-            actions.add(action);
-        }
+            if (GameConditions.canTargetToCancel(game, self, Filters.Glancing_Blow)) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                // Build action using common utility
+                action.isImmuneTo(Title.Run_Luke_Run);
+                CancelCardActionBuilder.buildCancelCardAction(action, Filters.Uncontrollable_Fury, Title.Uncontrollable_Fury);
+                actions.add(action);
+            }
 
-        // Check condition(s)
-        if (GameConditions.isDuringYourPhase(game, self, Phase.BATTLE)
+            // Check condition(s)
+            if (GameConditions.isDuringYourPhase(game, self, Phase.BATTLE)
                 && GameConditions.canTarget(game, self, Filters.Vader)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Move Vader using landspeed");
-            // Choose target(s)
-            action.appendTargeting(
+                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                action.setText("Move Vader using landspeed");
+                // Choose target(s)
+                action.appendTargeting(
                     new TargetCardOnTableEffect(action, playerId, "Choose Vader to move", Filters.Vader) {
                         @Override
                         protected boolean getUseShortcut() {
@@ -92,7 +91,7 @@ public class Card501_101 extends AbstractLostInterrupt {
                         @Override
                         protected void cardTargeted(final int targetGroupId, final PhysicalCard vader) {
                             action.addAnimationGroup(vader);
-                            Collection<PhysicalCard> unoccupiedSites = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.site, Filters.adjacentSite(vader), Filters.not(Filters.occupies(playerId)), Filters.locationCanBeRelocatedTo(vader, false, false, true, 0, false)));
+                            Collection<PhysicalCard> unoccupiedSites = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.canMoveToUsingLandspeed(playerId, vader, false, false, false, 0, 0), Filters.not(Filters.occupies(playerId))));
                             action.appendTargeting(
                                 new TargetCardOnTableEffect(action, playerId, "Choose adjacent site you don't occupy", Filters.in(unoccupiedSites)) {
                                     @Override
@@ -112,10 +111,11 @@ public class Card501_101 extends AbstractLostInterrupt {
                                 }                              
                             );
                         }
-                    });
+                    }
+                );
             actions.add(action);
+            }
         }
-
         return actions;
     }
 }

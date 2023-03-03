@@ -35,7 +35,7 @@ import java.util.List;
 
 public class Card501_100 extends AbstractAlien {
     public Card501_100() {
-        super(Side.DARK, 1, 4, 5, 3, 6, "Boba Fett With Blaster Rifle (V)", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 1, 4, 5, 3, 6, "Boba Fett With Blaster Rifle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setArmor(5);
         setLore("Notorious bounty hunter. 'As you wish.'");

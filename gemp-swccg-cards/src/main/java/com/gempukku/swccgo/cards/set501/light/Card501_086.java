@@ -7,14 +7,12 @@ import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
-import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -47,14 +45,14 @@ import java.util.List;
  */
 public class Card501_086 extends AbstractAlien {
     public Card501_086() {
-        super(Side.LIGHT, 2, 5, 6, 3, 6, "Beilert Valance", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 2, 5, 6, 3, 6, Title.Bielart_Valance, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setArmor(4);
         setLore("Chorinian. Cyborg. Former miner.");
         setGameText("Adds 2 to the power of anything he pilots. Draws one battle destiny if not able to otherwise. Unless a Jedi here, may cause any character Valance just ‘hit’ to be lost. Once per game, may deploy Cyborg Construct on Valance from Reserve Deck, reshuffle.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
         addKeywords(Keyword.MINER);
         setSpecies(Species.CHORINIAN);
-        setTestingText("Beilert Valance");
+        setTestingText(Title.Bielart_Valance);
     }
 
     @Override
@@ -69,12 +67,11 @@ public class Card501_086 extends AbstractAlien {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        Filter otherCharacterPresent = Filters.and(Filters.other(self), Filters.character, Filters.present(self));
         TargetingReason targetingReason = TargetingReason.TO_BE_LOST;
 
         // Check condition(s)
-        if (TriggerConditions.justHit(game, effectResult, otherCharacterPresent)
-            && !GameConditions.isPresentWith(game, self, Filters.Jedi)) {
+        if (TriggerConditions.justHitBy(game, effectResult, Filters.character, Filters.Bielart_Valance)
+            && !GameConditions.isHere(game, self, Filters.Jedi)) {
             PhysicalCard cardHit = ((HitResult) effectResult).getCardHit();
             if (GameConditions.canTarget(game, self, targetingReason, cardHit)) {
 
@@ -114,7 +111,7 @@ public class Card501_086 extends AbstractAlien {
         GameTextActionId gameTextActionId = GameTextActionId.BEILART_VALANCE__DOWNLOAD_CYBORG_CONSTRUCT;
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Cyborg_Construct)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
