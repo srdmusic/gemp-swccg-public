@@ -98,15 +98,11 @@ public class Card501_101 extends AbstractLostInterrupt {
                     action.appendTargeting(
                         new TargetCardOnTableEffect(action, playerId, "Choose card to move", Filters.in(charactersThatCanMove)) {
                             @Override
-                            protected boolean getUseShortcut() {
-                                return true;
-                            }
-                            @Override
                             protected void cardTargeted(final int targetGroupId, final PhysicalCard vader) {
                                 action.addAnimationGroup(vader);
                                 Collection<PhysicalCard> unoccupiedSites = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.canMoveToUsingLandspeed(playerId, vader, false, false, false, 0, 0), Filters.not(Filters.occupies(playerId))));
                                 action.appendTargeting(
-                                    new TargetCardOnTableEffect(action, playerId, "Choose adjacent site you don't occupy", Filters.in(unoccupiedSites)) {
+                                    new TargetCardOnTableEffect(action, playerId, "Choose site to move to", Filters.in(unoccupiedSites)) {
                                         @Override
                                         protected void cardTargeted(final int targetGroupId2, PhysicalCard location) {
                                             action.addAnimationGroup(location);
