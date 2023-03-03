@@ -41,7 +41,7 @@ import java.util.List;
  * Set: Set 22
  * Type: Character
  * Subtype: Alien
- * Title: Beilart Valance
+ * Title: Beilert Valance
  */
 public class Card501_086 extends AbstractAlien {
     public Card501_086() {
