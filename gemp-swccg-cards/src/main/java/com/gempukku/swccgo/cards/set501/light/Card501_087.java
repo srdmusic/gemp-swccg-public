@@ -38,7 +38,7 @@ public class Card501_087 extends AbstractNormalEffect {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Strike Planning", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("'General Solo, is your strike team assembled?'");
-        setGameText("If an [A New Hope] objective on table, Deploy on table. Twice per game, may take Mon Mothma or any general into hand from Reserve Deck; reshuffle. During your first turn, if Stolen Data Tapes at Dune Sea, [Set 1] Obi-Wan deploys -6 there. [Immune to Alter.]");
+        setGameText("If an [A New Hope] objective on table, deploy on table. Twice per game, may [upload] Mon Mothma or any general. During your first turn, while Stolen Data Tapes at Dune Sea, [Set 1] Obi-Wan deploys -6 there. [Immune to Alter.]");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Strike Planning (V)");
@@ -61,7 +61,7 @@ public class Card501_087 extends AbstractNormalEffect {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.STRIKE_PLANNING__UPLOAD_MON_MOTHMA_OR_GENERAL;
+        GameTextActionId gameTextActionId = GameTextActionId.STRIKE_PLANNING_V__UPLOAD_MON_MOTHMA_OR_GENERAL;
 
         // Check condition(s)
         if (GameConditions.isTwicePerGame(game, self, gameTextActionId)

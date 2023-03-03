@@ -36,7 +36,7 @@ public class Card501_056 extends AbstractImmediateEffect {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.A_Gift, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("'As a token of my good will, I present to you a gift: these two droids. Both are hardworking and will serve you well.'");
-        setGameText("If you just moved a droid to Audience Chamber, deploy on table. You may not cancel battles. Force loss from Or Be Destroyed may not exceed 3 or be reduced. While Han with an ‘unhit’ Luke, Lando or Chewie, he may not be targeted by weapons. [Immune to Control.]");
+        setGameText("If you just moved a droid to Audience Chamber, deploy on table. You may not cancel battles. Force loss from Or Be Destroyed may not be reduced and is limited to 3. While Han with your non-'hit' Chewie, Lando, or Luke, Han may not be targeted by weapons. [Immune to Control.]");
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Control);
         setTestingText("A Gift (V)");
