@@ -56,7 +56,6 @@ public class Card501_102 extends AbstractFirstOrder {
         modifiers.add(new MayNotReactToLocationModifier(self, Filters.here(self), allAbilityFromFulminuatrixPilots, opponent));
         modifiers.add(new MayNotReactFromLocationModifier(self, Filters.here(self), allAbilityFromFulminuatrixPilots, opponent));    
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, new CardMatchesEvaluator(2, 3, Filters.Fulminatrix)));
-        modifiers.add(new ArmorModifier(self, Filters.and(Filters.Supremacy, Filters.hasAboard(self)), 2));
         return modifiers;
     }
 
@@ -65,6 +64,7 @@ public class Card501_102 extends AbstractFirstOrder {
         String playerId = self.getOwner();
         // Check condition(s)
         if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Hit_And_Run, Filters.Alternatives_To_Fighting))
+                && GameConditions.isDuringBattleAt(game, Filters.here(self))
                 && GameConditions.isAllAbilityAtLocationProvidedBy(game, self, playerId, Filters.here(self), Filters.or(Filters.Fulminatrix, Filters.piloting(Filters.Fulminatrix)))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
