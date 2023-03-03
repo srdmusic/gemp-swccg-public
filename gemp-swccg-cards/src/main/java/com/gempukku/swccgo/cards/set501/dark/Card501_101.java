@@ -9,6 +9,7 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -22,8 +23,10 @@ import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckE
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Set: Set 22
@@ -67,7 +70,7 @@ public class Card501_101 extends AbstractLostInterrupt {
                 actions.add(action);
             }
 
-            if (GameConditions.canTargetToCancel(game, self, Filters.Glancing_Blow)) {
+            if (GameConditions.canTargetToCancel(game, self, Filters.Uncontrollable_Fury)) {
                 final PlayInterruptAction action = new PlayInterruptAction(game, self);
                 // Build action using common utility
                 action.isImmuneTo(Title.Run_Luke_Run);
@@ -75,45 +78,56 @@ public class Card501_101 extends AbstractLostInterrupt {
                 actions.add(action);
             }
 
+            final Filter vaderFilter = Filters.or(Filters.Vader, Filters.grantedMayBeTargetedBy(self));
+
             // Check condition(s)
             if (GameConditions.isDuringYourPhase(game, self, Phase.BATTLE)
-                && GameConditions.canTarget(game, self, Filters.Vader)) {
+                && GameConditions.canTarget(game, self, vaderFilter)) {
 
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                action.setText("Move Vader using landspeed");
-                // Choose target(s)
-                action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose Vader to move", Filters.Vader) {
-                        @Override
-                        protected boolean getUseShortcut() {
-                            return true;
-                        }
-                        @Override
-                        protected void cardTargeted(final int targetGroupId, final PhysicalCard vader) {
-                            action.addAnimationGroup(vader);
-                            Collection<PhysicalCard> unoccupiedSites = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.canMoveToUsingLandspeed(playerId, vader, false, false, false, 0, 0), Filters.not(Filters.occupies(playerId))));
-                            action.appendTargeting(
-                                new TargetCardOnTableEffect(action, playerId, "Choose adjacent site you don't occupy", Filters.in(unoccupiedSites)) {
-                                    @Override
-                                    protected void cardTargeted(final int targetGroupId2, PhysicalCard location) {
-                                        action.addAnimationGroup(location);
-                                        action.allowResponses("Move " + GameUtils.getCardLink(vader) + " to " + GameUtils.getCardLink(location),
-                                            new RespondablePlayCardEffect(action) {
-                                                @Override
-                                                protected void performActionResults(Action targetAction) {
-                                                    PhysicalCard finalVader = action.getPrimaryTargetCard(targetGroupId);
-                                                    PhysicalCard finalLocation = action.getPrimaryTargetCard(targetGroupId2);
-                                                    action.appendEffect(new MoveCardUsingLandspeedEffect(action, playerId, finalVader, false, finalLocation));
-                                                }
-                                            }
-                                        );
-                                    }                                    
-                                }                              
-                            );
-                        }
+                Set<PhysicalCard> charactersThatCanMove = new HashSet<>();
+                for(PhysicalCard card: Filters.filterActive(game, self, vaderFilter)){
+                    if (Filters.canSpotFromTopLocationsOnTable(game, Filters.and(Filters.canMoveToUsingLandspeed(playerId, card, false, false, false, 0, 0), Filters.not(Filters.occupies(playerId))))) {
+                        charactersThatCanMove.add(card);
                     }
-                );
-            actions.add(action);
+                }
+
+                if (!charactersThatCanMove.isEmpty()){
+                    final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                    action.setText("Move card using landspeed");
+                    // Choose target(s)
+                    action.appendTargeting(
+                        new TargetCardOnTableEffect(action, playerId, "Choose card to move", Filters.in(charactersThatCanMove)) {
+                            @Override
+                            protected boolean getUseShortcut() {
+                                return true;
+                            }
+                            @Override
+                            protected void cardTargeted(final int targetGroupId, final PhysicalCard vader) {
+                                action.addAnimationGroup(vader);
+                                Collection<PhysicalCard> unoccupiedSites = Filters.filterTopLocationsOnTable(game, Filters.and(Filters.canMoveToUsingLandspeed(playerId, vader, false, false, false, 0, 0), Filters.not(Filters.occupies(playerId))));
+                                action.appendTargeting(
+                                    new TargetCardOnTableEffect(action, playerId, "Choose adjacent site you don't occupy", Filters.in(unoccupiedSites)) {
+                                        @Override
+                                        protected void cardTargeted(final int targetGroupId2, PhysicalCard location) {
+                                            action.addAnimationGroup(location);
+                                            action.allowResponses("Move " + GameUtils.getCardLink(vader) + " to " + GameUtils.getCardLink(location),
+                                                new RespondablePlayCardEffect(action) {
+                                                    @Override
+                                                    protected void performActionResults(Action targetAction) {
+                                                        PhysicalCard finalVader = action.getPrimaryTargetCard(targetGroupId);
+                                                        PhysicalCard finalLocation = action.getPrimaryTargetCard(targetGroupId2);
+                                                        action.appendEffect(new MoveCardUsingLandspeedEffect(action, playerId, finalVader, false, finalLocation));
+                                                    }
+                                                }
+                                            );
+                                        }                                    
+                                    }                              
+                                );
+                            }
+                        }
+                    );
+                    actions.add(action);
+                }
             }
         }
         return actions;

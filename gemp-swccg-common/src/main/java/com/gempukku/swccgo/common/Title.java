@@ -99,7 +99,7 @@ public interface Title {
     String Bespin = "Bespin";
     String Bespin_Cloud_City = "Bespin: Cloud City";
     String Bib = "Bib Fortuna";
-    String Bielart_Valance = "Bielart Valance";
+    String Beilert_Valance = "Beilert Valance";
     String Big_One = "Big One";
     String Big_One_Asteroid_Cave = "Big One: Asteroid Cave";
     String Big_One_Asteroid_Cave_Or_Space_Slug_Belly = "Big One: Asteroid Cave Or Space Slug Belly";

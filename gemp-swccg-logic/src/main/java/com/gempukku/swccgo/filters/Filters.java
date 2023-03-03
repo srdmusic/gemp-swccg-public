@@ -17436,6 +17436,7 @@ public class Filters {
     public static final Filter BB8_or_has_BB8_as_permanent_astromech = Filters.or(Filters.persona(Persona.BB8), Filters.hasPermanentAboard(Filters.persona(Persona.BB8)));
     public static final Filter Beaumont = Filters.persona(Persona.BEAUMONT);
     public static final Filter Beckett = Filters.persona(Persona.BECKETT);
+    public static final Filter Beilert_Valance = Filters.title(Title.Beilert_Valance);
     public static final Filter Beggar = Filters.title(Title.Beggar);
     public static final Filter Beggars_Canyon = Filters.title(Title.Beggars_Canyon);
     public static final Filter Beru = Filters.title(Title.Beru_Lars);
@@ -17447,7 +17448,6 @@ public class Filters {
     public static final Filter Bespin_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Bespin));
     public static final Filter Bestoon_Legacy = Filters.persona(Persona.BESTOON_LEGACY);
     public static final Filter Bib = Filters.persona(Persona.BIB);
-    public static final Filter Bielart_Valance = Filters.title(Title.Bielart_Valance);
     public static final Filter biker_scout = Filters.keyword(Keyword.BIKER_SCOUT);
     public static final Filter Big_One = Filters.title(Title.Big_One);
     public static final Filter Big_One_Asteroid_Cave_Or_Space_Slug_Belly = Filters.or(Filters.title(Title.Big_One_Asteroid_Cave_Or_Space_Slug_Belly), Filters.title(Title.Big_One_Asteroid_Cave), Filters.title(Title.Space_Slug_Belly));

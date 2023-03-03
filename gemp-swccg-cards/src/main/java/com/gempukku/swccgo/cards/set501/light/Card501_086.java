@@ -45,14 +45,14 @@ import java.util.List;
  */
 public class Card501_086 extends AbstractAlien {
     public Card501_086() {
-        super(Side.LIGHT, 2, 5, 6, 3, 6, Title.Bielart_Valance, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 2, 5, 6, 3, 6, Title.Beilert_Valance, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setArmor(4);
         setLore("Chorinian. Cyborg. Former miner.");
         setGameText("Adds 2 to the power of anything he pilots. Draws one battle destiny if not able to otherwise. Unless a Jedi here, may cause any character Valance just ‘hit’ to be lost. Once per game, may deploy Cyborg Construct on Valance from Reserve Deck, reshuffle.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
         addKeywords(Keyword.MINER);
         setSpecies(Species.CHORINIAN);
-        setTestingText(Title.Bielart_Valance);
+        setTestingText(Title.Beilert_Valance);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class Card501_086 extends AbstractAlien {
         TargetingReason targetingReason = TargetingReason.TO_BE_LOST;
 
         // Check condition(s)
-        if (TriggerConditions.justHitBy(game, effectResult, Filters.character, Filters.Bielart_Valance)
+        if (TriggerConditions.justHitBy(game, effectResult, Filters.character, Filters.Beilert_Valance)
             && !GameConditions.isHere(game, self, Filters.Jedi)) {
             PhysicalCard cardHit = ((HitResult) effectResult).getCardHit();
             if (GameConditions.canTarget(game, self, targetingReason, cardHit)) {
