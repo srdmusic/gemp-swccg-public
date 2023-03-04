@@ -45,7 +45,7 @@ public class Card501_056 extends AbstractImmediateEffect {
     @Override
     protected List<PlayCardAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.movedToLocationBy(game, effectResult, playerId, Filters.droid, Filters.Audience_Chamber)) {
+        if (TriggerConditions.movedToLocationBy(game, effectResult, playerId, Filters.and(Filters.droid, Filters.canBeTargetedBy(self)), Filters.Audience_Chamber)) {
             PlayCardAction action = getPlayCardAction(playerId, game, self, self, false, 0, null, null, null, null, null, false, 0, null, null);
             if (action != null) {
                 return Collections.singletonList(action);
