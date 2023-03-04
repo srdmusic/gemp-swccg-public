@@ -31,7 +31,7 @@ import java.util.List;
 public class Card501_018 extends AbstractStarfighter {
     public Card501_018() {
         super(Side.DARK, 2, 5, 5, null, 5, 3, 5, "Colonel Jendon In Vader's Personal Shuttle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy -2 to Mustafar. May add 1 pilot and 3 passengers. Permanent pilot is •Colonel Jendon, who provides ability of 2. While Vader armed with a lightsaber weapon card at a battleground, Force drain +1 here.");
+        setGameText("Deploys -2 to Mustafar. May add 1 pilot and 3 passengers. Permanent pilot is •Jendon, who provides ability of 2. If Vader armed with a lightsaber weapon card at a battleground, Force drain +1 here.");
         addIcons(Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_21);
         addModelTypes(ModelType.LAMBDA_CLASS_SHUTTLE);
         setPilotCapacity(1);
