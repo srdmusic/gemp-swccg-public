@@ -1,6 +1,13 @@
 package com.gempukku.swccgo.logic.actions;
 
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.DestinyType;
+import com.gempukku.swccgo.common.Filterable;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Statistic;
+import com.gempukku.swccgo.common.TargetingReason;
+import com.gempukku.swccgo.common.Variable;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -13,15 +20,81 @@ import com.gempukku.swccgo.logic.conditions.FalseCondition;
 import com.gempukku.swccgo.logic.conditions.TrueCondition;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import com.gempukku.swccgo.logic.decisions.IntegerAwaitingDecision;
-import com.gempukku.swccgo.logic.effects.*;
-import com.gempukku.swccgo.logic.effects.choose.*;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.CancelGameTextEffect;
+import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfTurnEffect;
+import com.gempukku.swccgo.logic.effects.CancelImmunityToAttritionUntilEndOfTurnEffect;
+import com.gempukku.swccgo.logic.effects.CaptureCharacterOnTableEffect;
+import com.gempukku.swccgo.logic.effects.ChooseEffectOrderEffect;
+import com.gempukku.swccgo.logic.effects.CollapseSiteEffect;
+import com.gempukku.swccgo.logic.effects.CrashVehicleEffect;
+import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
+import com.gempukku.swccgo.logic.effects.ExcludeFromBattleEffect;
+import com.gempukku.swccgo.logic.effects.HitCardAndMayActivateForceEffect;
+import com.gempukku.swccgo.logic.effects.HitCardAndMayNotBeUsedToSatisfyAttritionAndOpponentLosesForceEffect;
+import com.gempukku.swccgo.logic.effects.HitCardAndMayNotBeUsedToSatisfyAttritionEffect;
+import com.gempukku.swccgo.logic.effects.HitCardAndModifyForfeitEffect;
+import com.gempukku.swccgo.logic.effects.HitCardAndModifyPowerAndForfeitEffect;
+import com.gempukku.swccgo.logic.effects.HitCardAndModifyPowerEffect;
+import com.gempukku.swccgo.logic.effects.HitCardAndOpponentLosesForceEffect;
+import com.gempukku.swccgo.logic.effects.HitCardAndResetForfeitEffect;
+import com.gempukku.swccgo.logic.effects.HitCardAndResetPowerEffect;
+import com.gempukku.swccgo.logic.effects.HitCardEffect;
+import com.gempukku.swccgo.logic.effects.HitCardModifyForfeitAndOpponentLosesForceEffect;
+import com.gempukku.swccgo.logic.effects.HitCardResetForfeitAndBothPlayersLoseForceEffect;
+import com.gempukku.swccgo.logic.effects.HitCardResetForfeitAndOpponentLosesForceEffect;
+import com.gempukku.swccgo.logic.effects.HitCardResetForfeitAndRetrieveForceEffect;
+import com.gempukku.swccgo.logic.effects.IonizeStarshipEffect;
+import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
+import com.gempukku.swccgo.logic.effects.LoseCardsFromTableEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.MayNotBattleUntilEndOfTurnEffect;
+import com.gempukku.swccgo.logic.effects.ModifyForfeitUntilEndOfTurnEffect;
+import com.gempukku.swccgo.logic.effects.ModifyPowerEffect;
+import com.gempukku.swccgo.logic.effects.ModifyPowerUntilEndOfTurnEffect;
+import com.gempukku.swccgo.logic.effects.ModifyTotalWeaponDestinyEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
+import com.gempukku.swccgo.logic.effects.RefreshPrintedDestinyValuesEffect;
+import com.gempukku.swccgo.logic.effects.ResetFerocityUntilEndOfTurnEffect;
+import com.gempukku.swccgo.logic.effects.ResetLandspeedAndModifyPowerUntilEndOfTurnEffect;
+import com.gempukku.swccgo.logic.effects.ResetPowerAndForfeitEffect;
+import com.gempukku.swccgo.logic.effects.ResetPowerForfeitAndLandspeedUntilEndOfYourNextTurnEffect;
+import com.gempukku.swccgo.logic.effects.ResetPowerUntilEndOfBattleEffect;
+import com.gempukku.swccgo.logic.effects.ResetPowerUntilEndOfTurnEffect;
+import com.gempukku.swccgo.logic.effects.RespondableWeaponFiringEffect;
+import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
+import com.gempukku.swccgo.logic.effects.SetInitialWeaponFiringCalculationVariableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardsOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardToLoseFromTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardsOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCharacterOnTableToCaptureEffect;
+import com.gempukku.swccgo.logic.effects.choose.StealCardToLocationEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeStackedCardsIntoHandEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsDestinyToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmunityToAttritionChangeModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeFiredModifier;
 import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
-import com.gempukku.swccgo.logic.timing.*;
+import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.GuiUtils;
+import com.gempukku.swccgo.logic.timing.PassthruEffect;
+import com.gempukku.swccgo.logic.timing.StandardEffect;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * A utility class for building common "fire weapon" actions.
@@ -1692,7 +1765,7 @@ public class FireWeaponActionBuilder {
                                                             else if ((totalDestiny + 2) > valueToCompare) {
                                                                 gameState.sendMessage("Result: Succeeded");
                                                                 action.appendEffect(
-                                                                        new HitCardModifyForfeitAndOpponentLosesForceEffect(action, cardFiredAt, -2, 1, _weaponOrCardWithPermanentWeapon, _permanentWeapon, action.getCardFiringWeapon()));
+                                                                        new HitCardModifyForfeitAndOpponentLosesForceEffect(action, cardFiredAt, -3, 1, _weaponOrCardWithPermanentWeapon, _permanentWeapon, action.getCardFiringWeapon()));
                                                             }
                                                             else {
                                                                 gameState.sendMessage("Result: Failed");
