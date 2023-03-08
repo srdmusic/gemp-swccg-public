@@ -121,7 +121,7 @@ public class Card110_004_BACK extends AbstractObjective {
                 boolean cannotBeReduced = false;
                 if (game.getModifiersQuerying().hasGameTextModification(game.getGameState(), self, ModifyGameTextType.OR_BE_DESTROYED__FORCE_LOSS_MAY_NOT_EXCEED_THREE_OR_BE_REDUCED)) {
                     // Force loss from Or Be Destroyed may not be reduced and is limited to 3
-                    numForce = Math.max(numForce, 3);
+                    numForce = Math.min(numForce, 3);
                     cannotBeReduced = true;
                 }
 
@@ -170,7 +170,7 @@ public class Card110_004_BACK extends AbstractObjective {
                 boolean cannotBeReduced = false;
                 if (game.getModifiersQuerying().hasGameTextModification(game.getGameState(), self, ModifyGameTextType.OR_BE_DESTROYED__FORCE_LOSS_MAY_NOT_EXCEED_THREE_OR_BE_REDUCED)) {
                     // Force loss from Or Be Destroyed may not be reduced and is limited to 3
-                    numForce = Math.max(numForce, 3);
+                    numForce = Math.min(numForce, 3);
                     cannotBeReduced = true;
                 }
 
