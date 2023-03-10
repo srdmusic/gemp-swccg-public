@@ -2590,6 +2590,16 @@ public class GameConditions {
     }
 
     /**
+     * Gets number of cards in player's reserve deck.
+     * @param game the game
+     * @param playerId the player
+     * @return the number of cards
+     */
+    public static int numCardsInReserveDeck(SwccgGame game, String playerId) {
+        return game.getGameState().getReserveDeckSize(playerId);
+    }
+
+    /**
      * Gets number of cards in player's lost pile.
      * @param game the game
      * @param playerId the player
