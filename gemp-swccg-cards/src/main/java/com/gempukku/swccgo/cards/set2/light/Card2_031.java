@@ -60,10 +60,12 @@ public class Card2_031 extends AbstractNormalEffect {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        final int permCardId = self.getPermanentCardId();
         Condition condition = new Condition() {
             @Override
             public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
-                return self.getCardsStacked().size()>=8;
+                PhysicalCard card = gameState.findCardByPermanentId(permCardId);
+                return GameConditions.hasStackedCards(gameState.getGame(), card, 8);
             }
         };
         List<Modifier> modifiers = new LinkedList<>();
@@ -76,7 +78,7 @@ public class Card2_031 extends AbstractNormalEffect {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
         // Check condition(s)
-        if (self.getCardsStacked().size() < 8
+        if (!GameConditions.hasStackedCards(game, self, 8)
                 && GameConditions.hasForcePile(game, playerId)) {
 
             PhysicalCard topCard = game.getGameState().getTopOfCardPile(playerId, Zone.FORCE_PILE);
@@ -126,7 +128,7 @@ public class Card2_031 extends AbstractNormalEffect {
                 || TriggerConditions.isAboutToBeCanceledFromTableBy(game, effectResult, opponent, self))
                 && GameConditions.hasStackedCards(game, self)) {
 
-            Collection<PhysicalCard> cards = self.getCardsStacked();
+            Collection<PhysicalCard> cards = Filters.filterStacked(game, Filters.stackedOn(self));
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Place stacked cards in Used Pile");
