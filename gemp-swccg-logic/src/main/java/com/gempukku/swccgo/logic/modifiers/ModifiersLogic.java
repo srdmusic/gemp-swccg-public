@@ -5066,6 +5066,20 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             }
         }
 
+        // If it is not a cancel and redraw, see if we have a global "cannot cancel destiny unless redrawn" rule in effect
+        // or if the specific destiny effect may not be canceled unless being redrawn
+        if (!isCancelAndRedraw) {
+            for (Modifier modifier : getModifiers(gameState, ModifierType.MAY_NOT_CANCEL_DESTINY_DRAWS_UNLESS_BEING_REDRAWN)) {
+                if (modifier.mayNotCancelDestiny(drawDestinyEffect.getPlayerDrawingDestiny(), playerId)) {
+                    return true;
+                }
+            }
+
+            if (drawDestinyEffect.mayNotBeCanceledUnlessBeingRedrawn())
+                return true;
+        }
+
+
         if (drawDestinyEffect.isDestinyCanceled()
                 || drawDestinyEffect.getSubstituteDestiny() != null
                 || drawDestinyEffect.mayNotBeCanceledByPlayer(playerId))
@@ -13042,7 +13056,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
      */
     @Override
     public boolean isLocationUnderHothEnergyShield(GameState gameState, PhysicalCard location) {
-        return !getModifiersAffectingCard(gameState, ModifierType.UNDER_HOTH_ENERGY_SHIELD, location).isEmpty();
+        return !getModifiersAffectingCard(gameState, ModifierType.UNDER_HOTH_ENERGY_SHIELD, location).isEmpty()
+                && getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_BE_COVERED_BY_HOTH_ENERGY_SHIELD, location).isEmpty();
     }
 
     /**
@@ -14554,6 +14569,28 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         // Check for deploy without presence or Force icons modifier
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAY_DEPLOY_WITHOUT_PRESENCE_OR_FORCE_ICONS, cardToDeploy))
+            if (modifier.isAffectedTarget(gameState, this, target))
+                return true;
+
+        return false;
+    }
+
+    /**
+     * Determines if a pilot may deploy simultaneously with the card to the target without presence or Force icons.
+     * @param gameState the game state
+     * @param target the target
+     * @param starshipOrVehicle the card to deploy
+     * @return true if card can be deployed to the target without presence or Force icons, otherwise false
+     */
+    @Override
+    public boolean mayDeployPilotSimultaneouslyToTargetWithoutPresenceOrForceIcons(GameState gameState, PhysicalCard target, PhysicalCard starshipOrVehicle) {
+        // Only check starships or vehicles
+        if (!getCardTypes(gameState, starshipOrVehicle).contains(CardType.STARSHIP)
+                && !getCardTypes(gameState, starshipOrVehicle).contains(CardType.VEHICLE))
+            return false;
+
+        // Check for deploy without presence or Force icons modifier
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAY_DEPLOY_PILOT_SIMULTANEOUSLY_WITHOUT_PRESENCE_OR_FORCE_ICONS, starshipOrVehicle))
             if (modifier.isAffectedTarget(gameState, this, target))
                 return true;
 
@@ -16739,10 +16776,6 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             types.add(((AddCardTypeModifier)m).getType());
         }
         return types;
-    }
-
-    public boolean isShieldGateBlownAway(GameState gameState) {
-        return !getModifiers(gameState, ModifierType.SHIELD_GATE_BLOWN_AWAY).isEmpty();
     }
 
     public Collection<PhysicalCard> getCardsForPersonaChecking(String playerId) {

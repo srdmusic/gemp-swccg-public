@@ -20,7 +20,6 @@ import com.gempukku.swccgo.logic.effects.ModifyDefenseValueUntilEndOfBattleEffec
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
-import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.KeywordModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -40,7 +39,7 @@ public class Card501_084 extends AbstractNormalEffect {
         super(Side.DARK, 6, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Well_Guarded, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Most of Jabba's guards had been sold to the Hutt and were too scared (or too dumb) to leave. Jabba assigned his best guards to watch over his most prized possessions.");
-        setGameText("Deploy on table. Gamorreans, Niktos, and Weequays are guards. Your guards are destiny and forfeit +1, and your alien leaders with them are defense value +1. During battle, may reduce a character's defense value by 1 for each of your guards present. [Immune to Alter.]");
+        setGameText("Deploy on table. Your Gamorreans, Niktos, and Weequays are guards. Your guards are forfeit +1. Your alien leaders with your guard are defense value +1. During battle, may reduce a character's defense value by 1 for each of your guards present. [Immune to Alter.]");
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Well Guarded (V)");
@@ -49,8 +48,7 @@ public class Card501_084 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new KeywordModifier(self, Filters.or(Filters.Gamorrean, Filters.Nikto, Filters.Weequay), Keyword.GUARD));
-        modifiers.add(new DestinyModifier(self, Filters.and(Filters.your(self), Filters.guard), 1));
+        modifiers.add(new KeywordModifier(self, Filters.and(Filters.your(self), Filters.or(Filters.Gamorrean, Filters.Nikto, Filters.Weequay)), Keyword.GUARD));
         modifiers.add(new ForfeitModifier(self, Filters.and(Filters.your(self), Filters.guard), 1));
         modifiers.add(new DefenseValueModifier(self, Filters.and(Filters.your(self), Filters.alien_leader, Filters.with(self, Filters.and(Filters.your(self), Filters.guard))), 1));
         return modifiers;

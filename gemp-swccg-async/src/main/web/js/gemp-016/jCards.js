@@ -3489,6 +3489,12 @@ var fixedImages = {
 "220_8":"https://res.starwarsccg.org/cards/Virtual20-Light/hires/nabootheedpalacegenerator.png",
 "220_9":"https://res.starwarsccg.org/cards/Virtual20-Light/hires/prisoner2187.png",
 "220_10":"https://res.starwarsccg.org/cards/Virtual20-Light/hires/thrownback.png",
+"221_1":"https://res.starwarsccg.org/cards/Virtual21-Dark/hires/coloneljendoninvaderspersonalshuttle.png",
+"221_2":"https://res.starwarsccg.org/cards/Virtual21-Dark/hires/wellguarded.png",
+"221_3":"https://res.starwarsccg.org/cards/Virtual21-Light/hires/agift.png",
+"221_4":"https://res.starwarsccg.org/cards/Virtual21-Light/hires/hansmedal.png",
+"221_5":"https://res.starwarsccg.org/cards/Virtual21-Light/hires/icantbelievehesgone.png",
+"221_6":"https://res.starwarsccg.org/cards/Virtual21-Light/hires/strikeplanning.png",
 
 "301_1":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/ahsokatanowithlightsabers.gif",
 "301_2":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/cityintheclouds.gif",
@@ -3516,7 +3522,7 @@ var fixedImages = {
 "501_11":"https://res.starwarsccg.org/cards/EnhancedCloudCity-Dark/large/bobafettinslavei.gif",
 "501_12":"https://res.starwarsccg.org/cards/legacy/VirtualBlock2-Dark/large/imageofthedarklord.gif",
 "501_13":"https://res.starwarsccg.org/cards/ANewHope-Dark/large/lasergate.gif",
-"501_14":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/nomatchforasith.gif",
+"501_14":"https://res.starwarsccg.org/cards/Hoth-Light/large/attackpatterndelta.gif",
 "501_15":"https://res.starwarsccg.org/cards/Hoth-Dark/large/captainlennox.gif",
 "501_16":"https://res.starwarsccg.org/cards/JabbasPalace-Dark/large/tatooinegreatpitofcarkoon.gif",
 "501_17":"https://res.starwarsccg.org/cards/Virtual12-Dark/large/eviliseverywhere.gif",
@@ -3562,7 +3568,7 @@ var fixedImages = {
 "501_53":"https://res.starwarsccg.org/cards/Tatooine-Light/large/icantbelievehesgone.gif",
 "501_54":"https://res.starwarsccg.org/cards/Coruscant-Light/large/naboodefensefighter.gif",
 "501_55":"https://res.starwarsccg.org/cards/Virtual11-Light/large/ahsokatano.gif",
-"501_56":"https://res.starwarsccg.org/cards/ThirdAnthology-Light/large/prisoner2187.gif",
+"501_56":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/agift.gif",
 "501_57":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/ifeeltheconflict.gif",
 "501_58":"https://res.starwarsccg.org/cards/Tatooine-Light/large/ididit.gif",
 "501_59":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
@@ -3606,6 +3612,11 @@ var fixedImages = {
 "501_94":"https://res.starwarsccg.org/cards/Endor-Light/large/rebelstriketeam.gif",
 "501_94_BACK":"https://res.starwarsccg.org/cards/Endor-Light/large/garrisondestroyed.gif",
 "501_95":"https://res.starwarsccg.org/cards/Endor-Light/large/deactivatetheshieldgenerator.gif",
+"501_96":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/dantooinebaseoperations.gif",
+"501_96_BACK":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/moredangerousthanyourealize.gif",
+"501_97":"https://res.starwarsccg.org/cards/EmpireStrikesBackIntroductoryTwoPlayerGame-Light/large/lonerogue.gif",
+"501_98":"https://res.starwarsccg.org/cards/Virtual11-Light/large/ahchtojeditemple.gif",
+"501_99":"https://res.starwarsccg.org/cards/Virtual17-Light/hires/kefbiroceanicwreckage.png",
 "501_100":"https://res.starwarsccg.org/cards/EnhancedPremiere-Dark/large/bobafettwithblasterrifle.gif",
 "501_101":"https://res.starwarsccg.org/cards/PremiereIntroductoryTwoPlayerGame-Dark/large/vadersobsession.gif",
 "501_102":"https://res.starwarsccg.org/cards/Virtual8-Dark/large/captainpeavey.gif",
@@ -3621,6 +3632,7 @@ var fixedImages = {
 "501_112":"https://res.starwarsccg.org/cards/OfficialTournamentSealedDeck-Dark/large/dreadnaughtclassheavycruiser.gif",
 "501_113":"https://res.starwarsccg.org/cards/Dagobah-Dark/large/executor.gif",
 "501_114":"https://res.starwarsccg.org/cards/EmpireStrikesBackIntroductoryTwoPlayerGame-Dark/large/imperialwalker.gif",
+"501_115":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/lothal.png",
 
 
 //legacy
@@ -4496,6 +4508,8 @@ var Card = Class.extend({
                    (cardNo == 71) ||
                    (cardNo == 74) ||
                    (cardNo == 89) ||
+                   (cardNo == 98) ||
+                   (cardNo == 99) ||
                    (cardNo == 108) ||
                    (cardNo == 109) ||
                    (cardNo == 113)

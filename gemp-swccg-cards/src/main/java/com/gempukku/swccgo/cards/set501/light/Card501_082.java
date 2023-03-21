@@ -73,7 +73,8 @@ public class Card501_082 extends AbstractCharacterDevice {
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         if (GameConditions.isAttachedTo(game, self, Filters.Chewie)
-                && TriggerConditions.isDestinyJustDrawnTargetingAbilityManeuverOrDefenseValue(game, effectResult, Filters.and(Filters.Wookiee, Filters.here(self)))) {
+                && TriggerConditions.isDestinyJustDrawnTargetingAbilityManeuverOrDefenseValue(game, effectResult, Filters.and(Filters.Wookiee, Filters.here(self)))
+                && GameConditions.canCancelDestiny(game, playerId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Cancel destiny draw");

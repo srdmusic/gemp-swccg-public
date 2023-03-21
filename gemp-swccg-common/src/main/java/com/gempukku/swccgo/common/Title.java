@@ -99,6 +99,7 @@ public interface Title {
     String Bespin = "Bespin";
     String Bespin_Cloud_City = "Bespin: Cloud City";
     String Bib = "Bib Fortuna";
+    String Beilert_Valance = "Beilert Valance";
     String Big_One = "Big One";
     String Big_One_Asteroid_Cave = "Big One: Asteroid Cave";
     String Big_One_Asteroid_Cave_Or_Space_Slug_Belly = "Big One: Asteroid Cave Or Space Slug Belly";
@@ -220,6 +221,7 @@ public interface Title {
     String Coruscant = "Coruscant";
     String Coruscant_Imperial_Square = "Coruscant: Imperial Square";
     String Coruscant_Celebration = "Coruscant Celebration";
+    String Coruscant_The_Works = "Coruscant: The Works";
     String Count_Me_In = "Count Me In";
     String Counter_Assault = "Counter Assault";
     String Courage_Of_A_Skywalker = "Courage Of A Skywalker";
@@ -411,6 +413,7 @@ public interface Title {
     String Frozen_Assets = "Frozen Assets";
     String Frustration = "Frustration";
     String Full_Scale_Alert = "Full Scale Alert";
+    String Fulminatrix = "Fulminatrix";
     String Furry_Fury = "Furry Fury";
     String Fusion_Generator_Supply_Tanks = "Fusion Generator Supply Tanks";
     String Gaderffii_Stick = "Gaderffii Stick";
@@ -472,6 +475,7 @@ public interface Title {
     String Highspeed_Tactics = "High-speed Tactics";
     String His_Destiny = "His Destiny";
     String His_Name_Is_Anakin = "His Name Is Anakin";
+    String Hit_And_Run = "Hit And Run";
     String Hit_Racer = "Hit Racer";
     String Hobbie = "Derek 'Hobbie' Klivian";
     String Holotheatre = "Executor: Holotheatre";

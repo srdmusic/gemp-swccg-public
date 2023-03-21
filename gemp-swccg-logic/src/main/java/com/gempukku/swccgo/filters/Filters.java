@@ -3826,15 +3826,11 @@ public class Filters {
                 if (!Filters.exterior_site.accepts(gameState, modifiersQuerying, physicalCard))
                     return false;
 
-                String relatedSystemName = physicalCard.getPartOfSystem();
-                if (relatedSystemName == null)
-                    return false;
-
                 PhysicalCard card = gameState.findCardByPermanentId(permCardId);
                 PhysicalCard location = modifiersQuerying.getLocationHere(gameState, card);
                 if (location == null
                         || location.getBlueprint().getCardSubtype() != CardSubtype.SITE
-                        || !relatedSystemName.equals(location.getPartOfSystem()))
+                        || !Filters.relatedSite(location).accepts(gameState.getGame(), physicalCard))
                     return false;
 
                 int distance = Math.abs(location.getLocationZoneIndex() - physicalCard.getLocationZoneIndex());
@@ -3844,7 +3840,7 @@ public class Filters {
                 // Check if there is another related exterior site closer (on either side)
                 Collection<PhysicalCard> locationsToCheck = Filters.filterTopLocationsOnTable(gameState.getGame(), Filters.and(Filters.exterior_site, Filters.relatedSite(location)));
                 for (PhysicalCard locationToCheck : locationsToCheck) {
-                    int curDistance = Math.abs(location.getLocationZoneIndex() - physicalCard.getLocationZoneIndex());
+                    int curDistance = Math.abs(location.getLocationZoneIndex() - locationToCheck.getLocationZoneIndex());
                     if (curDistance < distance) {
                         return false;
                     }
@@ -14375,6 +14371,51 @@ public class Filters {
     }
 
     /**
+     * Gets a filter representing cards that a card may deploy to only based on presence and Force icons.
+     * This is generally called by a getValidDeployTargetFilter and combined with other Filters to figure out
+     * valid targets for a card to deploy to.
+     * @param cardToDeploy the card to deploy
+     */
+    public static Filter sufficientPresenceOrForceIconsToDeployToAsPilotSimultaneouslyWith(PhysicalCard cardToDeploy, PhysicalCard starshipOrVehicle) {
+        final Integer permCardToDeployCardId = cardToDeploy.getPermanentCardId();
+        final Integer starshipOrVehicleToDeployCardId = starshipOrVehicle.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard cardToDeploy = gameState.findCardByPermanentId(permCardToDeployCardId);
+                PhysicalCard starshipOrVehicle = gameState.findCardByPermanentId(starshipOrVehicleToDeployCardId);
+
+                if (modifiersQuerying.mayDeployPilotSimultaneouslyToTargetWithoutPresenceOrForceIcons(gameState, physicalCard, starshipOrVehicle))
+                    return true;
+
+                if (modifiersQuerying.ignoresLocationDeploymentRestrictions(gameState, cardToDeploy, physicalCard, null, true))
+                    return true;
+
+                if (modifiersQuerying.mayDeployToTargetWithoutPresenceOrForceIcons(gameState, physicalCard, cardToDeploy))
+                    return true;
+
+                PhysicalCard locationHere = modifiersQuerying.getLocationHere(gameState, physicalCard);
+                if (locationHere == null)
+                    return false;
+
+                Icon icon;
+                if (gameState.getSide(cardToDeploy.getOwner()) == Side.DARK)
+                    icon = Icon.DARK_FORCE;
+                else
+                    icon = Icon.LIGHT_FORCE;
+
+                if (modifiersQuerying.hasIcon(gameState, locationHere, icon))
+                    return true;
+
+                if (Filters.canSpot(gameState.getGame(), null, SpotOverride.INCLUDE_UNDERCOVER, Filters.and(Filters.owner(cardToDeploy.getOwner()), Filters.undercover_spy, Filters.at(locationHere))))
+                    return true;
+
+                return modifiersQuerying.hasPresenceAt(gameState, cardToDeploy.getOwner(), locationHere, false, null, null);
+            }
+        };
+    }
+
+    /**
      * Gets a filter representing targets that the specified card ignores location deployment restrictions when deploying to.
      * @param cardToDeploy the card to deploy
      */
@@ -17436,6 +17477,7 @@ public class Filters {
     public static final Filter BB8_or_has_BB8_as_permanent_astromech = Filters.or(Filters.persona(Persona.BB8), Filters.hasPermanentAboard(Filters.persona(Persona.BB8)));
     public static final Filter Beaumont = Filters.persona(Persona.BEAUMONT);
     public static final Filter Beckett = Filters.persona(Persona.BECKETT);
+    public static final Filter Beilert_Valance = Filters.title(Title.Beilert_Valance);
     public static final Filter Beggar = Filters.title(Title.Beggar);
     public static final Filter Beggars_Canyon = Filters.title(Title.Beggars_Canyon);
     public static final Filter Beru = Filters.title(Title.Beru_Lars);
@@ -17611,6 +17653,7 @@ public class Filters {
     public static final Filter Coruscant_site = Filters.and(Filters.partOfSystem(Title.Coruscant), CardSubtype.SITE);
     public static final Filter Coruscant_Imperial_Square = Filters.title(Title.Coruscant_Imperial_Square);
     public static final Filter Coruscant_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Coruscant));
+    public static final Filter Coruscant_The_Works = Filters.title(Title.Coruscant_The_Works);
     public static final Filter Corulag = Filters.title(Title.Corulag);
     public static final Filter Corulag_site = Filters.and(Filters.partOfSystem(Title.Corulag), CardSubtype.SITE);
     public static final Filter corvette = Filters.or(Filters.modelType(ModelType.CORELLIAN_CORVETTE),Filters.modelType(ModelType.HAMMERHEAD_CORVETTE));
@@ -17763,6 +17806,7 @@ public class Filters {
     public static final Filter Downtown_Plaza = Filters.title(Title.Downtown_Plaza);
     public static final Filter Dqar_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Dqar));
     public static final Filter Dr_Evazan = Filters.title(Title.Dr_Evazan);
+    public static final Filter Dreadnaught = Filters.or(Filters.modelType(ModelType.DREADNAUGHT_CLASS_HEAVY_CRUISER), Filters.modelType(ModelType.MANDATOR_IV_CLASS_DREADNAUGHT), Filters.modelType(ModelType.MEGA_CLASS_DREADNAUGHT));
     public static final Filter Dreadnaught_class_cruisers = Filters.modelType(ModelType.DREADNAUGHT_CLASS_HEAVY_CRUISER);
     public static final Filter droid = Filters.icon(Icon.DROID);
     public static final Filter droid_control_ship = Filters.keyword(Keyword.DROID_CONTROL_SHIP);
@@ -17894,6 +17938,7 @@ public class Filters {
     public static final Filter Frozen_Assets = Filters.title(Title.Frozen_Assets);
     public static final Filter Frustration = Filters.title(Title.Frustration);
     public static final Filter Full_Scale_Alert = Filters.title(Title.Full_Scale_Alert);
+    public static final Filter Fulminatrix = Filters.title(Title.Fulminatrix);
     public static final Filter Furry_Fury = Filters.title(Title.Furry_Fury);
     public static final Filter fusion_generator = Filters.keyword(Keyword.FUSION_GENERATOR);
     public static final Filter Fusion_Generator_Supply_Tanks = Filters.title(Title.Fusion_Generator_Supply_Tanks);
@@ -17981,6 +18026,7 @@ public class Filters {
     public static final Filter Hidden_Weapons = Filters.title(Title.Hidden_Weapons);
     public static final Filter Highspeed_Tactics = Filters.title(Title.Highspeed_Tactics);
     public static final Filter His_Name_Is_Anakin = Filters.title(Title.His_Name_Is_Anakin);
+    public static final Filter Hit_And_Run = Filters.title(Title.Hit_And_Run);
     public static final Filter hit_character = Filters.and(CardCategory.CHARACTER, Filters.hit());
     public static final Filter Hit_Racer = Filters.title(Title.Hit_Racer);
     public static final Filter Hobbie = Filters.title(Title.Hobbie);

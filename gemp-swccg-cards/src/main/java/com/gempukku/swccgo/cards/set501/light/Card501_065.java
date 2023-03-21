@@ -32,15 +32,15 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Objective
- * Title: Hunt For The Droid General / Grievous Will Run And Hide
+ * Title: Hunt For The Droid General / He's A Coward
  */
 public class Card501_065 extends AbstractObjective {
     public Card501_065() {
         super(Side.LIGHT, 0, "Hunt For The Droid General", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy a [Clone Army] battleground, ♢Clone Command Center (to same planet), Cloning Cylinders, and He Is A Coward. \n" +
+        setGameText("Deploy a [Clone Army] battleground, ♢Clone Command Center (to same planet), Cloning Cylinders, and Grievous Will Run And Hide. \n" +
                 "For remainder of game, you may not deploy non-[Episode I] Jedi. Your non-[Episode I] cards with ability are deploy +2. Jedi gain [Pilot] skill. Your [Episode I] sites are immune to No Escape. At end of opponent's turn, if you occupy more battlegrounds than opponent, opponent loses 1 Force. \n" +
-                "Flip this card if He Is A Coward here (unless Grievous alone at a battleground).");
+                "Flip this card if Grievous Will Run And Hide here unless Grievous alone at a battleground.");
         addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("Hunt For The Droid General");
     }
@@ -77,10 +77,10 @@ public class Card501_065 extends AbstractObjective {
 
                                 });
                         action.appendRequiredEffect(
-                                new DeployCardFromReserveDeckEffect(action, Filters.title("He Is A Coward"), true, false) {
+                                new DeployCardFromReserveDeckEffect(action, Filters.title("Grievous Will Run And Hide"), true, false) {
                                     @Override
                                     public String getChoiceText() {
-                                        return "Deploy He Is A Coward";
+                                        return "Deploy Grievous Will Run And Hide";
                                     }
 
                                 });
@@ -124,7 +124,7 @@ public class Card501_065 extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && GameConditions.hasAttached(game, self, Filters.title("He Is A Coward"))
+                && GameConditions.hasAttached(game, self, Filters.title("Grievous Will Run And Hide"))
                 && !GameConditions.canSpot(game, self, Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground)))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);

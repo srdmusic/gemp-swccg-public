@@ -44,15 +44,15 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Objective
- * Title: Hunt For The Droid General / Grievous Will Run And Hide
+ * Title: Hunt For The Droid General / He's A Coward
  */
 public class Card501_065_BACK extends AbstractObjective {
     public Card501_065_BACK() {
-        super(Side.LIGHT, 7, "Grievous Will Run And Hide", ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 7, "He's A Coward", ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("While this side up, your Force drains are +1 where you have a Jedi/clone pair. X = number of battlegrounds your [Clone Army] cards occupy. If you just initiated a battle: peek at the top card of your Reserve Deck or Used Pile (may take it into hand or place it on bottom of Reserve Deck), then if X > 1, retrieve a [Clone Army] card into hand, then if X > 2, your clone may make a regular move (for free) to the battle location. \n" +
-                "Flip this card if He Is A Coward at a battleground or Grievous alone at a battleground.");
+                "Flip this card if Grievous Will Run And Hide at a battleground or Grievous alone at a battleground.");
         addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
-        setTestingText("Grievous Will Run And Hide");
+        setTestingText("He's A Coward");
     }
 
     @Override
@@ -162,7 +162,7 @@ public class Card501_065_BACK extends AbstractObjective {
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
                 && (GameConditions.canSpot(game, self, Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground)))
-                || !GameConditions.hasAttached(game, self, Filters.title("He Is A Coward")))) {
+                || !GameConditions.hasAttached(game, self, Filters.title("Grievous Will Run And Hide")))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setSingletonTrigger(true);
