@@ -2,23 +2,26 @@ package com.gempukku.swccgo.cards.set7.dark;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.TargetedByWeaponCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.game.state.WeaponFiringState;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.ModifySabaccTotalEffect;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.LinkedList;
@@ -46,9 +49,18 @@ public class Card7_180 extends AbstractAlien {
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(final SwccgGame game, final PhysicalCard self) {
+        Filter targetedByAttachedJawaWeapon = new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                WeaponFiringState weaponFiringState = gameState.getWeaponFiringState();
+                return weaponFiringState != null
+                        && GameConditions.isDuringWeaponFiringAtTarget(game, Filters.and(Filters.Jawa_weapon, Filters.attachedTo(self), Filters.weaponBeingFiredBy(self)), physicalCard);
+            }
+        };
+
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DefenseValueModifier(self, Filters.any, new TargetedByWeaponCondition(Filters.any, Filters.and(Filters.Jawa_weapon, Filters.attachedTo(self))), -3));
+        modifiers.add(new DefenseValueModifier(self, targetedByAttachedJawaWeapon, -3));
         return modifiers;
     }
 
@@ -58,7 +70,7 @@ public class Card7_180 extends AbstractAlien {
 
         // Check condition(s)
         if (TriggerConditions.isCalculatingSabaccTotals(game, effectResult)
-                && GameConditions.isPlayingSabacc(game, self, Filters.title("Dune Sea Sabacc"))) {
+                && GameConditions.isPlayingSabacc(game, self, Filters.title(Title.Dune_Sea_Sabacc))) {
 
             final OptionalGameTextTriggerAction action1 = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action1.setText("Add 1 to Sabacc total");
