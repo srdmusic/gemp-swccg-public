@@ -50,12 +50,14 @@ public class Card7_180 extends AbstractAlien {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(final SwccgGame game, final PhysicalCard self) {
+        final int permCardId = self.getPermanentCardId();
         Filter targetedByAttachedJawaWeapon = new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard card = gameState.findCardByPermanentId(permCardId);
                 WeaponFiringState weaponFiringState = gameState.getWeaponFiringState();
                 return weaponFiringState != null
-                        && GameConditions.isDuringWeaponFiringAtTarget(game, Filters.and(Filters.Jawa_weapon, Filters.attachedTo(self), Filters.weaponBeingFiredBy(self)), physicalCard);
+                        && GameConditions.isDuringWeaponFiringAtTarget(gameState.getGame(), Filters.and(Filters.Jawa_weapon, Filters.attachedTo(card), Filters.weaponBeingFiredBy(card)), physicalCard);
             }
         };
 
