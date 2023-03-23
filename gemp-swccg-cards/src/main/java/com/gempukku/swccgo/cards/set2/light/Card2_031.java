@@ -23,7 +23,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.CancelCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardsInUsedPileFromOffTableEffect;
+import com.gempukku.swccgo.logic.effects.PutStackedCardsInUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.StackOneCardFromForcePileEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -134,7 +134,7 @@ public class Card2_031 extends AbstractNormalEffect {
             action.setText("Place stacked cards in Used Pile");
             // Perform result(s)
             action.appendEffect(
-                    new PlaceCardsInUsedPileFromOffTableEffect(action, cards));
+                    new PutStackedCardsInUsedPileEffect(action, playerId, cards, true));
             actions.add(action);
         }
 
