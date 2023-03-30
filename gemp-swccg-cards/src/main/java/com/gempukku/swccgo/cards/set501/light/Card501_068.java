@@ -58,30 +58,41 @@ public class Card501_068 extends AbstractSite {
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(final String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(final String playerOnLightSideOfLocation, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
         final Filter siteYouOccupy = Filters.and(Filters.other(self), Filters.site, Filters.occupies(playerOnLightSideOfLocation));
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
-        if (GameConditions.isOnceDuringPlayersPhase(game, self, gameTextSourceCardId, gameTextActionId, playerOnLightSideOfLocation, Phase.MOVE)
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
                 && GameConditions.canSpotLocation(game, siteYouOccupy)
                 && GameConditions.canUseForce(game, playerOnLightSideOfLocation, 1)) {
-            //TODO make this more like A New Secret Base so you can choose the Jedi/clone pair in either order
-            if (GameConditions.canSpot(game, self,Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.Jedi, Filters.hasNotPerformedRegularMove, Filters.canBeRelocatedToLocation(siteYouOccupy, 0),
-                    Filters.with(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.clone, Filters.hasNotPerformedRegularMove, Filters.canBeRelocatedToLocation(siteYouOccupy, 0))), Filters.here(self)))) {
+
+            final Filter jediFilter = Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.Jedi, Filters.hasNotPerformedRegularMove);
+            final Filter cloneFilter = Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.clone, Filters.hasNotPerformedRegularMove);
+
+            //TODO choose the site first (copy MoveUsingLocationTextAction)
+            if (GameConditions.canSpot(game, self, Filters.and(Filters.and(jediFilter, Filters.canBeRelocatedToLocation(siteYouOccupy, 0)),
+                    Filters.with(self, Filters.and(cloneFilter, Filters.canBeRelocatedToLocation(siteYouOccupy, 0))), Filters.here(self)))) {
+
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
                 action.setText("Move from here to a site you occupy");
                 action.appendUsage(
                         new OncePerPhaseEffect(action));
 
-                action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a Jedi", Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.Jedi, Filters.hasNotPerformedRegularMove, Filters.here(self), Filters.canBeRelocated(false))) {
+                action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a Jedi or clone",
+                        Filters.and(Filters.or(Filters.and(jediFilter, Filters.canBeRelocatedToLocation(siteYouOccupy, 0), Filters.with(self, Filters.and(cloneFilter, Filters.canBeRelocatedToLocation(siteYouOccupy, 0)))),
+                                Filters.and(cloneFilter, Filters.canBeRelocatedToLocation(siteYouOccupy, 0), Filters.with(self, Filters.and(jediFilter, Filters.canBeRelocatedToLocation(siteYouOccupy, 0))))), Filters.here(self))) {
                     @Override
-                    protected void cardTargeted(final int targetGroupId_jedi, final PhysicalCard targetedJedi) {
-                        action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a clone", Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.clone, Filters.hasNotPerformedRegularMove, Filters.here(self), Filters.canBeRelocated(false))) {
+                    protected void cardTargeted(final int targetGroupId1, final PhysicalCard targetedCharacter1) {
+                        boolean isJedi = jediFilter.accepts(game, targetedCharacter1);
+                        String choiceText = (isJedi? "Choose a clone" : "Choose a Jedi");
+                        Filter nextChoiceFilter = (isJedi? cloneFilter : jediFilter);
+
+                        action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, choiceText, Filters.and(nextChoiceFilter, Filters.here(self), Filters.canBeRelocated(false))) {
                             @Override
-                            protected void cardTargeted(final int targetGroupId_clone, final PhysicalCard targetedClone) {
-                                action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a location to relocate to", Filters.and(siteYouOccupy, Filters.locationCanBeRelocatedTo(targetedJedi, 0), Filters.locationCanBeRelocatedTo(targetedClone, 0))) {
+                            protected void cardTargeted(final int targetGroupId2, final PhysicalCard targetedCharacter2) {
+                                action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a location to relocate to", Filters.and(siteYouOccupy, Filters.locationCanBeRelocatedTo(targetedCharacter1, 0), Filters.locationCanBeRelocatedTo(targetedCharacter2, 0))) {
                                     @Override
                                     protected void cardTargeted(final int targetGroupId_site, PhysicalCard targetedSite) {
 
@@ -91,14 +102,15 @@ public class Card501_068 extends AbstractSite {
                                         action.allowResponses(new RespondableEffect(action) {
                                             @Override
                                             protected void performActionResults(Action targetingAction) {
-                                                PhysicalCard jedi = action.getPrimaryTargetCard(targetGroupId_jedi);
-                                                PhysicalCard clone = action.getPrimaryTargetCard(targetGroupId_clone);
+                                                PhysicalCard character1 = action.getPrimaryTargetCard(targetGroupId1);
+                                                PhysicalCard character2 = action.getPrimaryTargetCard(targetGroupId2);
                                                 PhysicalCard site = action.getPrimaryTargetCard(targetGroupId_site);
 
                                                 Collection<PhysicalCard> toMove = new HashSet<>();
-                                                toMove.add(jedi);
-                                                toMove.add(clone);
-                                                action.appendEffect(new RelocateBetweenLocationsEffect(action, toMove, site, true));
+                                                toMove.add(character1);
+                                                toMove.add(character2);
+                                                action.appendEffect(
+                                                        new RelocateBetweenLocationsEffect(action, toMove, site, true));
                                             }
                                         });
                                     }
@@ -111,19 +123,24 @@ public class Card501_068 extends AbstractSite {
                 actions.add(action);
             }
 
-            if (GameConditions.canSpot(game, self,Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.Jedi, Filters.hasNotPerformedRegularMove, Filters.canBeRelocatedToLocation(self, 0),
-                    Filters.with(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.clone, Filters.hasNotPerformedRegularMove, Filters.canBeRelocatedToLocation(self, 0))), Filters.at(siteYouOccupy)))) {
+            if (GameConditions.canSpot(game, self,Filters.and(Filters.and(jediFilter, Filters.canBeRelocatedToLocation(self, 0)), Filters.with(self, Filters.and(cloneFilter, Filters.canBeRelocatedToLocation(self, 0))), Filters.at(siteYouOccupy)))) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
                 action.setText("Move from a site you occupy to here");
                 action.appendUsage(
                         new OncePerPhaseEffect(action));
 
-                action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a Jedi", Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.Jedi, Filters.hasNotPerformedRegularMove, Filters.at(siteYouOccupy), Filters.canBeRelocatedToLocation(self, 0))) {
+                action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a Jedi or clone",
+                        Filters.and(Filters.or(Filters.and(jediFilter, Filters.canBeRelocatedToLocation(self, 0), Filters.with(self, Filters.and(cloneFilter, Filters.canBeRelocatedToLocation(self, 0)))),
+                                Filters.and(cloneFilter, Filters.canBeRelocatedToLocation(self, 0), Filters.with(self, Filters.and(jediFilter, Filters.canBeRelocatedToLocation(self, 0))))), Filters.at(siteYouOccupy))) {
                     @Override
-                    protected void cardTargeted(final int targetGroupId_jedi, final PhysicalCard targetedJedi) {
-                        action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a clone", Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.clone, Filters.hasNotPerformedRegularMove, Filters.with(targetedJedi), Filters.canBeRelocatedToLocation(self, 0))) {
+                    protected void cardTargeted(final int targetGroupId1, final PhysicalCard targetedCharacter1) {
+                        boolean isJedi = jediFilter.accepts(game, targetedCharacter1);
+                        String choiceText = (isJedi? "Choose a clone" : "Choose a Jedi");
+                        Filter nextChoiceFilter = (isJedi? cloneFilter : jediFilter);
+
+                        action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, choiceText, Filters.and(nextChoiceFilter, Filters.with(targetedCharacter1), Filters.canBeRelocatedToLocation(self, 0))) {
                             @Override
-                            protected void cardTargeted(final int targetGroupId_clone, final PhysicalCard targetedClone) {
+                            protected void cardTargeted(final int targetGroupId2, final PhysicalCard targetedCharacter2) {
 
                                 //TODO account for free movement
                                 action.appendCost(
@@ -131,13 +148,14 @@ public class Card501_068 extends AbstractSite {
                                 action.allowResponses(new RespondableEffect(action) {
                                     @Override
                                     protected void performActionResults(Action targetingAction) {
-                                        PhysicalCard jedi = action.getPrimaryTargetCard(targetGroupId_jedi);
-                                        PhysicalCard clone = action.getPrimaryTargetCard(targetGroupId_clone);
+                                        PhysicalCard character1 = action.getPrimaryTargetCard(targetGroupId1);
+                                        PhysicalCard character2 = action.getPrimaryTargetCard(targetGroupId2);
 
                                         Collection<PhysicalCard> toMove = new HashSet<>();
-                                        toMove.add(jedi);
-                                        toMove.add(clone);
-                                        action.appendEffect(new RelocateBetweenLocationsEffect(action, toMove, self, true));
+                                        toMove.add(character1);
+                                        toMove.add(character2);
+                                        action.appendEffect(
+                                                new RelocateBetweenLocationsEffect(action, toMove, self, true));
                                     }
                                 });
                             }
