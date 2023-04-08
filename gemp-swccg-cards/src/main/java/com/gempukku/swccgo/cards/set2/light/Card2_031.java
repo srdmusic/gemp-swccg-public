@@ -23,8 +23,9 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.CancelCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.PutStackedCardsInUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.StackOneCardFromForcePileEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardsEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
@@ -133,8 +134,27 @@ public class Card2_031 extends AbstractNormalEffect {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Place stacked cards in Used Pile");
             // Perform result(s)
-            action.appendEffect(
-                    new PutStackedCardsInUsedPileEffect(action, playerId, cards, true));
+
+            int stacked = game.getGameState().getStackedCards(self).size();
+            action.appendTargeting(new ChooseStackedCardsEffect(action, opponent, self, stacked, stacked, Filters.any, true) {
+                @Override
+                protected boolean getUseShortcut() {
+                    return false;
+                }
+
+                @Override
+                protected boolean forceManualSelection() {
+                    return true;
+                }
+
+                @Override
+                protected void cardsSelected(SwccgGame game, Collection<PhysicalCard> selectedCards) {
+                    for(PhysicalCard card:selectedCards) {
+                        action.appendEffect(
+                                new PutStackedCardInUsedPileEffect(action, opponent, card, true));
+                    }
+                }
+            });
             actions.add(action);
         }
 
