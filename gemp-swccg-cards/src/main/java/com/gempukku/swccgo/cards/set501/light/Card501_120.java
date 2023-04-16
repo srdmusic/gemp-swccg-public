@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.PlayersTurnCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -10,7 +9,6 @@ import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -20,7 +18,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.DrawOneCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeCanceledModifier;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeModifiedModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeReducedModifier;
 import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotHaveForfeitValueIncreasedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -33,17 +31,17 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Effect
- * Title: Let's Keep A Little Optimism Here (V)
+ * Title: Scanner Techs (V)
  */
 public class Card501_120 extends AbstractNormalEffect {
     public Card501_120() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.ATTACHED, Title.Lets_Keep_A_Little_Optimism_Here, Uniqueness.UNIQUE, ExpansionSet.DEATH_STAR_II, Rarity.C);
+        super(Side.LIGHT, 5, PlayCardZoneOption.ATTACHED, "Scanner Techs", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setLore("The heroes of the Rebellion know that where there is life, there is hope.");
-        setGameText("Deploy on a battleground. During opponent's turn, forfeit values may not be increased here. You initiate battles here for free. If you just initiated battle here, may draw top card of Reserve Deck. Opponent may not cancel or modify Force drains here.");
-        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
+        setLore("Specialized scanner technicians examine scanner output to identify the presence of life forms. Experienced operators can even identify species and gender.");
+        setGameText("Deploy on a battleground. Forfeit values may not be increased here. You initiate battles here for free. If you just initiated battle here, may draw top card of Reserve Deck. Force drains may not be reduced or canceled here.");
+        addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.DEPLOYS_ON_LOCATION);
-        setTestingText("Let's Keep A Little Optimism Here (V) (Effect)");
+        setTestingText("Scanner Techs (V)");
     }
 
     @Override
@@ -57,10 +55,12 @@ public class Card501_120 extends AbstractNormalEffect {
         String opponent = game.getOpponent(playerId);
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotHaveForfeitValueIncreasedModifier(self, Filters.here(self), new PlayersTurnCondition(opponent)));
+        modifiers.add(new MayNotHaveForfeitValueIncreasedModifier(self, Filters.here(self)));
         modifiers.add(new InitiateBattlesForFreeModifier(self, Filters.here(self), playerId));
-        modifiers.add(new ForceDrainsMayNotBeModifiedModifier(self, Filters.here(self), opponent, null));
-        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.here(self), opponent, null));
+        modifiers.add(new ForceDrainsMayNotBeReducedModifier(self, Filters.here(self), playerId));
+        modifiers.add(new ForceDrainsMayNotBeReducedModifier(self, Filters.here(self), opponent));
+        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.here(self), playerId));
+        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.here(self), opponent));
         return modifiers;
     }
 
