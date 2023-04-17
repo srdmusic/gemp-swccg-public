@@ -40,6 +40,7 @@ import java.util.List;
 public class Card501_139 extends AbstractImperial {
     public Card501_139() {
         super(Side.DARK, 3, 2, 2, 2, 3, "Sergeant Tarl", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setVirtualSuffix(true);
         setLore("Took part in the capture of the Rebel Blockade Runner Tantive IV. Stormtrooper trained on Corulag. Corellia native.");
         setGameText("When deployed, power +2 for remainder of turn. While in battle with two ISB Agents (or troopers), may target a character present; target is immune to attrition and game text is canceled.");
         addIcons(Icon.ENDOR, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
