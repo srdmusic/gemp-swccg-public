@@ -38,7 +38,7 @@ public class Card501_008 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Juri_Juice, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Popular beverage served in many cantinas and tapcafes. Has intoxicating effect on many species. Favorite drink of Kabe, Chadra-Fan thief of Mos Eisley.");
-        setGameText("Deploy on table. Once per turn, may deploy Baniss or Cantina from Reserve Deck; reshuffle. Once during your draw phase, may peek at up to X cards from the top of your Reserve Deck, where X = number of your aliens at Cantina; take one into hand. Immune to Blue Milk. [Immune to Alter.]");
+        setGameText("Deploy on table. Once per turn, may deploy Nizuc Bek or Cantina from Reserve Deck; reshuffle. Once during your draw phase, may peek at up to X cards from the top of your Reserve Deck, where X = number of your aliens at Cantina; take one into hand. Immune to Blue Milk. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         addImmuneToCardTitle(Title.Blue_Milk);
@@ -52,14 +52,14 @@ public class Card501_008 extends AbstractNormalEffect {
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, "Baniss Keeg, Pilot Instructor")
+                && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, "Nizuc Bek")
                 || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Cantina))) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Baniss or Cantina from Reserve Deck");
-            action.setActionMsg("Deploy Baniss or Cantina from Reserve Deck");
+            action.setText("Deploy Nizuc Bek or Cantina from Reserve Deck");
+            action.setActionMsg("Deploy Nizuc Bek or Cantina from Reserve Deck");
 
-            Filter filter = Filters.or(Filters.title("Baniss Keeg, Pilot Instructor"), Filters.Cantina);
+            Filter filter = Filters.or(Filters.title("Nizuc Bek"), Filters.Cantina);
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
