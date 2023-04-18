@@ -37,7 +37,6 @@ import java.util.List;
 public class Card501_150 extends AbstractSite {
     public Card501_150() {
         super(Side.DARK, "Tatooine: Imperial Landing Site", Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setVirtualSuffix(true);
         setLocationDarkSideGameText("Your characters and vehicles shuttle to and from here for free.");
         setLocationLightSideGameText("If a player controls this site, once per turn they may raise their converted Tatooine location to the top.");
         addIcon(Icon.DARK_FORCE, 2);
