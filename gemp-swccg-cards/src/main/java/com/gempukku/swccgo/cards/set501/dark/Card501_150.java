@@ -40,7 +40,7 @@ public class Card501_150 extends AbstractSite {
         setVirtualSuffix(true);
         setLocationDarkSideGameText("Your characters and vehicles shuttle to and from here for free.");
         setLocationLightSideGameText("If a player controls this site, once per turn they may raise their converted Tatooine location to the top.");
-        addIcon(Icon.DARK_FORCE, 1);
+        addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_21);
         setTestingText("Tatooine: Imperial Landing Site");
