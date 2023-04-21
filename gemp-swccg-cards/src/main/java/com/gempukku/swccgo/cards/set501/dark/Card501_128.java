@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractEffect;
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.HasStackedCondition;
 import com.gempukku.swccgo.cards.effects.StackCardFromVoidEffect;
@@ -42,7 +42,7 @@ import java.util.List;
  * Subtype: Immediate
  * Title: Tentacle (V)
  */
-public class Card501_128 extends AbstractEffect {
+public class Card501_128 extends AbstractNormalEffect {
     public Card501_128() {
         super(Side.DARK, 5f, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Tentacle", Uniqueness.UNRESTRICTED, ExpansionSet.SET_21, Rarity.V);
         setVirtualSuffix(true);
