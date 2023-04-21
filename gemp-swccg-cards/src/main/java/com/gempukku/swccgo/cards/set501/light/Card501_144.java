@@ -20,6 +20,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
@@ -114,6 +115,27 @@ public class Card501_144 extends AbstractNormalEffect {
                         }
                     });
             return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.and(Filters.Interrupt, Filters.sameTitleAsStackedOn(self)))) {
+            PhysicalCard cardBeingPlayed = ((RespondablePlayingCardEffect) effect).getCard();
+            if (GameConditions.canBeGrabbed(game, self, cardBeingPlayed)) {
+
+                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("'Grab' " + GameUtils.getFullName(cardBeingPlayed));
+                action.setActionMsg("'Grab' " + GameUtils.getCardLink(cardBeingPlayed));
+                // Perform result(s)
+                action.appendEffect(
+                        new StackCardFromVoidEffect(action, cardBeingPlayed, self));
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }
