@@ -22,19 +22,21 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.MoveCardAsRegularMoveEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromCardPileOnBottomOfCardPileEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardsOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.MoveCardUsingLandspeedEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeOneCardIntoHandFromOffTableEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.IconModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
+import com.gempukku.swccgo.logic.modifiers.SuspendsCardModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collection;
@@ -49,7 +51,7 @@ import java.util.List;
 public class Card501_065_BACK extends AbstractObjective {
     public Card501_065_BACK() {
         super(Side.LIGHT, 7, "He's A Coward", ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, your Force drains are +1 where you have a Jedi/clone pair. X = number of battlegrounds your [Clone Army] cards occupy. If you just initiated a battle: peek at the top card of your Reserve Deck or Used Pile (may take it into hand or place it on bottom of Reserve Deck), then if X > 1, retrieve a [Clone Army] card into hand, then if X > 2, your clone may make a regular move (for free) to the battle location. \n" +
+        setGameText("While this side up, your Force drains are +1 where you have a clone with a Jedi or Padawan. X = number of battlegrounds your [Clone Army] cards occupy. If you just initiated a battle: peek at the top card of your Reserve Deck or Used Pile (may take it into hand or place it on bottom of Reserve Deck), then if X > 1, retrieve a [Clone Army] card into hand, then if X > 2, your clone may make a regular move (using landspeed for free) to the battle location. \n" +
                 "Flip this card if Grievous Will Run And Hide at a battleground or Grievous alone at a battleground.");
         addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("He's A Coward");
@@ -58,11 +60,12 @@ public class Card501_065_BACK extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.not(Icon.EPISODE_I), Filters.Jedi), self.getOwner()));
-        modifiers.add(new DeployCostModifier(self, Filters.and(Filters.your(self), Filters.not(Icon.EPISODE_I), Filters.hasAbilityOrHasPermanentPilotWithAbility), 2));
+        modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.not(Icon.EPISODE_I), Filters.hasAbilityOrHasPermanentPilotWithAbility), self.getOwner()));
+        modifiers.add(new SuspendsCardModifier(self, Filters.Your_Destiny));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.and(Icon.REFLECTIONS_II, Filters.Objective), ModifyGameTextType.REFLECTIONS_II_OBJECTIVE__TARGETS_ANAKIN_INSTEAD_OF_LUKE));
         modifiers.add(new IconModifier(self, Filters.and(Filters.your(self), Filters.Jedi), Icon.PILOT));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.your(self), Icon.EPISODE_I, Filters.site), Title.No_Escape));
-        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.occupiesWith(self.getOwner(), self, Filters.Jedi), Filters.occupiesWith(self.getOwner(), self, Filters.clone)), 1, self.getOwner()));
+        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.occupiesWith(self.getOwner(), self, Filters.or(Filters.Jedi, Filters.padawan)), Filters.occupiesWith(self.getOwner(), self, Filters.clone)), 1, self.getOwner()));
         return modifiers;
     }
 
@@ -133,17 +136,18 @@ public class Card501_065_BACK extends AbstractObjective {
                 action.appendEffect(new RetrieveCardIntoHandEffect(action, playerId, Filters.icon(Icon.CLONE_ARMY)));
 
                 final PhysicalCard location = Filters.findFirstFromTopLocationsOnTable(game, Filters.battleLocation);
-                final Filter cloneToMove = Filters.and(Filters.your(self), Filters.clone, Filters.movableAsRegularMove(playerId, true, 0, false, Filters.locationAndCardsAtLocation(Filters.battleLocation)));
+                final Filter cloneToMove = Filters.and(Filters.your(self), Filters.clone,
+                        Filters.movableAsRegularMoveUsingLandspeed(playerId, false, false, true, 0, null, Filters.locationAndCardsAtLocation(Filters.battleLocation)));
                 if (x > 2 && location != null
                         && GameConditions.canTarget(game, self, cloneToMove)) {
 
-                    action.appendEffect(new ChooseCardsOnTableEffect(action, playerId, "Choose a clone to move as a regular move (for free) to "+GameUtils.getCardLink(location),0, 1, cloneToMove) {
+                    action.appendEffect(new ChooseCardsOnTableEffect(action, playerId, "Choose a clone to move as a regular move (using landspeed for free) to "+GameUtils.getCardLink(location),0, 1, cloneToMove) {
                         @Override
                         protected void cardsSelected(Collection<PhysicalCard> selectedCards) {
                             if (selectedCards.size() == 1) {
                                 PhysicalCard clone = selectedCards.iterator().next();
                                 if (clone != null) {
-                                    action.appendEffect(new MoveCardAsRegularMoveEffect(action, playerId, clone, true, false, Filters.locationAndCardsAtLocation(Filters.battleLocation)));
+                                    action.appendEffect(new MoveCardUsingLandspeedEffect(action, playerId, clone, true, Filters.locationAndCardsAtLocation(Filters.battleLocation)));
                                 }
                             }
                         }
