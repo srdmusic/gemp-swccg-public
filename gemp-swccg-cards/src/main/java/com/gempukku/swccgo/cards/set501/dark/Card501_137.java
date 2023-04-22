@@ -4,7 +4,9 @@ import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.MoveUsingLocationTextAction;
 import com.gempukku.swccgo.cards.conditions.ControlsCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
@@ -31,7 +33,7 @@ import java.util.List;
 public class Card501_137 extends AbstractSite {
     public Card501_137() {
         super(Side.DARK, "Coruscant: ISB Central Headquarters", Title.Coruscant, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("During your move phase, ISB Agents may move between here and any battleground site.");
+        setLocationDarkSideGameText("During your move phase, one ISB agent may move between here and any battleground site.");
         setLocationLightSideGameText("If you control, ISB Agents are deploy +1.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
@@ -44,17 +46,23 @@ public class Card501_137 extends AbstractSite {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
         Filter otherBattlegroundSites = Filters.and(Filters.other(self), Filters.battleground_site);
 
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
         // Check condition(s)
-        if (GameConditions.isDuringYourPhase(game, playerOnDarkSideOfLocation, Phase.MOVE)
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
                 && GameConditions.canSpotLocation(game, otherBattlegroundSites)) {
             if (GameConditions.canPerformMovementUsingLocationText(playerOnDarkSideOfLocation, game, Filters.ISB_agent, self, otherBattlegroundSites, false)) {
-                MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnDarkSideOfLocation, game, self, gameTextSourceCardId, Filters.ISB_agent, self, otherBattlegroundSites, false);
+                MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnDarkSideOfLocation, game, self, gameTextSourceCardId, gameTextActionId, Filters.ISB_agent, self, otherBattlegroundSites, false, 1);
                 action.setText("Move from here to other battleground site");
+                action.appendUsage(
+                        new OncePerPhaseEffect(action));
                 actions.add(action);
             }
             if (GameConditions.canPerformMovementUsingLocationText(playerOnDarkSideOfLocation, game, Filters.ISB_agent, otherBattlegroundSites, self, false)) {
-                MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnDarkSideOfLocation, game, self, gameTextSourceCardId, Filters.ISB_agent, otherBattlegroundSites, self, false);
+                MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnDarkSideOfLocation, game, self, gameTextSourceCardId, gameTextActionId, Filters.ISB_agent, otherBattlegroundSites, self, false, 1);
                 action.setText("Move from other battleground site to here");
+                action.appendUsage(
+                        new OncePerPhaseEffect(action));
                 actions.add(action);
             }
         }
