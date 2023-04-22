@@ -1,0 +1,137 @@
+package com.gempukku.swccgo.cards.set501.dark;
+
+import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.ConvertLocationByRaisingToTopEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ShuttlesFreeFromLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.ShuttlesFreeToLocationModifier;
+import com.gempukku.swccgo.logic.timing.Action;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+/**
+ * Set: Set 21
+ * Type: Location
+ * Subtype: Site
+ * Title: Tatooine: Imperial Landing Site
+ */
+public class Card501_150 extends AbstractSite {
+    public Card501_150() {
+        super(Side.DARK, "Tatooine: Imperial Landing Site", Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLocationDarkSideGameText("Your characters and vehicles shuttle to and from here for free.");
+        setLocationLightSideGameText("If a player controls this site, once per turn they may raise their converted Tatooine location to the top.");
+        addIcon(Icon.DARK_FORCE, 2);
+        addIcon(Icon.LIGHT_FORCE, 1);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_21);
+        setTestingText("Tatooine: Imperial Landing Site");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ShuttlesFreeFromLocationModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.or(Filters.character, Filters.vehicle)), self));
+        modifiers.add(new ShuttlesFreeToLocationModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.or(Filters.character, Filters.vehicle)), self));
+        return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(final String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        Filter location = Filters.and(Filters.Tatooine_location, Filters.canBeConvertedByRaisingYourLocationToTop(playerOnLightSideOfLocation));
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        // Check condition(s)
+        if (GameConditions.controls(game, playerOnLightSideOfLocation, self)
+                && GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canTarget(game, self, location)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
+            action.setText("Raise your converted Tatooine location");
+
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Target location to convert", location) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Convert " + GameUtils.getCardLink(targetedCard),
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new ConvertLocationByRaisingToTopEffect(action, finalTarget, true));
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextLightSideOpponentsTopLevelActions(final String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        Filter location = Filters.and(Filters.Tatooine_location, Filters.canBeConvertedByRaisingYourLocationToTop(playerOnLightSideOfLocation));
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        // Check condition(s)
+        if (GameConditions.controls(game, playerOnLightSideOfLocation, self)
+                && GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canTarget(game, self, location)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
+            action.setText("Raise your converted Tatooine location");
+
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Target location to convert", location) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Convert " + GameUtils.getCardLink(targetedCard),
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new ConvertLocationByRaisingToTopEffect(action, finalTarget, true));
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+}

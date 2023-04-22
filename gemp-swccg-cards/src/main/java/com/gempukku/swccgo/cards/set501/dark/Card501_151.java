@@ -36,7 +36,7 @@ public class Card501_151 extends AbstractSite {
         setLocationLightSideGameText("Jawas deploy here for 1 Force from owner.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_21);
         setTestingText("Tatooine: Jawa Camp (V)");
     }
 
