@@ -14,6 +14,7 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.InitiateBattleAction;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
@@ -21,6 +22,12 @@ import com.gempukku.swccgo.logic.effects.ModifyTotalBattleDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.StackActionEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployUsingDejarikRulesModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifierFlag;
+import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.SpecialFlagModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.LinkedList;
@@ -31,14 +38,14 @@ import java.util.List;
  * Set: Endor
  * Type: Interrupt
  * Subtype: Used Or Lost
- * Title: Take The Initiative
+ * Title: Take The Initiative (V)
  */
 public class Card501_122 extends AbstractUsedOrLostInterrupt {
     public Card501_122() {
         super(Side.LIGHT, 3, Title.Take_The_Initiative, Uniqueness.UNIQUE, ExpansionSet.ENDOR, Rarity.C);
         setVirtualSuffix(true);
         setLore("The ability to think and act independently gave the Rebels an advantage over their Imperial foes.");
-        setGameText("USED: If all your ability in battle is provided by scouts and/or spies, your total battle destiny is +1 for each of your characters in battle. LOST: During opponent’s deploy phase, initiate a battle at a Scarif site where you have no weapons and less power than opponent.");
+        setGameText("USED: If all of your ability in battle is provided by spies your total battle destiny is +1 for each spy in battle. LOST: During opponent’s deploy phase, initiate a battle at a Scarif site where opponent outpowers you and you have no weapons (opponent may not deploy cards).");
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_21);
         setTestingText("Take The Initiative (V)");
     }
@@ -49,8 +56,8 @@ public class Card501_122 extends AbstractUsedOrLostInterrupt {
 
         // Check condition(s)
         if (GameConditions.isDuringBattle(game)
-                && GameConditions.isAllAbilityInBattleProvidedBy(game, playerId, Filters.or(Filters.scout, Filters.spy))) {
-            final Filter filter2 = Filters.and(Filters.your(self), Filters.character, Filters.participatingInBattle);
+                && GameConditions.isAllAbilityInBattleProvidedBy(game, playerId, Filters.spy)) {
+            final Filter filter2 = Filters.and(Filters.spy, Filters.participatingInBattle);
             int count = Filters.countActive(game, self, filter2);
             if (count > 0) {
 
@@ -76,12 +83,13 @@ public class Card501_122 extends AbstractUsedOrLostInterrupt {
 
         // Check condition(s)
         if (GameConditions.isDuringOpponentsPhase(game, playerId, Phase.DEPLOY)) {
+            final String opponent = game.getOpponent(playerId);
 
             Filter siteFilter = Filters.and(Filters.Scarif_site, Filters.not(Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.weapon))));
             List<PhysicalCard> potentialBattleLocations = new LinkedList<>();
             for(PhysicalCard site:Filters.filterTopLocationsOnTable(game, siteFilter)) {
                 float ownPower = game.getModifiersQuerying().getTotalPowerAtLocation(game.getGameState(), site, playerId, false, false);
-                float opponentPower = game.getModifiersQuerying().getTotalPowerAtLocation(game.getGameState(), site, game.getOpponent(playerId), false, false);
+                float opponentPower = game.getModifiersQuerying().getTotalPowerAtLocation(game.getGameState(), site, opponent, false, false);
 
                 if (ownPower < opponentPower
                         && (GameConditions.canInitiateBattleAtLocation(playerId, game, site, false, true)
@@ -102,7 +110,22 @@ public class Card501_122 extends AbstractUsedOrLostInterrupt {
                                 PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
                                 action.appendEffect(
                                         new StackActionEffect(action,
-                                                new InitiateBattleAction(playerId, finalTarget, false)));
+                                                new InitiateBattleAction(playerId, finalTarget, false) {
+                                                    @Override
+                                                    public List<Modifier> getAddedModifiers() {
+                                                        List<Modifier> modifiers = new LinkedList<>();
+                                                        Filter deploys = new Filter() {
+                                                            @Override
+                                                            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                                                                return physicalCard.getBlueprint().isCardTypeDeployed();
+                                                            }
+                                                        };
+                                                        modifiers.add(new MayNotDeployModifier(self, deploys, opponent));
+                                                        modifiers.add(new MayNotDeployUsingDejarikRulesModifier(self, Filters.any, opponent));
+                                                        modifiers.add(new SpecialFlagModifier(self, ModifierFlag.MAY_NOT_INITIATE_DEPLOYMENT_ACTIONS_THAT_SEARCH_PILES, opponent));
+                                                        return modifiers;
+                                                    }
+                                                }));
                             }
                         });
                     }

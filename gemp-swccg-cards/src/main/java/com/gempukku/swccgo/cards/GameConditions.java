@@ -3109,6 +3109,9 @@ public class GameConditions {
         GameState gameState = game.getGameState();
         ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
 
+        if (modifiersQuerying.hasFlagActive(gameState, ModifierFlag.MAY_NOT_INITIATE_DEPLOYMENT_ACTIONS_THAT_SEARCH_PILES, playerId))
+            return false;
+
         // Check is the the player's deploy phase
         if (!asReact && !skipDeployPhaseCheck && !isPhaseForPlayer(game, Phase.DEPLOY, playerId))
             return false;
