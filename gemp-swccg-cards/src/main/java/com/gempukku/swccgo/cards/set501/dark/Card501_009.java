@@ -17,7 +17,6 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeExcludedFromBattle;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -36,7 +35,7 @@ public class Card501_009 extends AbstractAlien {
     public Card501_009() {
         super(Side.DARK, 2, 4, 7, 2, 5, "Black Krrsantan", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Wookiee bounty hunter.");
-        setGameText("May not be excluded from battle. Opponent's characters of ability < 3 are power -1 here. If a battle was just initiated here, each player with four or more characters here must choose one of their characters here (except Krrsantan) to return to hand.");
+        setGameText("Opponent's characters of ability < 3 are power -1 here. If a battle was just initiated here, each player with four or more characters present with Krrsantan must choose one of their characters here (except Krrsantan) to return to hand.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         setSpecies(Species.WOOKIEE);
         addKeywords(Keyword.BOUNTY_HUNTER);
@@ -46,7 +45,6 @@ public class Card501_009 extends AbstractAlien {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotBeExcludedFromBattle(self, self));
         modifiers.add(new PowerModifier(self, Filters.and(Filters.opponents(self), Filters.here(self), Filters.character, Filters.abilityLessThan(3)), -1));
         return modifiers;
     }
@@ -58,7 +56,7 @@ public class Card501_009 extends AbstractAlien {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
 
-        Filter charactersHere = Filters.and(Filters.here(self), Filters.character);
+        Filter charactersHere = Filters.and(Filters.here(self), Filters.presentWith(self), Filters.character);
 
         Filter opponentsCharactersHere = Filters.and(Filters.opponents(playerId), charactersHere);
         Filter yourCharactersHere = Filters.and(Filters.your(playerId), charactersHere);
@@ -71,7 +69,7 @@ public class Card501_009 extends AbstractAlien {
                 && numOpponentCharactersHere >= 4) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, GameTextActionId.OTHER_CARD_ACTION_1);
-            action.setText(opponent + " returns a character to hand");
+            action.setText("Have " + opponent + " return a character to hand");
             // Perform result(s)
             action.appendEffect(
                     new ChooseCardOnTableEffect(action, opponent, "Choose character to return to your hand", Filters.and(opponentsCharactersHere, Filters.except(Filters.title("Black Krrsantan")))) {
@@ -91,7 +89,7 @@ public class Card501_009 extends AbstractAlien {
                 && numYourCharactersHere >= 4) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, GameTextActionId.OTHER_CARD_ACTION_2);
-            action.setText(playerId + " returns a character to hand");
+            action.setText("Have " + playerId + " return a character to hand");
             // Perform result(s)
             action.appendEffect(
                     new ChooseCardOnTableEffect(action, playerId, "Choose character to return to your hand", Filters.and(yourCharactersHere, Filters.except(Filters.title("Black Krrsantan")))) {
