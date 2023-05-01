@@ -20,8 +20,7 @@ import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
-import com.gempukku.swccgo.logic.evaluators.ConstantEvaluator;
-import com.gempukku.swccgo.logic.modifiers.ArmorModifier;
+import com.gempukku.swccgo.logic.modifiers.DefinedByGameTextArmorModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -52,7 +51,7 @@ public class Card501_042 extends AbstractDroid {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ArmorModifier(self, new ConstantEvaluator(5)));
+        modifiers.add(new DefinedByGameTextArmorModifier(self, 5));
         return modifiers;
     }
 

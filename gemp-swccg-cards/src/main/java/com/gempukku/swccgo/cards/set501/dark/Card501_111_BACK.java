@@ -36,7 +36,7 @@ import java.util.List;
  */
 public class Card501_111_BACK extends AbstractObjective {
     public Card501_111_BACK() {
-        super(Side.LIGHT, 7, Title.The_Resistance_Is_Doomed, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 7, Title.The_Resistance_Is_Doomed, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("While this side up, once per turn, may deploy a [First Order] vehicle from Reserve Deck; reshuffle. " + 
                     "During your control phase, while you control Salt Plateau: opponent loses 1 Force at each battleground " +
                     "your First Order Leader controls with another First Order character and once per turn, may peek at the top X cards " +
