@@ -45,7 +45,7 @@ public class Card501_122 extends AbstractUsedOrLostInterrupt {
         super(Side.LIGHT, 3, Title.Take_The_Initiative, Uniqueness.UNIQUE, ExpansionSet.ENDOR, Rarity.C);
         setVirtualSuffix(true);
         setLore("The ability to think and act independently gave the Rebels an advantage over their Imperial foes.");
-        setGameText("USED: If all of your ability in battle is provided by spies your total battle destiny is +1 for each spy in battle. LOST: During opponent’s deploy phase, initiate a battle at a Scarif site where opponent outpowers you and you have no weapons (opponent may not deploy cards).");
+        setGameText("USED: If all your ability in battle is provided by spies, your total battle destiny is +2. LOST: During opponent’s deploy phase, initiate a battle at a Scarif site where you have no weapons and opponent has more power than you (opponent may not deploy cards this battle).");
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_21);
         setTestingText("Take The Initiative (V)");
     }
@@ -57,26 +57,21 @@ public class Card501_122 extends AbstractUsedOrLostInterrupt {
         // Check condition(s)
         if (GameConditions.isDuringBattle(game)
                 && GameConditions.isAllAbilityInBattleProvidedBy(game, playerId, Filters.spy)) {
-            final Filter filter2 = Filters.and(Filters.spy, Filters.participatingInBattle);
-            int count = Filters.countActive(game, self, filter2);
-            if (count > 0) {
 
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-                action.setText("Add " + count + " to total battle destiny");
-                // Allow response(s)
-                action.allowResponses(
-                        new RespondablePlayCardEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                final int numToAdd = Filters.countActive(game, self, filter2);
-                                action.appendEffect(
-                                        new ModifyTotalBattleDestinyEffect(action, playerId, numToAdd));
-                            }
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Add 2 to total battle destiny");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new ModifyTotalBattleDestinyEffect(action, playerId, 2));
                         }
-                );
-                actions.add(action);
-            }
+                    }
+            );
+            actions.add(action);
         }
 
 
