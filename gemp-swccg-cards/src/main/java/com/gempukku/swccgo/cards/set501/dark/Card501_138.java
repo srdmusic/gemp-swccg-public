@@ -34,7 +34,7 @@ public class Card501_138 extends AbstractLostInterrupt {
         super(Side.DARK, 5, Title.Dark_Collaboration, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Imperial leaders are ruthlessly effective when working together. Tarkin, Motti and Tagge presented a deadly combination as they plotted to 'crush the Rebellion.'");
-        setGameText("Cancel Rebel Barrier. OR If your ISB leader in battle, cancel It's A Trap! or opponent's attempt to 'react' away from that battle. OR If three or more ISB Leaders are in a battle together, add two battle destiny.");
+        setGameText("Cancel Rebel Barrier. OR If your ISB agent leader (except Ozzel) in battle, cancel It's A Trap! or opponent's 'react' away from that battle. OR If three or more ISB agent leaders (except Ozzel) are in battle together, add two battle destiny.");
         setTestingText("Dark Collaboration (V)");
     }
 
@@ -44,7 +44,7 @@ public class Card501_138 extends AbstractLostInterrupt {
 
         // Check condition(s)
         if (GameConditions.isDuringBattle(game)
-                && GameConditions.canTarget(game, self, 3, Filters.and(Filters.ISB_agent, Filters.leader, Filters.participatingInBattle))
+                && GameConditions.canTarget(game, self, 3, Filters.and(Filters.ISB_agent, Filters.leader, Filters.participatingInBattle, Filters.not(Filters.Ozzel)))
                 && GameConditions.canAddBattleDestinyDraws(game, self)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
@@ -74,7 +74,7 @@ public class Card501_138 extends AbstractLostInterrupt {
 
         // Check condition(s)
         if (GameConditions.canTargetToCancel(game, self, Filters.Its_A_Trap)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.ISB_agent, Filters.leader))) {
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.ISB_agent, Filters.leader, Filters.not(Filters.Ozzel)))) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             // Build action using common utility
@@ -98,7 +98,7 @@ public class Card501_138 extends AbstractLostInterrupt {
 
         // Check condition(s)
         if (TriggerConditions.isPlayingCard(game, effect, Filters.Its_A_Trap)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.ISB_agent, Filters.leader))
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.ISB_agent, Filters.leader, Filters.not(Filters.Ozzel)))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
@@ -108,7 +108,7 @@ public class Card501_138 extends AbstractLostInterrupt {
         }
 
         if (TriggerConditions.isReact(game, effect)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.ISB_agent, Filters.leader))
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.ISB_agent, Filters.leader, Filters.not(Filters.Ozzel)))
                 && TriggerConditions.isMovingAsReact(game, effect, Filters.and(Filters.opponents(self), Filters.at(Filters.battleLocation)))) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
