@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
@@ -22,6 +23,7 @@ import com.gempukku.swccgo.logic.conditions.NotCondition;
 import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeFiredModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -35,7 +37,7 @@ public class Card501_125 extends AbstractNormalEffect {
     public Card501_125() {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Refuge On The Outskirts", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setGameText("If [Set 21] Credits Will Do Fine on table, deploy on table. While no 'credits' stacked, lightsabers at Watto's Junkyard may not fire. During your draw phase, if Obi-Wan at City Outskirts, may stack top card of your Lost Pile on Credits Will Do Fine. [Immune to Alter.]");
+        setGameText("If Credits Will Do Fine on table, deploy on table. While no 'credits' stacked, lightsabers may not fire at Watto's Junkyard. [Tatooine] or [Coruscant] Qui-Gon is power +1 for each 'credit.' [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Refuge On The Outskirts");
@@ -50,6 +52,7 @@ public class Card501_125 extends AbstractNormalEffect {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotBeFiredModifier(self, Filters.and(Filters.lightsaber, Filters.at(Filters.Wattos_Junkyard)), new NotCondition(new OnTableCondition(self, Filters.or(Filters.creditCard, Filters.hasStacked(Filters.creditCard))))));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.or(Icon.TATOOINE, Icon.CORUSCANT), Filters.QuiGon), new StackedEvaluator(self, Filters.any, Filters.creditCard)));
         return modifiers;
     }
 
