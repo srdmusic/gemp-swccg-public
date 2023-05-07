@@ -44,7 +44,7 @@ public class Card501_156 extends AbstractUsedInterrupt {
         setVirtualSuffix(true);
         setLore("The Imperial Navy boasts the best communications network in the galaxy. Sophisticated control technology allows the Empire to dispatch armed forces without delay.");
         setGameText("During your turn, target opponent's spy at a site you control; target is lost (Immune to Sense and Droid Shutdown). OR Target a starship weapon; for remainder of turn, it may not be fired. OR Cancel Dodge, I’m Getting Pretty Good At This, or a Force drain initiated by a lone Falcon.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_16);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_21);
         setTestingText("ComScan Detection (V)");
     }
 

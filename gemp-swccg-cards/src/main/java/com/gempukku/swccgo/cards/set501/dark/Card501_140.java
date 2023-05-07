@@ -106,7 +106,7 @@ public class Card501_140 extends AbstractImperial {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Place card from hand on Used Pile");
-            action.setActionMsg("Make the next ISB agent you deploy this turn is deploy -1");
+            action.setActionMsg("Make the next ISB agent you deploy this turn deploy -1");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
