@@ -26,8 +26,6 @@ import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
-import com.gempukku.swccgo.logic.modifiers.MayDeployToTargetModifier;
-import com.gempukku.swccgo.logic.modifiers.MayUseDeviceModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -45,8 +43,8 @@ import java.util.List;
  */
 public class Card501_086 extends AbstractAlien {
     public Card501_086() {
-        super(Side.LIGHT, 2, 5, 6, 3, 6, Title.Beilert_Valance, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setArmor(4);
+        super(Side.LIGHT, 2, 5, 6, 2, 6, Title.Beilert_Valance, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setArmor(5);
         setLore("Chorinian. Cyborg. Former miner.");
         setGameText("Adds 2 to the power of anything he pilots. Draws one battle destiny if not able to otherwise. Unless a Jedi here, may cause any character Valance just ‘hit’ to be lost. Once per game, may deploy Cyborg Construct on Valance from Reserve Deck, reshuffle.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
@@ -57,11 +55,9 @@ public class Card501_086 extends AbstractAlien {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, 1));
-        modifiers.add(new MayDeployToTargetModifier(self, Filters.title(Title.Cyborg_Construct), self));
-        modifiers.add(new MayUseDeviceModifier(self, Filters.title(Title.Cyborg_Construct)));
         return modifiers;
     }
 
