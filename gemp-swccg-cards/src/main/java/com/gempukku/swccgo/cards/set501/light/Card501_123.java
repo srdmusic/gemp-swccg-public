@@ -1,7 +1,11 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
@@ -14,12 +18,14 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.PlayCardOption;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.PutStackedCardsInLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.StandardEffect;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -66,5 +72,35 @@ public class Card501_123 extends AbstractAlien {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canAddBattleDestinyDraws(game, self)
+                && GameConditions.isDuringBattleWithParticipant(game, self)
+                && GameConditions.isDuringBattleAt(game, Filters.and(Icon.EPISODE_I, Filters.Tatooine_site, Filters.not(Filters.Wattos_Junkyard)))
+                && GameConditions.canSpot(game, self, Filters.hasStacked(Filters.creditCard))) {
+
+            PhysicalCard credits = Filters.findFirstActive(game, self, Filters.hasStacked(Filters.creditCard));
+            if (credits != null) {
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Add one battle destiny");
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerBattleEffect(action));
+                // Pay Costs
+                action.appendCost(
+                        new PutStackedCardsInLostPileEffect(action, playerId, 1, 1, credits));
+
+                action.appendEffect(
+                        new AddBattleDestinyEffect(action, 1));
+                return Collections.singletonList(action);
+            }
+        }
+        return null;
     }
 }
