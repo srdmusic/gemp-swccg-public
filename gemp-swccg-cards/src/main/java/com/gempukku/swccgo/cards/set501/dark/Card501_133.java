@@ -24,14 +24,15 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.ChooseEffectOrderEffect;
+import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
+import com.gempukku.swccgo.logic.decisions.IntegerAwaitingDecision;
+import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.evaluators.Evaluator;
 import com.gempukku.swccgo.logic.modifiers.ForceGenerationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.StandardEffect;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -42,7 +43,7 @@ import java.util.List;
  * Set: Premiere
  * Type: Character
  * Subtype: Alien
- * Title: Tonnika Sisters
+ * Title: Tonnika Sisters (V)
  */
 public class Card501_133 extends AbstractAlien {
     public Card501_133() {
@@ -50,9 +51,9 @@ public class Card501_133 extends AbstractAlien {
         setVirtualSuffix(true);
         setComboCard(true);
         setLore("Twins. Thieves. Con artists. Spies. Swindlers. Double agents. Brea and Senni use their natural charm to sway the unwary on the fringe of society.");
-        setGameText("While at Cantina, opponent’s Force generation here is -1 for each of your sets of two aliens here. Once per game, may add 2 to the destiny of an alien just drawn for destiny OR cause each player to retrieve 2 Force (opponent’s retrieval cannot be canceled).");
+        setGameText("Assassins. While at Cantina, opponent’s Force generation here is -1 for each of your sets of two aliens here. Once per game, may choose: add 2 to the destiny of an alien just drawn for destiny or cause each player to activate up to 2 Force.");
         addIcon(Icon.WARRIOR, 2);
-        addKeywords(Keyword.SPY, Keyword.THIEF, Keyword.FEMALE);
+        addKeywords(Keyword.SPY, Keyword.THIEF, Keyword.FEMALE, Keyword.ASSASSIN);
         addIcons(Icon.VIRTUAL_SET_21);
         setTestingText("Tonnika Sisters (V)");
     }
@@ -102,31 +103,55 @@ public class Card501_133 extends AbstractAlien {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
         boolean doubled = game.getModifiersQuerying().isDoubled(game.getGameState(), self);
+        final String opponent = game.getOpponent(playerId);
         GameTextActionId gameTextActionId = GameTextActionId.TONNIKA_SISTERS_V__CHOICE;
+
         if ((doubled && GameConditions.isTwicePerGame(game, self, gameTextActionId))
-                || (!doubled && GameConditions.isOncePerGame(game, self, gameTextActionId))) {
+                || (!doubled && GameConditions.isOncePerGame(game, self, gameTextActionId))
+                && (GameConditions.canActivateForce(game, playerId) || GameConditions.canActivateForce(game, opponent))) {
+
             final int printedOne = doubled ? 2 : 1;
             final int printedTwo = doubled ? 4 : 2;
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Each player retrieves " + printedTwo + " Force");
+            action.setText("Each player activates up to " + printedTwo + " Force");
             // Update usage limit(s)
             action.appendUsage(
                     new NumTimesPerGameEffect(action, printedOne));
-            // Perform result(s)
-            List<StandardEffect> effects = new LinkedList<>();
-            effects.add(
-                    new RetrieveForceEffect(action, playerId, printedTwo));
-            effects.add(
-                    new RetrieveForceEffect(action, game.getOpponent(playerId), printedTwo) {
-                        @Override
-                        public boolean mayNotBeCanceled() {
-                            return true;
-                        }
-                    });
 
-            action.appendEffect(
-                    new ChooseEffectOrderEffect(action, effects));
+
+            final int maxOpponentForce = Math.min(printedTwo, game.getGameState().getReserveDeckSize(opponent));
+            final int maxPlayerForce = Math.min(printedTwo, game.getGameState().getReserveDeckSize(playerId));
+            // Perform result(s)
+            if (maxOpponentForce>0) {
+                action.appendEffect(new PlayoutDecisionEffect(action, opponent,
+                        new IntegerAwaitingDecision("Choose amount of Force to activate", 1, maxOpponentForce, maxOpponentForce) {
+                            @Override
+                            public void decisionMade(int result) throws DecisionResultInvalidException {
+                                action.appendEffect(
+                                        new ActivateForceEffect(action, opponent, result));
+                                if (maxPlayerForce>0) {
+                                    action.appendEffect(new PlayoutDecisionEffect(action, playerId,
+                                            new IntegerAwaitingDecision("Choose amount of Force to activate", 1, maxPlayerForce, maxPlayerForce) {
+                                                @Override
+                                                public void decisionMade(int result) throws DecisionResultInvalidException {
+                                                    action.appendEffect(
+                                                            new ActivateForceEffect(action, playerId, result));
+                                                }
+                                            }));
+                                }
+                            }
+                        }));
+            } else {
+                action.appendEffect(new PlayoutDecisionEffect(action, playerId,
+                        new IntegerAwaitingDecision("Choose amount of Force to activate", 1, maxPlayerForce, maxPlayerForce) {
+                            @Override
+                            public void decisionMade(int result) throws DecisionResultInvalidException {
+                                action.appendEffect(
+                                        new ActivateForceEffect(action, playerId, result));
+                            }
+                        }));
+            }
 
             return Collections.singletonList(action);
         }

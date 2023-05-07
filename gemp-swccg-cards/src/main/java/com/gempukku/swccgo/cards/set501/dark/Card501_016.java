@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
+import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -14,8 +15,10 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotMoveFromLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -32,8 +35,8 @@ public class Card501_016 extends AbstractSite {
     public Card501_016() {
         super(Side.DARK, Title.Great_Pit_Of_Carkoon, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setLocationDarkSideGameText("Jabba's Sail Barge is deploy -1 (-2 if Jabba on table) here.");
-        setLocationLightSideGameText("Your characters of ability < 5 may not move from here if a Sarlacc or Barge here.");
+        setLocationDarkSideGameText("Jabba's Sail Barge deploys -1 here (-2 if Jabba on table).");
+        setLocationLightSideGameText("While Sarlacc or a barge here, you may not cancel Scum And Villainy unless you occupy this site.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.JABBAS_PALACE, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_21);
@@ -51,7 +54,7 @@ public class Card501_016 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotMoveFromLocationModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.character, Filters.abilityLessThan(5)), new HereCondition(self, Filters.or(Filters.Sarlacc, Filters.Jabbas_Sail_Barge)), self));
+        modifiers.add(new MayNotBeCanceledModifier(self, Filters.Scum_And_Villainy, new AndCondition(new HereCondition(self, Filters.or(Filters.Sarlacc, Filters.Jabbas_Sail_Barge)), new UnlessCondition(new OccupiesCondition(playerOnLightSideOfLocation, self)))));
         return modifiers;
     }
 }

@@ -1,9 +1,9 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -17,9 +17,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.LoseForceAndStackFaceDownEffect;
 import com.gempukku.swccgo.logic.modifiers.CreditCardModifier;
-import com.gempukku.swccgo.logic.modifiers.DefinedByGameTextDeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -36,24 +34,21 @@ public class Card501_124 extends AbstractNormalEffect {
         super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Credits_Will_Do_Fine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("'No, they won't!'");
-        setGameText("Use 2 Force to deploy on table. If you just initiated a Force drain (or won a battle) at Watto’s Junkyard, opponent loses 1 Force (cannot be reduced) and stacks lost card here face down. Cards here are 'credits.' [Set 0] Qui-Gon is power +1 for each 'credit.' [Immune to Alter.]");
+        setGameText("If your [Coruscant] objective on table, deploy on table. If you just initiated a Force drain (or won a battle) at Watto's Junkyard, opponent loses 1 Force (cannot be reduced) and stacks lost card here face down. Cards stacked here are 'credits.' [Immune to Alter.]");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Credits Will Do Fine (V)");
     }
 
     @Override
-    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DefinedByGameTextDeployCostModifier(self, 2));
-        return modifiers;
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.canSpot(game, self, Filters.and(Filters.your(self), Icon.CORUSCANT, Filters.Objective));
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new CreditCardModifier(self, Filters.stackedOn(self)));
-        modifiers.add(new PowerModifier(self, Filters.and(Icon.VIRTUAL_SET_0, Filters.QuiGon), new StackedEvaluator(self, Filters.any, Filters.creditCard)));
         return modifiers;
     }
 
