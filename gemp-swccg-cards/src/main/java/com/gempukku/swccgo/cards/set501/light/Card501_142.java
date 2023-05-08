@@ -43,7 +43,7 @@ public class Card501_142 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self.getOwner()), Icon.DAGOBAH), -1, Filters.Dagobah_location));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self.getOwner()), Filters.character, Icon.DAGOBAH), -1, Filters.Dagobah_location));
         modifiers.add(new EachTrainingDestinyModifier(self, Filters.any, 1));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test_2, ModifyGameTextType.JEDI_TEST_2__MAY_NOT_MOVE));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test_4, ModifyGameTextType.JEDI_TEST_4__SEARCHES_FOR_FREE));
