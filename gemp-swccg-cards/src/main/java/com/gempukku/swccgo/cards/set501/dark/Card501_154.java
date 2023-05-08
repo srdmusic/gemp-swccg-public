@@ -1,8 +1,8 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import com.gempukku.swccgo.cards.AbstractCapitalStarship;
 import com.gempukku.swccgo.cards.AbstractPermanentAboard;
 import com.gempukku.swccgo.cards.AbstractPermanentPilot;
-import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.conditions.AloneCondition;
 import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -27,20 +27,25 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Starship
- * Subtype: Starfighter
+ * Subtype: Capital
  * Title: First Light
  */
-public class Card501_154 extends AbstractStarfighter {
+public class Card501_154 extends AbstractCapitalStarship {
     public Card501_154() {
         super(Side.DARK, 2, 6, 4, 9, null, 3, 8, "First Light", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Crimson Dawn.");
-        setGameText("May add 3 pilots and 6 passengers. Permanent pilot provides ability of 4. During battle, if alone, your total battle destiny is +1 for each of your gangsters aboard. Immune to attrition < 5.");
+        setGameText("May add 3 pilots and 6 passengers. Permanent pilot provides ability of 4. Moves like a starfighter. During battle, while alone, your total battle destiny is +1 for each of your gangsters aboard. Immune to attrition < 5.");
         addIcons(Icon.INDEPENDENT, Icon.SCOMP_LINK, Icon.PILOT, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_21);
         addModelType(ModelType.NAUUR_CLASS_YACHT);
         setPilotCapacity(3);
         setPassengerCapacity(6);
         addPersona(Persona.FIRST_LIGHT);
         setTestingText("First Light");
+    }
+
+    @Override
+    public boolean isMovesLikeStarfighter() {
+        return true;
     }
 
     @Override
