@@ -47,7 +47,7 @@ public class Card501_140 extends AbstractImperial {
     public Card501_140() {
         super(Side.DARK, 3, 3, 3, 3, 5, "Lieutenant Dedra Meero", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Female ISB leader.");
-        setGameText("When deployed, may target opponent's spy present, spy is power = 0 until end of turn. Once per turn, may place a card from hand on Used Pile to reduce the cost of your next ISB agent you deploy this turn by 1.");
+        setGameText("When deployed, may target an opponent’s spy present to be power = 0 until end of turn. Once per turn, if an ISB agent on table, may place a card from hand on Used Pile; the next ISB agent you deploy this turn is deploy -1.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.FEMALE, Keyword.LEADER);
         setTestingText("Lieutenant Dedra Meero");
@@ -100,12 +100,13 @@ public class Card501_140 extends AbstractImperial {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+        if (GameConditions.canTarget(game, self, Filters.ISB_agent)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.hasHand(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Place card from hand on Used Pile");
-            action.setActionMsg("Reduce the cost of your next ISB agent you deploy this turn by 1");
+            action.setActionMsg("Make the next ISB agent you deploy this turn deploy -1");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));

@@ -14,7 +14,7 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.conditions.OrCondition;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextOnSideOfLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -32,8 +32,8 @@ public class Card501_130 extends AbstractSite {
     public Card501_130() {
         super(Side.DARK, Title.Chasm_Walkway, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setLocationDarkSideGameText("If Vader alone here, opponent's Interrupts are Lost Interrupts.");
-        setLocationLightSideGameText("If you occupy (or Emperor's Power on table), opponent's Chasm Walkway game text is canceled.");
+        setLocationDarkSideGameText("While [Death Star II] Vader's Cape on table and Vader alone here, opponent's Interrupts are Lost Interrupts.");
+        setLocationLightSideGameText("If you occupy, opponent's Chasm Walkway game text is canceled.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.CLOUD_CITY, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK);
@@ -44,15 +44,14 @@ public class Card501_130 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new LostInterruptModifier(self, Filters.and(Filters.opponents(playerOnDarkSideOfLocation), Filters.Interrupt), new HereCondition(self, Filters.and(Filters.Vader, Filters.alone))));
+        modifiers.add(new LostInterruptModifier(self, Filters.and(Filters.opponents(playerOnDarkSideOfLocation), Filters.Interrupt), new AndCondition(new OnTableCondition(self, Filters.and(Icon.DEATH_STAR_II, Filters.title("Vader's Cape"))), new HereCondition(self, Filters.and(Filters.Vader, Filters.alone)))));
         return modifiers;
     }
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new CancelsGameTextOnSideOfLocationModifier(self, Filters.Chasm_Walkway,
-                new OrCondition(new OccupiesCondition(playerOnLightSideOfLocation, self), new OnTableCondition(self, Filters.Emperors_Power)), game.getOpponent(playerOnLightSideOfLocation)));
+        modifiers.add(new CancelsGameTextOnSideOfLocationModifier(self, Filters.Chasm_Walkway, new OccupiesCondition(playerOnLightSideOfLocation, self), game.getOpponent(playerOnLightSideOfLocation)));
         return modifiers;
     }
 }

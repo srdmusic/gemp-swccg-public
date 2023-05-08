@@ -75,11 +75,11 @@ public class Card501_008 extends AbstractNormalEffect {
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        if(TriggerConditions.justDeployed(game, effectResult, playerId, Filters.alien)
-                && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
+        if(TriggerConditions.justDeployedTo(game, effectResult, playerId, Filters.alien, Filters.Cantina)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.hasReserveDeck(game, playerId)) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Peek at top two cards of Reserve Deck");
             action.setActionMsg("Peek at top two cards of Reserve Deck and take one into hand");
 
