@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Effect
- * aTitle: At Peace (V)
+ * Title: At Peace (V)
  */
 public class Card501_142 extends AbstractNormalEffect {
     public Card501_142() {
