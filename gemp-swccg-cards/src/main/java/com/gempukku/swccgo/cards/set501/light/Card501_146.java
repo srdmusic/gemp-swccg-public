@@ -1,8 +1,9 @@
-package com.gempukku.swccgo.cards.set501.dark;
+package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
+import com.gempukku.swccgo.cards.effects.AddDuelDestinyEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -15,18 +16,20 @@ import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.ModifyDuelTotalEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
-import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotHaveTotalAbilityReducedModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotModifyTotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotResetTotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.ModifierFlag;
+import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -36,16 +39,16 @@ import java.util.List;
  * Set: Set 21
  * Type: Interrupt
  * Subtype: Lost
- * Title: Wounded Wookiee (V)
+ * Title: Courage Of A Skywalker (V)
  */
-public class Card501_135 extends AbstractLostInterrupt {
-    public Card501_135() {
-        super(Side.DARK, 2, Title.Wounded_Wookiee, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+public class Card501_146 extends AbstractLostInterrupt {
+    public Card501_146() {
+        super(Side.LIGHT, 2, Title.Courage_Of_A_Skywalker, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setLore("When blaster fire from the barge's gun hit Chewie's skiff, his leg was injured by shrapnel. This setback distracted the Rebels, causing them to momentarily lose their advantage.");
-        setGameText("Once per game, if on top of your Lost Pile, may retrieve into hand. Add one battle destiny (if Chewie or a guard in that battle, attrition against you is -2); for remainder of turn, opponent may not modify or reset either player's total battle destiny (or reduce your total ability).");
-        addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_21);
-        setTestingText("Wounded Wookiee (V)");
+        setLore("Despite being alone, trapped and desperately outmatched, Luke continued his battle with the Dark Lord of the Sith.");
+        setGameText("Once per game, if on top of Lost Pile, may retrieve into hand. Add one battle destiny or duel destiny (if a Skywalker in that battle or duel, your total power or duel total is +2); for remainder of turn, opponent may not modify or reset either player’s total battle destiny.");
+        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_21);
+        setTestingText("Courage Of A Skywalker (V)");
     }
 
     @Override
@@ -54,7 +57,7 @@ public class Card501_135 extends AbstractLostInterrupt {
         actions.addAll(super.getCardPilePhaseActions(playerId, game, self));
 
 
-        GameTextActionId gameTextActionId = GameTextActionId.WOUNDED_WOOKIEE_V__RETRIEVE;
+        GameTextActionId gameTextActionId = GameTextActionId.COURAGE_OF_A_SKYWALKER_V__RETRIEVE;
 
         if (self.getZone()== Zone.TOP_OF_LOST_PILE
                 && !game.getModifiersQuerying().hasFlagActive(game.getGameState(), ModifierFlag.LOST_PILE_FACE_DOWN, playerId)
@@ -93,9 +96,9 @@ public class Card501_135 extends AbstractLostInterrupt {
                             // Perform result(s)
                             action.appendEffect(
                                     new AddBattleDestinyEffect(action, 1));
-                            if (GameConditions.isDuringBattleWithParticipant(game, Filters.or(Filters.Chewie, Filters.guard))) {
+                            if (GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker)) {
                                 action.appendEffect(new AddUntilEndOfBattleModifierEffect(action,
-                                        new AttritionModifier(self, -2, playerId), "Subtracts 2 from attrition against you"));
+                                        new TotalPowerModifier(self, Filters.battleLocation, 2, playerId), "Adds 2 to your total power"));
                             }
 
                             //modify total battle destiny
@@ -104,15 +107,49 @@ public class Card501_135 extends AbstractLostInterrupt {
                             //reset total battle destiny
                             action.appendEffect(new AddUntilEndOfTurnModifierEffect(action,
                                     new MayNotResetTotalBattleDestinyModifier(self, null, opponent),"Prevents "+opponent+" from resetting either player's total battle destiny"));
-                            //reduce total ability
-                            action.appendEffect(new AddUntilEndOfTurnModifierEffect(action,
-                                    new MayNotHaveTotalAbilityReducedModifier(self, Filters.any, playerId),"Prevents your total ability from being reduced"));
                         }
                     }
             );
             return Collections.singletonList(action);
         }
 
+        return null;
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
+        // Check condition(s)
+        if (TriggerConditions.isDuelAddOrModifyDuelDestiniesStep(game, effectResult)) {
+
+            final String opponent = game.getOpponent(playerId);
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Add one duel destiny");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new AddDuelDestinyEffect(action, 1));
+
+                            if (GameConditions.isDuringDuelWithParticipant(game, Filters.Skywalker)) {
+                                action.appendEffect(
+                                        new ModifyDuelTotalEffect(action, 2, playerId, "Adds 2 to duel total"));
+                            }
+
+                            //modify total battle destiny
+                            action.appendEffect(new AddUntilEndOfTurnModifierEffect(action,
+                                    new MayNotModifyTotalBattleDestinyModifier(self, null, opponent),"Prevents "+opponent+" from modifying either player's total battle destiny"));
+                            //reset total battle destiny
+                            action.appendEffect(new AddUntilEndOfTurnModifierEffect(action,
+                                    new MayNotResetTotalBattleDestinyModifier(self, null, opponent),"Prevents "+opponent+" from resetting either player's total battle destiny"));
+                        }
+                    }
+            );
+            return Collections.singletonList(action);
+        }
         return null;
     }
 }

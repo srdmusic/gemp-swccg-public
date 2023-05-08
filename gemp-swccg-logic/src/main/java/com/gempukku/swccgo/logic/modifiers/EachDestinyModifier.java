@@ -13,9 +13,6 @@ import com.gempukku.swccgo.logic.evaluators.Evaluator;
 public class EachDestinyModifier extends AbstractModifier {
     private int _drawDestinyStateId;
     private Evaluator _evaluator;
-    private boolean _allForPlayer;
-    private String _playerId;
-
 
     /**
      * Creates a modifier to each destiny draw for a specified draw destiny.
@@ -49,20 +46,6 @@ public class EachDestinyModifier extends AbstractModifier {
         super(source, null, null, condition, ModifierType.EACH_DESTINY_DRAW, false);
         _drawDestinyStateId = drawDestinyStateId;
         _evaluator = evaluator;
-        _allForPlayer = false;
-    }
-
-    /**
-     * Creates a modifier to each destiny draw for a specified draw destiny.
-     * @param source the source of the modifier
-     * @param condition the condition that must be fulfilled for the modifier to be in effect
-     * @param evaluator the evaluator that calculates the amount of the modifier
-     */
-    public EachDestinyModifier(PhysicalCard source, Condition condition, Evaluator evaluator, String playerId) {
-        super(source, null, null, condition, ModifierType.EACH_DESTINY_DRAW, false);
-        _evaluator = evaluator;
-        _allForPlayer = true;
-        _playerId = playerId;
     }
 
     /**
@@ -73,7 +56,7 @@ public class EachDestinyModifier extends AbstractModifier {
     @Override
     public boolean isForTopDrawDestinyEffect(GameState gameState) {
         DrawDestinyState drawDestinyState = gameState.getTopDrawDestinyState();
-        return (drawDestinyState != null && _drawDestinyStateId == drawDestinyState.getId()) || (_allForPlayer && drawDestinyState.getDrawDestinyEffect().getPlayerDrawingDestiny().equals(_playerId));
+        return drawDestinyState != null && _drawDestinyStateId == drawDestinyState.getId();
     }
 
     @Override
