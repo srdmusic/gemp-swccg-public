@@ -1999,11 +1999,20 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
     }
 
     /**
-     * Determines if this deploys and moves like a starfighter at cloud sectors.
-     * @return true if deploys and moves like a starfighter at cloud sectors, otherwise false
+     * Determines if this deploys like a starfighter at cloud sectors.
+     * @return true if deploys like a starfighter at cloud sectors, otherwise false
      */
     @Override
-    public boolean isDeploysAndMovesLikeStarfighterAtCloudSectors() {
+    public boolean isDeploysLikeStarfighterAtCloudSectors() {
+        return false;
+    }
+
+    /**
+     * Determines if this moves like a starfighter at cloud sectors.
+     * @return true if moves like a starfighter at cloud sectors, otherwise false
+     */
+    @Override
+    public boolean isMovesLikeStarfighterAtCloudSectors() {
         return false;
     }
 

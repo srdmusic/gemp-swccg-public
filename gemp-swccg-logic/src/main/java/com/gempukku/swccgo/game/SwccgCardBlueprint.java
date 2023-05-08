@@ -274,10 +274,16 @@ public interface SwccgCardBlueprint {
     boolean isMovesLikeStarfighter();
 
     /**
-     * Determines if this deploys and moves like a starfighter at cloud sectors.
-     * @return true if deploys and moves like a starfighter at cloud sectors, otherwise false
+     * Determines if this deploys like a starfighter at cloud sectors.
+     * @return true if deploys like a starfighter at cloud sectors, otherwise false
      */
-    boolean isDeploysAndMovesLikeStarfighterAtCloudSectors();
+    boolean isDeploysLikeStarfighterAtCloudSectors();
+
+    /**
+     * Determines if this moves like a starfighter at cloud sectors.
+     * @return true if moves like a starfighter at cloud sectors, otherwise false
+     */
+    boolean isMovesLikeStarfighterAtCloudSectors();
 
     /**
      * Determines if this can go in the vehicle capacity slot of a starship.
