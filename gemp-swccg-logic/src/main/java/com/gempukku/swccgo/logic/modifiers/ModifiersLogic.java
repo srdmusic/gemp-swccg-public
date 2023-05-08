@@ -16577,7 +16577,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
      */
     @Override
     public boolean isDeploysAndMovesLikeStarfighter(GameState gameState, PhysicalCard card) {
-        return card.getBlueprint().isDeploysAndMovesLikeStarfighter() || Filters.squadron.accepts(gameState, this, card);
+        return card.getBlueprint().isDeploysLikeStarfighter() || Filters.squadron.accepts(gameState, this, card);
     }
 
     /**
