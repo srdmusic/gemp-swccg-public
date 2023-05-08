@@ -72,7 +72,7 @@ public class Card501_016 extends AbstractSite {
                     actions.add(action);
                 }
 
-            if (GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, Persona.BOBA_FETT)) {
+            if (GameConditions.canDeployCardFromLostPile(game, playerOnLightSideOfLocation, self, gameTextActionId, Persona.BOBA_FETT)) {
                 TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
                 action.setText("Deploy Boba from Lost Pile");
                 action.appendUsage(
