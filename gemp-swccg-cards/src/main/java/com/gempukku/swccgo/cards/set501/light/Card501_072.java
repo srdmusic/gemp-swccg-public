@@ -38,7 +38,7 @@ public class Card501_072 extends AbstractNormalEffect {
     public Card501_072() {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Of Geonosis", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("If a Geonosis location on table, deploy on table. Once per battle, may deploy or move a clone as a 'react' to same location as your Jedi or Padawan. While your clone in battle with a Jedi or Padawan, opponent's total battle destiny is -1 (-2 if Yoda in battle). [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Battle Of Geonosis");
     }

@@ -4,7 +4,6 @@ import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.MoveUsingLocationTextAction;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
@@ -32,7 +31,7 @@ import java.util.List;
 public class Card501_153 extends AbstractSite {
     public Card501_153() {
         super(Side.DARK, "Jakku: Niima Marketplace", Title.Jakku, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("Once during your deploy phase, your [Episode VII] character may relocate from here to a battleground.");
+        setLocationDarkSideGameText("During your move phase, any of your [Episode VII] characters may move from here to a battleground.");
         setLocationLightSideGameText("If Finn or Rey here, opponent's First Order characters may not move away from here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
@@ -47,11 +46,10 @@ public class Card501_153 extends AbstractSite {
         Filter battleground = Filters.and(Filters.other(self), Filters.battleground);
 
         if (GameConditions.canSpotLocation(game, battleground)
-            && GameConditions.isOnceDuringYourPhase(game, self, playerOnDarkSideOfLocation, gameTextSourceCardId, Phase.DEPLOY)
+            && GameConditions.isDuringYourPhase(game, playerOnDarkSideOfLocation, Phase.MOVE)
             && GameConditions.canPerformMovementUsingLocationText(playerOnDarkSideOfLocation, game, character, self, battleground, false)) {
             MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnDarkSideOfLocation, game, self, gameTextSourceCardId, character, self, battleground, false);
             action.setText("Move your [Episode VII] character");
-            action.appendUsage(new OncePerPhaseEffect(action));
             actions.add(action);
             return actions;
         }

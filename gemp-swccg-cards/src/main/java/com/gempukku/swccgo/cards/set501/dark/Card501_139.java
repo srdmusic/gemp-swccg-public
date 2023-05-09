@@ -42,7 +42,7 @@ public class Card501_139 extends AbstractImperial {
         super(Side.DARK, 3, 2, 2, 2, 3, "Sergeant Tarl", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Took part in the capture of the Rebel Blockade Runner Tantive IV. Stormtrooper trained on Corulag. Corellia native.");
-        setGameText("When deployed, power +2 for remainder of turn. While in battle with two ISB Agents (or troopers), may target a character present; target is immune to attrition and game text is canceled.");
+        setGameText("When deployed, power +2 for remainder of turn. While in battle with two ISB Agents (or troopers), may target a Rebel present; target is immune to attrition and game text is canceled.");
         addIcons(Icon.ENDOR, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.STORMTROOPER);
         setSpecies(Species.CORELLIAN);
@@ -72,16 +72,16 @@ public class Card501_139 extends AbstractImperial {
         if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId)
                 && (GameConditions.isInBattleWith(game, self, 2, Filters.ISB_agent)
                 || GameConditions.isInBattleWith(game, self, 2, Filters.trooper))
-                && GameConditions.isInBattleWith(game, self, Filters.and(Filters.presentAt(Filters.here(self)), Filters.canBeTargetedBy(self)))) {
+                && GameConditions.isInBattleWith(game, self, Filters.and(Filters.presentAt(Filters.here(self)), Filters.Rebel, Filters.canBeTargetedBy(self)))) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
-            action.setText("Target character");
-            action.setActionMsg("Target a character to make it immune to attrition and cancel its game text");
+            action.setText("Target Rebel");
+            action.setActionMsg("Target a Rebel to make it immune to attrition and cancel its game text");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerBattleEffect(action));
 
-            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a character", Filters.and(Filters.participatingInBattle, Filters.presentAt(Filters.here(self)))) {
+            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target a Rebel", Filters.and(Filters.participatingInBattle, Filters.Rebel, Filters.presentAt(Filters.here(self)))) {
                 @Override
                 protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                     action.allowResponses(new RespondableEffect(action) {
