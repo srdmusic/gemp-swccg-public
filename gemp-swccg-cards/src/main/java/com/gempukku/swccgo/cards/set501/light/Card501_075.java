@@ -35,7 +35,7 @@ public class Card501_075 extends AbstractNormalEffect {
     public Card501_075() {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Of Christophsis", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("If a Christophsis location on table, deploy on table. Once per turn, if you just deployed a clone to Christophsis, may draw top card of Used Pile. Once per turn, if your clone in battle with a Jedi or Padawan, may lose 1 Force to add one destiny to total power. [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Battle Of Christophsis");
     }
