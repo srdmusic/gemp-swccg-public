@@ -88,13 +88,13 @@ public class Card501_066 extends AbstractNormalEffect {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         if (TriggerConditions.wonBattle(game, effectResult, playerId)
-                && GameConditions.canSpotLocation(game, Filters.and(Icon.EPISODE_I, Filters.battleground))) {
+                && GameConditions.canSpotLocation(game, Filters.and(Icon.EPISODE_I, Filters.battleground, Filters.not(Filters.hasAttached(self))))) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Relocate to a battleground");
             action.setActionMsg("Relocate " + GameUtils.getCardLink(self) + " to an [Episode I] battleground");
 
-            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose an [Episode I] battleground", Filters.and(Icon.EPISODE_I, Filters.battleground)) {
+            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose an [Episode I] battleground", Filters.and(Icon.EPISODE_I, Filters.battleground, Filters.not(Filters.hasAttached(self)))) {
                 @Override
                 protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                     action.allowResponses(new RespondableEffect(action) {
