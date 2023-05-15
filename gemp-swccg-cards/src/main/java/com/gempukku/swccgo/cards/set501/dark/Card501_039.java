@@ -42,7 +42,7 @@ public class Card501_039 extends AbstractSith {
     public Card501_039() {
         super(Side.DARK, 1, 5, 5, 5, 7, "Asajj Ventress", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Female Dathomirian assassin.");
-        setGameText("Deploys -1 if Dooku on table. Whenever a player loses a battle here, that player loses 1 Force. While armed, opponent's weapon destiny draws are -1 here. Opponent may not cancel battles here. Immune to [Permanent] weapons and attrition < 4.");
+        setGameText("Deploys -1 if Dooku on table. Whenever a player loses a battle here, that player loses 1 Force. While armed, opponent's weapon destiny draws targeting Ventress are -1. Opponent may not cancel battles here. Immune to [Permanent Weapon] weapons and attrition < 4.");
         addPersona(Persona.VENTRESS);
         addKeywords(Keyword.FEMALE, Keyword.ASSASSIN);
         setSpecies(Species.DATHOMIRIAN);
@@ -62,7 +62,7 @@ public class Card501_039 extends AbstractSith {
         String opponent = game.getOpponent(self.getOwner());
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new EachWeaponDestinyModifier(self, Filters.and(Filters.opponents(self), Filters.weapon, Filters.here(self)), new ArmedWithCondition(self, Filters.weapon), -1));
+        modifiers.add(new EachWeaponDestinyModifier(self, Filters.and(Filters.opponents(self), Filters.weapon), new ArmedWithCondition(self, Filters.weapon), Filters.any, -1, Filters.Ventress));
         modifiers.add(new MayNotCancelBattleModifier(self, Filters.here(self), null, opponent));
         modifiers.add(new MayNotBeTargetedByPermanentWeaponsModifier(self));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
