@@ -83,7 +83,7 @@ public class Card501_126 extends AbstractUsedOrLostInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.and(Icon.TATOOINE, Filters.Anakin), Filters.title("Tatooine: Skywalker Hut")), true));
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.Skywalker_Hut, Filters.and(Icon.TATOOINE, Filters.Anakin)), true));
                         }
                     }
             );
