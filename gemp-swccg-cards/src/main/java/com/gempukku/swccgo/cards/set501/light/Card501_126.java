@@ -34,7 +34,7 @@ public class Card501_126 extends AbstractUsedOrLostInterrupt {
     public Card501_126() {
         super(Side.LIGHT, 4, "Eventually You'll Lose", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("In the end, Watto finally came to understand the agony of defeat.");
-        setGameText("USED: If The Hyperdrive Generator’s Gone on table, take Refuge On The Outskirts, Skywalker Hut, or [Tatooine] Anakin into hand from Reserve Deck; reshuffle. LOST: If opponent just stacked a card on Credits Will Do Fine, for remainder of turn your Force drains may not be reduced");
+        setGameText("USED: If The Hyperdrive Generator's Gone on table, take Skywalker Hut or [Tatooine] Anakin into hand from Reserve Deck; reshuffle. LOST: If opponent just stacked a card on Credits Will Do Fine, for remainder of turn your Force drains may not be reduced");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("Eventually You'll Lose (V)");
     }
@@ -77,13 +77,13 @@ public class Card501_126 extends AbstractUsedOrLostInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
             action.setText("Take card into hand from Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Take Refuge On The Outskirts, Skywalker Hut, or [Tatooine] Anakin into hand from Reserve Deck",
+            action.allowResponses("Take Skywalker Hut or [Tatooine] Anakin into hand from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.and(Icon.TATOOINE, Filters.Anakin), Filters.title("Tatooine: Skywalker Hut"), Filters.title("Refuge On The Outskirts")), true));
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.and(Icon.TATOOINE, Filters.Anakin), Filters.title("Tatooine: Skywalker Hut")), true));
                         }
                     }
             );
