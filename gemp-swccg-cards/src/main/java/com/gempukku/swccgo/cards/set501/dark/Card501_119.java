@@ -8,7 +8,6 @@ import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -24,7 +23,6 @@ import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -38,7 +36,7 @@ public class Card501_119 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Power Of The Hutt", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Jabba runs his organization out of a palace built around a B'omarr monastery. His fortress near the border of the western Dune Sea is safe from enemies in Mos Eisley.");
-        setGameText("Deploy on table. If Nal Hutta on table and your alien at Audience Chamber, [Reflections III] Leia’s game text is canceled and, during opponent’s turn, may activate 1 Force. Once per turn, may deploy Hutt Influence or Jabba’s Sail Barge from Reserve Deck; reshuffle. [Immune to Alter.]");
+        setGameText("Deploy on table. If Nal Hutta on table and your alien at Audience Chamber, [Reflections III] Leia's game text is canceled and, once during opponent's turn, may activate 1 Force. Once per turn, may deploy Bib, Hutt Influence, or a barge from Reserve Deck; reshuffle. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Power Of The Hutt (V)");
@@ -60,17 +58,17 @@ public class Card501_119 extends AbstractNormalEffect {
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.JABBAS_SAIL_BARGE, Arrays.asList(Title.Hutt_Influence))) {
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy Hutt Influence or Jabba's Sail Barge from Reserve Deck");
+            action.setActionMsg("Deploy Bib, Hutt Influence, or a barge from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Jabbas_Sail_Barge, Filters.Hutt_Influence), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Bib, Filters.Hutt_Influence, Filters.barge), true));
             actions.add(action);
         }
 
