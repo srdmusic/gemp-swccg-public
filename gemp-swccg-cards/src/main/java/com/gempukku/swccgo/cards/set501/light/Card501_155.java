@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class Card501_155 extends AbstractLostOrStartingInterrupt {
     public Card501_155() {
-        super(Side.LIGHT, 1, "Anakin's Destiny", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 4, "Anakin's Destiny", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'A vergence, you say?'");
         setGameText("LOST: At start of opponent's turn, opponent does not activate Force from your [Death Star II] sites for remainder of turn. " +
                 "STARTING: If He Is The Chosen One on table, deploy His Destiny and two Effects that deploy for free and are always [Immune to Alter]. Place Interrupt in hand.");

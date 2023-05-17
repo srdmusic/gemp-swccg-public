@@ -6,6 +6,7 @@ import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.evaluators.MaxLimitEvaluator;
+import com.gempukku.swccgo.cards.evaluators.PowerEvaluator;
 import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.DestinyType;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -36,7 +37,6 @@ import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.evaluators.ConstantEvaluator;
 import com.gempukku.swccgo.logic.evaluators.Evaluator;
 import com.gempukku.swccgo.logic.modifiers.ConflictCardModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -55,13 +55,13 @@ import java.util.List;
  */
 public class Card501_058 extends AbstractEpicEventDeployable {
     public Card501_058() {
-        super(Side.LIGHT, 6, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "His Destiny", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "His Destiny", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("If He Is The Chosen One on table, deploy on table. Cards stacked on I Feel The Conflict are conflict cards. " +
                 "Once per game, may deploy a Death Star II site from Reserve Deck; reshuffle. " +
                 "While Luke is alone, your total power at other locations is +1 (limit +3) for each ‘conflict’ card.  " +
                 "During your move phase, if you played a [Death Star II] Interrupt, may relocate Luke to a battleground site. " +
                 "During your draw phase, if Luke present with a Dark Jedi, may initiate a duel between them. " +
-                "Each player draws two destiny. Highest total wins. If Luke loses, lose 1 Force (if Luke wins by more than 5, Dark Jedi lost).");
+                "Each player draws two destiny. Add power. Highest total wins. If Luke loses, lose 1 Force (if Luke wins by more than 9, Dark Jedi lost).");
         addIcons(Icon.VIRTUAL_SET_21);
         setTestingText("His Destiny");
     }
@@ -144,7 +144,7 @@ public class Card501_058 extends AbstractEpicEventDeployable {
 
                                                                 @Override
                                                                 public Evaluator getBaseDuelTotal(final String playerId, final DuelState duelState) {
-                                                                    return new ConstantEvaluator(0);
+                                                                    return new PowerEvaluator(duelState.getCharacter(playerId));
                                                                 }
 
                                                                 @Override
@@ -185,7 +185,7 @@ public class Card501_058 extends AbstractEpicEventDeployable {
                                                                     if (!winner.equals(self.getOwner())) {
                                                                         action.appendEffect(
                                                                                 new LoseForceEffect(action, self.getOwner(), 1));
-                                                                    } else if (duelState.getFinalDuelTotal(self.getOwner()) - duelState.getFinalDuelTotal(game.getOpponent(self.getOwner())) > 5) {
+                                                                    } else if (duelState.getFinalDuelTotal(self.getOwner()) - duelState.getFinalDuelTotal(game.getOpponent(self.getOwner())) > 9) {
                                                                         // if Luke wins by more than 5, Dark Jedi lost
                                                                         PhysicalCard losingCharacter = duelState.getLosingCharacter();
                                                                         if (losingCharacter != null) {

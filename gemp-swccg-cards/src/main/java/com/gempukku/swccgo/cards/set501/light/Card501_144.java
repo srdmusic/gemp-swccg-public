@@ -2,9 +2,9 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.HasStackedCondition;
 import com.gempukku.swccgo.cards.effects.StackCardFromVoidEffect;
 import com.gempukku.swccgo.cards.effects.complete.ChooseExistingCardPileEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -22,13 +22,11 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayingCardEffect;
 import com.gempukku.swccgo.logic.effects.ShufflePileEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
+import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.UniqueModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 
@@ -47,7 +45,7 @@ public class Card501_144 extends AbstractNormalEffect {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Grappling Hook", Uniqueness.UNRESTRICTED, ExpansionSet.SET_21, Rarity.V);
         setVirtualSuffix(true);
         setLore("Stormtrooper utility belts contain basic tools such as a grappling hook to grab onto protrusions. The hook can also be used to ensnare escaping targets.");
-        setGameText("Deploy on table. While no card stacked here, may stack a just played Interrupt here. All Interrupts of that title are unique (•) and stacked here once played (if possible). May place opponent’s card stacked here in their Used Pile to shuffle any Deck. (Immune to Alter.)");
+        setGameText("Deploy on table. Imperial Barrier is a Lost Interrupt. While no card stacked here, may stack a just played Interrupt here. All Interrupts of that title are stacked here once played (if possible). Once per game, may shuffle any deck or pile. (Immune to Alter.)");
         addIcons(Icon.A_NEW_HOPE, Icon.GRABBER, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Grappling Hook (V)");
@@ -56,7 +54,7 @@ public class Card501_144 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new UniqueModifier(self, Filters.and(Filters.Interrupt, Filters.sameTitleAsStackedOn(self)), new HasStackedCondition(self, Filters.Interrupt)));
+        modifiers.add(new LostInterruptModifier(self, Filters.Imperial_Barrier));
         return modifiers;
     }
 
@@ -84,31 +82,26 @@ public class Card501_144 extends AbstractNormalEffect {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+        GameTextActionId gameTextActionId = GameTextActionId.GRAPPLING_HOOK_V__SHUFFLE_PILE;
 
-        if (GameConditions.hasStackedCards(game, self, Filters.and(Filters.opponents(playerId), Filters.Interrupt))) {
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)) {
+
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Shuffle any Reserve Deck");
-            action.setActionMsg("Shuffle any Reserve Deck");
+            action.setText("Shuffle any deck or pile");
+
+            action.appendUsage(
+                    new OncePerGameEffect(action));
             // Perform result(s)
             action.appendTargeting(
-                    new ChooseExistingCardPileEffect(action, playerId, Zone.RESERVE_DECK) {
+                    new ChooseExistingCardPileEffect(action, playerId) {
                         @Override
                         protected void pileChosen(final SwccgGame game, final String cardPileOwner, final Zone cardPile) {
                             action.allowResponses("Shuffle " + cardPileOwner + "'s " + cardPile.getHumanReadable(),
                                     new RespondableEffect(action) {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
-                                            action.appendEffect(
-                                                    new ChooseStackedCardEffect(action, playerId, self, Filters.opponents(playerId)) {
-                                                        @Override
-                                                        protected void cardSelected(PhysicalCard selectedCard) {
-                                                            action.appendEffect(
-                                                                    new PutStackedCardInUsedPileEffect(action, playerId, selectedCard, false));
                                                             action.appendEffect(
                                                                     new ShufflePileEffect(action, cardPileOwner, cardPile));
-                                                        }
-                                                    });
                                         }
                                     });
 

@@ -5,11 +5,13 @@ import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -32,14 +34,19 @@ import java.util.List;
  */
 public class Card501_142 extends AbstractNormalEffect {
     public Card501_142() {
-        super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "At Peace", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.R);
+        super(Side.LIGHT, 3, PlayCardZoneOption.ATTACHED, "At Peace", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.R);
         setVirtualSuffix(true);
         setLore("To recover from the strenuous Jedi training routine and revitalize the mind and body, an apprentice must rest to be calm and at peace.");
-        setGameText("Deploy on table. Your [Dagobah] characters deploy -1 to Dagobah. Your Force retrieval is canceled. Your training destiny draws are +1. " +
-                "Jedi Test #2 may not move. Jedi Test #4 searches for free. [Immune to Alter.]");
-        addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_21);
+        setGameText("Deploy on Dagobah system. Your Force retrieval is canceled. Your [Dagobah] characters deploy -1 to Dagobah. Your training destiny draws are +1. " +
+                "Jedi Test #2 may not move. Jedi Test #4 searches your Reserve Deck for free. [Immune to Alter.]");
+        addIcons(Icon.DAGOBAH, Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("At Peace (V)");
+    }
+
+    @Override
+    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.Dagobah_system;
     }
 
     @Override

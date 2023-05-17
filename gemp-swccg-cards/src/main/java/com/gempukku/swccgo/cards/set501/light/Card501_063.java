@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.PeekAtTopCardOfForcePileEffect;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -14,15 +15,14 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.modifiers.BattleDamageLimitModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -34,8 +34,8 @@ import java.util.List;
 public class Card501_063 extends AbstractUsedOrLostInterrupt {
     public Card501_063() {
         super(Side.LIGHT, 4, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("");
-        setGameText("USED: If a character of ability > 4 was just hit during battle, opponent loses 1 Force (if Luke, battle damage against you is limited to 3). LOST: If Luke alone during a battle or duel add or subtract 1 to a just drawn weapon, battle, or duel destiny for each 'conflict' card (limit 3).");
+        setLore("It had been decades since Vader had felt the sting of an enemy's blade.");
+        setGameText("USED: If a character of ability > 4 was just hit during battle, opponent loses 1 Force. OR Peek at top card of Force Pile. LOST: If Luke alone during a battle or duel add or subtract 1 to a just drawn weapon, battle, or duel destiny for each 'conflict' card (limit 3).");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
         setTestingText("A Jedi's Fury");
     }
@@ -58,10 +58,6 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
                 protected void performActionResults(Action targetingAction) {
                     action.appendEffect(
                             new LoseForceEffect(action, opponent, 1));
-                    if (lukeHit)
-                        action.appendEffect(
-                                new AddUntilEndOfBattleModifierEffect(action, new BattleDamageLimitModifier(self, Filters.battleLocation, 3, playerId),
-                                        "Limit battle damage against you to 3"));
                 }
             });
 
@@ -113,6 +109,32 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
             actions.add(subtractAction);
         }
 
+        return actions;
+    }
+
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
+
+        // Check condition(s)
+        if (GameConditions.hasForcePile(game, playerId)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Peek at top card of Force Pile");
+            // Allow response(s)
+            action.allowResponses("Peek at top card of Force Pile",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new PeekAtTopCardOfForcePileEffect(action, playerId, playerId));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
         return actions;
     }
 }

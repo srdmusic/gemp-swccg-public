@@ -10,14 +10,19 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
-import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.GuiUtils;
+import com.gempukku.swccgo.logic.timing.results.AboutToBeStolenResult;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,39 +30,78 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Defensive Shield
- * Title: Do, Or Do Not (V)
+ * Title: Only Jedi Carry That Weapon (V)
  */
 public class Card501_145 extends AbstractDefensiveShield {
     public Card501_145() {
-        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Do_Or_Do_Not, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Only Jedi Carry That Weapon", ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setLore("A Jedi may choose to intervene in the natural course of events, but must accept responsibility for the consequences.");
-        setGameText("Plays on table. Sense, Alter, and Trample are now Lost Interrupts. When any player makes a destiny draw for Sense, Alter, or Trample and that destiny draw is successful, that player loses 2 Force. [Episode I] blasters are immune to An Entire Legion Of My Best Troops.");
+        setLore("An elegant weapon for a more civilized age.");
+        setGameText("Plays on table. For opponent to steal a weapon from target character using a non-[Episode I] card, must first draw destiny. Unless destiny +1 > target's ability, attempt fails (stealing card is placed out of play). [Episode I] blasters are immune to An Entire Legion Of My Best Troops.");
         addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_SET_21);
-        setTestingText("Do, Or Do Not (V)");
+        setTestingText("Only Jedi Carry That Weapon (V)");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new LostInterruptModifier(self, Filters.or(Filters.Sense, Filters.Alter, Filters.Trample)));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Icon.EPISODE_I, Filters.blaster), Title.An_Entire_Legion_Of_My_Best_Troops));
         return modifiers;
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.senseOrAlterDestinyDrawSuccessful(game, effectResult)
-                || TriggerConditions.trampleDestinyDrawSuccessful(game, effectResult)) {
-            final String playerId = effectResult.getPerformingPlayerId();
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        final String opponent = game.getOpponent(self.getOwner());
 
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Make " + playerId + " lose 2 Force");
-            // Perform result(s)
-            action.appendEffect(
-                    new LoseForceEffect(action, playerId, 2));
-            return Collections.singletonList(action);
+        if (TriggerConditions.isAboutToBeStolen(game, effectResult, Filters.and(Filters.character_weapon, Filters.attachedTo(Filters.and(Filters.your(self), Filters.character))))) {
+            final AboutToBeStolenResult aboutToStealCardResult = (AboutToBeStolenResult) effectResult;
+            final PhysicalCard sourceCard = aboutToStealCardResult.getSourceCard();
+            final PhysicalCard weaponToBeStolen = aboutToStealCardResult.getCardToBeStolen();
+            final PhysicalCard targetCharacter = weaponToBeStolen.getAttachedTo();
+            if (targetCharacter != null
+                    && !game.getModifiersQuerying().hasIcon(game.getGameState(), sourceCard, Icon.EPISODE_I)) {
+
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setText("Make " + opponent + " draw destiny");
+                // Perform result(s)
+                action.appendEffect(
+                        new DrawDestinyEffect(action, opponent) {
+                            @Override
+                            protected Collection<PhysicalCard> getGameTextAbilityManeuverOrDefenseValueTargeted() {
+                                return Collections.singletonList(targetCharacter);
+                            }
+                            @Override
+                            protected void destinyDraws(SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, Float totalDestiny) {
+                                GameState gameState = game.getGameState();
+                                if (totalDestiny == null) {
+                                    gameState.sendMessage("Result: Failed due to failed destiny draw");
+                                    aboutToStealCardResult.getPreventableCardEffect().preventEffectOnCard(weaponToBeStolen);
+                                    action.appendEffect(
+                                            new PlaceCardOutOfPlayFromOffTableEffect(action, sourceCard));
+                                    action.appendEffect(
+                                            new PlaceCardOutOfPlayFromTableEffect(action, sourceCard));
+                                    return;
+                                }
+
+                                float ability = game.getModifiersQuerying().getAbility(game.getGameState(), targetCharacter);
+                                gameState.sendMessage("Destiny: " + GuiUtils.formatAsString(totalDestiny));
+                                gameState.sendMessage("Target's ability: " + GuiUtils.formatAsString(ability));
+                                if ((totalDestiny + 1) > ability) {
+                                    gameState.sendMessage("Result: Succeeded");
+                                }
+                                else {
+                                    gameState.sendMessage("Result: Failed");
+                                    aboutToStealCardResult.getPreventableCardEffect().preventEffectOnCard(weaponToBeStolen);
+                                    action.appendEffect(
+                                            new PlaceCardOutOfPlayFromOffTableEffect(action, sourceCard));
+                                    action.appendEffect(
+                                            new PlaceCardOutOfPlayFromTableEffect(action, sourceCard));
+                                }
+                            }
+                        }
+                );
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }
