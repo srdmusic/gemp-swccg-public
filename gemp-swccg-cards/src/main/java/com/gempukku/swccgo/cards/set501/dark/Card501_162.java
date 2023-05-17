@@ -6,7 +6,6 @@ import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -48,7 +47,6 @@ public class Card501_162 extends AbstractUsedInterrupt {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Add 1 to power and forfeit of speeder bikes");
-            action.setImmuneTo(Title.Sense);
 
             // Allow response(s)
             action.allowResponses("Add 1 to power and forfeit of your speeder bikes",
