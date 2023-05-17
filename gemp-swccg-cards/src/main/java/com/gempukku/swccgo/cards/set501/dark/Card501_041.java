@@ -67,13 +67,13 @@ public class Card501_041 extends AbstractNormalEffect {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy Sidious' Lightsaber or a [Coruscant] site from Reserve Deck");
+            action.setActionMsg("Deploy Sidious' Lightsaber or a [Coruscant] Naboo site from Reserve Deck");
 
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.persona(Persona.SIDIOUS_LIGHTSABER), Filters.and(Icon.CORUSCANT, Filters.site)), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.persona(Persona.SIDIOUS_LIGHTSABER), Filters.and(Icon.CORUSCANT, Filters.Naboo_site)), true));
             actions.add(action);
         }
 
