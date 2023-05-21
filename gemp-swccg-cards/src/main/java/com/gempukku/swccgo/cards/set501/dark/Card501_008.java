@@ -18,6 +18,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeConvertedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -36,7 +37,7 @@ public class Card501_008 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Juri_Juice, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Popular beverage served in many cantinas and tapcafes. Has intoxicating effect on many species. Favorite drink of Kabe, Chadra-Fan thief of Mos Eisley.");
-        setGameText("Deploy on table. May deploy Cantina from Reserve Deck; reshuffle. Your Cantina may not be converted. Once per turn, if you just deployed an alien to Cantina, may peek at the top two cards of Reserve Deck; take one into hand. Immune to Blue Milk. [Immune to Alter.]");
+        setGameText("Deploy on table. May deploy Cantina from Reserve Deck; reshuffle. Your Cantina may not be converted. Once per turn, if you just deployed an alien to Cantina, may peek at the top two cards of your Reserve Deck; take one into hand and shuffle your Reserve Deck. Immune to Blue Milk. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         addImmuneToCardTitle(Title.Blue_Milk);
@@ -82,12 +83,14 @@ public class Card501_008 extends AbstractNormalEffect {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Peek at top two cards of Reserve Deck");
-            action.setActionMsg("Peek at top two cards of Reserve Deck and take one into hand");
+            action.setActionMsg("Peek at top two cards of Reserve Deck, take one into hand, and shuffle your Reserve Deck");
 
             action.appendUsage(
                     new OncePerTurnEffect(action));
             action.appendEffect(
                     new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, 2, 1, 1));
+            action.appendEffect(
+                    new ShuffleReserveDeckEffect(action, playerId));
 
             actions.add(action);
         }
