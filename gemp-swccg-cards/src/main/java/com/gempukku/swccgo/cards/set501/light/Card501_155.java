@@ -2,26 +2,33 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractLostOrStartingInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.CancelTargetingEffect;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromVoidInLostPileEffect;
+import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TakeCardFromVoidIntoHandEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.GenerateNoForceModifier;
 import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.timing.TargetingActionUtils;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -35,36 +42,55 @@ public class Card501_155 extends AbstractLostOrStartingInterrupt {
     public Card501_155() {
         super(Side.LIGHT, 4, "Anakin's Destiny", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'A vergence, you say?'");
-        setGameText("LOST: At start of opponent's turn, opponent does not activate Force from your [Death Star II] sites for remainder of turn. " +
-                "STARTING: If He Is The Chosen One on table, deploy His Destiny and two Effects that deploy for free and are always [Immune to Alter]. Place Interrupt in hand.");
+        setGameText("LOST: Cancel an attempt to 'choke' (or target with Force Lightning) a character of ability > 4. " +
+                "STARTING: If He Is The Chosen One on table, deploy His Destiny and two Effects that deploy for free and are always immune to Alter. Place Interrupt in Lost Pile.");
         addIcons(Icon.VIRTUAL_SET_21);
         setTestingText("Anakin's Destiny");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
-        if (TriggerConditions.isStartOfOpponentsTurn(game, effectResult, playerId)
-                && GameConditions.canTarget(game, self, Filters.and(Filters.your(self), Icon.DEATH_STAR_II, Filters.site))) {
+    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self) {
+        String opponent = game.getOpponent(playerId);
+        Filter filter = Filters.and(Filters.character, Filters.abilityMoreThan(4));
+        Collection<TargetingReason> targetingReasons = Arrays.asList(TargetingReason.TO_BE_CHOKED);
 
-            final String opponent = game.getOpponent(playerId);
+        // Check condition(s)
+        if (TriggerConditions.isTargetedForReason(game, effect, opponent, filter, targetingReasons)
+                || TriggerConditions.isPlayingCardTargeting(game, effect, Filters.Force_Lightning, filter)) {
+            final RespondableEffect respondableEffect = (RespondableEffect) effect;
+            final List<PhysicalCard> cardsTargeted = (TriggerConditions.isPlayingCardTargeting(game, effect, Filters.Force_Lightning, filter)?
+                    TargetingActionUtils.getCardsTargeted(game, respondableEffect.getTargetingAction(), filter) :
+                    TargetingActionUtils.getCardsTargetedForReason(game, respondableEffect.getTargetingAction(), targetingReasons, filter));
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            action.setText("Cancel opponent's activation at your sites");
+            if (!cardsTargeted.isEmpty()) {
 
-            // Allow response(s)
-            action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new AddUntilEndOfTurnModifierEffect(action, new GenerateNoForceModifier(self, Filters.and(Filters.your(self), Icon.DEATH_STAR_II, Filters.site), opponent), "Causes opponent to generate no Force from your [Death Star II] sites"));
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+                action.setText("Cancel targeting");
+                // Choose target(s)
+                action.appendTargeting(
+                        new TargetCardOnTableEffect(action, playerId, "Choose character", Filters.in(cardsTargeted)) {
+                            @Override
+                            protected void cardTargeted(final int targetGroupId1, final PhysicalCard droidTargeted) {
+                                action.addAnimationGroup(droidTargeted);
+                                // Allow response(s)
+                                action.allowResponses("Cancel targeting of " + GameUtils.getCardLink(droidTargeted),
+                                        new RespondablePlayCardEffect(action) {
+                                            @Override
+                                            protected void performActionResults(Action targetingAction) {
+                                                // Get the final targeted card(s)
+                                                PhysicalCard finalDroid = action.getPrimaryTargetCard(targetGroupId1);
+                                                // Perform result(s)
+                                                action.appendEffect(
+                                                        new CancelTargetingEffect(action, respondableEffect));
+                                            }
+                                        }
+                                );
+                            }
                         }
-                    }
-            );
-            return Collections.singletonList(action);
+                );
+                return Collections.singletonList(action);
+            }
         }
-
         return null;
     }
 
@@ -86,7 +112,7 @@ public class Card501_155 extends AbstractLostOrStartingInterrupt {
                             action.appendEffect(
                                     new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.deploysForFree, Filters.immune_to_Alter), 2, 2, true, false));
                             action.appendEffect(
-                                    new TakeCardFromVoidIntoHandEffect(action, playerId, self));
+                                    new PutCardFromVoidInLostPileEffect(action, playerId, self));
                         }
                     }
             );
