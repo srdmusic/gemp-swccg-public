@@ -9,6 +9,7 @@ import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Variable;
 import com.gempukku.swccgo.common.Zone;
@@ -164,18 +165,30 @@ public class Card501_065_BACK extends AbstractObjective {
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canBeFlipped(game, self)
-                && (GameConditions.canSpot(game, self, Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground)))
-                || !GameConditions.hasAttached(game, self, Filters.title("Grievous Will Run And Hide")))) {
+                && GameConditions.canBeFlipped(game, self)) {
 
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setSingletonTrigger(true);
-            action.setText("Flip");
-            action.setActionMsg(null);
-            // Perform result(s)
-            action.appendEffect(
-                    new FlipCardEffect(action, self));
-            actions.add(action);
+
+            boolean flip = !GameConditions.hasAttached(game, self, Filters.title("Grievous Will Run And Hide"));
+
+            if (!flip) {
+                // if Grievous is alone, make sure it isn't because other characters with him are excluded from battle
+                PhysicalCard grievous = Filters.findFirstActive(game, self, Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground)));
+                if (grievous != null && game.getModifiersQuerying().isAlone(game.getGameState(), grievous, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)) {
+                    flip = true;
+                }
+            }
+
+            if (flip) {
+
+                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setSingletonTrigger(true);
+                action.setText("Flip");
+                action.setActionMsg(null);
+                // Perform result(s)
+                action.appendEffect(
+                        new FlipCardEffect(action, self));
+                actions.add(action);
+            }
         }
         return actions;
     }
