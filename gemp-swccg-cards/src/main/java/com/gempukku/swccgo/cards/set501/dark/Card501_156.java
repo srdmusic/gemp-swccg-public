@@ -85,8 +85,7 @@ public class Card501_156 extends AbstractUsedInterrupt {
             actions.add(action);
         }
 
-        if (GameConditions.isDuringYourTurn(game, playerId)
-                && GameConditions.canTarget(game, self, Filters.starship_weapon)) {
+        if (GameConditions.canTarget(game, self, Filters.starship_weapon)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Prevent a starship weapon from firing");
