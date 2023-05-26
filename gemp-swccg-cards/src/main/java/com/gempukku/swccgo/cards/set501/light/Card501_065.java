@@ -8,6 +8,7 @@ import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -127,17 +128,21 @@ public class Card501_065 extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && GameConditions.hasAttached(game, self, Filters.title("Grievous Will Run And Hide"))
-                && !GameConditions.canSpot(game, self, Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground)))) {
+                && GameConditions.hasAttached(game, self, Filters.title("Grievous Will Run And Hide"))) {
 
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setSingletonTrigger(true);
-            action.setText("Flip");
-            action.setActionMsg(null);
-            // Perform result(s)
-            action.appendEffect(
-                    new FlipCardEffect(action, self));
-            actions.add(action);
+            // if Grievous is alone, make sure it isn't because other characters with him are excluded from battle
+            PhysicalCard grievous = Filters.findFirstActive(game, self, Filters.and(Filters.Grievous, Filters.alone, Filters.at(Filters.battleground)));
+            if (grievous == null || !game.getModifiersQuerying().isAlone(game.getGameState(), grievous, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE)) {
+
+                RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setSingletonTrigger(true);
+                action.setText("Flip");
+                action.setActionMsg(null);
+                // Perform result(s)
+                action.appendEffect(
+                        new FlipCardEffect(action, self));
+                actions.add(action);
+            }
         }
         return actions;
     }
