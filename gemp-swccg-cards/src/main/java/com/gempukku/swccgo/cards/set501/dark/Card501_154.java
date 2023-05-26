@@ -34,7 +34,7 @@ public class Card501_154 extends AbstractCapitalStarship {
     public Card501_154() {
         super(Side.DARK, 2, 5, 4, 9, null, 3, 7, "First Light", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Crimson Dawn.");
-        setGameText("May add 3 pilots and 6 passengers. Permanent pilot provides ability of 4. Moves like a starfighter. During battle, while alone, your total battle destiny is +1 for each of your gangsters aboard. Immune to attrition < 5.");
+        setGameText("May add 3 pilots and 6 passengers. Permanent pilot provides ability of 3. Moves like a starfighter. During battle, while alone, your total battle destiny is +1 for each of your gangsters aboard. Immune to attrition < 5.");
         addIcons(Icon.INDEPENDENT, Icon.SCOMP_LINK, Icon.PILOT, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_21);
         addModelType(ModelType.NAUUR_CLASS_YACHT);
         setPilotCapacity(3);
@@ -51,7 +51,7 @@ public class Card501_154 extends AbstractCapitalStarship {
     @Override
     protected List<? extends AbstractPermanentAboard> getGameTextPermanentsAboard() {
         List<AbstractPermanentAboard> permanentsAboard = new ArrayList<>();
-        permanentsAboard.add(new AbstractPermanentPilot(4) {});
+        permanentsAboard.add(new AbstractPermanentPilot(3) {});
         return permanentsAboard;
     }
 

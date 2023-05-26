@@ -13,11 +13,13 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfTurnEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -35,7 +37,7 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
     public Card501_063() {
         super(Side.LIGHT, 4, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("It had been decades since Vader had felt the sting of an enemy's blade.");
-        setGameText("USED: If a character of ability > 4 was just hit during battle, opponent loses 1 Force. OR Peek at top card of Force Pile. LOST: If Luke alone during a battle or duel add or subtract 1 to a just drawn weapon, battle, or duel destiny for each 'conflict' card (limit 3).");
+        setGameText("USED: If a character of ability > 4 was just 'hit' during battle, opponent loses 1 Force. OR Peek at top card of Force Pile. LOST: If His Destiny on table, for remainder of turn cancel the game text of opponent's ability 6 character with Luke.");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
         setTestingText("A Jedi's Fury");
     }
@@ -64,51 +66,6 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
             actions.add(action);
         }
 
-
-        Filter lukeAlone = Filters.and(Filters.Luke, Filters.alone);
-
-        if (GameConditions.canSpot(game, self, Filters.I_Feel_The_Conflict)
-                && (GameConditions.isDuringBattleWithParticipant(game, lukeAlone)
-                || GameConditions.isDuringDuelWithParticipant(game, lukeAlone))
-                && (TriggerConditions.isBattleDestinyJustDrawn(game, effectResult)
-                || TriggerConditions.isDuelDestinyJustDrawn(game, effectResult)
-                || TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult))) {
-
-            final int numCardsStacked =
-                    Math.min(3, Filters.filterStacked(game, Filters.stackedOn(self, Filters.I_Feel_The_Conflict)).size());
-
-
-            final PlayInterruptAction addAction = new PlayInterruptAction(game, self, CardSubtype.LOST);
-
-            addAction.setText("Add " + numCardsStacked + " to destiny");
-            addAction.allowResponses(
-                    new RespondablePlayCardEffect(addAction) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            addAction.appendEffect(
-                                    new ModifyDestinyEffect(addAction, numCardsStacked)
-                            );
-                        }
-                    }
-            );
-            actions.add(addAction);
-
-            final PlayInterruptAction subtractAction = new PlayInterruptAction(game, self, CardSubtype.LOST);
-
-            subtractAction.setText("Subtract " + numCardsStacked + " from destiny");
-            subtractAction.allowResponses(
-                    new RespondablePlayCardEffect(subtractAction) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            subtractAction.appendEffect(
-                                    new ModifyDestinyEffect(subtractAction, -numCardsStacked)
-                            );
-                        }
-                    }
-            );
-            actions.add(subtractAction);
-        }
-
         return actions;
     }
 
@@ -130,6 +87,41 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
                             // Perform result(s)
                             action.appendEffect(
                                     new PeekAtTopCardOfForcePileEffect(action, playerId, playerId));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
+
+        Filter filter = Filters.and(Filters.opponents(self), Filters.character, Filters.abilityEqualTo(6), Filters.with(self, Filters.Luke));
+
+        if (GameConditions.canTarget(game, self, Filters.title("His Destiny"))
+                && GameConditions.canTarget(game, self, filter)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            action.setText("Target opponent's character");
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose character", filter) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Cancel " + GameUtils.getCardLink(targetedCard) + "'s game text",
+                                    new RespondablePlayCardEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Get the targeted card(s) from the action using the targetGroupId.
+                                            // This needs to be done in case the target(s) were changed during the responses.
+                                            final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new CancelGameTextUntilEndOfTurnEffect(action, finalTarget));
+                                        }
+                                    }
+                            );
                         }
                     }
             );
