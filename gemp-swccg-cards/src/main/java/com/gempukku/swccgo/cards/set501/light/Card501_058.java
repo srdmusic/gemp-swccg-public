@@ -144,7 +144,7 @@ public class Card501_058 extends AbstractEpicEventDeployable {
 
         gameTextActionId = GameTextActionId.HIS_DESTINY__RELOCATE_LUKE;
 
-        final Filter siteFilter = Filters.and(Filters.battleground_site, Filters.sameLocationAs(self, Filters.Dark_Jedi));
+        final Filter siteFilter = Filters.and(Filters.battleground_site, Filters.sameLocationAs(self, Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4))));
 
         if (GameConditions.isDuringYourPhase(game, playerId, Phase.MOVE)
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)
