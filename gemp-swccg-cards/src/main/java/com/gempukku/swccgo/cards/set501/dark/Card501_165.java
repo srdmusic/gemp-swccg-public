@@ -10,6 +10,7 @@ import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.AddsDestinyToPowerModifier;
@@ -60,8 +61,8 @@ public class Card501_165 extends AbstractStarfighter {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, 1, self.getOwner()));
-        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, 1, game.getOpponent(self.getOwner())));
+        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, Filters.here(self), 1, self.getOwner()));
+        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, Filters.here(self), 1, game.getOpponent(self.getOwner())));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
         return modifiers;
     }
