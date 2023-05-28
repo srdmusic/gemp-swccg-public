@@ -51,7 +51,7 @@ public class Card501_150 extends AbstractSite {
 
         GameTextActionId gameTextActionId = GameTextActionId.IMPERIAL_LANDING_SITE__DEPLOY_DEVICE;
         // Check condition(s)
-        if (GameConditions.isHere(game, self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.Imperial, Filters.trooper))
+        if (GameConditions.isHere(game, self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.Imperial))
                 && GameConditions.isDuringYourPhase(game, playerOnDarkSideOfLocation, Phase.DEPLOY)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerOnDarkSideOfLocation, self, gameTextActionId)) {
 
