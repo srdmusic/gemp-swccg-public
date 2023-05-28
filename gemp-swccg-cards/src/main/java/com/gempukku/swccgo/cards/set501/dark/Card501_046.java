@@ -59,11 +59,11 @@ public class Card501_046 extends AbstractImperial {
 
         // Check condition(s)
         if (TriggerConditions.justDeployed(game, effectResult, self)
-                && GameConditions.canDeployCardFromUsedPile(game, playerId, self, gameTextActionId)) {
+                && GameConditions.canDeployCardFromUsedPile(game, playerId, self, gameTextActionId, true)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy battleground from Force Pile");
-            action.setActionMsg("Deploy a battleground location from Force Pile");
+            action.setText("Deploy card from Used Pile");
+            action.setActionMsg("Deploy a battleground or speeder bike from Used Pile");
             // Perform result(s)
             action.appendEffect(
                     new DeployCardFromUsedPileEffect(action, Filters.or(Filters.battleground, Filters.speeder_bike), true));
