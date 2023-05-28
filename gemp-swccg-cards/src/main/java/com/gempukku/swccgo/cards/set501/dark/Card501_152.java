@@ -14,8 +14,8 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToFireWeaponModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -30,7 +30,7 @@ public class Card501_152 extends AbstractSite {
     public Card501_152() {
         super(Side.DARK, Title.Mos_Eisley, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setLocationDarkSideGameText("Sandtroopers here are power +1 and immune to Blaster Proficiency and Clash of Sabers.");
+        setLocationDarkSideGameText("Imperial stormtroopers here may not be targeted by blasters or Clash Of Sabers.");
         setLocationLightSideGameText("Unless Obi-Wan here, you must first use 1 Force to fire a lightsaber here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
@@ -41,9 +41,8 @@ public class Card501_152 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.sandtrooper, Filters.here(self)), 1));
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.sandtrooper, Filters.here(self)), Title.Blaster_Proficiency));
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.sandtrooper, Filters.here(self)), Title.Clash_Of_Sabers));
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.Imperial, Filters.trooper, Filters.here(self)), Filters.blaster));
+        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.Imperial, Filters.trooper, Filters.here(self)), Title.Clash_Of_Sabers));
         return modifiers;
     }
 
