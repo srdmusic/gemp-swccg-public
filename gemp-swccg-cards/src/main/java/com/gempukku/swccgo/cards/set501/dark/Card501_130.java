@@ -17,6 +17,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextOnSideOfLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeConvertedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -33,10 +34,10 @@ public class Card501_130 extends AbstractSite {
         super(Side.DARK, Title.Chasm_Walkway, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLocationDarkSideGameText("While Vader's Malediction on table and Vader alone here, opponent's Interrupts are Lost Interrupts.");
-        setLocationLightSideGameText("If you occupy, opponent's Chasm Walkway game text is canceled.");
+        setLocationLightSideGameText("If you occupy, opponent's Chasm Walkway game text is canceled. May not be converted.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.CLOUD_CITY, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK);
+        addIcons(Icon.CLOUD_CITY, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.CLOUD_CITY_LOCATION);
         setTestingText("Cloud City: Chasm Walkway (DARK) (V)");
     }
@@ -52,6 +53,7 @@ public class Card501_130 extends AbstractSite {
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new CancelsGameTextOnSideOfLocationModifier(self, Filters.Chasm_Walkway, new OccupiesCondition(playerOnLightSideOfLocation, self), game.getOpponent(playerOnLightSideOfLocation)));
+        modifiers.add(new MayNotBeConvertedModifier(self));
         return modifiers;
     }
 }
