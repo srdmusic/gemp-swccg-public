@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
 import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
+import com.gempukku.swccgo.cards.effects.PreventEffectOnCardEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.evaluators.NegativeEvaluator;
 import com.gempukku.swccgo.cards.evaluators.OccupiesEvaluator;
@@ -15,13 +16,13 @@ import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
@@ -31,13 +32,13 @@ import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.StealCardAndAttachFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalForceGenerationModifier;
 import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.AboutToBeStolenResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,12 +53,12 @@ import java.util.List;
 public class Card501_058 extends AbstractEpicEventDeployable {
     public Card501_058() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "His Destiny", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("If He Is The Chosen One on table, deploy on table. May lose 2 Force to cancel Force Lightning or relocate a stolen Luke's Lightsaber to Luke. " +
+        setGameText("If He Is The Chosen One on table, deploy on table. May lose 2 Force to cancel You Are Beaten or an attempt to steal Luke's Lightsaber. " +
                 "Once per game, may deploy a Death Star II site from Reserve Deck; reshuffle. " +
-                "Opponent's total Force generation is -1 (and your total power is +1) for each Death Star II site you occupy.  " +
-                "Once per game, during your move phase, may relocate Luke to same battleground site as a Dark Jedi. " +
-                "If a card just stacked on I Feel The Conflict, may peek at top two cards of your Reserve Deck and take one into hand.");
-        addIcons(Icon.VIRTUAL_SET_21);
+                "Opponent's total Force generation is -1 (and your total power at all locations is +1) for each Death Star II site you occupy. " +
+                "Once per game, during your move phase, may relocate Luke to same battleground site as opponent's character of ability > 4. " +
+                "If a card was just stacked on I Feel The Conflict, may peek at top two cards of your Reserve Deck and take one into hand.");
+        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
         setTestingText("His Destiny");
     }
 
@@ -99,48 +100,14 @@ public class Card501_058 extends AbstractEpicEventDeployable {
             actions.add(action);
         }
 
-        if (GameConditions.canTargetToCancel(game, self, Filters.Force_Lightning)) {
+        if (GameConditions.canTargetToCancel(game, self, Filters.You_Are_Beaten)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
             // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Force_Lightning, Title.Force_Lightning);
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.You_Are_Beaten, Title.You_Are_Beaten);
             action.appendCost(new LoseForceEffect(action, playerId, 2, true));
             actions.add(action);
         }
-
-        if (GameConditions.canTarget(game, self, TargetingReason.TO_BE_STOLEN, Filters.and(Filters.stolen, Filters.Lukes_Lightsaber))
-                && GameConditions.canTarget(game, self, Filters.Luke)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId);
-            action.setText("Steal Luke's Lightsaber");
-
-            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target stolen Luke's Lightsaber", TargetingReason.TO_BE_STOLEN, Filters.and(Filters.stolen, Filters.Lukes_Lightsaber)) {
-                @Override
-                protected void cardTargeted(final int targetGroupId1, PhysicalCard targetedLightsaber) {
-                    action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target Luke", Filters.Luke) {
-                        @Override
-                        protected void cardTargeted(final int targetGroupId2, PhysicalCard targetedLuke) {
-                            action.appendCost(
-                                    new LoseForceEffect(action, playerId, 2, true));
-                            action.allowResponses(new RespondableEffect(action) {
-                                @Override
-                                protected void performActionResults(Action targetingAction) {
-                                    PhysicalCard finalLightsaber = action.getPrimaryTargetCard(targetGroupId1);
-                                    PhysicalCard finalLuke = action.getPrimaryTargetCard(targetGroupId2);
-
-                                    // Perform result(s)
-                                    action.appendEffect(
-                                            new StealCardAndAttachFromTableEffect(action, finalLightsaber, finalLuke));
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-
-            actions.add(action);
-        }
-
 
         gameTextActionId = GameTextActionId.HIS_DESTINY__RELOCATE_LUKE;
 
@@ -184,7 +151,7 @@ public class Card501_058 extends AbstractEpicEventDeployable {
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalBeforeTriggers(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.Force_Lightning)
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.You_Are_Beaten)
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
@@ -215,6 +182,20 @@ public class Card501_058 extends AbstractEpicEventDeployable {
             actions.add(action);
         }
 
+        if (TriggerConditions.isAboutToBeStolen(game, effectResult, Filters.Lukes_Lightsaber)) {
+            final AboutToBeStolenResult aboutToStealCardResult = (AboutToBeStolenResult) effectResult;
+            final PhysicalCard weaponToBeStolen = aboutToStealCardResult.getCardToBeStolen();
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Cancel attempt");
+            action.setActionMsg("Cancel attempt to steal "+ GameUtils.getCardLink(weaponToBeStolen));
+
+            action.appendCost(
+                    new LoseForceEffect(action, playerId, 2, true));
+            action.appendEffect(
+                    new PreventEffectOnCardEffect(action, aboutToStealCardResult.getPreventableCardEffect(), weaponToBeStolen, null));
+            actions.add(action);
+        }
         return actions;
     }
 }

@@ -2,16 +2,14 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.CancelTargetingEffect;
-import com.gempukku.swccgo.cards.effects.PeekAtBottomCardOfCardPileEffect;
+import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -19,23 +17,15 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.decisions.YesNoDecision;
+import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfTurnEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
-import com.gempukku.swccgo.logic.effects.PutCardFromForcePileOnTopOfCardPileEffect;
-import com.gempukku.swccgo.logic.effects.RespondableEffect;
+import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.TargetingActionUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -49,7 +39,7 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
     public Card501_063() {
         super(Side.LIGHT, 4, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("It had been decades since Vader had felt the sting of an enemy's blade.");
-        setGameText("USED: If a character of ability > 4 was just 'hit' during battle, opponent loses 1 Force. OR Peek at bottom card of your Force Pile; may relocate it to the top of that Pile. LOST: Cancel an attempt to ‘choke’ (or target with Force Lightning) a character of ability > 4.");
+        setGameText("USED: If a character of ability > 4 was just ‘hit’ during battle, opponent loses 1 Force. LOST: If His Destiny on table, choose: For remainder of turn, cancel the game text of a Dark Jedi with Luke. OR During your move phase, relocate Luke from a site to Turbolift Walkway.");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
         setTestingText("A Jedi's Fury");
     }
@@ -83,88 +73,91 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
-        // Check condition(s)
-        if (GameConditions.hasForcePile(game, playerId)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-            action.setText("Peek at bottom card of Force Pile");
-            // Allow response(s)
-            action.allowResponses(new RespondablePlayCardEffect(action) {
+        Filter filter = Filters.and(Filters.opponents(self), Filters.Dark_Jedi, Filters.with(self, Filters.Luke));
+
+        if (GameConditions.canTarget(game, self, Filters.title("His Destiny"))
+                && GameConditions.canTarget(game, self, filter)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            action.setText("Target opponent's character");
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose Dark Jedi", filter) {
                         @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new PeekAtBottomCardOfCardPileEffect(action, playerId, playerId, Zone.FORCE_PILE) {
+                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Cancel " + GameUtils.getCardLink(targetedCard) + "'s game text",
+                                    new RespondablePlayCardEffect(action) {
                                         @Override
-                                        protected void cardsPeekedAt(List<PhysicalCard> peekedAtCards) {
-                                            final PhysicalCard card = peekedAtCards.iterator().next();
-                                            if (card != null) {
-                                                action.appendEffect(new PlayoutDecisionEffect(action, playerId, new YesNoDecision("Move card to top of Force Pile?") {
-                                                    @Override
-                                                    protected void yes() {
-                                                        action.appendEffect(new PutCardFromForcePileOnTopOfCardPileEffect(action, playerId, card, Zone.FORCE_PILE, true));
-                                                    }
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Get the targeted card(s) from the action using the targetGroupId.
+                                            // This needs to be done in case the target(s) were changed during the responses.
+                                            final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
 
-                                                    @Override
-                                                    protected void no() {
-                                                        action.appendEffect(new SendMessageEffect(action, playerId + " chooses not to move card to top of Force Pile"));
-                                                    }
-                                                }));
-                                            }
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new CancelGameTextUntilEndOfTurnEffect(action, finalTarget));
                                         }
-                                    });
+                                    }
+                            );
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
+
+        final Filter locationFilter = Filters.title("Death Star II: Turbolift Walkway");
+        Filter lukeFilter = Filters.and(Filters.Luke, Filters.canBeRelocatedToLocation(locationFilter, 0));
+
+        // Check condition(s)
+        if (GameConditions.isDuringYourPhase(game, playerId, Phase.MOVE)
+                && GameConditions.canTarget(game, self, Filters.title("His Destiny"))
+                && GameConditions.canTarget(game, self, locationFilter)
+                && GameConditions.canTarget(game, self, lukeFilter)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            action.setText("Relocate Luke");
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose character", lukeFilter) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId1, final PhysicalCard characterToRelocate) {
+                            action.appendTargeting(
+                                    new TargetCardOnTableEffect(action, playerId, "Choose site to relocate " + GameUtils.getCardLink(characterToRelocate) + " to", locationFilter) {
+                                        @Override
+                                        protected void cardTargeted(final int targetGroupId2, PhysicalCard targetedSite) {
+                                            action.addAnimationGroup(characterToRelocate);
+                                            action.addAnimationGroup(targetedSite);
+                                            // Pay cost(s)
+                                            action.appendCost(
+                                                    new PayRelocateBetweenLocationsCostEffect(action, playerId, characterToRelocate, targetedSite, 0));
+                                            // Allow response(s)
+                                            action.allowResponses("Relocate " + GameUtils.getCardLink(characterToRelocate) + " to " + GameUtils.getCardLink(targetedSite),
+                                                    new RespondablePlayCardEffect(action) {
+                                                        @Override
+                                                        protected void performActionResults(Action targetingAction) {
+                                                            // Get the targeted card(s) from the action using the targetGroupId.
+                                                            // This needs to be done in case the target(s) were changed during the responses.
+                                                            PhysicalCard finalCharacter = action.getPrimaryTargetCard(targetGroupId1);
+                                                            PhysicalCard finalSite = action.getPrimaryTargetCard(targetGroupId2);
+
+                                                            // Perform result(s)
+                                                            action.appendEffect(
+                                                                    new RelocateBetweenLocationsEffect(action, finalCharacter, finalSite));
+                                                        }
+                                                    }
+                                            );
+                                        }
+                                    }
+                            );
                         }
                     }
             );
             actions.add(action);
         }
         return actions;
-    }
-
-
-    @Override
-    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self) {
-        String opponent = game.getOpponent(playerId);
-        Filter filter = Filters.and(Filters.character, Filters.abilityMoreThan(4));
-        Collection<TargetingReason> targetingReasons = Arrays.asList(TargetingReason.TO_BE_CHOKED);
-
-        // Check condition(s)
-        if (TriggerConditions.isTargetedForReason(game, effect, opponent, filter, targetingReasons)
-                || TriggerConditions.isPlayingCardTargeting(game, effect, Filters.Force_Lightning, filter)) {
-            final RespondableEffect respondableEffect = (RespondableEffect) effect;
-            final List<PhysicalCard> cardsTargeted = (TriggerConditions.isPlayingCardTargeting(game, effect, Filters.Force_Lightning, filter)?
-                    TargetingActionUtils.getCardsTargeted(game, respondableEffect.getTargetingAction(), filter) :
-                    TargetingActionUtils.getCardsTargetedForReason(game, respondableEffect.getTargetingAction(), targetingReasons, filter));
-
-            if (!cardsTargeted.isEmpty()) {
-
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-                action.setText("Cancel targeting");
-                // Choose target(s)
-                action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Choose character", Filters.in(cardsTargeted)) {
-                            @Override
-                            protected void cardTargeted(final int targetGroupId1, final PhysicalCard droidTargeted) {
-                                action.addAnimationGroup(droidTargeted);
-                                // Allow response(s)
-                                action.allowResponses("Cancel targeting of " + GameUtils.getCardLink(droidTargeted),
-                                        new RespondablePlayCardEffect(action) {
-                                            @Override
-                                            protected void performActionResults(Action targetingAction) {
-                                                // Get the final targeted card(s)
-                                                PhysicalCard finalDroid = action.getPrimaryTargetCard(targetGroupId1);
-                                                // Perform result(s)
-                                                action.appendEffect(
-                                                        new CancelTargetingEffect(action, respondableEffect));
-                                            }
-                                        }
-                                );
-                            }
-                        }
-                );
-                return Collections.singletonList(action);
-            }
-        }
-        return null;
     }
 }
