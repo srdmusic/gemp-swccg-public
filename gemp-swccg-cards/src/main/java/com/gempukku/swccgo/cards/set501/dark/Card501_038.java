@@ -17,6 +17,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ShowCardOnScreenEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromOutsideOfGameSimultaneouslyWithCardEffect;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToTargetModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -32,10 +33,10 @@ import java.util.List;
  */
 public class Card501_038 extends AbstractImperial {
     public Card501_038() {
-        super(Side.DARK, 3, 2, 2, 2, 4, "TD-4445", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 3, 2, 2, 2, 3, "TD-4445", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setArmor(4);
         setLore("Sandtrooper.");
-        setGameText("Once per game, may reveal from hand to take a Dewback into hand from outside your deck and deploy both simultaneously. Your characters aboard Dewbacks here may not be targeted by axes or lightsabers.");
+        setGameText("Once per game, may reveal from hand to take a dewback into hand from outside your deck and deploy both simultaneously. Deploys -2 aboard a dewback. Your characters aboard dewbacks here may not be targeted by axes or lightsabers.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.SANDTROOPER);
         setTestingText("TD-4445");
@@ -49,8 +50,8 @@ public class Card501_038 extends AbstractImperial {
             && GameConditions.isDuringYourPhase(game, playerId, Phase.DEPLOY)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Reveal to deploy a Dewback");
-            action.setActionMsg("Reveal to deploy simultaneously with a Dewback from outside the game");
+            action.setText("Reveal to deploy a dewback");
+            action.setActionMsg("Reveal to deploy simultaneously with a dewback from outside the game");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerGameEffect(action));
@@ -62,6 +63,13 @@ public class Card501_038 extends AbstractImperial {
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DeployCostToTargetModifier(self, -2, Filters.Dewback));
+        return modifiers;
     }
 
     @Override
