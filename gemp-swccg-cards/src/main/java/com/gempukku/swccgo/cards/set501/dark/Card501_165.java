@@ -13,8 +13,9 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.AddsDestinyToPowerModifier;
+import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotAddDestinyDrawsToPowerModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDrawMoreThanBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -32,8 +33,9 @@ import java.util.List;
 public class Card501_165 extends AbstractStarfighter {
     public Card501_165() {
         super(Side.DARK, 2, 6, 5, null, 5, 5, 7, "Zuckuss And 4-LOM In Mist Hunter", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setComboCard(true);
         setLore("Zuckuss is a dangerous adversary, especially when aboard his own starship. Mystical omens enable the Gand to predict enemy maneuvers in starship combat.");
-        setGameText("May add 2 passengers. Permanent pilots are Zuckuss and 4-LOM, who provide 4 ability and adds one destiny to total power. Players may not draw more than one battle destiny here. Immune to attrition < 5.");
+        setGameText("May add 2 passengers. Permanent pilots are •Zuckuss, who provides ability of 4, and •4-LOM. Players may not add power destinies or draw more than one battle destiny here. Immune to attrition < 5.");
         addPersonas(Persona.MIST_HUNTER);
         addIcons(Icon.INDEPENDENT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_21);
         addIcon(Icon.PILOT, 2);
@@ -45,13 +47,7 @@ public class Card501_165 extends AbstractStarfighter {
     @Override
     protected List<? extends AbstractPermanentAboard> getGameTextPermanentsAboard() {
         List<AbstractPermanentAboard> permanentsAboard = new ArrayList<>();
-        permanentsAboard.add(new AbstractPermanentPilot(Persona.ZUCKUSS, 4)  {
-            @Override
-            public List<Modifier> getGameTextModifiers(PhysicalCard self) {
-                List<Modifier> modifiers = new LinkedList<>();
-                modifiers.add(new AddsDestinyToPowerModifier(self, 1));
-                return modifiers;
-            }
+        permanentsAboard.add(new AbstractPermanentPilot(Persona.ZUCKUSS, 4) {
         });
         permanentsAboard.add(new AbstractPermanentPilot(Persona._4_LOM, 0) {
         });
@@ -60,9 +56,13 @@ public class Card501_165 extends AbstractStarfighter {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, Filters.here(self), 1, self.getOwner()));
-        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, Filters.here(self), 1, game.getOpponent(self.getOwner())));
+        modifiers.add(new MayNotAddDestinyDrawsToPowerModifier(self, new InBattleCondition(self), playerId));
+        modifiers.add(new MayNotAddDestinyDrawsToPowerModifier(self, new InBattleCondition(self), opponent));
+        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, Filters.here(self), 1, playerId));
+        modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, Filters.here(self), 1, opponent));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
         return modifiers;
     }
