@@ -37,7 +37,7 @@ import java.util.List;
  */
 public class Card501_063 extends AbstractUsedOrLostInterrupt {
     public Card501_063() {
-        super(Side.LIGHT, 4, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 5, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("It had been decades since Vader had felt the sting of an enemy's blade.");
         setGameText("USED: If a character of ability > 4 was just ‘hit’ during battle, opponent loses 1 Force. LOST: If His Destiny on table, choose: For remainder of turn, cancel the game text of a Dark Jedi with Luke. OR During your move phase, relocate Luke from a site to Turbolift Walkway.");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
