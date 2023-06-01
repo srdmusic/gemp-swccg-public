@@ -2,11 +2,10 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -16,13 +15,16 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.ShowCardOnScreenEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckSimultaneouslyWithCardEffect;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.MoveCardAsRegularMoveEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.modifiers.ResetDefenseValueModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.MovedResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -31,66 +33,65 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Effect
- * Title: Relentless Tracking (V)
+ * Title: Royal Escort (V)
  */
 public class Card501_045 extends AbstractNormalEffect {
     public Card501_045() {
-        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Relentless Tracking", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Royal Escort", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setLore("Biker scouts commonly work as a team to track enemies of the Empire. A pair of scouts on speeder bike is difficult to elude.");
-        setGameText("Deploy on table. Speeder bikes are power +1. Speeder bike pilots are defense value = 5. During your deploy phase, may reveal a speeder bike from hand to take a biker scout (or vice versa) into hand from Reserve Deck, and deploy both simultaneously; reshuffle. [Immune to Alter.]");
-        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_21);
+        setLore("When away from the Imperial Palace on Coruscant, the Emperor is protected by legions of troops. Typically this force includes soldiers trained to fight in the local environment.");
+        setGameText("Deploy on table. Your scouts piloting speeder bikes are defense value = 5 and immune to Clash of Sabers. Once per game, your speeder bike piloted by a scout may follow an opponent's character that just moved from same site. [Immune to Alter.]");
+        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Relentless Tracking (V)");
+        setTestingText("Royal Escort (V)");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        Filter scoutsPilotingSpeederBikesFilter = Filters.and(Filters.your(self), Filters.scout, Filters.piloting(Filters.speeder_bike));
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, Filters.speeder_bike, 1));
-        modifiers.add(new ResetDefenseValueModifier(self, Filters.piloting(Filters.speeder_bike), 5));
+        modifiers.add(new ResetDefenseValueModifier(self, scoutsPilotingSpeederBikesFilter, 5));
+        modifiers.add(new ImmuneToTitleModifier(self, scoutsPilotingSpeederBikesFilter, Title.Clash_Of_Sabers));
         return modifiers;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        final Filter vehicleFilter = Filters.and(Filters.speeder_bike, Filters.isUniquenessOnTableNotReached);
-        Filter pilotFilter = Filters.and(Filters.biker_scout, Filters.isUniquenessOnTableNotReached);
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.ROYAL_ESCORT_V__FOLLOW;
 
-        GameTextActionId gameTextActionId = GameTextActionId.RELENTLESS_TRACKING_V__DEPLOY_SPEEDER_BIKE_OR_BIKER_SCOUT;
+        Filter speederBikeFilter = Filters.and(Filters.your(self), Filters.speeder_bike, Filters.hasPiloting(self, Filters.scout));
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
-                && GameConditions.hasInHand(game, playerId, Filters.or(vehicleFilter, pilotFilter))
-                && GameConditions.canSearchReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (TriggerConditions.movedFromLocation(game, effectResult, Filters.and(Filters.opponents(self), Filters.character), Filters.sameSiteAs(self, speederBikeFilter))
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Reveal biker scout or speeder bike from hand");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
-            // Choose target(s)
-            action.appendTargeting(
-                    new ChooseCardFromHandEffect(action, playerId, Filters.or(vehicleFilter, pilotFilter)) {
-                        @Override
-                        protected void cardSelected(SwccgGame game, final PhysicalCard selectedCard) {
-                            final Filter searchFilter;
-                            if (Filters.character.accepts(game, selectedCard)) {
-                                action.setActionMsg("Take a speeder bike from Reserve Deck and deploy both simultaneously");
-                                searchFilter = vehicleFilter;
+            MovedResult movedResult = (MovedResult) effectResult;
+            final PhysicalCard fromLocation = movedResult.getMovedFrom();
+            final Filter toLocation = Filters.sameLocation(movedResult.getMovedTo());
+            Filter movableFilter = Filters.and(speederBikeFilter, Filters.at(fromLocation),
+                    Filters.movableAsRegularMove(playerId, false, 0, false, toLocation));
+            if (GameConditions.canTarget(game, self, movableFilter)) {
+
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Have speeder bike follow character");
+
+                action.appendUsage(
+                        new OncePerGameEffect(action));
+                // Choose target(s)
+                action.appendTargeting(
+                        new ChooseCardOnTableEffect(action, playerId, "Choose speeder bike", movableFilter) {
+                            @Override
+                            protected void cardSelected(final PhysicalCard speederBike) {
+                                action.addAnimationGroup(speederBike);
+                                action.setActionMsg("Have " + GameUtils.getCardLink(speederBike) + " move to follow character");
+                                // Perform result(s)
+                                action.appendEffect(
+                                        new MoveCardAsRegularMoveEffect(action, playerId, speederBike, false, false, toLocation));
                             }
-                            else {
-                                action.setActionMsg("Take a biker scout from Reserve Deck and deploy both simultaneously");
-                                searchFilter = Filters.biker_scout;
-                            }
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new ShowCardOnScreenEffect(action, selectedCard));
-                            action.appendEffect(
-                                    new DeployCardFromReserveDeckSimultaneouslyWithCardEffect(action, selectedCard, searchFilter, true));
                         }
-                    });
-            return Collections.singletonList(action);
+                );
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }
