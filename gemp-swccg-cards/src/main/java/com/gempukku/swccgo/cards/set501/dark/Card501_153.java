@@ -31,8 +31,8 @@ import java.util.List;
 public class Card501_153 extends AbstractSite {
     public Card501_153() {
         super(Side.DARK, "Jakku: Niima Marketplace", Title.Jakku, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("During your move phase, any of your [Episode VII] characters may move from here to a battleground.");
-        setLocationLightSideGameText("If Finn or Rey here, opponent's First Order characters may not move away from here.");
+        setLocationDarkSideGameText("During your move phase, your [Episode VII] characters may move from here to a battleground site.");
+        setLocationLightSideGameText("If Finn or Rey here, opponent's First Order characters may not move from here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_21);

@@ -32,13 +32,13 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Effect
- * Title: Tatooine Occupation
+ * Title: Tatooine Occupation (V)
  */
 public class Card501_049 extends AbstractNormalEffect {
     public Card501_049() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Tatooine_Occupation, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setLore("Sandtroopers commanded by Governor Aryon do not enjoy their assignment. They find a means of venting their frustrations by harassing the local inhibitors.");
+        setLore("Sandtroopers commanded by Governor Aryon do not enjoy their assignment. They find a means of venting their frustrations by harassing the local inhabitants.");
         setGameText("Deploy on table. During your control phase, if you occupy Tatooine system, opponent loses 1 Force for each Tatooine battleground site you occupy with a unique (•) trooper. While you have three troopers on Tatooine, immune to Alter and Endor Celebration.");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_21);
         setTestingText("Tatooine Occupation (V)");
@@ -64,7 +64,7 @@ public class Card501_049 extends AbstractNormalEffect {
             int numForce = Filters.countTopLocationsOnTable(game, Filters.and(Filters.Tatooine_battleground_site, Filters.occupiesWith(playerId, self, Filters.and(Filters.unique, Filters.trooper))));
             if (numForce > 0) {
 
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
                 action.setText("Make opponent lose " + numForce + " Force");
                 // Update usage limit(s)
                 action.appendUsage(

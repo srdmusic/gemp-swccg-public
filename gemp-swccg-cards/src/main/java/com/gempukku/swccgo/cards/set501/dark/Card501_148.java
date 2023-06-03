@@ -36,7 +36,7 @@ public class Card501_148 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Send A Detachment Down", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Vader sent Imperial stormtroopers to the surface of Tatooine in search of the stolen Death Star plans. 'There'll be no one to stop us this time.'");
-        setGameText("Deploy on table. While you occupy Tatooine your Force generation is +1 at related sites you occupy with a trooper and during your deploy phase, may exchange a non-[Maintenance] Imperial trooper from hand with one from Reserve Deck; reshuffle. [Immune to Alter.]");
+        setGameText("Deploy on table. While you occupy Tatooine system, your Force generation is +1 at Tatooine sites you occupy with a trooper and, during your deploy phase, may exchange a non-[Maintenance] Imperial trooper in hand with one in Reserve Deck; reshuffle. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Send A Detachment Down (V)");

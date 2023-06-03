@@ -3,12 +3,11 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.ConvertLocationByRaisingToTopEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnForCardTitleEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -21,7 +20,7 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Collections;
@@ -37,8 +36,8 @@ import java.util.List;
 public class Card501_150 extends AbstractSite {
     public Card501_150() {
         super(Side.DARK, "Tatooine: Imperial Landing Site", Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("If your Imperial here during your deploy phase, may deploy a [Hoth] device to related system.");
-        setLocationLightSideGameText("If a player controls this site, once per turn they may raise their converted Tatooine location to the top.");
+        setLocationDarkSideGameText("Once per turn, if your Imperial here, may [download] a [Hoth] device.");
+        setLocationLightSideGameText("Once per turn, a player who controls this site may raise their converted related location to the top.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_21);
@@ -52,19 +51,19 @@ public class Card501_150 extends AbstractSite {
         GameTextActionId gameTextActionId = GameTextActionId.IMPERIAL_LANDING_SITE__DEPLOY_DEVICE;
         // Check condition(s)
         if (GameConditions.isHere(game, self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.Imperial))
-                && GameConditions.isDuringYourPhase(game, playerOnDarkSideOfLocation, Phase.DEPLOY)
+                && GameConditions.isOncePerTurn(game, self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerOnDarkSideOfLocation, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy device from Reserve Deck");
-            action.setActionMsg("Deploy [Hoth] device to related system from Reserve Deck");
+            action.setText("Deploy [Hoth] device");
+            action.setActionMsg("Deploy [Hoth] device from Reserve Deck");
 
             // Update usage limit(s)
             action.appendUsage(
-                    new OncePerGameEffect(action));
+                    new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Icon.HOTH, Filters.device), Filters.Tatooine_system, true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.HOTH, Filters.device), true));
             return Collections.singletonList(action);
         }
 
@@ -75,17 +74,17 @@ public class Card501_150 extends AbstractSite {
     protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(final String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         Filter location = Filters.and(Filters.Tatooine_location, Filters.canBeConvertedByRaisingYourLocationToTop(playerOnLightSideOfLocation));
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionId = GameTextActionId.IMPERIAL_LANDING_SITE__RAISE_CONVERTED_LOCATION;
         // Check condition(s)
         if (GameConditions.controls(game, playerOnLightSideOfLocation, self)
-                && GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isOncePerTurnForCardTitle(game, self, gameTextActionId)
                 && GameConditions.canTarget(game, self, location)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.setText("Raise your converted Tatooine location");
 
             action.appendUsage(
-                    new OncePerTurnEffect(action));
+                    new OncePerTurnForCardTitleEffect(action));
             // Choose target(s)
             action.appendTargeting(
                     new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Target location to convert", location) {
@@ -116,17 +115,17 @@ public class Card501_150 extends AbstractSite {
     protected List<TopLevelGameTextAction> getGameTextLightSideOpponentsTopLevelActions(final String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         Filter location = Filters.and(Filters.Tatooine_location, Filters.canBeConvertedByRaisingYourLocationToTop(playerOnLightSideOfLocation));
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionId = GameTextActionId.IMPERIAL_LANDING_SITE__RAISE_CONVERTED_LOCATION;
         // Check condition(s)
         if (GameConditions.controls(game, playerOnLightSideOfLocation, self)
-                && GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isOncePerTurnForCardTitle(game, self, gameTextActionId)
                 && GameConditions.canTarget(game, self, location)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.setText("Raise your converted Tatooine location");
 
             action.appendUsage(
-                    new OncePerTurnEffect(action));
+                    new OncePerTurnForCardTitleEffect(action));
             // Choose target(s)
             action.appendTargeting(
                     new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Target location to convert", location) {

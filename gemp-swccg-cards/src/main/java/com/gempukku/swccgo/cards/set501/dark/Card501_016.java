@@ -60,15 +60,15 @@ public class Card501_016 extends AbstractSite {
         GameTextActionId gameTextActionId = GameTextActionId.TATOOINE_GREAT_PIT_OF_CARKOON__DEPLOY_BOBA;
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)) {
 
-                if (GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, Persona.BOBA_FETT)) {
-                    TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
-                    action.setText("Deploy Boba Fett from Reserve Deck");
-                    action.appendUsage(
-                            new OncePerGameEffect(action));
-                    action.appendEffect(
-                            new DeployCardToLocationFromReserveDeckEffect(action, Filters.Boba_Fett, Filters.here(self), true));
-                    actions.add(action);
-                }
+            if (GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId, Persona.BOBA_FETT)) {
+                TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
+                action.setText("Deploy Boba Fett from Reserve Deck");
+                action.appendUsage(
+                        new OncePerGameEffect(action));
+                action.appendEffect(
+                        new DeployCardToLocationFromReserveDeckEffect(action, Filters.Boba_Fett, Filters.here(self), true));
+                actions.add(action);
+            }
 
             if (GameConditions.canDeployCardFromLostPile(game, playerOnLightSideOfLocation, self, gameTextActionId, Persona.BOBA_FETT)) {
                 TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);

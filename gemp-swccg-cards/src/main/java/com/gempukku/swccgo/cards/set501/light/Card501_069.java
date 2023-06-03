@@ -30,7 +30,7 @@ import java.util.List;
 public class Card501_069 extends AbstractSite {
     public Card501_069() {
         super(Side.LIGHT, "Supply Route", Uniqueness.DIAMOND_1, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("Deploys only to same system as Clone Command Center. Your vehicles are power +1 here.");
+        setLocationDarkSideGameText("Deploys only to same planet as Clone Command Center. Your vehicles are power +1 here.");
         setLocationLightSideGameText("Once during opponent's turn, if your clone here with a Jedi or Padawan, may activate 1 Force.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
@@ -58,7 +58,7 @@ public class Card501_069 extends AbstractSite {
         // Check condition(s)
         if (GameConditions.isOnceDuringOpponentsTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canActivateForce(game, playerOnLightSideOfLocation)
-                && GameConditions.occupiesWith(game, self, playerOnLightSideOfLocation, Filters.here(self), Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.or(Filters.Jedi, Filters.padawan), Filters.with(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.clone))))) {
+                && GameConditions.occupiesWith(game, self, playerOnLightSideOfLocation, Filters.here(self), Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.clone, Filters.with(self, Filters.or(Filters.Jedi, Filters.padawan))))) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.setText("Activate 1 Force");

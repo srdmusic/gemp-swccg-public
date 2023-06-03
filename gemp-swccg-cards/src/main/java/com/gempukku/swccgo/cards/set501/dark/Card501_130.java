@@ -33,8 +33,8 @@ public class Card501_130 extends AbstractSite {
     public Card501_130() {
         super(Side.DARK, Title.Chasm_Walkway, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setLocationDarkSideGameText("While Vader's Malediction on table and Vader alone here, opponent's Interrupts are Lost Interrupts.");
-        setLocationLightSideGameText("If you occupy, opponent's Chasm Walkway game text is canceled. May not be converted.");
+        setLocationDarkSideGameText("If Vader's Malediction on table and Vader alone here, opponent's Interrupts are Lost Interrupts.");
+        setLocationLightSideGameText("If you occupy, opponent's Chasm Walkway game text here is canceled. May not be converted.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.CLOUD_CITY, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_21);
@@ -52,7 +52,7 @@ public class Card501_130 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new CancelsGameTextOnSideOfLocationModifier(self, Filters.Chasm_Walkway, new OccupiesCondition(playerOnLightSideOfLocation, self), game.getOpponent(playerOnLightSideOfLocation)));
+        modifiers.add(new CancelsGameTextOnSideOfLocationModifier(self, Filters.and(Filters.Chasm_Walkway, Filters.here(self)), new OccupiesCondition(playerOnLightSideOfLocation, self), game.getOpponent(playerOnLightSideOfLocation)));
         modifiers.add(new MayNotBeConvertedModifier(self));
         return modifiers;
     }
