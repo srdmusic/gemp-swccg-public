@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class Card501_142 extends AbstractNormalEffect {
     public Card501_142() {
-        super(Side.LIGHT, 3, PlayCardZoneOption.ATTACHED, "At Peace", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.R);
+        super(Side.LIGHT, 3, PlayCardZoneOption.ATTACHED, "At Peace", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("To recover from the strenuous Jedi training routine and revitalize the mind and body, an apprentice must rest to be calm and at peace.");
         setGameText("Deploy on Dagobah system. Your Force retrieval is canceled. Your [Dagobah] characters deploy -1 to Dagobah. Your training destiny draws are +1. " +
@@ -51,8 +51,8 @@ public class Card501_142 extends AbstractNormalEffect {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self.getOwner()), Filters.character, Icon.DAGOBAH), -1, Filters.Dagobah_location));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(self), Filters.character, Icon.DAGOBAH), -1, Filters.Dagobah_location));
         modifiers.add(new EachTrainingDestinyModifier(self, Filters.any, 1));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test_2, ModifyGameTextType.JEDI_TEST_2__MAY_NOT_MOVE));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test_4, ModifyGameTextType.JEDI_TEST_4__SEARCHES_FOR_FREE));

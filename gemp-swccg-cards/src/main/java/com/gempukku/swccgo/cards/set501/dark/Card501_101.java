@@ -23,9 +23,11 @@ import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.MoveCardUsingLandspeedEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,7 +44,7 @@ public class Card501_101 extends AbstractLostInterrupt {
         super(Side.DARK, 6, Title.Vaders_Obsession, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Vader sought to hunt down and destroy all Jedi. After completing the circle with Obi-Wan, he turned his attention to the young Skywalker.");
-        setGameText("If Vader is your apprentice, choose: Take The Works into hand from Reserve Deck; reshuffle. OR Cancel Uncontrollable Fury. (Immune to Run Luke, Run!) OR At start of your battle phase, move Vader (using landspeed) to a site you do not occupy.");
+        setGameText("If Vader is your apprentice, choose: [upload] The Works. OR Cancel Uncontrollable Fury. (Immune to Run Luke, Run!) OR At start of your battle phase, move Vader (using landspeed) to a site you do not occupy.");
         addIcons(Icon.VIRTUAL_SET_21);
         setTestingText("Vader's Obsession (V)");
     }
@@ -65,38 +67,52 @@ public class Card501_101 extends AbstractLostInterrupt {
             GameTextActionId gameTextActionId = GameTextActionId.VADERS_OBSESSION__UPLOAD_THE_WORKS;
 
             // Check condition(s)
-            if (GameConditions.canSpot(game, self, Filters.Revenge_Of_The_Sith)
-                    && GameConditions.canSpot(game, self, Filters.I_Am_Your_Father)) {
-                if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-                    final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-                    action.setText("Take The Works into hand from Reserve Deck");
-                    action.setActionMsg("Take Coruscant: The Works into hand from Reserve Deck.");
-                    action.setImmuneTo(Title.Run_Luke_Run);
+            if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+                action.setText("Take The Works into hand from Reserve Deck");
+                action.setActionMsg("Take Coruscant: The Works into hand from Reserve Deck.");
+                action.setImmuneTo(Title.Run_Luke_Run);
 
-                    // Allow response(s)
-                    action.allowResponses(
-                            new RespondablePlayCardEffect(action) {
-                                @Override
-                                protected void performActionResults(Action targetingAction) {
-                                    // Perform result(s)
-                                    action.appendEffect(
-                                            new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Coruscant_The_Works, true));
-                                }
+                // Allow response(s)
+                action.allowResponses(
+                        new RespondablePlayCardEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                // Perform result(s)
+                                action.appendEffect(
+                                        new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Coruscant_The_Works, true));
                             }
-                    );
-                    actions.add(action);
-                }
-
-                if (GameConditions.canTargetToCancel(game, self, Filters.Uncontrollable_Fury)) {
-                    final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                    // Build action using common utility
-                    action.setImmuneTo(Title.Run_Luke_Run);
-                    CancelCardActionBuilder.buildCancelCardAction(action, Filters.Uncontrollable_Fury, Title.Uncontrollable_Fury);
-                    actions.add(action);
-                }
+                        }
+                );
+                actions.add(action);
             }
+
+            if (GameConditions.canTargetToCancel(game, self, Filters.Uncontrollable_Fury)) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                // Build action using common utility
+                action.setImmuneTo(Title.Run_Luke_Run);
+                CancelCardActionBuilder.buildCancelCardAction(action, Filters.Uncontrollable_Fury, Title.Uncontrollable_Fury);
+                actions.add(action);
+            }
+
         }
         return actions;
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self) {
+        // Check condition(s)
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.Uncontrollable_Fury)
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)
+                && isVaderYourApprentice(game, self)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            // Build action using common utility
+            action.setImmuneTo(Title.Run_Luke_Run);
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
     @Override

@@ -44,7 +44,7 @@ public class Card501_155 extends AbstractLostOrStartingInterrupt {
         setLore("'A vergence, you say?'");
         setGameText("LOST: Cancel an attempt to 'choke' (or target with Force Lightning) your character of ability > 4. " +
                 "STARTING: If He Is The Chosen One on table, deploy His Destiny and two Effects that deploy for free and are always immune to Alter. Place Interrupt in Lost Pile.");
-        addIcons(Icon.VIRTUAL_SET_21);
+        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
         setTestingText("Anakin's Destiny");
     }
 

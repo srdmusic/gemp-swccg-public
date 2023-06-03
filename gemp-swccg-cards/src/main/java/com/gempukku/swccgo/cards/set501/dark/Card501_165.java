@@ -34,7 +34,7 @@ public class Card501_165 extends AbstractStarfighter {
     public Card501_165() {
         super(Side.DARK, 2, 6, 5, null, 5, 5, 7, "Zuckuss And 4-LOM In Mist Hunter", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setComboCard(true);
-        setLore("Zuckuss is a dangerous adversary, especially when aboard his own starship. Mystical omens enable the Gand to predict enemy maneuvers in starship combat.");
+        setLore("Commissioned by a group of Gand venture capitalists headed by Zuckuss. Manufactured by Byblos Drive Yards. Uses repulsor lift technology developed for combat cloud cars.");
         setGameText("May add 2 passengers. Permanent pilots are •Zuckuss, who provides ability of 4, and •4-LOM. Players may not add power destinies or draw more than one battle destiny here. Immune to attrition < 5.");
         addPersonas(Persona.MIST_HUNTER);
         addIcons(Icon.INDEPENDENT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_21);

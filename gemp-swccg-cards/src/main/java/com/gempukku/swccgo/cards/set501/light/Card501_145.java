@@ -37,8 +37,8 @@ public class Card501_145 extends AbstractDefensiveShield {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Only Jedi Carry That Weapon", ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("An elegant weapon for a more civilized age.");
-        setGameText("Plays on table. For opponent to steal a weapon from target character using a non-[Episode I] card, must first draw destiny. Unless destiny +1 > target's ability, attempt fails (stealing card is placed out of play). [Episode I] blasters are immune to An Entire Legion Of My Best Troops.");
-        addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_SET_21);
+        setGameText("Plays on table. For opponent to steal a weapon from target character using a non-[Episode I] card, must first draw destiny. Unless destiny +1 > target's ability, attempt fails and stealing card is placed out of play. [Episode I] blasters are immune to An Entire Legion Of My Best Troops.");
+        addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I, Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setTestingText("Only Jedi Carry That Weapon (V)");
     }
 

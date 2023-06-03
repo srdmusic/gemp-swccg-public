@@ -34,10 +34,9 @@ import java.util.List;
 public class Card501_129 extends AbstractNormalEffect {
     public Card501_129() {
         super(Side.DARK, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Vader's Malediction", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setVirtualSuffix(true);
-        setLore("A symbol of the Dark Lord of the Sith, and of the seductive power of the dark side.");
-        setGameText("If Vader is your 'apprentice', deploy on table. Vader's game text may not be canceled. While Vader is alone, armed with a [Death Star II] lightsaber, and present at a site, your Force drains there are +1. If you just drew Vader for destiny, may take him into hand. [Immune to Alter.]");
-        addIcons(Icon.CLOUD_CITY, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
+        setLore("'... And together, we can rule the galaxy as father and son!'");
+        setGameText("If Vader is your apprentice, deploy on table. Vader's game text may not be canceled. While Vader alone, armed with a [Death Star II] lightsaber, and present at a site, your Force drains there are +1. If you just drew Vader for destiny, may take him into hand. [Immune to Alter.]");
+        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Vader's Malediction");
     }
@@ -58,9 +57,8 @@ public class Card501_129 extends AbstractNormalEffect {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotHaveGameTextCanceledModifier(self, Filters.Vader));
-        Filter dsIILightsaber = Filters.and(Filters.icon(Icon.DEATH_STAR_II), Filters.lightsaber);
-        Filter aloneAndPresentAtASite = Filters.and(Filters.alone, Filters.presentAt(Filters.site));
-        Filter vaderArmedWithDsIILightsaberAloneAndPresentAtASite = Filters.and(Filters.Vader, Filters.armedWith(dsIILightsaber), aloneAndPresentAtASite);
+        Filter dsIILightsaber = Filters.and(Icon.DEATH_STAR_II, Filters.lightsaber);
+        Filter vaderArmedWithDsIILightsaberAloneAndPresentAtASite = Filters.and(Filters.Vader, Filters.alone, Filters.armedWith(dsIILightsaber), Filters.presentAt(Filters.site));
         modifiers.add(new ForceDrainModifier(self, Filters.sameSiteAs(self, vaderArmedWithDsIILightsaberAloneAndPresentAtASite), 1, self.getOwner()));
         return modifiers;
     }
@@ -68,7 +66,7 @@ public class Card501_129 extends AbstractNormalEffect {
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.isDestinyJustDrawn(game, effectResult)
+        if (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, playerId)
                 && GameConditions.isDestinyCardMatchTo(game, Filters.Vader)
                 && GameConditions.canTakeDestinyCardIntoHand(game, playerId)) {
 

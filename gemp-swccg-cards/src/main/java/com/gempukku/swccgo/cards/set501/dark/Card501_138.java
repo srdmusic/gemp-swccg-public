@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -34,13 +35,14 @@ public class Card501_138 extends AbstractLostInterrupt {
         super(Side.DARK, 5, Title.Dark_Collaboration, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Imperial leaders are ruthlessly effective when working together. Tarkin, Motti and Tagge presented a deadly combination as they plotted to 'crush the Rebellion.'");
-        setGameText("Cancel Rebel Barrier. OR If your ISB agent leader (except Ozzel) in battle, cancel It's A Trap! or opponent's 'react' away from that battle. OR If three or more ISB agent leaders (except Ozzel) are in battle together, add two battle destiny.");
+        setGameText("Cancel Rebel Barrier. OR If your non-Ozzel ISB agent leader in battle, cancel It's A Trap! or opponent's 'react' away from that battle. OR If three non-Ozzel ISB agent leaders are in battle together, add two battle destiny.");
+        addIcons(Icon.VIRTUAL_SET_21);
         setTestingText("Dark Collaboration (V)");
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+        List<PlayInterruptAction> actions = new LinkedList<>();
 
         // Check condition(s)
         if (GameConditions.isDuringBattle(game)

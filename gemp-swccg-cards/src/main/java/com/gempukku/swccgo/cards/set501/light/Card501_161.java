@@ -16,7 +16,6 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
@@ -40,14 +39,13 @@ public class Card501_161 extends AbstractUsedInterrupt {
         super(Side.LIGHT, 4, "Either Way, You Win", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("'Deal!'");
-        setGameText("If [Coruscant] or [Tatooine] Qui-Gon in battle, he is power +1 for each credit. OR Once per game, if a battle just initiated at Watto's Junkyard involving Qui-Gon, target a character. Lightsabers may not be fired this battle and (unless Watto or a Dark Jedi) target's game text is canceled.");
+        setGameText("If [Tatooine] or [Coruscant] Qui-Gon in battle, he is power +1 for each 'credit.' OR Once per game, if a battle just initiated at Watto's Junkyard involving Qui-Gon, target a character. Lightsabers may not be fired this battle. Unless target is Watto or a Dark Jedi, cancel target's game text.");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("Either Way, You Win (V)");
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        final String opponent = game.getOpponent(playerId);
 
         if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.or(Icon.TATOOINE, Icon.CORUSCANT), Filters.QuiGon))) {
 
@@ -73,7 +71,7 @@ public class Card501_161 extends AbstractUsedInterrupt {
 
                                             // Perform result(s)
                                             action.appendEffect(
-                                                    new AddUntilEndOfTurnModifierEffect(action, new PowerModifier(self, finalQuiGon, finalCreditCount), "Makes " + GameUtils.getCardLink(finalQuiGon) + " power +" + finalCreditCount));
+                                                    new AddUntilEndOfBattleModifierEffect(action, new PowerModifier(self, finalQuiGon, finalCreditCount), "Makes " + GameUtils.getCardLink(finalQuiGon) + " power +" + finalCreditCount));
                                         }
                                     }
                             );
