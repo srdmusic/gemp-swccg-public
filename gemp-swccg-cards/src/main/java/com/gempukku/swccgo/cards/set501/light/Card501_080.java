@@ -61,7 +61,7 @@ public class Card501_080 extends AbstractRepublic {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        if (GameConditions.canSpot(game, self, Filters.and(Filters.title("Cloning Cylinders"), Filters.hasStacked(self)))
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.Cloning_Cylinders, Filters.hasStacked(self)))
                 && GameConditions.canTarget(game, self, TargetingReason.TO_BE_CANCELED, Filters.Lateral_Damage)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);

@@ -37,17 +37,15 @@ public class Card501_077 extends AbstractCapitalStarship {
         setPassengerCapacity(5);
         setVehicleCapacity(5);
         setStarfighterCapacity(5);
-        setMatchingPilotFilter(Filters.or(Filters.Anakin, Filters.title("Admiral Yularen")));
+        setMatchingPilotFilter(Filters.or(Filters.Anakin, Filters.Yularen));
         setTestingText("Resolute");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        String opponent = game.getOpponent(self.getOwner());
-
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, new HasPilotingCondition(self, Filters.or(Filters.Anakin, Filters.title("Admiral Yularen"))), 5));
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(self), Icon.CLONE_ARMY, Filters.at(Filters.relatedSite(self))), new HasPilotingCondition(self, Filters.or(Filters.Anakin, Filters.title("Admiral Yularen"))), 1));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, new HasPilotingCondition(self, Filters.or(Filters.Anakin, Filters.Yularen)), 5));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(self), Icon.CLONE_ARMY, Filters.at(Filters.relatedSite(self))), new HasPilotingCondition(self, Filters.or(Filters.Anakin, Filters.Yularen)), 1));
         return modifiers;
     }
 

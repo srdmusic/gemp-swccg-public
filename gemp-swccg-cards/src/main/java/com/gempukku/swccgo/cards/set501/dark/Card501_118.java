@@ -15,7 +15,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeReducedModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -31,7 +31,7 @@ public class Card501_118 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Hutt_Influence, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Jabba's criminal empire extends to all reaches of the Outer Rim.");
-        setGameText("Deploy on table. I Must Be Allowed Be To Speak ignores your sites (unless they converted opponent's). Force drains at Tatooine battlegrounds where you have an alien with a gangster, gambler, or Dug may not be canceled or reduced by opponent. [Immune to Alter.]");
+        setGameText("Deploy on table. I Must Be Allowed Be To Speak may only target opponent's locations (even if converted). At Tatooine battlegrounds where you have an alien and a gambler, gangster, or Dug, Force drains may not be canceled or reduced by opponent. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Hutt Influence (V)");
@@ -42,12 +42,12 @@ public class Card501_118 extends AbstractNormalEffect {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
 
-        Filter locationFilter = Filters.and(Filters.Tatooine_location, Filters.battleground, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.or(Filters.gangster, Filters.gambler, Filters.species(Species.DUG))))));
+        Filter locationFilter = Filters.and(Filters.Tatooine_location, Filters.battleground, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.or(Filters.gangster, Filters.gambler, Filters.species(Species.DUG)))))));
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.site, Filters.your(self), Filters.not(Filters.convertedLocationOnTopOfLocation(Filters.opponents(self)))), Title.I_Must_Be_Allowed_To_Speak));
-        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, locationFilter, opponent, playerId));
-        modifiers.add(new ForceDrainsMayNotBeReducedModifier(self, locationFilter, opponent, playerId));
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.site, Filters.your(self), Filters.not(Filters.convertedLocationOnTopOfLocation(Filters.opponents(self)))), Filters.title(Title.I_Must_Be_Allowed_To_Speak)));
+        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, locationFilter, opponent, null));
+        modifiers.add(new ForceDrainsMayNotBeReducedModifier(self, locationFilter, opponent, null));
         return modifiers;
     }
 }

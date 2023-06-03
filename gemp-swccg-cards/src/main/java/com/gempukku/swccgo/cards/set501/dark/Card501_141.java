@@ -39,7 +39,7 @@ public class Card501_141 extends AbstractImperial {
     public Card501_141() {
         super(Side.DARK, 3, 3, 2, 4, 5, "Major Partagaz", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("ISB leader.");
-        setGameText("When deployed, may shuffle any player's Reserve Deck, Lost Pile, or Used Pile. Your ISB agent leaders at same and related sites are power and defense value +1 (or all locations if Partagaz present at a Coruscant site).");
+        setGameText("When deployed, may shuffle any player's Reserve Deck, Lost Pile, or Used Pile. ISB agent leaders at same and related sites (or at all locations while Partagaz present at a Coruscant site) are power and defense value +1.");
         addIcons(Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.LEADER);
         setTestingText("Major Partagaz");
@@ -47,15 +47,13 @@ public class Card501_141 extends AbstractImperial {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        String opponent = game.getOpponent(self.getOwner());
-
         Condition presentAtCoruscantSiteCondition = new PresentAtCondition(self, Filters.Coruscant_site);
-        Filter yourISBagentleaders = Filters.and(Filters.your(self), Filters.ISB_agent, Filters.leader);
+        Filter ISBagentLeaders = Filters.and(Filters.ISB_agent, Filters.leader);
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, Filters.and(yourISBagentleaders, Filters.at(Filters.sameOrRelatedLocation(self))), new NotCondition(presentAtCoruscantSiteCondition), 1));
-        modifiers.add(new PowerModifier(self, yourISBagentleaders, presentAtCoruscantSiteCondition, 1));
-        modifiers.add(new DefenseValueModifier(self, Filters.and(yourISBagentleaders, Filters.at(Filters.sameOrRelatedLocation(self))), new NotCondition(presentAtCoruscantSiteCondition), 1));
-        modifiers.add(new DefenseValueModifier(self, yourISBagentleaders, presentAtCoruscantSiteCondition, 1));
+        modifiers.add(new PowerModifier(self, Filters.and(ISBagentLeaders, Filters.at(Filters.sameOrRelatedLocation(self))), new NotCondition(presentAtCoruscantSiteCondition), 1));
+        modifiers.add(new PowerModifier(self, Filters.and(ISBagentLeaders, Filters.at(Filters.location)), presentAtCoruscantSiteCondition, 1));
+        modifiers.add(new DefenseValueModifier(self, Filters.and(ISBagentLeaders, Filters.at(Filters.sameOrRelatedLocation(self))), new NotCondition(presentAtCoruscantSiteCondition), 1));
+        modifiers.add(new DefenseValueModifier(self, Filters.and(ISBagentLeaders, Filters.at(Filters.location)), presentAtCoruscantSiteCondition, 1));
         return modifiers;
     }
 
@@ -70,7 +68,7 @@ public class Card501_141 extends AbstractImperial {
                 || GameConditions.hasUsedPile(game, playerId) || GameConditions.hasUsedPile(game, opponent))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Shuffle card pile");
+            action.setText("Shuffle deck or pile");
             // Choose target(s)
             action.appendTargeting(
                     new ChooseExistingCardPileEffect(action, playerId, Filters.or(Zone.RESERVE_DECK, Zone.LOST_PILE, Zone.USED_PILE)) {

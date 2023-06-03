@@ -12,8 +12,8 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.modifiers.DeployCostAboardModifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostForSimultaneouslyDeployingPilotModifier;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToTargetModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ShuttlesFreeFromLocationModifier;
@@ -52,7 +52,7 @@ public class Card501_078 extends AbstractCapitalStarship {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiersEvenIfUnpiloted(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeployCostToTargetModifier(self, Filters.or(Filters.title("Admiral Kilian"), Filters.Mace, Filters.clone),  -1, self));
+        modifiers.add(new DeployCostAboardModifier(self, Filters.or(Filters.title("Admiral Kilian"), Filters.Mace, Filters.clone),  -1, self));
         return modifiers;
     }
 

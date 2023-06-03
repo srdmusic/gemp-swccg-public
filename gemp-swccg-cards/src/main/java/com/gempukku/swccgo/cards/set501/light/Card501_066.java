@@ -38,8 +38,7 @@ import java.util.List;
  */
 public class Card501_066 extends AbstractNormalEffect {
     public Card501_066() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, "Grievous Will Run And Hide", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("");
+        super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Grievous_Will_Run_And_Hide, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on a battleground. [Clone Army] Jedi deploy -1 here. If you just won a battle (or just Force drained here), relocate this card to your [Clone Army] objective. If opponent just won a battle, opponent may relocate this Effect to an [Episode I] battleground. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
@@ -62,7 +61,7 @@ public class Card501_066 extends AbstractNormalEffect {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         final String playerId = self.getOwner();
         Filter filter = Filters.and(Filters.your(self), Icon.CLONE_ARMY, Filters.Objective, Filters.not(Filters.hasAttached(self)));
-        if (Filters.canSpot(game, self, filter)
+        if (GameConditions.canTarget(game, self, filter)
                 && (TriggerConditions.wonBattle(game, effectResult, playerId)
                 || TriggerConditions.forceDrainCompleted(game, effectResult, playerId, Filters.hasAttached(self)))) {
 
