@@ -2,10 +2,12 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
+import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
 import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
 import com.gempukku.swccgo.cards.effects.PreventEffectOnCardEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.evaluators.MaxLimitEvaluator;
 import com.gempukku.swccgo.cards.evaluators.NegativeEvaluator;
 import com.gempukku.swccgo.cards.evaluators.OccupiesEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -27,11 +29,14 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
+import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
+import com.gempukku.swccgo.logic.evaluators.Evaluator;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalForceGenerationModifier;
 import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
@@ -53,11 +58,11 @@ import java.util.List;
 public class Card501_058 extends AbstractEpicEventDeployable {
     public Card501_058() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "His Destiny", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("If He Is The Chosen One on table, deploy on table. May lose 2 Force to cancel You Are Beaten or an attempt to steal Luke's Lightsaber. " +
-                "Once per game, may deploy a Death Star II site from Reserve Deck; reshuffle. " +
-                "Opponent's total Force generation is -1 (and your total power at all locations is +1) for each Death Star II site you occupy. " +
-                "Once per game, during your move phase, may relocate Luke to same battleground site as opponent's character of ability > 4. " +
-                "If a card was just stacked on I Feel The Conflict, may peek at top two cards of your Reserve Deck and take one into hand.");
+        setGameText("If He Is The Chosen One on table, deploy on table. " +
+                "Opponent's total Force generation is -1 (and your total power everywhere is +1) for each [Endor] or [Death Star II] battleground you occupy (limit 2). " +
+                "Once per turn, if a card was just stacked on I Feel The Conflict, may peek at top two cards of your Reserve Deck; take one into hand and shuffle your Reserve Deck." +
+                "May lose 2 Force to cancel You Are Beaten or an attempt to steal Luke's Lightsaber. " +
+                "During your move phase, may flip a card stacked on I Feel The Conflict face up to relocate Luke between a battleground site and your Death Star II site.");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
         setTestingText("His Destiny");
     }
@@ -72,33 +77,16 @@ public class Card501_058 extends AbstractEpicEventDeployable {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
 
+        Evaluator battlegroundCount = new MaxLimitEvaluator(new OccupiesEvaluator(playerId, Filters.and(Filters.or(Icon.ENDOR, Icon.DEATH_STAR_II), Filters.battleground)), 2);
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new TotalForceGenerationModifier(self, new NegativeEvaluator(new OccupiesEvaluator(playerId, Filters.Death_Star_II_site)), opponent));
-        modifiers.add(new TotalPowerModifier(self, Filters.location, new OccupiesCondition(playerId, Filters.Death_Star_II_site), new OccupiesEvaluator(playerId, Filters.Death_Star_II_site), playerId));
+        modifiers.add(new TotalForceGenerationModifier(self, new NegativeEvaluator(battlegroundCount), opponent));
+        modifiers.add(new TotalPowerModifier(self, Filters.location, battlegroundCount, playerId));
         return modifiers;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new ArrayList<>();
-
-        GameTextActionId gameTextActionId = GameTextActionId.HIS_DESTINY__DEPLOY_A_DEATH_STAR_II_SITE;
-
-        if(GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)){
-
-            TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy a Death Star II site");
-            action.setActionMsg("Deploy a Death Star II site from Reserve Deck");
-
-            action.appendUsage(
-                    new OncePerGameEffect(action)
-            );
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Death_Star_II_site, true)
-            );
-            actions.add(action);
-        }
 
         if (GameConditions.canTargetToCancel(game, self, Filters.You_Are_Beaten)) {
 
@@ -109,41 +97,24 @@ public class Card501_058 extends AbstractEpicEventDeployable {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.HIS_DESTINY__RELOCATE_LUKE;
+        // Relocate Luke
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
 
-        final Filter siteFilter = Filters.and(Filters.battleground_site, Filters.sameLocationAs(self, Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4))));
-
-        if (GameConditions.isDuringYourPhase(game, playerId, Phase.MOVE)
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canTarget(game, self, Filters.and(Filters.Luke, Filters.canBeRelocatedToLocation(siteFilter, 0)))) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Relocate Luke");
+        final Filter battlegroundFilter = Filters.battleground_site;
+        final Filter dsiisiteFilter = Filters.and(Filters.your(self), Filters.Death_Star_II_site);
+        final Filter lukeFilter = Filters.Luke;
 
 
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target Luke", Filters.and(Filters.Luke, Filters.canBeRelocatedToLocation(siteFilter, 0))) {
-                @Override
-                protected void cardTargeted(final int targetGroupId1, PhysicalCard targetedLuke) {
-                    action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Target location", Filters.and(siteFilter, Filters.locationCanBeRelocatedTo(targetedLuke, 0))) {
-                        @Override
-                        protected void cardTargeted(final int targetGroupId2, PhysicalCard targetedLocation) {
-                            action.allowResponses(new RespondableEffect(action) {
-                                @Override
-                                protected void performActionResults(Action targetingAction) {
-                                    PhysicalCard finalLuke = action.getPrimaryTargetCard(targetGroupId1);
-                                    PhysicalCard finalLocation = action.getPrimaryTargetCard(targetGroupId2);
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
+                && !Filters.filterStacked(game, Filters.and(Filters.stackedOn(self, Filters.I_Feel_The_Conflict), Filters.face_down)).isEmpty()) {
 
-                                    action.appendEffect(
-                                            new RelocateBetweenLocationsEffect(action, finalLuke, finalLocation));
-                                }
-                            });
-                        }
-                    });
-                }
-            });
-            actions.add(action);
+            if (GameConditions.canTarget(game, self, Filters.and(lukeFilter, Filters.at(battlegroundFilter), Filters.canBeRelocatedToLocation(dsiisiteFilter, 0)))) {
+                actions.add(getRelocationAction(playerId, game, self, gameTextSourceCardId, gameTextActionId, "Relocate Luke to a Death Star II site", battlegroundFilter, dsiisiteFilter, lukeFilter));
+            }
+
+            if (GameConditions.canTarget(game, self, Filters.and(lukeFilter, Filters.at(dsiisiteFilter), Filters.canBeRelocatedToLocation(battlegroundFilter, 0)))) {
+                actions.add(getRelocationAction(playerId, game, self, gameTextSourceCardId, gameTextActionId, "Relocate Luke to a battleground site", dsiisiteFilter, battlegroundFilter, lukeFilter));
+            }
         }
         return actions;
     }
@@ -170,15 +141,22 @@ public class Card501_058 extends AbstractEpicEventDeployable {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         if(TriggerConditions.justStackedCardOn(game, effectResult, Filters.any, Filters.I_Feel_The_Conflict)
-                && GameConditions.hasReserveDeck(game, playerId)) {
+                && GameConditions.hasReserveDeck(game, playerId)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Peek at top two cards of Reserve Deck");
-            action.setActionMsg("Peek at top two cards of Reserve Deck and take one into hand");
+            action.setActionMsg("Peek at top two cards of Reserve Deck, take one into hand, and shuffle your Reserve Deck");
 
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            boolean twoCardsInReserve = GameConditions.numCardsInReserveDeck(game, playerId) >= 2;
             action.appendEffect(
                     new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, 2, 1, 1));
-
+            if (twoCardsInReserve) {
+                action.appendEffect(
+                        new ShuffleReserveDeckEffect(action, playerId));
+            }
             actions.add(action);
         }
 
@@ -197,5 +175,55 @@ public class Card501_058 extends AbstractEpicEventDeployable {
             actions.add(action);
         }
         return actions;
+    }
+
+    private TopLevelGameTextAction getRelocationAction(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId, GameTextActionId gameTextActionId, String actionText, final Filter currentLocationFilter, final Filter relocateLocationFilter, final Filter characterFilter) {
+        final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+        action.setText(actionText);
+
+        action.appendUsage(
+                new OncePerPhaseEffect(action));
+        // Choose target(s)
+        action.appendTargeting(
+                new TargetCardOnTableEffect(action, playerId, "Choose character", Filters.and(characterFilter, Filters.at(currentLocationFilter), Filters.canBeRelocatedToLocation(relocateLocationFilter, 0))) {
+                    @Override
+                    protected void cardTargeted(final int targetGroupIdCharacter, final PhysicalCard characterToRelocate) {
+                        action.appendTargeting(
+                                new TargetCardOnTableEffect(action, playerId, "Choose site to relocate " + GameUtils.getCardLink(characterToRelocate) + " to",
+                                        Filters.and(relocateLocationFilter, Filters.locationCanBeRelocatedTo(characterToRelocate, 0))) {
+                                    @Override
+                                    protected void cardTargeted(final int targetGroupIdSite, final PhysicalCard siteSelected) {
+                                        action.appendTargeting(new ChooseStackedCardEffect(action, playerId, Filters.I_Feel_The_Conflict, Filters.face_down) {
+                                            @Override
+                                            protected void cardSelected(PhysicalCard selectedCard) {
+                                                action.addAnimationGroup(characterToRelocate);
+                                                action.addAnimationGroup(siteSelected);
+
+                                                // Pay cost(s)
+                                                action.appendCost(
+                                                        new FlipSingleSidedStackedCard(action, selectedCard));
+                                                action.appendCost(
+                                                        new PayRelocateBetweenLocationsCostEffect(action, playerId, characterToRelocate, siteSelected, 0));
+                                                action.allowResponses(new RespondableEffect(action) {
+                                                    @Override
+                                                    protected void performActionResults(Action targetingAction) {
+                                                        PhysicalCard finalSite = action.getPrimaryTargetCard(targetGroupIdSite);
+                                                        PhysicalCard finalCharacter = action.getPrimaryTargetCard(targetGroupIdCharacter);
+
+                                                        // Perform result(s)
+                                                        action.appendEffect(
+                                                                new RelocateBetweenLocationsEffect(action, finalCharacter, finalSite));
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    }
+
+                                }
+                        );
+                    }
+                }
+        );
+        return action;
     }
 }

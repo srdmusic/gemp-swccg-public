@@ -43,7 +43,7 @@ public class Card501_156 extends AbstractUsedInterrupt {
         super(Side.DARK, 4, "ComScan Detection", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("The Imperial Navy boasts the best communications network in the galaxy. Sophisticated control technology allows the Empire to dispatch armed forces without delay.");
-        setGameText("During your turn, target opponent's spy at a site you control; target is lost. (Immune to Droid Shutdown and Sense.) OR Cancel Dodge, Sabotage, or a Force drain initiated by a lone Falcon. OR Target a starship weapon; it may not fire this turn.");
+        setGameText("During your turn, target opponent's spy at a site you control; target is lost. (Immune to Droid Shutdown and Sense.) OR Cancel Dodge, I Think I Can Handle Myself, or a Force drain initiated by a lone Falcon. OR Target a starship weapon; it may not fire this turn.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_21);
         setTestingText("ComScan Detection (V)");
     }
@@ -120,11 +120,11 @@ public class Card501_156 extends AbstractUsedInterrupt {
             actions.add(action);
         }
         // Check condition(s)
-        if (GameConditions.canTargetToCancel(game, self, Filters.Sabotage)) {
+        if (GameConditions.canTargetToCancel(game, self, Filters.title("I Think I Can Handle Myself"))) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Sabotage, Title.Sabotage);
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.title("I Think I Can Handle Myself"), "I Think I Can Handle Myself");
             actions.add(action);
         }
 
@@ -136,7 +136,7 @@ public class Card501_156 extends AbstractUsedInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Dodge, Filters.Sabotage))
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Dodge, Filters.title("I Think I Can Handle Myself")))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             PlayInterruptAction action = new PlayInterruptAction(game, self);
