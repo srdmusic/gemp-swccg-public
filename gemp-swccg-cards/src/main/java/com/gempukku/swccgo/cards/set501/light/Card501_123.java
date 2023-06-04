@@ -40,9 +40,9 @@ public class Card501_123 extends AbstractAlien {
     public Card501_123() {
         super(Side.LIGHT, 6, 4, 2, 4, 6, "Anakin Skywalker, Junkyard Slave", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Mechanic.");
-        setGameText("Adds 2 to power of anything he pilots. Deploys only to Watto's Junkyard or Skywalker Hut. During battle, may place a 'credit' in owner's Lost Pile to choose: if with Shmi add one destiny to attrition; if with Obi-Wan, add one destiny to total power; if with Qui-Gon, add one battle destiny.");
+        setGameText("[Pilot] 2. Deploys only to Skywalker Hut or Watto's Junkyard. During battle, may cause a 'credit' to be lost to choose: if with Obi-Wan, add one destiny to total power; if with Qui-Gon, add one battle destiny; if with Shmi, add one destiny to attrition.");
         addPersona(Persona.ANAKIN);
-        addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.TATOOINE, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.SLAVE);
         setTestingText("Anakin Skywalker, Junkyard Slave");
     }

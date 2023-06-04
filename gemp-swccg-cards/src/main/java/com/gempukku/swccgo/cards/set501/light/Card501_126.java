@@ -34,7 +34,7 @@ public class Card501_126 extends AbstractUsedOrLostInterrupt {
     public Card501_126() {
         super(Side.LIGHT, 4, "Eventually You'll Lose", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("In the end, Watto finally came to understand the agony of defeat.");
-        setGameText("USED: If The Hyperdrive Generator's Gone on table, take Skywalker Hut or Jar Jar into hand from Reserve Deck; reshuffle. LOST: If opponent just stacked a card on Credits Will Do Fine, for remainder of turn your Force drains may not be reduced");
+        setGameText("USED: If The Hyperdrive Generator's Gone on table, [upload] Skywalker Hut or Jar Jar. LOST: If opponent's card was just stacked on Credits Will Do Fine, for remainder of turn, your Force drains may not be reduced.");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("Eventually You'll Lose (V)");
     }
@@ -42,7 +42,6 @@ public class Card501_126 extends AbstractUsedOrLostInterrupt {
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
-        String opponent = game.getOpponent(playerId);
 
         // Check condition(s)
         if (TriggerConditions.justStackedCardOn(game, effectResult, Filters.opponents(self), Filters.Credits_Will_Do_Fine)) {

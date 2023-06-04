@@ -35,7 +35,7 @@ public class Card501_160 extends AbstractNormalEffect {
         super(Side.LIGHT, 5, PlayCardZoneOption.ATTACHED, "A Remote Planet", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("In unfamiliar and potentially hostile territory, Qui-Gon knew that success would require patience and caution.");
-        setGameText("If Credits Will Do Fine, deploy on Mos Espa on table. Opponent's first Force lost from Force drains here is stacked on Credits Will Do Fine. If you just deployed Amidala, Jar Jar, or a Jedi here, may take Either Way, You Win into hand from Reserve Deck; reshuffle.");
+        setGameText("If Credits Will Do Fine on table, deploy on Mos Espa. Opponent's first Force lost to a Force drain here is stacked on Credits Will Do Fine. If you just deployed Amidala, Jar Jar, or a Jedi here, may [upload] Either Way, You Win.");
         addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I, Icon.TATOOINE, Icon.VIRTUAL_SET_21);
         setTestingText("A Remote Planet (V)");
     }
@@ -55,7 +55,7 @@ public class Card501_160 extends AbstractNormalEffect {
         GameTextActionId gameTextActionId = GameTextActionId.A_REMOTE_PLANET_V__UPLOAD_EITHER_WAY_YOU_WIN;
 
         // Check condition(s)
-        if (TriggerConditions.justDeployedTo(game, effectResult, playerId, Filters.or(Filters.Amidala, Filters.Jar_Jar, Filters.Jedi), Filters.Mos_Espa)
+        if (TriggerConditions.justDeployedTo(game, effectResult, playerId, Filters.or(Filters.Amidala, Filters.Jar_Jar, Filters.Jedi), Filters.here(self))
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);

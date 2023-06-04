@@ -37,15 +37,14 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Effect
- * Subtype: Immediate
  * Title: Grappling Hook (V)
  */
 public class Card501_144 extends AbstractNormalEffect {
     public Card501_144() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Grappling Hook", Uniqueness.UNRESTRICTED, ExpansionSet.SET_21, Rarity.V);
+        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Grappling Hook", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Stormtrooper utility belts contain basic tools such as a grappling hook to grab onto protrusions. The hook can also be used to ensnare escaping targets.");
-        setGameText("Deploy on table. Imperial Barrier is a Lost Interrupt. While no card stacked here, may stack a just played Interrupt here. All Interrupts of that title are stacked here once played (if possible). Once per game, may shuffle any deck or pile. (Immune to Alter.)");
+        setGameText("Deploy on table. Imperial Barrier is a Lost Interrupt. If no card stacked here, may stack one Interrupt just played here. To play any new Interrupt of the same name, player must first stack it here. Once per game, may shuffle any deck or pile. [Immune to Alter.]");
         addIcons(Icon.A_NEW_HOPE, Icon.GRABBER, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Grappling Hook (V)");

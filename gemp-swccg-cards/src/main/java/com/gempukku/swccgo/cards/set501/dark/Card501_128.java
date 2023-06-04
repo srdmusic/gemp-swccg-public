@@ -37,15 +37,14 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Effect
- * Subtype: Immediate
  * Title: Tentacle (V)
  */
 public class Card501_128 extends AbstractNormalEffect {
     public Card501_128() {
-        super(Side.DARK, 5f, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Tentacle", Uniqueness.UNRESTRICTED, ExpansionSet.SET_21, Rarity.V);
+        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Tentacle", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Dianogas use their seven tentacles for both locomotion and catching food. The few survivors of such attacks claim that a dianoga tentacle has the strength of a hydro-clamp.");
-        setGameText("Deploy on table. Rebel Barrier is a Lost Interrupt. While no card stacked here, may stack a just played Interrupt here. All Interrupts of that title are stacked here once played (if possible). Once per game, may shuffle any deck or pile. (Immune to Alter.)");
+        setGameText("Deploy on table. Rebel Barrier is a Lost Interrupt. If no card stacked here, may stack one Interrupt just played here. To play any new Interrupt of the same name, player must first stack it here. Once per game, may shuffle any deck or pile. [Immune to Alter.]");
         addIcons(Icon.A_NEW_HOPE, Icon.GRABBER, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Tentacle (V)");

@@ -46,8 +46,8 @@ public class Card501_149 extends AbstractCreatureVehicle {
         super(Side.DARK, 5, 2, 2, 4, null, 2, 4, "Dewback", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Protected by hard skin composed of tough armored scales. Frequently ridden by sandtroopers stationed in desert environments.");
-        setGameText("Deploys only on Tatooine. Ability = 1/4. May add 1 'rider' (passenger). Moves for free. When ‘ridden’ by a sandtrooper, draw one battle destiny if unable to otherwise (may add one destiny to total power instead).");
-        addIcons(Icon.SPECIAL_EDITION);
+        setGameText("Deploys only on Tatooine. Ability = 1/4. May add 1 'rider' (passenger). Moves for free. When 'ridden' by a sandtrooper, draws one battle destiny if unable to otherwise (may add one destiny to power instead).");
+        addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.DEWBACK);
         setPassengerCapacity(1);
         setTestingText("Dewback (V)");
@@ -60,7 +60,7 @@ public class Card501_149 extends AbstractCreatureVehicle {
 
     @Override
     protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DefinedByGameTextAbilityModifier(self, 0.25));
         return modifiers;
     }

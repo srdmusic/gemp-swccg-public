@@ -34,7 +34,7 @@ public class Card501_162 extends AbstractUsedInterrupt {
         super(Side.DARK, 6, "Accelerate", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("The Empire trains its personnel to operate a variety of specialized equipment in demanding environments. This training allows troops to take seemingly risky actions.");
-        setGameText("For remainder of turn, your speeder bikes are power and forfeit +1. OR Subtract 2 from a destiny targeting the ability or defense value of a biker scout piloting a speeder bike.");
+        setGameText("For remainder of turn, your speeder bikes are power and forfeit +1. OR Subtract 2 from a just drawn destiny targeting the ability or defense value of a biker scout piloting a speeder bike.");
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_21);
         setTestingText("Accelerate (V)");
     }

@@ -33,7 +33,7 @@ public class Card501_154 extends AbstractCapitalStarship {
     public Card501_154() {
         super(Side.DARK, 2, 5, 4, 9, null, 3, 7, "First Light", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Crimson Dawn.");
-        setGameText("May add 3 pilots and 6 passengers. Permanent pilot provides ability of 3. Deploys and moves like a starfighter. During battle, your total battle destiny is +1 for each gangster aboard. Immune to attrition < 5.");
+        setGameText("May add 3 pilots and 6 passengers. Permanent pilot provides ability of 3. Deploys and moves like a starfighter. Your total battle destiny here is +1 for each gangster aboard. Immune to attrition < 5.");
         addIcons(Icon.INDEPENDENT, Icon.SCOMP_LINK, Icon.PILOT, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_21);
         addModelType(ModelType.NAUUR_CLASS_YACHT);
         setPilotCapacity(3);
@@ -62,7 +62,7 @@ public class Card501_154 extends AbstractCapitalStarship {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new TotalBattleDestinyModifier(self, new OnTableEvaluator(self, Filters.and(Filters.your(self), Filters.gangster, Filters.aboard(self))), self.getOwner()));
+        modifiers.add(new TotalBattleDestinyModifier(self, new OnTableEvaluator(self, Filters.and(Filters.gangster, Filters.aboard(self))), self.getOwner()));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
         return modifiers;
     }
