@@ -9,6 +9,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -47,7 +48,7 @@ public class Card501_068 extends AbstractSite {
 
     @Override
     public boolean mayNotBePartOfSystem(SwccgGame game, String system) {
-        return Filters.filterTopLocationsOnTable(game, Filters.and(Filters.titleContains("Clone Command Center"), Filters.partOfSystem(system))).isEmpty();
+        return Filters.filterTopLocationsOnTable(game, Filters.and(Filters.titleContains(Title.Clone_Command_Center), Filters.partOfSystem(system))).isEmpty();
     }
 
     @Override

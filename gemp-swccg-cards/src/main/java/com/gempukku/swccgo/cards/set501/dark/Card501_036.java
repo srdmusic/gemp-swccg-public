@@ -39,7 +39,7 @@ public class Card501_036 extends AbstractImperial {
         super(Side.DARK, 2, 2, 2, 2, 4, "Commander Praji", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Vader's aide on the Devastator. Personally supervised search for Death Star plans on Tatooine by Vader's order. Was graduated with honors from Imperial Navy Academy on Carida.");
-        setGameText("Adds 2 to power of anything he pilots. While aboard Devastator, adds 1 to armor and hyperspeed and, during your deploy phase, your trooper at a related site may make a regular move using landspeed.");
+        setGameText("Adds 2 to power of anything he pilots. While aboard Devastator, adds 1 to armor and hyperspeed and, once during your deploy phase, your trooper at a related site may make a regular move using landspeed.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.COMMANDER);
         setMatchingStarshipFilter(Filters.Devastator);
@@ -50,8 +50,8 @@ public class Card501_036 extends AbstractImperial {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
-        modifiers.add(new ArmorModifier(self, Filters.and(Filters.Devastator, Filters.hasPiloting(self)), 1));
-        modifiers.add(new HyperspeedModifier(self, Filters.and(Filters.Devastator, Filters.hasPiloting(self)), 1));
+        modifiers.add(new ArmorModifier(self, Filters.and(Filters.Devastator, Filters.hasAboard(self)), 1));
+        modifiers.add(new HyperspeedModifier(self, Filters.and(Filters.Devastator, Filters.hasAboard(self)), 1));
         return modifiers;
     }
 
@@ -67,8 +67,7 @@ public class Card501_036 extends AbstractImperial {
                 && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
                 && GameConditions.canTarget(game, self, trooperFilter)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setPerformingPlayer(playerId);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Move your trooper using landspeed");
             // Update usage limit(s)
             action.appendUsage(

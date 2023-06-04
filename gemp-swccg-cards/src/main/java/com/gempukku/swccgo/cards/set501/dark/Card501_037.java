@@ -2,8 +2,8 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.InBattleWithCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -43,7 +43,7 @@ public class Card501_037 extends AbstractImperial {
         super(Side.DARK, 3, 2, 2, 2, 4, "Captain Mod Terrik", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setArmor(4);
         setLore("Leader. Sandtrooper.");
-        setGameText("Power +1 if Stardust or Stolen Data Tapes on table. While in battle with another trooper, attrition against opponent is +1. When moving using landspeed in your move phase, two of your stormtroopers here may move as a regular move to same location for free.");
+        setGameText("Power +1 if Stardust or Stolen Data Tapes on table. While with another trooper, attrition against opponent here is +1. During your move phase, when moving with a 'squad' of up to two other stormtroopers, they all move (using landspeed) for 1 Force.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.SANDTROOPER, Keyword.LEADER);
         setTestingText("Captain Mod Terrik");
@@ -54,7 +54,7 @@ public class Card501_037 extends AbstractImperial {
         String opponent = game.getOpponent(self.getOwner());
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new PowerModifier(self, new OnTableCondition(self, Filters.or(Filters.Stardust, Filters.Stolen_Data_Tapes)), 1));
-        modifiers.add(new AttritionModifier(self, Filters.here(self), new InBattleWithCondition(self, Filters.trooper), 1, opponent));
+        modifiers.add(new AttritionModifier(self, Filters.here(self), new WithCondition(self, Filters.trooper), 1, opponent));
 
         return modifiers;
     }

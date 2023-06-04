@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class Card501_075 extends AbstractNormalEffect {
     public Card501_075() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Of Christophsis", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Of Christophsis", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("If a Christophsis location on table, deploy on table. Once per turn, if you just deployed a clone to Christophsis, may draw top card of Used Pile. Once per turn, if your clone in battle with a Jedi or Padawan, may lose 1 Force to add one destiny to total power. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
@@ -49,7 +49,7 @@ public class Card501_075 extends AbstractNormalEffect {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.or(Filters.Jedi, Filters.padawan), Filters.with(self, Filters.and(Filters.your(self), Filters.clone))))
+        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.clone, Filters.with(self, Filters.or(Filters.Jedi, Filters.padawan))))
                 && GameConditions.canAddDestinyDrawsToPower(game, playerId)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 

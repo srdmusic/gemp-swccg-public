@@ -87,10 +87,13 @@ public class Card501_008 extends AbstractNormalEffect {
 
             action.appendUsage(
                     new OncePerTurnEffect(action));
+            boolean twoCardsInReserve = GameConditions.numCardsInReserveDeck(game, playerId) >= 2;
             action.appendEffect(
                     new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, 2, 1, 1));
-            action.appendEffect(
-                    new ShuffleReserveDeckEffect(action, playerId));
+            if (twoCardsInReserve) {
+                action.appendEffect(
+                        new ShuffleReserveDeckEffect(action, playerId));
+            }
 
             actions.add(action);
         }

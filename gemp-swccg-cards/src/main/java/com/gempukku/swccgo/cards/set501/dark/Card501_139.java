@@ -42,7 +42,7 @@ public class Card501_139 extends AbstractImperial {
         super(Side.DARK, 3, 2, 2, 2, 3, "Sergeant Tarl", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Took part in the capture of the Rebel Blockade Runner Tantive IV. Stormtrooper trained on Corulag. Corellia native.");
-        setGameText("When deployed, power +2 for remainder of turn. While in battle with two ISB Agents (or troopers), may target a Rebel present; target is immune to attrition and game text is canceled.");
+        setGameText("When deployed, power +2 for remainder of turn. During battle with two ISB agents (or troopers), may target a Rebel present; target is immune to attrition and target's game text is canceled.");
         addIcons(Icon.ENDOR, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.STORMTROOPER);
         setSpecies(Species.CORELLIAN);
@@ -89,7 +89,7 @@ public class Card501_139 extends AbstractImperial {
                         protected void performActionResults(Action targetingAction) {
                             PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
                             action.appendEffect(
-                                    new AddUntilEndOfBattleModifierEffect(action, new ImmuneToAttritionModifier(self, finalTarget), GameUtils.getCardLink(finalTarget) + " is immune to attrition until end of battle"));
+                                    new AddUntilEndOfBattleModifierEffect(action, new ImmuneToAttritionModifier(self, finalTarget), "Makes " + GameUtils.getCardLink(finalTarget) + " immune to attrition"));
                             action.appendEffect(
                                     new CancelGameTextUntilEndOfBattleEffect(action, finalTarget));
                         }

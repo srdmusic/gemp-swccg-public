@@ -52,7 +52,7 @@ import java.util.List;
 public class Card501_065_BACK extends AbstractObjective {
     public Card501_065_BACK() {
         super(Side.LIGHT, 7, "He's A Coward", ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, your Force drains are +1 where you have a clone with a Jedi or Padawan. X = number of battlegrounds your [Clone Army] cards occupy. If you just initiated a battle: peek at the top card of your Reserve Deck or Used Pile (may take it into hand or place it on bottom of Reserve Deck), then if X > 1, retrieve a [Clone Army] card into hand, then if X > 2, your clone may make a regular move (using landspeed for free) to the battle location. \n" +
+        setGameText("While this side up, your Force drains are +1 where you have a clone with a Jedi or Padawan. X = number of battlegrounds your [Clone Army] cards occupy. If you just initiated a battle: peek at the top card of your Reserve Deck or Used Pile (may take it into hand or place it on bottom of Reserve Deck), then if X > 1, retrieve a [Clone Army] card into hand, then if X > 2, your clone may make a regular move (using landspeed for free) to the battle location. " +
                 "Flip this card if Grievous Will Run And Hide at a battleground or Grievous alone at a battleground.");
         addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("He's A Coward");
@@ -66,7 +66,7 @@ public class Card501_065_BACK extends AbstractObjective {
         modifiers.add(new ModifyGameTextModifier(self, Filters.and(Icon.REFLECTIONS_II, Filters.Objective), ModifyGameTextType.REFLECTIONS_II_OBJECTIVE__TARGETS_ANAKIN_INSTEAD_OF_LUKE));
         modifiers.add(new IconModifier(self, Filters.and(Filters.your(self), Filters.Jedi), Icon.PILOT));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.your(self), Icon.EPISODE_I, Filters.site), Title.No_Escape));
-        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.occupiesWith(self.getOwner(), self, Filters.or(Filters.Jedi, Filters.padawan)), Filters.occupiesWith(self.getOwner(), self, Filters.clone)), 1, self.getOwner()));
+        modifiers.add(new ForceDrainModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.clone, Filters.with(self, Filters.or(Filters.Jedi, Filters.padawan)))),  1, self.getOwner()));
         return modifiers;
     }
 
@@ -168,7 +168,7 @@ public class Card501_065_BACK extends AbstractObjective {
                 && GameConditions.canBeFlipped(game, self)) {
 
 
-            boolean flip = !GameConditions.hasAttached(game, self, Filters.title("Grievous Will Run And Hide"));
+            boolean flip = !GameConditions.hasAttached(game, self, Filters.Grievous_Will_Run_And_Hide);
 
             if (!flip) {
                 // if Grievous is alone, make sure it isn't because other characters with him are excluded from battle
