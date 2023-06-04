@@ -22,7 +22,9 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.CancelCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.StackOneCardFromForcePileEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardsEffect;
@@ -45,7 +47,7 @@ public class Card2_031 extends AbstractNormalEffect {
     public Card2_031() {
         super(Side.LIGHT, 5, PlayCardZoneOption.ATTACHED, "Commence Recharging", Uniqueness.UNIQUE, ExpansionSet.A_NEW_HOPE, Rarity.R2);
         setLore("The huge strain on the little-tested power generator matrix of the superlaser's fusion reactor can require full recharging before the system can be used again.");
-        setGameText("Deploy on a superlaser. May not fire at a planet unless 8 cards stacked here. If fewer than 8 cards stacked here, opponent may stack top card of Force Pile here. When fired at a planet, Effect is canceled. If Effect canceled, cards stacked here are placed in Used Pile.");
+        setGameText("Deploy on a superlaser. May not fire at a planet unless 8 cards stacked here. If fewer than 8 cards stacked here, opponent may stack top card of Force Pile here. If just fired at a system, Effect is canceled. If Effect canceled, cards stacked here are placed in Used Pile.");
         addIcons(Icon.A_NEW_HOPE);
     }
 
@@ -110,7 +112,7 @@ public class Card2_031 extends AbstractNormalEffect {
             FiredWeaponResult weaponFiredResult = (FiredWeaponResult) effectResult;
 
             if (weaponFiredResult != null
-                    && !Filters.filter(weaponFiredResult.getTargets(), game, Filters.planet_system).isEmpty()) {
+                    && !Filters.filter(weaponFiredResult.getTargets(), game, Filters.system).isEmpty()) {
 
                 final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setSingletonTrigger(true);
@@ -129,32 +131,58 @@ public class Card2_031 extends AbstractNormalEffect {
                 || TriggerConditions.isAboutToBeCanceledFromTableBy(game, effectResult, opponent, self))
                 && GameConditions.hasStackedCards(game, self)) {
 
-            Collection<PhysicalCard> cards = Filters.filterStacked(game, Filters.stackedOn(self));
-
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Place stacked cards in Used Pile");
             // Perform result(s)
 
-            int stacked = game.getGameState().getStackedCards(self).size();
-            action.appendTargeting(new ChooseStackedCardsEffect(action, opponent, self, stacked, stacked, Filters.any, true) {
-                @Override
-                protected boolean getUseShortcut() {
-                    return false;
-                }
+            final int stacked = game.getGameState().getStackedCards(self).size();
 
-                @Override
-                protected boolean forceManualSelection() {
-                    return true;
-                }
+            if (stacked > 1) {
+                final String MANUAL = "Choose manually";
+                final String AUTOMATIC = "Default order";
+                action.appendTargeting(new PlayoutDecisionEffect(action, opponent, new MultipleChoiceAwaitingDecision("Do you want to manually choose the order the cards from " + GameUtils.getCardLink(self) + " are placed in Used Pile?", new String[]{MANUAL, AUTOMATIC}) {
+                    @Override
+                    protected void validDecisionMade(int index, String result) {
+                        final boolean manualSelection = MANUAL.equals(result);
 
-                @Override
-                protected void cardsSelected(SwccgGame game, Collection<PhysicalCard> selectedCards) {
-                    for(PhysicalCard card:selectedCards) {
-                        action.appendEffect(
-                                new PutStackedCardInUsedPileEffect(action, opponent, card, true));
+                        action.appendTargeting(new ChooseStackedCardsEffect(action, opponent, self, stacked, stacked, Filters.any, true) {
+                            @Override
+                            protected boolean getUseShortcut() {
+                                return !manualSelection;
+                            }
+
+                            @Override
+                            protected boolean forceManualSelection() {
+                                return manualSelection;
+                            }
+
+                            @Override
+                            protected void cardsSelected(SwccgGame game, Collection<PhysicalCard> selectedCards) {
+                                for (PhysicalCard card : selectedCards) {
+                                    action.appendEffect(
+                                            new PutStackedCardInUsedPileEffect(action, opponent, card, true));
+                                }
+                            }
+                        });
                     }
-                }
-            });
+                }));
+            } else {
+                action.appendTargeting(new ChooseStackedCardsEffect(action, opponent, self, stacked, stacked, Filters.any, true) {
+                    @Override
+                    protected boolean getUseShortcut() {
+                        return true;
+                    }
+
+                    @Override
+                    protected void cardsSelected(SwccgGame game, Collection<PhysicalCard> selectedCards) {
+                        for (PhysicalCard card : selectedCards) {
+                            action.appendEffect(
+                                    new PutStackedCardInUsedPileEffect(action, opponent, card, true));
+                        }
+                    }
+                });
+            }
+
             actions.add(action);
         }
 
