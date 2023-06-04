@@ -34,8 +34,8 @@ public class Card501_159 extends AbstractSite {
     public Card501_159() {
         super(Side.LIGHT, Title.Mos_Espa, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setLocationLightSideGameText("If you occupy, may deploy [Tatooine] A Remote Planet here from Reserve Deck; reshuffle.");
-        setLocationDarkSideGameText("While Mos Espa, your Force generation here is +2.");
+        setLocationLightSideGameText("If you occupy, may [download] [Tatooine] A Remote Planet here.");
+        setLocationDarkSideGameText("While Mos Espa converted, your Force generation is +2 here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_21);

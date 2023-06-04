@@ -38,7 +38,7 @@ public class Card501_010 extends AbstractSite {
     public Card501_010() {
         super(Side.DARK, Title.Cantina, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setLocationDarkSideGameText("Once per turn, may deploy Djas, Tonnika Sisters, or [Set 22] Wuher here from Reserve Deck; reshuffle.");
+        setLocationDarkSideGameText("Once per turn, may deploy Djas Puhr, Tonnika Sisters, or [Jabba's Palace] Wuher here from Reserve Deck; reshuffle.");
         setLocationLightSideGameText("Unless Obi-Wan here (or at Mos Eisley), you may not move to here during your control phase.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
@@ -56,13 +56,13 @@ public class Card501_010 extends AbstractSite {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card here from Reserve Deck");
-            action.setActionMsg("Deploy Djas, Tonnika Sisters, or [Set 22] Wuher here from Reserve Deck");
+            action.setActionMsg("Deploy Djas Puhr, Tonnika Sisters, or [Jabba's Palace] Wuher");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.or(Filters.title("Djas Puhr"), Filters.Tonnika_Sisters, Filters.and(Icon.VIRTUAL_SET_21, Filters.title(Title.Wuher))), Filters.here(self), true));
+                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.or(Filters.title("Djas Puhr"), Filters.Tonnika_Sisters, Filters.and(Icon.JABBAS_PALACE, Filters.title(Title.Wuher))), Filters.here(self), true));
             return Collections.singletonList(action);
         }
 
