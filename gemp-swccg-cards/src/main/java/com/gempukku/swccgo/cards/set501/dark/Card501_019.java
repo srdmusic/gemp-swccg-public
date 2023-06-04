@@ -10,6 +10,7 @@ import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -18,7 +19,6 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -31,18 +31,17 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Objective
- * Title: More And More Systems Are Joining The Separatists / The Galaxy Torn Apart
+ * Title: More Systems Will Rally To Our Cause / The Galaxy Torn Apart
  */
 public class Card501_019 extends AbstractObjective {
     public Card501_019() {
-        super(Side.DARK, 0, "More And More Systems Are Joining The Separatists", ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 0, "More Systems Will Rally To Our Cause", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy [Separatist] Geonosis, two [Clone Army] systems, and Droid Racks. \n" +
-                "For remainder of game, you may not deploy non-[Episode I] characters, non-[Episode I] starships, or non-[Episode I] vehicles. Once per turn, may deploy an [Episode I] battleground site from Reserve Deck; reshuffle. If your [Episode I] system was just converted, raise it to the top.\n" +
-                "While this side up, opponent loses no more than 1 Force from your Force drains. \n" +
+        setGameText("Deploy [Separatist] Geonosis system, two [Clone Army] systems, and Droid Racks. \n" +
+                "For remainder of game, you may not deploy non-[Episode I] characters, non-[Episode I] starships, or non-[Episode I] vehicles. If your [Episode I] system was just converted, raise it to the top. Once per turn, may deploy a battleground site related to your [Clone Army] or [Separatist] system from Reserve Deck; reshuffle. \n" +
                 "Flip this card if two [Separatist] systems on table.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
-        setTestingText("More And More Systems Are Joining The Separatists");
+        setTestingText("More Systems Will Rally To Our Cause");
     }
 
     @Override
@@ -84,7 +83,6 @@ public class Card501_019 extends AbstractObjective {
         String opponent = game.getOpponent(self.getOwner());
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.not(Icon.EPISODE_I), Filters.or(Filters.character, Filters.starship, Filters.vehicle)), self.getOwner()));
-        modifiers.add(new LimitForceLossFromForceDrainModifier(self, 1, opponent));
         return modifiers;
     }
 
@@ -96,16 +94,26 @@ public class Card501_019 extends AbstractObjective {
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy a site from Reserve Deck");
-            action.setActionMsg("Deploy an [Episode I] battleground site from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.EPISODE_I, Filters.battleground_site), true));
-            return Collections.singletonList(action);
+            Filter systemFilter = Filters.and(Filters.your(self), Filters.or(Icon.SEPARATIST, Icon.CLONE_ARMY), Filters.system);
+
+            if (GameConditions.canSpotLocation(game, systemFilter)) {
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Deploy a site from Reserve Deck");
+                action.setActionMsg("Deploy a battleground site related to your [Separatist] or [Clone Army] system from Reserve Deck");
+
+                Filter siteFilter = Filters.none;
+                for(PhysicalCard system: Filters.filterTopLocationsOnTable(game, systemFilter)) {
+                    siteFilter = Filters.or(siteFilter, Filters.relatedLocationEvenWhenNotInPlay(system));
+                }
+
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerTurnEffect(action));
+                // Perform result(s)
+                action.appendEffect(
+                        new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.title("Separatist Command Center"), Filters.and(Filters.site, siteFilter)), Filters.battleground, true));
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }

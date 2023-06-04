@@ -1,94 +1,108 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.AbstractImmediateEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.InactiveReason;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.actions.PlayCardAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
+import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.CaptureCharacterResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Set: Set 21
  * Type: Effect
- * Subtype: Effect
- * Title: Send A Detachment Down (V)
+ * Subtype: Immediate
+ * Title: The Client's Bounty
  */
-public class Card501_034 extends AbstractNormalEffect {
+public class Card501_034 extends AbstractImmediateEffect {
     public Card501_034() {
-        super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, "Send A Detachment Down", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setVirtualSuffix(true);
-        setLore("Vader sent Imperial stormtroopers to the surface of Tatooine in search of the stolen Death Star plans. 'There'll be no one to stop us this time.'");
-        setGameText("Deploy on Tatooine system. Tatooine Occupation is canceled. While you occupy, at related sites where you have two troopers (or a sandtrooper) your Force drains are +1. [Immune to Alter.]");
-        addImmuneToCardTitle(Title.Alter);
+        super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, "The Client's Bounty", Uniqueness.UNIQUE, ExpansionSet.SET_6, Rarity.V);
+        setGameText("Unless a [Death Star II] objective on table, deploy on a just captured character. During your control phase, if with your leader (or The Client) at a site you control, may take this card into hand; captive is lost and you retrieve 3 Force. (Immune to Control while Greef or The Client on table.)");
         addIcons(Icon.VIRTUAL_SET_21);
-        setTestingText("Send A Detachment Down (V)");
+        addKeywords(Keyword.BOUNTY);
+        setTestingText("The Client's Bounty");
     }
 
     @Override
-    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.Tatooine_system;
-    }
-
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        String playerId = self.getOwner();
-
-        Filter siteFilter = Filters.and(Filters.relatedSite(self), Filters.sameSiteAs(self, Filters.or(Filters.and(Filters.your(self), Filters.sandtrooper),
-                        Filters.and(Filters.your(self), Filters.trooper, Filters.with(self, Filters.and(Filters.your(self), Filters.trooper))))));
-
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, siteFilter, new OccupiesCondition(playerId, Filters.hasAttached(self)), 1, playerId));
+        modifiers.add(new ImmuneToTitleModifier(self, new OnTableCondition(self, Filters.or(Filters.persona(Persona.GREEF), Filters.title("The Client"))), Title.Control));
         return modifiers;
     }
 
+    @Override
+    public Map<InactiveReason, Boolean> getDeployTargetSpotOverride(PlayCardOptionId playCardOptionId) {
+        return SpotOverride.INCLUDE_CAPTIVE;
+    }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<PlayCardAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.Tatooine_Occupation)
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            return Collections.singletonList(action);
+        if (!GameConditions.canTarget(game, self, Filters.and(Icon.DEATH_STAR_II, Filters.Objective))
+                && TriggerConditions.captured(game, effectResult, Filters.character)) {
+            PhysicalCard capturedCard = ((CaptureCharacterResult) effectResult).getCapturedCard();
+            PlayCardAction action = getPlayCardAction(playerId, game, self, self, false, 0, null, null, null, null, null, false, 0, Filters.sameCardId(capturedCard), null);
+            if (action != null) {
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActionsWhenInactiveInPlay(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
 
-        // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canTargetToCancel(game, self, Filters.Tatooine_Occupation)) {
+        if (GameConditions.isDuringYourPhase(game, playerId, Phase.CONTROL)
+                && GameConditions.controls(game, playerId, Filters.here(self))
+                && GameConditions.isAtLocation(game, self, Filters.sameLocationAs(self, Filters.or(Filters.and(Filters.your(self), Filters.leader), Filters.title("The Client"))))
+                && GameConditions.canTarget(game, self, SpotOverride.INCLUDE_CAPTIVE, TargetingReason.TO_BE_LOST, Filters.and(Filters.captive, Filters.hasAttached(self)))) {
 
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Tatooine_Occupation, Title.Tatooine_Occupation);
-            actions.add(action);
+            PhysicalCard captive = Filters.findFirstActive(game, self, SpotOverride.INCLUDE_CAPTIVE, Filters.and(Filters.captive, Filters.hasAttached(self)));
+            if (captive != null) {
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+                action.setText("Take into hand");
+                action.setActionMsg("Make captive lost and retrieve 3 Force");
+
+                action.appendCost(
+                        new ReturnCardToHandFromTableEffect(action, self));
+
+                action.appendEffect(
+                        new LoseCardFromTableEffect(action, captive));
+                action.appendEffect(
+                        new RetrieveForceEffect(action, playerId, 3));
+
+                return Collections.singletonList(action);
+            }
         }
-        return actions;
+
+        return null;
     }
 }

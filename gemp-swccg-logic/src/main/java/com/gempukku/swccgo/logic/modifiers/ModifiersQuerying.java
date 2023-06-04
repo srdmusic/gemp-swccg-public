@@ -977,20 +977,36 @@ public interface ModifiersQuerying {
     float getTotalForceIconCount(GameState gameState, String playerId);
 
     /**
-     * Determines if this deploys and moves like a starfighter.
+     * Determines if this deploys like a starfighter.
      * @param gameState the game state
      * @param card the card
-     * @return true if deploys and moves like a starfighter, otherwise false
+     * @return true if deploys like a starfighter, otherwise false
      */
-    boolean isDeploysAndMovesLikeStarfighter(GameState gameState, PhysicalCard card);
+    boolean isDeploysLikeStarfighter(GameState gameState, PhysicalCard card);
 
     /**
-     * Determines if this deploys and moves like a starfighter at cloud sectors.
+     * Determines if this moves like a starfighter.
      * @param gameState the game state
      * @param card the card
-     * @return true if deploys and moves like a starfighter at cloud sectors, otherwise false
+     * @return true if moves like a starfighter, otherwise false
      */
-    boolean isDeploysAndMovesLikeStarfighterAtCloudSectors(GameState gameState, PhysicalCard card);
+    boolean isMovesLikeStarfighter(GameState gameState, PhysicalCard card);
+
+    /**
+     * Determines if this deploys like a starfighter at cloud sectors.
+     * @param gameState the game state
+     * @param card the card
+     * @return true if deploys like a starfighter at cloud sectors, otherwise false
+     */
+    boolean isDeploysLikeStarfighterAtCloudSectors(GameState gameState, PhysicalCard card);
+
+    /**
+     * Determines if this moves like a starfighter at cloud sectors.
+     * @param gameState the game state
+     * @param card the card
+     * @return true if moves like a starfighter at cloud sectors, otherwise false
+     */
+    boolean isMovesLikeStarfighterAtCloudSectors(GameState gameState, PhysicalCard card);
 
     /**
      * Gets the sites marker number.
@@ -1758,6 +1774,15 @@ public interface ModifiersQuerying {
      * @return true if total battle destiny may not be modified, otherwise false
      */
     boolean mayNotModifyTotalBattleDestiny(GameState gameState, String playerDrawingDestiny, String playerToModify);
+
+    /**
+     * Determines if total battle destiny for a specified player may not be increased by the other specified player.
+     * @param gameState the game state
+     * @param playerDrawingDestiny the player with total battle destiny
+     * @param playerToModify the player to increase total battle destiny
+     * @return true if total battle destiny may not be increased, otherwise false
+     */
+    boolean mayNotIncreaseTotalBattleDestiny(GameState gameState, String playerDrawingDestiny, String playerToModify);
 
     /**
      * Determines if battle destiny draws by a specified player may not be modified by the other specified player.
@@ -2537,6 +2562,15 @@ public interface ModifiersQuerying {
      * @return true if card can be deployed to the location without presence or Force icons, otherwise false
      */
     boolean mayDeployToTargetWithoutPresenceOrForceIcons(GameState gameState, PhysicalCard target, PhysicalCard cardToDeploy);
+
+    /**
+     * Determines if a pilot may deploy simultaneously with the card to the target without presence or Force icons.
+     * @param gameState the game state
+     * @param target the target
+     * @param cardToDeploy the card to deploy
+     * @return true if card can be deployed to the target without presence or Force icons, otherwise false
+     */
+    boolean mayDeployPilotSimultaneouslyToTargetWithoutPresenceOrForceIcons(GameState gameState, PhysicalCard target, PhysicalCard cardToDeploy);
 
     boolean mayDeployAsIfFromHand(GameState gameState, PhysicalCard card);
 
@@ -3827,9 +3861,15 @@ public interface ModifiersQuerying {
 
     boolean isStarshipOrVehicleAlone(GameState gameState, PhysicalCard physicalCard);
 
+    boolean isStarshipOrVehicleAlone(GameState gameState, PhysicalCard physicalCard, Map<InactiveReason, Boolean> spotOverrides);
+
     boolean isCharacterAlone(GameState gameState, PhysicalCard physicalCard);
 
+    boolean isCharacterAlone(GameState gameState, PhysicalCard physicalCard, Map<InactiveReason, Boolean> spotOverrides);
+
     boolean isAlone(GameState gameState, PhysicalCard physicalCard);
+
+    boolean isAlone(GameState gameState, PhysicalCard physicalCard, Map<InactiveReason, Boolean> spotOverrides);
 
     boolean hasPermanentPilotAlone(GameState gameState, PhysicalCard physicalCard);
 
@@ -4639,7 +4679,6 @@ public interface ModifiersQuerying {
     boolean isCommuning(GameState gameState, Filterable filter);
     Collection<PhysicalCard> getCardsConsideredOutOfPlay(GameState gameState);
     Collection<PhysicalCard> getActiveCardsAffectedByModifier(GameState gameState, ModifierType modifierType);
-    boolean isShieldGateBlownAway(GameState gameState);
     Collection<PhysicalCard> getCardsForPersonaChecking(String playerId);
     boolean mayNotCancelBattle(GameState gameState, String playerId);
     boolean blownAwayForceLossMayNotBeReduced(GameState gameState);
@@ -4652,4 +4691,6 @@ public interface ModifiersQuerying {
     boolean landsAsUnlimitedMove(GameState gameState, PhysicalCard card);
     boolean takesOffAsUnlimitedMove(GameState gameState, PhysicalCard card);
     boolean isPlacedOutOfPlayWhenPlayedAsSubtype(GameState gameState, PhysicalCard card, CardSubtype subtype);
+    boolean isConflictCard(GameState gameState, PhysicalCard card);
+    boolean isCreditCard(GameState gameState, PhysicalCard card);
 }

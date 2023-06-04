@@ -54,7 +54,7 @@ public class SwccgGameMediator {
     private volatile boolean _destroyed;
 
     public SwccgGameMediator(String gameId, SwccgFormat swccgFormat, League league, SwccgGameParticipant[] participants, SwccgCardBlueprintLibrary library, int maxSecondsForGamePerPlayer,
-                             boolean allowSpectators, boolean cancelIfNoActions, boolean cancellable, boolean allowExtendGameTimer, int decisionTimeoutSeconds, boolean isPrivate) {
+                             boolean allowSpectators, boolean cancelIfNoActions, boolean cancellable, boolean allowExtendGameTimer, int decisionTimeoutSeconds, boolean isPrivate, boolean useBonusAbilities) {
         _gameId = gameId;
         _maxSecondsForGamePerPlayer = maxSecondsForGamePerPlayer;
         _allowSpectators = allowSpectators;
@@ -77,7 +77,7 @@ public class SwccgGameMediator {
         }
 
         _userFeedback = new DefaultUserFeedback();
-        _swccgoGame = new DefaultSwccgGame(swccgFormat, decks, _userFeedback, library, _playerClocks);
+        _swccgoGame = new DefaultSwccgGame(swccgFormat, decks, _userFeedback, library, _playerClocks, useBonusAbilities);
         _userFeedback.setGame(_swccgoGame);
     }
 
@@ -339,7 +339,7 @@ public class SwccgGameMediator {
 
                     // Show parsec and related system info (if applicable)
                     if (card.getSystemOrbited() != null) {
-                        PhysicalCard planet = Filters.findFirstFromTopLocationsOnTable(_swccgoGame, Filters.and(Filters.planet_system, Filters.title(card.getSystemOrbited())));
+                        PhysicalCard planet = Filters.findFirstFromTopLocationsOnTable(_swccgoGame, Filters.and(Filters.system, Filters.title(card.getSystemOrbited())));
                         if (planet != null) {
                             if (Filters.mobile_system.accepts(gameState, modifiersQuerying, card)) {
                                 sb.append("<div>");
@@ -1391,7 +1391,7 @@ public class SwccgGameMediator {
                 // Hunt Down
                 objectiveLabel = "Hunt Down";
             }
-            if (Filters.or(Filters.title("Hunt For The Droid General"), Filters.title("Grievous Will Run And Hide")).accepts(_swccgoGame, objective)) {
+            if (Filters.or(Filters.title("Hunt For The Droid General"), Filters.title("He's A Coward")).accepts(_swccgoGame, objective)) {
                 // Hunt For The Droid General
                 objectiveLabel = "Hunt For The Droid General";
             }
@@ -1443,29 +1443,37 @@ public class SwccgGameMediator {
                 // On The Verge Of Greatness
                 objectiveLabel = "On The Verge Of Greatness";
             }
-            if (Filters.or(Filters.Local_Uprising, Filters.Liberation, Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
+            if (Filters.or(Filters.Local_Uprising, Filters.Liberation).accepts(_swccgoGame, objective)) {
                 // Operatives
+                objectiveLabel = "Local Uprising";
+
                 if (!objective.getBlueprint().hasVirtualSuffix()) {
-                    objectiveLabel = "Operatives";
+                    String system = _swccgoGame.getModifiersQuerying().getExtraInformationForArchetypeLabel(playerId);
+                    if (system != null)
+                        objectiveLabel = "Local Uprising - " + system;
                 }
-                // Imperial Occupation v
-                else if(Filters.or(Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
+            }
+            if (Filters.or(Filters.Imperial_Occupation, Filters.Imperial_Control).accepts(_swccgoGame, objective)) {
+                // Operatives
                     objectiveLabel = "Imperial Occupation";
-                } else if(Filters.or(Filters.Local_Uprising, Filters.Liberation).accepts(_swccgoGame, objective)) {
-                    objectiveLabel = "Local Uprising";
+
+                if (!objective.getBlueprint().hasVirtualSuffix()) {
+                    String system = _swccgoGame.getModifiersQuerying().getExtraInformationForArchetypeLabel(playerId);
+                    if (system != null)
+                        objectiveLabel = "Imperial Occupation - " + system;
                 }
             }
             if (Filters.or(Filters.You_Can_Either_Profit_By_This, Filters.Or_Be_Destroyed).accepts(_swccgoGame, objective)) {
                 // You Can Either Profit By This...
                 objectiveLabel = "Profit";
             }
+            if (Filters.or(Filters.title("Protect The Ridge"), Filters.title("Prepare For Ground Assault")).accepts(_swccgoGame, objective)) {
+                // Protect The Ridge
+                objectiveLabel = "Protect The Ridge";
+            }
             if (Filters.or(Filters.Quiet_Mining_Colony, Filters.Independent_Operation).accepts(_swccgoGame, objective)) {
                 // Quiet Mining Colony
                 objectiveLabel = "QMC";
-            }
-            if (Filters.or(Filters.At_Last_The_Jedi_Are_No_More, Filters.Revenge_Of_The_Sith).accepts(_swccgoGame, objective)) {
-                // Revenge Of The Sith
-                objectiveLabel = "Revenge Of The Sith";
             }
             if (Filters.or(Filters.Ralltiir_Operations, Filters.In_The_Hands_Of_The_Empire).accepts(_swccgoGame, objective)) {
                 // Ralltiir Operations
@@ -1483,13 +1491,9 @@ public class SwccgGameMediator {
                 // Senate
                 objectiveLabel = "Senate";
             }
-            if (Filters.or(Filters.title("More And More Systems Are Joining The Separatists"), Filters.title("The Galaxy Torn Apart")).accepts(_swccgoGame, objective)) {
+            if (Filters.or(Filters.title("More Systems Will Rally To Our Cause"), Filters.title("The Galaxy Torn Apart")).accepts(_swccgoGame, objective)) {
                 // Separatists
-                objectiveLabel = "Joining The Separatists";
-            }
-            if (Filters.or(Filters.The_Force_Is_Strong_In_My_Family, Filters.Rise_Of_Skywalker).accepts(_swccgoGame, objective)) {
-                // The Force Is Strong In My Family
-                return "Skywalker Saga";
+                objectiveLabel = "Rally To Our Cause";
             }
             if (Filters.or(Filters.Wookiee_Slaving_Operation, Filters.Indentured_To_The_Empire).accepts(_swccgoGame, objective)) {
                 //Wookiee Slaving Operation

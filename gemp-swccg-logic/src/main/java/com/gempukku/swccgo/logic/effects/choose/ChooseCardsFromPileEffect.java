@@ -11,12 +11,11 @@ import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.decisions.ArbitraryCardsSelectionDecision;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
-import com.gempukku.swccgo.logic.effects.TriggeringResultEffect;
 import com.gempukku.swccgo.logic.modifiers.CantSearchCardPileModifier;
 import com.gempukku.swccgo.logic.timing.AbstractStandardEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.TargetingEffect;
-import com.gempukku.swccgo.logic.timing.results.LookedAtCardsInOwnCardPileResult;
+import com.gempukku.swccgo.logic.timing.results.LookedAtCardsInCardPileResult;
 import com.gempukku.swccgo.logic.timing.results.VerifiedCardPileResult;
 
 import java.util.Collection;
@@ -140,8 +139,10 @@ public abstract class ChooseCardsFromPileEffect extends AbstractStandardEffect i
         int minimum = Math.min(_minimum, maximum);
 
         // If start of game, only show selectable cards to make it easier to find starting cards (and even auto-select it if only 1 selectable card)
+        // But not if the player choosing cards is the opponent of the owner of the card initiating the action (to avoid potentially revealing information about the deck if there is only 1 selectable card)
         boolean onlyShowSelectable = success && gameState.getCurrentPhase()== Phase.PLAY_STARTING_CARDS;
-        if (onlyShowSelectable && (minimum == 0 || minimum == 1) && (selectableCards.size() == minimum)) {
+        if (onlyShowSelectable && (minimum == 0 || minimum == 1) && (selectableCards.size() == minimum)
+                && (_action.getActionSource()==null || (_action.getActionSource()!= null && _action.getActionSource().getOwner().equals(_playerId)))) {
             cardsSelected(game, selectableCards);
             return new FullEffectResult(true);
         }
@@ -192,8 +193,9 @@ public abstract class ChooseCardsFromPileEffect extends AbstractStandardEffect i
         }
 
         // Check if player looked at cards in own card pile
-        if (!isSkipTriggerPlayerLookedAtCardsInPile() && _zoneOwner.equals(_playerId)) {
-            _action.appendAfterEffect(new TriggeringResultEffect(_action, new LookedAtCardsInOwnCardPileResult(_zoneOwner, _zone)));
+        if (!isSkipTriggerPlayerLookedAtCardsInPile()) {
+            game.getActionsEnvironment().emitEffectResult(
+                    new LookedAtCardsInCardPileResult(_playerId, _zoneOwner, _zone, _action.getActionSource()));
         }
 
         return new FullEffectResult(success);

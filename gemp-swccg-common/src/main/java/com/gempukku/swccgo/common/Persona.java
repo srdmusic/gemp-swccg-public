@@ -10,6 +10,7 @@ public enum Persona implements Filterable {
     AHSOKA("Ahsoka"),
     AMIDALA("Amidala"),
     ANAKIN("Anakin"),
+    APHRA("Aphra"),
     AURRA("Aurra"),
     BAZE("Baze"),
     BB8("BB-8"),
@@ -51,6 +52,7 @@ public enum Persona implements Filterable {
     FENNEC_SHAND("Fennec Shand"),
     FIGRIN_DAN("Figrin D'an"),
     GIDEON("Gideon"),
+    GREEF("Greef"),
     GREEN_LEADER("Green Leader"),
     GRIEVOUS("Grievous"),
     GROGU("Grogu"),
@@ -65,6 +67,7 @@ public enum Persona implements Filterable {
     JAINA("Jaina"),
     JANGO_FETT("Jango"),
     JANNAH("Jannah"),
+    JANSE("Janse"),
     JAR_JAR("Jar Jar"),
     JENDON("Jendon"),
     JERUS("Jerus"),
@@ -150,6 +153,7 @@ public enum Persona implements Filterable {
     WEDGE("Wedge"),
     WUHER("Wuher"),
     YODA("Yoda"),
+    YULAREN("Yularen"),
     ZUCKUSS("Zuckuss"),
 
     // Starships
@@ -184,9 +188,11 @@ public enum Persona implements Filterable {
     RUKH("Rukh"),
     SCIMITAR_2("Scimitar 2"),
     SLAVE_I("Slave I"),
+    SUPREMACY("Supremacy"),
     STEADFAST("Steadfast"),
     TANTIVE_IV("Tantive IV"),
     VADERS_CUSTOM_TIE("Vader's Custom TIE"),
+    VADERS_PERSONAL_SHUTTLE("Vader's Personal Shuttle"),
 
     // Vehicles
     JABBAS_SAIL_BARGE("Jabba's Sail Barge"),
@@ -207,8 +213,12 @@ public enum Persona implements Filterable {
     MARA_SKYWALKERS_LIGHTSABER("Mara Skywalker's Lightsaber"),
     MAULS_DOUBLE_BLADED_LIGHTSABER("Maul's Double-Bladed Lightsaber"),
     QUIGON_JINNS_LIGHTSABER("Qui-Gon Jinn's Lightsaber"),
+    SIDIOUS_LIGHTSABER("Sidious' Lightsaber"),
     SON_OF_VADERS_LIGHTSABER("Son Of Vader's Lightsaber"),
-    VADERS_LIGHTSABER("Vader's Lightsaber");
+    VADERS_LIGHTSABER("Vader's Lightsaber"),
+    VENTRESS_LIGHTSABER("Ventress' Lightsabers"),
+
+    ;
 
 
 

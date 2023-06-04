@@ -15,6 +15,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.choose.StackCardsFromOutsideDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.DefinedByGameTextDeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.MayDeployAsIfFromHandModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -32,10 +33,17 @@ import java.util.List;
 public class Card501_031 extends AbstractNormalEffect {
     public Card501_031() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Droid Reinforcements", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("If Geonosis on table, deploy on table. When deployed, stack two B-1 Battle Droids face up here from outside your deck. B-1 Battle Droids may deploy from here as if from hand (for -1 Force). [Immune to Alter.]");
+        setGameText("If Geonosis on table, use 2 Force to deploy on table. When deployed, stack two B-1 Clankers face up here from outside your deck. B-1 Clankers may deploy from here as if from hand (for -2 Force). [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Battle Droid Reinforcements");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DefinedByGameTextDeployCostModifier(self, 2));
+        return modifiers;
     }
 
     @Override
@@ -49,10 +57,10 @@ public class Card501_031 extends AbstractNormalEffect {
         if (TriggerConditions.justDeployed(game, effectResult, self)) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Stack two B-1 Battle Droids here");
-            action.setActionMsg("Stack two B-1 Battle Droids here from outside your deck");
+            action.setText("Stack two B-1 Clankers here");
+            action.setActionMsg("Stack two B-1 Clankers here from outside your deck");
             action.appendEffect(
-                    new StackCardsFromOutsideDeckEffect(action, self.getOwner(), 2, 2, self, false, Filters.title("B-1 Battle Droid")));
+                    new StackCardsFromOutsideDeckEffect(action, self.getOwner(), 2, 2, self, false, Filters.title("B-1 Clanker")));
             return Collections.singletonList(action);
         }
 
@@ -62,8 +70,8 @@ public class Card501_031 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayDeployAsIfFromHandModifier(self, Filters.and(Filters.stackedOn(self), Filters.title("B-1 Battle Droid"))));
-        modifiers.add(new DeployCostModifier(self, Filters.and(Filters.stackedOn(self), Filters.title("B-1 Battle Droid")), -1));
+        modifiers.add(new MayDeployAsIfFromHandModifier(self, Filters.and(Filters.stackedOn(self), Filters.title("B-1 Clanker"))));
+        modifiers.add(new DeployCostModifier(self, Filters.and(Filters.stackedOn(self), Filters.title("B-1 Clanker")), -2));
         return modifiers;
     }
 }

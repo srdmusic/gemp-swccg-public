@@ -26,10 +26,10 @@ import java.util.List;
  */
 public class Card501_020 extends AbstractSystem {
     public Card501_020() {
-        super(Side.DARK, Title.Geonosis, 6, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, Title.Geonosis, 7, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setLocationDarkSideGameText("If opponent just Force drained (or won a battle) here and no Geonosis sites on table, they 'conquer' (flip) Geonosis.");
-        setLocationLightSideGameText("If you just Force drained (or won a battle) at a Geonosis site, 'conquer' (flip) Geonosis.");
+        setLocationDarkSideGameText("If opponent just initiated a Force drain (or won a battle) here and no Geonosis sites on table, they 'conquer' (flip) Geonosis.");
+        setLocationLightSideGameText("If you just initiated a Force drain (or won a battle) at a Geonosis site, 'conquer' (flip) Geonosis.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_21);
@@ -40,7 +40,7 @@ public class Card501_020 extends AbstractSystem {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         if (GameConditions.canBeFlipped(game, self)
-                && (TriggerConditions.forceDrainCompleted(game, effectResult,  playerOnLightSideOfLocation, Filters.Geonosis_site)
+                && (TriggerConditions.forceDrainInitiatedBy(game, effectResult,  playerOnLightSideOfLocation, Filters.Geonosis_site)
                 || TriggerConditions.wonBattleAt(game, effectResult, playerOnLightSideOfLocation, Filters.Geonosis_site))) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
@@ -56,7 +56,7 @@ public class Card501_020 extends AbstractSystem {
         String opponent = game.getOpponent(playerOnDarkSideOfLocation);
         if (GameConditions.canBeFlipped(game, self)
                 && !Filters.canSpotFromTopLocationsOnTable(game, Filters.Geonosis_site)
-                && (TriggerConditions.forceDrainCompleted(game, effectResult,  opponent, self)
+                && (TriggerConditions.forceDrainInitiatedBy(game, effectResult,  opponent, self)
                 || TriggerConditions.wonBattleAt(game, effectResult, opponent, self))) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);

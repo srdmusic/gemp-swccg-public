@@ -262,16 +262,28 @@ public interface SwccgCardBlueprint {
     boolean isMovesLikeCharacter();
 
     /**
-     * Determines if this deploys and moves like a starfighter.
-     * @return true if deploys and moves like a starfighter, otherwise false
+     * Determines if this deploys like a starfighter.
+     * @return true if deploys like a starfighter, otherwise false
      */
-    boolean isDeploysAndMovesLikeStarfighter();
+    boolean isDeploysLikeStarfighter();
 
     /**
-     * Determines if this deploys and moves like a starfighter at cloud sectors.
-     * @return true if deploys and moves like a starfighter at cloud sectors, otherwise false
+     * Determines if this moves like a starfighter.
+     * @return true if moves like a starfighter, otherwise false
      */
-    boolean isDeploysAndMovesLikeStarfighterAtCloudSectors();
+    boolean isMovesLikeStarfighter();
+
+    /**
+     * Determines if this deploys like a starfighter at cloud sectors.
+     * @return true if deploys like a starfighter at cloud sectors, otherwise false
+     */
+    boolean isDeploysLikeStarfighterAtCloudSectors();
+
+    /**
+     * Determines if this moves like a starfighter at cloud sectors.
+     * @return true if moves like a starfighter at cloud sectors, otherwise false
+     */
+    boolean isMovesLikeStarfighterAtCloudSectors();
 
     /**
      * Determines if this can go in the vehicle capacity slot of a starship.
@@ -952,7 +964,7 @@ public interface SwccgCardBlueprint {
      * @param moveTargetFilter the filter for where the card can move
      * @return the action, or null
      */
-    Action getLandAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, Filter moveTargetFilter);
+    Action getLandAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, boolean asUnlimitedMove, Filter moveTargetFilter);
 
     /**
      * Gets the take off action for the card if it can take off.
@@ -966,7 +978,7 @@ public interface SwccgCardBlueprint {
      * @param moveTargetFilter the filter for where the card can move
      * @return the action, or null
      */
-    Action getTakeOffAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, Filter moveTargetFilter);
+    Action getTakeOffAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, boolean asUnlimitedMove, Filter moveTargetFilter);
 
     /**
      * Gets the move action for a bomber at the start of a Bombing Run.

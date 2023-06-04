@@ -5066,6 +5066,20 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
             }
         }
 
+        // If it is not a cancel and redraw, see if we have a global "cannot cancel destiny unless redrawn" rule in effect
+        // or if the specific destiny effect may not be canceled unless being redrawn
+        if (!isCancelAndRedraw) {
+            for (Modifier modifier : getModifiers(gameState, ModifierType.MAY_NOT_CANCEL_DESTINY_DRAWS_UNLESS_BEING_REDRAWN)) {
+                if (modifier.mayNotCancelDestiny(drawDestinyEffect.getPlayerDrawingDestiny(), playerId)) {
+                    return true;
+                }
+            }
+
+            if (drawDestinyEffect.mayNotBeCanceledUnlessBeingRedrawn())
+                return true;
+        }
+
+
         if (drawDestinyEffect.isDestinyCanceled()
                 || drawDestinyEffect.getSubstituteDestiny() != null
                 || drawDestinyEffect.mayNotBeCanceledByPlayer(playerId))
@@ -5111,6 +5125,25 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         PhysicalCard battleLocation = gameState.getBattleLocation();
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_MODIFY_TOTAL_BATTLE_DESTINY, battleLocation)) {
             if (modifier.mayNotModifyBattleDestiny(playerDrawingDestiny, playerToModify)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /**
+     * Determines if total battle destiny for a specified player may not be increased by the other specified player.
+     * @param gameState the game state
+     * @param playerDrawingDestiny the player with total battle destiny
+     * @param playerToModify the player to increase total battle destiny
+     * @return true if total battle destiny may not be increased, otherwise false
+     */
+    @Override
+    public boolean mayNotIncreaseTotalBattleDestiny(GameState gameState, String playerDrawingDestiny, String playerToModify) {
+        PhysicalCard battleLocation = gameState.getBattleLocation();
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_INCREASE_TOTAL_BATTLE_DESTINY, battleLocation)) {
+            if (((MayNotIncreaseTotalBattleDestinyModifier)modifier).mayNotIncreaseBattleDestiny(playerDrawingDestiny, playerToModify)) {
                 return true;
             }
         }
@@ -9270,8 +9303,14 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.TOTAL_BATTLE_DESTINY_AT_LOCATION, battleLocation)) {
             if (modifier.isForPlayer(playerId)) {
                 if (!mayNotModifyTotalBattleDestiny(gameState, playerId, modifier.getSource(gameState) != null ? modifier.getSource(gameState).getOwner() : null)) {
-                    result *= modifier.getMultiplierValue(gameState, this, battleLocation);
-                    result += modifier.getValue(gameState, this, battleLocation);
+                    boolean mayNotIncrease = mayNotIncreaseTotalBattleDestiny(gameState, playerId, modifier.getSource(gameState) != null ? modifier.getSource(gameState).getOwner() : null);
+
+                    float multiplyValue = modifier.getMultiplierValue(gameState, this, battleLocation);
+                    float addValue = modifier.getValue(gameState, this, battleLocation);
+                    if (!mayNotIncrease || multiplyValue < 1)
+                        result *= multiplyValue;
+                    if (!mayNotIncrease || addValue < 0)
+                        result += addValue;
                 }
             }
         }
@@ -13042,7 +13081,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
      */
     @Override
     public boolean isLocationUnderHothEnergyShield(GameState gameState, PhysicalCard location) {
-        return !getModifiersAffectingCard(gameState, ModifierType.UNDER_HOTH_ENERGY_SHIELD, location).isEmpty();
+        return !getModifiersAffectingCard(gameState, ModifierType.UNDER_HOTH_ENERGY_SHIELD, location).isEmpty()
+                && getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_BE_COVERED_BY_HOTH_ENERGY_SHIELD, location).isEmpty();
     }
 
     /**
@@ -13855,7 +13895,17 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     }
 
     @Override
+    public boolean isAlone(GameState gameState, PhysicalCard physicalCard, Map<InactiveReason, Boolean> spotOverrides) {
+        return isCharacterAlone(gameState, physicalCard, spotOverrides) || isStarshipOrVehicleAlone(gameState, physicalCard, spotOverrides);
+    }
+
+    @Override
     public boolean isCharacterAlone(GameState gameState, PhysicalCard physicalCard) {
+        return isCharacterAlone(gameState, physicalCard, null);
+    }
+
+    @Override
+    public boolean isCharacterAlone(GameState gameState, PhysicalCard physicalCard, Map<InactiveReason, Boolean> spotOverrides) {
         // Your character or permanent pilot is alone at a location if it is active
         // and you have no other cards at that location that are active characters
         // or active cards with ability. Combo Cards (such as Artoo & Threepio or Tonnika Sisters),
@@ -13872,7 +13922,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         if (location==null)
             return false;
 
-        if (Filters.canSpot(gameState.getGame(), null, Filters.and(Filters.not(physicalCard), Filters.at(location),
+        if (Filters.canSpot(gameState.getGame(), null, spotOverrides, Filters.and(Filters.not(physicalCard), Filters.at(location),
                 Filters.owner(physicalCard.getOwner()), Filters.or(CardCategory.CHARACTER, Filters.abilityMoreThan(0, true)))))
             return false;
 
@@ -13881,6 +13931,11 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
     @Override
     public boolean isStarshipOrVehicleAlone(GameState gameState, PhysicalCard physicalCard) {
+        return isStarshipOrVehicleAlone(gameState, physicalCard, null);
+    }
+
+    @Override
+    public boolean isStarshipOrVehicleAlone(GameState gameState, PhysicalCard physicalCard, Map<InactiveReason, Boolean> spotOverrides) {
         // Your character or permanent pilot is alone at a location if it is active
         // and you have no other cards at that location that are active characters
         // or active cards with ability. Combo Cards (such as Artoo & Threepio or Tonnika Sisters),
@@ -13897,7 +13952,7 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         if (location==null)
             return false;
 
-        if (Filters.canSpot(gameState.getGame(), null, Filters.and(Filters.at(location), Filters.owner(physicalCard.getOwner()),
+        if (Filters.canSpot(gameState.getGame(), null, spotOverrides, Filters.and(Filters.at(location), Filters.owner(physicalCard.getOwner()),
                 Filters.or(CardCategory.CHARACTER, CardCategory.STARSHIP, CardCategory.VEHICLE),
                 Filters.not(Filters.or(physicalCard, Filters.aboardOrAboardCargoOf(physicalCard))))))
             return false;
@@ -14554,6 +14609,28 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         // Check for deploy without presence or Force icons modifier
         for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAY_DEPLOY_WITHOUT_PRESENCE_OR_FORCE_ICONS, cardToDeploy))
+            if (modifier.isAffectedTarget(gameState, this, target))
+                return true;
+
+        return false;
+    }
+
+    /**
+     * Determines if a pilot may deploy simultaneously with the card to the target without presence or Force icons.
+     * @param gameState the game state
+     * @param target the target
+     * @param starshipOrVehicle the card to deploy
+     * @return true if card can be deployed to the target without presence or Force icons, otherwise false
+     */
+    @Override
+    public boolean mayDeployPilotSimultaneouslyToTargetWithoutPresenceOrForceIcons(GameState gameState, PhysicalCard target, PhysicalCard starshipOrVehicle) {
+        // Only check starships or vehicles
+        if (!getCardTypes(gameState, starshipOrVehicle).contains(CardType.STARSHIP)
+                && !getCardTypes(gameState, starshipOrVehicle).contains(CardType.VEHICLE))
+            return false;
+
+        // Check for deploy without presence or Force icons modifier
+        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAY_DEPLOY_PILOT_SIMULTANEOUSLY_WITHOUT_PRESENCE_OR_FORCE_ICONS, starshipOrVehicle))
             if (modifier.isAffectedTarget(gameState, this, target))
                 return true;
 
@@ -16533,31 +16610,59 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     }
 
     /**
-     * Determines if this deploys and moves like a starfighter.
+     * Determines if this deploys like a starfighter.
      * @param gameState the game state
      * @param card the card
-     * @return true if deploys and moves like a starfighter, otherwise false
+     * @return true if deploys like a starfighter, otherwise false
      */
     @Override
-    public boolean isDeploysAndMovesLikeStarfighter(GameState gameState, PhysicalCard card) {
-        return card.getBlueprint().isDeploysAndMovesLikeStarfighter() || Filters.squadron.accepts(gameState, this, card);
+    public boolean isDeploysLikeStarfighter(GameState gameState, PhysicalCard card) {
+        return card.getBlueprint().isDeploysLikeStarfighter() || Filters.squadron.accepts(gameState, this, card);
     }
 
     /**
-     * Determines if this deploys and moves like a starfighter at cloud sectors.
+     * Determines if this moves like a starfighter.
      * @param gameState the game state
      * @param card the card
-     * @return true if deploys and moves like a starfighter at cloud sectors, otherwise false
+     * @return true if moves like a starfighter, otherwise false
      */
     @Override
-    public boolean isDeploysAndMovesLikeStarfighterAtCloudSectors(GameState gameState, PhysicalCard card) {
-        if (isDeploysAndMovesLikeStarfighter(gameState, card))
+    public boolean isMovesLikeStarfighter(GameState gameState, PhysicalCard card) {
+        return card.getBlueprint().isMovesLikeStarfighter() || Filters.squadron.accepts(gameState, this, card);
+    }
+
+    /**
+     * Determines if this deploys like a starfighter at cloud sectors.
+     * @param gameState the game state
+     * @param card the card
+     * @return true if deploys like a starfighter at cloud sectors, otherwise false
+     */
+    @Override
+    public boolean isDeploysLikeStarfighterAtCloudSectors(GameState gameState, PhysicalCard card) {
+        if (isDeploysLikeStarfighter(gameState, card))
             return true;
 
         if (Filters.or(Filters.shuttle_vehicle, Filters.cloud_car, Filters.Patrol_Craft).accepts(gameState, this, card))
             return true;
 
-        return card.getBlueprint().isDeploysAndMovesLikeStarfighterAtCloudSectors();
+        return card.getBlueprint().isDeploysLikeStarfighterAtCloudSectors();
+    }
+
+    /**
+     * Determines if this moves like a starfighter at cloud sectors.
+     * @param gameState the game state
+     * @param card the card
+     * @return true if moves like a starfighter at cloud sectors, otherwise false
+     */
+    @Override
+    public boolean isMovesLikeStarfighterAtCloudSectors(GameState gameState, PhysicalCard card) {
+        if (isMovesLikeStarfighter(gameState, card))
+            return true;
+
+        if (Filters.or(Filters.shuttle_vehicle, Filters.cloud_car, Filters.Patrol_Craft).accepts(gameState, this, card))
+            return true;
+
+        return card.getBlueprint().isMovesLikeStarfighterAtCloudSectors();
     }
 
     /**
@@ -16741,10 +16846,6 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         return types;
     }
 
-    public boolean isShieldGateBlownAway(GameState gameState) {
-        return !getModifiers(gameState, ModifierType.SHIELD_GATE_BLOWN_AWAY).isEmpty();
-    }
-
     public Collection<PhysicalCard> getCardsForPersonaChecking(String playerId) {
         Collection<PhysicalCard> cards = new LinkedList<>();
         //my cards on table
@@ -16865,5 +16966,15 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                 return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean isConflictCard(GameState gameState, PhysicalCard card) {
+        return !getModifiersAffectingCard(gameState, ModifierType.CONFLICT_CARD, card).isEmpty();
+    }
+
+    @Override
+    public boolean isCreditCard(GameState gameState, PhysicalCard card) {
+        return !getModifiersAffectingCard(gameState, ModifierType.CREDIT_CARD, card).isEmpty();
     }
 }

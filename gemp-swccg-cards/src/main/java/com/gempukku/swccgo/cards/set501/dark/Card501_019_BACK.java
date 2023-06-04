@@ -20,42 +20,37 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.ConvertLocationResult;
 
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Set: Set 21
  * Type: Objective
- * Title: More And More Systems Are Joining The Separatists / The Galaxy Torn Apart
+ * Title: More Systems Will Rally To Our Cause / The Galaxy Torn Apart
  */
 public class Card501_019_BACK extends AbstractObjective {
     public Card501_019_BACK() {
         super(Side.DARK, 7, "The Galaxy Torn Apart", ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, [Separatist] characters are deploy -1. Once per turn, may deploy a [Separatist] character from Reserve Deck to a site that is part of a system named in that character's game text; reshuffle. During your control phase, opponent loses X Force, where X = number of systems you occupy where you also occupy a related site. At systems related to sites you occupy, your [Separatist] starships are immune to attrition.\n" +
-                "Flip this card if less than two [Separatist] systems on table.");
+        setGameText("While this side up, during your control phase, opponent loses X Force, where X = number of systems you occupy where you also occupy a related site. At systems related to sites you occupy, opponent's Force drains are -1 and your [Separatist] starships are immune to attrition. " +
+                "Flip this card if fewer than two [Separatist] systems on table.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("The Galaxy Torn Apart");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        String opponent = game.getOpponent(self.getOwner());
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotDeployModifier(self, Filters.and(Filters.not(Icon.EPISODE_I), Filters.or(Filters.character, Filters.starship, Filters.vehicle)), self.getOwner()));
-        modifiers.add(new DeployCostModifier(self, Filters.and(Icon.SEPARATIST, Filters.character), -1));
+        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.system, Filters.relatedSystemTo(self, Filters.and(Filters.site, Filters.occupies(self.getOwner())))), -1, game.getOpponent(self.getOwner())));
         modifiers.add(new ImmuneToAttritionModifier(self, Filters.and(Filters.your(self), Icon.SEPARATIST, Filters.starship, Filters.at(Filters.relatedSystemTo(self, Filters.and(Filters.site, Filters.occupies(self.getOwner())))))));
         return modifiers;
     }
@@ -72,62 +67,26 @@ public class Card501_019_BACK extends AbstractObjective {
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy a site from Reserve Deck");
-            action.setActionMsg("Deploy an [Episode I] battleground site from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.EPISODE_I, Filters.battleground_site), true));
-            actions.add(action);
-        }
+            Filter systemFilter = Filters.and(Filters.your(self), Filters.or(Icon.SEPARATIST, Icon.CLONE_ARMY), Filters.system);
 
+            if (GameConditions.canSpotLocation(game, systemFilter)) {
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Deploy a site from Reserve Deck");
+                action.setActionMsg("Deploy a battleground site related to your [Separatist] or [Clone Army] system from Reserve Deck");
 
-        gameTextActionId = GameTextActionId.THE_GALAXY_TORN_APART__DEPLOY_CHARACTER_FROM_RESERVE_DECK;
+                Filter siteFilter = Filters.none;
+                for(PhysicalCard system: Filters.filterTopLocationsOnTable(game, systemFilter)) {
+                    siteFilter = Filters.or(siteFilter, Filters.relatedLocationEvenWhenNotInPlay(system));
+                }
 
-        // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
-                && GameConditions.canSpot(game, self, Filters.site)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy a [Separatist] character");
-            action.setActionMsg("deploy a [Separatist] character from Reserve Deck to a site that is part of a system named in that character's game text");
-
-            Collection<PhysicalCard> sites = Filters.filterTopLocationsOnTable(game, Filters.site);
-            final Collection<String> systemNames = new HashSet<>();
-
-            Filter characterFilter = Filters.none;
-
-            for(PhysicalCard site: sites) {
-                String systemName = site.getPartOfSystem();
-                characterFilter = Filters.or(characterFilter, Filters.and(Filters.gameTextContains(systemName), Filters.deployableToLocation(self, Filters.and(Filters.site, Filters.partOfSystem(systemName)), false, 0)));
-                systemNames.add(systemName);
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerTurnEffect(action));
+                // Perform result(s)
+                action.appendEffect(
+                        new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.title("Separatist Command Center"), Filters.and(Filters.site, siteFilter)), Filters.battleground, true));
+                actions.add(action);
             }
-
-
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            action.appendEffect(
-                    new ChooseCardFromReserveDeckEffect(action, playerId, characterFilter) {
-                        @Override
-                        protected void cardSelected(SwccgGame game, PhysicalCard selectedCard) {
-                            Filter siteFilter = Filters.none;
-                            for (String system: systemNames) {
-                                if (Filters.gameTextContains(system).accepts(game, selectedCard)) {
-                                    siteFilter = Filters.or(siteFilter, Filters.partOfSystem(system));
-                                }
-                            }
-
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new DeployCardToTargetFromReserveDeckEffect(action, selectedCard, Filters.and(Filters.site, siteFilter), false, false, true));
-                        }
-                    });
-            actions.add(action);
         }
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;

@@ -15,8 +15,7 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.MoveCardUsingLandspeedEffect;
@@ -25,7 +24,6 @@ import com.gempukku.swccgo.logic.modifiers.ArmorModifier;
 import com.gempukku.swccgo.logic.modifiers.HyperspeedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -41,8 +39,8 @@ public class Card501_036 extends AbstractImperial {
         super(Side.DARK, 2, 2, 2, 2, 4, "Commander Praji", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Vader's aide on the Devastator. Personally supervised search for Death Star plans on Tatooine by Vader's order. Was graduated with honors from Imperial Navy Academy on Carida.");
-        setGameText("Adds 2 to power of anything he pilots. While aboard Devastator, adds 1 to armor and hyperspeed and, at the beginning of opponent's battle phase, you may move one trooper at a related site using landspeed.");
-        addIcons(Icon.PILOT, Icon.VIRTUAL_SET_21);
+        setGameText("Adds 2 to power of anything he pilots. While aboard Devastator, adds 1 to armor and hyperspeed and, once during your deploy phase, your trooper at a related site may make a regular move using landspeed.");
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.COMMANDER);
         setMatchingStarshipFilter(Filters.Devastator);
         setTestingText("Commander Praji (V)");
@@ -50,28 +48,27 @@ public class Card501_036 extends AbstractImperial {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+        List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
-        modifiers.add(new ArmorModifier(self, Filters.and(Filters.Devastator, Filters.hasPiloting(self)), 1));
-        modifiers.add(new HyperspeedModifier(self, Filters.and(Filters.Devastator, Filters.hasPiloting(self)), 1));
+        modifiers.add(new ArmorModifier(self, Filters.and(Filters.Devastator, Filters.hasAboard(self)), 1));
+        modifiers.add(new HyperspeedModifier(self, Filters.and(Filters.Devastator, Filters.hasAboard(self)), 1));
         return modifiers;
     }
 
-
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         Filter trooperFilter = Filters.and(Filters.your(self), Filters.trooper, Filters.at(Filters.relatedSite(self)), Filters.canMoveUsingLandspeed(playerId, false, false, false, 0));
 
         // Check condition(s)
-        if (TriggerConditions.isStartOfOpponentsPhase(game, self, effectResult, Phase.BATTLE)
+        if (GameConditions.isAboard(game, self, Filters.Devastator)
+                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
                 && GameConditions.canTarget(game, self, trooperFilter)) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setPerformingPlayer(playerId);
-            action.setText("Move a trooper using landspeed");
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Move your trooper using landspeed");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerPhaseEffect(action));

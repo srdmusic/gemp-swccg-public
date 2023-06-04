@@ -180,7 +180,7 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
         REORDER_CARD_PILE,
         STACKED_FROM_CARD_PILE,
         STACKED_FROM_HAND,
-        LOOKED_AT_OWN_CARD_PILE,
+        LOOKED_AT_CARDS_IN_CARD_PILE,
         RECIRCULATED,
 
         // Canceling/restoring game text
@@ -329,6 +329,9 @@ public abstract class EffectResult implements Snapshotable<EffectResult> {
 
         // Sense/Alter Destiny Successful
         SENSE_ALTER_DESTINY_SUCCESSFUL,
+
+        // Trample Destiny Successful
+        TRAMPLE_DESTINY_SUCCESSFUL,
 
         // 'Insert' card revealed
         INSERT_CARD_REVEALED,

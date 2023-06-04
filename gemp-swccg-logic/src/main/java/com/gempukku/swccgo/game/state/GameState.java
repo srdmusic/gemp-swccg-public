@@ -15,6 +15,7 @@ import com.gempukku.swccgo.logic.actions.GameTextAction;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifierFlag;
 import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.GameStats;
@@ -2659,6 +2660,14 @@ public class GameState implements Snapshotable<GameState> {
                 }
             }
         }
+
+        // Check for top level actions from the top card of Lost Pile (unless it is face down)
+        PhysicalCard topOfLostPile = getTopOfLostPile(playerId);
+        if (topOfLostPile != null
+                && !_game.getModifiersQuerying().hasFlagActive(this, ModifierFlag.LOST_PILE_FACE_DOWN, playerId)) {
+            if (physicalCardVisitor.visitPhysicalCard(topOfLostPile))
+                return true;
+        }
         return false;
     }
 
@@ -2700,8 +2709,9 @@ public class GameState implements Snapshotable<GameState> {
 */
         }
         // Visit stacked cards to check for any actions, either whileStacked actions or any stacked cards that may deploy "as if from hand"
-        for (PhysicalCard physicalCard : _stacked.get(playerId)) {
+        for (PhysicalCard physicalCard : getAllStackedCards()) {
             if (physicalCard.getZone() == Zone.STACKED
+                    && physicalCard.getOwner().equals(playerId)
                     && physicalCard.getBlueprint().getCardCategory() != CardCategory.INTERRUPT
                     && physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION
                     && physicalCard.getBlueprint().getCardCategory() != CardCategory.EPIC_EVENT) {
@@ -3671,7 +3681,7 @@ public class GameState implements Snapshotable<GameState> {
      * @param isLocalTrouble true if battle is a Local Trouble battle, otherwise false
      * @param localTroubleParticipants the Local Trouble battle participants, or null if not a Local Trouble battle
      */
-    public void beginBattle(String playerId, PhysicalCard location, boolean isLocalTrouble, Collection<PhysicalCard> localTroubleParticipants) {
+    public void beginBattle(String playerId, PhysicalCard location, boolean isLocalTrouble, Collection<PhysicalCard> localTroubleParticipants, Collection<Modifier> extraModifiers) {
         _battleState = new BattleState(getGame(), playerId, location, isLocalTrouble);
 
         if (isLocalTrouble) {
@@ -3680,6 +3690,10 @@ public class GameState implements Snapshotable<GameState> {
         }
         else {
             _battleState.addParticipants(this, Filters.filterActive(_game, null, Filters.initiallyParticipatesInBattle(location)));
+        }
+
+        for (Modifier modifier: extraModifiers) {
+            _game.getModifiersEnvironment().addUntilEndOfBattleModifier(modifier);
         }
 
         Collection<PhysicalCard> allCardsParticipating = _battleState.getAllCardsParticipating();

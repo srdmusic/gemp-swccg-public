@@ -1,14 +1,51 @@
 package com.gempukku.swccgo.cards;
 
-import com.gempukku.swccgo.cards.conditions.*;
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.cards.conditions.AllAbilityAtLocationProvidedByCondition;
+import com.gempukku.swccgo.cards.conditions.AllAbilityInBattleProvidedByCondition;
+import com.gempukku.swccgo.cards.conditions.AllAbilityOnTableProvidedByCondition;
+import com.gempukku.swccgo.cards.conditions.ControlsCondition;
+import com.gempukku.swccgo.cards.conditions.ControlsWithCondition;
+import com.gempukku.swccgo.cards.conditions.InBattleWithCondition;
+import com.gempukku.swccgo.cards.conditions.InSenateMajorityCondition;
+import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
+import com.gempukku.swccgo.cards.conditions.OccupiesWithCondition;
+import com.gempukku.swccgo.cards.conditions.OnCloudCityCondition;
+import com.gempukku.swccgo.cards.conditions.UnderNighttimeConditionConditions;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.Filterable;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.InactiveReason;
+import com.gempukku.swccgo.common.JediTestStatus;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.SpecialRule;
+import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.SpotOverride;
+import com.gempukku.swccgo.common.TargetingReason;
+import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.UtinniEffectStatus;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.PlayCardOption;
 import com.gempukku.swccgo.game.SwccgBuiltInCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.*;
+import com.gempukku.swccgo.game.state.AttackState;
+import com.gempukku.swccgo.game.state.BattleState;
+import com.gempukku.swccgo.game.state.DrawDestinyState;
+import com.gempukku.swccgo.game.state.DuelState;
+import com.gempukku.swccgo.game.state.EpicEventState;
+import com.gempukku.swccgo.game.state.ForRemainderOfGameData;
+import com.gempukku.swccgo.game.state.ForceDrainState;
+import com.gempukku.swccgo.game.state.ForceLossState;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.game.state.LightsaberCombatState;
+import com.gempukku.swccgo.game.state.SabaccState;
+import com.gempukku.swccgo.game.state.WeaponFiringState;
 import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayingCardEffect;
 import com.gempukku.swccgo.logic.modifiers.ModifierFlag;
@@ -18,7 +55,13 @@ import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.InsertCardRevealedResult;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 // This class contain methods to be used by cards
@@ -1963,7 +2006,7 @@ public class GameConditions {
      * @return true if a card can be spotted, otherwise false
      */
     public static boolean canTarget(SwccgGame game, PhysicalCard card, int count, Filterable targetFilters) {
-        return canTarget(game, card, true, targetFilters);
+        return canTarget(game, card, count, true, targetFilters);
     }
 
     /**
@@ -2547,6 +2590,16 @@ public class GameConditions {
     }
 
     /**
+     * Gets number of cards in player's reserve deck.
+     * @param game the game
+     * @param playerId the player
+     * @return the number of cards
+     */
+    public static int numCardsInReserveDeck(SwccgGame game, String playerId) {
+        return game.getGameState().getReserveDeckSize(playerId);
+    }
+
+    /**
      * Gets number of cards in player's lost pile.
      * @param game the game
      * @param playerId the player
@@ -3028,6 +3081,32 @@ public class GameConditions {
     }
 
     /**
+     * Checks if the player can deploy a card from Used Pile.
+     * @param game the game
+     * @param playerId the player
+     * @param self the self
+     * @param gameTextActionId the identifier for the card's specific action to perform the search
+     * @return true or false
+     */
+    public static boolean canDeployCardFromUsedPile(SwccgGame game, String playerId, PhysicalCard self, GameTextActionId gameTextActionId) {
+        return canDeployCardFromCardPile(game, playerId, self, Zone.USED_PILE, gameTextActionId, false, false, Collections.<Persona>emptySet(), Collections.<String>emptyList());
+    }
+
+
+    /**
+     * Checks if the player can deploy a card from Used Pile.
+     * @param game the game
+     * @param playerId the player
+     * @param self the self
+     * @param gameTextActionId the identifier for the card's specific action to perform the search
+     * @param skipDeployPhaseCheck true if checking it is the player's deploy phase is skipped, otherwise false
+     * @return true or false
+     */
+    public static boolean canDeployCardFromUsedPile(SwccgGame game, String playerId, PhysicalCard self, GameTextActionId gameTextActionId, boolean skipDeployPhaseCheck) {
+        return canDeployCardFromCardPile(game, playerId, self, Zone.USED_PILE, gameTextActionId, skipDeployPhaseCheck, false, Collections.<Persona>emptySet(), Collections.<String>emptyList());
+    }
+
+    /**
      * Checks if the player can deploy a card from the specified card pile.
      * @param game the game
      * @param playerId the player
@@ -3043,6 +3122,9 @@ public class GameConditions {
     private static boolean canDeployCardFromCardPile(SwccgGame game, String playerId, PhysicalCard self, Zone cardPile, GameTextActionId gameTextActionId, boolean skipDeployPhaseCheck, boolean asReact, Set<Persona> personas, List<String> titles) {
         GameState gameState = game.getGameState();
         ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
+
+        if (modifiersQuerying.hasFlagActive(gameState, ModifierFlag.MAY_NOT_INITIATE_DEPLOYMENT_ACTIONS_THAT_SEARCH_PILES, playerId))
+            return false;
 
         // Check is the the player's deploy phase
         if (!asReact && !skipDeployPhaseCheck && !isPhaseForPlayer(game, Phase.DEPLOY, playerId))
@@ -4086,6 +4168,24 @@ public class GameConditions {
     }
 
     /**
+     * Determines if the character card is playing sabacc from a specific source.
+     * @param game the game
+     * @param card the character card
+     * @param sabaccFilter the filter for the source of the sabacc game
+     * @return true or false
+     */
+    public static boolean isPlayingSabacc(SwccgGame game, PhysicalCard card, Filterable sabaccFilter) {
+        SabaccState sabaccState = game.getGameState().getSabaccState();
+        if (sabaccState == null)
+            return false;
+
+        List<PhysicalCard> sabaccPlayers = sabaccState.getSabaccPlayers();
+        PhysicalCard sabaccSource = sabaccState.getSabaccInterrupt();
+
+        return sabaccSource != null && sabaccPlayers.contains(card) && Filters.and(sabaccFilter).accepts(game, sabaccSource);
+    }
+
+    /**
      * Determines if the current Force loss is not prohibited from being reduced.
      * @param game the game
      * @return true or false
@@ -4199,7 +4299,7 @@ public class GameConditions {
      * @return true or false
      */
     public static boolean isGeneratingAtLeastXForceMoreThan(SwccgGame game, String playerId1, String playerId2, int difference) {
-        return (game.getGameState().getPlayersTotalForceGeneration(playerId1) - difference) >= game.getGameState().getPlayersTotalForceGeneration(playerId2);
+        return (game.getModifiersQuerying().getTotalForceGeneration(game.getGameState(), playerId1) - difference) >= game.getModifiersQuerying().getTotalForceGeneration(game.getGameState(), playerId2);
     }
 
     // Checks if flag is active.
@@ -4712,11 +4812,25 @@ public class GameConditions {
      * @return true or false
      */
     public static boolean canInitiateBattleAtLocation(String player, SwccgGame game, PhysicalCard location, boolean forFree) {
+        return canInitiateBattleAtLocation(player, game, location, forFree, false);
+    }
+
+    /**
+     * Determines if the specified player can initiate battle at the location.
+     * @param player the player
+     * @param game the game
+     * @param location the location
+     * @param forFree if the battle would be initiated for free
+     * @return true or false
+     */
+    public static boolean canInitiateBattleAtLocation(String player, SwccgGame game, PhysicalCard location, boolean forFree, boolean skipPhaseCheck) {
         GameState gameState = game.getGameState();
         ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
 
-        if (location.getZone() != Zone.LOCATIONS || !gameState.getCurrentPlayerId().equals(player)
-                || gameState.getCurrentPhase() != Phase.BATTLE || gameState.isDuringBattle() || gameState.isDuringAttack())
+        if (location.getZone() != Zone.LOCATIONS
+                || (!gameState.getCurrentPlayerId().equals(player) && !skipPhaseCheck)
+                || (gameState.getCurrentPhase() != Phase.BATTLE && !skipPhaseCheck)
+                || gameState.isDuringBattle() || gameState.isDuringAttack())
             return false;
 
         // Check if player is prevented from initiating battle at location

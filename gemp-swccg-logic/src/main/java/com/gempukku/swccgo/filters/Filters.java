@@ -1,8 +1,46 @@
 package com.gempukku.swccgo.filters;
 
-import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.game.*;
-import com.gempukku.swccgo.game.state.*;
+import com.gempukku.swccgo.common.Agenda;
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.CardType;
+import com.gempukku.swccgo.common.Filterable;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.InactiveReason;
+import com.gempukku.swccgo.common.IonizationType;
+import com.gempukku.swccgo.common.JediTestStatus;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.ModelType;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpecialRule;
+import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.SpotOverride;
+import com.gempukku.swccgo.common.TargetId;
+import com.gempukku.swccgo.common.TargetingReason;
+import com.gempukku.swccgo.common.TargetingType;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.UtinniEffectStatus;
+import com.gempukku.swccgo.common.Zone;
+import com.gempukku.swccgo.game.CompletePhysicalCardVisitor;
+import com.gempukku.swccgo.game.DeployAsCaptiveOption;
+import com.gempukku.swccgo.game.DeploymentOption;
+import com.gempukku.swccgo.game.DeploymentRestrictionsOption;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.PhysicalCardVisitor;
+import com.gempukku.swccgo.game.PlayCardOption;
+import com.gempukku.swccgo.game.ReactActionOption;
+import com.gempukku.swccgo.game.SwccgBuiltInCardBlueprint;
+import com.gempukku.swccgo.game.SwccgCardBlueprint;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.AttackRunState;
+import com.gempukku.swccgo.game.state.AttackState;
+import com.gempukku.swccgo.game.state.BattleState;
+import com.gempukku.swccgo.game.state.EpicEventState;
+import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.game.state.MoveAsReactState;
+import com.gempukku.swccgo.game.state.WeaponFiringState;
 import com.gempukku.swccgo.game.state.actions.PlayCardState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
@@ -14,7 +52,15 @@ import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.TargetingActionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -2641,7 +2687,7 @@ public class Filters {
      * @return Filter
      */
     public static Filter occupiesWith(final String playerId, PhysicalCard source, final Filter filters) {
-        return Filters.and(Filters.occupies(playerId), Filters.sameLocationAs(source, Filters.and(Filters.owner(playerId), filters)));
+        return Filters.and(Filters.occupies(playerId), Filters.sameLocationAs(source, Filters.and(Filters.owner(playerId), Filters.not(Filters.location), filters)));
     }
 
     /**
@@ -2655,7 +2701,7 @@ public class Filters {
      * @return Filter
      */
     public static Filter occupiesWith(final String playerId, PhysicalCard source, final Map<InactiveReason, Boolean> spotOverrides, final Filter filters) {
-        return Filters.and(Filters.occupies(playerId, spotOverrides), Filters.sameLocationAs(source, spotOverrides, Filters.and(Filters.owner(playerId), filters)));
+        return Filters.and(Filters.occupies(playerId, spotOverrides), Filters.sameLocationAs(source, spotOverrides, Filters.and(Filters.owner(playerId), Filters.not(Filters.location), filters)));
     }
 
     /**
@@ -2836,7 +2882,7 @@ public class Filters {
      * @return Filter
      */
     public static Filter controlsWith(final String playerId, PhysicalCard source, final Filter filters) {
-        return Filters.and(Filters.controls(playerId), Filters.sameLocationAs(source, Filters.and(Filters.owner(playerId), filters)));
+        return Filters.and(Filters.controls(playerId), Filters.sameLocationAs(source, Filters.and(Filters.owner(playerId), Filters.not(Filters.location), filters)));
     }
 
     /**
@@ -3780,15 +3826,11 @@ public class Filters {
                 if (!Filters.exterior_site.accepts(gameState, modifiersQuerying, physicalCard))
                     return false;
 
-                String relatedSystemName = physicalCard.getPartOfSystem();
-                if (relatedSystemName == null)
-                    return false;
-
                 PhysicalCard card = gameState.findCardByPermanentId(permCardId);
                 PhysicalCard location = modifiersQuerying.getLocationHere(gameState, card);
                 if (location == null
                         || location.getBlueprint().getCardSubtype() != CardSubtype.SITE
-                        || !relatedSystemName.equals(location.getPartOfSystem()))
+                        || !Filters.relatedSite(location).accepts(gameState.getGame(), physicalCard))
                     return false;
 
                 int distance = Math.abs(location.getLocationZoneIndex() - physicalCard.getLocationZoneIndex());
@@ -3798,7 +3840,7 @@ public class Filters {
                 // Check if there is another related exterior site closer (on either side)
                 Collection<PhysicalCard> locationsToCheck = Filters.filterTopLocationsOnTable(gameState.getGame(), Filters.and(Filters.exterior_site, Filters.relatedSite(location)));
                 for (PhysicalCard locationToCheck : locationsToCheck) {
-                    int curDistance = Math.abs(location.getLocationZoneIndex() - physicalCard.getLocationZoneIndex());
+                    int curDistance = Math.abs(location.getLocationZoneIndex() - locationToCheck.getLocationZoneIndex());
                     if (curDistance < distance) {
                         return false;
                     }
@@ -6423,7 +6465,7 @@ public class Filters {
                 }
 
                 if ((cardToMove.getBlueprint().getCardCategory() != CardCategory.STARSHIP
-                        && !cardToMove.getBlueprint().isDeploysAndMovesLikeStarfighter())
+                        && !cardToMove.getBlueprint().isMovesLikeStarfighter())
                         || currentAtLocation == null
                         || currentAtLocation.getBlueprint().getCardSubtype() != CardSubtype.SYSTEM
                         || physicalCard.getBlueprint().getCardSubtype() != CardSubtype.SYSTEM
@@ -6495,7 +6537,7 @@ public class Filters {
                 boolean validDestination = false;
 
                 // 1) Check if card to move is a starship at a system and the location to move to is the nearest related asteroid sector
-                if ((cardToMove.getBlueprint().getCardCategory() == CardCategory.STARSHIP || cardToMove.getBlueprint().isDeploysAndMovesLikeStarfighter())
+                if ((cardToMove.getBlueprint().getCardCategory() == CardCategory.STARSHIP || cardToMove.getBlueprint().isMovesLikeStarfighter())
                         && currentAtLocation.getBlueprint().getCardSubtype() == CardSubtype.SYSTEM
                         && Filters.nearestRelatedAsteroidSector(currentAtLocation).accepts(gameState, modifiersQuerying, physicalCard)) {
                     validDestination = true;
@@ -6504,7 +6546,7 @@ public class Filters {
                 // 2) Check if card to move is a starship at a system and the location to move to is the nearest related cloud sector
                 if (!validDestination
                         && currentAtLocation.getBlueprint().getCardSubtype() == CardSubtype.SYSTEM
-                        && Filters.or(Filters.starfighter, Filters.deploysAndMovesLikeStarfighter).accepts(gameState, modifiersQuerying, cardToMove)
+                        && Filters.or(Filters.starfighter, Filters.movesLikeStarfighter).accepts(gameState, modifiersQuerying, cardToMove)
                         && Filters.nearestRelatedCloudSector(currentAtLocation).accepts(gameState, modifiersQuerying, physicalCard)) {
                     validDestination = true;
                 }
@@ -6519,7 +6561,7 @@ public class Filters {
 
                 // 4) Check if card move is a starship at nearest related sector to the system location
                 if (!validDestination
-                        && (cardToMove.getBlueprint().getCardCategory() == CardCategory.STARSHIP || cardToMove.getBlueprint().isDeploysAndMovesLikeStarfighter())
+                        && (cardToMove.getBlueprint().getCardCategory() == CardCategory.STARSHIP || cardToMove.getBlueprint().isMovesLikeStarfighter())
                         && physicalCard.getBlueprint().getCardSubtype() == CardSubtype.SYSTEM
                         && Filters.nearestRelatedSector(physicalCard).accepts(gameState, modifiersQuerying, currentAtLocation)) {
                     validDestination = true;
@@ -6530,15 +6572,15 @@ public class Filters {
                 if (!validDestination
                         && currentAtLocation.getBlueprint().getCardSubtype() == CardSubtype.SECTOR
                         && physicalCard.getBlueprint().getCardSubtype() == CardSubtype.SECTOR
-                        && Filters.or(Filters.starship, Filters.deploysAndMovesLikeStarfighter, Filters.and(Filters.vehicle, Filters.hasLandspeed)).accepts(gameState, modifiersQuerying, cardToMove)) {
+                        && Filters.or(Filters.starship, Filters.movesLikeStarfighter, Filters.and(Filters.vehicle, Filters.hasLandspeed)).accepts(gameState, modifiersQuerying, cardToMove)) {
 
                     int range = 1;
                     if (!Filters.Death_Star_II_sector.accepts(gameState, modifiersQuerying, currentAtLocation)) {
-                        if (Filters.or(Filters.starfighter, Filters.deploysAndMovesLikeStarfighter).accepts(gameState, modifiersQuerying, cardToMove)) {
+                        if (Filters.or(Filters.starfighter, Filters.movesLikeStarfighter).accepts(gameState, modifiersQuerying, cardToMove)) {
                             range = 2;
                         } else if (Filters.cloud_sector.accepts(gameState, modifiersQuerying, currentAtLocation)
                                 && Filters.cloud_sector.accepts(gameState, modifiersQuerying, physicalCard)
-                                && Filters.deploysAndMovesLikeStarfighterAtCloudSectors.accepts(gameState, modifiersQuerying, cardToMove)) {
+                                && Filters.movesLikeStarfighterAtCloudSectors.accepts(gameState, modifiersQuerying, cardToMove)) {
                             range = 2;
                         }
                     }
@@ -6627,7 +6669,7 @@ public class Filters {
                 boolean validDestination = false;
 
                 // Check if card to move is present with a starship that has a related starship site that can be landed at
-                if (Filters.or(Filters.starfighter, Filters.deploysAndMovesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)
+                if (Filters.or(Filters.starfighter, Filters.movesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)
                         && Filters.and(Filters.starshipSiteToShuttleTransferLandAndTakeOffAtForFreeInsteadOfRelatedStarship(playerId),
                         Filters.relatedSiteTo(null, Filters.and(Filters.your(cardToMove), Filters.capital_starship, Filters.presentWith(cardToMove)))).accepts(gameState, modifiersQuerying, physicalCard)) {
                     validDestination = true;
@@ -6637,7 +6679,7 @@ public class Filters {
                 else if (currentAtLocation.getBlueprint().getCardSubtype() == CardSubtype.SYSTEM
                         && currentAtLocation.getTitle().equals(physicalCard.getPartOfSystem())
                         && Filters.exterior_site.accepts(gameState, modifiersQuerying, physicalCard)
-                        && Filters.or(Filters.starfighter, Filters.deploysAndMovesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)) {
+                        && Filters.or(Filters.starfighter, Filters.movesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)) {
                     // Check if no sectors in between
                     List<PhysicalCard> sectorsBetween = modifiersQuerying.getSectorsBetween(gameState, currentAtLocation, physicalCard);
                     validDestination = (sectorsBetween != null && sectorsBetween.isEmpty());
@@ -6646,21 +6688,21 @@ public class Filters {
                 else if (currentAtLocation.getBlueprint().hasKeyword(Keyword.CLOUD_SECTOR)
                         && currentAtLocation.getPartOfSystem() != null && currentAtLocation.getPartOfSystem().equals(physicalCard.getPartOfSystem())
                         && Filters.exterior_site.accepts(gameState, modifiersQuerying, physicalCard)
-                        && Filters.or(Filters.starfighter, Filters.deploysAndMovesLikeStarfighter, Filters.deploysAndMovesLikeStarfighterAtCloudSectors, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)) {
+                        && Filters.or(Filters.starfighter, Filters.movesLikeStarfighter, Filters.movesLikeStarfighterAtCloudSectors, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)) {
                     // Check if no sectors in between
                     List<PhysicalCard> sectorsBetween = modifiersQuerying.getSectorsBetween(gameState, currentAtLocation, physicalCard);
                     validDestination = (sectorsBetween != null && sectorsBetween.isEmpty());
                 }
                 // Check if card to move is at a system and there is a starship docking bay related to a starship that is at that system
                 else if (currentAtLocation.getBlueprint().getCardSubtype() == CardSubtype.SYSTEM
-                        && Filters.or(Filters.starfighter, Filters.deploysAndMovesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)
+                        && Filters.or(Filters.starfighter, Filters.movesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)
                         && Filters.and(Filters.starship_site, Filters.docking_bay, Filters.relatedSiteTo(null, Filters.and(Filters.starship, Filters.present(currentAtLocation)))).accepts(gameState, modifiersQuerying, physicalCard)) {
                     validDestination = true;
                 }
                 // Check if card to move is at a Big One and the location to move to is the related site.
                 else if (Filters.Big_One.accepts(gameState, modifiersQuerying, currentAtLocation)
                         && Filters.and(Filters.Big_One_Asteroid_Cave_Or_Space_Slug_Belly, Filters.relatedSite(currentAtLocation)).accepts(gameState, modifiersQuerying, physicalCard)
-                        && Filters.or(Filters.starfighter, Filters.deploysAndMovesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)) {
+                        && Filters.or(Filters.starfighter, Filters.movesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)) {
                     validDestination = true;
                 }
 
@@ -6726,7 +6768,7 @@ public class Filters {
 
                 // Check if destination is location is where the starship related to the starship site is present at
                 if (physicalCard.getBlueprint().getCardCategory() == CardCategory.LOCATION
-                        && Filters.or(Filters.starfighter, Filters.deploysAndMovesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)
+                        && Filters.or(Filters.starfighter, Filters.movesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)
                         && Filters.starshipSiteToShuttleTransferLandAndTakeOffAtForFreeInsteadOfRelatedStarship(cardToMove.getOwner()).accepts(gameState, modifiersQuerying, currentAtLocation)) {
                     validDestination = Filters.siteOfStarshipOrVehicle(Filters.present(physicalCard)).accepts(gameState, modifiersQuerying, currentAtLocation);
                 }
@@ -6735,7 +6777,7 @@ public class Filters {
                 else if (physicalCard.getBlueprint().getCardSubtype() == CardSubtype.SYSTEM
                         && physicalCard.getTitle().equals(currentAtLocation.getPartOfSystem())
                         && Filters.exterior_site.accepts(gameState, modifiersQuerying, currentAtLocation)
-                        && Filters.or(Filters.starfighter, Filters.deploysAndMovesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)) {
+                        && Filters.or(Filters.starfighter, Filters.movesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)) {
                     // Check if no sectors in between
                     validDestination = modifiersQuerying.getSectorsBetween(gameState, currentAtLocation, physicalCard).isEmpty();
                 }
@@ -6743,20 +6785,20 @@ public class Filters {
                 else if (physicalCard.getBlueprint().hasKeyword(Keyword.CLOUD_SECTOR)
                         && physicalCard.getPartOfSystem() != null && physicalCard.getPartOfSystem().equals(currentAtLocation.getPartOfSystem())
                         && Filters.exterior_site.accepts(gameState, modifiersQuerying, currentAtLocation)
-                        && Filters.or(Filters.starfighter, Filters.deploysAndMovesLikeStarfighter, Filters.deploysAndMovesLikeStarfighterAtCloudSectors, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)) {
+                        && Filters.or(Filters.starfighter, Filters.movesLikeStarfighter, Filters.movesLikeStarfighterAtCloudSectors, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)) {
                     // Check if no sectors in between
                     validDestination = modifiersQuerying.getSectorsBetween(gameState, currentAtLocation, physicalCard).isEmpty();
                 }
                 // Check if the location is a system and card to move is at a starship docking bay related to a starship at that system
                 else if (physicalCard.getBlueprint().getCardSubtype() == CardSubtype.SYSTEM
-                        && Filters.or(Filters.starfighter, Filters.deploysAndMovesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)
+                        && Filters.or(Filters.starfighter, Filters.movesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)
                         && Filters.and(Filters.starship_site, Filters.docking_bay, Filters.relatedSiteTo(null, Filters.and(Filters.starship, Filters.present(physicalCard)))).accepts(gameState, modifiersQuerying, currentAtLocation)) {
                     validDestination = true;
                 }
                 // Check if card to move is at a Big One site and the location to move to is the related Big One.
                 else if (Filters.Big_One.accepts(gameState, modifiersQuerying, physicalCard)
                         && Filters.and(Filters.Big_One_Asteroid_Cave_Or_Space_Slug_Belly, Filters.relatedSite(physicalCard)).accepts(gameState, modifiersQuerying, currentAtLocation)
-                        && Filters.or(Filters.starfighter, Filters.deploysAndMovesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)) {
+                        && Filters.or(Filters.starfighter, Filters.movesLikeStarfighter, Filters.squadron).accepts(gameState, modifiersQuerying, cardToMove)) {
                     validDestination = true;
                 }
 
@@ -11019,6 +11061,40 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that are 'conflict' cards.
+     */
+    public static final Filter conflictCard = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return modifiersQuerying.isConflictCard(gameState, physicalCard);
+        }
+    };
+
+    /**
+     * Wrapper method to allow other static filters to access the wrapped filter.
+     */
+    private static Filter conflictCard() {
+        return conflictCard;
+    }
+
+    /**
+     * Filter that accepts cards that are 'credit' cards.
+     */
+    public static final Filter creditCard = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return modifiersQuerying.isCreditCard(gameState, physicalCard);
+        }
+    };
+
+    /**
+     * Wrapper method to allow other static filters to access the wrapped filter.
+     */
+    private static Filter creditCard() {
+        return creditCard;
+    }
+
+    /**
      * Wrapper method to allow other static filters to access the wrapped filter.
      */
     private static Filter coaxiumCard() {
@@ -12795,35 +12871,67 @@ public class Filters {
     }
 
     /**
-     * Filter that accepts cards deploy and move like a starfighter.
+     * Filter that accepts cards deploy like a starfighter.
      */
-    public static final Filter deploysAndMovesLikeStarfighter = new Filter() {
+    public static final Filter deploysLikeStarfighter = new Filter() {
         @Override
         public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-            return modifiersQuerying.isDeploysAndMovesLikeStarfighter(gameState, physicalCard);
+            return modifiersQuerying.isDeploysLikeStarfighter(gameState, physicalCard);
         }
     };
     /**
      * Wrapper method to allow other static filters to access the wrapped filter.
      */
-    private static Filter deploysAndMovesLikeStarfighter() {
-        return deploysAndMovesLikeStarfighter;
+    private static Filter deploysLikeStarfighter() {
+        return deploysLikeStarfighter;
     }
 
     /**
-     * Filter that accepts cards deploy and move like a starfighter at cloud sectors.
+     * Filter that accepts cards move like a starfighter.
      */
-    public static final Filter deploysAndMovesLikeStarfighterAtCloudSectors = new Filter() {
+    public static final Filter movesLikeStarfighter = new Filter() {
         @Override
         public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
-            return modifiersQuerying.isDeploysAndMovesLikeStarfighterAtCloudSectors(gameState, physicalCard);
+            return modifiersQuerying.isMovesLikeStarfighter(gameState, physicalCard);
         }
     };
     /**
      * Wrapper method to allow other static filters to access the wrapped filter.
      */
-    private static Filter deploysAndMovesLikeStarfighterAtCloudSectors() {
-        return deploysAndMovesLikeStarfighterAtCloudSectors;
+    private static Filter movesLikeStarfighter() {
+        return deploysLikeStarfighter;
+    }
+
+    /**
+     * Filter that accepts cards deploy like a starfighter at cloud sectors.
+     */
+    public static final Filter deploysLikeStarfighterAtCloudSectors = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return modifiersQuerying.isDeploysLikeStarfighterAtCloudSectors(gameState, physicalCard);
+        }
+    };
+    /**
+     * Wrapper method to allow other static filters to access the wrapped filter.
+     */
+    private static Filter deploysLikeStarfighterAtCloudSectors() {
+        return deploysLikeStarfighterAtCloudSectors;
+    }
+
+    /**
+     * Filter that accepts cards move like a starfighter at cloud sectors.
+     */
+    public static final Filter movesLikeStarfighterAtCloudSectors = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return modifiersQuerying.isDeploysLikeStarfighterAtCloudSectors(gameState, physicalCard);
+        }
+    };
+    /**
+     * Wrapper method to allow other static filters to access the wrapped filter.
+     */
+    private static Filter movesLikeStarfighterAtCloudSectors() {
+        return deploysLikeStarfighterAtCloudSectors;
     }
 
     /**
@@ -14300,6 +14408,51 @@ public class Filters {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
                 PhysicalCard cardToDeploy = gameState.findCardByPermanentId(permCardToDeployCardId);
+
+                if (modifiersQuerying.ignoresLocationDeploymentRestrictions(gameState, cardToDeploy, physicalCard, null, true))
+                    return true;
+
+                if (modifiersQuerying.mayDeployToTargetWithoutPresenceOrForceIcons(gameState, physicalCard, cardToDeploy))
+                    return true;
+
+                PhysicalCard locationHere = modifiersQuerying.getLocationHere(gameState, physicalCard);
+                if (locationHere == null)
+                    return false;
+
+                Icon icon;
+                if (gameState.getSide(cardToDeploy.getOwner()) == Side.DARK)
+                    icon = Icon.DARK_FORCE;
+                else
+                    icon = Icon.LIGHT_FORCE;
+
+                if (modifiersQuerying.hasIcon(gameState, locationHere, icon))
+                    return true;
+
+                if (Filters.canSpot(gameState.getGame(), null, SpotOverride.INCLUDE_UNDERCOVER, Filters.and(Filters.owner(cardToDeploy.getOwner()), Filters.undercover_spy, Filters.at(locationHere))))
+                    return true;
+
+                return modifiersQuerying.hasPresenceAt(gameState, cardToDeploy.getOwner(), locationHere, false, null, null);
+            }
+        };
+    }
+
+    /**
+     * Gets a filter representing cards that a card may deploy to only based on presence and Force icons.
+     * This is generally called by a getValidDeployTargetFilter and combined with other Filters to figure out
+     * valid targets for a card to deploy to.
+     * @param cardToDeploy the card to deploy
+     */
+    public static Filter sufficientPresenceOrForceIconsToDeployToAsPilotSimultaneouslyWith(PhysicalCard cardToDeploy, PhysicalCard starshipOrVehicle) {
+        final Integer permCardToDeployCardId = cardToDeploy.getPermanentCardId();
+        final Integer starshipOrVehicleToDeployCardId = starshipOrVehicle.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard cardToDeploy = gameState.findCardByPermanentId(permCardToDeployCardId);
+                PhysicalCard starshipOrVehicle = gameState.findCardByPermanentId(starshipOrVehicleToDeployCardId);
+
+                if (modifiersQuerying.mayDeployPilotSimultaneouslyToTargetWithoutPresenceOrForceIcons(gameState, physicalCard, starshipOrVehicle))
+                    return true;
 
                 if (modifiersQuerying.ignoresLocationDeploymentRestrictions(gameState, cardToDeploy, physicalCard, null, true))
                     return true;
@@ -17371,6 +17524,7 @@ public class Filters {
     public static final Filter Avarik = Filters.title(Title.Avarik);
     public static final Filter Avenger = Filters.title(Title.Avenger);
     public static final Filter Awwww_Cannot_Get_Your_Ship_Out = Filters.title(Title.Awwww_Cannot_Get_Your_Ship_Out);
+    public static final Filter ax = Filters.or(Keyword.AX, Keyword.VIBRO_AX);
     public static final Filter Azure_Angel = Filters.title(Title.Azure_Angel);
     public static final Filter B_wing = Filters.modelType(ModelType.B_WING);
     public static final Filter Back_Door = Filters.title(Title.Back_Door);
@@ -17378,6 +17532,7 @@ public class Filters {
     public static final Filter Bad_Feeling_Have_I = Filters.title(Title.Bad_Feeling_Have_I);
     public static final Filter bantha = Filters.keyword(Keyword.BANTHA);
     public static final Filter Barada = Filters.title(Title.Barada);
+    public static final Filter barge = Filters.keyword(Keyword.BARGE);
     public static final Filter Barich = Filters.title(Title.Barich);
     public static final Filter battle_droid = Filters.and(ModelType.BATTLE, CardType.DROID);
     public static final Filter Battle_Plains = Filters.title(Title.Battle_Plains);
@@ -17390,6 +17545,7 @@ public class Filters {
     public static final Filter BB8_or_has_BB8_as_permanent_astromech = Filters.or(Filters.persona(Persona.BB8), Filters.hasPermanentAboard(Filters.persona(Persona.BB8)));
     public static final Filter Beaumont = Filters.persona(Persona.BEAUMONT);
     public static final Filter Beckett = Filters.persona(Persona.BECKETT);
+    public static final Filter Beilert_Valance = Filters.title(Title.Beilert_Valance);
     public static final Filter Beggar = Filters.title(Title.Beggar);
     public static final Filter Beggars_Canyon = Filters.title(Title.Beggars_Canyon);
     public static final Filter Beru = Filters.title(Title.Beru_Lars);
@@ -17522,6 +17678,8 @@ public class Filters {
     public static final Filter Clash_Of_Sabers = Filters.title(Title.Clash_Of_Sabers);
     public static final Filter clone = Filters.keyword(Keyword.CLONE_TROOPER);
     public static final Filter Clone_Army = Filters.icon(Icon.CLONE_ARMY);
+    public static final Filter Clone_Command_Center = Filters.title(Title.Clone_Command_Center);
+    public static final Filter Cloning_Cylinders = Filters.title(Title.Cloning_Cylinders);
     public static final Filter Closer = Filters.title(Title.Closer);
     public static final Filter cloud_car = Filters.or(ModelType.TWIN_POD_CLOUD_CAR, ModelType.TALON_I_COMBAT_CLOUD_CAR);
     public static final Filter Cloud_City_battleground_site = Filters.and(Keyword.CLOUD_CITY_LOCATION, CardSubtype.SITE, Filters.battleground());
@@ -17565,6 +17723,7 @@ public class Filters {
     public static final Filter Coruscant_site = Filters.and(Filters.partOfSystem(Title.Coruscant), CardSubtype.SITE);
     public static final Filter Coruscant_Imperial_Square = Filters.title(Title.Coruscant_Imperial_Square);
     public static final Filter Coruscant_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Coruscant));
+    public static final Filter Coruscant_The_Works = Filters.title(Title.Coruscant_The_Works);
     public static final Filter Corulag = Filters.title(Title.Corulag);
     public static final Filter Corulag_site = Filters.and(Filters.partOfSystem(Title.Corulag), CardSubtype.SITE);
     public static final Filter corvette = Filters.or(Filters.modelType(ModelType.CORELLIAN_CORVETTE),Filters.modelType(ModelType.HAMMERHEAD_CORVETTE));
@@ -17573,6 +17732,8 @@ public class Filters {
     public static final Filter Courage_Of_A_Skywalker = Filters.title(Title.Courage_Of_A_Skywalker);
     public static final Filter Court_Of_The_Vile_Gangster = Filters.title(Title.Court_Of_The_Vile_Gangster);
     public static final Filter Cracken = Filters.persona(Persona.CRACKEN);
+    public static final Filter Crait_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Crait));
+    public static final Filter Crait_Salt_Plateau = Filters.and(CardSubtype.SITE, Filters.title(Title.Crait_Salt_Plateau));
     public static final Filter Crash_Site_Memorial = Filters.title(Title.Crash_Site_Memorial);
     public static final Filter crashed_vehicle = Filters.and(CardType.VEHICLE, Filters.crashed());
     public static final Filter creature = Filters.type(CardType.CREATURE);
@@ -17713,7 +17874,9 @@ public class Filters {
     public static final Filter Double_Agent = Filters.title(Title.Double_Agent);
     public static final Filter Double_Back = Filters.title(Title.Double_Back);
     public static final Filter Downtown_Plaza = Filters.title(Title.Downtown_Plaza);
+    public static final Filter Dqar_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Dqar));
     public static final Filter Dr_Evazan = Filters.title(Title.Dr_Evazan);
+    public static final Filter Dreadnaught = Filters.or(Filters.modelType(ModelType.DREADNAUGHT_CLASS_HEAVY_CRUISER), Filters.modelType(ModelType.MANDATOR_IV_CLASS_DREADNAUGHT), Filters.modelType(ModelType.MEGA_CLASS_DREADNAUGHT));
     public static final Filter Dreadnaught_class_cruisers = Filters.modelType(ModelType.DREADNAUGHT_CLASS_HEAVY_CRUISER);
     public static final Filter droid = Filters.icon(Icon.DROID);
     public static final Filter droid_control_ship = Filters.keyword(Keyword.DROID_CONTROL_SHIP);
@@ -17823,6 +17986,8 @@ public class Filters {
     public static final Filter First_Order_character = Filters.and(Icon.FIRST_ORDER, CardCategory.CHARACTER);
     public static final Filter First_Order_leader = Filters.and(Icon.FIRST_ORDER, CardCategory.CHARACTER, Keyword.LEADER);
     public static final Filter First_Order_pilot = Filters.and(Icon.FIRST_ORDER, CardCategory.CHARACTER, Icon.PILOT);
+    public static final Filter First_Order_starship = Filters.and(Icon.FIRST_ORDER, CardCategory.STARSHIP);
+    public static final Filter First_Order_TIE = Filters.and(Icon.FIRST_ORDER, Filters.tie());
     public static final Filter First_Order_warrior = Filters.and(Icon.FIRST_ORDER, CardCategory.CHARACTER, Icon.WARRIOR);
     public static final Filter Fixer = Filters.title(Title.Fixer);
     public static final Filter Flagship = Filters.title(Title.Flagship);
@@ -17843,6 +18008,7 @@ public class Filters {
     public static final Filter Frozen_Assets = Filters.title(Title.Frozen_Assets);
     public static final Filter Frustration = Filters.title(Title.Frustration);
     public static final Filter Full_Scale_Alert = Filters.title(Title.Full_Scale_Alert);
+    public static final Filter Fulminatrix = Filters.title(Title.Fulminatrix);
     public static final Filter Furry_Fury = Filters.title(Title.Furry_Fury);
     public static final Filter fusion_generator = Filters.keyword(Keyword.FUSION_GENERATOR);
     public static final Filter Fusion_Generator_Supply_Tanks = Filters.title(Title.Fusion_Generator_Supply_Tanks);
@@ -17894,6 +18060,7 @@ public class Filters {
     public static final Filter Green_Squadron_1 = Filters.persona(Persona.GREEN_SQUADRON_1);
     public static final Filter Green_Squadron_3 = Filters.persona(Persona.GREEN_SQUADRON_3);
     public static final Filter Grievous = Filters.persona(Persona.GRIEVOUS);
+    public static final Filter Grievous_Will_Run_And_Hide = Filters.title(Title.Grievous_Will_Run_And_Hide);
     public static final Filter Grimtaash = Filters.title(Title.Grimtaash);
     public static final Filter Grogu = Filters.persona(Persona.GROGU);
     public static final Filter Grond = Filters.title(Title.Grond);
@@ -17930,6 +18097,7 @@ public class Filters {
     public static final Filter Hidden_Weapons = Filters.title(Title.Hidden_Weapons);
     public static final Filter Highspeed_Tactics = Filters.title(Title.Highspeed_Tactics);
     public static final Filter His_Name_Is_Anakin = Filters.title(Title.His_Name_Is_Anakin);
+    public static final Filter Hit_And_Run = Filters.title(Title.Hit_And_Run);
     public static final Filter hit_character = Filters.and(CardCategory.CHARACTER, Filters.hit());
     public static final Filter Hit_Racer = Filters.title(Title.Hit_Racer);
     public static final Filter Hobbie = Filters.title(Title.Hobbie);
@@ -18143,7 +18311,7 @@ public class Filters {
     public static final Filter Lambda_shuttle = Filters.modelType(ModelType.LAMBDA_CLASS_SHUTTLE);
     public static final Filter Lana_Dobreed = Filters.title(Title.Lana_Dobreed);
     public static final Filter Landing_Claw = Filters.title(Title.Landing_Claw);
-    public static final Filter Landing_Craft = Filters.modelType(ModelType.SENTINEL_CLASS_LANDING_CRAFT);
+    public static final Filter Landing_Craft = Filters.or(Filters.modelType(ModelType.SENTINEL_CLASS_LANDING_CRAFT), Filters.modelType(ModelType.TRADE_FEDERATION_LANDING_CRAFT));
     public static final Filter Landing_Platform = Filters.title(Title.Landing_Platform);
     public static final Filter Lando = Filters.persona(Persona.LANDO);
     public static final Filter Lars_Moisture_Farm = Filters.title(Title.Lars_Moisture_Farm);
@@ -18508,6 +18676,7 @@ public class Filters {
     public static final Filter Resistance_character = Filters.and(CardCategory.CHARACTER, Icon.RESISTANCE);
     public static final Filter Resistance_leader = Filters.and(Icon.RESISTANCE, Keyword.LEADER);
     public static final Filter Resistance_pilot = Filters.and(CardCategory.CHARACTER, Icon.RESISTANCE, Icon.PILOT);
+    public static final Filter Resistance_starship = Filters.and(CardCategory.STARSHIP, Icon.RESISTANCE);
     public static final Filter Responsibility_Of_Command = Filters.title(Title.Responsibility_Of_Command);
     public static final Filter Restore_Freedom_To_The_Galaxy = Filters.title(Title.Restore_Freedom_To_The_Galaxy);
     public static final Filter Restraining_Bolt = Filters.title(Title.Restraining_Bolt);
@@ -18633,6 +18802,7 @@ public class Filters {
     public static final Filter Skrilling = Filters.species(Species.SKRILLING);
     public static final Filter Skyhook_Platform = Filters.title(Title.Skyhook_Platform);
     public static final Filter Skywalker = Filters.or(Persona.ANAKIN, Persona.LUKE, Persona.LEIA, Persona.MARA_SKYWALKER, Filters.title(Title.Shmi), Keyword.SKYWALKER);
+    public static final Filter Skywalker_Hut = Filters.title(Title.Skywalker_Hut);
     public static final Filter Skywalkers = Filters.title(Title.Skywalkers);
     public static final Filter Slave_I = Filters.persona(Persona.SLAVE_I);
     public static final Filter Slave_Quarters = Filters.title(Title.Slave_Quarters);
@@ -18723,6 +18893,8 @@ public class Filters {
     public static final Filter Superlaser = Filters.title(Title.Superlaser);
     public static final Filter Superlaser_Mark_II = Filters.title(Title.Superlaser_Mark_II);
     public static final Filter superlaser_weapon = Filters.or(Filters.title(Title.Superlaser), Filters.title(Title.Superlaser_Mark_II));
+    public static final Filter Supremacy = Filters.title(Title.Supremacy);
+    public static final Filter Supremacy_Bridge = Filters.title(Title.Supremacy_Bridge);
     public static final Filter Surface_Defense_Cannon = Filters.title(Title.Surface_Defense_Cannon);
     public static final Filter Surprise = Filters.title(Title.Surprise);
     public static final Filter Surprise_Assault = Filters.title(Title.Surprise_Assault);
@@ -18791,6 +18963,7 @@ public class Filters {
     public static final Filter The_Phantom_Menace = Filters.title(Title.The_Phantom_Menace);
     public static final Filter The_Planet_That_Its_Farthest_From = Filters.title(Title.The_Planet_That_Its_Farthest_From);
     public static final Filter The_Professor = Filters.title(Title.The_Professor);
+    public static final Filter The_Resistance_Is_Doomed = Filters.title(Title.The_Resistance_Is_Doomed);
     public static final Filter The_Shield_Doors_Must_Be_Closed = Filters.title(Title.The_Shield_Doors_Must_Be_Closed);
     public static final Filter The_Shield_Will_Be_Down_In_Moments = Filters.title(Title.The_Shield_Will_Be_Down_In_Moments);
     public static final Filter The_Time_To_Fight_Is_Now = Filters.title(Title.The_Time_To_Fight_Is_Now);
@@ -18847,6 +19020,7 @@ public class Filters {
     public static final Filter torpedo = Filters.or(Keyword.PROTON_TORPEDOES);
     public static final Filter Torture = Filters.title(Title.Torture);
     public static final Filter Toche_Station = Filters.title(Title.Toche_Station);
+    public static final Filter Tracked_Fleet = Filters.title(Title.Tracked_Fleet);
     public static final Filter tractor_beam = Filters.keyword(Keyword.TRACTOR_BEAM);
     public static final Filter trade_agenda = Filters.agenda(Agenda.TRADE);
     public static final Filter Trade_Federation_starfighter = Filters.and(Icon.TRADE_FEDERATION, CardSubtype.STARFIGHTER);
@@ -19000,7 +19174,7 @@ public class Filters {
     public static final Filter Youre_A_Slave = Filters.title(Title.Youre_A_Slave);
     public static final Filter Youre_All_Clear_Kid = Filters.title(Title.Youre_All_Clear_Kid);
     public static final Filter YT_1300_Transport = Filters.title(Title.YT_1300_Transport);
-    public static final Filter Yularen = Filters.title(Title.Yularen);
+    public static final Filter Yularen = Filters.persona(Persona.YULAREN);
     public static final Filter Yuzzum = Filters.species(Species.YUZZUM);
     public static final Filter Z_95 = Filters.or(ModelType.MODIFIED_Z_95_HEADHUNTER, ModelType.Z_95_HEADHUNTER);
     public static final Filter Zeb = Filters.title(Title.Zeb);

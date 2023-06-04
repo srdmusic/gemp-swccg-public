@@ -2,8 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OnCondition;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -17,13 +16,14 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
-import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -39,10 +39,10 @@ public class Card501_025 extends AbstractRepublic {
     public Card501_025() {
         super(Side.DARK, 2, 3, 3, 3, 5, "San Hill", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Muun leader. Banking Clan.");
-        setGameText("Your battle droids at same site are deploy -1 and forfeit +1. Once per game may deploy Grievous here from Reserve Deck; reshuffle. While on Utapau and The Galaxy Torn Apart on table, you initiate battle for free.");
+        setGameText("At same site, your battle droids deploy -1 and are forfeit +1. Once per game, may deploy Grievous here from Reserve Deck; reshuffle. While on Utapau and The Galaxy Torn Apart on table, opponent's Force retrieval is canceled.");
         addKeywords(Keyword.LEADER);
         setSpecies(Species.MUUN);
-        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.PILOT, Icon.VIRTUAL_SET_21);
         setTestingText("San Hill");
     }
 
@@ -51,7 +51,6 @@ public class Card501_025 extends AbstractRepublic {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeployCostToLocationModifier(self,  Filters.battle_droid, -1, Filters.here(self)));
         modifiers.add(new ForfeitModifier(self, Filters.and(Filters.your(self), Filters.battle_droid, Filters.here(self)), 1));
-        modifiers.add(new InitiateBattlesForFreeModifier(self, Filters.any, new AndCondition(new OnCondition(self, Title.Utapau), new OnTableCondition(self, Filters.title("The Galaxy Torn Apart"))), self.getOwner()));
         return modifiers;
     }
 
@@ -75,6 +74,24 @@ public class Card501_025 extends AbstractRepublic {
                     new DeployCardToLocationFromReserveDeckEffect(action, Filters.Grievous, Filters.here(self), true));
             return Collections.singletonList(action);
         }
+        return null;
+    }
+
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        if (TriggerConditions.isAboutToRetrieveForce(game, effectResult, game.getOpponent(self.getOwner()))
+                && GameConditions.isOnSystem(game, self, Title.Utapau)
+                && GameConditions.canSpot(game, self, Filters.title("The Galaxy Torn Apart"))) {
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Cancel retrieval");
+            action.setActionMsg("Force retrieval is canceled");
+            action.appendEffect(
+                    new CancelForceRetrievalEffect(action)
+            );
+            return Collections.singletonList(action);
+        }
+
         return null;
     }
 }

@@ -1,13 +1,16 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractLostInterrupt;
+import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.PeekAtBottomCardOfCardPileEffect;
+import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -15,14 +18,19 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
-import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
+import com.gempukku.swccgo.logic.decisions.YesNoDecision;
+import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfTurnEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromForcePileOnTopOfCardPileEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -31,46 +39,34 @@ import java.util.List;
  * Subtype: Lost
  * Title: A Jedi's Fury
  */
-public class Card501_063 extends AbstractLostInterrupt {
+public class Card501_063 extends AbstractUsedOrLostInterrupt {
     public Card501_063() {
-        super(Side.LIGHT, 4, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("");
-        setGameText("If Luke alone in a battle or duel, add 1 to a just drawn weapon, " +
-                "battle or duel destiny for each card stacked on I Feel The Conflict (limit 3). " +
-                "OR During your move phase, relocate Luke from a site to a battleground site " +
-                "(or your site that opponent occupies).");
-        addIcon(Icon.VIRTUAL_SET_21);
+        super(Side.LIGHT, 5, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("It had been decades since Vader had felt the sting of an enemy's blade.");
+        setGameText("If His Destiny on table, choose: USED: If a character of ability > 4 was just 'hit' during battle, opponent loses 1 Force. OR Peek at the bottom card of your Force Pile; may move it on top of that pile. LOST: Cancel the game text of a Dark Jedi with Luke for remainder of turn.");
+        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
         setTestingText("A Jedi's Fury");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self) {
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new ArrayList<>();
 
-        Filter lukeAlone = Filters.and(Filters.Luke, Filters.alone);
+        if (GameConditions.isDuringBattle(game)
+                && TriggerConditions.justHit(game, effectResult, Filters.and(Filters.character, Filters.abilityMoreThan(4)))
+                && GameConditions.canTarget(game, self, Filters.title(Title.His_Destiny))) {
 
-        if(GameConditions.canSpot(game, self, Filters.I_Feel_The_Conflict)
-                && (GameConditions.isDuringBattleWithParticipant(game, lukeAlone)
-                || GameConditions.isDuringDuelWithParticipant(game, lukeAlone))
-                && (TriggerConditions.isBattleDestinyJustDrawn(game, effectResult)
-                || TriggerConditions.isDuelDestinyJustDrawn(game, effectResult)
-                || TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult))){
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            final String opponent = game.getOpponent(playerId);
 
-            final int numCardsStacked =
-                    Math.min(3, Filters.filterStacked(game, Filters.stackedOn(self, Filters.I_Feel_The_Conflict)).size());
-
-            action.setText("Add " + numCardsStacked + " to your destiny");
-            action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            action.appendEffect(
-                                    new ModifyDestinyEffect(action, numCardsStacked)
-                            );
-                        }
-                    }
-            );
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Opponent loses 1 Force");
+            action.allowResponses(new RespondablePlayCardEffect(action) {
+                @Override
+                protected void performActionResults(Action targetingAction) {
+                    action.appendEffect(
+                            new LoseForceEffect(action, opponent, 1));
+                }
+            });
 
             actions.add(action);
         }
@@ -79,45 +75,71 @@ public class Card501_063 extends AbstractLostInterrupt {
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, PhysicalCard self) {
-        List<PlayInterruptAction> actions = new ArrayList<>();
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
 
-        // Check condition(s)
-        if (GameConditions.isDuringYourPhase(game, self, Phase.MOVE)) {
-            PhysicalCard luke = Filters.findFirstActive(game, self,
-                    Filters.and(Filters.Luke, Filters.at(Filters.site), Filters.canBeTargetedBy(self)));
+        if (GameConditions.canTarget(game, self, Filters.title(Title.His_Destiny))) {
+            // Check condition(s)
+            if (GameConditions.hasForcePile(game, playerId)) {
 
-            final Filter siteFilter = Filters.or(Filters.battleground_site, Filters.and(Filters.your(playerId), Filters.site, Filters.occupies(game.getOpponent(playerId))));
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+                action.setText("Peek at bottom card of Force Pile");
+                // Allow response(s)
+                action.allowResponses(new RespondablePlayCardEffect(action) {
+                                          @Override
+                                          protected void performActionResults(Action targetingAction) {
+                                              // Perform result(s)
+                                              action.appendEffect(
+                                                      new PeekAtBottomCardOfCardPileEffect(action, playerId, playerId, Zone.FORCE_PILE) {
+                                                          @Override
+                                                          protected void cardsPeekedAt(List<PhysicalCard> peekedAtCards) {
+                                                              final PhysicalCard card = peekedAtCards.iterator().next();
+                                                              if (card != null) {
+                                                                  action.appendEffect(new PlayoutDecisionEffect(action, playerId, new YesNoDecision("Move card to top of Force Pile?") {
+                                                                      @Override
+                                                                      protected void yes() {
+                                                                          action.appendEffect(new PutCardFromForcePileOnTopOfCardPileEffect(action, playerId, card, Zone.FORCE_PILE, true));
+                                                                      }
 
-            if (luke != null
-                    && Filters.canBeRelocatedToLocation(siteFilter, false, 0).accepts(game, luke)) {
+                                                                      @Override
+                                                                      protected void no() {
+                                                                          action.appendEffect(new SendMessageEffect(action, playerId + " chooses not to move card to top of Force Pile"));
+                                                                      }
+                                                                  }));
+                                                              }
+                                                          }
+                                                      });
+                                          }
+                                      }
+                );
+                actions.add(action);
+            }
 
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                action.setText("Relocate Luke to a site");
+
+            Filter filter = Filters.and(Filters.opponents(self), Filters.Dark_Jedi, Filters.with(self, Filters.Luke));
+
+            if (GameConditions.canTarget(game, self, filter)) {
+
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+                action.setText("Cancel game text of a Dark Jedi");
                 // Choose target(s)
                 action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Choose Luke", Filters.sameCardId(luke)) {
+                        new TargetCardOnTableEffect(action, playerId, "Choose Dark Jedi", filter) {
                             @Override
-                            protected void cardTargeted(final int targetGroupId, final PhysicalCard luke) {
-                                action.addAnimationGroup(luke);
-                                Filter locationFilter = Filters.and(siteFilter, Filters.locationCanBeRelocatedTo(luke, false, false, true, 0, false));
-                                action.appendTargeting(
-                                        new TargetCardOnTableEffect(action, playerId, "Target a site", locationFilter) {
+                            protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                                action.addAnimationGroup(targetedCard);
+                                // Allow response(s)
+                                action.allowResponses("Cancel " + GameUtils.getCardLink(targetedCard) + "'s game text",
+                                        new RespondablePlayCardEffect(action) {
                                             @Override
-                                            protected void cardTargeted(final int targetGroupId, final PhysicalCard location) {
-                                                action.addAnimationGroup(location);
-                                                // Allow response(s)
-                                                action.allowResponses("Relocate " + GameUtils.getCardLink(luke) + " to " + GameUtils.getCardLink(location),
-                                                        new RespondablePlayCardEffect(action) {
-                                                            @Override
-                                                            protected void performActionResults(Action targetingAction) {
-                                                                final PhysicalCard finalTarget = targetingAction.getPrimaryTargetCard(targetGroupId);
-                                                                // Perform result(s)
-                                                                action.appendEffect(
-                                                                        new RelocateBetweenLocationsEffect(action, luke, finalTarget));
-                                                            }
-                                                        }
-                                                );
+                                            protected void performActionResults(Action targetingAction) {
+                                                // Get the targeted card(s) from the action using the targetGroupId.
+                                                // This needs to be done in case the target(s) were changed during the responses.
+                                                final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+
+                                                // Perform result(s)
+                                                action.appendEffect(
+                                                        new CancelGameTextUntilEndOfTurnEffect(action, finalTarget));
                                             }
                                         }
                                 );

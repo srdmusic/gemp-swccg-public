@@ -6,6 +6,7 @@ import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -37,6 +38,7 @@ public class Card501_079 extends AbstractRepublic {
         setGameText("Adds 3 to power of anything he pilots. While piloting a [Clone Army] capital starship, adds one battle destiny and its power may not be reduced by opponent. While with Anakin (or while piloting Resolute), opponent may not cancel or substitute battle destiny draws here.");
         addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.WARRIOR, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.LEADER, Keyword.ADMIRAL);
+        addPersona(Persona.YULAREN);
         setMatchingStarshipFilter(Filters.title("Resolute"));
         setTestingText("Admiral Yularen");
     }

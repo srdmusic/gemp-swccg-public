@@ -1525,7 +1525,7 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
      * @return the action, or null
      */
     @Override
-    public Action getLandAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, Filter moveTargetFilter) {
+    public Action getLandAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, boolean asUnlimitedMove, Filter moveTargetFilter) {
         throw new UnsupportedOperationException("This method, getLandAction(), should not be called on this card: " + _title);
     }
 
@@ -1542,7 +1542,7 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
      * @return the action, or null
      */
     @Override
-    public Action getTakeOffAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, Filter moveTargetFilter) {
+    public Action getTakeOffAction(String playerId, SwccgGame game, PhysicalCard self, boolean forFree, boolean asReact, boolean skipPhaseCheck, boolean asAdditionalMove, boolean asUnlimitedMove, Filter moveTargetFilter) {
         throw new UnsupportedOperationException("This method, getTakeOffAction(), should not be called on this card: " + _title);
     }
 
@@ -1981,20 +1981,38 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
     }
 
     /**
-     * Determines if this deploys and moves like a starfighter.
-     * @return true if deploys and moves like a starfighter, otherwise false
+     * Determines if this deploys like a starfighter.
+     * @return true if deploys like a starfighter, otherwise false
      */
     @Override
-    public boolean isDeploysAndMovesLikeStarfighter() {
+    public boolean isDeploysLikeStarfighter() {
         return false;
     }
 
     /**
-     * Determines if this deploys and moves like a starfighter at cloud sectors.
-     * @return true if deploys and moves like a starfighter at cloud sectors, otherwise false
+     * Determines if this moves like a starfighter.
+     * @return true if moves like a starfighter, otherwise false
      */
     @Override
-    public boolean isDeploysAndMovesLikeStarfighterAtCloudSectors() {
+    public boolean isMovesLikeStarfighter() {
+        return false;
+    }
+
+    /**
+     * Determines if this deploys like a starfighter at cloud sectors.
+     * @return true if deploys like a starfighter at cloud sectors, otherwise false
+     */
+    @Override
+    public boolean isDeploysLikeStarfighterAtCloudSectors() {
+        return false;
+    }
+
+    /**
+     * Determines if this moves like a starfighter at cloud sectors.
+     * @return true if moves like a starfighter at cloud sectors, otherwise false
+     */
+    @Override
+    public boolean isMovesLikeStarfighterAtCloudSectors() {
         return false;
     }
 
@@ -2196,7 +2214,7 @@ public abstract class AbstractSwccgCardBlueprint implements SwccgCardBlueprint {
      * @return the actions
      */
     @Override
-    public final List<Action> getCardPilePhaseActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+    public List<Action> getCardPilePhaseActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<Action> actions = new LinkedList<Action>();
         final GameState gameState = game.getGameState();
         final ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();

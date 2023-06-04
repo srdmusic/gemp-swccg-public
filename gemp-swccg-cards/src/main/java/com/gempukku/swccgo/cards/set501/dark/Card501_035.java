@@ -34,7 +34,7 @@ public class Card501_035 extends AbstractImperial {
         super(Side.DARK, 1, 3, 3, 3, 5, Title.Tagge, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Oversees defense operations of Death Star. Outstanding tactician. No-nonsense leader. Member of the House of Tagge, a powerful noble family and corporate conglomerate.");
-        setGameText("Your non-[Maintenance] troopers are armor = 4. Your power at adjacent sites where you have a non-biker scout trooper is +3. Once per game, if with two non-unique troopers, may recirculate.");
+        setGameText("Your non-[Maintenance] troopers have armor = 4. At adjacent sites where you have a non-pilot trooper, your total power is +3. Once per game, if with two troopers, may re-circulate.");
         addKeywords(Keyword.GENERAL, Keyword.LEADER);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         setTestingText("General Tagge (V)");
@@ -46,7 +46,7 @@ public class Card501_035 extends AbstractImperial {
 
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ResetArmorModifier(self, Filters.and(Filters.your(self), Filters.not(Icon.MAINTENANCE), Filters.trooper), 4));
-        modifiers.add(new TotalPowerModifier(self, Filters.and(Filters.adjacentSite(self), Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.not(Filters.biker_scout), Filters.trooper))), 3, playerId));
+        modifiers.add(new TotalPowerModifier(self, Filters.and(Filters.adjacentSite(self), Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.not(Filters.pilot), Filters.trooper))), 3, playerId));
         return modifiers;
     }
 
@@ -59,7 +59,7 @@ public class Card501_035 extends AbstractImperial {
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.isWith(game, self, 2, Filters.and(Filters.non_unique, Filters.trooper))) {
+                && GameConditions.isWith(game, self, 2, Filters.trooper)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Re-circulate");

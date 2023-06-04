@@ -17,7 +17,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromForcePileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromUsedPileEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalWeaponDestinyForWeaponFiredByModifier;
@@ -38,7 +38,7 @@ public class Card501_046 extends AbstractImperial {
         super(Side.DARK, 3, 2, 2, 2, 3, "Corporal Oberk", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Originally from Ukio. Stormtrooper assigned to search for Rebel activity on Endor. Trying to impress the commander of his biker scout detachment.");
-        setGameText("Adds 2 to power of anything he pilots (3 if a speeder bike). When deployed, may deploy a battleground location from Force Pile; reshuffle. When firing a Scout Blaster, adds 1 to his total weapon destiny (2 if targeting an alien).");
+        setGameText("Adds 2 to power of anything he pilots (3 if a speeder bike). When deployed, may deploy a battleground or speeder bike from your Used Pile; reshuffle. When firing a Scout Blaster, adds 1 to his total weapon destiny (2 if targeting an alien).");
         addIcons(Icon.ENDOR, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.BIKER_SCOUT);
         setTestingText("Corporal Oberk (V)");
@@ -55,18 +55,18 @@ public class Card501_046 extends AbstractImperial {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.CORPORAL_OBERK_V__DEPLOY_LOCATION_FROM_FORCE_PILE;
+        GameTextActionId gameTextActionId = GameTextActionId.CORPORAL_OBERK_V__DEPLOY_CARD_FROM_USED_PILE;
 
         // Check condition(s)
         if (TriggerConditions.justDeployed(game, effectResult, self)
-                && GameConditions.canDeployCardFromForcePile(game, playerId, self, gameTextActionId, true)) {
+                && GameConditions.canDeployCardFromUsedPile(game, playerId, self, gameTextActionId, true)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy battleground from Force Pile");
-            action.setActionMsg("Deploy a battleground location from Force Pile");
+            action.setText("Deploy card from Used Pile");
+            action.setActionMsg("Deploy a battleground or speeder bike from Used Pile");
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromForcePileEffect(action, Filters.and(Filters.battleground, Filters.location), true));
+                    new DeployCardFromUsedPileEffect(action, Filters.or(Filters.battleground, Filters.speeder_bike), true));
             return Collections.singletonList(action);
         }
         return null;

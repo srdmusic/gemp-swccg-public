@@ -34,16 +34,15 @@ import java.util.List;
 /**
  * Set: Set 21
  * Type: Effect
- * Title: He Is A Coward
+ * Title: Grievous Will Run And Hide
  */
 public class Card501_066 extends AbstractNormalEffect {
     public Card501_066() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, "He Is A Coward", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("");
+        super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Grievous_Will_Run_And_Hide, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on a battleground. [Clone Army] Jedi deploy -1 here. If you just won a battle (or just Force drained here), relocate this card to your [Clone Army] objective. If opponent just won a battle, opponent may relocate this Effect to an [Episode I] battleground. [Immune to Alter.]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("He Is A Coward");
+        setTestingText("Grievous Will Run And Hide");
     }
 
     @Override
@@ -62,7 +61,7 @@ public class Card501_066 extends AbstractNormalEffect {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         final String playerId = self.getOwner();
         Filter filter = Filters.and(Filters.your(self), Icon.CLONE_ARMY, Filters.Objective, Filters.not(Filters.hasAttached(self)));
-        if (Filters.canSpot(game, self, filter)
+        if (GameConditions.canTarget(game, self, filter)
                 && (TriggerConditions.wonBattle(game, effectResult, playerId)
                 || TriggerConditions.forceDrainCompleted(game, effectResult, playerId, Filters.hasAttached(self)))) {
 
@@ -88,13 +87,13 @@ public class Card501_066 extends AbstractNormalEffect {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         if (TriggerConditions.wonBattle(game, effectResult, playerId)
-                && GameConditions.canSpotLocation(game, Filters.and(Icon.EPISODE_I, Filters.battleground))) {
+                && GameConditions.canSpotLocation(game, Filters.and(Icon.EPISODE_I, Filters.battleground, Filters.not(Filters.hasAttached(self))))) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Relocate to a battleground");
             action.setActionMsg("Relocate " + GameUtils.getCardLink(self) + " to an [Episode I] battleground");
 
-            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose an [Episode I] battleground", Filters.and(Icon.EPISODE_I, Filters.battleground)) {
+            action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose an [Episode I] battleground", Filters.and(Icon.EPISODE_I, Filters.battleground, Filters.not(Filters.hasAttached(self)))) {
                 @Override
                 protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                     action.allowResponses(new RespondableEffect(action) {

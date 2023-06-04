@@ -114,6 +114,8 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             findMultipleAccounts(request, responseWriter);
         } else if (uri.equals("/togglePrivateGames") && request.getMethod() == HttpMethod.POST) {
             togglePrivateGames(request, responseWriter);
+        } else if (uri.equals("/toggleBonusAbilities") && request.getMethod() == HttpMethod.POST) {
+            toggleBonusAbilities(request, responseWriter);
         } else if (uri.equals("/toggleInGameStatistics") && request.getMethod() == HttpMethod.POST) {
             toggleInGameStatistics(request, responseWriter);
         } else if (uri.equals("/toggleNewAccountRegistration") && request.getMethod() == HttpMethod.POST) {
@@ -396,8 +398,14 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         } else {
             Map<Player, CardCollection> playersCollection = _collectionManager.getPlayersCollection(collectionType);
 
-            for (Map.Entry<Player, CardCollection> playerCollection : playersCollection.entrySet())
-                _collectionManager.addItemsToPlayerCollection(true, reason + " (" + getResourceOwnerSafely(request,null).getName() + ")", playerCollection.getKey(), createCollectionType(collectionType), productItems);
+            for (Map.Entry<Player, CardCollection> playerCollection : playersCollection.entrySet()) {
+                if (playerCollection.getKey() != null
+                        && playerCollection.getKey().hasType(Player.Type.UNBANNED)
+                        && playerCollection.getValue()!=null
+                        && !playerCollection.getKey().getName().startsWith("rando_")) {
+                    _collectionManager.addItemsToPlayerCollection(true, reason + " (" + getResourceOwnerSafely(request, null).getName() + ")", playerCollection.getKey(), createCollectionType(collectionType), productItems);
+                }
+            }
 
             responseWriter.writeHtmlResponse("OK");
         }
@@ -423,7 +431,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             List<String> invalidUsernames = getInvalidUsernameList(playerNames);
 
             if (!invalidUsernames.isEmpty()) {
-                responseWriter.writeHtmlResponse(invalidUsernameListToString(invalidUsernames));
+                responseWriter.writeHtmlResponse("Did not add any items. "+invalidUsernameListToString(invalidUsernames));
             } else {
 
                 for (String playerName : playerNames) {
@@ -446,7 +454,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
     }
 
     private String invalidUsernameListToString(List<String> invalidUsernames) {
-        StringBuilder stringBuilder = new StringBuilder("Did not add any items. Invalid usernames:");
+        StringBuilder stringBuilder = new StringBuilder("Invalid usernames:");
         for (String s : invalidUsernames) {
             stringBuilder.append("<br>" + s);
         }
@@ -524,7 +532,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             List<String> invalidUsernames = getInvalidUsernameList(playerNames);
 
             if (!invalidUsernames.isEmpty()) {
-                responseWriter.writeHtmlResponse(invalidUsernameListToString(invalidUsernames));
+                responseWriter.writeHtmlResponse("Did not add any currency. "+invalidUsernameListToString(invalidUsernames));
             } else {
                 for (String playerName : playerNames) {
                     Player player = _playerDao.getPlayer(playerName);
@@ -820,18 +828,24 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         }
         List<String> playerNames = getItems(players);
 
-        for (String playerName : playerNames) {
-            Player player = _playerDao.getPlayer(playerName);
-            if (player != null) {
-                if (!_leagueService.isPlayerInLeague(league, player)) {
-                    if (!_leagueService.playerJoinsLeague(league, player, e.getRemoteAddress().toString(), true, true)) {
-                        throw new HttpProcessingException(409);
+        List<String> invalidUsernames = getInvalidUsernameList(playerNames);
+
+        if (!invalidUsernames.isEmpty()) {
+            responseWriter.writeHtmlResponse("Did not add any players to the league. "+invalidUsernameListToString(invalidUsernames));
+        } else {
+            for (String playerName : playerNames) {
+                Player player = _playerDao.getPlayer(playerName);
+                if (player != null) {
+                    if (!_leagueService.isPlayerInLeague(league, player)) {
+                        if (!_leagueService.playerJoinsLeague(league, player, e.getRemoteAddress().toString(), true, true)) {
+                            throw new HttpProcessingException(409);
+                        }
                     }
                 }
             }
-        }
 
-        responseWriter.writeHtmlResponse("OK");
+            responseWriter.writeHtmlResponse("OK");
+        }
     }
 
     private void setMotd(HttpRequest request, ResponseWriter responseWriter) throws HttpProcessingException, Exception {
@@ -883,6 +897,13 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         _hallServer.togglePrivateGames();
 
         responseWriter.writeHtmlResponse("Private games enabled: "+String.valueOf(_hallServer.privateGamesAllowed()));
+    }
+
+    private void toggleBonusAbilities(HttpRequest request, ResponseWriter responseWriter) throws HttpProcessingException {
+        validateAdmin(request);
+        _hallServer.toggleBonusAbilities();
+
+        responseWriter.writeHtmlResponse("Bonus abilities enabled in casual games: "+String.valueOf(_hallServer.bonusAbilitiesEnabled()));
     }
 
     private void toggleNewAccountRegistration(HttpRequest request, ResponseWriter responseWriter) throws HttpProcessingException {

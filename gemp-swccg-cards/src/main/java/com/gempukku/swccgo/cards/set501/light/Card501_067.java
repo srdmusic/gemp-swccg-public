@@ -8,6 +8,7 @@ import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -26,9 +27,9 @@ import java.util.List;
  */
 public class Card501_067 extends AbstractSite {
     public Card501_067() {
-        super(Side.LIGHT, "Clone Command Center", Uniqueness.DIAMOND_1, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("Deploys only if a [Clone Army] objective on table. Deploys only at start of game.");
-        setLocationLightSideGameText("Once per turn, may deploy a Kamino site or [Clone Army] battleground from Reserve Deck; reshuffle.");
+        super(Side.LIGHT, Title.Clone_Command_Center, Uniqueness.DIAMOND_1, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLocationDarkSideGameText("");
+        setLocationLightSideGameText("Deploys only if a [Clone Army] objective on table. Once per turn, may deploy a Kamino site or [Clone Army] battleground from Reserve Deck; reshuffle.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_21);
         setTestingText("Clone Command Center");
@@ -36,8 +37,7 @@ public class Card501_067 extends AbstractSite {
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self) {
-        return GameConditions.canSpot(game, self, Filters.and(Icon.CLONE_ARMY, Filters.Objective))
-                && GameConditions.isDuringStartOfGame(game);
+        return GameConditions.canSpot(game, self, Filters.and(Icon.CLONE_ARMY, Filters.Objective));
     }
 
     @Override

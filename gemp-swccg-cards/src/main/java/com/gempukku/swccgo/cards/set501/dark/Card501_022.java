@@ -2,8 +2,9 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OnCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
-import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -17,13 +18,12 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDrawMoreThanBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -39,10 +39,10 @@ public class Card501_022 extends AbstractRepublic {
     public Card501_022() {
         super(Side.DARK, 2, 3, 4, 2, 5, "Poggle The Lesser", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Geonosian leader.");
-        setGameText("While with a battle droid, opponent may not draw more than one battle destiny here. Once per game, may deploy Dooku here from Reserve Deck; reshuffle. While on Geonosis and The Galaxy Torn Apart on table, opponent's Force retrieval is canceled.");
+        setGameText("While with a battle droid, opponent may not draw more than one battle destiny here. Once per game, may deploy Dooku here from Reserve Deck; reshuffle. While on Geonosis and The Galaxy Torn Apart on table, you initiate battles for free.");
         addKeywords(Keyword.LEADER);
         setSpecies(Species.GEONOSIAN);
-        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.PILOT, Icon.VIRTUAL_SET_21);
         setTestingText("Poggle The Lesser");
     }
 
@@ -50,6 +50,7 @@ public class Card501_022 extends AbstractRepublic {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotDrawMoreThanBattleDestinyModifier(self, Filters.here(self), new WithCondition(self, Filters.battle_droid), 1, game.getOpponent(self.getOwner())));
+        modifiers.add(new InitiateBattlesForFreeModifier(self, Filters.any, new AndCondition(new OnCondition(self, Title.Geonosis), new OnTableCondition(self, Filters.title("The Galaxy Torn Apart"))), self.getOwner()));
         return modifiers;
     }
 
@@ -72,23 +73,6 @@ public class Card501_022 extends AbstractRepublic {
                     new DeployCardToLocationFromReserveDeckEffect(action, Filters.Dooku, Filters.here(self), true));
             return Collections.singletonList(action);
         }
-        return null;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.isAboutToRetrieveForce(game, effectResult, game.getOpponent(self.getOwner()))
-                && GameConditions.isOnSystem(game, self, Title.Geonosis)
-                && GameConditions.canSpot(game, self, Filters.title("The Galaxy Torn Apart"))) {
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Cancel retrieval");
-            action.setActionMsg("Force retrieval is canceled");
-            action.appendEffect(
-                    new CancelForceRetrievalEffect(action)
-            );
-            return Collections.singletonList(action);
-        }
-
         return null;
     }
 }

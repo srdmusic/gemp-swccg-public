@@ -20,7 +20,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.choose.DrawCardsIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DrawCardsIntoHandFromUsedPileEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -33,9 +33,9 @@ import java.util.List;
  */
 public class Card501_075 extends AbstractNormalEffect {
     public Card501_075() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Of Christophsis", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("If a Christophsis location on table, deploy on table. Once per turn, if you just deployed a clone or starship to Christophsis, may draw top card of Reserve Deck. Once per turn, if your Jedi/clone pair in battle, may lose 1 Force to add one destiny to total power. [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Of Christophsis", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setGameText("If a Christophsis location on table, deploy on table. Once per turn, if you just deployed a clone to Christophsis, may draw top card of Used Pile. Once per turn, if your clone in battle with a Jedi or Padawan, may lose 1 Force to add one destiny to total power. [Immune to Alter.]");
+        addIcons(Icon.EPISODE_I, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Battle Of Christophsis");
     }
@@ -49,7 +49,7 @@ public class Card501_075 extends AbstractNormalEffect {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.Jedi, Filters.with(self, Filters.and(Filters.your(self), Filters.clone))))
+        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(self), Filters.clone, Filters.with(self, Filters.or(Filters.Jedi, Filters.padawan))))
                 && GameConditions.canAddDestinyDrawsToPower(game, playerId)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
@@ -72,18 +72,18 @@ public class Card501_075 extends AbstractNormalEffect {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
 
-        if (TriggerConditions.justDeployedToLocation(game, effectResult, playerId, Filters.or(Filters.clone, Filters.and(Icon.CLONE_ARMY, Filters.starship)), Filters.Christophsis_location)
-                && GameConditions.hasReserveDeck(game, playerId)
+        if (TriggerConditions.justDeployedToLocation(game, effectResult, playerId,  Filters.clone, Filters.Christophsis_location)
+                && GameConditions.hasUsedPile(game, playerId)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Draw top card of Reserve Deck");
+            action.setText("Draw top card of Used Pile");
 
             action.appendUsage(
                     new OncePerTurnEffect(action));
 
             action.appendEffect(
-                    new DrawCardsIntoHandFromReserveDeckEffect(action, playerId, 1));
+                    new DrawCardsIntoHandFromUsedPileEffect(action, playerId, 1));
 
             return Collections.singletonList(action);
         }
