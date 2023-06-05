@@ -193,7 +193,7 @@ public class Card501_058 extends AbstractEpicEventDeployable {
                                         Filters.and(relocateLocationFilter, Filters.locationCanBeRelocatedTo(characterToRelocate, 0))) {
                                     @Override
                                     protected void cardTargeted(final int targetGroupIdSite, final PhysicalCard siteSelected) {
-                                        action.appendTargeting(new ChooseStackedCardEffect(action, playerId, Filters.I_Feel_The_Conflict, Filters.face_down) {
+                                        action.appendTargeting(new ChooseStackedCardEffect(action, playerId, Filters.I_Feel_The_Conflict, Filters.face_down, true) {
                                             @Override
                                             protected void cardSelected(PhysicalCard selectedCard) {
                                                 action.addAnimationGroup(characterToRelocate);

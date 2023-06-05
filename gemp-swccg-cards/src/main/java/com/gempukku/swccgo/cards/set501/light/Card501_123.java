@@ -22,7 +22,8 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
-import com.gempukku.swccgo.logic.effects.PutStackedCardsInLostPileEffect;
+import com.gempukku.swccgo.logic.effects.PutStackedCardInLostPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -91,6 +92,7 @@ public class Card501_123 extends AbstractAlien {
 
 
                 if (possible.size() > 0) {
+                    final String[] possibleResults = possible.toArray(new String[0]);
 
                     final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
                     action.setText("Place credit in Lost Pile");
@@ -98,32 +100,36 @@ public class Card501_123 extends AbstractAlien {
                     action.appendUsage(
                             new OncePerBattleEffect(action));
                     // Pay Costs
-                    action.appendCost(
-                            new PutStackedCardsInLostPileEffect(action, playerId, 1, 1, credits));
-
-                    String[] possibleResults = possible.toArray(new String[0]);
-
-                    action.appendEffect(
-                            new PlayoutDecisionEffect(action, playerId, new MultipleChoiceAwaitingDecision("Choose option", possibleResults) {
+                    action.appendTargeting(
+                            new ChooseStackedCardEffect(action, playerId, credits, Filters.any, true) {
                                 @Override
-                                protected void validDecisionMade(int index, String result) {
-                                    switch (result) {
-                                        case ATTRITION:
-                                            action.appendEffect(
-                                                    new AddDestinyToAttritionEffect(action, 1, playerId));
-                                            break;
-                                        case POWER:
-                                            action.appendEffect(
-                                                    new AddDestinyToTotalPowerEffect(action, 1, playerId));
-                                            break;
-                                        case BATTLE_DESTINY:
-                                            action.appendEffect(
-                                                    new AddBattleDestinyEffect(action, 1, playerId));
-                                            break;
-                                        default:
-                                    }
+                                protected void cardSelected(PhysicalCard selectedCard) {
+                                    action.appendCost(
+                                            new PutStackedCardInLostPileEffect(action, playerId, selectedCard, false));
+
+                                    action.appendEffect(
+                                            new PlayoutDecisionEffect(action, playerId, new MultipleChoiceAwaitingDecision("Choose option", possibleResults) {
+                                                @Override
+                                                protected void validDecisionMade(int index, String result) {
+                                                    switch (result) {
+                                                        case ATTRITION:
+                                                            action.appendEffect(
+                                                                    new AddDestinyToAttritionEffect(action, 1, playerId));
+                                                            break;
+                                                        case POWER:
+                                                            action.appendEffect(
+                                                                    new AddDestinyToTotalPowerEffect(action, 1, playerId));
+                                                            break;
+                                                        case BATTLE_DESTINY:
+                                                            action.appendEffect(
+                                                                    new AddBattleDestinyEffect(action, 1, playerId));
+                                                            break;
+                                                        default:
+                                                    }
+                                                }
+                                            }));
                                 }
-                            }));
+                            });
                     return Collections.singletonList(action);
                 }
             }
