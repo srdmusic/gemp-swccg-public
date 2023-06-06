@@ -18,6 +18,7 @@ import com.gempukku.swccgo.logic.modifiers.DeployOnlyUsingOwnForceToLocationModi
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.ResetDeployCostToLocationModifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -53,6 +54,7 @@ public class Card501_151 extends AbstractSite {
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeployOnlyUsingOwnForceToLocationModifier(self, Filters.Jawa, self));
+        modifiers.add(new ResetDeployCostToLocationModifier(self, Filters.Jawa, 1, self));
         modifiers.add(new MovesFreeToLocationModifier(self, Filters.ObiWan, Filters.here(self)));
         return modifiers;
     }

@@ -5,6 +5,7 @@ import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
@@ -39,6 +40,7 @@ public class Card501_142 extends AbstractNormalEffect {
         setLore("To recover from the strenuous Jedi training routine and revitalize the mind and body, an apprentice must rest to be calm and at peace.");
         setGameText("Deploy on Dagobah system. Your Force retrieval is canceled. Your [Dagobah] characters deploy -1 to Dagobah. Your training destiny draws are +1. " +
                 "Jedi Test #2 may not move. Jedi Test #4 searches your Reserve Deck for free. [Immune to Alter.]");
+        addKeywords(Keyword.DEPLOYS_ON_LOCATION);
         addIcons(Icon.DAGOBAH, Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("At Peace (V)");

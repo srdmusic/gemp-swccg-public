@@ -64,7 +64,7 @@ public class Card501_148 extends AbstractNormalEffect {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Exchange for trooper in Reserve Deck");
-            action.setActionMsg("Exchange exchange a non-[Maintenance] Imperial trooper from hand with one from Reserve Deck");
+            action.setActionMsg("Exchange a non-[Maintenance] Imperial trooper from hand with one from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerPhaseEffect(action));

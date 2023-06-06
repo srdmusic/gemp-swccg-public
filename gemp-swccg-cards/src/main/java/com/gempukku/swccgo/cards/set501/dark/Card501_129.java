@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class Card501_129 extends AbstractNormalEffect {
     public Card501_129() {
-        super(Side.DARK, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Vader's Malediction", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Vaders_Malediction, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'... And together, we can rule the galaxy as father and son!'");
         setGameText("If Vader is your apprentice, deploy on table. Vader's game text may not be canceled. While Vader alone, armed with a [Death Star II] lightsaber, and present at a site, your Force drains there are +1. If you just drew Vader for destiny, may take him into hand. [Immune to Alter.]");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_21);

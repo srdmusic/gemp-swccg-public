@@ -43,7 +43,7 @@ public class Card501_153 extends AbstractSite {
     protected List<TopLevelGameTextAction> getGameTextDarkSideTopLevelActions(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
         Filter character = Filters.and(Filters.your(playerOnDarkSideOfLocation), Icon.EPISODE_VII, Filters.character);
-        Filter battleground = Filters.and(Filters.other(self), Filters.battleground);
+        Filter battleground = Filters.and(Filters.other(self), Filters.battleground_site);
 
         if (GameConditions.canSpotLocation(game, battleground)
             && GameConditions.isDuringYourPhase(game, playerOnDarkSideOfLocation, Phase.MOVE)

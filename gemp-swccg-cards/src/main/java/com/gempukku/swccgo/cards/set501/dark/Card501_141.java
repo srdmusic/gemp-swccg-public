@@ -30,7 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 1
+ * Set: Set 21
  * Type: Character
  * Subtype: Imperial
  * Title: Major Partagaz

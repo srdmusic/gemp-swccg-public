@@ -54,7 +54,7 @@ public class Card501_008 extends AbstractNormalEffect {
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
-        GameTextActionId gameTextActionId = GameTextActionId.JURI_JUICE_V__DEPLOY_CARD;
+        GameTextActionId gameTextActionId = GameTextActionId.JURI_JUICE_V__DEPLOY_CANTINA;
 
         // Check condition(s)
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Cantina)) {

@@ -14,6 +14,9 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.CancelCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
@@ -25,7 +28,9 @@ import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwise
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.Effect;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -56,7 +61,7 @@ public class Card501_080 extends AbstractRepublic {
         return modifiers;
     }
 
-
+    @Override
     public List<TopLevelGameTextAction> getGameTextTopLevelWhileStackedActions(String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
@@ -85,5 +90,23 @@ public class Card501_080 extends AbstractRepublic {
         }
 
         return actions;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalBeforeTriggersWhenStacked(String playerId, SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.Cloning_Cylinders, Filters.hasStacked(self)))
+                && TriggerConditions.isPlayingCard(game, effect, Filters.Lateral_Damage)
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            action.appendCost(new FlipSingleSidedStackedCard(action, self));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }

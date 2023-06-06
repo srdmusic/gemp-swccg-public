@@ -5,6 +5,7 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
@@ -36,6 +37,7 @@ public class Card501_160 extends AbstractNormalEffect {
         setVirtualSuffix(true);
         setLore("In unfamiliar and potentially hostile territory, Qui-Gon knew that success would require patience and caution.");
         setGameText("If Credits Will Do Fine on table, deploy on Mos Espa. Opponent's first Force lost to a Force drain here is stacked on Credits Will Do Fine. If you just deployed Amidala, Jar Jar, or a Jedi here, may [upload] Either Way, You Win.");
+        addKeywords(Keyword.DEPLOYS_ON_SITE);
         addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I, Icon.TATOOINE, Icon.VIRTUAL_SET_21);
         setTestingText("A Remote Planet (V)");
     }

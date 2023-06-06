@@ -40,7 +40,7 @@ public class Card501_150 extends AbstractSite {
         setLocationLightSideGameText("Once per turn, a player who controls this site may raise their converted related location to the top.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.A_NEW_HOPE, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_21);
         setTestingText("Tatooine: Imperial Landing Site");
     }
 

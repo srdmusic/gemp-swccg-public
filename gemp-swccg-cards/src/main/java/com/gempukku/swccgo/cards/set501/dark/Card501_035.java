@@ -33,7 +33,7 @@ public class Card501_035 extends AbstractImperial {
     public Card501_035() {
         super(Side.DARK, 1, 3, 3, 3, 5, Title.Tagge, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setLore("Oversees defense operations of Death Star. Outstanding tactician. No-nonsense leader. Member of the House of Tagge, a powerful noble family and corporate conglomerate.");
+        setLore("Oversees defense operations of Death Star. Outstanding tactician. No-nonsense leader. Member of House of Tagge, a powerful noble family and corporate conglomerate.");
         setGameText("Your non-[Maintenance] troopers have armor = 4. At adjacent sites where you have a non-pilot trooper, your total power is +3. Once per game, if with two troopers, may re-circulate.");
         addKeywords(Keyword.GENERAL, Keyword.LEADER);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_21);
