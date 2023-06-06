@@ -9,6 +9,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.TargetingReason;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -108,7 +109,7 @@ public class Card501_155 extends AbstractLostOrStartingInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.titleContains("His Destiny"),  true, false));
+                                    new DeployCardFromReserveDeckEffect(action, Filters.titleContains(Title.His_Destiny),  true, false));
                             action.appendEffect(
                                     new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.deploysForFree, Filters.immune_to_Alter), 2, 2, true, false));
                             action.appendEffect(
