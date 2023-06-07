@@ -65,7 +65,7 @@ public class Card2_092 extends AbstractImperial {
                 if (movingResult.isReact()) {
                     otherTroopers = Filters.filter(otherTroopers, game, Filters.isCardEligibleToJoinMoveAsReact);
                 } else if (!GameConditions.isPhaseForPlayer(game, Phase.MOVE, playerId)) {
-                    // it's not a react and not during your move phase so the other clones are not able to make a regular move with him
+                    // it's not a react and not during your move phase so the other troopers are not able to make a regular move with him
                     otherTroopers.clear();
                 }
                 if (otherTroopers.size() >= 3) {
