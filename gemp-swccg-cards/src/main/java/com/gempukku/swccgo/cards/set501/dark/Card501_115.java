@@ -40,7 +40,7 @@ public class Card501_115 extends AbstractNormalEffect {
         super(Side.DARK, 5, PlayCardZoneOption.ATTACHED, "Hyperwave Scan", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Full Imperial scans include full-spectrum transceivers, dedicated energy receptors, crystal gravfield traps, and hyperwave signal interceptors.");
-        setGameText("Deploy on a battleground. Opponent may not cancel or reduce your Force drains here. Forfeit values and total battle destiny may not be increased here. You initiate battles here for free. If you just initiated battle here, may draw top card of Reserve Deck.");
+        setGameText("Deploy on a location. At same battleground, opponent may not cancel or reduce your Force drains here. Forfeit values and total battle destiny may not be increased here. You initiate battles here for free. If you just initiated battle here, may draw top card of Reserve Deck.");
         addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.DEPLOYS_ON_LOCATION);
         setTestingText("Hyperwave Scan (V)");
@@ -48,7 +48,7 @@ public class Card501_115 extends AbstractNormalEffect {
 
     @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.battleground;
+        return Filters.location;
     }
 
     @Override
@@ -57,8 +57,8 @@ public class Card501_115 extends AbstractNormalEffect {
         String opponent = game.getOpponent(playerId);
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainsMayNotBeReducedModifier(self, Filters.here(self), opponent, playerId));
-        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.here(self), opponent, playerId));
+        modifiers.add(new ForceDrainsMayNotBeReducedModifier(self, Filters.and(Filters.here(self), Filters.battleground), opponent, playerId));
+        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.and(Filters.here(self), Filters.battleground), opponent, playerId));
         modifiers.add(new MayNotHaveForfeitValueIncreasedModifier(self, Filters.here(self)));
         modifiers.add(new MayNotIncreaseTotalBattleDestinyModifier(self, new DuringBattleAtCondition(Filters.here(self))));
         modifiers.add(new InitiateBattlesForFreeModifier(self, Filters.here(self), playerId));
