@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -19,13 +20,12 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardsOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -66,98 +66,95 @@ public class Card501_068 extends AbstractSite {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
-                && GameConditions.canSpotLocation(game, siteYouOccupy)
-                && GameConditions.canUseForce(game, playerOnLightSideOfLocation, 1)) {
+                && GameConditions.canSpotLocation(game, siteYouOccupy)) {
 
             final Filter characterFilter = Filters.and(Filters.your(playerOnLightSideOfLocation), Icon.CLONE_ARMY, Filters.character, Filters.hasNotPerformedRegularMove);
 
-            //TODO choose the site first (copy MoveUsingLocationTextAction)
-            if (GameConditions.canSpot(game, self, Filters.and(Filters.and(characterFilter, Filters.canBeRelocatedToLocation(siteYouOccupy, 0)),
-                    Filters.with(self, Filters.and(characterFilter, Filters.canBeRelocatedToLocation(siteYouOccupy, 0))), Filters.here(self)))) {
+            //from here to a site you occupy
+            if (GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, characterFilter, self, siteYouOccupy, false, 1)) {
 
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
-                action.setText("Move from here to a site you occupy");
-                action.appendUsage(
-                        new OncePerPhaseEffect(action));
-
-
-                action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a [Clone Army] character",
-                        Filters.and(Filters.or(Filters.and(characterFilter, Filters.canBeRelocatedToLocation(siteYouOccupy, 0), Filters.with(self, Filters.and(characterFilter, Filters.canBeRelocatedToLocation(siteYouOccupy, 0)))),
-                                Filters.and(characterFilter, Filters.canBeRelocatedToLocation(siteYouOccupy, 0), Filters.with(self, Filters.and(characterFilter, Filters.canBeRelocatedToLocation(siteYouOccupy, 0))))), Filters.here(self))) {
-                    @Override
-                    protected void cardTargeted(final int targetGroupId1, final PhysicalCard targetedCharacter1) {
-                        action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a [Clone Army] charater", Filters.and(Icon.CLONE_ARMY, Filters.character, Filters.here(self), Filters.canBeRelocated(false))) {
-                            @Override
-                            protected void cardTargeted(final int targetGroupId2, final PhysicalCard targetedCharacter2) {
-                                action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a location to relocate to", Filters.and(siteYouOccupy, Filters.locationCanBeRelocatedTo(targetedCharacter1, 0), Filters.locationCanBeRelocatedTo(targetedCharacter2, 0))) {
-                                    @Override
-                                    protected void cardTargeted(final int targetGroupId_site, PhysicalCard targetedSite) {
-
-                                        //TODO account for free movement
-                                        action.appendCost(
-                                                new UseForceEffect(action, playerOnLightSideOfLocation, 1));
-                                        action.allowResponses(new RespondableEffect(action) {
-                                            @Override
-                                            protected void performActionResults(Action targetingAction) {
-                                                PhysicalCard character1 = action.getPrimaryTargetCard(targetGroupId1);
-                                                PhysicalCard character2 = action.getPrimaryTargetCard(targetGroupId2);
-                                                PhysicalCard site = action.getPrimaryTargetCard(targetGroupId_site);
-
-                                                Collection<PhysicalCard> toMove = new HashSet<>();
-                                                toMove.add(character1);
-                                                toMove.add(character2);
-                                                action.appendEffect(
-                                                        new RelocateBetweenLocationsEffect(action, toMove, site, true));
-                                            }
-                                        });
-                                    }
-                                });
-                            }
-                        });
-
+                final List<PhysicalCard> validSites = new LinkedList<>();
+                for(PhysicalCard site: Filters.filterTopLocationsOnTable(game, siteYouOccupy)) {
+                    if (Filters.sameLocationAs(self, Filters.and(Filters.and(characterFilter, Filters.canBeRelocatedToLocation(site, 1)),
+                            Filters.with(self, Filters.and(characterFilter, Filters.canBeRelocatedToLocation(site, 1))))).accepts(game, self)) {
+                        validSites.add(site);
                     }
-                });
-                actions.add(action);
+                }
+
+                if (!validSites.isEmpty()) {
+
+                    final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
+                    action.setText("Move from here to a site you occupy");
+                    action.appendUsage(
+                            new OncePerPhaseEffect(action));
+
+                    action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose location to relocate to", Filters.in(validSites)) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupIdSite, final PhysicalCard targetedSite) {
+                            action.appendTargeting(new TargetCardsOnTableEffect(action, playerOnLightSideOfLocation, "Choose characters to move", 2, 2, Filters.and(characterFilter, Filters.at(self), Filters.canBeRelocatedToLocation(targetedSite, 1))) {
+                                @Override
+                                protected void cardsTargeted(final int targetGroupIdCharacters, Collection<PhysicalCard> targetedCharacters) {
+                                    action.appendCost(
+                                            new PayRelocateBetweenLocationsCostEffect(action, playerOnLightSideOfLocation, targetedCharacters, targetedSite, 1));
+                                    action.allowResponses(new RespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            PhysicalCard finalSite = action.getPrimaryTargetCard(targetGroupIdSite);
+                                            Collection<PhysicalCard> finalCharacters = action.getPrimaryTargetCards(targetGroupIdCharacters);
+
+                                            action.appendEffect(
+                                                    new RelocateBetweenLocationsEffect(action, finalCharacters, finalSite, true));
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                    actions.add(action);
+                }
             }
 
-            if (GameConditions.canSpot(game, self,Filters.and(Filters.and(characterFilter, Filters.canBeRelocatedToLocation(self, 0)), Filters.with(self, Filters.and(characterFilter, Filters.canBeRelocatedToLocation(self, 0))), Filters.at(siteYouOccupy)))) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
-                action.setText("Move from a site you occupy to here");
-                action.appendUsage(
-                        new OncePerPhaseEffect(action));
+            //from a site you occupy to here
+            if (GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, characterFilter, siteYouOccupy, self, false, 1)) {
 
-                action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a [Clone Army] character",
-                        Filters.and(Filters.or(Filters.and(characterFilter, Filters.canBeRelocatedToLocation(self, 0), Filters.with(self, Filters.and(characterFilter, Filters.canBeRelocatedToLocation(self, 0)))),
-                                Filters.and(characterFilter, Filters.canBeRelocatedToLocation(self, 0), Filters.with(self, Filters.and(characterFilter, Filters.canBeRelocatedToLocation(self, 0))))), Filters.at(siteYouOccupy))) {
-                    @Override
-                    protected void cardTargeted(final int targetGroupId1, final PhysicalCard targetedCharacter1) {
-                        action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose a [Clone Army] character", Filters.and(characterFilter, Filters.with(targetedCharacter1), Filters.canBeRelocatedToLocation(self, 0))) {
-                            @Override
-                            protected void cardTargeted(final int targetGroupId2, final PhysicalCard targetedCharacter2) {
-
-                                //TODO account for free movement
-                                action.appendCost(
-                                        new UseForceEffect(action, playerOnLightSideOfLocation, 1));
-                                action.allowResponses(new RespondableEffect(action) {
-                                    @Override
-                                    protected void performActionResults(Action targetingAction) {
-                                        PhysicalCard character1 = action.getPrimaryTargetCard(targetGroupId1);
-                                        PhysicalCard character2 = action.getPrimaryTargetCard(targetGroupId2);
-
-                                        Collection<PhysicalCard> toMove = new HashSet<>();
-                                        toMove.add(character1);
-                                        toMove.add(character2);
-                                        action.appendEffect(
-                                                new RelocateBetweenLocationsEffect(action, toMove, self, true));
-                                    }
-                                });
-                            }
-                        });
-
+                final List<PhysicalCard> validSites = new LinkedList<>();
+                for(PhysicalCard site: Filters.filterTopLocationsOnTable(game, siteYouOccupy)) {
+                    if (Filters.sameLocationAs(self, Filters.and(Filters.and(characterFilter, Filters.canBeRelocatedToLocation(self, 1)),
+                            Filters.with(self, Filters.and(characterFilter, Filters.canBeRelocatedToLocation(self, 1))))).accepts(game, site)) {
+                        validSites.add(site);
                     }
-                });
+                }
 
-                actions.add(action);
+                if (!validSites.isEmpty()) {
+
+                    final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
+                    action.setText("Move from a site you occupy to here");
+                    action.appendUsage(
+                            new OncePerPhaseEffect(action));
+
+                    action.appendTargeting(new TargetCardOnTableEffect(action, playerOnLightSideOfLocation, "Choose location to relocate from", Filters.in(validSites)) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupIdSite, final PhysicalCard targetedSite) {
+                            action.appendTargeting(new TargetCardsOnTableEffect(action, playerOnLightSideOfLocation, "Choose characters to move", 2, 2, Filters.and(characterFilter, Filters.at(targetedSite), Filters.canBeRelocatedToLocation(self, 1))) {
+                                @Override
+                                protected void cardsTargeted(final int targetGroupIdCharacters, Collection<PhysicalCard> targetedCharacters) {
+                                    action.appendCost(
+                                            new PayRelocateBetweenLocationsCostEffect(action, playerOnLightSideOfLocation, targetedCharacters, self, 1));
+                                    action.allowResponses(new RespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            Collection<PhysicalCard> finalCharacters = action.getPrimaryTargetCards(targetGroupIdCharacters);
+
+                                            action.appendEffect(
+                                                    new RelocateBetweenLocationsEffect(action, finalCharacters, self, true));
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                    actions.add(action);
+                }
             }
         }
 
