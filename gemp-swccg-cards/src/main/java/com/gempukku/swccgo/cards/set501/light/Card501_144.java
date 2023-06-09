@@ -99,8 +99,8 @@ public class Card501_144 extends AbstractNormalEffect {
                                     new RespondableEffect(action) {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
-                                                            action.appendEffect(
-                                                                    new ShufflePileEffect(action, cardPileOwner, cardPile));
+                                            action.appendEffect(
+                                                    new ShufflePileEffect(action, cardPileOwner, cardPile));
                                         }
                                     });
 

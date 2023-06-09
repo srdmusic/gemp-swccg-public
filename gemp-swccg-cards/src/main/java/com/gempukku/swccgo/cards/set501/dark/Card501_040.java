@@ -44,7 +44,7 @@ public class Card501_040 extends AbstractCharacterWeapon {
     public Card501_040() {
         super(Side.DARK, 1, "Asajj Ventress' Lightsabers", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on a Sith. May add 1 to Force drain if present at opponent's site. May target a character (twice per battle if on Ventress). Draw two destiny. Subtract 2 from total if this weapon already fired this battle. Target hit, and its forfeit = 0, if total destiny > defense value.");
-        addPersona(Persona.VENTRESS_LIGHTSABER);
+        addPersona(Persona.ASAJJS_LIGHTSABERS);
         addKeywords(Keyword.LIGHTSABER);
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setMatchingCharacterFilter(Filters.Ventress);

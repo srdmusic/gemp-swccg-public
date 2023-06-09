@@ -11,7 +11,6 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
@@ -48,8 +47,7 @@ public class Card501_152 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.Imperial, Filters.stormtrooper, Filters.here(self)), Filters.blaster));
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.Imperial, Filters.stormtrooper, Filters.here(self)), Title.Clash_Of_Sabers));
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.Imperial, Filters.stormtrooper, Filters.here(self)), Filters.or(Filters.Clash_Of_Sabers, Filters.blaster)));
         return modifiers;
     }
 }

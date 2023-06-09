@@ -45,7 +45,7 @@ public class Card501_130 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new LostInterruptModifier(self, Filters.and(Filters.opponents(playerOnDarkSideOfLocation), Filters.Interrupt), new AndCondition(new OnTableCondition(self, Filters.title("Vader's Malediction")), new HereCondition(self, Filters.and(Filters.Vader, Filters.alone)))));
+        modifiers.add(new LostInterruptModifier(self, Filters.and(Filters.opponents(playerOnDarkSideOfLocation), Filters.Interrupt), new AndCondition(new OnTableCondition(self, Filters.title(Title.Vaders_Malediction)), new HereCondition(self, Filters.and(Filters.Vader, Filters.alone)))));
         return modifiers;
     }
 

@@ -42,10 +42,10 @@ public class Card501_037 extends AbstractImperial {
     public Card501_037() {
         super(Side.DARK, 3, 2, 2, 2, 4, "Captain Mod Terrik", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setArmor(4);
-        setLore("Leader. Sandtrooper.");
+        setLore("Captain Mod Terrik, a typical officer of the Desert Sands sandtrooper unit. Fearless and highly motivated. Willing to sacrifice as many troops as necessary. Leader.");
         setGameText("Power +1 if Stardust or Stolen Data Tapes on table. While with another trooper, attrition against opponent here is +1. During your move phase, when moving with a 'squad' of up to two other stormtroopers, they all move (using landspeed) for 1 Force.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_21);
-        addKeywords(Keyword.SANDTROOPER, Keyword.LEADER);
+        addKeywords(Keyword.SANDTROOPER, Keyword.LEADER, Keyword.CAPTAIN);
         setTestingText("Captain Mod Terrik");
     }
 
@@ -67,19 +67,19 @@ public class Card501_037 extends AbstractImperial {
 
             final MovingUsingLandspeedResult movingResult = (MovingUsingLandspeedResult) effectResult;
             final PhysicalCard toLocation = movingResult.getMovingTo();
-            if (!Filters.canSpot(movingResult.getAllCardsMoving(), game, Filters.and(Filters.your(self), Filters.other(self), Filters.trooper))) {
+            if (!Filters.canSpot(movingResult.getAllCardsMoving(), game, Filters.and(Filters.your(self), Filters.other(self), Filters.stormtrooper))) {
                 Collection<PhysicalCard> otherTroopers = Filters.filterActive(game, self, Filters.and(Filters.your(self), Filters.other(self), Filters.stormtrooper, Filters.not(Filters.in(movingResult.getAllCardsMoving())),
                         Filters.present(self), Filters.movableAsRegularMoveUsingLandspeed(playerId, movingResult.isReact(), movingResult.isMoveAway(), true, 0, null, Filters.sameCardId(toLocation))));
                 if (movingResult.isReact()) {
                     otherTroopers = Filters.filter(otherTroopers, game, Filters.isCardEligibleToJoinMoveAsReact);
                 }
-                if (otherTroopers.size() >= 2) {
+                if (otherTroopers.size() >= 1) {
 
                     final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
                     action.setText("Move with 'squad'");
                     // Choose target(s)
                     action.appendTargeting(
-                            new TargetCardsOnTableEffect(action, playerId, "Choose other troopers to move as 'squad'", 2, 2, Filters.in(otherTroopers)) {
+                            new TargetCardsOnTableEffect(action, playerId, "Choose other stormtroopers to move as 'squad'", 1, 2, Filters.in(otherTroopers)) {
                                 @Override
                                 protected void cardsTargeted(int targetGroupId, final Collection<PhysicalCard> targetedTroopers) {
                                     action.addAnimationGroup(targetedTroopers);
