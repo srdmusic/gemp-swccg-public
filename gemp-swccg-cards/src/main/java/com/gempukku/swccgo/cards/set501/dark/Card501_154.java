@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class Card501_154 extends AbstractCapitalStarship {
     public Card501_154() {
-        super(Side.DARK, 2, 5, 4, 9, null, 3, 7, "First Light", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 2, 5, 5, 9, null, 3, 7, "First Light", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Crimson Dawn.");
         setGameText("May add 3 pilots and 6 passengers. Permanent pilot provides ability of 3. Deploys and moves like a starfighter. Your total battle destiny here is +1 for each gangster aboard. Immune to attrition < 5.");
         addIcons(Icon.INDEPENDENT, Icon.SCOMP_LINK, Icon.PILOT, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_21);
