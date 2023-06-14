@@ -34,7 +34,7 @@ public class Card501_035 extends AbstractImperial {
         super(Side.DARK, 1, 3, 3, 3, 5, Title.Tagge, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Oversees defense operations of Death Star. Outstanding tactician. No-nonsense leader. Member of House of Tagge, a powerful noble family and corporate conglomerate.");
-        setGameText("Your non-[Maintenance] troopers have armor = 4. At adjacent sites where you have a non-pilot trooper, your total power is +3. Once per game, if with two troopers, may re-circulate.");
+        setGameText("Your non-[Maintenance] troopers have armor = 4. At same and adjacent sites where you have a non-pilot trooper, your total power is +3. Once per game, if with two troopers, may re-circulate.");
         addKeywords(Keyword.GENERAL, Keyword.LEADER);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         setTestingText("General Tagge (V)");
@@ -46,7 +46,7 @@ public class Card501_035 extends AbstractImperial {
 
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ResetArmorModifier(self, Filters.and(Filters.your(self), Filters.not(Icon.MAINTENANCE), Filters.trooper), 4));
-        modifiers.add(new TotalPowerModifier(self, Filters.and(Filters.adjacentSite(self), Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.not(Filters.pilot), Filters.trooper))), 3, playerId));
+        modifiers.add(new TotalPowerModifier(self, Filters.and(Filters.sameOrAdjacentSite(self), Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.not(Filters.pilot), Filters.trooper))), 3, playerId));
         return modifiers;
     }
 
