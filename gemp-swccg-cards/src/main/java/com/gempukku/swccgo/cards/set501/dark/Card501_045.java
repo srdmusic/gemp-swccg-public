@@ -25,6 +25,7 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ResetDefenseValueModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.MovedResult;
+import com.gempukku.swccgo.logic.timing.results.MovedUsingLandspeedResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -62,35 +63,37 @@ public class Card501_045 extends AbstractNormalEffect {
         Filter speederBikeFilter = Filters.and(Filters.your(self), Filters.speeder_bike, Filters.hasPiloting(self, Filters.scout));
 
         // Check condition(s)
-        if (TriggerConditions.movedFromLocation(game, effectResult, Filters.and(Filters.opponents(self), Filters.character), Filters.sameSiteAs(self, speederBikeFilter))
+        if (TriggerConditions.movedFromOrThroughLocationToLocation(game, effectResult, Filters.and(Filters.opponents(self), Filters.character), Filters.sameSiteAs(self, speederBikeFilter), Filters.location)
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
 
             MovedResult movedResult = (MovedResult) effectResult;
-            final PhysicalCard fromLocation = movedResult.getMovedFrom();
-            final Filter toLocation = Filters.sameLocation(movedResult.getMovedTo());
-            Filter movableFilter = Filters.and(speederBikeFilter, Filters.at(fromLocation),
-                    Filters.movableAsRegularMove(playerId, false, 0, false, toLocation));
-            if (GameConditions.canTarget(game, self, movableFilter)) {
+            if (movedResult.isMoveComplete()) {
+                final List<PhysicalCard> fromLocations = (effectResult.getType()==EffectResult.Type.MOVED_USING_LANDSPEED? ((MovedUsingLandspeedResult) movedResult).getLocationsAlongPath() : Collections.singletonList(movedResult.getMovedFrom()));
+                final Filter toLocation = Filters.sameLocation(movedResult.getMovedTo());
+                Filter movableFilter = Filters.and(speederBikeFilter, Filters.at(Filters.in(fromLocations)),
+                        Filters.movableAsRegularMove(playerId, false, 0, false, toLocation));
+                if (GameConditions.canTarget(game, self, movableFilter)) {
 
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Have speeder bike follow character");
+                    final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                    action.setText("Have speeder bike follow character");
 
-                action.appendUsage(
-                        new OncePerGameEffect(action));
-                // Choose target(s)
-                action.appendTargeting(
-                        new ChooseCardOnTableEffect(action, playerId, "Choose speeder bike", movableFilter) {
-                            @Override
-                            protected void cardSelected(final PhysicalCard speederBike) {
-                                action.addAnimationGroup(speederBike);
-                                action.setActionMsg("Have " + GameUtils.getCardLink(speederBike) + " move to follow character");
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new MoveCardAsRegularMoveEffect(action, playerId, speederBike, false, false, toLocation));
+                    action.appendUsage(
+                            new OncePerGameEffect(action));
+                    // Choose target(s)
+                    action.appendTargeting(
+                            new ChooseCardOnTableEffect(action, playerId, "Choose speeder bike", movableFilter) {
+                                @Override
+                                protected void cardSelected(final PhysicalCard speederBike) {
+                                    action.addAnimationGroup(speederBike);
+                                    action.setActionMsg("Have " + GameUtils.getCardLink(speederBike) + " move to follow character");
+                                    // Perform result(s)
+                                    action.appendEffect(
+                                            new MoveCardAsRegularMoveEffect(action, playerId, speederBike, false, false, toLocation));
+                                }
                             }
-                        }
-                );
-                return Collections.singletonList(action);
+                    );
+                    return Collections.singletonList(action);
+                }
             }
         }
         return null;
