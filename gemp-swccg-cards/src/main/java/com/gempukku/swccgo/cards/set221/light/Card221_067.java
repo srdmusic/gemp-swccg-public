@@ -39,7 +39,7 @@ import java.util.List;
  */
 public class Card221_067 extends AbstractObjective {
     public Card221_067() {
-        super(Side.LIGHT, 0, "Hunt For The Droid General", ExpansionSet.SET_21, Rarity.V);
+        super(Side.LIGHT, 0, Title.Hunt_For_The_Droid_General, ExpansionSet.SET_21, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy a [Clone Army] battleground, Clone Command Center (to same planet), Cloning Cylinders, and Grievous Will Run And Hide. " +
                 "For remainder of game, you may not deploy non-[Episode I] cards with ability. [Reflections II] objectives target Anakin instead of Luke. Your Destiny is suspended. Jedi gain [Pilot] skill. Your [Episode I] sites are immune to No Escape. At end of opponent's turn, if you occupy more battlegrounds than opponent, opponent loses 1 Force. " +

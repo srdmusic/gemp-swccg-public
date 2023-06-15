@@ -51,7 +51,7 @@ import java.util.List;
  */
 public class Card221_067_BACK extends AbstractObjective {
     public Card221_067_BACK() {
-        super(Side.LIGHT, 7, "He's A Coward", ExpansionSet.SET_21, Rarity.V);
+        super(Side.LIGHT, 7, Title.Hes_A_Coward, ExpansionSet.SET_21, Rarity.V);
         setGameText("While this side up, your Force drains are +1 where you have a clone with a Jedi or Padawan. X = number of battlegrounds your [Clone Army] cards occupy. If you just initiated a battle: peek at the top card of your Reserve Deck or Used Pile (may take it into hand or place it on bottom of Reserve Deck), then if X > 1, retrieve a [Clone Army] card into hand, then if X > 2, your clone may make a regular move (using landspeed for free) to the battle location. " +
                 "Flip this card if Grievous Will Run And Hide at a battleground or Grievous alone at a battleground.");
         addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
