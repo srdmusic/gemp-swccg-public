@@ -37,7 +37,7 @@ public class Card221_024 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Juri_Juice, Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
         setVirtualSuffix(true);
         setLore("Popular beverage served in many cantinas and tapcafes. Has intoxicating effect on many species. Favorite drink of Kabe, Chadra-Fan thief of Mos Eisley.");
-        setGameText("Deploy on table. May deploy Cantina from Reserve Deck; reshuffle. Your Cantina may not be converted. Once per turn, if you just deployed an alien to Cantina, may peek at the top two cards of your Reserve Deck; take one into hand and shuffle your Reserve Deck. Immune to Blue Milk. [Immune to Alter.]");
+        setGameText("Deploy on table. May [download] Cantina. Your Cantina may not be converted. Once per turn, if you just deployed an alien to Cantina, may peek at the top two cards of your Reserve Deck; take one into hand and shuffle your Reserve Deck. Immune to Blue Milk. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         addImmuneToCardTitle(Title.Blue_Milk);

@@ -38,7 +38,7 @@ public class Card221_016 extends AbstractImperial {
         super(Side.DARK, 3, 2, 2, 2, 3, "Corporal Oberk", Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
         setVirtualSuffix(true);
         setLore("Originally from Ukio. Stormtrooper assigned to search for Rebel activity on Endor. Trying to impress the commander of his biker scout detachment.");
-        setGameText("Adds 2 to power of anything he pilots (3 if a speeder bike). When deployed, may deploy a battleground or speeder bike from your Used Pile; reshuffle. When firing a Scout Blaster, adds 1 to his total weapon destiny (2 if targeting an alien).");
+        setGameText("[Pilot] 2, 3: any speeder bike. When deployed, may deploy a battleground or speeder bike from Used Pile; reshuffle. When firing a Scout Blaster, adds 1 to his total weapon destiny (2 if targeting an alien).");
         addIcons(Icon.ENDOR, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.BIKER_SCOUT);
     }

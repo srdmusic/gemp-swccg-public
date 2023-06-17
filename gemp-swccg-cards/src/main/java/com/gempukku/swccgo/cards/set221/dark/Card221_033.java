@@ -38,7 +38,7 @@ public class Card221_033 extends AbstractSite {
     public Card221_033() {
         super(Side.DARK, Title.Cantina, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
         setVirtualSuffix(true);
-        setLocationDarkSideGameText("Once per turn, may deploy Djas Puhr, Tonnika Sisters, or [Jabba's Palace] Wuher here from Reserve Deck; reshuffle.");
+        setLocationDarkSideGameText("Once per turn, may [download] Djas Puhr, Tonnika Sisters, or [Jabba's Palace] Wuher here.");
         setLocationLightSideGameText("Unless Obi-Wan here (or at Mos Eisley), you may not move to here during your control phase.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);

@@ -36,7 +36,7 @@ public class Card221_027 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Power Of The Hutt", Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
         setVirtualSuffix(true);
         setLore("Jabba runs his organization out of a palace built around a B'omarr monastery. His fortress near the border of the western Dune Sea is safe from enemies in Mos Eisley.");
-        setGameText("Deploy on table. If Nal Hutta on table and your alien at Audience Chamber, [Reflections III] Leia's game text is canceled and, once during opponent's turn, may activate 1 Force. Once per turn, may deploy Bib, Hutt Influence, or a barge from Reserve Deck; reshuffle. [Immune to Alter.]");
+        setGameText("Deploy on table. While Nal Hutta on table and your alien at Audience Chamber, [Reflections III] Leia's game text is canceled and, once during opponent's turn, may activate 1 Force. Once per turn, may [download] Hutt Influence, Bib, or a barge. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
     }

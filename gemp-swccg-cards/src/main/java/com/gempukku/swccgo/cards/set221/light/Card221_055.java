@@ -45,7 +45,7 @@ public class Card221_055 extends AbstractRepublic {
         super(Side.LIGHT, 3, 2, 1, 2, 3, "Clone Pilot", Uniqueness.UNRESTRICTED, ExpansionSet.SET_21, Rarity.V);
         setArmor(3);
         setLore("Clone trooper.");
-        setGameText("Adds 2 to power and 1 to defense value of anything he pilots. While piloting a [Clone Army] starship or vehicle, forfeit +1 and draws one battle destiny if unable to otherwise. If stacked face up on Cloning Cylinders, may turn him face down to cancel Lateral Damage.");
+        setGameText("Adds 2 to power and 1 to defense value of anything he pilots. While piloting a [Clone Army] starship or [Clone Army] vehicle, forfeit +1 and draws one battle destiny if unable to otherwise. If stacked face up on Cloning Cylinders, may turn him face down to cancel Lateral Damage.");
         addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.WARRIOR, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.CLONE_TROOPER);
     }

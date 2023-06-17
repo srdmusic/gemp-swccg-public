@@ -37,7 +37,7 @@ public class Card221_034 extends AbstractSite {
         super(Side.DARK, Title.Great_Pit_Of_Carkoon, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
         setVirtualSuffix(true);
         setLocationDarkSideGameText("If Jabba at Audience Chamber, [Set 4] Jabba's Sail Barge deploys -2 here.");
-        setLocationLightSideGameText("Once per game, may deploy Boba Fett here from Reserve Deck (reshuffle) or Lost Pile.");
+        setLocationLightSideGameText("Once per game, may [download] (or deploy from Lost Pile) Boba Fett here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.JABBAS_PALACE, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_21);

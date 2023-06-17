@@ -36,7 +36,7 @@ public class Card221_073 extends AbstractNormalEffect {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Security Control", Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
         setVirtualSuffix(true);
         setLore("Actions borne of the love for one's planet can heavily outweigh those generated from simple battle orders.");
-        setGameText("If your [Episode I] objective on table, deploy on table. Your Republic characters of ability < 4 are forfeit +1. Game text of your clones may not be canceled. Once per turn, may deploy an [Episode I] weapon on your character present at a site from Reserve Deck; reshuffle. [Immune to Alter.]");
+        setGameText("If your [Episode I] objective on table, deploy on table. Your Republic characters of ability < 4 are forfeit +1. Game text of your clones may not be canceled. Once per turn, may [download] an [Episode I] weapon on your character present at a site. [Immune to Alter.]");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
     }

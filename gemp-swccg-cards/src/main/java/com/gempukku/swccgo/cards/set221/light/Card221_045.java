@@ -35,7 +35,7 @@ public class Card221_045 extends AbstractRepublic {
     public Card221_045() {
         super(Side.LIGHT, 1, 3, 3, 3, 5, "Admiral Yularen", Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
         setLore("Leader.");
-        setGameText("Adds 3 to power of anything he pilots. While piloting a [Clone Army] capital starship, adds one battle destiny and its power may not be reduced by opponent. While with Anakin (or while piloting Resolute), opponent may not cancel or substitute battle destiny draws here.");
+        setGameText("[Pilot] 3. While piloting a [Clone Army] capital starship, adds one battle destiny and its power may not be reduced by opponent. While with Anakin (or while piloting Resolute), opponent may not cancel or substitute battle destiny draws here.");
         addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.WARRIOR, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.LEADER, Keyword.ADMIRAL);
         addPersona(Persona.YULAREN);

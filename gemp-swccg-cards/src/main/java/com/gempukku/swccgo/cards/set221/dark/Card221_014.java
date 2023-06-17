@@ -36,7 +36,7 @@ public class Card221_014 extends AbstractImperial {
         super(Side.DARK, 3, 2, 2, 1, 4, Title.Avarik, Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
         setVirtualSuffix(true);
         setLore("Frequently engaged in brawls at the local enlisted clubs on homeworld of Corulag. Stormtrooper assigned to biker scout unit. Monitors Yuzzum activity.");
-        setGameText("Adds 3 to power of any speeder bike he pilots. While piloting a speeder bike, draws one battle destiny if unable to otherwise. Once per game, may take a speeder bike (or an Effect with 'speeder bike' in game text) into hand from Reserve Deck; reshuffle.");
+        setGameText("[Pilot] 3: any speeder bike. While piloting a speeder bike, draws one battle destiny if unable to otherwise. Once per game, may [upload] a speeder bike (or an Effect with 'speeder bike' in game text).");
         addIcons(Icon.ENDOR, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.BIKER_SCOUT);
     }

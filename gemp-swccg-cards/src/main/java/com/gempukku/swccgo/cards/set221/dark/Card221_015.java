@@ -36,7 +36,7 @@ public class Card221_015 extends AbstractImperial {
         super(Side.DARK, 3, 2, 2, 2, 3, "Corporal Drazin", Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
         setVirtualSuffix(true);
         setLore("Stormtrooper assigned to Commander Igar's honor guard. Accompanied Vader on Drazin's homeworld of Bespin. Shot C-3PO there.");
-        setGameText("Deploys -1 to Endor. Your Lando and your [Endor] leaders may not be targeted by weapons here. While at a Cloud City site, modifiers to Force drains here may not be canceled. Once per game, may take Blasted Droid into hand from Reserve Deck; reshuffle.");
+        setGameText("Deploys -1 to Endor. Your Lando and your [Endor] leaders may not be targeted by weapons here. While at a Cloud City site, modifiers to Force drains here may not be canceled. Once per game, may [upload] Blasted Droid.");
         addIcons(Icon.ENDOR, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.STORMTROOPER, Keyword.GUARD);
     }

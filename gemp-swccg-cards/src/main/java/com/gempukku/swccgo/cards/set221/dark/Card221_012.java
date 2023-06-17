@@ -39,7 +39,7 @@ public class Card221_012 extends AbstractImperial {
         super(Side.DARK, 2, 2, 2, 2, 4, "Commander Praji", Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
         setVirtualSuffix(true);
         setLore("Vader's aide on the Devastator. Personally supervised search for Death Star plans on Tatooine by Vader's order. Was graduated with honors from Imperial Navy Academy on Carida.");
-        setGameText("Adds 2 to power of anything he pilots. While aboard Devastator, adds 1 to armor and hyperspeed and, once during your deploy phase, your trooper at a related site may make a regular move using landspeed.");
+        setGameText("[Pilot] 2. While aboard Devastator, adds 1 to armor and hyperspeed and, once during your deploy phase, your trooper at a related site may make a regular move using landspeed.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.COMMANDER);
         setMatchingStarshipFilter(Filters.Devastator);

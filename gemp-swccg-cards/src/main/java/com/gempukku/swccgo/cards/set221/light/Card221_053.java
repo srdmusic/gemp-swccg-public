@@ -29,7 +29,7 @@ public class Card221_053 extends AbstractSite {
     public Card221_053() {
         super(Side.LIGHT, "Christophsis: Chaleydonia", Title.Christophsis, Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
         setLocationDarkSideGameText("Force drain -1 here. Ventress is power +2 here.");
-        setLocationLightSideGameText("Your total power here is +1 for each of your starships at Christophsis system.");
+        setLocationLightSideGameText("Your total power here is +1 for each of your piloted starships at Christophsis system.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
@@ -46,7 +46,7 @@ public class Card221_053 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(final String playerOnLightSideOfLocation, final SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new TotalPowerModifier(self, self, new OnTableEvaluator(self, Filters.and(Filters.at(Filters.Christophsis_system), Filters.your(playerOnLightSideOfLocation), Filters.starship)), playerOnLightSideOfLocation));
+        modifiers.add(new TotalPowerModifier(self, self, new OnTableEvaluator(self, Filters.and(Filters.at(Filters.Christophsis_system), Filters.your(playerOnLightSideOfLocation), Filters.piloted, Filters.starship)), playerOnLightSideOfLocation));
         return modifiers;
     }
 }

@@ -29,7 +29,7 @@ public class Card221_054 extends AbstractSite {
     public Card221_054() {
         super(Side.LIGHT, Title.Clone_Command_Center, Uniqueness.DIAMOND_1, ExpansionSet.SET_21, Rarity.V);
         setLocationDarkSideGameText("");
-        setLocationLightSideGameText("Deploys only if a [Clone Army] objective on table. Once per turn, may deploy a Kamino site or [Clone Army] battleground from Reserve Deck; reshuffle.");
+        setLocationLightSideGameText("Deploys only if a [Clone Army] objective on table. Once per turn, may [download] a Kamino site or [Clone Army] battleground.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.CLONE_ARMY, Icon.VIRTUAL_SET_21);
     }
