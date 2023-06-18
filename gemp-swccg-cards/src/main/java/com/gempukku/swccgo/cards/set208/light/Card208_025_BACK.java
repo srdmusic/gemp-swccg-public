@@ -118,7 +118,7 @@ public class Card208_025_BACK extends AbstractObjective {
                                                         protected void yes() {
                                                             SubAction subAction = new SubAction(action, opponent);
                                                             subAction.appendCost(
-                                                                    new StackCardFromHandEffect(subAction, opponent, iFeelTheConflict, Filters.any, true, false, false, false));
+                                                                    new StackCardFromHandEffect(subAction, opponent, iFeelTheConflict, Filters.any, true, false, false, false, false));
                                                             subAction.appendEffect(
                                                                     new PlaceCardOutOfPlayFromOffTableEffect(subAction, retrievedCard));
                                                             action.appendEffect(
