@@ -30,7 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Character
  * Subtype: Republic
  * Title: San Hill
@@ -42,7 +42,7 @@ public class Card501_025 extends AbstractRepublic {
         setGameText("At same site, your battle droids deploy -1 and are forfeit +1. Once per game, may deploy Grievous here from Reserve Deck; reshuffle. While on Utapau and The Galaxy Torn Apart on table, opponent's Force retrieval is canceled.");
         addKeywords(Keyword.LEADER);
         setSpecies(Species.MUUN);
-        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.PILOT, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.PILOT, Icon.VIRTUAL_SET_22);
         setTestingText("San Hill");
     }
 

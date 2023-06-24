@@ -32,7 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Set 22
  * Type: Effect
  * Title: Reflection (V)
  */
@@ -43,7 +43,7 @@ public class Card501_143 extends AbstractNormalEffect {
         setVirtualSuffix(true);
         setGameText("Deploy on [Cloud City] or [Endor] Leia. She is defense value and immunity to attrition +2. While at a battleground site: Force drain +1 here and retrieve 1 Force if a Rebel just initiated battle (2 if Leia initiated against an Imperial). (Immune to Alter.)");
         addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
-        addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_22);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Reflection (V)");
     }

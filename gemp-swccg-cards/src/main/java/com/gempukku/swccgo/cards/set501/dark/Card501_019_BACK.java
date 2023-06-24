@@ -33,16 +33,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Objective
  * Title: More Systems Will Rally To Our Cause / The Galaxy Torn Apart
  */
 public class Card501_019_BACK extends AbstractObjective {
     public Card501_019_BACK() {
         super(Side.DARK, 7, "The Galaxy Torn Apart", ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, during your control phase, opponent loses X Force, where X = number of systems you occupy where you also occupy a related site. At systems related to sites you occupy, opponent's Force drains are -1 and your [Separatist] starships are immune to attrition. " +
+        setGameText("While this side up, during your control phase, opponent loses X Force, " +
+                "where X = number of systems you occupy where you also occupy a related site. " +
+                "At systems related to sites you occupy, opponent's Force drains are -1 and your [Separatist] starships are immune to attrition. " +
                 "Flip this card if fewer than two [Separatist] systems on table.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
         setTestingText("The Galaxy Torn Apart");
     }
 

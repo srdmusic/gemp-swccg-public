@@ -38,9 +38,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Premiere
+ * Set: Set 22
  * Type: Character
  * Subtype: Alien
  * Title: Tonnika Sisters (V)
@@ -54,7 +53,7 @@ public class Card501_133 extends AbstractAlien {
         setGameText("Assassins. While at Cantina, opponent’s Force generation here is -1 for each of your sets of two aliens here. Once per game, may choose: add 2 to the destiny of an alien just drawn for destiny or cause each player to activate up to 2 Force.");
         addIcon(Icon.WARRIOR, 2);
         addKeywords(Keyword.SPY, Keyword.THIEF, Keyword.FEMALE, Keyword.ASSASSIN);
-        addIcons(Icon.VIRTUAL_SET_21);
+        addIcons(Icon.VIRTUAL_SET_22);
         setTestingText("Tonnika Sisters (V)");
     }
 

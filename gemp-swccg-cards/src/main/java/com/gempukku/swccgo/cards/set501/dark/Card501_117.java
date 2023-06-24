@@ -25,7 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Set 22
  * Type: Interrupt
  * Subtype: Lost or Starting
  * Title: Gangster's Paradise
@@ -35,7 +35,7 @@ public class Card501_117 extends AbstractLostOrStartingInterrupt {
         super(Side.DARK, 4, "Gangster's Paradise", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Jabba's Palace is considered a safe haven to many on the run. It is also widely known to provide luxurious accommodations to its welcomed guests.");
         setGameText("LOST: Deploy an interior Jabba's Palace site from Reserve Deck; reshuffle. STARTING: If you have deployed a Jabba's Palace site, deploy Jabba's Haven and up to two Effects that deploy on table and are always immune to Alter. Place Interrupt in hand.");
-        addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_22);
         setTestingText("Gangster's Paradise");
     }
 

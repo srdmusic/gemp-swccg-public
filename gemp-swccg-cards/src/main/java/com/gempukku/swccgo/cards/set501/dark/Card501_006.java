@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Location
  * Subtype: Site
  * Title: Hoth: Main Power Generators (1st Marker)
@@ -34,7 +34,7 @@ public class Card501_006 extends AbstractSite {
         super(Side.DARK, Title.Main_Power_Generators, Title.Hoth, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("If 'blown away,' Light Side loses 4 Force (may not be reduced).");
         setLocationLightSideGameText("'Hoth Energy Shield Rules' in effect. Your artillery weapons on Hoth are powered.");
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.HOTH, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.HOTH, Icon.VIRTUAL_SET_22);
         addKeywords(Keyword.MARKER_1);
         setTestingText("Hoth: Main Power Generators (1st Marker)");
     }

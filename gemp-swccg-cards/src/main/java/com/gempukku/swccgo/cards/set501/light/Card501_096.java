@@ -32,7 +32,6 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
  * Set: Set 22
  * Type: Objective

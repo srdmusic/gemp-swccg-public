@@ -19,7 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Location
  * Subtype: Site
  * Title: Geonosis: Petranaki Arena
@@ -31,7 +31,7 @@ public class Card501_021 extends AbstractSite {
         setLocationLightSideGameText("Your characters are defense value -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
         setTestingText("Geonosis: Petranaki Arena");
     }
 

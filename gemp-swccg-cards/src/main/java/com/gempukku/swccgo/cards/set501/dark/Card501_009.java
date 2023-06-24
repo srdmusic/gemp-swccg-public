@@ -26,7 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Character
  * Subtype: Alien
  * Title: Black Krrsantan
@@ -36,7 +36,7 @@ public class Card501_009 extends AbstractAlien {
         super(Side.DARK, 2, 4, 7, 2, 5, "Black Krrsantan", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Wookiee bounty hunter.");
         setGameText("Opponent's characters of ability < 3 are power -1 here. If a battle was just initiated here, each player with four or more characters present with Krrsantan must choose one of their characters here (except Krrsantan) to return to hand.");
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
         setSpecies(Species.WOOKIEE);
         addKeywords(Keyword.BOUNTY_HUNTER);
         setTestingText("Black Krrsantan");

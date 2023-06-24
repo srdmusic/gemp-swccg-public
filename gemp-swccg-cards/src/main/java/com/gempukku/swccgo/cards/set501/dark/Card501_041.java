@@ -28,7 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Effect
  * Title: I'm Sending My Apprentice
  */
@@ -37,7 +37,7 @@ public class Card501_041 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "I'm Sending My Apprentice", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Maul channeled his rage within himself, thus drawing on the dark side of the Force in his confrontation with the Jedi.");
         setGameText("If a Naboo site on table, deploy on table. Maul deploys -2 to [Coruscant] sites. If Maul in battle alone, your total battle destiny is +1 for each character in battle. Once per turn, may deploy Sidious' Lightsaber or a [Coruscant] Naboo site from Reserve Deck; reshuffle. [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("I'm Sending My Apprentice");
     }

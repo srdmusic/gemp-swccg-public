@@ -29,7 +29,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Interrupt
  * Subtype: Lost or Starting
  * Title: That's It, The Rebels Are There! (V)
@@ -39,7 +39,7 @@ public class Card501_004 extends AbstractUsedOrStartingInterrupt {
         super(Side.DARK, 4, "That's It, The Rebels Are There!", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setGameText("USED: Move your AT-AT as a 'react.' STARTING: If 1st Marker on table, take [Set 6] Veers into hand. Deploy [Set 9] Prepare For A Surface Attack and up to two Effects that deploy for free and are always [Immune to Alter]. Place Interrupt in Lost Pile.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_22);
         setTestingText("That's It, The Rebels Are There! (V)");
     }
 

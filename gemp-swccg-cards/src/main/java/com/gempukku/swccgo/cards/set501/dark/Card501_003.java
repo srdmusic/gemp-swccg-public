@@ -30,7 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Objective
  * Title: The Shield Will Be Down In Moments / Imperial Troops Have Entered The Base!
  */
@@ -42,7 +42,7 @@ public class Card501_003 extends AbstractObjective {
                 "For remainder of game, you may not play Sunsdown. Trample is a Lost Interrupt. X on Target The Main Generator is -2 (unless firing at or below the 3rd Marker) and maximum X = 3. " +
                 "While this side up, once per turn, may deploy an exterior Hoth site from Reserve Deck; reshuffle. " +
                 "Flip this card if Main Power Generators has been 'blown away' and you occupy Hoth system.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_22);
         setTestingText("The Shield Will Be Down in Moments");
     }
 

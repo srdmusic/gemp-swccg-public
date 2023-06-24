@@ -21,14 +21,12 @@ import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
 import java.util.Collections;
 import java.util.List;
 
-
 /**
- * Set: Set 22
+ * Set: Playtesting
  * Type: Character
  * Subtype: Alien
  * Title: Boba Fett With Blaster Rifle (V)
  */
-
 public class Card501_100 extends AbstractAlien {
     public Card501_100() {
         super(Side.DARK, 1, 4, 5, 3, 6, "Boba Fett With Blaster Rifle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
@@ -37,7 +35,7 @@ public class Card501_100 extends AbstractAlien {
         setLore("Notorious bounty hunter. 'As you wish.'");
         setGameText("Permanent weapon is •Boba Fett's Blaster Rifle (may target a character or creature for free; draw destiny; if destiny > ability; target captured; otherwise, if destiny +2 > ability, target hit, it's forfeit -3 and opponent loses 1 Force).");
         addPersona(Persona.BOBA_FETT);
-        addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON);
+        addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_22);
         addKeywords(Keyword.BOUNTY_HUNTER);
         setTestingText("Boba Fett With Blaster Rifle (V)");
     }

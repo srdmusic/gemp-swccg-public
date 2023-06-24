@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Location
  * Subtype: System
  * Title: Geonosis
@@ -32,7 +32,7 @@ public class Card501_020 extends AbstractSystem {
         setLocationLightSideGameText("If you just initiated a Force drain (or won a battle) at a Geonosis site, 'conquer' (flip) Geonosis.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_22);
         setMayNotBePlacedInReserveDeck(true);
         setTestingText("Geonosis (Separatist controlled)");
     }

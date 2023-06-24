@@ -31,7 +31,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: A Fine Addition to my Collection
@@ -43,7 +43,7 @@ public class Card501_002 extends AbstractUsedOrLostInterrupt {
         setGameText("USED: If Grievous just swung a stolen lightsaber, add one battle destiny. " +
                 "LOST: Cancel an attempt to target Grievous with a lightsaber. " +
                 "OR Deploy any lightsaber from your Lost Pile on Grievous (who may use that lightsaber).");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
         setTestingText("A Fine Addition to my Collection");
     }
 

@@ -32,7 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Character
  * Subtype: Republic
  * Title: General Whorm Loathsom
@@ -44,7 +44,7 @@ public class Card501_028 extends AbstractRepublic {
         setGameText("While with a battle droid, adds one battle destiny. Once per game, may deploy Ventress here from Reserve Deck; reshuffle. While on Christophsis and The Galaxy Torn Apart on table, your Force drains (and Force drain bonuses) may not be canceled or reduced.");
         addKeywords(Keyword.LEADER, Keyword.GENERAL);
         setSpecies(Species.KERKOIDEN);
-        addIcons(Icon.EPISODE_I, Icon.WARRIOR, Icon.PILOT, Icon.SEPARATIST, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.WARRIOR, Icon.PILOT, Icon.SEPARATIST, Icon.VIRTUAL_SET_22);
         setTestingText("General Whorm Loathsom");
     }
 
