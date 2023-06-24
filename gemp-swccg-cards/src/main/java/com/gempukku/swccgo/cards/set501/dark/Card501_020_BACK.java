@@ -23,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Location
  * Subtype: System
  * Title: Geonosis
@@ -35,7 +35,7 @@ public class Card501_020_BACK extends AbstractSystem {
         setLocationLightSideGameText("While you occupy with a [Republic] starship, your Jedi and clones at Geonosis sites are power +1.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_22);
         setTestingText("Geonosis (Republic controlled)");
     }
 

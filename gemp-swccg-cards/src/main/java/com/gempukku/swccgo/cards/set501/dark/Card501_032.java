@@ -19,7 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Character
  * Subtype: Droid
  * Title: B-1 Clanker
@@ -30,7 +30,7 @@ public class Card501_032 extends AbstractDroid {
         setArmor(3);
         setLore("Infantry battle droid.");
         setGameText("While with your Republic leader (or another battle droid), draws one battle destiny if unable to otherwise.");
-        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PRESENCE, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PRESENCE, Icon.VIRTUAL_SET_22);
         addKeywords(Keyword.INFANTRY_BATTLE_DROID);
         addModelType(ModelType.BATTLE);
         setTestingText("B-1 Clanker");

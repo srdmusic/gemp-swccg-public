@@ -34,9 +34,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Character
  * Subtype: Dark Jedi Master
  * Title: Darth Plagueis
@@ -48,7 +47,7 @@ public class Card501_043 extends AbstractDarkJediMaster {
         setGameText("Once per game, if drawn for destiny, may place this card out of play to make that destiny draw +6. Other Dark Jedi (except Sidious) are lost. While alone, your characters with 'Trade Federation' in lore deploy -1 to [Episode I] locations. Immune to attrition.");
         setSpecies(Species.MUUN);
         addKeywords(Keyword.LEADER);
-        addIcons(Icon.EPISODE_I, Icon.WARRIOR, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
         setTestingText("Darth Plagueis");
     }
 

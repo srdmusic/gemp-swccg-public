@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
  * Set: Set 22
  * Type: Starship

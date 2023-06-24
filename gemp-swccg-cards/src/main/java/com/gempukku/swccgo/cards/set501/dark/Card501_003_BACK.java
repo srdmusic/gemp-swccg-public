@@ -34,7 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Objective
  * Title: The Shield Will Be Down In Moments / Imperial Troops Have Entered The Base!
  */
@@ -43,7 +43,7 @@ public class Card501_003_BACK extends AbstractObjective {
         super(Side.DARK, 7, Title.Imperial_Troops_Have_Entered_The_Base, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("While this side up, attrition against opponent is +1 for each Imperial leader in battle. Rebel Leadership and We're Doomed are Lost Interrupts. Your Force drains are +1 at opponent's sites (and Echo sites) where your snowtrooper or non-unique AT-AT is present. Unless opponent controls a Hoth location, your Force drain bonuses may not be canceled. Once per turn, if opponent just lost Force to You May Start Your Landing, may take bottom card of Lost Pile into hand. " +
                 "Flip this card if opponent controls Hoth system.");
-        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.HOTH, Icon.VIRTUAL_SET_22);
         setTestingText("Imperial Troops Have Entered the Base!");
     }
 

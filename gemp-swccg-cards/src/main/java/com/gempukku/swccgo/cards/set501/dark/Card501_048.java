@@ -27,9 +27,8 @@ import com.gempukku.swccgo.logic.timing.Action;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 21
+ * Set: Playtesing
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: There They Are! (V)
@@ -39,9 +38,9 @@ public class Card501_048 extends AbstractUsedOrLostInterrupt {
         super(Side.DARK, 5, Title.There_They_Are, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("When unexplained droid losses are detected, a Droid Control Ship can call in reinforcements in seconds.");
-        setGameText("USED: Take a non-unique battle droid, non-unique droid starfighter, or Battle Droid Reinforcements into hand from Reserve Deck; reshuffle. \n" +
+        setGameText("USED: Take a non-unique battle droid, non-unique droid starfighter, or Battle Droid Reinforcements into hand from Reserve Deck; reshuffle." +
                 "LOST: Break cover of and capture opponent's Undercover spy at same site as your battle droid. [Immune to Sense]");
-        addIcons(Icon.THEED_PALACE, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.THEED_PALACE, Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
         setTestingText("There They Are! (V)");
     }
 

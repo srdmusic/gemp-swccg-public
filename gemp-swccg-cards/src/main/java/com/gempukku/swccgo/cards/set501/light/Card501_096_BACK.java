@@ -45,7 +45,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
  * Set: Set 22
  * Type: Objective

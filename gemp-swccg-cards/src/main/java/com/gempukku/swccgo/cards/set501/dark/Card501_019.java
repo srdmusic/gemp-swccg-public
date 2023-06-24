@@ -29,7 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Objective
  * Title: More Systems Will Rally To Our Cause / The Galaxy Torn Apart
  */
@@ -37,10 +37,12 @@ public class Card501_019 extends AbstractObjective {
     public Card501_019() {
         super(Side.DARK, 0, "More Systems Will Rally To Our Cause", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy [Separatist] Geonosis system, two [Clone Army] systems, and Droid Racks. \n" +
-                "For remainder of game, you may not deploy non-[Episode I] characters, non-[Episode I] starships, or non-[Episode I] vehicles. If your [Episode I] system was just converted, raise it to the top. Once per turn, may deploy a battleground site related to your [Clone Army] or [Separatist] system from Reserve Deck; reshuffle. \n" +
+        setGameText("Deploy [Separatist] Geonosis system, two [Clone Army] systems, and Droid Racks." +
+                "For remainder of game, you may not deploy non-[Episode I] characters, non-[Episode I] starships, or non-[Episode I] vehicles. " +
+                "If your [Episode I] system was just converted, raise it to the top. " +
+                "Once per turn, may deploy a battleground site related to your [Clone Army] or [Separatist] system from Reserve Deck; reshuffle. " +
                 "Flip this card if two [Separatist] systems on table.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
         setTestingText("More Systems Will Rally To Our Cause");
     }
 

@@ -18,7 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Location
  * Subtype: Site
  * Title: Separatist Command Center
@@ -30,7 +30,7 @@ public class Card501_029 extends AbstractSite {
         setLocationLightSideGameText("Deploys only to a [Clone Army] or [Separatist] system. Immune to Ounee Ta.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_22);
         setTestingText("Separatist Command Center");
     }
     @Override

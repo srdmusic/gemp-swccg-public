@@ -28,9 +28,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Character
  * Subtype: Droid
  * Title: Triple Zero & BT-1
@@ -41,7 +40,7 @@ public class Card501_042 extends AbstractDroid {
         addComboCardTitles("Triple Zero", "BT-1");
         setLore("Assassin. Information broker.");
         setGameText("Armor = 5. If with Aphra, may add one destiny to attrition. If opponent’s character of ability < 4 here is about to leave table, may use 1 Force; opponent loses 1 Force.");
-        addIcons(Icon.PRESENCE, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.PRESENCE, Icon.VIRTUAL_SET_22);
         addIcon(Icon.WARRIOR, 2);
         addModelTypes(ModelType.ASTROMECH, ModelType.PROTOCOL);
         addKeywords(Keyword.ASSASSIN, Keyword.INFORMATION_BROKER);

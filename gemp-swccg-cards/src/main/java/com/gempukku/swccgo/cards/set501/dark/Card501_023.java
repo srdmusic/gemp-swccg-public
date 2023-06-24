@@ -23,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Location
  * Subtype: System
  * Title: Utapau
@@ -36,7 +36,7 @@ public class Card501_023 extends AbstractSystem {
         setLocationLightSideGameText("If you control, Jedi are deploy -1 to Utapau sites.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_22);
         setMayNotBePlacedInReserveDeck(true);
         setTestingText("Utapau (Republic controlled)");
     }

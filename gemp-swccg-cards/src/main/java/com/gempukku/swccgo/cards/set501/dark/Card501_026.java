@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Location
  * Subtype: System
  * Title: Christophsis
@@ -35,7 +35,7 @@ public class Card501_026 extends AbstractSystem {
         setLocationLightSideGameText("Starships piloted by Anakin or Obi-Wan here are immune to attrition.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_22);
         setMayNotBePlacedInReserveDeck(true);
         setTestingText("Christophsis (Republic controlled)");
     }

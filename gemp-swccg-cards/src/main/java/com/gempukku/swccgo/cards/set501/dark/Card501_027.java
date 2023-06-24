@@ -18,7 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 21
+ * Set: Playtesting
  * Type: Location
  * Subtype: Site
  * Title: Christophsis: Separatist Encampment
@@ -30,7 +30,7 @@ public class Card501_027 extends AbstractSite {
         setLocationLightSideGameText("Your battle destiny draws are -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
         setTestingText("Christophsis: Separatist Encampment");
     }
 
