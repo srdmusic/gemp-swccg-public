@@ -31,6 +31,7 @@ public enum ModifyGameTextType {
     HOTH_SENTRY__APPLIES_ALL_MODIFIERS("Applies all modifiers"),
     HUNT_DOWN__DO_NOT_PLACE_OUT_OF_PLAY_IF_MAUL_DUELS("Not placed out of play if Maul initiates a duel"),
     I_CANT_BELIEVE_HES_GONE__ONLY_EFFECTS_BATTLES_WITH_LUKE_OR_LEIA("Only applies to battles with Luke or Leia"),
+    I_MUST_BE_ALLOWED_TO_SPEAK__DOES_NOT_TARGET_LOCATIONS_EXCEPT_LARS_MOISTURE_FARM_AND_JABBAS_PALACE_SITES("May not target locations except Lars' Moisture Farm and Jabba's Palace sites"),
     IT_IS_THE_FUTURE_YOU_SEE__STACK_DESTINY_CARD_ON_JEDI_TEST_5("Stack destiny card on Jedi Test #5"),
     IMPERIAL_DECREE__DOES_NOT_COUNT_YAVIN_4_LOCATIONS("Does not count Yavin 4 locations"),
     LEIA_REFLECTIONS_III__MAY_NOT_CANCEL_FORCE_DRAINS_OR_REDUCE_ABILITY("May not cancel Force drains or reduce opponent's total ability"),
