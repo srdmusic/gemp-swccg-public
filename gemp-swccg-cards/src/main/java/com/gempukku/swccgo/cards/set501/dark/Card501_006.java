@@ -32,7 +32,7 @@ import java.util.List;
 public class Card501_006 extends AbstractSite {
     public Card501_006() {
         super(Side.DARK, Title.Main_Power_Generators, Title.Hoth, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("If 'blown away,' Light Side loses 4 Force (may not be reduced).");
+        setLocationDarkSideGameText("If 'blown away,' Light Side loses 5 Force.");
         setLocationLightSideGameText("'Hoth Energy Shield Rules' in effect. Your artillery weapons on Hoth are powered.");
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.HOTH, Icon.VIRTUAL_SET_22);
         addKeywords(Keyword.MARKER_1);
@@ -47,7 +47,7 @@ public class Card501_006 extends AbstractSite {
             action.skipInitialMessageAndAnimation();
             // Perform result(s)
             action.appendEffect(
-                    new AddToBlownAwayForceLossEffect(action, game.getLightPlayer(), 4, true));
+                    new AddToBlownAwayForceLossEffect(action, game.getLightPlayer(), 5));
             return Collections.singletonList(action);
         }
         return null;
