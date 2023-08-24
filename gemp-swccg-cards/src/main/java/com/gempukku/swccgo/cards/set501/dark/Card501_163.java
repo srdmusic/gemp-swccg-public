@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AboardAsPassengerCondition;
+import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -17,6 +18,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfTurnEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
@@ -53,10 +55,12 @@ public class Card501_163 extends AbstractAlien {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         Filter narShaddaaOrNalHutta = Filters.or(Filters.Nar_Shadda_system, Filters.Nal_Hutta_system);
         AboardAsPassengerCondition aboardAsPassengerCondition = new AboardAsPassengerCondition(self, Filters.any);
+        AtCondition atCondition = new AtCondition(self, narShaddaaOrNalHutta);
+        AndCondition aboardAsPassengerAtNarShaddaOrNallHuttaCondition = new AndCondition(aboardAsPassengerCondition, atCondition);
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
-        modifiers.add(new EachBattleDestinyModifier(self, narShaddaaOrNalHutta, aboardAsPassengerCondition, 1, self.getOwner()));
-        modifiers.add(new EachWeaponDestinyModifier(self, Filters.any, Filters.and(Filters.at(narShaddaaOrNalHutta), Filters.hasPassenger(self)), 1));
-        modifiers.add(new ForceDrainModifier(self, narShaddaaOrNalHutta, aboardAsPassengerCondition, 1, self.getOwner()));
+        modifiers.add(new EachBattleDestinyModifier(self, narShaddaaOrNalHutta, aboardAsPassengerAtNarShaddaOrNallHuttaCondition, 1, self.getOwner()));
+        modifiers.add(new EachWeaponDestinyModifier(self, Filters.any, aboardAsPassengerAtNarShaddaOrNallHuttaCondition, Filters.hasPassenger(self), 1));
+        modifiers.add(new ForceDrainModifier(self, narShaddaaOrNalHutta, aboardAsPassengerAtNarShaddaOrNallHuttaCondition, 1, self.getOwner()));
         return modifiers;
     }
 
