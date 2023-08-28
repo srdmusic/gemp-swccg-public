@@ -7,6 +7,7 @@ import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -16,13 +17,14 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.PhaseCondition;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
+import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromCardModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeFiredModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -38,10 +40,10 @@ public class Card501_003 extends AbstractObjective {
     public Card501_003() {
         super(Side.DARK, 0, Title.The_Shield_Will_Be_Down_In_Moments, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Hoth system, [Set 17] 4th Marker, 1st Marker, and [Set 21] You May Start Your Landing. " +
-                "For remainder of game, you may not play Sunsdown. Trample is a Lost Interrupt. X on Target The Main Generator is -2 (unless firing at or below the 3rd Marker) and maximum X = 3. " +
-                "While this side up, once per turn, may deploy an exterior Hoth site from Reserve Deck; reshuffle. " +
-                "Flip this card if Main Power Generators has been 'blown away' and you occupy Hoth system.");
+        setGameText("Deploy 5th Marker, [Set 17] 4th Marker, 1st Marker, and [Set 9] Prepare for a Surface Attack. " +
+                "For remainder of game, you may not fire AT-AT cannons during your control phase or deploy Rebel Base Occupation or Sunsdown. " +
+                "While this side up, once per turn, may deploy a Hoth location from Reserve Deck; reshuffle. Opponent loses no more than 1 Force to You May Start Your Landing. " +
+                "Flip this card if Main Power Generators is 'blown away.'");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_22);
         setTestingText("The Shield Will Be Down in Moments");
     }
@@ -50,10 +52,10 @@ public class Card501_003 extends AbstractObjective {
     protected ObjectiveDeployedTriggerAction getGameTextWhenDeployedAction(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         ObjectiveDeployedTriggerAction action = new ObjectiveDeployedTriggerAction(self);
         action.appendRequiredEffect(
-            new DeployCardFromReserveDeckEffect(action, Filters.Hoth_system, true, false) {
+            new DeployCardFromReserveDeckEffect(action, Filters.Fifth_Marker, true, false) {
                 @Override
                 public String getChoiceText() {
-                    return "Choose Hoth system to deploy";
+                    return "Choose 5th Marker to deploy";
                 }
             });
         action.appendRequiredEffect(
@@ -68,15 +70,15 @@ public class Card501_003 extends AbstractObjective {
             new DeployCardFromReserveDeckEffect(action, Filters.First_Marker, true, false) {
                 @Override
                 public String getChoiceText() {
-                    return "Choose 1st marker to deploy";
+                    return "Choose 1st Marker to deploy";
                 }
             });
 
         action.appendRequiredEffect(
-            new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_21, Filters.You_May_Start_Your_Landing), true, false) {
+            new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.VIRTUAL_SET_9, Filters.Prepare_For_A_Surface_Attack), true, false) {
                 @Override
                 public String getChoiceText() {
-                    return "Choose [Set 21] You May Start Your Landing to deploy";
+                    return "Choose [Set 9] Prepare for a Surface Attack to deploy";
                 }
             });
         return action;
@@ -87,31 +89,37 @@ public class Card501_003 extends AbstractObjective {
         RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new MayNotDeployModifier(self, Filters.Sunsdown, self.getOwner()), null));
+                        new MayNotBeFiredModifier(self, Filters.and(Filters.your(self), Filters.AT_AT_Cannon), new PhaseCondition(Phase.CONTROL, playerId)), "AT-AT Cannons can't be fired"));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new LostInterruptModifier(self, Filters.Trample), null));
-        action.appendEffect(
-                new AddUntilEndOfGameModifierEffect(action,
-                    new ModifyGameTextModifier(self, Filters.Target_The_Main_Generator, ModifyGameTextType.TARGET_THE_MAIN_GENERATOR__MODIFY_X), null));
+                        new MayNotDeployModifier(self, Filters.or(Filters.Rebel_Base_Occupation, Filters.Sunsdown), playerId), null));
         return action;
     }
 
     @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new LimitForceLossFromCardModifier(self, Filters.You_May_Start_Your_Landing, 1, opponent));
+        return modifiers;
+    }
+
+    @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.THE_SHIELD_WILL_BE_DOWN__DOWNLOAD_HOTH_SITE;
+        GameTextActionId gameTextActionId = GameTextActionId.THE_SHIELD_WILL_BE_DOWN_IN_MOMENTS__DOWNLOAD_HOTH_LOCATION;
 
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy a Hoth site from Reserve Deck");
-            action.setActionMsg("Deploy an exterior Hoth site from Reserve Deck");
+            action.setText("Deploy a Hoth location from Reserve Deck");
 
             action.appendUsage(
                     new OncePerTurnEffect(action));
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.Hoth_site, Filters.exterior_site), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.Hoth_location, true));
 
             return Collections.singletonList(action);
         }
@@ -121,17 +129,11 @@ public class Card501_003 extends AbstractObjective {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
         // Check condition(s)
         if (GameConditions.canBeFlipped(game, self)
-                && (
-                    TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Main_Power_Generators, true)) ||
-                    GameConditions.isBlownAway(game, Filters.title(Title.Main_Power_Generators, true))
-                )
-                && GameConditions.occupies(game, playerId, Filters.Hoth_system)) {
+                && TriggerConditions.isBlownAwayLastStep(game, effectResult, Filters.title(Title.Main_Power_Generators, true))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Flip");
