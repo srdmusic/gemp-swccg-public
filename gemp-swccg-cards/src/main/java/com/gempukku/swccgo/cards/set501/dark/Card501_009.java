@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.conditions.DefendingBattleCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -17,6 +18,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.DeploysFreeToTargetModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -33,9 +35,10 @@ import java.util.List;
  */
 public class Card501_009 extends AbstractAlien {
     public Card501_009() {
-        super(Side.DARK, 2, 4, 7, 2, 5, "Black Krrsantan", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 2, 4, 6, 2, 5, "Black Krrsantan", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setArmor(5);
         setLore("Wookiee bounty hunter.");
-        setGameText("Opponent's characters of ability < 3 are power -1 here. If a battle was just initiated here, each player with four or more characters present with Krrsantan must choose one of their characters here (except Krrsantan) to return to hand.");
+        setGameText("Vibro-Ax deploys free on Krrsantan. Power +1 while defending a battle. If a battle was just initiated here, each player who has four or more characters present with Krrsantan must choose one to return to hand.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
         setSpecies(Species.WOOKIEE);
         addKeywords(Keyword.BOUNTY_HUNTER);
@@ -45,7 +48,8 @@ public class Card501_009 extends AbstractAlien {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.opponents(self), Filters.here(self), Filters.character, Filters.abilityLessThan(3)), -1));
+        modifiers.add(new DeploysFreeToTargetModifier(self, Filters.Vibro_Ax, self));
+        modifiers.add(new PowerModifier(self, new DefendingBattleCondition(self), 1));
         return modifiers;
     }
 
