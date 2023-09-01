@@ -48,7 +48,6 @@ import com.gempukku.swccgo.logic.timing.PassthruEffect;
 import com.gempukku.swccgo.logic.timing.StandardEffect;
 import com.gempukku.swccgo.logic.timing.results.CalculatingEpicEventTotalResult;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -138,7 +137,6 @@ public class Card501_095 extends AbstractEpicEventDeployable {
                                             if (finalEpicEventTotal > 8) {
                                                 gameState.sendMessage("Result: Succeeded");
                                                 final PhysicalCard bunker = Filters.findFirstFromTopLocationsOnTable(game, Filters.Bunker);
-                                                PhysicalCard landingPlatform = Filters.findFirstFromTopLocationsOnTable(game, Filters.Landing_Platform);
                                                 final PhysicalCard backDoor = Filters.findFirstFromTopLocationsOnTable(game, Filters.Back_Door);
                                                 if (backDoor != null) {
                                                     final Collection<PhysicalCard> charactersToRelocate = Filters.filterActive(game, self,
@@ -163,13 +161,9 @@ public class Card501_095 extends AbstractEpicEventDeployable {
                                                         );
                                                     }
                                                 }
-                                                List<PhysicalCard> sites = new ArrayList<PhysicalCard>();
-                                                sites.add(bunker);
-                                                if (landingPlatform != null) {
-                                                    sites.add(landingPlatform);
-                                                }
+
                                                 action.appendEffect(
-                                                        new BlowAwayEffect(action, sites) {
+                                                        new BlowAwayEffect(action, bunker) {
                                                             @Override
                                                             protected List<ActionProxy> getBlowAwayActionProxies(SwccgGame game, BlowAwayState blowAwayState) {
                                                                 ActionProxy actionProxy = new AbstractActionProxy() {
