@@ -6,6 +6,7 @@ import com.gempukku.swccgo.cards.conditions.PilotingCondition;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
@@ -25,18 +26,18 @@ import java.util.List;
  * Set: Set 22
  * Type: Character
  * Subtype: Rebel
- * Title: Nien Nunb (V)
+ * Title: Nien Nunb, Sullustian Smuggler
  */
 public class Card501_056 extends AbstractAlienRebel {
     public Card501_056() {
-        super(Side.LIGHT, 2, 2, 2, 2, 4, "Nien Nunb", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setVirtualSuffix(true);
-        setLore("Brilliant navigator. Former SoroSuub employee. Turned to pirating when that corporation backed the Empire. Tall for a Sullustan.");
+        super(Side.LIGHT, 2, 2, 2, 2, 4, "Nien Nunb, Sullustian Smuggler", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Brilliant navigator. Former SoroSuub employee. Turned to pirating when that corporation backed the Empire. Tall for a Sullustan. Smuggler.");
         setGameText("Adds 2 to power of anything he pilots. While piloting a freighter, " +
                 "it is defense value +2 and opponent’s immunity to attrition is limited to < 7 here (< 5 if Lando piloting here).");
-        addIcons(Icon.DEATH_STAR_II, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
+        addKeyword(Keyword.SMUGGLER);
         setSpecies(Species.SULLUSTAN);
-        setTestingText("Nien Nunb (V)");
+        setTestingText("Nien Nunb, Sullustian Smuggler");
     }
 
     @Override
