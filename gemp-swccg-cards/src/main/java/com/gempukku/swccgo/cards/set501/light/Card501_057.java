@@ -46,7 +46,7 @@ public class Card501_057 extends AbstractUsedOrLostInterrupt {
     public Card501_057() {
         super(Side.LIGHT, 5, "I’m Ready For Anything", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("For remainder of turn, players may only fire one weapon at Cantina and [Ref2] sites. " +
+        setGameText("USED: For remainder of turn, players may only fire one weapon at Cantina and [Ref2] sites. " +
                 "OR If Mara in battle add one to a just drawn destiny (two if at a [Ref2] site). " +
                 "LOST: Deploy Mara (with Anakin’s Lightsaber on her) from hand and/or Reserve Deck (reshuffle).");
         addIcons(Icon.VIRTUAL_SET_22);
