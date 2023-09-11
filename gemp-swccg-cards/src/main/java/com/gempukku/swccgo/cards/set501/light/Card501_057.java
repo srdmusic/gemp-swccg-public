@@ -6,6 +6,7 @@ import com.gempukku.swccgo.cards.conditions.FiredWeaponsInBattleCondition;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -15,23 +16,22 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.decisions.YesNoDecision;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
-import com.gempukku.swccgo.logic.effects.DeployCardsSimultaneouslyEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
-import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardCombinationFromHandAndOrReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandOrReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromHandEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromHandEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeFiredModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.StandardEffect;
+import com.gempukku.swccgo.logic.timing.PassthruEffect;
 
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -56,10 +56,9 @@ public class Card501_057 extends AbstractUsedOrLostInterrupt {
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
-        String opponent = game.getOpponent(playerId);
 
         // Check condition(s)
-        if (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, opponent)
+        if (TriggerConditions.isDestinyJustDrawn(game, effectResult)
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.Mara_Jade)) {
 
             final int modifierAmount = GameConditions.isDuringBattleAt(game, Filters.and(Filters.icon(Icon.REFLECTIONS_II), Filters.site)) ? 2 : 1;
@@ -112,113 +111,63 @@ public class Card501_057 extends AbstractUsedOrLostInterrupt {
         );
         actions.add(action1);
 
-        final PlayInterruptAction action2 = new PlayInterruptAction(game, self, CardSubtype.LOST);
-        action2.setText("Deploy Mara (with Anakin’s Lightsaber on her)");
-        // Allow response(s)
-        action2.allowResponses("Deploy Mara (with Anakin’s Lightsaber on her)",
-                new RespondablePlayCardEffect(action2) {
-                    @Override
-                    protected void performActionResults(Action targetingAction) {
-                        final Collection<PhysicalCard> cardsInHand = game.getGameState().getHand(playerId);
-                        final Collection<PhysicalCard> maraInHand = Filters.filter(cardsInHand, game, Filters.Mara_Jade);
-                        final Collection<PhysicalCard> anakinsLightsaberInHand = Filters.filter(cardsInHand, game, Filters.title(Title.Anakins_Lightsaber));
-
-                        if (!maraInHand.isEmpty() && !anakinsLightsaberInHand.isEmpty()) {
-                            action2.appendTargeting(
-                                    new PlayoutDecisionEffect(action2, playerId,
-                                            new YesNoDecision("You have both Mara Jade and Anakin's Lightsaber in hand. Do you want to search Reserve Deck as well?") {
-                                                @Override
-                                                protected void yes() {
-                                                    action2.setActionMsg("Choose Mara Jade and Anakin's Lightsaber from hand and/or Reserve Deck");
-                                                    // Perform result(s)
-                                                    action2.appendEffect(getChooseCardsEffect(action2));
-                                                }
-
-                                                @Override
-                                                protected void no() {
-                                                    action2.setActionMsg("Deploy Mara Jade and Anakin's Lightsaber from hand");
-                                                    action2.appendTargeting(
-                                                            new ChooseCardFromHandEffect(action2, playerId, Filters.Mara_Jade) {
-                                                                @Override
-                                                                public String getChoiceText(int numCardsToChoose) {
-                                                                    return "Choose Mara Jade";
-                                                                }
-
-                                                                @Override
-                                                                protected void cardSelected(SwccgGame game, final PhysicalCard maraJade) {
-                                                                    action2.appendTargeting(
-                                                                            new ChooseCardFromHandEffect(action2, playerId, Filters.title(Title.Anakins_Lightsaber)) {
+        if (GameConditions.isDuringYourPhase(game, self, Phase.DEPLOY)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            action.setText("Deploy Mara with Anakin’s Lightsaber");
+            // Allow response(s)
+            action.allowResponses("Deploy Mara with Anakin’s Lightsaber",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new ChooseCardFromHandOrReserveDeckEffect(action, playerId, Filters.Mara_Jade, true, false) {
+                                        @Override
+                                        protected void cardSelected(SwccgGame game, PhysicalCard firstCardToDeploy) {
+                                            if (GameUtils.getZoneFromZoneTop(firstCardToDeploy.getZone()) == Zone.RESERVE_DECK) {
+                                                action.appendEffect(
+                                                        new DeployCardToLocationFromReserveDeckEffect(action, firstCardToDeploy, Filters.any, false, false, true));
+                                            } else {
+                                                action.appendEffect(
+                                                        new DeployCardToLocationFromHandEffect(action, firstCardToDeploy, Filters.any, false, false));
+                                            }
+                                            action.appendEffect(
+                                                    new PassthruEffect(action) {
+                                                        @Override
+                                                        protected void doPlayEffect(SwccgGame game) {
+                                                            // If Leia is in battle, and we know her matching weapon is available to be deployed from hand or Reserve Deck, deploy it.
+                                                            final PhysicalCard maraJade = Filters.findFirstActive(game, self, Filters.Mara_Jade);
+                                                            if (maraJade != null) {
+                                                                Filter secondCardFilter = Filters.title(Title.Anakins_Lightsaber);
+                                                                if (GameConditions.hasInHandOrDeployableAsIfFromHand(game, playerId, secondCardFilter) || GameConditions.hasInReserveDeck(game, playerId, secondCardFilter)) {
+                                                                    action.appendEffect(
+                                                                            new ChooseCardFromHandOrReserveDeckEffect(action, playerId, secondCardFilter, true, true) {
                                                                                 @Override
-                                                                                public String getChoiceText(int numCardsToChoose) {
-                                                                                    return "Choose Anakin's Lightsaber";
-                                                                                }
-
-                                                                                @Override
-                                                                                protected void cardSelected(SwccgGame game, PhysicalCard anakinsLightsaber) {
-                                                                                    action2.appendEffect(
-                                                                                            new DeployCardsSimultaneouslyEffect(action2, maraJade, false, 0, anakinsLightsaber, false, 0)
-                                                                                    );
+                                                                                protected void cardSelected(SwccgGame game, PhysicalCard secondCardToDeploy) {
+                                                                                    if (GameUtils.getZoneFromZoneTop(secondCardToDeploy.getZone()) == Zone.RESERVE_DECK) {
+                                                                                        action.appendEffect(
+                                                                                                new DeployCardToTargetFromReserveDeckEffect(action, secondCardToDeploy, Filters.sameCardId(maraJade), false, false, true));
+                                                                                    } else {
+                                                                                        action.appendEffect(
+                                                                                                new DeployCardToTargetFromHandEffect(action, secondCardToDeploy, Filters.sameCardId(maraJade), false, false));
+                                                                                    }
                                                                                 }
                                                                             }
                                                                     );
                                                                 }
                                                             }
-                                                    );
-                                                }
-                                            }
-                                    )
+                                                        }
+                                                    }
+                                            );
+                                        }
+                                    }
                             );
-                        } else {
-                            action2.setActionMsg("Deploy Mara Jade and Anakin's Lightsaber from hand and/or Reserve Deck");
-                            // Perform result(s)
-                            action2.appendEffect(getChooseCardsEffect(action2));
                         }
                     }
-                }
-        );
-        actions.add(action2);
+            );
+            actions.add(action);
+        }
 
         return actions;
-    }
-
-    private StandardEffect getChooseCardsEffect(final Action action) {
-        return new ChooseCardCombinationFromHandAndOrReserveDeckEffect(action) {
-            @Override
-            public String getChoiceText(SwccgGame game, Collection<PhysicalCard> cardsSelected) {
-                return "Choose Mara Jade and Anakin's Lightsaber from hand and/or Reserve Deck";
-            }
-
-            @Override
-            public Filter getValidToSelectFilter(SwccgGame game, Collection<PhysicalCard> cardsSelected) {
-                String playerId = action.getPerformingPlayer();
-                GameState gameState = game.getGameState();
-                Collection<PhysicalCard> cardsToChooseFrom = new LinkedList<PhysicalCard>(gameState.getHand(playerId));
-                cardsToChooseFrom.addAll(gameState.getCardPile(playerId, Zone.RESERVE_DECK));
-
-                if (cardsSelected.isEmpty()) {
-                    Collection<PhysicalCard> maraJades = Filters.filter(cardsToChooseFrom, game, Filters.Mara_Jade);
-                    return Filters.in(maraJades);
-                } else if (cardsSelected.size() == 1) {
-                    PhysicalCard maraJade = cardsSelected.iterator().next();
-                    return Filters.and(Filters.title(Title.Anakins_Lightsaber), Filters.deployableSimultaneouslyWith(action.getActionSource(), maraJade, false, 0, false, 0));
-                }
-                return Filters.none;
-            }
-
-            @Override
-            public boolean isSelectionValid(SwccgGame game, Collection<PhysicalCard> cardsSelected) {
-                return (cardsSelected.size() == 2);
-            }
-
-            @Override
-            protected void cardsChosen(List<PhysicalCard> cardsChosen) {
-                PhysicalCard maraJade = cardsChosen.get(0);
-                PhysicalCard anakinsLightsaber = cardsChosen.get(1);
-
-                // Perform result(s)
-                action.appendEffect(
-                        new DeployCardsSimultaneouslyEffect(action, maraJade, false, 0, anakinsLightsaber, false, 0));
-            }
-        };
     }
 }
