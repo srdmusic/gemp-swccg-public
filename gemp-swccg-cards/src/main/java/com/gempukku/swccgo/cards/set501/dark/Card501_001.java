@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class Card501_001 extends AbstractFirstOrder {
     public Card501_001() {
-        super(Side.DARK, 4, 5, 5, 3, 6, "Ap'lek", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 3, 5, 5, 3, 6, "Ap'lek", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Knight of Ren.");
         setGameText("Adds one battle destiny. If opponent initiates battle at same location, they lose 1 Force; add its destiny number to Ap'lek's power, or power of Night Buzzard he is piloting. End of your turn: * Use 1 or [Skull].");
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.WARRIOR, Icon.MAINTENANCE, Icon.VIRTUAL_SET_22);
