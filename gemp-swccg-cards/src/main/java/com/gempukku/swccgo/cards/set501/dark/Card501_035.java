@@ -38,6 +38,7 @@ public class Card501_035 extends AbstractUsedOrLostInterrupt {
         addComboCardTitles(Title.Force_Push, Title.Podracer_Collision);
         setGameText("USED: If you just verified opponent's Reserve Deck, search that Reserve Deck and place one Interrupt (except Houjix) found there out of play. LOST: Once per game, exchange two cards from hand with any one card from Force Pile; reshuffle.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
+        addImmuneToCardTitle("Too Close For Comfort");
         setTestingText("Force Push & Podracer Collision");
     }
 
