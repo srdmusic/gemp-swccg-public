@@ -37,7 +37,9 @@ public class Card501_060 extends AbstractRebel {
         super(Side.LIGHT, 3, 2, 2, 2, 4, "Echo Base Trooper", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("The personnel assigned to protect Echo Base are veteran warriors. Troopers such as Jess Allashane are trained to counter Imperial tactics in cold environment.");
-        setGameText("Power +1 on Hoth. Once per turn, may deploy a non-location card with 'Echo' in title from Reserve Deck; reshuffle. If on Hoth (or present with a Scomp link), once per turn, may reveal the top card of each player's Reserve Deck.");
+        setGameText(" Power +1 on Hoth. " +
+                "Once per turn, may deploy a card with 'Echo' in title (except Echo Base Trooper or a location), from Reserve Deck; reshuffle. " +
+                "Once per turn, if on Hoth (or present with a Scomp link), may reveal the top card of each player's Reserve Deck.");
         addIcons(Icon.HOTH, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
         addKeywords(Keyword.ECHO_BASE_TROOPER);
         setTestingText("Echo Base Trooper (V)");
@@ -65,7 +67,7 @@ public class Card501_060 extends AbstractRebel {
             action.appendUsage(
                     new OncePerTurnEffect(action));
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.not(Filters.location), Filters.or(Filters.titleContains("Echo"), Filters.titleContains("Echos"), Filters.titleContains("Echoes"))), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.not(Filters.or(Filters.title("Echo Base Trooper"), Filters.location)), Filters.or(Filters.titleContains("Echo"), Filters.titleContains("Echos"), Filters.titleContains("Echoes"))), true));
 
             actions.add(action);
         }
