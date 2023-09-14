@@ -40,14 +40,14 @@ import java.util.List;
  * Set: Set 22
  * Type: Interrupt
  * Subtype: Used Or Lost
- * Title: I’m Ready For Anything
+ * Title: I'm Ready For Anything
  */
 public class Card501_057 extends AbstractUsedOrLostInterrupt {
     public Card501_057() {
         super(Side.LIGHT, 5, "I’m Ready For Anything", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("USED: For remainder of turn, players may only fire one weapon at Cantina and [Ref2] sites. " +
-                "OR If Mara in battle add one to a just drawn destiny (two if at a [Ref2] site). " +
+                "OR If Mara in battle add one to a just drawn battle destiny (two if at a [Ref2] site). " +
                 "LOST: Deploy Mara (with Anakin’s Lightsaber on her) from hand and/or Reserve Deck (reshuffle).");
         addIcons(Icon.VIRTUAL_SET_22);
         setTestingText("I’m Ready For Anything");
@@ -58,7 +58,7 @@ public class Card501_057 extends AbstractUsedOrLostInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         // Check condition(s)
-        if (TriggerConditions.isDestinyJustDrawn(game, effectResult)
+        if (TriggerConditions.isBattleDestinyJustDrawn(game, effectResult)
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.Mara_Jade)) {
 
             final int modifierAmount = GameConditions.isDuringBattleAt(game, Filters.and(Filters.icon(Icon.REFLECTIONS_II), Filters.site)) ? 2 : 1;
