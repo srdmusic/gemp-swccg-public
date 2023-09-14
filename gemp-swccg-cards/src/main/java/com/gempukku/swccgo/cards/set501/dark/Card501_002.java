@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
+import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.cards.effects.CancelWeaponTargetingEffect;
@@ -31,18 +31,18 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Playtesting
+ * Set: Set 22
  * Type: Interrupt
  * Subtype: Used or Lost
  * Title: A Fine Addition to my Collection
  */
-public class Card501_002 extends AbstractUsedOrLostInterrupt {
+public class Card501_002 extends AbstractLostInterrupt {
     public Card501_002() {
         super(Side.DARK, 5, "A Fine Addition to my Collection", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("USED: If Grievous just swung a stolen lightsaber, add one battle destiny. " +
-                "LOST: Cancel an attempt to target Grievous with a lightsaber. " +
-                "OR Deploy any lightsaber from your Lost Pile on Grievous (who may use that lightsaber).");
+        setGameText("If Grievous just swung a lightsaber, add one battle destiny. " +
+                "OR Cancel an attempt to target Grievous with a lightsaber. " +
+                "OR Deploy any lightsaber from your Lost Pile on Grievous (he may use it until he is no longer carrying it).");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
         setTestingText("A Fine Addition to my Collection");
     }
@@ -90,10 +90,10 @@ public class Card501_002 extends AbstractUsedOrLostInterrupt {
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
         // Check condition(s)
-        if (TriggerConditions.weaponJustFiredBy(game, effectResult, Filters.and(Filters.stolen, Filters.lightsaber), Filters.Grievous)
+        if (TriggerConditions.weaponJustFiredBy(game, effectResult, Filters.lightsaber, Filters.Grievous)
                 && GameConditions.canAddBattleDestinyDraws(game, self)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setText("Add one battle destiny");
             // Allow response(s)
             action.allowResponses(
