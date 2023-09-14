@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.CancelForceDrainEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -11,16 +10,14 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -38,7 +35,8 @@ public class Card501_010 extends AbstractLostInterrupt {
     public Card501_010() {
         super(Side.DARK, 4, Title.Walker_Garrison, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("When efficiently deployed, a squadron of AT-ATs can quickly take control of a wide area, making it easy for imperial forces to dominate a planet.");
-        setGameText("Take [Premium] Veers or a [Premium] AT-AT into hand from Reserve Deck; reshuffle. OR Cancel an opponent's Force drain at a site if your AT-AT occupies a related site. OR Once per game, for remainder of turn, your Force drains are +1 at Hoth sites where you have a piloted AT-AT.");
+        setGameText("If your [Hoth] objective on table, choose: Take [Premium] Veers or a [Premium] AT-AT into hand from Reserve Deck; reshuffle. " +
+                "OR Cancel a Force drain at a site if your AT-AT occupies a related battleground site. OR Retrieve an AT-AT Cannon.");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_22);
         setTestingText("Walker Garrison (V)");
     }
@@ -50,7 +48,8 @@ public class Card501_010 extends AbstractLostInterrupt {
         GameTextActionId gameTextActionId = GameTextActionId.WALKER_GARRISON_V__UPLOAD_CARD;
 
         // Check condition(s)
-        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.icon(Icon.HOTH), Filters.Objective))
+                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setText("Take Veers or an AT-AT into hand from Reserve Deck");
@@ -69,26 +68,19 @@ public class Card501_010 extends AbstractLostInterrupt {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.WALKER_GARRISON_V__ADD_TO_FORCE_DRAINS;
-
-        final Filter siteFilter = Filters.and(Filters.Hoth_site, Filters.sameLocationAs(self, Filters.and(Filters.your(playerId), Filters.piloted, Filters.AT_AT)));
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
-        if (GameConditions.canSpotLocation(game, siteFilter)) {
+        if (GameConditions.canSpot(game, self, Filters.and(Filters.icon(Icon.HOTH), Filters.Objective))) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Make Force drains +1 at Hoth sites");
-            action.appendUsage(
-                    new OncePerGameEffect(action));
+            action.setText("Retrieve AT-AT Canon");
             // Allow response(s)
             action.allowResponses(
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
-                            action.appendEffect(
-                                    new AddUntilEndOfTurnModifierEffect(action,
-                                        new ForceDrainModifier(self, siteFilter, 1, playerId),
-                                            "Makes Force drains +1 at Hoth sites where you have a piloted AT-AT"));
+                            action.appendEffect(new RetrieveCardEffect(action, playerId, Filters.AT_AT_Cannon));
                         }
                     }
             );
@@ -103,6 +95,7 @@ public class Card501_010 extends AbstractLostInterrupt {
         // Check condition(s)
         if (TriggerConditions.forceDrainInitiatedAt(game, effectResult, Filters.and(Filters.site, Filters.relatedLocationTo(self,
                 Filters.and(Filters.occupies(playerId), Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.AT_AT, Filters.piloted))))))
+                && GameConditions.canSpot(game, self, Filters.and(Filters.icon(Icon.HOTH), Filters.Objective))
                 && GameConditions.canCancelForceDrain(game, self)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
