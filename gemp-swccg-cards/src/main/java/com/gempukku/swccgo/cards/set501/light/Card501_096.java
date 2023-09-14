@@ -35,15 +35,18 @@ import java.util.List;
 /**
  * Set: Set 22
  * Type: Objective
- * Title: Protect The Ridge / Prepare For Ground Assault
+ * Title: The Empire Knows We're Here / Prepare For Ground Assault
  */
 public class Card501_096 extends AbstractObjective {
     public Card501_096() {
-        super(Side.LIGHT, 0, "Protect The Ridge", ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 0, "The Empire Knows We're Here", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Hoth system and Main Power Generators. \n" +
-                "For the remainder of game, 'Hoth Energy Shield Rules' do not extend beyond 1st Marker. You may not deploy Ice Storm, systems, or [Special Edition] Leia. Echo Base Garrison is immune to Alter. Once per turn, may deploy a Hoth location from Reserve Deck; reshuffle. \n" +
-                "While this side up, Force drain +1 at Hoth system. During your control phase, if you occupy two marker sites, retrieve 1 Force. \n" +
+        setGameText("For the remainder of game, 'Hoth Energy Shield Rules' do not extend beyond 1st Marker. " +
+                "You may not deploy Ice Storm, [SE] Leia, or characters of ability > 4. " +
+                "Echo Base Garrison is immune to Alter. " +
+                "Once per turn, may deploy a Marker site or Echo War Room from Reserve Deck; reshuffle." +
+                "While this side up, Force drain +1 at Hoth system. " +
+                "During your control phase, retrieve one Force if you occupy two battleground marker sites." +
                 "Flip this card if opponent occupies a Hoth location.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_22);
         setTestingText("Protect The Ridge");
@@ -73,7 +76,7 @@ public class Card501_096 extends AbstractObjective {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotBeCoveredByHothEnergyShieldModifier(self, Filters.or(Filters.Second_Marker, Filters.Third_Marker)));
-        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Ice_Storm, Filters.system, Filters.and(Icon.SPECIAL_EDITION, Filters.Leia)), self.getOwner()));
+        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Ice_Storm, Filters.and(Icon.SPECIAL_EDITION, Filters.Leia), Filters.and(Filters.character, Filters.abilityMoreThan(4))), self.getOwner()));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.title("Echo Base Garrison"), Title.Alter));
 
         modifiers.add(new ForceDrainModifier(self, Filters.Hoth_system, 1, self.getOwner()));
@@ -84,21 +87,21 @@ public class Card501_096 extends AbstractObjective {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.PROTECT_THE_RIDE__DOWNLOAD_LOCATION;
+        GameTextActionId gameTextActionId = GameTextActionId.THE_EMPIRE_KNOWS_WERE_HERE__DOWNLOAD_LOCATION;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Hoth location from Reserve Deck");
-            action.setActionMsg("Deploy a Hoth location from Reserve Deck");
+            action.setText("Deploy a location from Reserve Deck");
+            action.setActionMsg("Deploy a Marker site or Echo War Room from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Hoth_location, true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.marker_site, Filters.and(Filters.Echo_site, Filters.war_room)), true));
 
             actions.add(action);
         }

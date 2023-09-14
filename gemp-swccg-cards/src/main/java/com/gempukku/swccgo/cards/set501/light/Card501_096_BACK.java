@@ -31,10 +31,9 @@ import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.ShuffleUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
-import com.gempukku.swccgo.logic.modifiers.FiresForFreeModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
-import com.gempukku.swccgo.logic.modifiers.IsPoweredModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeCoveredByHothEnergyShieldModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -48,33 +47,38 @@ import java.util.List;
 /**
  * Set: Set 22
  * Type: Objective
- * Title: Protect The Ridge / Prepare For Ground Assault
+ * Title: The Empire Knows We're Here  / Prepare For Ground Assault
  */
 public class Card501_096_BACK extends AbstractObjective {
     public Card501_096_BACK() {
         super(Side.LIGHT, 7, "Prepare For Ground Assault", ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, Echo Base troopers and Rebel starships are defense value +2. Your artillery weapons on Hoth are powered, fire for free, and targets they hit are forfeit -3. Attrition against opponent is +1 for each Rebel leader you have in battle. When you initiate battle, may look at the top X cards of Used Pile and take one into hand, where X = number of Hoth battlegrounds you occupy; reshuffle.\n" +
+        setGameText("While this side up, the game text of your Admiral’s Orders and unique (•) characters (except troopers, gunners, or pilots) is canceled. " +
+                "Rebel starships are defense value +2. " +
+                "Attrition against opponent is +1 for each leader you have in battle. " +
+                "When you initiate battle, may look at the top X cards of Used Pile and take one into hand, " +
+                "where X = number of Hoth battlegrounds you occupy; reshuffle." +
                 "Flip this card if opponent does not occupy a Hoth location.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_22);
         setTestingText("Prepare For Ground Assault");
     }
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.PROTECT_THE_RIDE__DOWNLOAD_LOCATION;
+        GameTextActionId gameTextActionId = GameTextActionId.THE_EMPIRE_KNOWS_WERE_HERE__DOWNLOAD_LOCATION;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Hoth location from Reserve Deck");
-            action.setActionMsg("Deploy a Hoth location from Reserve Deck");
+            action.setText("Deploy a location from Reserve Deck");
+            action.setActionMsg("Deploy a Marker site or Echo War Room from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Hoth_location, true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.marker_site, Filters.and(Filters.Echo_site, Filters.war_room)), true));
+
             return Collections.singletonList(action);
         }
         return null;
@@ -86,14 +90,16 @@ public class Card501_096_BACK extends AbstractObjective {
         String opponent = game.getOpponent(playerId);
 
         List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.your(playerId),
+                Filters.or(Filters.Admirals_Order, Filters.and(Filters.unique, Filters.character)),
+                Filters.not(Filters.or(Filters.trooper, Filters.gunner, Filters.pilot)))));
+
         modifiers.add(new MayNotBeCoveredByHothEnergyShieldModifier(self, Filters.or(Filters.Second_Marker, Filters.Third_Marker)));
-        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Ice_Storm, Filters.system, Filters.and(Icon.SPECIAL_EDITION, Filters.Leia)), playerId));
+        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Ice_Storm, Filters.and(Icon.SPECIAL_EDITION, Filters.Leia), Filters.and(Filters.character, Filters.abilityMoreThan(4))), self.getOwner()));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.title("Echo Base Garrison"), Title.Alter));
 
-        modifiers.add(new DefenseValueModifier(self, Filters.or(Filters.Echo_Base_trooper, Filters.Rebel_starship), 2));
-        modifiers.add(new IsPoweredModifier(self, Filters.and(Filters.your(self), Filters.artillery_weapon, Filters.on(Title.Hoth))));
-        modifiers.add(new FiresForFreeModifier(self, Filters.and(Filters.your(self), Filters.artillery_weapon, Filters.on(Title.Hoth))));
-        modifiers.add(new AttritionModifier(self, new InBattleCondition(self, Filters.Rebel_leader), new OnTableEvaluator(self, Filters.and(Filters.participatingInBattle, Filters.Rebel_leader)), opponent));
+        modifiers.add(new DefenseValueModifier(self, Filters.Rebel_starship, 2));
+        modifiers.add(new AttritionModifier(self, new InBattleCondition(self, Filters.leader), new OnTableEvaluator(self, Filters.and(Filters.participatingInBattle, Filters.leader)), opponent));
         return modifiers;
     }
 
