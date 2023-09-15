@@ -42,7 +42,7 @@ public class Card501_088 extends AbstractNormalEffect {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Twilight Is Upon Me", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("When a Jedi dies, the spirit spreads through the Force and touches the living.");
-        setGameText("If your [Death Star II] Epic Event on table, deploy on table. " +
+        setGameText("If His Destiny on table, deploy on table. " +
                 "Unless Wokling on table, your total Force generation is +1. " +
                 "Once per turn, may deploy a mobile docking bay from Reserve Deck; reshuffle." +
                 "Once per game, during your move phase, Luke may relocate to same battleground as Prophecy Of The Force. [Immune to Alter].");
@@ -53,7 +53,7 @@ public class Card501_088 extends AbstractNormalEffect {
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.and(Filters.icon(Icon.DEATH_STAR_II), Filters.Epic_Event));
+        return Filters.canSpot(game, self, Filters.title(Title.His_Destiny));
     }
 
     @Override
