@@ -42,7 +42,7 @@ public class Card501_096 extends AbstractObjective {
         super(Side.LIGHT, 0, "The Empire Knows We're Here", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setGameText("For the remainder of game, 'Hoth Energy Shield Rules' do not extend beyond 1st Marker. " +
-                "You may not deploy Ice Storm, [SE] Leia, or characters of ability > 4. " +
+                "You may not deploy Ice Storm, systems, [SE] Leia, or characters of ability > 4. " +
                 "Echo Base Garrison is immune to Alter. " +
                 "Once per turn, may deploy a Marker site or Echo War Room from Reserve Deck; reshuffle." +
                 "While this side up, Force drain +1 at Hoth system. " +
@@ -76,7 +76,7 @@ public class Card501_096 extends AbstractObjective {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new MayNotBeCoveredByHothEnergyShieldModifier(self, Filters.or(Filters.Second_Marker, Filters.Third_Marker)));
-        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Ice_Storm, Filters.and(Icon.SPECIAL_EDITION, Filters.Leia), Filters.and(Filters.character, Filters.abilityMoreThan(4))), self.getOwner()));
+        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Ice_Storm, Filters.system, Filters.and(Icon.SPECIAL_EDITION, Filters.Leia), Filters.and(Filters.character, Filters.abilityMoreThan(4))), self.getOwner()));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.title("Echo Base Garrison"), Title.Alter));
 
         modifiers.add(new ForceDrainModifier(self, Filters.Hoth_system, 1, self.getOwner()));

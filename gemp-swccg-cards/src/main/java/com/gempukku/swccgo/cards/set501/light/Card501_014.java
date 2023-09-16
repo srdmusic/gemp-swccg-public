@@ -43,9 +43,9 @@ public class Card501_014 extends AbstractUsedOrLostInterrupt {
         super(Side.LIGHT, 3, "Attack Pattern Delta", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Snowspeeder attack plan devised by Commander Skywalker and Rebel tactician Beryl Chifonage. Single-file formation protects the squadron as the leader draws fire.");
-        setGameText("USED: Cancel Crash Landing or High-Speed Tactics." +
-                "LOST: If you occupy three Hoth battlegrounds with T-47s, cancel a non-[immune to Sense] interrupt just played. " +
-                "OR Target a vehicle. For remainder of turn, target is maneuver +1 and immune to attrition.");
+        setGameText("USED: Cancel Crash Landing or High-speed Tactics. " +
+                "LOST: Target a T-47. For remainder of turn, target is maneuver +1 and immune to attrition. " +
+                "OR If you occupy three Hoth battlegrounds with T-47s, cancel a non-[Immune to Sense] Interrupt just played.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_22);
         setTestingText("Attack Pattern Delta (V)");
     }
@@ -56,13 +56,13 @@ public class Card501_014 extends AbstractUsedOrLostInterrupt {
 
         // Check condition(s)
         if (GameConditions.isDuringYourTurn(game, self)
-                && GameConditions.canTarget(game, self, Filters.vehicle)) {
+                && GameConditions.canTarget(game, self, Filters.T_47)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Target a vehicle");
+            action.setText("Target a T-47");
             // Choose target(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose vehicle", Filters.vehicle) {
+                    new TargetCardOnTableEffect(action, playerId, "Choose T-47", Filters.T_47) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
                             action.addAnimationGroup(targetedCard);

@@ -5,40 +5,33 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfUsedPileAndChooseCardsToTakeIntoHandEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
-import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Variable;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import com.gempukku.swccgo.logic.decisions.IntegerAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
-import com.gempukku.swccgo.logic.effects.ModifyForfeitEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.ShuffleUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
-import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeCoveredByHothEnergyShieldModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeUsedToSatisfyAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.HitResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -52,12 +45,12 @@ import java.util.List;
 public class Card501_096_BACK extends AbstractObjective {
     public Card501_096_BACK() {
         super(Side.LIGHT, 7, "Prepare For Ground Assault", ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, the game text of your Admiral’s Orders and unique (•) characters (except troopers, gunners, or pilots) is canceled. " +
-                "Rebel starships are defense value +2. " +
-                "Attrition against opponent is +1 for each leader you have in battle. " +
+        setGameText("While this side up, Hoth Sentry, Sunsdown and the game text of your " +
+                "Admiral’s Orders and unique (•) characters (except troopers, gunners, or pilots) is canceled. " +
                 "When you initiate battle, may look at the top X cards of Used Pile and take one into hand, " +
-                "where X = number of Hoth battlegrounds you occupy; reshuffle." +
-                "Flip this card if opponent does not occupy a Hoth location.");
+                "where X = number of Hoth battlegrounds you occupy; reshuffle. " +
+                "Cards ‘hit’ by your vehicle weapons or artillery weapons may not be used to satisfy attrition." +
+                "Flip this card if opponent does not occupy your Hoth location.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_22);
         setTestingText("Prepare For Ground Assault");
     }
@@ -87,19 +80,18 @@ public class Card501_096_BACK extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
-
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.your(playerId),
-                Filters.or(Filters.Admirals_Order, Filters.and(Filters.unique, Filters.character)),
-                Filters.not(Filters.or(Filters.trooper, Filters.gunner, Filters.pilot)))));
 
+        // Front Side Modifiers
         modifiers.add(new MayNotBeCoveredByHothEnergyShieldModifier(self, Filters.or(Filters.Second_Marker, Filters.Third_Marker)));
         modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Ice_Storm, Filters.and(Icon.SPECIAL_EDITION, Filters.Leia), Filters.and(Filters.character, Filters.abilityMoreThan(4))), self.getOwner()));
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.title("Echo Base Garrison"), Title.Alter));
 
-        modifiers.add(new DefenseValueModifier(self, Filters.Rebel_starship, 2));
-        modifiers.add(new AttritionModifier(self, new InBattleCondition(self, Filters.leader), new OnTableEvaluator(self, Filters.and(Filters.participatingInBattle, Filters.leader)), opponent));
+        // Back Side Modifiers
+        Filter characterFilter = Filters.and(Filters.unique, Filters.character, Filters.not(Filters.or(Filters.trooper, Filters.gunner, Filters.pilot)));
+        modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.your(playerId),
+                Filters.or(Filters.Hoth_Sentry, Filters.Sunsdown, Filters.Admirals_Order, characterFilter))));
+
+        modifiers.add(new MayNotBeUsedToSatisfyAttritionModifier(self, Filters.hitBy(Filters.and(Filters.your(playerId), Filters.or(Filters.vehicle_weapon, Filters.artillery_weapon)))));
         return modifiers;
     }
 
@@ -150,7 +142,7 @@ public class Card501_096_BACK extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && !GameConditions.occupies(game, opponent,  SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Hoth_location)) {
+                && !GameConditions.occupies(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(playerId), Filters.Hoth_location))) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setSingletonTrigger(true);
@@ -159,19 +151,6 @@ public class Card501_096_BACK extends AbstractObjective {
             // Perform result(s)
             action.appendEffect(
                     new FlipCardEffect(action, self));
-            actions.add(action);
-        }
-
-        // Check condition(s)
-        if (TriggerConditions.justHitBy(game, effectResult, Filters.any, Filters.and(Filters.your(self), Filters.artillery_weapon, Filters.on(Title.Hoth)))) {
-            PhysicalCard cardHit = ((HitResult) effectResult).getCardHit();
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Make " + GameUtils.getFullName(cardHit) + " forfeit -3");
-            action.setActionMsg("Make " + GameUtils.getCardLink(cardHit) + " forfeit -3");
-            // Perform result(s)
-            action.appendEffect(
-                    new ModifyForfeitEffect(action, cardHit, -3));
             actions.add(action);
         }
 

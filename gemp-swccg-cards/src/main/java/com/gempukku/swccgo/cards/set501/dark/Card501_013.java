@@ -41,7 +41,7 @@ public class Card501_013 extends AbstractFirstOrder {
     public Card501_013() {
         super(Side.DARK, 1, 6, 6, 5, 7, "Kylo, Master Of The Knights Of Ren", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Knight of Ren. Leader.");
-        setGameText("Adds 3 to power of anything he pilots. While in battle alone, your total power here is +3, battle destiny draws may not be added and, once per game during opponent's turn, may take an Interrupt into hand from Reserve Deck; reshuffle. Immune to attrition < 4 (< 5 if alone).");
+        setGameText("Adds 3 to power of anything he pilots. While in battle alone, your total power here is +3, battle destiny draws may not be added and, once per game during opponent's turn, may [upload] an Interrupt (except Ghhhk). Immune to attrition < 4 (< 5 if alone).");
         addPersona(Persona.KYLO);
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
         addKeywords(Keyword.LEADER, Keyword.KNIGHT_OF_REN);
@@ -73,13 +73,13 @@ public class Card501_013 extends AbstractFirstOrder {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Take Interrupt into hand from Reserve Deck");
-            action.setActionMsg("Take an Interrupt into hand from Reserve Deck");
+            action.setActionMsg("Take an Interrupt (except Ghhhk) into hand from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Interrupt, true));
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.and(Filters.Interrupt, Filters.not(Filters.Ghhhk)), true));
             return Collections.singletonList(action);
         }
         return null;
