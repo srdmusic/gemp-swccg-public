@@ -19,7 +19,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
-import com.gempukku.swccgo.logic.effects.choose.DrawCardsIntoHandFromForcePileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DrawCardsIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToCardTitleWithOwnerModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -45,7 +45,7 @@ public class Card501_133 extends AbstractAlien {
         setLore("Twins. Thieves. Con artists. Spies. Swindlers. Double agents. Brea and Senni use their natural charm to sway the unwary on the fringe of society.");
         setGameText("Assassins. Power and Forfeit +2 at a Cantina or Night Club. " +
                 "Twice during battle, may double your just drawn battle destiny of 2. " +
-                "Twice per game, if you have exactly 2 cards in hand, may draw 2 cards from Force Pile. Immune to Kiffex.");
+                "Twice per game, if you have exactly 2 cards in hand, may draw 2 cards from Reserve Deck. Immune to Kiffex.");
         addIcon(Icon.WARRIOR, 2);
         addKeywords(Keyword.SPY, Keyword.THIEF, Keyword.FEMALE, Keyword.ASSASSIN);
         addIcons(Icon.VIRTUAL_SET_22);
@@ -105,7 +105,7 @@ public class Card501_133 extends AbstractAlien {
                     new TwicePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DrawCardsIntoHandFromForcePileEffect(action, playerId, 2));
+                    new DrawCardsIntoHandFromReserveDeckEffect(action, playerId, 2));
             return Collections.singletonList(action);
         }
         return null;

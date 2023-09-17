@@ -21,6 +21,7 @@ import com.gempukku.swccgo.logic.conditions.PhaseCondition;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromCardModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeFiredModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
@@ -41,9 +42,10 @@ public class Card501_003 extends AbstractObjective {
         super(Side.DARK, 0, Title.The_Shield_Will_Be_Down_In_Moments, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy 5th Marker, [Set 17] 4th Marker, 1st Marker, and [Set 9] Prepare for a Surface Attack. " +
-                "For remainder of game, you may not fire AT-AT cannons during your control phase or deploy Rebel Base Occupation or Sunsdown. " +
-                "While this side up, once per turn, may deploy a Hoth location from Reserve Deck; reshuffle. Opponent loses no more than 1 Force to You May Start Your Landing. " +
-                "Flip this card if Main Power Generators is 'blown away.'");
+                "For remainder of game, you may not deploy Rebel Base Occupation, Sunsdown, or Dark Jedi (except Vader). AT-AT cannons may not fire during your control phase. Echo Base Sensors is canceled. " +
+                "Echo Base Sensors is canceled." +
+                "While this side up, once per turn, may [download] a Hoth location. Opponent loses no more than 1 Force to You May Start Your Landing." +
+                "Flip this card if Main Power Generators 'blown away.'");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_22);
         setTestingText("The Shield Will Be Down in Moments");
     }
@@ -92,7 +94,10 @@ public class Card501_003 extends AbstractObjective {
                         new MayNotBeFiredModifier(self, Filters.and(Filters.your(self), Filters.AT_AT_Cannon), new PhaseCondition(Phase.CONTROL, playerId)), "AT-AT Cannons can't be fired"));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new MayNotDeployModifier(self, Filters.or(Filters.Rebel_Base_Occupation, Filters.Sunsdown), playerId), null));
+                        new MayNotDeployModifier(self, Filters.or(Filters.Rebel_Base_Occupation, Filters.Sunsdown, Filters.and(Filters.Dark_Jedi, Filters.not(Filters.Vader))), playerId), null));
+        action.appendEffect(
+                new AddUntilEndOfGameModifierEffect(action,
+                        new CancelsGameTextModifier(self, Filters.title("Echo Base Sensors")), null));
         return action;
     }
 
