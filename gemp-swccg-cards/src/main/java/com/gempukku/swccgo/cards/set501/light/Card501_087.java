@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class Card501_087 extends AbstractRebel {
     public Card501_087() {
-        super(Side.LIGHT, 6, 8, 6, 6, 8, "Young Skywalker", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 6, 8, 6, 6, 9, "Young Skywalker", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Scout.");
         setGameText("[Pilot] 2. Deploys -3 to Endor. " +
                 "A Jedi’s Fury does not require His Destiny on table and may be played if a battle just initiated. " +

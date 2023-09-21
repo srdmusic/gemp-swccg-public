@@ -35,7 +35,7 @@ import java.util.List;
  */
 public class Card501_017 extends AbstractDarkJediMasterImperial {
     public Card501_017() {
-        super(Side.DARK, 6, 5, 4, 7, 8, "Palpatine, Galactic Emperor", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 6, 5, 4, 7, 9, "Palpatine, Galactic Emperor", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Leader.");
         setGameText("Never deploys or moves (even if carried) to a site opponent occupies. Once per turn, may take The Empire's Back into hand from Reserve Deck; reshuffle. Opponent may not limit your Force generation at your mobile sites. Immune to attrition.");
         addPersona(Persona.SIDIOUS);
