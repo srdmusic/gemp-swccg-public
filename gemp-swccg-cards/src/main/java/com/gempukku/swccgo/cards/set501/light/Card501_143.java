@@ -66,9 +66,9 @@ public class Card501_143 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DefenseValueModifier(self, self, 1));
-        modifiers.add(new ImmunityToAttritionChangeModifier(self, self, 1));
-        modifiers.add(new ForceDrainModifier(self, Filters.here(self), new AtCondition(self, Filters.attachedTo(self), Filters.battleground), 1, self.getOwner()));
+        modifiers.add(new DefenseValueModifier(self, Filters.hasAttached(self), 1));
+        modifiers.add(new ImmunityToAttritionChangeModifier(self, Filters.hasAttached(self), 1));
+        modifiers.add(new ForceDrainModifier(self, Filters.here(self), new AtCondition(self, Filters.battleground), 1, self.getOwner()));
         return modifiers;
     }
 

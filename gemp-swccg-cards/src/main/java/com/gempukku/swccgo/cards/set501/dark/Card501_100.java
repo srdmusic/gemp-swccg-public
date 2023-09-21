@@ -17,8 +17,11 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.FireWeaponAction;
 import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
+import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -33,11 +36,18 @@ public class Card501_100 extends AbstractAlien {
         setVirtualSuffix(true);
         setArmor(5);
         setLore("Notorious bounty hunter. 'As you wish.'");
-        setGameText("Permanent weapon is •Boba Fett's Blaster Rifle (may target a character or creature for free; draw destiny; if destiny > ability; target captured; otherwise, if destiny +2 > ability, target hit, it's forfeit -3 and opponent loses 1 Force).");
+        setGameText("[Pilot] 2. Permanent weapon is •Boba Fett's Blaster Rifle (may target a character or creature for free; draw destiny; if destiny > ability; target captured; otherwise, if destiny +2 > ability, target hit, it's forfeit -3 and opponent loses 1 Force).");
         addPersona(Persona.BOBA_FETT);
         addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_22);
         addKeywords(Keyword.BOUNTY_HUNTER);
         setTestingText("Boba Fett With Blaster Rifle (V)");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
+        return modifiers;
     }
 
     // Define "Boba Fett's Blaster Rifle" permanent weapon
