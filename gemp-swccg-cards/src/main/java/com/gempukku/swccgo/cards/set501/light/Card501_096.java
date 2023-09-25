@@ -47,7 +47,7 @@ public class Card501_096 extends AbstractObjective {
                 "Once per turn, may deploy a Marker site or Echo War Room from Reserve Deck; reshuffle." +
                 "While this side up, Force drain +1 at Hoth system. " +
                 "During your control phase, retrieve one Force if you occupy two battleground marker sites." +
-                "Flip this card if opponent occupies a Hoth location.");
+                "Flip this card if opponent occupies your Hoth location.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_22);
         setTestingText("Protect The Ridge");
     }
@@ -135,7 +135,7 @@ public class Card501_096 extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && GameConditions.occupies(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Hoth_location)) {
+                && GameConditions.occupies(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(playerId), Filters.Hoth_location))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setSingletonTrigger(true);

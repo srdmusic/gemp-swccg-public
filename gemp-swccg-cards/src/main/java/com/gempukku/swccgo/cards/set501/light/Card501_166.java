@@ -31,7 +31,7 @@ import java.util.List;
  * Title: A Brave Resistance
  */
 public class Card501_166 extends AbstractNormalEffect {
-    protected Card501_166() {
+    public Card501_166() {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Brave Resistance", Uniqueness.UNIQUE, ExpansionSet.SET_9, Rarity.V);
         setLore("");
         setGameText("If Jakku on table, deploy on table. " +

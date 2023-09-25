@@ -36,7 +36,9 @@ public class Card501_100 extends AbstractAlien {
         setVirtualSuffix(true);
         setArmor(5);
         setLore("Notorious bounty hunter. 'As you wish.'");
-        setGameText("[Pilot] 2. Permanent weapon is •Boba Fett's Blaster Rifle (may target a character or creature for free; draw destiny; if destiny > ability; target captured; otherwise, if destiny +2 > ability, target hit, it's forfeit -3 and opponent loses 1 Force).");
+        setGameText("[Pilot] 2. Permanent weapon is •Boba Fett's Blaster Rifle (may target a character for free; " +
+                "draw destiny; if destiny > defense value, target captured; otherwise, " +
+                "if destiny +2 > defense value, target hit, is forfeit -3, and opponent loses 1 Force; may not be retargeted).");
         addPersona(Persona.BOBA_FETT);
         addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_22);
         addKeywords(Keyword.BOUNTY_HUNTER);
