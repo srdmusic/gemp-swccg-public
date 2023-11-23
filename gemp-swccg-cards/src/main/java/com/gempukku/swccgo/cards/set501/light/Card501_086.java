@@ -36,7 +36,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 22
+ * Set: Playtesting
  * Type: Character
  * Subtype: Alien
  * Title: Beilert Valance
@@ -47,7 +47,7 @@ public class Card501_086 extends AbstractAlien {
         setArmor(5);
         setLore("Chorinian. Cyborg. Former miner.");
         setGameText("Adds 2 to the power of anything he pilots. Draws one battle destiny if not able to otherwise. Unless a Jedi here, may cause any character Valance just ‘hit’ to be lost. Once per game, may deploy Cyborg Construct on Valance from Reserve Deck, reshuffle.");
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.MINER);
         setSpecies(Species.CHORINIAN);
         setTestingText(Title.Beilert_Valance);

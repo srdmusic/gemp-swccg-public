@@ -13,12 +13,11 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
-import com.gempukku.swccgo.logic.modifiers.ArmorModifier;
 import com.gempukku.swccgo.logic.modifiers.CancelImmunityToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotReactFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotReactToLocationModifier;
@@ -30,20 +29,20 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 22
+ * Set: Playtesting
  * Type: Character
  * Subtype: First Order
- * Title: Captain Moden Canaday
+ * Title: Captain Moden Canady
  */
 public class Card501_102 extends AbstractFirstOrder {
     public Card501_102() {
-        super(Side.DARK, 2, 3, 2, 2, 5, "Captain Moden Canaday", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 2, 3, 2, 2, 5, "Captain Moden Canady", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Leader.");
         setGameText("Adds 2 to power of anything he pilots (3 if Fulminatrix). While all your ability here is provided Fulminatrix pilots: opponent's immunity to attrition (and reacts), Hit And Run and Alternatives To Fighting are canceled here.");
-        addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.VIRTUAL_SET_23);
         addKeywords(Keyword.LEADER);
         setMatchingStarshipFilter(Filters.Fulminatrix);
-        setTestingText("Captain Moden Canaday");
+        setTestingText("Captain Moden Canady");
     }
 
     @Override

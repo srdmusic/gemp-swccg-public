@@ -31,7 +31,7 @@ public class Card501_024 extends AbstractSite {
         setLocationLightSideGameText("You must first use 1 Force to fire a weapon here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_24);
         setTestingText("Utapau: Pau City");
     }
 

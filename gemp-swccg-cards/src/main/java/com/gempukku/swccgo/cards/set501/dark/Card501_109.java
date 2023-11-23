@@ -23,7 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 22
+ * Set: Playtesting
  * Type: Location
  * Subtype: Site
  * Title: Supremacy: Bridge
@@ -34,7 +34,7 @@ public class Card501_109 extends AbstractUniqueStarshipSite {
         setLocationDarkSideGameText("If you occupy with a First Order character and Tracked Fleet in play, Supremacy deploys -9.");
         setLocationLightSideGameText("Unless your Resistance ship at a system, force drain -1.");
         addIcon(Icon.DARK_FORCE, 2);
-        addIcons(Icon.INTERIOR_SITE, Icon.STARSHIP_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.INTERIOR_SITE, Icon.STARSHIP_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.VIRTUAL_SET_23);
         setTestingText(Title.Supremacy_Bridge);
     }
 

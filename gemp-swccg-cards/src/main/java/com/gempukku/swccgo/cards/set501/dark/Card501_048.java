@@ -40,7 +40,7 @@ public class Card501_048 extends AbstractUsedOrLostInterrupt {
         setLore("When unexplained droid losses are detected, a Droid Control Ship can call in reinforcements in seconds.");
         setGameText("USED: Take a non-unique battle droid, non-unique droid starfighter, or Battle Droid Reinforcements into hand from Reserve Deck; reshuffle." +
                 "LOST: Break cover of and capture opponent's Undercover spy at same site as your battle droid. [Immune to Sense]");
-        addIcons(Icon.THEED_PALACE, Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.THEED_PALACE, Icon.EPISODE_I, Icon.VIRTUAL_SET_24);
         setTestingText("There They Are! (V)");
     }
 

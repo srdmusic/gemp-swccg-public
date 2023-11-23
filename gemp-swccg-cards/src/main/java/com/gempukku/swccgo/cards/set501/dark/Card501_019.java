@@ -42,7 +42,7 @@ public class Card501_019 extends AbstractObjective {
                 "If your [Episode I] system was just converted, raise it to the top. " +
                 "Once per turn, may deploy a battleground site related to your [Clone Army] or [Separatist] system from Reserve Deck; reshuffle. " +
                 "Flip this card if two [Separatist] systems on table.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_24);
         setTestingText("More Systems Will Rally To Our Cause");
     }
 

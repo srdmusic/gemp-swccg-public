@@ -30,7 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 22
+ * Set: Set 23
  * Type: Effect
  * Title: Order 66
  */
@@ -41,7 +41,7 @@ public class Card501_012 extends AbstractNormalEffect {
         setGameText("Deploy on table. Once per game, may 'execute Order 66' (relocate this Effect to a site). " +
                 "Whenever this Effect relocates to a site, immunity to attrition of Jedi here is canceled for remainder of turn. " +
                 "May not be canceled. [Immune to Alter].");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.HOLOGRAM);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Order 66");

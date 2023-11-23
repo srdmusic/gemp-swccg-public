@@ -24,7 +24,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Hoth
+ * Set: Playtesting
  * Type: Location
  * Subtype: Site
  * Title: Hoth: Defensive Perimeter (3rd Marker) (V)
@@ -37,7 +37,7 @@ public class Card501_099 extends AbstractSite {
         setLocationLightSideGameText("Once per game, you may deploy an artillery weapon here from Reserve Deck; reshuffle.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.HOTH, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.HOTH, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.MARKER_3);
         setTestingText("Hoth: Defensive Perimeter (3rd Marker) (V)");
     }

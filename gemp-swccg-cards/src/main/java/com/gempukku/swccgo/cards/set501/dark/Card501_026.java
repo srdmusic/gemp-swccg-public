@@ -35,7 +35,7 @@ public class Card501_026 extends AbstractSystem {
         setLocationLightSideGameText("Starships piloted by Anakin or Obi-Wan here are immune to attrition.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.CLONE_ARMY, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_24);
         setMayNotBePlacedInReserveDeck(true);
         setTestingText("Christophsis (Republic controlled)");
     }
