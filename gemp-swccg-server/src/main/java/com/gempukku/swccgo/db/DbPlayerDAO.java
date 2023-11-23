@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.db;
 
 import com.gempukku.swccgo.game.Player;
+import com.mysql.jdbc.StringUtils;
 
 import java.security.MessageDigest;
 import java.sql.Connection;
@@ -45,77 +46,54 @@ public class DbPlayerDAO implements PlayerDAO {
 
     @Override
     public synchronized boolean registerPlayer(String playerName, String password, String remoteAddr) throws SQLException, LoginInvalidException, RegisterNotAllowedException {
+
+        Player player = getPlayer(playerName);
+        if(player != null && StringUtils.isNullOrEmpty(player.getPassword())) {
+            //This player has had their password reset and just needs to get it re-defined.
+
+            try (Connection conn = _dbAccess.getDataSource().getConnection()) {
+                try (PreparedStatement statement = conn.prepareStatement(
+                        "UPDATE player SET password=? WHERE name=?")) {
+                    statement.setString(1, encodePassword(password));
+                    statement.setString(2, playerName);
+                    statement.executeUpdate();
+                    return true;
+                }
+            }
+        }
+
         boolean result = validateNewUser(playerName, remoteAddr);
         if (!result) {
             return false;
         }
 
-        Connection conn = _dbAccess.getDataSource().getConnection();
-        try {
-            PreparedStatement statement = conn.prepareStatement("insert into player (name, password, type, create_ip) values (?, ?, ?, ?)");
-            try {
+        try (Connection conn = _dbAccess.getDataSource().getConnection()) {
+            try (PreparedStatement statement = conn.prepareStatement(
+                    "insert into player (name, password, type, create_ip) values (?, ?, ?, ?)")) {
                 statement.setString(1, playerName);
                 statement.setString(2, encodePassword(password));
                 statement.setString(3, Player.Type.UNBANNED.getValue());
                 statement.setString(4, remoteAddr);
                 statement.execute();
                 return true;
-            } finally {
-                statement.close();
             }
-        } finally {
-            conn.close();
         }
     }
 
     @Override
     public synchronized Player loginPlayer(String playerName, String password) throws SQLException {
-        Connection conn = _dbAccess.getDataSource().getConnection();
-        try {
-            // Check if password was reset
-            PreparedStatement statement1 = conn.prepareStatement(_selectPlayer + " where name=? and password=''" + _notDeactivated);
-            try {
+        try (Connection conn = _dbAccess.getDataSource().getConnection()) {
+            try (PreparedStatement statement1 = conn.prepareStatement(
+                    _selectPlayer + " WHERE name=? AND (password='' OR password=?)" + _notDeactivated)) {
                 statement1.setString(1, playerName);
-                ResultSet rs = statement1.executeQuery();
-                try {
-                    if (rs.next()) {
-                        // Set the new password
-                        int id = rs.getInt(1);
-                        PreparedStatement statement2 = conn.prepareStatement("update player set password=? where id=?");
-                        try {
-                            statement2.setString(1, encodePassword(password));
-                            statement2.setInt(2, id);
-                            statement2.execute();
-                        } finally {
-                            statement2.close();
-                        }
-                    }
-                } finally {
-                    rs.close();
-                }
-            } finally {
-                statement1.close();
-            }
-
-            // Get the player
-            PreparedStatement statement3 = conn.prepareStatement(_selectPlayer + " where name=? and password=?" + _notDeactivated);
-            try {
-                statement3.setString(1, playerName);
-                statement3.setString(2, encodePassword(password));
-                ResultSet rs = statement3.executeQuery();
-                try {
+                statement1.setString(2, encodePassword(password));
+                try (ResultSet rs = statement1.executeQuery()) {
                     if (rs.next()) {
                         return getPlayerFromResultSet(rs);
                     } else
                         return null;
-                } finally {
-                    rs.close();
                 }
-            } finally {
-                statement3.close();
             }
-        } finally {
-            conn.close();
         }
     }
 
@@ -162,17 +140,11 @@ public class DbPlayerDAO implements PlayerDAO {
 
     @Override
     public synchronized boolean resetUserPassword(String playerName) throws SQLException {
-        Connection conn = _dbAccess.getDataSource().getConnection();
-        try {
-            PreparedStatement statement = conn.prepareStatement("update player set password='' where name=?");
-            try {
+        try (Connection conn = _dbAccess.getDataSource().getConnection()) {
+            try (PreparedStatement statement = conn.prepareStatement("UPDATE player SET password='' WHERE name=?")) {
                 statement.setString(1, playerName);
                 return statement.executeUpdate() == 1;
-            } finally {
-                statement.close();
             }
-        } finally {
-            conn.close();
         }
     }
 
@@ -300,34 +272,26 @@ public class DbPlayerDAO implements PlayerDAO {
 
     @Override
     public boolean setPlayerAsDeactivated(String playerName, boolean deactivate) throws SQLException {
-        Connection conn = _dbAccess.getDataSource().getConnection();
-        try {
+        try (Connection conn = _dbAccess.getDataSource().getConnection()) {
             final Player player = getPlayerFromDBByName(playerName, !deactivate);
             if (player == null) {
                 return false;
             }
 
-            // Add/remove playtester type
             List<Player.Type> types = Player.Type.getTypes(player.getType());
             if (deactivate) {
                 if (!types.contains(Player.Type.DEACTIVATED)) {
                     types.add(Player.Type.DEACTIVATED);
                 }
-            }
-            else {
+            } else {
                 types.remove(Player.Type.DEACTIVATED);
             }
 
-            PreparedStatement statement = conn.prepareStatement("update player set type=? where id=?");
-            try {
+            try (PreparedStatement statement = conn.prepareStatement("UPDATE player SET type=? WHERE id=?")) {
                 statement.setString(1, Player.Type.getTypeString(types));
                 statement.setInt(2, player.getId());
                 return statement.executeUpdate() == 1;
-            } finally {
-                statement.close();
             }
-        } finally {
-            conn.close();
         }
     }
 
@@ -539,25 +503,17 @@ public class DbPlayerDAO implements PlayerDAO {
             return false;
         }
 
-        Connection conn = _dbAccess.getDataSource().getConnection();
-        try {
+        try (Connection conn = _dbAccess.getDataSource().getConnection()) {
             // Allow this to see deleted players so the name is not re-used
-            PreparedStatement statement = conn.prepareStatement("select id, name from player where LOWER(name)=?");
-            try {
+            try (PreparedStatement statement = conn.prepareStatement(
+                    "select id, name, password from player where LOWER(name)=?")) {
                 statement.setString(1, lowerCase);
-                ResultSet rs = statement.executeQuery();
-                try {
+                try (ResultSet rs = statement.executeQuery()) {
                     if (rs.next()) {
                         throw new LoginInvalidException();
                     }
-                } finally {
-                    rs.close();
                 }
-            } finally {
-                statement.close();
             }
-        } finally {
-            conn.close();
         }
 
         int tickMarks = 0;

@@ -52,6 +52,16 @@ var GempSwccgCommunication = Class.extend({
             callback(xml);
         };
     },
+    
+    deliveryCheckStatus:function (callback) {
+        var that = this;
+        return function (xml, status, request) {
+            var delivery = request.getResponseHeader("Delivery-Service-Package");
+            if (delivery == "true" && window.deliveryService != null)
+                that.getDelivery(window.deliveryService);
+            callback(xml, request.status);
+        };
+    },
 
     getGameHistory:function (start, count, callback, errorMap) {
         $.ajax({
@@ -723,7 +733,7 @@ var GempSwccgCommunication = Class.extend({
                 login:login,
                 password:password,
                 participantId:getUrlParam("participantId")},
-            success:this.deliveryCheck(callback),
+            success:this.deliveryCheckStatus(callback),
             error:this.errorCheck(errorMap),
             dataType:"html"
         });
@@ -737,7 +747,7 @@ var GempSwccgCommunication = Class.extend({
                 login:login,
                 password:password,
                 participantId:getUrlParam("participantId")},
-            success:this.deliveryCheck(callback),
+            success:this.deliveryCheckStatus(callback),
             error:this.errorCheck(errorMap),
             dataType:"html"
         });

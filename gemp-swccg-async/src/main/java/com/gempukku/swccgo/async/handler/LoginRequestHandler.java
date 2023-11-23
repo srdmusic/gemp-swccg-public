@@ -2,6 +2,7 @@ package com.gempukku.swccgo.async.handler;
 
 import com.gempukku.swccgo.async.ResponseWriter;
 import com.gempukku.swccgo.game.Player;
+import com.mysql.jdbc.StringUtils;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.handler.codec.http.HttpMethod;
 import org.jboss.netty.handler.codec.http.HttpRequest;
@@ -25,7 +26,12 @@ public class LoginRequestHandler extends SwccgoServerRequestHandler implements U
 
             Player player = _playerDao.loginPlayer(login, password);
             if (player != null) {
-                if (!player.hasType(Player.Type.UNBANNED)) {
+                if (StringUtils.isNullOrEmpty(player.getPassword())) {
+                    //This communicates back to the front end that the user needs routed through
+                    // the registration flow again so that the password needs typed in twice.
+                    responseWriter.writeError(202);
+                }
+                else if (!player.hasType(Player.Type.UNBANNED)) {
                     final Date bannedUntil = player.getBannedUntil();
                     if (bannedUntil != null) {
                         if (bannedUntil.after(new Date())) {
