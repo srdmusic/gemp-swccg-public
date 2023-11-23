@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.async.handler;
 
+import com.gempukku.swccgo.async.HttpProcessingException;
 import com.gempukku.swccgo.async.ResponseWriter;
 import com.gempukku.swccgo.game.Player;
 import com.mysql.jdbc.StringUtils;
@@ -25,34 +26,33 @@ public class LoginRequestHandler extends SwccgoServerRequestHandler implements U
             String password = getFormParameterSafely(postDecoder, "password");
 
             Player player = _playerDao.loginPlayer(login, password);
-            if (player != null) {
-                if (StringUtils.isNullOrEmpty(player.getPassword())) {
-                    //This communicates back to the front end that the user needs routed through
-                    // the registration flow again so that the password needs typed in twice.
-                    responseWriter.writeError(202);
-                }
-                else if (!player.hasType(Player.Type.UNBANNED)) {
-                    final Date bannedUntil = player.getBannedUntil();
-                    if (bannedUntil != null) {
-                        if (bannedUntil.after(new Date())) {
-                            responseWriter.writeXmlResponse(null, logUserReturningHeaders(e, login));
-                        }
-                        else {
-                            responseWriter.writeError(409);
-                        }
-                    }
-                    else {
-                        responseWriter.writeError(403);
-                    }
-                } else {
-                    responseWriter.writeXmlResponse(null, logUserReturningHeaders(e, login));
-                }
-            } else {
-                responseWriter.writeError(401);
+
+            //No user found, which is to say either user does not exist or user failed to provide credentials
+            if(player == null)
+                throw new HttpProcessingException(401);
+
+            //User was found, but they had a blank password, which means they have had their password reset
+            // and need to be sent through the registration flow so that their password is typed in twice.
+            if (StringUtils.isNullOrEmpty(player.getPassword()))
+                throw new HttpProcessingException(202);
+
+            //User has a permaban or tempban state
+            if (!player.hasType(Player.Type.UNBANNED)) {
+                final Date bannedUntil = player.getBannedUntil();
+
+                //Permabanned
+                if(bannedUntil == null)
+                    throw new HttpProcessingException(403);
+
+                //Tempbanned
+                if (bannedUntil.after(new Date()))
+                    throw new HttpProcessingException(409);
             }
 
-        } else {
-            responseWriter.writeError(404);
+            responseWriter.writeXmlResponse(null, logUserReturningHeaders(e, login));
+        }
+        else {
+            throw new HttpProcessingException(404);
         }
     }
 
