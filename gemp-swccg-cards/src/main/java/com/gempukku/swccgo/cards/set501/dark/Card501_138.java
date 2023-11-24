@@ -17,6 +17,6 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_138 extends AbstractNormalEffect {
     public Card501_138() {
         super(Side.DARK, 0, PlayCardZoneOption.ATTACHED, "Imperial Blockade", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

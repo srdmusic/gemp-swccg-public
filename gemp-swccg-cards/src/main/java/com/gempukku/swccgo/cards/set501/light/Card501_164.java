@@ -19,6 +19,6 @@ public class Card501_164 extends AbstractUsedInterrupt {
         super(Side.LIGHT, 3, Title.Scomp_Link_Access, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setTestingText("Scomp Link Access (V)");
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

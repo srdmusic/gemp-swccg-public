@@ -16,6 +16,6 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_136 extends AbstractUsedOrLostInterrupt {
     public Card501_136() {
         super(Side.DARK, 5, "Not Within Sight Or Reach", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

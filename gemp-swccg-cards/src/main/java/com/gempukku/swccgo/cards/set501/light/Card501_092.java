@@ -11,6 +11,6 @@ public class Card501_092 extends AbstractMobileSystem {
         super(Side.LIGHT, Title.Death_Star, 1, 0, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setTestingText("Death Star (V)");
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

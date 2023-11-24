@@ -16,6 +16,6 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_130 extends AbstractUsedInterrupt {
     public Card501_130() {
         super(Side.DARK, 5, "More! More!", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

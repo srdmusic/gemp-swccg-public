@@ -18,6 +18,6 @@ public class Card501_089 extends AbstractRebel {
         super(Side.LIGHT, 1, 4, 4, 4, 5, "Orrimaarko (V)", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setTestingText("Orrimaarko (V)");
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

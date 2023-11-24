@@ -13,6 +13,6 @@ public class Card501_093 extends AbstractEpicEventDeployable {
         super(Side.LIGHT, PlayCardZoneOption.ATTACHED, Title.Attack_Run, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setTestingText("Attack Run (V)");
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

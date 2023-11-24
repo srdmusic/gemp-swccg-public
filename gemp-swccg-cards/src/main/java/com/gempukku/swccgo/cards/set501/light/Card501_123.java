@@ -16,6 +16,6 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_123 extends AbstractRebel {
     public Card501_123() {
         super(Side.LIGHT, 2, 0, 4, 3, 0, "Jyn Erso, Heroic Rebel", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

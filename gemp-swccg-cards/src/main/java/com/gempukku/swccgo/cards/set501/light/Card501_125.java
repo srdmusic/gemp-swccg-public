@@ -16,6 +16,6 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_125 extends AbstractRebel {
     public Card501_125() {
         super(Side.LIGHT, 1, 5, 4, 6, 6, "Corran Horn, Jedi", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

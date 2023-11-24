@@ -17,6 +17,6 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_090 extends AbstractNormalEffect {
     public Card501_090() {
         super(Side.LIGHT, 0, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Station Plans", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

@@ -16,6 +16,6 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_132 extends AbstractAlien {
     public Card501_132() {
         super(Side.DARK, 1, 4, 2, 4, 4, "Zuckuss With Snare Rifle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

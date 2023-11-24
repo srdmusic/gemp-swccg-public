@@ -17,6 +17,6 @@ public class Card501_091 extends AbstractObjective {
         super(Side.LIGHT, 0, Title.Massassi_Base_Operations, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setTestingText("Massassi Base Operations (V)");
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

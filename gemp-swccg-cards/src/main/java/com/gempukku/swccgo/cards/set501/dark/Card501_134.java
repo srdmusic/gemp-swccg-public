@@ -18,6 +18,6 @@ public class Card501_134 extends AbstractVehicleWeapon {
         super(Side.DARK, 6, "Electro-Rangefinder (V)", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setTestingText("Electro-Rangefinder (V)");
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

@@ -18,6 +18,6 @@ public class Card501_131 extends AbstractCharacterWeapon {
         super(Side.DARK, 1, "IG-88's Pulse Cannon (V)", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setTestingText("IG-88's Pulse Cannon (V)");
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }    
 }

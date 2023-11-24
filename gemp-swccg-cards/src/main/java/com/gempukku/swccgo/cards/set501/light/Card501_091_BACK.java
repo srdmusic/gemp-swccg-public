@@ -17,6 +17,6 @@ public class Card501_091_BACK extends AbstractObjective {
         super(Side.LIGHT, 7, Title.One_In_A_Million, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setTestingText("One In A Million (V)");
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

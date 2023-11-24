@@ -16,6 +16,6 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_141 extends AbstractImperial {
     public Card501_141() {
         super(Side.DARK, 1, 4, 4, 4, 6, "Moff Gideon, Suited For Battle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

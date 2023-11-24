@@ -19,6 +19,6 @@ public class Card501_139 extends AbstractAlien {
         super(Side.DARK, 3, 2, 2, 1, 3, Title.Wuher, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setTestingText("Wuher (V)");
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

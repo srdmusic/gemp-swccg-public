@@ -20,6 +20,6 @@ public class Card501_137 extends AbstractNormalEffect {
         super(Side.DARK, 5, PlayCardZoneOption.ATTACHED, Title.Ominous_Rumors, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setTestingText("Ominous Rumors (V)");
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

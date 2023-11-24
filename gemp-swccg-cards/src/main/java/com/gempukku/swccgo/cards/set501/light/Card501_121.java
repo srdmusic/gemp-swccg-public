@@ -19,6 +19,6 @@ public class Card501_121 extends AbstractUsedInterrupt {
         super(Side.LIGHT, 5, Title.Transmission_Terminated, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setTestingText("Transmission Terminated (V)");
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

@@ -17,6 +17,6 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_133 extends AbstractImmediateEffect {
     public Card501_133() {
         super(Side.DARK, 6, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Echo Base Destroyed", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }

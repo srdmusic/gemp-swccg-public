@@ -16,6 +16,6 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_124 extends AbstractAlien {
     public Card501_124() {
         super(Side.LIGHT, 2, 3, 3, 3, 5, "Jaxxon T. Tumperakki", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        excludeFromDeckBuilder();
+        hideFromDeckBuilder();
     }
 }
