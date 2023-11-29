@@ -6,6 +6,13 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 
+/**
+ * Set: Playtesting
+ * Type: Location
+ * Subtype: Mobile System 
+ * Title: Death Star (LS) (V)
+ */
+
 public class Card501_092 extends AbstractMobileSystem {
     public Card501_092() {
         super(Side.LIGHT, Title.Death_Star, 1, 0, ExpansionSet.PLAYTESTING, Rarity.V);
