@@ -38,7 +38,8 @@ public class Card501_102 extends AbstractFirstOrder {
     public Card501_102() {
         super(Side.DARK, 2, 3, 2, 2, 5, "Captain Moden Canady", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Leader.");
-        setGameText("Adds 2 to power of anything he pilots (3 if Fulminatrix). While all your ability here is provided Fulminatrix pilots: opponent's immunity to attrition (and reacts), Hit And Run and Alternatives To Fighting are canceled here.");
+        setGameText("Adds 2 power to anything he pilots and 2 to armor of Fulminatrix. While all your ability here is provided by Fulminatrix and First Order TIE pilots: opponent’s immunity to attrition (and reacts), Hit And Run and Alternatives To Fighting are canceled here.\n" + //
+                "");
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.VIRTUAL_SET_23);
         addKeywords(Keyword.LEADER);
         setMatchingStarshipFilter(Filters.Fulminatrix);
@@ -55,7 +56,7 @@ public class Card501_102 extends AbstractFirstOrder {
         modifiers.add(new MayNotReactToLocationModifier(self, Filters.here(self), allAbilityCondition, opponent));
         modifiers.add(new MayNotReactFromLocationModifier(self, Filters.here(self), allAbilityCondition, opponent));    
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
-        modifiers.add(new ArmorModifier(self, Filters.and(Filters.Fulminatrix, Filters.hasPiloting(self)), 1));
+        modifiers.add(new ArmorModifier(self, Filters.and(Filters.Fulminatrix, Filters.hasPiloting(self)), 2));
         return modifiers;
     }
 
