@@ -69,6 +69,7 @@ public enum ModifyGameTextType {
     SPECIAL_DELIVERY__TAKE_TWO_ADDITIONAL_CARDS_INTO_HAND("Take two additional cards into hand"),
     SPECIAL_MODIFICATIONS__IMMUNE_TO_ATTRITION_LESS_THAN_FOUR("Makes target to attrition < 4"),
     SPICE_MINES_OF_KESSEL__ADD_4_TO_FORCE_RETRIEVED("Add 4 to Force retrieved"),
+    STARDUST__ADD_1_TO_FORCE_LOSS("Add 1 to Force loss"),
     SUPERLASER_IGNORES_DEPLOYMENT_RESTRICTIONS("Ignores deployment restrictions"),
     SURPRISE_ASSAULT__ADD_DESTINY_TO_TOTAL("Add one destiny to total"),
     TALLON_ROLL__OPPONENT_ADDS_MANEUVER_AND_ABILITY("Opponent adds maneuver and ability"),
