@@ -19,7 +19,7 @@ import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
 import com.gempukku.swccgo.logic.effects.FireWeaponEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.MayBeFiredTwicePerBattleModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -109,27 +109,17 @@ public class Card501_130 extends AbstractUsedInterrupt {
                 action.setText("Fire a weapon into a battle at an adjacent site");
                 // Choose target(s)
                 action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Choose weapon to fire", weaponFilter) {
+                        new ChooseCardOnTableEffect(action, playerId, "Choose weapon to fire", weaponFilter) {
                             @Override
-                            protected void cardTargeted(final int targetGroupId, final PhysicalCard weapon) {
+                            protected void cardSelected(final PhysicalCard weapon) {
                                 action.addAnimationGroup(weapon);
-                                final PhysicalCard finalWeapon = action.getPrimaryTargetCard(targetGroupId);
-                                Filter weaponTargetFilter = Filters.and(Filters.opponents(self), Filters.at(Filters.battleLocation), Filters.canBeTargetedBy(finalWeapon));
-                                action.appendTargeting(
-                                    new TargetCardOnTableEffect(action, playerId, "Choose weapon target", weaponTargetFilter) {
+                                action.allowResponses("Fire" + GameUtils.getCardLink(weapon),
+                                    new RespondablePlayCardEffect(action) {
                                         @Override
-                                        protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
-                                            // Allow responses
-                                            action.allowResponses("Fire " + GameUtils.getCardLink(weapon) + " at " + GameUtils.getCardLink(targetedCard),
-                                                    new RespondablePlayCardEffect(action) {
-                                                        @Override
-                                                        protected void performActionResults(Action targetingAction) {
-                                                            // Perform result(s)
-                                                            action.appendEffect(
-                                                                    new FireWeaponEffect(action, finalWeapon, false, Filters.sameCardId(targetedCard))
-                                                            );
-                                                        }
-                                                    }
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                new FireWeaponEffect(action, weapon, false, Filters.and(Filters.opponents(self), Filters.at(Filters.battleLocation), Filters.canBeTargetedBy(weapon)))
                                             );
                                         }
                                     }
