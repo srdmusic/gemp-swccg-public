@@ -26,7 +26,6 @@ import com.gempukku.swccgo.logic.effects.AttachCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
@@ -94,10 +93,6 @@ public class Card209_018 extends AbstractNormalEffect {
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
             int num_force = 1;
 
-            if (GameConditions.hasGameTextModification(game, self, ModifyGameTextType.STARDUST__ADD_1_TO_FORCE_LOSS)) {
-                num_force = num_force + 1;
-            }
-
             if (damageConditionsSatisfied(game, self, playerId)) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Make opponent lose " + num_force + " Force");
@@ -126,10 +121,6 @@ public class Card209_018 extends AbstractNormalEffect {
         if (TriggerConditions.isEndOfYourPhase(game, effectResult, Phase.CONTROL, playerId)
                 && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)) {
             int num_force = 1;
-
-            if (GameConditions.hasGameTextModification(game, self, ModifyGameTextType.STARDUST__ADD_1_TO_FORCE_LOSS)) {
-                num_force = num_force + 1;
-            }
 
             if (damageConditionsSatisfied(game, self, playerId)) {
                 final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);

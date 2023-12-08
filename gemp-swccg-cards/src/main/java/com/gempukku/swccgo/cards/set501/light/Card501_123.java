@@ -2,7 +2,8 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.conditions.HasAttachedCondition;
-import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.conditions.PresentAtCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -15,13 +16,12 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotHaveGameTextCanceledModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeChokedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -38,9 +38,8 @@ public class Card501_123 extends AbstractRebel {
     public Card501_123() {
         super(Side.LIGHT, 2, 4, 4, 3, 5, "Jyn Erso, Heroic Rebel", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Female spy. Leader.");
-        setGameText("Jyn's game text may not be canceled. Draws one battle destiny if unable to otherwise. " +
-                "Adds one battle destiny with Galen or Stadust. While Stardust on Jyn, adds 1 to Stardust Force loss. " +
-                "If just lost, opponent loses 1 Force.");
+        setGameText("While Stardust on your spy, Jyn adds one battle destiny. While Stardust on Jyn and present at a battleground, " +
+                "Force drain +1 here and non-trooper Rebel spies here may not be 'choked.' If just lost, opponent loses 1 Force.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_23);
         addKeywords(Keyword.FEMALE, Keyword.SPY, Keyword.LEADER);
         addPersona(Persona.JYN);
@@ -50,10 +49,11 @@ public class Card501_123 extends AbstractRebel {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotHaveGameTextCanceledModifier(self));
-        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, 1));
-        modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.or(Filters.Galen, Filters.Stardust)), 1));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Stardust, new HasAttachedCondition(self, Filters.Stardust), ModifyGameTextType.STARDUST__ADD_1_TO_FORCE_LOSS));
+        HasAttachedCondition hasStardustAttached = new HasAttachedCondition(self, Filters.Stardust);
+        PresentAtCondition presentAtBattleground = new PresentAtCondition(self, Filters.battleground);
+        modifiers.add(new AddsBattleDestinyModifier(self, new OnTableCondition(self, Filters.and(Filters.spy, Filters.hasAttached(Filters.Stardust))), 1));
+        modifiers.add(new ForceDrainModifier(self, Filters.here(self), new AndCondition(hasStardustAttached, presentAtBattleground), 1, self.getOwner()));
+        modifiers.add(new MayNotBeChokedModifier(self, Filters.and(Filters.here(self), Filters.and(Filters.not(Filters.trooper), Filters.Rebel, Filters.spy))));
         return modifiers;
     }
 
