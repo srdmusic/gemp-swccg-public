@@ -19,9 +19,9 @@ import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeUsedModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotCloakModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotFireWeaponsModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.SuspendsCardModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
@@ -41,8 +41,8 @@ public class Card501_121 extends AbstractUsedOrLostInterrupt {
         super(Side.LIGHT, 5, Title.Transmission_Terminated, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("After the mission, the Death Squadron HoloNet communications system reported fifteen system errors: ten computer malfunctions, four power failures and one asteroid.");
-        setGameText("USED: Target a starfighter. Target may not ‘cloak,’ fire a weapon, or initiate a Force drain alone for remainder of turn. " +
-                "LOST: Cancel a hologram. OR Suspend the game text of Emperor's Power or an Admiral’s Orders until start of your turn.");
+        setGameText("USED: Target a starship. For remainder of turn, target may not use Tractor Beams, fire weapons, or 'cloak.' " +
+                "LOST: Cancel a hologram. OR Cancel the game text of Emperor's Power or an Admiral's Order until start of your turn.");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_23);
         setTestingText("Transmission Terminated (V)");
     }
@@ -76,8 +76,8 @@ public class Card501_121 extends AbstractUsedOrLostInterrupt {
                                                     "Prevents " + GameUtils.getCardLink(finalCard) + " from 'cloaking'"));
                                     action.appendEffect(
                                             new AddUntilEndOfTurnModifierEffect(action,
-                                                    new MayNotForceDrainAtLocationModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.alone, finalCard)), finalCard.getOwner()),
-                                                    "Prevents " + GameUtils.getCardLink(finalCard) + " from force draining alone"));
+                                                    new MayNotBeUsedModifier(self, Filters.and(Filters.tractor_beam, Filters.attachedTo(finalCard))),
+                                                    "Prevents " + GameUtils.getCardLink(finalCard) + " from using tractor beams"));
                                 }
                             }
                     );
