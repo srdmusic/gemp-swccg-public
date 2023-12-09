@@ -37,7 +37,7 @@ public class Card501_140 extends AbstractImperial {
         super(Side.DARK, 3, 2, 2, 2, 3, "TD-110", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setArmor(4);
         setLore("Sandtrooper. Leader.");
-        setGameText("Destiny +2 if drawn for destiny if Send a Detachment Down on table.  While in battle at a Tatooine site, may place Tactical Support out of play from lost pule to add 2 to your total attrition.");
+        setGameText("Destiny +2 if drawn for destiny if Send a Detachment Down on table.  While in battle at a Tatooine site, may place Tactical Support out of play from lost pile to add 2 to your total attrition.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_21);
         addKeywords(Keyword.SANDTROOPER, Keyword.LEADER);
         setTestingText("TD-110");
