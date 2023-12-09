@@ -75,6 +75,7 @@ public enum Persona implements Filterable {
     JONUS("Jonus"),
     JUNKIN("Junkin"),
     JUNO("Juno Eclipse"),
+    JYN("Jyn Erso"),
     KANAN("Kanan"),
     KETWOL("Ketwol"),
     KHURGEE("Khurgee"),
@@ -149,6 +150,7 @@ public enum Persona implements Filterable {
     VADER("Vader"),
     VAL("Val"),
     VANEE("Vanee"),
+    VANTO("Vanto"),
     VEERS("Veers"),
     VENTRESS("Ventress"),
     VOS("Vos"),
@@ -180,6 +182,7 @@ public enum Persona implements Filterable {
     IG2000("IG-2000"),
     INVISIBLE_HAND("Invisible Hand"),
     LIBERTINE("Libertine"),
+    MAULS_SITH_INFILTRATOR("Maul's Sith Infiltrator"),
     MIST_HUNTER("Mist Hunter"),
     ONYX_1("Onyx 1"),
     PULSAR_SKATE("Pulsar Skate"),
@@ -221,6 +224,7 @@ public enum Persona implements Filterable {
     SIDIOUS_LIGHTSABER("Sidious' Lightsaber"),
     SON_OF_VADERS_LIGHTSABER("Son Of Vader's Lightsaber"),
     VADERS_LIGHTSABER("Vader's Lightsaber"),
+    ZUCKUSS_SNARE_RIFLE("Zuckuss' Snare Rifle"),
 
     ;
 
