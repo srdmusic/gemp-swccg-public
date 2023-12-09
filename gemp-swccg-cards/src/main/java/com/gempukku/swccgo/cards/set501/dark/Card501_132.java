@@ -33,7 +33,7 @@ import java.util.List;
 public class Card501_132 extends AbstractAlien {
     public Card501_132() {
         super(Side.DARK, 1, 4, 2, 4, 4, "Zuckuss With Snare Rifle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("");
+        setLore("Bounty Hunter, Scout");
         setGameText("Adds 2 to power of anything he pilots. " +
                 "Once per game, may peek at top card of any Reserve Deck. " +
                 "Permanent weapon is Zuckuss' Snare Rifle (may target a character for 1 Force; draw destiny; " +
