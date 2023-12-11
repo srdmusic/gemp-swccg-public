@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -15,11 +14,14 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.game.state.BattleState;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.AddToAttritionEffect;
 import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.DestinyWhenDrawnForDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -51,29 +53,25 @@ public class Card501_140 extends AbstractImperial {
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.TD_110__MODIFY_ATTRITION;
         String opponent = game.getOpponent(playerId);
-
         // Check condition(s)
-        if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId)
-            && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)
-            && GameConditions.isInBattleAt(game, self, Filters.Tatooine_site)
-            && GameConditions.canModifyAttritionAgainst(game, opponent)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place Tactial Support in Lost Pile out of play");
-            action.setActionMsg("Add 2 to your total attrition");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerBattleEffect(action));
-            // Pay cost(s)
-            action.appendCost(
+        if (TriggerConditions.isInitialAttritionJustCalculated(game, effectResult)
+                && GameConditions.isInBattleAt(game, self, Filters.Tatooine_site)
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
+            final BattleState battleState = game.getGameState().getBattleState();
+            if (battleState.hasAttritionTotal(playerId)) {
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setText("Add 2 to your total attrition");
+                // Pay cost(s)
+                action.appendCost(
                     new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, playerId, Filters.Tactical_Support, false));
-            // Perform result(s)
-            action.appendEffect(
+                // Perform result(s)
+                action.appendEffect(
                     new AddToAttritionEffect(action, opponent, 2));
-            return Collections.singletonList(action);
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }
