@@ -16,11 +16,13 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfWeaponFiringModifierEffect;
 import com.gempukku.swccgo.logic.effects.FireWeaponEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.MayBeFiredTwicePerBattleModifier;
+import com.gempukku.swccgo.logic.modifiers.MayTargetAdjacentSiteModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.FiredWeaponResult;
@@ -119,8 +121,10 @@ public class Card501_130 extends AbstractUsedInterrupt {
                                         protected void performActionResults(Action targetingAction) {
                                             // Perform result(s)
                                             action.appendEffect(
-                                                new FireWeaponEffect(action, weapon, false, Filters.and(Filters.opponents(self), Filters.at(Filters.battleLocation), Filters.canBeTargetedBy(weapon)))
+                                                new AddUntilEndOfWeaponFiringModifierEffect(action, new MayTargetAdjacentSiteModifier(self, weapon), null)
                                             );
+                                            action.appendEffect(
+                                                        new FireWeaponEffect(action, weapon, false, Filters.canBeTargetedBy(self)));
                                         }
                                     }
                                 );
