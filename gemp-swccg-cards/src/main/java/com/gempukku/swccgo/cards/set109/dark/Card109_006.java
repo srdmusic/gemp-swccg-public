@@ -29,7 +29,7 @@ import java.util.List;
 
 /**
  * Set: Premium (Enhanced Cloud City)
- * Type: Character
+ *  * Type: Character
  * Subtype: Droid
  * Title: 4-LOM With Concussion Rifle
  */
