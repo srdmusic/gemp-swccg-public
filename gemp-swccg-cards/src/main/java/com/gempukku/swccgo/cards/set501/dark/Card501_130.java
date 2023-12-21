@@ -40,11 +40,50 @@ import java.util.List;
 
 public class Card501_130 extends AbstractUsedInterrupt {
     public Card501_130() {
-        super(Side.DARK, 5, "More! More!", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 5, "More! MORE!", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("If Kylo in battle, add 1 to a just drawn destiny. OR Once per game, if you just fired an [E7] weapon (except a lightsaber) in battle, it may fire again this battle. OR fire an [E7] blaster or [E7] cannon into a battle at an adjacent site.");
+        setGameText("Fire an [Episode VII] blaster or [Episode VII] cannon into a battle at an adjacent site. OR If Kylo in battle, add 1 to a just drawn destiny. OR Once per game during battle, if you just fired an [Episode VII] weapon (except a lightsaber), it may fire again this battle.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_23);
         setTestingText("More! More!");
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
+
+        // Check condition(s)
+        if (GameConditions.isDuringBattle(game)) {
+            Filter weaponFilter = Filters.and(Filters.your(self), Filters.at(Filters.adjacentSiteTo(self, Filters.battleLocation)), 
+                                              Filters.and(Icon.EPISODE_VII, Filters.or(Filters.blaster, Filters.cannon)));
+            if (GameConditions.canSpot(game, self, weaponFilter)) {
+
+                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                action.setText("Fire a weapon into a battle at an adjacent site");
+                // Choose target(s)
+                action.appendTargeting(
+                        new ChooseCardOnTableEffect(action, playerId, "Choose weapon to fire", weaponFilter) {
+                            @Override
+                            protected void cardSelected(final PhysicalCard weapon) {
+                                action.addAnimationGroup(weapon);
+                                action.allowResponses("Fire" + GameUtils.getCardLink(weapon),
+                                    new RespondablePlayCardEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                new AddUntilEndOfWeaponFiringModifierEffect(action, new MayTargetAdjacentSiteModifier(self, weapon), null)
+                                            );
+                                            action.appendEffect(
+                                                        new FireWeaponEffect(action, weapon, false, Filters.canBeTargetedBy(self)));
+                                        }
+                                    }
+                                );
+                            }
+                        }
+                );
+                return Collections.singletonList(action);
+            }
+        }
+        return null;
     }
 
     @Override
@@ -96,45 +135,6 @@ public class Card501_130 extends AbstractUsedInterrupt {
             actions.add(action);
         }
         return actions;
-    }
-
-    @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
-
-        // Check condition(s)
-        if (GameConditions.isDuringBattle(game)) {
-            Filter weaponFilter = Filters.and(Filters.your(self), Filters.at(Filters.adjacentSiteTo(self, Filters.battleLocation)), 
-                                              Filters.and(Icon.EPISODE_VII, Filters.or(Filters.blaster, Filters.cannon)));
-            if (GameConditions.canSpot(game, self, weaponFilter)) {
-
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                action.setText("Fire a weapon into a battle at an adjacent site");
-                // Choose target(s)
-                action.appendTargeting(
-                        new ChooseCardOnTableEffect(action, playerId, "Choose weapon to fire", weaponFilter) {
-                            @Override
-                            protected void cardSelected(final PhysicalCard weapon) {
-                                action.addAnimationGroup(weapon);
-                                action.allowResponses("Fire" + GameUtils.getCardLink(weapon),
-                                    new RespondablePlayCardEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                new AddUntilEndOfWeaponFiringModifierEffect(action, new MayTargetAdjacentSiteModifier(self, weapon), null)
-                                            );
-                                            action.appendEffect(
-                                                        new FireWeaponEffect(action, weapon, false, Filters.canBeTargetedBy(self)));
-                                        }
-                                    }
-                                );
-                            }
-                        }
-                );
-                return Collections.singletonList(action);
-            }
-        }
-        return null;
     }
 
 }
