@@ -167,6 +167,7 @@ var CardFilter = Class.extend({
             + "<option value='premiere_se'>Premiere - Special Edition</option>"
             + "<option value='premiere_jp'>Premiere - Jabba's Palace</option>"
             + "<option value='premiere_cc'>Premiere - Cloud City</option>"
+            + "<option value='premiere_cc_m'>Premiere - Cloud City (Modified)</option>"
             + "<option value='premiere_dagobah'>Premiere - Dagobah</option>"
             + "<option value='premiere_hoth'>Premiere - Hoth</option>"
             + "<option value='premiere_anh'>Premiere - A New Hope</option>"
