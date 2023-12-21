@@ -26,7 +26,7 @@ import java.util.List;
  * Set: Set 12
  * Type: Interrupt
  * Subtype: Starting
- * Title: Slip Sliding Away (V) (Errata)
+ * Title: Slip Sliding Away (V)
  */
 public class Card212_004 extends AbstractStartingInterrupt {
     public Card212_004() {
