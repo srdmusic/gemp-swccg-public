@@ -1790,6 +1790,23 @@ public class Filters {
         return forfeitMayBeReduced;
     }
 
+    /**
+     * Filter that accepts cards that have a forfeit value > X.
+     *
+     * @param value the value of X
+     * @return Filter
+     */
+    public static Filter printedForfeitValueLessThan(final float value) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                if (!physicalCard.getBlueprint().hasForfeitAttribute())
+                    return false;
+
+                return physicalCard.getBlueprint().getForfeit() < value;
+            }
+        };
+    }
 
     //
     //
@@ -11150,6 +11167,20 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that are 'hit' by the specified filter.
+     */
+    public static Filter hitBy(final Filter hitByFilter) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                return modifiersQuerying.wasHitOrMadeLostByWeapon(physicalCard, hitByFilter);
+            }
+        };
+    }
+
+    ;
+
+    /**
      * Filter that accepts cards that are Disarmed.
      */
     public static final Filter Disarmed = new Filter() {
@@ -14231,6 +14262,9 @@ public class Filters {
                 PhysicalCard weapon = gameState.findCardByPermanentId(permWeaponCardId);
 
                 if (!modifiersQuerying.notProhibitedFromFiringWeapons(gameState, physicalCard))
+                    return false;
+
+                if (modifiersQuerying.mayNotBeFired(gameState, weapon))
                     return false;
 
                 boolean mayBeUsedByLandedStarship = modifiersQuerying.mayBeUsedByLandedStarship(gameState, weapon);
@@ -17734,6 +17768,7 @@ public class Filters {
     public static final Filter Cracken = Filters.persona(Persona.CRACKEN);
     public static final Filter Crait_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Crait));
     public static final Filter Crait_Salt_Plateau = Filters.and(CardSubtype.SITE, Filters.title(Title.Crait_Salt_Plateau));
+    public static final Filter Crash_Landing = Filters.title(Title.Crash_Landing);
     public static final Filter Crash_Site_Memorial = Filters.title(Title.Crash_Site_Memorial);
     public static final Filter crashed_vehicle = Filters.and(CardType.VEHICLE, Filters.crashed());
     public static final Filter creature = Filters.type(CardType.CREATURE);
@@ -18303,6 +18338,7 @@ public class Filters {
     public static final Filter Kirdo_III_site = Filters.and(Filters.partOfSystem(Title.Kirdo_III), CardSubtype.SITE);
     public static final Filter Kitonak = Filters.species(Species.KITONAK);
     public static final Filter Klaatu = Filters.title(Title.Klaatu);
+    public static final Filter Knight_of_Ren = Filters.keyword(Keyword.KNIGHT_OF_REN);
     public static final Filter Krayt_Dragon_Bones = Filters.title(Title.Krayt_Dragon_Bones);
     public static final Filter Krennic = Filters.persona(Persona.KRENNIC);
     public static final Filter Kuat_Drive_Yards = Filters.title(Title.Kuat_Drive_Yards);
@@ -18459,6 +18495,7 @@ public class Filters {
     public static final Filter Nabrun_Leids = Filters.title(Title.Nabrun_Leids);
     public static final Filter Nal_Hutta_site = Filters.and(Filters.partOfSystem(Title.Nal_Hutta), CardSubtype.SITE);
     public static final Filter Nal_Hutta_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Nal_Hutta));
+    public static final Filter Nar_Shadda_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Nar_Shaddaa));
     public static final Filter Narrow_Escape = Filters.title(Title.Narrow_Escape);
     public static final Filter Nav_Computer = Filters.icon(Icon.NAV_COMPUTER);
     public static final Filter Neck_And_Neck = Filters.title(Title.Neck_And_Neck);
@@ -18569,7 +18606,7 @@ public class Filters {
     public static final Filter Podracer = Filters.category(CardCategory.PODRACER);
     public static final Filter Podracer_Bay = Filters.title(Title.Podracer_Bay);
     public static final Filter Podracer_Collision = Filters.title(Title.Podracer_Collision);
-    public static final Filter Poe = Filters.title(Title.Poe);
+    public static final Filter Poe = Filters.persona(Persona.POE);
     public static final Filter Polis_Massa_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Polis_Massa));
     public static final Filter Political_Effect = Filters.and(CardType.EFFECT, CardSubtype.POLITICAL);
     public static final Filter Ponda_Baba = Filters.title(Title.Ponda_Baba);
@@ -19028,7 +19065,7 @@ public class Filters {
     public static final Filter Trade_Federation_starfighter = Filters.and(Icon.TRADE_FEDERATION, CardSubtype.STARFIGHTER);
     public static final Filter Trample = Filters.title(Title.Trample);
     public static final Filter Trandoshan = Filters.species(Species.TRANDOSHAN);
-    public static final Filter transport = Filters.and(CardType.STARSHIP, Filters.or(Keyword.TRANSPORT_SHIP, ModelType.BYBLOS_G1A_TRANSPORT, ModelType.MODIFIED_TRANSPORT, ModelType.RESISTANCE_TRANSPORT, ModelType.TRANSPORT, ModelType.WTK_85A_INTERSTELLAR_TRANSPORT, ModelType.ZETA_CLASS_TRANSPORT));
+    public static final Filter transport = Filters.and(CardType.STARSHIP, Filters.or(Keyword.TRANSPORT_SHIP, ModelType.BYBLOS_G1A_TRANSPORT, ModelType.MODIFIED_TRANSPORT, ModelType.OUBLIETTE_CLASS_TRANSPORT, ModelType.RESISTANCE_TRANSPORT, ModelType.TRANSPORT, ModelType.WTK_85A_INTERSTELLAR_TRANSPORT, ModelType.ZETA_CLASS_TRANSPORT));
     public static final Filter transport_vehicle = Filters.and(CardType.VEHICLE, CardSubtype.TRANSPORT);
     public static final Filter Transmission_Terminated = Filters.title(Title.Transmission_Terminated);
     public static final Filter Trap_Door = Filters.title(Title.Trap_Door);
@@ -19075,6 +19112,7 @@ public class Filters {
     public static final Filter Vaders_Obsession = Filters.title(Title.Vaders_Obsession);
     public static final Filter Val = Filters.persona(Persona.VAL);
     public static final Filter Valorum = Filters.title(Title.Valorum);
+    public static final Filter Vanto = Filters.persona(Persona.VANTO);
     public static final Filter Vaporator = Filters.title(Title.Vaporator);
     public static final Filter Veers = Filters.persona(Persona.VEERS);
     public static final Filter vehicle = Filters.type(CardType.VEHICLE);

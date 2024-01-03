@@ -44,7 +44,7 @@ public class Card501_019_BACK extends AbstractObjective {
                 "where X = number of systems you occupy where you also occupy a related site. " +
                 "At systems related to sites you occupy, opponent's Force drains are -1 and your [Separatist] starships are immune to attrition. " +
                 "Flip this card if fewer than two [Separatist] systems on table.");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_24);
         setTestingText("The Galaxy Torn Apart");
     }
 

@@ -30,7 +30,7 @@ public class Card501_029 extends AbstractSite {
         setLocationLightSideGameText("Deploys only to a [Clone Army] or [Separatist] system. Immune to Ounee Ta.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_24);
         setTestingText("Separatist Command Center");
     }
     @Override

@@ -43,7 +43,9 @@ public class Card221_043 extends AbstractUsedOrLostInterrupt {
     public Card221_043() {
         super(Side.LIGHT, 5, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
         setLore("It had been decades since Vader had felt the sting of an enemy's blade.");
-        setGameText("If His Destiny on table, choose: USED: If a character of ability > 4 was just 'hit' during battle, opponent loses 1 Force. OR Peek at the bottom card of your Force Pile; may move it to the top of that pile. LOST: Cancel game text of a Dark Jedi with Luke for remainder of turn.");
+        setGameText("If His Destiny on table, choose: USED: If a character of ability > 4 was just 'hit' during battle, opponent loses 1 Force. " +
+                "OR Peek at the bottom card of your Force Pile; may move it to the top of that pile. " +
+                "LOST: Cancel game text of a Dark Jedi with Luke for remainder of turn.");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
     }
 

@@ -230,6 +230,7 @@ public interface Title {
     String Covert_Landing = "Covert Landing";
     String Crait = "Crait";
     String Crait_Salt_Plateau = "Crait: Salt Plateau";
+    String Crash_Landing = "Crash Landing";
     String Crash_Site_Memorial = "Crash Site Memorial";
     String Credits_Will_Do_Fine = "Credits Will Do Fine";
     String Crimson_Dawn_Blaster = "Crimson Dawn Blaster";
@@ -738,6 +739,7 @@ public interface Title {
     String Naboo = "Naboo";
     String Naboo_Swamp = "Naboo: Swamp";
     String Nal_Hutta = "Nal Hutta";
+    String Nar_Shaddaa = "Nar Shaddaa";
     String Nar_Shaddaa_Wind_Chimes = "Nar Shaddaa Wind Chimes";
     String Narrow_Escape = "Narrow Escape";
     String Neck_And_Neck = "Neck And Neck";
@@ -953,6 +955,7 @@ public interface Title {
     String Seeking_An_Audience = "Seeking An Audience";
     String Seelos = "Seelos";
     String Sei_Taria = "Sei Taria";
+    String Send_A_Detachment_Down = "Send A Detachment Down";
     String Sense = "Sense";
     String Set_For_Stun = "Set For Stun";
     String Set_Your_Course_For_Alderaan = "Set Your Course For Alderaan";
@@ -1006,6 +1009,7 @@ public interface Title {
     String Stormtrooper_Utility_Belt = "Stormtrooper Utility Belt";
     String Strangle = "Strangle";
     String Strategic_Reserves = "Strategic Reserves";
+    String Strike_Planning = "Strike Planning";
     String Stunning_Leader = "Stunning Leader";
     String Sullust = "Sullust";
     String Sunsdown = "Sunsdown";

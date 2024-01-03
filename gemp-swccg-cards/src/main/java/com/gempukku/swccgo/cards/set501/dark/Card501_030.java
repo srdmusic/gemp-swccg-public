@@ -32,7 +32,7 @@ public class Card501_030 extends AbstractCapitalStarship {
         super(Side.DARK, 4, 4, 6, 5, null, 4, 6, "Munificent-Class Star Frigate", Uniqueness.RESTRICTED_2, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Banking Clan.");
         setGameText("May add 2 pilots, 5 passengers, and 1 shuttle. Permanent pilot provides ability of 2. While at a [Clone Army] or [Separatist] system, immune to attrition < 6 and, if you control, opponent's Force drains at related sites are -1.");
-        addIcons(Icon.NAV_COMPUTER, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.NAV_COMPUTER, Icon.EPISODE_I, Icon.SCOMP_LINK, Icon.SEPARATIST, Icon.VIRTUAL_SET_24);
         addIcon(Icon.PILOT, 1);
         addModelType(ModelType.MUNIFICENT_CLASS_STAR_FRIGATE);
         setPilotCapacity(2);

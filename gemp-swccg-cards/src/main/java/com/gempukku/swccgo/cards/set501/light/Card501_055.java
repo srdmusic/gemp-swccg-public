@@ -24,7 +24,6 @@ import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.ResetForfeitUntilEndOfTurnEffect;
 import com.gempukku.swccgo.logic.modifiers.IgnoresDeploymentRestrictionsFromCardModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.DestinyDrawnResult;
@@ -35,7 +34,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 22
+ * Set: Playtesting
  * Type: Character
  * Subtype: Alien
  * Title: Ahsoka, Friend Of The Family
@@ -44,10 +43,10 @@ public class Card501_055 extends AbstractAlien {
     public Card501_055() {
         super(Side.LIGHT, 1, 5, 5, 6, 7, "Ahsoka, Friend Of The Family", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Female Togruta.");
-        setGameText("Ignores [Sk] Epic Event deployment restrictions. " +
-                    "Once per turn, may subtract 1 from a non-weapon destiny targeting your character's ability or defense value. " +
-                    "Characters she hits are forfeit = 0. Immune to non-lightsaber weapons and attrition < 5.");
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_22);
+        setGameText("While your [Skywalker] Epic Event on table, Ahsoka ignores its deployment restrictions and, " +
+                "once per turn, may subtract 1 from a non-weapon destiny draw targeting your character's ability or defense value. " +
+                "Characters Ahsoka ‘hits’ are forfeit = 0. Immune to attrition < 5.");
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_23);
         addKeywords(Keyword.FEMALE);
         setSpecies(Species.TOGRUTA);
         addPersona(Persona.AHSOKA);
@@ -64,7 +63,6 @@ public class Card501_055 extends AbstractAlien {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.weapon, Filters.not(Filters.lightsaber))));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
         return modifiers;
     }
@@ -73,7 +71,8 @@ public class Card501_055 extends AbstractAlien {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         if(TriggerConditions.isDestinyJustDrawnTargetingAbilityManeuverOrDefenseValue(game, effectResult, Filters.and(Filters.your(playerId), Filters.character))
-            && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)){
+                && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canSpot(game, self, Filters.and(Icon.SKYWALKER, Filters.Epic_Event))) {
 
             DestinyDrawnResult destinyDrawnResult = (DestinyDrawnResult) effectResult;
             DestinyType destinyType = destinyDrawnResult.getDestinyType();
