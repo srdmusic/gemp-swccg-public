@@ -30,8 +30,7 @@ import java.util.List;
 
 /**
  * Set: Playtesting
- * Type: Weapon
- * Subtype: Vehicle
+ * Type: Device
  * Title: Electro-Rangefinder (V)
  */
 public class Card501_134 extends AbstractDevice {
