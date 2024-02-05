@@ -64,8 +64,7 @@ public class Card501_125 extends AbstractRebel {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if ((TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult, Filters.blaster)
-                || TriggerConditions.isBattleDestinyJustDrawn(game, effectResult))
+        if (TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult, Filters.blaster)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
             // Subtract 1
