@@ -39,6 +39,7 @@ public class Card501_009 extends AbstractNormalEffect {
         addIcons(Icon.VIRTUAL_SET_23);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Weapons Are Part Of My Religion");
+        hideFromDeckBuilder();
     }
 
     @Override
