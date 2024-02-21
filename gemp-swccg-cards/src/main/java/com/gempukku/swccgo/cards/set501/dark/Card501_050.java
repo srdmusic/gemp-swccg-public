@@ -49,12 +49,9 @@ public class Card501_050 extends AbstractAlien {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
         Filter yourMercenaries = Filters.and(Filters.your(self), Filters.characteristic(Keyword.MERCENARY));
-        Filter yourScouts = Filters.and(Filters.your(self), Filters.scout);
-        Filter yourThieves = Filters.and(Filters.your(self), Filters.thief);
-        Filter yourGangsers = Filters.and(Filters.your(self), Filters.gangster);
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.or(yourMercenaries, yourScouts, yourThieves), Filters.atSameLocation(self)), 1));
-        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.or(yourMercenaries, yourScouts, yourThieves), Filters.atSameLocation(self)), 1));
-        modifiers.add(new MayNotCancelBattleDestinyModifier(self, Filters.sameLocationAs(self, yourGangsers), playerId, opponent));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(self), Filters.scout, Filters.thief, Filters.gangster, Filters.atSameLocation(self)), 1));
+        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.your(self), Filters.scout, Filters.thief, Filters.gangster, Filters.atSameLocation(self)), 1));
+        modifiers.add(new MayNotCancelBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.gangster)), playerId, opponent));
         return modifiers;
     }
 
