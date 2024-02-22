@@ -38,9 +38,9 @@ import java.util.List;
 public class Card501_116 extends AbstractStarfighter {
     public Card501_116() {
         super(Side.LIGHT, 3, 4, 5, 5, null, 5, 7, "Razor Crest", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("May add 1 pilot and 2 passengers. Once per turn, may make an additional move when landing or taking off. " +
+        setGameText("May add 1 pilot and 2 passengers. Once per turn, may make an additional move after taking off. " +
                 "Characters aboard apply their ability towards drawing battle destiny. " +
-                "Immune to attrition < 5 (< 6 if Din piloting or at a related location).");
+                "Immune to attrition < 5 (< 6 if Din aboard or at a related location).");
         addPersona(Persona.RAZOR_CREST);
         addIcons(Icon.MUDHORN, Icon.NAV_COMPUTER, Icon.INDEPENDENT, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_23);
         addModelType(ModelType.ST_70_CLASS_RAZOR_CREST_M_111_ASSAULT_SHIP);
@@ -57,8 +57,7 @@ public class Card501_116 extends AbstractStarfighter {
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId)
                 && Filters.movableAsAdditionalMove(playerId).accepts(game, self)
-                && (TriggerConditions.justLandedAt(game, effectResult, self, Filters.any)
-                || TriggerConditions.justTookOff(game, effectResult, self))) {
+                && TriggerConditions.justTookOff(game, effectResult, self)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make an additional move");
@@ -79,7 +78,7 @@ public class Card501_116 extends AbstractStarfighter {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new PassengerAppliesAbilityForBattleDestinyModifier(self, Filters.aboardAsPassenger(self)));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, new ConditionEvaluator(5, 6,
-                new OnTableCondition(self, Filters.and(Filters.Din, Filters.at(Filters.relatedLocation(self)))))));
+                new OnTableCondition(self, Filters.or(Filters.hasAboard(self, Filters.Din), Filters.and(Filters.Din, Filters.at(Filters.relatedLocation(self))))))));
         return modifiers;
     }
 }
