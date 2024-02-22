@@ -30,15 +30,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Razor Crest (3)
- * ST-70 class Razor Crest M-111 Assault Ship
- * Power 5 Armor 5 Hyperspeed 5
- * May add 1 pilot and 2 passengers. May make an additional move when landing or taking off. Characters aboard apply their ability towards drawing battle destiny. Immune to attrition < 5 (< 6 if Din piloting or at a related location).
- * Deploy 4 Forfeit 7
- * [Independent]
- */
-
-/**
  * Set: Playtesting
  * Type: Starship
  * Subtype: Starfighter
