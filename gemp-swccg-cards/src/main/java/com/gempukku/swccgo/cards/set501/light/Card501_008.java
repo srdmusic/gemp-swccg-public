@@ -24,7 +24,7 @@ import java.util.List;
  */
 public class Card501_008 extends AbstractSite{
     public Card501_008(){
-        super(Side.LIGHT, "Nevarro City: Mandalorian Covert", Title.Nevarro, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, Title.Mandalorian_Covert, Title.Nevarro, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationLightSideGameText("You may not deploy characters here (except Mandalorians).");
         setLocationDarkSideGameText("You may not deploy characters here (except Jango, Boba, and Jodo Kast).");
         addIcon(Icon.LIGHT_FORCE, 2);
