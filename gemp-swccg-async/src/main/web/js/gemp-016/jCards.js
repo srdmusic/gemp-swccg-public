@@ -4426,7 +4426,8 @@ var Card = Class.extend({
         if (this.alternateImage) {
             // AIs that are horizontal and the non-AI is not
             if (blueprintId == "204_47ai"
-                    || blueprintId == "200_41ai") {
+                    || blueprintId == "200_41ai"
+                    || blueprintId == "206_6ai") {
                 return true;
             }
         }
