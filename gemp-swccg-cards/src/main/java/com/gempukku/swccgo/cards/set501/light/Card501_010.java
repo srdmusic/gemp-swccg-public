@@ -38,7 +38,6 @@ public class Card501_010 extends AbstractDevice {
         setGameText("Deploy on your Mandalorian. Character is defense value +2 and immunity to attrition +2. Once per game, may [upload] Beskar Deflection. Character's game text may not be cancelled.");
         addIcons(Icon.VIRTUAL_SET_23);
         setTestingText("Beskar Armor");
-        hideFromDeckBuilder();
     }
 
     @Override
