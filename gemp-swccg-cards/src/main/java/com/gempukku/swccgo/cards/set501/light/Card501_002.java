@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractCharacterWeapon;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.PlayCardOptionId;
@@ -13,12 +14,16 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.FireWeaponAction;
 import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.WeaponBeingFiredByCondition;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalPowerDuringBattleModifier;
 import com.gempukku.swccgo.logic.modifiers.TotalWeaponDestinyModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -54,7 +59,6 @@ public class Card501_002 extends AbstractCharacterWeapon {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new TotalPowerDuringBattleModifier(self, new WeaponBeingFiredByCondition(self, Filters.Din), 1, self.getOwner()));
         modifiers.add(new TotalWeaponDestinyModifier(self, 1, Filters.The_Asset));
         return modifiers;
     }
@@ -69,6 +73,21 @@ public class Card501_002 extends AbstractCharacterWeapon {
             // Build action using common utility
             FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 1, Statistic.DEFENSE_VALUE,
                     new WeaponBeingFiredByCondition(self, Filters.Din), true, 0);
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        if (TriggerConditions.weaponJustFiredBy(game, effectResult, self, Filters.Din)
+                && GameConditions.isDuringBattle(game)) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Total power +1");
+            // Perform result(s)
+            action.appendEffect(
+                    new AddUntilEndOfBattleModifierEffect(action,
+                            new TotalPowerDuringBattleModifier(self, 1, self.getOwner()), ""));
             return Collections.singletonList(action);
         }
         return null;
