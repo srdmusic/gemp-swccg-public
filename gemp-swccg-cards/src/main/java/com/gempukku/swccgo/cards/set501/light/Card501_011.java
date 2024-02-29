@@ -62,12 +62,13 @@ public class Card501_011 extends AbstractEpicEventDeployable {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
+        PhysicalCard theAsset = Filters.findFirstActive(game, self, Filters.The_Asset);
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        if (TriggerConditions.isStartOfEachPhase(game, effectResult, Phase.CONTROL)
-                && GameConditions.isOnceDuringEitherPlayersPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && !GameConditions.occupiesWith(game, self, opponent, Filters.battleground, Filters.The_Asset)
-                && GameConditions.canSpot(game, self, Filters.The_Asset)) {
+        if (theAsset != null
+                && TriggerConditions.isStartOfEachPhase(game, effectResult, Phase.CONTROL)
+                && !GameConditions.isPresentAt(game, theAsset, Filters.battleground)
+                && GameConditions.occupies(game, playerId, Filters.battleground)) {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make " + opponent + " lose 1 Force");
             action.setActionMsg("Make " + opponent + " lose 1 force for \"The Asset\" not being present at a battleground");

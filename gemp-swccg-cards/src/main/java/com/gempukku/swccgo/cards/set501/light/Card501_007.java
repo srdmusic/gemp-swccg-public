@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class Card501_007 extends AbstractSite {
     public Card501_007() {
-        super(Side.LIGHT, "Nevarro City: Mandalorian Forge", Title.Nevarro, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, Title.Mandalorian_Forge, Title.Nevarro, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationLightSideGameText("The Armorer deploys -1 here.");
         setLocationDarkSideGameText("Your characters deploy and move here for +3 force.");
         addIcon(Icon.LIGHT_FORCE, 1);
