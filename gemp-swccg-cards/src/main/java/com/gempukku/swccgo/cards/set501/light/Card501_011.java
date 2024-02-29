@@ -67,7 +67,6 @@ public class Card501_011 extends AbstractEpicEventDeployable {
 
         if (theAsset != null
                 && TriggerConditions.isStartOfEachPhase(game, effectResult, Phase.CONTROL)
-                && GameConditions.isOnceDuringEitherPlayersPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
                 && !GameConditions.isPresentAt(game, theAsset, Filters.battleground)
                 && GameConditions.occupies(game, playerId, Filters.battleground)) {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
