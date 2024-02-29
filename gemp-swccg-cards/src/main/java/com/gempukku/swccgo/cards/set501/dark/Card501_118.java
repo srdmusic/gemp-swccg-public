@@ -33,6 +33,7 @@ public class Card501_118 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII);
+        setTestingText("Crait: The Rebellion's Abandoned Outpost");
     }
 
     @Override
