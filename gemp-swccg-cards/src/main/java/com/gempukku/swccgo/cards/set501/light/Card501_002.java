@@ -89,7 +89,7 @@ public class Card501_002 extends AbstractCharacterWeapon {
             // Perform result(s)
             action.appendEffect(
                     new AddUntilEndOfBattleModifierEffect(action,
-                            new PowerModifier(self, Filters.Din, 2),
+                            new PowerModifier(self, Filters.Din, 1),
                             "Makes " + GameUtils.getCardLink(Filters.findFirstActive(game, self, Filters.Din)) + " power +1"));
             return Collections.singletonList(action);
         }
