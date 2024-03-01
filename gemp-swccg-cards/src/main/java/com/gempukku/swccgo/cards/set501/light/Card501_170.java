@@ -11,7 +11,6 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.evaluators.ConstantEvaluator;
 import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
 import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToDeployCardToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
@@ -43,8 +42,7 @@ public class Card501_170 extends AbstractAlien {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ExtraForceCostToDeployCardToLocationModifier(self,
-                Filters.and(Filters.opponents(self), Filters.character),
-                new ConstantEvaluator(1),
+                Filters.and(Filters.opponents(self), Filters.character), 1,
                 Filters.sameLocationAs(self, Filters.or(Filters.Holopuck, Filters.The_Asset))));
         modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, 1));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
