@@ -26,6 +26,18 @@ public class ExtraForceCostToDeployCardToLocationModifier extends ExtraForceCost
      *
      * @param source         the source of the modifier
      * @param affectFilter   the filter
+     * @param evaluator      the evaluator that calculates the amount of the modifier
+     * @param locationFilter the location Filter
+     */
+    public ExtraForceCostToDeployCardToLocationModifier(PhysicalCard source, Filterable affectFilter, Evaluator evaluator, Filterable locationFilter) {
+        super(source, affectFilter, null, evaluator, Filters.locationAndCardsAtLocation(Filters.and(locationFilter)));
+    }
+
+    /**
+     * Creates a modifier that requires extra Force cost to deploy cards accepted by the filter to locations accepted by the location filter.
+     *
+     * @param source         the source of the modifier
+     * @param affectFilter   the filter
      * @param condition      the condition that must be fulfilled for the modifier to be in effect
      * @param evaluator      the evaluator that calculates the amount of the modifier
      * @param locationFilter the location Filter

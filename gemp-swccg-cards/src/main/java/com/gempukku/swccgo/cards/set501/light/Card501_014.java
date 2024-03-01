@@ -7,27 +7,29 @@ import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
-import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
+import com.gempukku.swccgo.logic.effects.ExcludeFromBattleEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
-import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotMoveAwayFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
@@ -43,12 +45,14 @@ public class Card501_014 extends AbstractObjective {
     public Card501_014() {
         super(Side.LIGHT, 0, Title.I_Can_Bring_You_In_Warm, ExpansionSet.SET_23, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Mandalorian Covert, Bounty Hunter's Guild (with Bounty Puck there) and Bounty Hunting Is A Dangerous Profession. " +
-                "For remainder of game you may not deploy Jedi (except Ahsoka and Luke), or [EPI] or [EPVII] characters. Once per turn, may [download] a [Mudhorn] location from Reserve Deck. " +
-                "While this side up, during your move phase, may return your Din (and cards on him) to owner's hand. " +
-                "Flip this card if Din or \"The Asset\" in battle.");
-        addIcons(Icon.MUDHORN);
-        addIcons(Icon.VIRTUAL_SET_23);
+        setGameText("Deploy Mandalorian Covert, Bounty Hunter's Guild (with Holouck there) and Bounty Hunting Is A Dangerous Profession. " +
+                "For remainder of game you may not deploy Jedi (except Ahsoka and Luke), or [EPI] or [EPVII] characters. " +
+                "Once per turn, may [download] a [Mudhorn] location from Reserve Deck; reshuffle. " +
+                "'The Asset' may not move away from same location as Din." +
+                "If a battle just initiated involving Din and 'The Asset', opponent chooses:" +
+                "Lose 2 force and the 'The Asset' to exclude Din from battle" +
+                "OR Flip this card.");
+        addIcons(Icon.MUDHORN, Icon.VIRTUAL_SET_23);
         setTestingText("I Can Bring You In Warm");
     }
 
@@ -70,10 +74,10 @@ public class Card501_014 extends AbstractObjective {
                     }
                 });
         action.appendRequiredEffect(
-                new DeployCardToTargetFromReserveDeckEffect(action, Filters.Bounty_Puck, Filters.Bounty_Hunters_Guild, false) {
+                new DeployCardToTargetFromReserveDeckEffect(action, Filters.Holopuck, Filters.Bounty_Hunters_Guild, false) {
                     @Override
                     public String getChoiceText() {
-                        return "Choose Bounty Puck to deploy";
+                        return "Choose Holopuck to deploy";
                     }
                 });
         action.appendRequiredEffect(
@@ -93,6 +97,7 @@ public class Card501_014 extends AbstractObjective {
         Filter jediExeptLukeAhsoka = Filters.and(Filters.your(self), Filters.Jedi, Filters.except(Filters.or(Filters.Luke, Filters.Ahsoka)));
 
         modifiers.add(new MayNotDeployModifier(self, Filters.or(jediExeptLukeAhsoka, Filters.and(Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.character)), self.getOwner()));
+        modifiers.add(new MayNotMoveAwayFromLocationModifier(self, Filters.The_Asset, Filters.sameLocationAs(self, Filters.Din)));
         return modifiers;
     }
 
@@ -114,53 +119,45 @@ public class Card501_014 extends AbstractObjective {
             return Collections.singletonList(action);
         }
 
-        Filter din = Filters.and(Filters.your(playerId), Filters.Din);
-
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, Phase.MOVE)
-                && GameConditions.canTarget(game, self, din)) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
-            action.setText("Take Din into hand");
-            // Perform result(s)
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose Din to take into hand", din) {
-                        @Override
-                        protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
-                            action.addAnimationGroup(targetedCard);
-                            // Allow response(s)
-                            action.allowResponses("Take " + GameUtils.getCardLink(targetedCard) + " into hand",
-                                    new UnrespondableEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new ReturnCardToHandFromTableEffect(action, targetedCard, Zone.HAND));
-                                        }
-                                    }
-                            );
-                        }
-                    }
-            );
-            return Collections.singletonList(action);
-        }
-
         return null;
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        String playerId = self.getOwner();
-
-        if (/*TriggerConditions.battleInitiated(game, effectResult)
-                && */GameConditions.canBeFlipped(game, self)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.or(Filters.Din, Filters.The_Asset))) {
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        if (TriggerConditions.battleInitiated(game, effectResult)
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.Din)
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.The_Asset)
+                && GameConditions.canBeFlipped(game, self)) {
+            final PhysicalCard din = Filters.findFirstActive(game, self, Filters.Din);
+            final PhysicalCard theAsset = Filters.findFirstActive(game, self, Filters.The_Asset);
+            final GameState gameState = game.getGameState();
+            final String opponent = game.getOpponent(self.getOwner());
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setSingletonTrigger(true);
-            action.setText("Flip");
-            action.setActionMsg(null);
-            // Perform result(s)
             action.appendEffect(
-                    new FlipCardEffect(action, self));
+                    new PlayoutDecisionEffect(action, opponent,
+                            new MultipleChoiceAwaitingDecision("Choose result", new String[]{"Lose 2 force and " + GameUtils.getCardLink(theAsset) + " to exclude " + GameUtils.getCardLink(din) + " from battle",
+                                    "Flip " + GameUtils.getCardLink(self)}) {
+                                @Override
+                                protected void validDecisionMade(int index, String result) {
+                                    if (index == 0) {
+                                        gameState.sendMessage(opponent + " chooses to lose 2 force and " + GameUtils.getCardLink(theAsset) + " to exclude " + GameUtils.getCardLink(din) + " from battle");
+                                        action.appendEffect(
+                                                new LoseForceEffect(action, opponent, 2, true));
+                                        action.appendEffect(
+                                                new LoseCardFromTableEffect(action, theAsset)
+                                        );
+                                        action.appendEffect(
+                                                new ExcludeFromBattleEffect(action, din));
+                                    } else {
+                                        gameState.sendMessage(opponent + " chooses to Flip " + GameUtils.getCardLink(self));
+                                        action.appendEffect(
+                                                new FlipCardEffect(action, self));
+                                    }
+                                }
+                            }
+                    )
+            );
             return Collections.singletonList(action);
         }
 
