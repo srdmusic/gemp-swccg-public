@@ -45,7 +45,7 @@ public class Card501_014 extends AbstractObjective {
     public Card501_014() {
         super(Side.LIGHT, 0, Title.I_Can_Bring_You_In_Warm, ExpansionSet.SET_23, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Mandalorian Covert, Bounty Hunter's Guild (with Holouck there) and Bounty Hunting Is A Dangerous Profession. " +
+        setGameText("Deploy Mandalorian Covert, Bounty Hunter's Guild (with Holopuck there) and Bounty Hunting Is A Dangerous Profession. " +
                 "For remainder of game you may not deploy Jedi (except Ahsoka and Luke), or [EPI] or [EPVII] characters. " +
                 "Once per turn, may [download] a [Mudhorn] location from Reserve Deck; reshuffle. " +
                 "'The Asset' may not move away from same location as Din." +
