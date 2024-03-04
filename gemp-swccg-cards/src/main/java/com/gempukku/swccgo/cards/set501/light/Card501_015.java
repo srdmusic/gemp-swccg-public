@@ -22,11 +22,21 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.ShowCardOnScreenEffect;
+import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.KeywordModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
+import com.gempukku.swccgo.logic.timing.results.CancelCardOnTableResult;
+import com.gempukku.swccgo.logic.timing.results.ForfeitedCardToUsedPileFromTableResult;
+import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
+import com.gempukku.swccgo.logic.timing.results.PlacedCardOutOfPlayFromTableResult;
 import com.gempukku.swccgo.logic.timing.results.PlayCardResult;
+import com.gempukku.swccgo.logic.timing.results.PutCardInForcePileFromTableResult;
+import com.gempukku.swccgo.logic.timing.results.PutCardInReserveDeckFromTableResult;
+import com.gempukku.swccgo.logic.timing.results.PutCardInUsedPileFromTableResult;
+import com.gempukku.swccgo.logic.timing.results.ReturnedCardToHandFromTableResult;
+import com.gempukku.swccgo.logic.timing.results.StackedFromTableResult;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -79,14 +89,46 @@ public class Card501_015 extends AbstractDevice {
             actions.add(action);
         }
 
-        if (TriggerConditions.isAboutToLeaveTable(game, effectResult, Filters.The_Asset)) {
-            PhysicalCard cardLeavingTable = ((AboutToLeaveTableResult) effectResult).getCardAboutToLeaveTable();
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText(GameUtils.getCardLink(cardLeavingTable) + " is no longer the 'The Asset'");
-            action.setActionMsg(GameUtils.getCardLink(cardLeavingTable) + " is no longer 'The Asset'");
-            action.appendEffect(
-                    new SetWhileInPlayDataEffect(action, self, null));
-            actions.add(action);
+        if (TriggerConditions.leavesTable(game, effectResult, Filters.The_Asset)) {
+
+            PhysicalCard leftTable = null;
+            boolean placeOutPlay = false;
+
+            if (effectResult.getType() == EffectResult.Type.LOST_FROM_TABLE || effectResult.getType() == EffectResult.Type.FORFEITED_TO_LOST_PILE_FROM_TABLE)
+                leftTable = ((LostFromTableResult) effectResult).getCard();
+            if (GameConditions.hasGameTextModification(game, self, ModifyGameTextType.HOLOPUCK__PLACES_OUT_OF_PLAY))
+                placeOutPlay = true;
+            else if (effectResult.getType() == EffectResult.Type.FORFEITED_TO_USED_PILE_FROM_TABLE)
+                leftTable = ((ForfeitedCardToUsedPileFromTableResult) effectResult).getCard();
+            else if (effectResult.getType() == EffectResult.Type.CANCELED_ON_TABLE)
+                leftTable = ((CancelCardOnTableResult) effectResult).getCard();
+            else if (effectResult.getType() == EffectResult.Type.STACKED_FROM_TABLE)
+                leftTable = ((StackedFromTableResult) effectResult).getCard();
+            else if (effectResult.getType() == EffectResult.Type.RETURNED_TO_HAND_FROM_TABLE)
+                leftTable = ((ReturnedCardToHandFromTableResult) effectResult).getCard();
+            else if (effectResult.getType() == EffectResult.Type.PUT_IN_RESERVE_DECK_FROM_TABLE)
+                leftTable = ((PutCardInReserveDeckFromTableResult) effectResult).getCard();
+            else if (effectResult.getType() == EffectResult.Type.PUT_IN_FORCE_PILE_FROM_TABLE)
+                leftTable = ((PutCardInForcePileFromTableResult) effectResult).getCard();
+            else if (effectResult.getType() == EffectResult.Type.PUT_IN_USED_PILE_FROM_TABLE)
+                leftTable = ((PutCardInUsedPileFromTableResult) effectResult).getCard();
+            else if (effectResult.getType() == EffectResult.Type.PLACED_OUT_OF_PLAY_FROM_TABLE)
+                leftTable = ((PlacedCardOutOfPlayFromTableResult) effectResult).getCard();
+
+
+            if (leftTable != null) {
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setText(GameUtils.getCardLink(leftTable) + " is no longer the 'The Asset'");
+                action.setActionMsg(GameUtils.getCardLink(leftTable) + " is no longer 'The Asset'");
+                if (placeOutPlay) {
+                    action.appendEffect(
+                            new PlaceCardOutOfPlayFromLostPileEffect(action, self.getOwner(), game.getOpponent(self.getOwner()), leftTable, false)
+                    );
+                }
+                action.appendEffect(
+                        new SetWhileInPlayDataEffect(action, self, null));
+                actions.add(action);
+            }
         }
 
         return actions;

@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.PreventEffectOnCardEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -14,20 +13,23 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RecirculateEffect;
 import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotCancelWeaponDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
+import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,8 +45,8 @@ public class Card501_014_BACK extends AbstractObjective {
         super(Side.LIGHT, 7, Title.Or_I_Can_Bring_You_In_Cold, ExpansionSet.SET_23, Rarity.V);
         setGameText("May immediately re-circulate and shuffle your Reserve Deck. " +
                 "While this side up, during battles involving 'The Asset', " +
-                "opponent may not cancel your non-lightsaber weapon destiny draws and if 'The Asset' about to be lost, " +
-                "place that character out of play instead. The gametext of the 'The Asset' is cancelled." +
+                "opponent may not cancel your non-lightsaber weapon destiny draws and if 'The Asset' just lost, " +
+                "place that character out of play. The gametext of the 'The Asset' is cancelled." +
                 "Flip this card at the start of any move phase.");
         addIcons(Icon.MUDHORN, Icon.VIRTUAL_SET_23);
         setTestingText("...Or I Can Bring You In Cold");
@@ -83,22 +85,24 @@ public class Card501_014_BACK extends AbstractObjective {
         modifiers.add(new MayNotDeployModifier(self, Filters.or(jediExceptLukeAndAhsoka, Filters.and(Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.character)), self.getOwner()));
         modifiers.add(new MayNotCancelWeaponDestinyModifier(self, new InBattleCondition(Filters.findFirstActive(game, self, Filters.The_Asset)), game.getDarkPlayer(), nonLightsaberWeapon));
         modifiers.add(new CancelsGameTextModifier(self, Filters.The_Asset));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.Holopuck, ModifyGameTextType.HOLOPUCK__PLACES_OUT_OF_PLAY));
         return modifiers;
     }
 
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new ArrayList<>();
+
         PhysicalCard theAsset = Filters.findFirstActive(game, self, Filters.The_Asset);
 
         if (theAsset != null
-                && (TriggerConditions.isAboutToBeLostIncludingAllCardsSituation(game, effectResult, Filters.The_Asset)
-                || TriggerConditions.isAboutToBeForfeitedToLostPile(game, effectResult, Filters.The_Asset))) {
+                && TriggerConditions.justLost(game, effectResult, Filters.The_Asset)) {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setActionMsg("Place 'The Asset' out of play");
+            PhysicalCard justLostCard = ((LostFromTableResult) effectResult).getCard();
+            action.setActionMsg("Place " + GameUtils.getCardLink(justLostCard) + " out of play");
             // Perform result(s)
             action.appendEffect(
-                    new PreventEffectOnCardEffect(action, ((AboutToLeaveTableResult) effectResult).getPreventableCardEffect(), theAsset, null));
-            action.appendEffect(
-                    new PlaceCardOutOfPlayFromTableEffect(action, theAsset));
+                    new PlaceCardOutOfPlayFromLostPileEffect(action, self.getOwner(), game.getOpponent(self.getOwner()), justLostCard, false));
+            actions.add(action);
         }
 
         if (TriggerConditions.isStartOfEachPhase(game, effectResult, Phase.MOVE)
@@ -110,9 +114,9 @@ public class Card501_014_BACK extends AbstractObjective {
             // Perform result(s)
             action.appendEffect(
                     new FlipCardEffect(action, self));
-            return Collections.singletonList(action);
+            actions.add(action);
         }
 
-        return null;
+        return actions;
     }
 }
