@@ -14,6 +14,7 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.FireWeaponAction;
 import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
@@ -21,7 +22,7 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.WeaponBeingFiredByCondition;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.TotalPowerDuringBattleModifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.modifiers.TotalWeaponDestinyModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -39,8 +40,9 @@ public class Card501_002 extends AbstractCharacterWeapon {
     public Card501_002() {
         super(Side.LIGHT, 2, "Din's IB-94 Blaster Pistol", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("Deploy on Din. May target a character or creature for free. Draw destiny. Add 1 if targeting 'The Asset.' " +
-                "If destiny +1 > defense value, target hit and forfeit = 0. If fired by Din in battle, your total power is +1.");
+        setGameText("Deploy on Din. May target a character or creature for free. Draw destiny. Add 1 if targeting 'The Asset' " +
+                "If destiny +1 > defense value, target hit and forfeit = 0. " +
+                "If fired by Din in battle, he is power +1 for remainder of battle.");
         addKeywords(Keyword.BLASTER);
         setMatchingCharacterFilter(Filters.Din);
         setTestingText("Din's IB-94 Blaster Pistol");
@@ -83,11 +85,12 @@ public class Card501_002 extends AbstractCharacterWeapon {
         if (TriggerConditions.weaponJustFiredBy(game, effectResult, self, Filters.Din)
                 && GameConditions.isDuringBattle(game)) {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Total power +1");
+            action.setText("Make Din power +1");
             // Perform result(s)
             action.appendEffect(
                     new AddUntilEndOfBattleModifierEffect(action,
-                            new TotalPowerDuringBattleModifier(self, 1, self.getOwner()), ""));
+                            new PowerModifier(self, Filters.Din, 1),
+                            "Makes " + GameUtils.getCardLink(Filters.findFirstActive(game, self, Filters.Din)) + " power +1"));
             return Collections.singletonList(action);
         }
         return null;
