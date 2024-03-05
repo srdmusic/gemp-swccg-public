@@ -39,7 +39,7 @@ import java.util.List;
 /**
  * Set: Set 23
  * Type: Epic Event
- * Title: Bounty Hunting Is A Dangerous Profession
+ *  Title: Bounty Hunting Is A Dangerous Profession
  */
 public class Card501_011 extends AbstractEpicEventDeployable {
     public Card501_011() {
@@ -71,8 +71,7 @@ public class Card501_011 extends AbstractEpicEventDeployable {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         if (TriggerConditions.isEndOfOpponentsPhase(game, effectResult, Phase.DEPLOY, playerId)
-                && !GameConditions.canSpot(game, self, Filters.and(Filters.The_Asset, Filters.presentAt(Filters.battleground_site)))
-                && GameConditions.occupies(game, playerId, Filters.battleground)) {
+                && !GameConditions.canSpot(game, self, Filters.and(Filters.The_Asset, Filters.presentAt(Filters.battleground_site)))) {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make " + opponent + " lose 1 Force");
             action.setActionMsg("Make " + opponent + " lose 1 force for 'The Asset' not being present at a battleground");

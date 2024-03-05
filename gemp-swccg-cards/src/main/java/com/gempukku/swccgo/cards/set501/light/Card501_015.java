@@ -65,7 +65,7 @@ public class Card501_015 extends AbstractNormalEffect {
         final Filter filter = Filters.and(Filters.opponents(self), Filters.character, Filters.or(Filters.abilityMoreThan(2), Filters.leader), Filters.non_Dark_Jedi_character);
 
         if (!GameConditions.hasAttached(game, self, Filters.character)
-                && TriggerConditions.justDeployed(game, effectResult, opponent, filter)) {
+                && TriggerConditions.justDeployedToLocation(game, effectResult, opponent, filter, Filters.site)) {
             PhysicalCard deployedCard = ((PlayCardResult) effectResult).getPlayedCard();
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Make " + GameUtils.getCardLink(deployedCard) + " 'The Asset'");
