@@ -68,6 +68,7 @@ public class Card501_011 extends AbstractEpicEventDeployable {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
+        PhysicalCard theAsset = Filters.findFirstActive(game, self, Filters.The_Asset);
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         if (TriggerConditions.isEndOfOpponentsPhase(game, effectResult, Phase.DEPLOY, playerId)

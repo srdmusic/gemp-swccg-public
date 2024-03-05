@@ -85,8 +85,7 @@ public class Card501_125 extends AbstractRebel {
         final String opponent = game.getOpponent(playerId);
 
         // Check condition(s)
-        if ((TriggerConditions.battleInitiated(game, effectResult, opponent)
-                || TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent))
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.sameLocation(self))
                 && GameConditions.isOncePerGame(game, self, gameTextActionId2)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId2, true)) {
 
@@ -100,8 +99,7 @@ public class Card501_125 extends AbstractRebel {
             actions.add(action2);
         }
 
-        if ((TriggerConditions.battleInitiated(game, effectResult, opponent)
-                || TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent))
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.sameLocation(self))
                 && GameConditions.isOncePerGame(game, self, gameTextActionId2)
                 && GameConditions.hasInHand(game, playerId, Filters.blaster)) {
 
