@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -25,8 +26,9 @@ import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
-import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.TotalForceGenerationModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -43,8 +45,9 @@ public class Card501_011 extends AbstractEpicEventDeployable {
     public Card501_011() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Bounty_Hunting_Is_A_Dangerous_Profession, Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
         setGameText("Deploy on table if your [Mudhorn] objective on table. " +
-                "Your Boba, Bo-Katan, Cara Dune, and Grogu are deploy -1 and destiny +1. " +
-                "While you occupy a battleground: At the beginning of each control phase, opponent loses 1 Force unless 'The Asset' present at a battleground. " +
+                "Your Boba, Cara Dune, and Grogu are deploy -1. " +
+                "At the end of opponent's deploy phase, opponent loses 1 Force unless 'The Asset' present at a battleground site." +
+                "Your total force generation and battle destiny is +1 for each card stacked here. " +
                 "During your move phase, may take Din (and your cards attached to him) into hand from a location.");
         addIcons(Icon.MUDHORN, Icon.VIRTUAL_SET_23);
         setTestingText("Bounty Hunting Is A Dangerous Profession");
@@ -53,10 +56,11 @@ public class Card501_011 extends AbstractEpicEventDeployable {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new ArrayList<>();
-        Filter groguBobaBoCara = Filters.and(Filters.your(self), Filters.or(Filters.Grogu, Filters.Bo_Katan, Filters.Boba_Fett, Filters.Cara_Dune));
+        Filter groguBobaBoCara = Filters.and(Filters.your(self), Filters.or(Filters.Grogu, Filters.Boba_Fett, Filters.Cara_Dune));
 
-        modifiers.add(new DestinyModifier(self, groguBobaBoCara, 1));
         modifiers.add(new DeployCostModifier(self, groguBobaBoCara, -1));
+        modifiers.add(new TotalBattleDestinyModifier(self, new StackedEvaluator(self), self.getOwner()));
+        modifiers.add(new TotalForceGenerationModifier(self, new StackedEvaluator(self), self.getOwner()));
         return modifiers;
     }
 
@@ -66,10 +70,9 @@ public class Card501_011 extends AbstractEpicEventDeployable {
         String opponent = game.getOpponent(playerId);
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        if (TriggerConditions.isStartOfEachPhase(game, effectResult, Phase.CONTROL)
-                && GameConditions.isOnceDuringEitherPlayersPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && !GameConditions.occupiesWith(game, self, opponent, Filters.battleground, Filters.The_Asset)
-                && GameConditions.canSpot(game, self, Filters.The_Asset)) {
+        if (TriggerConditions.isEndOfOpponentsPhase(game, effectResult, Phase.DEPLOY, playerId)
+                && !GameConditions.canSpot(game, self, Filters.and(Filters.The_Asset, Filters.presentAt(Filters.battleground_site)))
+                && GameConditions.occupies(game, playerId, Filters.battleground)) {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make " + opponent + " lose 1 Force");
             action.setActionMsg("Make " + opponent + " lose 1 force for 'The Asset' not being present at a battleground");

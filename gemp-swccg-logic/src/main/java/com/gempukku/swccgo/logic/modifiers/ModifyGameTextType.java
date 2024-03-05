@@ -28,7 +28,6 @@ public enum ModifyGameTextType {
     FEAR_WILL_KEEP_THEM_IN_LINE__ADDS_1_TO_ATTRITION("Add 1 to attrition"),
     FLAGSHIP_OPERATIONS__MAY_IGNORE_DEPLOYMENT_RESTRICTIONS("May ignore deployment restrictions"),
     GRIMTAASH__PUT_TWO_CARDS_IN_USED("Place two cards in used pile first"),
-    HOLOPUCK__PLACES_OUT_OF_PLAY("Place 'The Asset' out of play"),
     HOTH_SENTRY__APPLIES_ALL_MODIFIERS("Applies all modifiers"),
     HUNT_DOWN__DO_NOT_PLACE_OUT_OF_PLAY_IF_MAUL_DUELS("Not placed out of play if Maul initiates a duel"),
     I_CANT_BELIEVE_HES_GONE__ONLY_EFFECTS_BATTLES_WITH_LUKE_OR_LEIA("Only applies to battles with Luke or Leia"),

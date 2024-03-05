@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.SetWhileInPlayDataEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -26,8 +27,6 @@ import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotCancelWeaponDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 
@@ -85,25 +84,36 @@ public class Card501_014_BACK extends AbstractObjective {
         modifiers.add(new MayNotDeployModifier(self, Filters.or(jediExceptLukeAndAhsoka, Filters.and(Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.character)), self.getOwner()));
         modifiers.add(new MayNotCancelWeaponDestinyModifier(self, new InBattleCondition(Filters.findFirstActive(game, self, Filters.The_Asset)), game.getDarkPlayer(), nonLightsaberWeapon));
         modifiers.add(new CancelsGameTextModifier(self, Filters.The_Asset));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Holopuck, ModifyGameTextType.HOLOPUCK__PLACES_OUT_OF_PLAY));
         return modifiers;
     }
 
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new ArrayList<>();
 
-        PhysicalCard theAsset = Filters.findFirstActive(game, self, Filters.The_Asset);
+        PhysicalCard holoPuck = Filters.findFirstActive(game, self, Filters.Holopuck);
 
-        if (theAsset != null
-                && TriggerConditions.justLost(game, effectResult, Filters.The_Asset)) {
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            PhysicalCard justLostCard = ((LostFromTableResult) effectResult).getCard();
-            action.setActionMsg("Place " + GameUtils.getCardLink(justLostCard) + " out of play");
-            // Perform result(s)
-            action.appendEffect(
-                    new PlaceCardOutOfPlayFromLostPileEffect(action, self.getOwner(), game.getOpponent(self.getOwner()), justLostCard, false));
-            actions.add(action);
+        if (holoPuck != null
+                && TriggerConditions.leavesTable(game, effectResult, Filters.The_Asset)) {
+
+            if (effectResult.getType() == EffectResult.Type.LOST_FROM_TABLE || effectResult.getType() == EffectResult.Type.FORFEITED_TO_LOST_PILE_FROM_TABLE) {
+                PhysicalCard leftTable = ((LostFromTableResult) effectResult).getCard();
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setText("Place " + GameUtils.getCardLink(leftTable) + " out of play");
+                action.setActionMsg("Place " + GameUtils.getCardLink(leftTable) + " out of play");
+                action.appendEffect(
+                        new PlaceCardOutOfPlayFromLostPileEffect(action, self.getOwner(), game.getOpponent(self.getOwner()), leftTable, false)
+                );
+                action.appendEffect(
+                        new SetWhileInPlayDataEffect(action, holoPuck, null));
+                actions.add(action);
+            } else {
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.appendEffect(
+                        new SetWhileInPlayDataEffect(action, holoPuck, null));
+                actions.add(action);
+            }
         }
+
 
         if (TriggerConditions.isStartOfEachPhase(game, effectResult, Phase.MOVE)
                 && GameConditions.canBeFlipped(game, self)) {

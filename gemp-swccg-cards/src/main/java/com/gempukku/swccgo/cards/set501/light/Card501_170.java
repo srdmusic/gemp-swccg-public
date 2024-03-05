@@ -29,7 +29,7 @@ public class Card501_170 extends AbstractAlien {
     public Card501_170() {
         super(Side.LIGHT, 3, 3, 3, 3, 5, "Greef Karga, Disgraced Magistrate", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Leader. Information broker.");
-        setGameText("Opponent must first use 1 Force to deploy a character to same location as Holopuck or 'The Asset'. " +
+        setGameText("Opponent must first use 1 Force to deploy a character to same location as Holopuck." +
                 "Draws one battle destiny if unable to otherwise. " +
                 "Immune to attrition < 3.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_23);
@@ -43,7 +43,7 @@ public class Card501_170 extends AbstractAlien {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ExtraForceCostToDeployCardToLocationModifier(self,
                 Filters.and(Filters.opponents(self), Filters.character), 1,
-                Filters.sameLocationAs(self, Filters.or(Filters.Holopuck, Filters.The_Asset))));
+                Filters.sameLocationAs(self, Filters.or(Filters.Holopuck))));
         modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, 1));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
         return modifiers;

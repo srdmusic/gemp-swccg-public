@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
+import com.gempukku.swccgo.cards.effects.SetWhileInPlayDataEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -23,10 +24,10 @@ import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.ExcludeFromBattleEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveAwayFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -50,7 +51,7 @@ public class Card501_014 extends AbstractObjective {
                 "Once per turn, may [download] a [Mudhorn] location from Reserve Deck; reshuffle. " +
                 "'The Asset' may not move away from same location as Din." +
                 "If a battle just initiated involving Din and 'The Asset', opponent chooses:" +
-                "Lose 2 force and the 'The Asset' to exclude Din from battle" +
+                "Lose the 'The Asset' to exclude Din from battle (you may [upload] any card; reshuffle)" +
                 "OR Flip this card.");
         addIcons(Icon.MUDHORN, Icon.VIRTUAL_SET_23);
         setTestingText("I Can Bring You In Warm");
@@ -124,6 +125,8 @@ public class Card501_014 extends AbstractObjective {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new ArrayList<>();
+
         if (TriggerConditions.battleInitiated(game, effectResult)
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.Din)
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.The_Asset)
@@ -136,19 +139,20 @@ public class Card501_014 extends AbstractObjective {
             action.setSingletonTrigger(true);
             action.appendEffect(
                     new PlayoutDecisionEffect(action, opponent,
-                            new MultipleChoiceAwaitingDecision("Choose result", new String[]{"Lose 2 force and " + GameUtils.getCardLink(theAsset) + " to exclude " + GameUtils.getCardLink(din) + " from battle",
+                            new MultipleChoiceAwaitingDecision("Choose result", new String[]{"Lose " + GameUtils.getCardLink(theAsset) + " to exclude " + GameUtils.getCardLink(din) + " from battle",
                                     "Flip " + GameUtils.getCardLink(self)}) {
                                 @Override
                                 protected void validDecisionMade(int index, String result) {
                                     if (index == 0) {
-                                        gameState.sendMessage(opponent + " chooses to lose 2 force and " + GameUtils.getCardLink(theAsset) + " to exclude " + GameUtils.getCardLink(din) + " from battle");
-                                        action.appendEffect(
-                                                new LoseForceEffect(action, opponent, 2, true));
+                                        gameState.sendMessage(opponent + " chooses to lose " + GameUtils.getCardLink(theAsset) + " to exclude " + GameUtils.getCardLink(din) + " from battle");
                                         action.appendEffect(
                                                 new LoseCardFromTableEffect(action, theAsset)
                                         );
                                         action.appendEffect(
                                                 new ExcludeFromBattleEffect(action, din));
+                                        action.appendEffect(
+                                                new TakeCardIntoHandFromReserveDeckEffect(action, self.getOwner(), true)
+                                        );
                                     } else {
                                         gameState.sendMessage(opponent + " chooses to Flip " + GameUtils.getCardLink(self));
                                         action.appendEffect(
@@ -158,9 +162,19 @@ public class Card501_014 extends AbstractObjective {
                             }
                     )
             );
-            return Collections.singletonList(action);
+            actions.add(action);
         }
 
-        return null;
+        PhysicalCard holoPuck = Filters.findFirstActive(game, self, Filters.Holopuck);
+
+        if (holoPuck != null
+                && TriggerConditions.leavesTable(game, effectResult, Filters.The_Asset)) {
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.appendEffect(
+                    new SetWhileInPlayDataEffect(action, holoPuck, null));
+            actions.add(action);
+        }
+
+        return actions;
     }
 }
