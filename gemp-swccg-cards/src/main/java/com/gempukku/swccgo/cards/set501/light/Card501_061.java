@@ -49,7 +49,7 @@ public class Card501_061 extends AbstractCreature {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotAttackModifier(self, self));
-        modifiers.add(new IconModifier(self, Filters.and(Filters.sameLocation(self), Filters.your(self)), Icon.LIGHT_FORCE));
+        modifiers.add(new IconModifier(self, Filters.sameLocation(self), Icon.LIGHT_FORCE));
         modifiers.add(new PowerModifier(self, Filters.or(Filters.and(Filters.character, Filters.present(self)),  Filters.and(Filters.starship, Filters.or(Filters.hasAttached(self), Filters.hasAboard(self)))), new TrueCondition(), new CardMatchesEvaluator(-1, 2, Filters.your(self)), false));
         modifiers.add(new DefenseValueModifier(self, Filters.or(Filters.and(Filters.character, Filters.present(self)),  Filters.and(Filters.starship, Filters.or(Filters.hasAttached(self), Filters.hasAboard(self)))), new TrueCondition(), new CardMatchesEvaluator(-1, 2, Filters.your(self)), false));
         return modifiers;
