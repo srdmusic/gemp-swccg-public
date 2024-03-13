@@ -1,7 +1,9 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractStarfighter;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.HasAttachedCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -14,14 +16,11 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.MoveCardAsRegularMoveEffect;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardAboardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PassengerAppliesAbilityForBattleDestinyModifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -35,10 +34,10 @@ import java.util.List;
  */
 public class Card501_116 extends AbstractStarfighter {
     public Card501_116() {
-        super(Side.LIGHT, 3, 4, 5, 5, null, 5, 7, "Razor Crest", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("May add 1 pilot and 2 passengers. May make an additional move after taking off. " +
+        super(Side.LIGHT, 3, 4, 5, 5, null, 5, 6, "Razor Crest", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setGameText("May add 1 pilot and 2 passengers. Once per game, may [download] an alien of ability = 4 aboard. " +
                 "Characters aboard apply their ability towards drawing battle destiny. " +
-                "Immune to attrition < 5 (< 6 if Din aboard or at a related location).");
+                "Immune to attrition < 5 (<6 if Din aboard.)");
         addPersona(Persona.RAZOR_CREST);
         addIcons(Icon.MUDHORN, Icon.NAV_COMPUTER, Icon.INDEPENDENT, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_23);
         addModelType(ModelType.ST_70_CLASS_RAZOR_CREST_M_111_ASSAULT_SHIP);
@@ -49,19 +48,20 @@ public class Card501_116 extends AbstractStarfighter {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActionsEvenIfUnpiloted(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.RAZOR_CREST__DOWNLOAD_ALIEN;
 
-        // Check condition(s)
-        if (Filters.movableAsAdditionalMove(playerId).accepts(game, self)
-                && TriggerConditions.justTookOff(game, effectResult, self)) {
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
+                && getPilotOrPassengerCapacity() > 0) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Make an additional move");
-            action.setActionMsg("Have " + GameUtils.getCardLink(self) + " make an additional move");
-            // Perform result(s)
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Alien aboard");
+            action.setActionMsg("Deploy Alien of ability = 4 aboard from Reserve Deck");
+            action.appendUsage(
+                    new OncePerGameEffect(action));
             action.appendEffect(
-                    new MoveCardAsRegularMoveEffect(action, playerId, self, false, true, Filters.any));
+                    new DeployCardAboardFromReserveDeckEffect(action, Filters.and(Filters.alien, Filters.abilityEqualTo(4)), Filters.sameCardId(self), true));
             return Collections.singletonList(action);
         }
         return null;
@@ -72,7 +72,7 @@ public class Card501_116 extends AbstractStarfighter {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new PassengerAppliesAbilityForBattleDestinyModifier(self, Filters.aboardAsPassenger(self)));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, new ConditionEvaluator(5, 6,
-                new OnTableCondition(self, Filters.or(Filters.hasAboard(self, Filters.Din), Filters.and(Filters.Din, Filters.at(Filters.relatedLocation(self))))))));
+                new HasAttachedCondition(self, Filters.Din))));
         return modifiers;
     }
 }
