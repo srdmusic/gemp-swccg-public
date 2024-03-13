@@ -92,7 +92,6 @@ var ChatBoxUI = Class.extend({
                         function () {
                             showMutedUsersDialog();
                         });
-                this.hideMessageClass("systemMessage");
             }
 
             if (showList) {
@@ -173,6 +172,9 @@ var ChatBoxUI = Class.extend({
     },
 
     appendMessage:function (message, msgClass) {
+        if(checkIfMessageShouldBeMuted(message)) {
+            return;
+        }
         if (msgClass == undefined)
             msgClass = "chatMessage";
         var messageDiv = $("<div class='message " + msgClass + "'>" + message + "</div>");

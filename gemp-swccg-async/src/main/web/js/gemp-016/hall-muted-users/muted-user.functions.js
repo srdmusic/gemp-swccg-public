@@ -1,6 +1,11 @@
 const IS_MUTE_ENABLED = "isMuteEnabled";
 const MUTED_USERS = "mutedUsers";
 
+// type MutedUser = {
+//     name: string;
+//     reason: string;
+// }
+
 const USER_NAME_REGEX = new RegExp(/<b>(\S*):<\/b>/);
 
 function getIsMuteEnabled() {
@@ -8,20 +13,25 @@ function getIsMuteEnabled() {
 }
 
 function getMutedUsers() {
-    const mutedUsers = JSON.parse(window.localStorage.getItem(MUTED_USERS)) ?? '';
-    return mutedUsers ?? [];
+    return JSON.parse(window.localStorage.getItem(MUTED_USERS)) ?? [];
 }
 
 function setMutedUsers(userNames) {
     window.localStorage.setItem(MUTED_USERS, JSON.stringify(userNames));
 }
 
-function addMutedUser(userName) {
+function isUserMuted(userName) {
     const mutedUsers = getMutedUsers();
-    if (mutedUsers.includes(userName)) {
-        return;
+    return mutedUsers.find(user => user.name === userName);
+}
+
+function addMutedUser({name, reason = ''}) {
+    const mutedUsers = getMutedUsers();
+    if (isUserMuted(name)) {
+        return false;
     }
-    setMutedUsers([...mutedUsers, userName]);
+    setMutedUsers([...mutedUsers, { name, reason }]);
+    return true;
 }
 
 function getUserNameFromMessage(message) {
@@ -33,10 +43,9 @@ function getUserNameFromMessage(message) {
 }
 
 function checkIfMessageShouldBeMuted(message) {
-    // if (window.location.href.includes("game.html")) {
-    //     return false;
-    // }
+    if (window.location.href.includes("game.html")) {
+        return false;
+    }
     const userName = getUserNameFromMessage(message);
-    console.log(userName)
-    return getMutedUsers().includes(userName);
+    return !!isUserMuted(userName);
 }
