@@ -189,7 +189,7 @@
     "name":"Premiere - Cloud City (Modified)",
     "code":"premiere_cc_m",
     "set":[1, 2, 3, 4, 5, 101, 102, 103, 104, 105],
-    "banned": ["4_114", "4_16", "4_17", "4_27", "5_85"]
+    "banned": ["4_114", "4_136", "4_140", "4_16", "4_17", "4_27", "5_85"]
   },
   {
     "name":"Premiere - Dagobah",
