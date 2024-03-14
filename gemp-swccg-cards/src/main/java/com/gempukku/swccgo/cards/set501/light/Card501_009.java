@@ -43,8 +43,8 @@ public class Card501_009 extends AbstractNormalEffect {
         super(Side.LIGHT, 2, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Weapons_Are_Part_Of_My_Religion, Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
         setGameText("Deploy on table. " +
                 "While armed, Din draws one battle destiny if unable to otherwise, and is immune to Disarmed and attrition <4. " +
-                "Once per turn, may [download] one character weapon or device on your Mandalorian; reshuffle. " +
-                "If Din about to be lost, your cards on him go to Used Pile. [Immune to Alter.]");
+                "Once per turn, may [download] one unique character weapon or device on your Mandalorian; reshuffle. " +
+                "If Din about to leave table, your cards on him go to Used Pile. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_23);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Weapons Are Part Of My Religion");
@@ -73,13 +73,13 @@ public class Card501_009 extends AbstractNormalEffect {
                 && GameConditions.canSpot(game, self, characterFilter)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy a weapon or device from Reserve Deck");
-            action.setActionMsg("Deploy one character weapon or device on your Mandalorian from Reserve Deck");
+            action.setActionMsg("Deploy one unique character weapon or device on your Mandalorian from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.or(Filters.weapon, Filters.device), characterFilter, true)
+                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.or(Filters.and(Filters.unique, Filters.weapon), Filters.device), characterFilter, true)
             );
             actions.add(action);
         }
@@ -93,8 +93,7 @@ public class Card501_009 extends AbstractNormalEffect {
         final String playerId = self.getOwner();
 
         // Check condition(s)
-        if (TriggerConditions.isAboutToBeLost(game, effectResult, Filters.Din)
-                || TriggerConditions.isAboutToBeForfeitedToLostPile(game, effectResult, Filters.Din)) {
+        if (TriggerConditions.isAboutToLeaveTable(game, effectResult, Filters.Din)) {
             final AboutToLeaveTableResult aboutToLeaveTableResult = (AboutToLeaveTableResult) effectResult;
             final PhysicalCard cardToBeLost = aboutToLeaveTableResult.getCardAboutToLeaveTable();
             final Collection<PhysicalCard> yourCardsOnDin = Filters.filter(cardToBeLost.getCardsAttached(), game, Filters.your(playerId));

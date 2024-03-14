@@ -12,7 +12,6 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -22,8 +21,8 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.ReturnCardsToHandFromTableSimultaneouslyEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardsOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -33,6 +32,7 @@ import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -48,7 +48,7 @@ public class Card501_011 extends AbstractEpicEventDeployable {
                 "Your Boba, Cara Dune, and Grogu are deploy -1. " +
                 "At the end of opponent's deploy phase, opponent loses 1 Force unless 'The Asset' present at a battleground site." +
                 "Your total force generation and battle destiny is +1 for each card stacked here. " +
-                "During your move phase, may take Din (and your cards attached to him) into hand from a location.");
+                "During your move phase, may take Din (and Grogu if with Din) into hand from a location.");
         addIcons(Icon.MUDHORN, Icon.VIRTUAL_SET_23);
         setTestingText("Bounty Hunting Is A Dangerous Profession");
     }
@@ -88,25 +88,30 @@ public class Card501_011 extends AbstractEpicEventDeployable {
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         Filter din = Filters.and(Filters.your(playerId), Filters.Din, Filters.at(Filters.location));
+        Filter groguWithDin = Filters.and(Filters.Grogu, Filters.with(self, Filters.Din));
 
         if (GameConditions.isDuringYourPhase(game, playerId, Phase.MOVE)
                 && GameConditions.canTarget(game, self, din)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
-            action.setText("Take Din into hand");
+
+            int numCards = GameConditions.canSpot(game, self, groguWithDin) ? 2 : 1;
+
+            action.setText("Take card(s) into hand");
+
             // Perform result(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose Din to take into hand", din) {
+                    new TargetCardsOnTableEffect(action, playerId, "Choose Din to take into hand", numCards, numCards, Filters.or(din, groguWithDin)) {
                         @Override
-                        protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
-                            action.addAnimationGroup(targetedCard);
+                        protected void cardsTargeted(int targetGroupId, final Collection<PhysicalCard> targetedCards) {
+                            action.addAnimationGroup(targetedCards);
                             // Allow response(s)
-                            action.allowResponses("Take " + GameUtils.getCardLink(targetedCard) + " into hand",
+                            action.allowResponses("Take " + GameUtils.getAppendedTextNames(targetedCards) + " into hand",
                                     new UnrespondableEffect(action) {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
                                             // Perform result(s)
                                             action.appendEffect(
-                                                    new ReturnCardToHandFromTableEffect(action, targetedCard, Zone.HAND, Zone.LOST_PILE));
+                                                    new ReturnCardsToHandFromTableSimultaneouslyEffect(action, targetedCards, true));
                                         }
                                     }
                             );

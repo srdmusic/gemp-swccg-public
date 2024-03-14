@@ -38,7 +38,7 @@ public class Card501_001 extends AbstractUsedOrStartingInterrupt {
         super(Side.LIGHT, 4, "This Is The Way", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("Used: Take a unique Mandalorian into hand from Reserve Deck, reshuffle." +
-                "Starting: Take Din, Weapons Are Part Of My Religion, The Razor Crest, and Mandalorian Forge into hand. " +
+                "Starting: Take Din, Weapons Are Part Of My Religion, The Razor Crest, and Mandalorian Covert into hand. " +
                 "Draw 6 cards instead of 8. Place Interrupt in Reserve Deck.");
         addIcons(Icon.VIRTUAL_SET_23);
         setTestingText("This Is The Way");
@@ -74,7 +74,7 @@ public class Card501_001 extends AbstractUsedOrStartingInterrupt {
         final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
         action.setText("Take cards into hand from Reserve Deck");
         // Allow response(s)
-        action.allowResponses("Take Din, Weapons Are Part Of My Religion, The Razor Crest, and Mandalorian Forge into hand from Reserve Deck",
+        action.allowResponses("Take Din, Weapons Are Part Of My Religion, The Razor Crest, and Mandalorian Covert into hand from Reserve Deck",
                 new RespondablePlayCardEffect(action) {
                     @Override
                     protected void performActionResults(Action targetingAction) {
@@ -83,12 +83,12 @@ public class Card501_001 extends AbstractUsedOrStartingInterrupt {
                                 new TakeCardCombinationIntoHandFromReserveDeckEffect(action, playerId, false) {
                                     @Override
                                     public String getChoiceText(SwccgGame game, Collection<PhysicalCard> cardsSelected) {
-                                        return "Choose Din, Weapons Are Part Of My Religion, The Razor Crest, and Mandalorian Forge";
+                                        return "Choose Din, Weapons Are Part Of My Religion, The Razor Crest, and Mandalorian Covert";
                                     }
 
                                     @Override
                                     public Filter getValidToSelectFilter(SwccgGame game, Collection<PhysicalCard> cardsSelected) {
-                                        return Filters.or(Filters.Din, Filters.title(Title.Weapons_Are_Part_Of_My_Religion), Filters.Razor_Crest, Filters.title(Title.Mandalorian_Forge));
+                                        return Filters.or(Filters.Din, Filters.title(Title.Weapons_Are_Part_Of_My_Religion), Filters.Razor_Crest, Filters.title(Title.Mandalorian_Covert));
                                     }
 
                                     @Override
@@ -96,7 +96,7 @@ public class Card501_001 extends AbstractUsedOrStartingInterrupt {
                                         if (Filters.filter(cardsSelected, game, Filters.Din).size() != 1
                                                 || Filters.filter(cardsSelected, game, Filters.title(Title.Weapons_Are_Part_Of_My_Religion)).size() != 1
                                                 || Filters.filter(cardsSelected, game, Filters.Razor_Crest).size() != 1
-                                                || Filters.filter(cardsSelected, game, Filters.title(Title.Mandalorian_Forge)).size() != 1) {
+                                                || Filters.filter(cardsSelected, game, Filters.title(Title.Mandalorian_Covert)).size() != 1) {
                                             return false;
                                         }
                                         return true;
