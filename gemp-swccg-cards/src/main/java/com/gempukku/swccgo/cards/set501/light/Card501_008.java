@@ -25,8 +25,8 @@ import java.util.List;
 public class Card501_008 extends AbstractSite{
     public Card501_008(){
         super(Side.LIGHT, Title.Mandalorian_Covert, Uniqueness.DIAMOND_1, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationLightSideGameText("You may not deploy characters here (except Mandalorians). Immune to No Escape.");
-        setLocationDarkSideGameText("You may not deploy characters here (except Jango, Boba, and Jodo Kast).");
+        setLocationLightSideGameText("You may not deploy characters here (except Mandalorians). May not be deployed to Dagobah, Endor, Jakku, or Tatooine.");
+        setLocationDarkSideGameText("You may not deploy characters here (except Jango, Boba, and Jodo Kast). Immune to No Escape.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.INTERIOR_SITE, Icon.UNDERGROUND, Icon.PLANET);
         addImmuneToCardTitle(Title.No_Escape);
