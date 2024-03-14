@@ -56,8 +56,7 @@ public class Card220_007 extends AbstractStarfighter {
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.or(Icon.REFLECTIONS_II, Icon.SKYWALKER), Filters.site))
                 && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.CHEWIE)
-                || (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.HAN)))
-                && getPilotOrPassengerCapacity() > 0) {
+                || (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.HAN)))) {
             
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy Han or Chewie aboard");

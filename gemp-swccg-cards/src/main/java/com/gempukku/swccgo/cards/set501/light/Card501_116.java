@@ -2,7 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.HasAttachedCondition;
+import com.gempukku.swccgo.cards.conditions.HasAboardCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -52,8 +52,7 @@ public class Card501_116 extends AbstractStarfighter {
         GameTextActionId gameTextActionId = GameTextActionId.RAZOR_CREST__DOWNLOAD_ALIEN;
 
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
-                && getPilotOrPassengerCapacity() > 0) {
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy Alien aboard");
@@ -72,7 +71,7 @@ public class Card501_116 extends AbstractStarfighter {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new PassengerAppliesAbilityForBattleDestinyModifier(self, Filters.aboardAsPassenger(self)));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, new ConditionEvaluator(5, 6,
-                new HasAttachedCondition(self, Filters.Din))));
+                new HasAboardCondition(self, Filters.Din))));
         return modifiers;
     }
 }

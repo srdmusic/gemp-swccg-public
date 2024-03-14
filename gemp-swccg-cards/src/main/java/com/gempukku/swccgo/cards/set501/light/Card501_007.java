@@ -43,7 +43,7 @@ public class Card501_007 extends AbstractUniqueStarshipSite {
 
         GameTextActionId gameTextActionId = GameTextActionId.COLD_STORAGE__RETRIEVE_DIN;
 
-        if (GameConditions.canSearchLostPile(game, self.getOwner(), self, gameTextActionId)
+        if (GameConditions.canSearchLostPile(game, playerOnLightSideOfLocation, self, gameTextActionId)
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.setText("Retrieve Din into hand");
@@ -52,7 +52,7 @@ public class Card501_007 extends AbstractUniqueStarshipSite {
                     new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new RetrieveCardIntoHandEffect(action, self.getOwner(), Filters.Din));
+                    new RetrieveCardIntoHandEffect(action, playerOnLightSideOfLocation, Filters.Din));
             actions.add(action);
         }
 

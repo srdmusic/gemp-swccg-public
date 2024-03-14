@@ -32,8 +32,8 @@ import java.util.List;
 public class Card501_171 extends AbstractSite {
     public Card501_171() {
         super(Side.LIGHT, Title.Sewers, Title.Nevarro, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("During your move phase, your characters may move between here and any Nevarro City site.");
-        setLocationLightSideGameText("Force drain -1 here.");
+        setLocationLightSideGameText("During your move phase, your characters may move between here and any Nevarro City site.");
+        setLocationDarkSideGameText("Force drain -1 here.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.UNDERGROUND, Icon.INTERIOR_SITE, Icon.PLANET, Icon.MUDHORN, Icon.VIRTUAL_SET_23);
