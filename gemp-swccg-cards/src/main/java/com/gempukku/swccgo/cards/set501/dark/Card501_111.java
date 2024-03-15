@@ -105,7 +105,7 @@ public class Card501_111 extends AbstractObjective {
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.and(Filters.battleground_system, Icon.EPISODE_VII), Filters.Crait_Salt_Plateau), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.and(Filters.battleground_system, Icon.EPISODE_VII), Filters.Crait_location), true));
             actions.add(action);
         }
         return actions;
