@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 22
+ * Set: Playtesting
  * Type: Effect
  * Title: Navy Of The First Order
  */
@@ -34,7 +34,7 @@ public class Card501_105 extends AbstractNormalEffect {
     public Card501_105() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Navy Of The First Order", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on table. During your deploy phase, you may reveal one [First Order] Starship from hand to [upload] its matching pilot character (or vice versa) and deploy both simultaneously (for -1 Force each). [Immune to Alter]");
-        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_23);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Navy Of The First Order");
     }

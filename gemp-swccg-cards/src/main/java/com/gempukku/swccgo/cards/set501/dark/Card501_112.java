@@ -29,7 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 22
+ * Set: Playtesting
  * Type: Starship
  * Subtype: Capital
  * Title: Fulminatrix
@@ -37,8 +37,8 @@ import java.util.List;
 public class Card501_112 extends AbstractCapitalStarship {
     public Card501_112() {
         super(Side.DARK, 3, 9, 10, 8, null, 3, 9, Title.Fulminatrix, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("May add 5 pilots, 4 passengers, 3 TIEs, and 2 vehicles. Permanent pilot provides ability of 2. Deploy -3 if Tracked Fleet on tablew. Opponent must lose 1 force to move a starship from here.");
-        addIcons(Icon.NAV_COMPUTER, Icon.EPISODE_VII, Icon.SCOMP_LINK, Icon.FIRST_ORDER, Icon.VIRTUAL_SET_22);
+        setGameText("May add 5 pilots, 4 passengers, 3 TIEs, and 2 vehicles. Permanent pilot provides ability of 2. Deploy -3 if Tracked Fleet on table. Opponent must lose 1 force to move a starship from here.");
+        addIcons(Icon.NAV_COMPUTER, Icon.EPISODE_VII, Icon.SCOMP_LINK, Icon.FIRST_ORDER, Icon.VIRTUAL_SET_23);
         addIcon(Icon.PILOT, 1);
         addModelType(ModelType.MANDATOR_IV_CLASS_DREADNAUGHT);
         setPilotCapacity(5);

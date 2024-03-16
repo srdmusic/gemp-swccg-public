@@ -32,7 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 22
+ * Set: Playtesting
  * Type: Character
  * Subtype: Rebel
  * Title: Luke With Lightsaber (V)
@@ -44,7 +44,7 @@ public class Card501_059 extends AbstractRebel {
         setLore("'I've taken care of everything.'");
         setGameText("Permanent weapon is •Luke's Lightsaber (may target a character or creature for free; draw two destiny; target 'hit,' and its forfeit = 0, if total destiny > defense value). If Luke has not fired a weapon this turn, he is immune to attrition.");
         addPersona(Persona.LUKE);
-        addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_24);
         setTestingText("Luke With Lightsaber (V)");
     }
 

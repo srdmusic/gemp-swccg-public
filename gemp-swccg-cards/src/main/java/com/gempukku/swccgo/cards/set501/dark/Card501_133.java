@@ -1,13 +1,12 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.AtCondition;
-import com.gempukku.swccgo.cards.effects.usage.TwicePerGameEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -15,99 +14,75 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
-import com.gempukku.swccgo.logic.effects.choose.DrawCardsIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToCardTitleWithOwnerModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.DestinyDrawnResult;
+import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromHandOnBottomOfReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromForcePileEffect;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 22
- * Type: Character
- * Subtype: Alien
- * Title: Tonnika Sisters (V)
+ * Set: Playtesting
+ * Type: Effect
+ * Subtype: Effect
+ * Title: Echo Base Destroyed
  */
-public class Card501_133 extends AbstractAlien {
+
+public class Card501_133 extends AbstractNormalEffect {
     public Card501_133() {
-        super(Side.DARK, 2, 2, 2, 2, 2, Title.Tonnika_Sisters, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setVirtualSuffix(true);
-        setComboCard(true);
-        setLore("Twins. Thieves. Con artists. Spies. Swindlers. Double agents. Brea and Senni use their natural charm to sway the unwary on the fringe of society.");
-        setGameText("Assassins. Power and Forfeit +2 at a Cantina or Night Club. " +
-                "Twice during battle, may double your just drawn battle destiny of 2. " +
-                "Twice per game, if you have exactly 2 cards in hand, may draw 2 cards from Reserve Deck. Immune to Kiffex.");
-        addIcon(Icon.WARRIOR, 2);
-        addKeywords(Keyword.SPY, Keyword.THIEF, Keyword.FEMALE, Keyword.ASSASSIN);
-        addIcons(Icon.VIRTUAL_SET_22);
-        setTestingText("Tonnika Sisters (V)");
+        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Echo Base Destroyed", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setGameText("Deploy on table. Once per turn, if Main Power Generators on table, may place a card from hand under Reserve Deck to activate 1 Force. Once per turn, if 1st Marker 'blown away,' may take any one [Hoth] card into hand from Force Pile; reshuffle. [Immune to Alter.]");
+        addIcons(Icon.VIRTUAL_SET_23);
+        addImmuneToCardTitle(Title.Alter);
+        setTestingText("Echo Base Destroyed");
     }
-
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        AtCondition atCantinaOrNightClub = new AtCondition(self, Filters.or(Filters.Cantina, Filters.Nightclub));
-        List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, atCantinaOrNightClub, 2));
-        modifiers.add(new ForfeitModifier(self, atCantinaOrNightClub, 2));
-        modifiers.add(new ImmuneToCardTitleWithOwnerModifier(self, Title.Kiffex, self.getOwner()));
-        modifiers.add(new ImmuneToCardTitleWithOwnerModifier(self, Title.Kiffex, game.getOpponent(self.getOwner())));
-        return modifiers;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        // Check condition(s)
-        if (TriggerConditions.isDestinyJustDrawn(game, effectResult)
-                && GameConditions.isNumTimesPerBattle(game, self, 2, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.isInBattle(game, self)) {
-            // Check more condition(s)
-            DestinyDrawnResult destinyDrawnResult = (DestinyDrawnResult) effectResult;
-            PhysicalCard drawnCard = destinyDrawnResult.getCard();
-            if (drawnCard != null
-                    && drawnCard.getDestinyValueToUse() == 2) {
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Double the destiny");
-                // Perform result(s)
-                action.appendEffect(
-                        new ModifyDestinyEffect(action, 2));
-                return Collections.singletonList(action);
-            }
-        }
-        return null;
-    }
-
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.TONNIKA_SISTERS_V__DRAW_CARDS;
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
 
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
-        if (GameConditions.isTwicePerGame(game, self, gameTextActionId)
-                && game.getGameState().getForcePile(playerId).size() >= 2
-                && game.getGameState().getHand(playerId).size() == 2) {
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canTarget(game, self, Filters.Main_Power_Generators)
+                && GameConditions.hasHand(game, playerId)
+                && GameConditions.canActivateForce(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Draw two cards from Force Pile");
-            action.setActionMsg("Draw two cards from Force Pile");
+            action.setText("Place card from hand under Reserve Deck");
+            action.setActionMsg("Activate 1 Force");
             // Update usage limit(s)
             action.appendUsage(
-                    new TwicePerGameEffect(action));
+                    new OncePerTurnEffect(action));
+
+            action.appendCost(
+                    new PutCardFromHandOnBottomOfReserveDeckEffect(action, playerId));
             // Perform result(s)
             action.appendEffect(
-                    new DrawCardsIntoHandFromReserveDeckEffect(action, playerId, 2));
-            return Collections.singletonList(action);
+                    new ActivateForceEffect(action, playerId, 1));
+
+            actions.add(action);
         }
-        return null;
+
+        gameTextActionId = GameTextActionId.ECHO_BASE_DESTROYED__TAKE_CARD_INTO_HAND_FROM_FORCE_PILE;
+        // Check condition(s)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isBlownAway(game, Filters.First_Marker)
+                && GameConditions.canTakeCardsIntoHandFromForcePile(game, playerId, self, gameTextActionId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take [Hoth] card into hand from Force Pile");
+            action.setActionMsg("Take a [Hoth] card into hand from Force Pile");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new TakeCardIntoHandFromForcePileEffect(action, playerId, Filters.icon(Icon.HOTH),  true));
+
+            actions.add(action);
+        }
+        return actions;
     }
 }

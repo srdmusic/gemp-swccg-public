@@ -29,7 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 22
+ * Set: Playtesting
  * Type: Interrupt
  * Subtype: Used
  * Title: A Jedi
@@ -38,7 +38,7 @@ public class Card501_052 extends AbstractUsedInterrupt {
     public Card501_052() {
         super(Side.LIGHT, 5, "A Jedi", Uniqueness.RESTRICTED_2, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Once per game, if Luke is on table when you play this Interrupt, may return it to hand. Take Grogu or R2-D2 into hand from Reserve Deck; reshuffle. OR If a battle just initiated at same site as Grogu, move Luke there from an adjacent site. OR If Grogu and Luke in battle, add one battle destiny.");
-        addIcons(Icon.VIRTUAL_SET_22);
+        addIcons(Icon.VIRTUAL_SET_23);
         setTestingText("A Jedi");
     }
 

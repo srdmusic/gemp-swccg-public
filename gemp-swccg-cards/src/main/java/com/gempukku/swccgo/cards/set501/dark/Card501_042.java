@@ -36,15 +36,15 @@ import java.util.List;
  */
 public class Card501_042 extends AbstractDroid {
     public Card501_042() {
-        super(Side.DARK, 3, 5, 5, 6, "Triple Zero & BT-1", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        addComboCardTitles("Triple Zero", "BT-1");
-        setLore("Assassin. Information broker.");
+        super(Side.DARK, 3, 5, 5, 6, "BT-1 & Triple Zero", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        addComboCardTitles("BT-1", "Triple Zero");
+        setLore("Assassin and information broker.");
         setGameText("Armor = 5. If with Aphra, may add one destiny to attrition. If opponent’s character of ability < 4 here is about to leave table, may use 1 Force; opponent loses 1 Force.");
-        addIcons(Icon.PRESENCE, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.PRESENCE, Icon.VIRTUAL_SET_24);
         addIcon(Icon.WARRIOR, 2);
         addModelTypes(ModelType.ASTROMECH, ModelType.PROTOCOL);
         addKeywords(Keyword.ASSASSIN, Keyword.INFORMATION_BROKER);
-        setTestingText("Triple Zero & BT-1");
+        setTestingText("BT-1 & Triple Zero");
     }
 
     @Override

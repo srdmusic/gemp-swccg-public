@@ -96,6 +96,8 @@ public interface Title {
     String Beru_Lars = "Beru Lars";
     String Beru_Stew = "Beru Stew";
     String Besieged = "Besieged";
+    String Beskar_Armor = "Beskar Armor";
+    String Beskar_Deflection = "Beskar Deflection";
     String Bespin = "Bespin";
     String Bespin_Cloud_City = "Bespin: Cloud City";
     String Bib = "Bib Fortuna";
@@ -122,6 +124,7 @@ public interface Title {
     String Blue_Milk = "Blue Milk";
     String Blue_Squadron_5 = "Blue Squadron 5";
     String Bluffs = "Tatooine: Bluffs";
+    String Bo_Katan = "Bo-Katan";
     String Bo_Shuda = "Bo Shuda";
     String Boba_Fetts_Blaster_Rifle = "Boba Fett's Blaster Rifle";
     String Bodhi = "Bodhi Rook";
@@ -136,6 +139,9 @@ public interface Title {
     String Bossks_Mortar_Gun =  "Bossk's Mortar Gun";
     String Bothawui = "Bothawui";
     String Bounty = "Bounty";
+    String Bounty_Hunters_Guild = "Nevarro City: Bounty Hunter's Guild";
+    String Bounty_Hunting_Is_A_Dangerous_Profession = "Bounty Hunting Is A Dangerous Profession";
+    String Holopuck = "Holopuck";
     String Bow_To_The_First_Order = "Bow To The First Order";
     String Bowcaster = "Bowcaster";
     String Brangus_Glee = "Brangus Glee";
@@ -195,6 +201,7 @@ public interface Title {
     String Cloud_City_Sabacc = "Cloud City Sabacc";
     String Close_Call = "Close Call";
     String Cold_Feet = "Cold Feet";
+    String Cold_Storage = "Razor Crest: Cold Storage";
     String Collateral_Damage = "Collateral Damage";
     String Collision = "Collision!";
     String Colo_Claw_Fish = "Colo Claw Fish";
@@ -504,6 +511,7 @@ public interface Title {
     String I_Am_Your_Father = "I Am Your Father";
     String I_Can_Save_Him = "I Can Save Him";
     String I_Cant_Believe_Hes_Gone = "I Can't Believe He's Gone";
+    String I_Can_Bring_You_In_Warm = "I Can Bring You In Warm";
     String I_Did_It = "I Did It!";
     String I_Feel_The_Conflict = "I Feel The Conflict";
     String I_Have_You_Now = "I Have You Now";
@@ -684,6 +692,7 @@ public interface Title {
     String Malastare = "Malastare";
     String Mandalore = "Mandalore";
     String Mandalorian_Armor = "Mandalorian Armor";
+    String Mandalorian_Covert = "Mandalorian Covert";
     String Maneuvering_Flaps = "Maneuvering Flaps";
     String Mantellian_Savrip = "Mantellian Savrip";
     String Marketplace = "Tatooine: Marketplace";
@@ -745,6 +754,7 @@ public interface Title {
     String Neck_And_Neck = "Neck And Neck";
     String Needa = "Captain Needa";
     String Nevar_Yalnal = "Nevar Yalnal";
+    String Nevarro = "Nevarro";
     String Never_Tell_Me_The_Odds = "Never Tell Me The Odds";
     String Nien_Nunb = "Nien Nunb";
     String Nightclub = "Coruscant: Night Club";
@@ -784,6 +794,7 @@ public interface Title {
     String Operational_As_Planned = "Operational As Planned";
     String Oppressive_Enforcement = "Oppressive Enforcement";
     String Or_Be_Destroyed = "Or Be Destroyed";
+    String Or_I_Can_Bring_You_In_Cold = "Or I Can Bring You In Cold";
     String Orbital_Mine = "Orbital Mine";
     String Ord_Mantell = "Ord Mantell";
     String Order_To_Engage = "Order To Engage";
@@ -955,11 +966,13 @@ public interface Title {
     String Seeking_An_Audience = "Seeking An Audience";
     String Seelos = "Seelos";
     String Sei_Taria = "Sei Taria";
+    String Send_A_Detachment_Down = "Send A Detachment Down";
     String Sense = "Sense";
     String Set_For_Stun = "Set For Stun";
     String Set_Your_Course_For_Alderaan = "Set Your Course For Alderaan";
     String Starship_Levitation = "Starship Levitation";
     String Sewer = "Xizor's Palace: Sewer";
+    String Sewers = "Nevarro City: Sewers";
     String S_foils = "S-foils";
     String SFS_Lx93_Laser_Cannons = "SFS L-s9.3 Laser Cannons";
     String Shadow_Collective = "Shadow Collective";
@@ -1179,6 +1192,7 @@ public interface Title {
     String We_Have_A_Prisoner = "We Have A Prisoner";
     String We_Need_Luke_Skywalker = "We Need Luke Skywalker";
     String We_Need_Your_Help = "We Need Your Help";
+    String Weapons_Are_Part_Of_My_Religion = "Weapons Are Part Of My Religion";
     String Weather_Vane = "Weather Vane";
     String Weequay_Guard = "Weequay Guard";
     String Weequay_Marksman = "Weequay Marksman";

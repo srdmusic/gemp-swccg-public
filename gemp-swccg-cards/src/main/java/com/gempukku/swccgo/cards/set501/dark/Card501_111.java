@@ -28,7 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 22
+ * Set: Playtesting
  * Type: Objective
  * Title: The First Order Reigns / The Resistance Is Doomed
  */
@@ -38,9 +38,9 @@ public class Card501_111 extends AbstractObjective {
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy D’Qar, Crait, Supremacy: Bridge, and Tracked Fleet.\n" +
                 "For remainder of game, you may not deploy non-[Episode VII] Dark Jedi, Imperials, Imperial starships, or Imperial vehicles.\n" +
-                "While this side up, once per turn may deploy an [Episode VII] battleground system (or Plateau) from Reserve Deck; reshuffle. Opponent loses no more than 1 Force to Force drains at your locations.\n" +
+                "While this side up, once per turn may deploy an [Episode VII] battleground system (or Crait location) from Reserve Deck; reshuffle. Opponent loses no more than 1 Force to Force drains at your locations.\n" +
                 "Flip if Tracked Fleet is 'blown away.'");
-        addIcons(Icon.VIRTUAL_SET_22, Icon.EPISODE_VII);
+        addIcons(Icon.VIRTUAL_SET_23, Icon.EPISODE_VII);
         setTestingText("The First Order Reigns");
     }
 
@@ -105,7 +105,7 @@ public class Card501_111 extends AbstractObjective {
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.and(Filters.battleground_system, Icon.EPISODE_VII), Filters.Crait_Salt_Plateau), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.and(Filters.battleground_system, Icon.EPISODE_VII), Filters.Crait_location), true));
             actions.add(action);
         }
         return actions;

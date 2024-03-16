@@ -30,7 +30,7 @@ public class Card501_027 extends AbstractSite {
         setLocationLightSideGameText("Your battle destiny draws are -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_24);
         setTestingText("Christophsis: Separatist Encampment");
     }
 

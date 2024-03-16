@@ -31,7 +31,7 @@ public class Card501_021 extends AbstractSite {
         setLocationLightSideGameText("Your characters are defense value -1 here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_24);
         setTestingText("Geonosis: Petranaki Arena");
     }
 

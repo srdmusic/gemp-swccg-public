@@ -19,7 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 22
+ * Set: Playtesting
  * Type: Location
  * Subtype: Site
  * Title: Crait: Salt Plateau
@@ -30,7 +30,7 @@ public class Card501_108 extends AbstractSite {
         setLocationDarkSideGameText("Your combat vehicles are defense value +1 here.");
         setLocationLightSideGameText("Gains [Light icon] while The Resistance Is Doomed on table.");
         addIcon(Icon.DARK_FORCE, 2);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_22);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_23);
         setTestingText(Title.Crait_Salt_Plateau);
     }
 

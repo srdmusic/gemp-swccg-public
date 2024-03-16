@@ -17527,6 +17527,7 @@ public class Filters {
     public static final Filter Any_Methods_Necessary = Filters.title(Title.Any_Methods_Necessary);
     public static final Filter Ardon_Crell = Filters.title(Title.Ardon_Crell);
     public static final Filter Arleil = Filters.title(Title.Arleil);
+    public static final Filter Armorer = Filters.persona(Persona.ARMORER);
     public static final Filter Arnet = Filters.title(Title.Arnet);
     public static final Filter artillery_weapon = Filters.and(CardType.WEAPON, CardSubtype.ARTILLERY);
     public static final Filter Arven = Filters.title(Title.Arven);
@@ -17585,6 +17586,7 @@ public class Filters {
     public static final Filter Beru = Filters.title(Title.Beru_Lars);
     public static final Filter Beru_Stew = Filters.title(Title.Beru_Stew);
     public static final Filter Besieged = Filters.title(Title.Besieged);
+    public static final Filter Beskar_Deflection = Filters.title(Title.Beskar_Deflection);
     public static final Filter Bespin_Cloud_City = Filters.title(Title.Bespin_Cloud_City);
     public static final Filter Bespin_cloud_sector = Filters.and(Filters.partOfSystem(Title.Bespin), Keyword.CLOUD_SECTOR);
     public static final Filter Bespin_location = Filters.partOfSystem(Title.Bespin);
@@ -17624,6 +17626,7 @@ public class Filters {
     public static final Filter Blue_Milk = Filters.title(Title.Blue_Milk);
     public static final Filter Blue_Squadron_5 = Filters.title(Title.Blue_Squadron_5);
     public static final Filter Bluffs = Filters.title(Title.Bluffs);
+    public static final Filter Bo_Katan = Filters.title(Title.Bo_Katan);
     public static final Filter Bo_Shuda = Filters.title(Title.Bo_Shuda);
     public static final Filter Boba_Fett = Filters.persona(Persona.BOBA_FETT);
     public static final Filter Bodhi = Filters.title(Title.Bodhi);
@@ -17642,6 +17645,9 @@ public class Filters {
     public static final Filter Bothawui_site = Filters.and(Filters.partOfSystem(Title.Bothawui), CardSubtype.SITE);
     public static final Filter Bounty = Filters.title(Title.Bounty);
     public static final Filter bounty_hunter = Filters.keyword(Keyword.BOUNTY_HUNTER);
+    public static final Filter Bounty_Hunters_Guild = Filters.title(Title.Bounty_Hunters_Guild);
+    public static final Filter Bounty_Hunting_Is_A_Dangerous_Profession = Filters.title(Title.Bounty_Hunting_Is_A_Dangerous_Profession);
+    public static final Filter Holopuck = Filters.title(Title.Holopuck);
     public static final Filter Bow_To_The_First_Order = Filters.title(Title.Bow_To_The_First_Order);
     public static final Filter bowcaster = Filters.keyword(Keyword.BOWCASTER);
     public static final Filter Bowcaster = Filters.title(Title.Bowcaster);
@@ -17672,6 +17678,7 @@ public class Filters {
     public static final Filter Captain_Tarpals = Filters.title(Title.Captain_Tarpals);
     public static final Filter Captive_Fury = Filters.title(Title.Captive_Fury);
     public static final Filter Captive_Pursuit = Filters.title(Title.Captive_Pursuit);
+    public static final Filter Cara_Dune = Filters.persona(Persona.CARA_DUNE);
     public static final Filter Carbon_Chamber_Testing = Filters.title(Title.Carbon_Chamber_Testing);
     public static final Filter Carbon_Freezing = Filters.title(Title.Carbon_Freezing);
     public static final Filter Carbonite_Chamber = Filters.title(Title.Carbonite_Chamber);
@@ -17766,6 +17773,7 @@ public class Filters {
     public static final Filter Courage_Of_A_Skywalker = Filters.title(Title.Courage_Of_A_Skywalker);
     public static final Filter Court_Of_The_Vile_Gangster = Filters.title(Title.Court_Of_The_Vile_Gangster);
     public static final Filter Cracken = Filters.persona(Persona.CRACKEN);
+    public static final Filter Crait_location = Filters.partOfSystem(Title.Crait);
     public static final Filter Crait_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Crait));
     public static final Filter Crait_Salt_Plateau = Filters.and(CardSubtype.SITE, Filters.title(Title.Crait_Salt_Plateau));
     public static final Filter Crash_Landing = Filters.title(Title.Crash_Landing);
@@ -18091,6 +18099,7 @@ public class Filters {
     public static final Filter Great_Pit_Of_Carkoon = Filters.title(Title.Great_Pit_Of_Carkoon);
     public static final Filter Great_Warrior = Filters.title(Title.Great_Warrior);
     public static final Filter Greedo = Filters.title(Title.Greedo);
+    public static final Filter Greef = Filters.persona(Persona.GREEF);
     public static final Filter Green_Leader = Filters.persona(Persona.GREEN_LEADER);
     public static final Filter Green_Squadron_1 = Filters.persona(Persona.GREEN_SQUADRON_1);
     public static final Filter Green_Squadron_3 = Filters.persona(Persona.GREEN_SQUADRON_3);
@@ -18178,6 +18187,7 @@ public class Filters {
     public static final Filter Ice_Storm = Filters.title(Title.Ice_Storm);
     public static final Filter Id_Just_As_Soon_Kiss_A_Wookiee = Filters.title(Title.Id_Just_As_Soon_Kiss_A_Wookiee);
     public static final Filter If_The_Trace_Was_Correct = Filters.title(Title.If_The_Trace_Was_Correct);
+    public static final Filter IG11 = Filters.persona(Persona.IG11);
     public static final Filter IG88 = Filters.persona(Persona.IG88);
     public static final Filter Igar = Filters.title(Title.Igar);
     public static final Filter I_Had_No_Choice = Filters.title(Title.I_Had_No_Choice);
@@ -18419,6 +18429,7 @@ public class Filters {
     public static final Filter Mandalore_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Mandalore));
     public static final Filter Mandalorian = Filters.species(Species.MANDALORIAN);
     public static final Filter Mandalorian_Armor = Filters.title(Title.Mandalorian_Armor);
+    public static final Filter Mandalorian_Covert = Filters.title(Title.Mandalorian_Covert);
     public static final Filter Maneuvering_Flaps = Filters.title(Title.Maneuvering_Flaps);
     public static final Filter Mantellian_Savrip = Filters.title(Title.Mantellian_Savrip);
     public static final Filter Mara_Jade = Filters.persona(Persona.MARA_JADE);
@@ -18478,6 +18489,7 @@ public class Filters {
     public static final Filter mouse_droid = Filters.title(Title.Mouse_Droid);
     public static final Filter Momaw_Nadon = Filters.title(Title.Momaw_Nadon);
     public static final Filter MTT = Filters.modelType(ModelType.MTT);
+    public static final Filter Mudhorn_Location = Filters.and(Filters.icon(Icon.MUDHORN), Filters.location);
     public static final Filter musician = Filters.keyword(Keyword.MUSICIAN);
     public static final Filter Mustafar_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Mustafar));
     public static final Filter Mustafar_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Mustafar));
@@ -18502,8 +18514,9 @@ public class Filters {
     public static final Filter Needa = Filters.title(Title.Needa);
     public static final Filter Neimoidian = Filters.species(Species.NEIMOIDIAN);
     public static final Filter Nevar_Yalnal = Filters.title(Title.Nevar_Yalnal);
+    public static final Filter Nevarro_City_site = Filters.keyword(Keyword.NEVARRO_CITY_SITE);
     public static final Filter Never_Tell_Me_The_Odds = Filters.title(Title.Never_Tell_Me_The_Odds);
-    public static final Filter Nien_Nunb = Filters.title(Title.Nien_Nunb);
+    public static final Filter Nien_Nunb = Filters.persona(Persona.NIEN_NUNB);
     public static final Filter Nightclub = Filters.title(Title.Nightclub);
     public static final Filter Nightfall = Filters.title(Title.Nightfall);
     public static final Filter Niima_Outpost_Shipyard = Filters.title(Title.Niima_Outpost_Shipyard);
@@ -18520,6 +18533,7 @@ public class Filters {
     public static final Filter non_captive = Filters.not(Filters.captive());
     public static final Filter non_cloud_sector = Filters.and(CardSubtype.SECTOR, Filters.not(Filters.keyword(Keyword.CLOUD_SECTOR)));
     public static final Filter non_creature_vehicle = Filters.and(CardCategory.VEHICLE, Filters.not(Filters.subtype(CardSubtype.CREATURE)));
+    public static final Filter non_Dark_Jedi_character = Filters.and(CardCategory.CHARACTER, Filters.not(Filters.and(Filters.side(Side.DARK), Filters.abilityMoreThanOrEqualTo(6))));
     public static final Filter non_droid_character = Filters.and(CardCategory.CHARACTER, Filters.not(Filters.type(CardType.DROID)));
     public static final Filter non_Ewok_vehicle = Filters.and(CardCategory.VEHICLE, Filters.not(Filters.keyword(Keyword.EWOK_VEHICLE)));
     public static final Filter non_interior_site = Filters.and(CardSubtype.SITE, Filters.not(Filters.icon(Icon.INTERIOR_SITE)));
@@ -18658,6 +18672,7 @@ public class Filters {
     public static final Filter Ralltiir_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Ralltiir));
     public static final Filter Rancor_Pit = Filters.title(Title.Rancor_Pit);
     public static final Filter Ravager_Crash_Site = Filters.title(Title.Ravager_Crash_Site);
+    public static final Filter Razor_Crest = Filters.persona(Persona.RAZOR_CREST);
     public static final Filter Reactor_Core = Filters.title(Title.Reactor_Core);
     public static final Filter Rebel = Filters.icon(Icon.REBEL);
     public static final Filter Rebel_Ambush = Filters.title(Title.Rebel_Ambush);
@@ -18992,6 +19007,7 @@ public class Filters {
     public static final Filter Thank_The_Maker = Filters.title(Title.Thank_The_Maker);
     public static final Filter That_Things_Operational = Filters.title(Title.That_Things_Operational);
     public static final Filter Thats_One = Filters.title(Title.Thats_One);
+    public static final Filter The_Asset = Filters.keyword(Keyword.THE_ASSET);
     public static final Filter The_Camp = Filters.title(Title.The_Camp);
     public static final Filter The_Circle_Is_Now_Complete = Filters.title(Title.The_Circle_Is_Now_Complete);
     public static final Filter The_First_Transport_Is_Away = Filters.title(Title.The_First_Transport_Is_Away);
@@ -19112,6 +19128,7 @@ public class Filters {
     public static final Filter Vaders_Obsession = Filters.title(Title.Vaders_Obsession);
     public static final Filter Val = Filters.persona(Persona.VAL);
     public static final Filter Valorum = Filters.title(Title.Valorum);
+    public static final Filter Vanto = Filters.persona(Persona.VANTO);
     public static final Filter Vaporator = Filters.title(Title.Vaporator);
     public static final Filter Veers = Filters.persona(Persona.VEERS);
     public static final Filter vehicle = Filters.type(CardType.VEHICLE);

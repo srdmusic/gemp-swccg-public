@@ -2,6 +2,7 @@ var GempSwccgGameUI = Class.extend({
     padding:1,
 
     gameUiInitialized:false,
+    rightClickListenerAdded:false,
 
     bottomPlayerId:null,
     bottomPlayerIndex:null,
@@ -546,6 +547,7 @@ var GempSwccgGameUI = Class.extend({
                 function (event) {
                     return that.clickCardFunction(event);
                 });
+        if (!this.rightClickListenerAdded) {
         $("body")[0].addEventListener("contextmenu",
             function (event) {
                 if(!that.clickCardFunction(event))
@@ -555,6 +557,8 @@ var GempSwccgGameUI = Class.extend({
                 }
                 return true;
             });
+        this.rightClickListenerAdded = true;
+        }
         $('body').unbind('mousedown');
         $("body").mousedown(
                 function (event) {
@@ -1137,7 +1141,7 @@ var GempSwccgGameUI = Class.extend({
         };
 
         var chatRoomName = (this.replayMode ? null : ("Game" + getUrlParam("gameId")));
-        this.chatBox = new ChatBoxUI(chatRoomName, $("#chatBox"), this.communication.url, false, playerListener, false, true, this.allPlayerIds);
+        this.chatBox = new ChatBoxUI(chatRoomName, $("#chatBox"), this.communication.url, false, playerListener, false, true, this.allPlayerIds, false);
         this.chatBox.chatUpdateInterval = 3000;
 
         if (!this.spectatorMode && !this.replayMode) {
