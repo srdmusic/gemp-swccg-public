@@ -55,7 +55,7 @@ public class Card501_120 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotBeCanceledModifier(self, Filters.Rebel_Barrier, new UnlessCondition(new HereCondition(self, Filters.and(Filters.your(self), Filters.blaster)))));
+        modifiers.add(new MayNotBeCanceledModifier(self, Filters.and(Filters.Rebel_Barrier, Filters.cardBeingPlayedTargeting(self, Filters.here(self))), new UnlessCondition(new HereCondition(self, Filters.and(Filters.your(self), Filters.blaster)))));
         return modifiers;
     }
 }
