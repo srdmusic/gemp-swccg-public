@@ -33,7 +33,7 @@ import java.util.List;
 
 public class Card501_120 extends AbstractSite {
     public Card501_120() {
-        super(Side.LIGHT, Title.Docking_Control_Room_327, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, Title.Docking_Control_Room_327, Title.Death_Star, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationLightSideGameText("While Luke here, he may not be captured.  C-3P0 may not be targeted by weapons here.");
         setLocationDarkSideGameText("Unless your blaster present, Rebel Barrier may not be cancelled here.");
         addIcon(Icon.LIGHT_FORCE, 2);
