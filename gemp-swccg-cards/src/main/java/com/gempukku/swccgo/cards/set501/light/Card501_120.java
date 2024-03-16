@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.conditions.PresentAtCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -55,7 +56,7 @@ public class Card501_120 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotBeCanceledModifier(self, Filters.and(Filters.Rebel_Barrier, Filters.cardBeingPlayedTargeting(self, Filters.here(self))), new UnlessCondition(new HereCondition(self, Filters.and(Filters.your(self), Filters.blaster)))));
+        modifiers.add(new MayNotBeCanceledModifier(self, Filters.and(Filters.Rebel_Barrier, Filters.cardBeingPlayedTargeting(self, Filters.here(self))), new UnlessCondition(new PresentAtCondition(Filters.and(Filters.your(self), Filters.blaster), Filters.here(self)))));
         return modifiers;
     }
 }
