@@ -64,7 +64,7 @@ public class Card501_015 extends AbstractNormalEffect {
         final String opponent = game.getOpponent(self.getOwner());
         final Filter filter = Filters.and(Filters.opponents(self), Filters.character, Filters.or(Filters.abilityMoreThan(2), Filters.leader), Filters.non_Dark_Jedi_character);
 
-        if (!GameConditions.hasAttached(game, self, Filters.character)
+        if (!GameConditions.isAttachedTo(game, self, Filters.character)
                 && TriggerConditions.justDeployedToLocation(game, effectResult, opponent, filter, Filters.site)) {
             PhysicalCard deployedCard = ((PlayCardResult) effectResult).getPlayedCard();
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);

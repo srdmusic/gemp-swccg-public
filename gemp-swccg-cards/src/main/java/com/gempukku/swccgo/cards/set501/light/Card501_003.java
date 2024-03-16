@@ -20,6 +20,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
@@ -37,7 +38,8 @@ public class Card501_003 extends AbstractAlien {
     public Card501_003() {
         super(Side.LIGHT, 2, 3, 4, 4, 5, "The Armorer", Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
         setLore("Female Mandalorian leader.");
-        setGameText("Deploys only to [underground] sites. Once per game, may retrieve a non-lightsaber character weapon into hand. " +
+        setGameText("Only deploys to non-battleground sites (-1 if [underground]). " +
+                "Once per game, may retrieve a non-lightsaber character weapon into hand. " +
                 "Your other Mandalorians are power and defense value +1. Immune to Attrition < 4.");
         setArmor(5);
         addPersona(Persona.ARMORER);
@@ -50,7 +52,14 @@ public class Card501_003 extends AbstractAlien {
 
     @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.underground_site;
+        return Filters.and(Filters.site, Filters.not(Filters.battleground));
+    }
+
+    @Override
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DeployCostToLocationModifier(self, -1, Filters.underground_site));
+        return modifiers;
     }
 
     @Override

@@ -3627,7 +3627,7 @@ var fixedImages = {
 "501_4":"https://res.starwarsccg.org/cards/Virtual12-Dark/hires/slipslidingaway.png",
 "501_5":"https://res.starwarsccg.org/cards/ANewHope-Light/large/corellia.gif",
 "501_6":"https://res.starwarsccg.org/cards/Coruscant-Light/large/naboobattleplains.gif",
-"501_7":"https://res.starwarsccg.org/cards/Hoth-Light/large/hothechodockingbay.gif",
+"501_7":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/homeonewarroom.gif",
 "501_8":"https://res.starwarsccg.org/cards/Hoth-Light/large/hothechocommandcenterwarroom.gif",
 "501_9":"https://res.starwarsccg.org/cards/Premiere-Light/large/plastoidarmor.gif",
 "501_10":"https://res.starwarsccg.org/cards/ReflectionsII-Light/large/mercenaryarmor.gif",
@@ -3700,7 +3700,7 @@ var fixedImages = {
 "501_130":"https://res.starwarsccg.org/cards/Virtual4-Dark/large/forcefreeze.gif",
 "501_131":"https://res.starwarsccg.org/cards/Dagobah-Dark/large/ig88spulsecannon.gif",
 "501_132":"https://res.starwarsccg.org/cards/Dagobah-Dark/large/zuckuss.gif",
-"501_133":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/imperialpropaganda.gif",
+"501_133":"https://res.starwarsccg.org/cards/Hoth-Dark/large/toocoldforspeeders.gif",
 "501_134":"https://res.starwarsccg.org/cards/Hoth-Dark/large/electrorangefinder.gif",
 "501_135":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/maulssithinfiltrator.gif",
 "501_136":"https://res.starwarsccg.org/cards/Virtual19-Dark/large/thrawnsartcollection.gif",
@@ -3711,7 +3711,7 @@ var fixedImages = {
 "501_141":"https://res.starwarsccg.org/cards/Virtual12-Dark/large/moffgideon.gif",
 "501_164":"https://res.starwarsccg.org/cards/Premiere-Light/large/scomplinkaccess.gif",
 "501_170":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/pucumirthryss.gif",
-
+"501_171":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/cloudcitynorthcorridor.gif",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",
@@ -4652,8 +4652,8 @@ var Card = Class.extend({
                    (cardNo == 109) ||
                    (cardNo == 113) ||
                    (cardNo == 118) ||
-                   (cardNo == 120)
-                   ;
+                   (cardNo == 120) ||
+                   (cardNo == 171);
         }
         if (setNo == 601) {
              return (cardNo == 14) ||

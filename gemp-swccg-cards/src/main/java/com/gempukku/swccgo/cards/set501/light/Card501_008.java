@@ -20,16 +20,18 @@ import java.util.List;
  * Set: Set 23
  * Type: Location
  * Subtype: Site
- * Title: Nevarro: Mandalorian Covert
+ * Title: Mandalorian Covert
  */
 public class Card501_008 extends AbstractSite{
     public Card501_008(){
-        super(Side.LIGHT, Title.Mandalorian_Covert, Title.Nevarro, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationLightSideGameText("You may not deploy characters here (except Mandalorians).");
-        setLocationDarkSideGameText("You may not deploy characters here (except Jango, Boba, and Jodo Kast).");
+        super(Side.LIGHT, Title.Mandalorian_Covert, Uniqueness.DIAMOND_1, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLocationLightSideGameText("You may not deploy characters here (except Mandalorians). May not be deployed to Ahch_To, Bespin, Dagobah, Endor, Hoth, Jakku, or Tatooine.");
+        setLocationDarkSideGameText("You may not deploy characters here (except Jango, Boba, and Jodo Kast). Immune to No Escape.");
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.INTERIOR_SITE, Icon.UNDERGROUND, Icon.PLANET, Icon.MUDHORN);
-        setTestingText("Nevarro City: Mandalorian Covert");
+        addIcons(Icon.INTERIOR_SITE, Icon.UNDERGROUND, Icon.PLANET);
+        addImmuneToCardTitle(Title.No_Escape);
+        addMayNotBePartOfSystem(Title.Ahch_To, Title.Bespin, Title.Dagobah, Title.Endor, Title.Hoth, Title.Jakku, Title.Tatooine);
+        setTestingText("Mandalorian Covert");
     }
 
     @Override

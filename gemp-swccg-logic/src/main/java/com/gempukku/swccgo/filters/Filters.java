@@ -17773,6 +17773,7 @@ public class Filters {
     public static final Filter Courage_Of_A_Skywalker = Filters.title(Title.Courage_Of_A_Skywalker);
     public static final Filter Court_Of_The_Vile_Gangster = Filters.title(Title.Court_Of_The_Vile_Gangster);
     public static final Filter Cracken = Filters.persona(Persona.CRACKEN);
+    public static final Filter Crait_location = Filters.partOfSystem(Title.Crait);
     public static final Filter Crait_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Crait));
     public static final Filter Crait_Salt_Plateau = Filters.and(CardSubtype.SITE, Filters.title(Title.Crait_Salt_Plateau));
     public static final Filter Crash_Landing = Filters.title(Title.Crash_Landing);
@@ -18513,6 +18514,7 @@ public class Filters {
     public static final Filter Needa = Filters.title(Title.Needa);
     public static final Filter Neimoidian = Filters.species(Species.NEIMOIDIAN);
     public static final Filter Nevar_Yalnal = Filters.title(Title.Nevar_Yalnal);
+    public static final Filter Nevarro_City_site = Filters.keyword(Keyword.NEVARRO_CITY_SITE);
     public static final Filter Never_Tell_Me_The_Odds = Filters.title(Title.Never_Tell_Me_The_Odds);
     public static final Filter Nien_Nunb = Filters.persona(Persona.NIEN_NUNB);
     public static final Filter Nightclub = Filters.title(Title.Nightclub);
