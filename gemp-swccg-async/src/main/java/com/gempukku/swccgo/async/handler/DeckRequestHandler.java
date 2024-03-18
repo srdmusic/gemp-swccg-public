@@ -3,7 +3,6 @@ package com.gempukku.swccgo.async.handler;
 import com.gempukku.swccgo.async.HttpProcessingException;
 import com.gempukku.swccgo.async.ResponseWriter;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Variable;
 import com.gempukku.swccgo.game.*;
 import com.gempukku.swccgo.game.formats.SwccgoFormatLibrary;
 import com.gempukku.swccgo.logic.GameUtils;
@@ -28,8 +27,6 @@ import javax.xml.transform.stream.StreamResult;
 import java.lang.reflect.Type;
 import java.util.*;
 import java.io.StringWriter;
-import java.lang.reflect.Type;
-import java.util.*;
 
 public class DeckRequestHandler extends SwccgoServerRequestHandler implements UriRequestHandler {
     private SortAndFilterCards _sortAndFilterCards;
@@ -154,7 +151,7 @@ public class DeckRequestHandler extends SwccgoServerRequestHandler implements Ur
         StringBuilder valid = new StringBuilder();
         StringBuilder invalid = new StringBuilder();
         for (SwccgFormat format : _formatLibrary.getAllFormats().values()) {
-            if (!format.isPlaytesting() || resourceOwner.hasType(Player.Type.ADMIN) || resourceOwner.hasType(Player.Type.PLAY_TESTER)) {
+            if (!format.isPlaytesting() || resourceOwner.hasType(Player.Type.ADMIN) || resourceOwner.hasType(Player.Type.PLAYTESTER)) {
                 String formatCssId = format.getName().replace(" ", "-").replace("(", "").replace(")", "").replace("/", "").replace("'", "");
                 try {
                     format.validateDeck(deck);

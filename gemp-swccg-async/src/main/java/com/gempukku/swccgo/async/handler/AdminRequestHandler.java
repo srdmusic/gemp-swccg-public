@@ -20,6 +20,8 @@ import com.gempukku.swccgo.hall.HallServer;
 import com.gempukku.swccgo.league.*;
 import com.gempukku.swccgo.service.AdminService;
 import com.gempukku.swccgo.tournament.TournamentService;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.handler.codec.http.HttpMethod;
 import org.jboss.netty.handler.codec.http.HttpRequest;
@@ -33,6 +35,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -90,20 +93,14 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             addItems(request, responseWriter);
         } else if (uri.equals("/addCurrency") && request.getMethod() == HttpMethod.POST) {
             addCurrency(request, responseWriter);
-        } else if (uri.equals("/addPlaytester") && request.getMethod() == HttpMethod.POST) {
-            addPlaytester(request, responseWriter);
-        } else if (uri.equals("/removePlaytesters") && request.getMethod() == HttpMethod.POST) {
-            removePlaytesters(request, responseWriter);
-        } else if (uri.equals("/showPlaytesters") && request.getMethod() == HttpMethod.POST) {
-            showPlaytesters(request, responseWriter);
-        } else if (uri.equals("/addCommentator") && request.getMethod() == HttpMethod.POST) {
-            addCommentator(request, responseWriter);
-        } else if (uri.equals("/removeCommentators") && request.getMethod() == HttpMethod.POST) {
-            removeCommentators(request, responseWriter);
-        } else if (uri.equals("/showCommentators") && request.getMethod() == HttpMethod.POST) {
-            showCommentators(request, responseWriter);
         } else if (uri.equals("/addItemsToAllPlayers") && request.getMethod() == HttpMethod.POST) {
             addItemsToAllPlayers(request, responseWriter);
+        } else if (uri.equals("/addFlagToUser") && request.getMethod() == HttpMethod.POST) {
+            addFlagToUser(request, responseWriter);
+        } else if (uri.equals("/removeFlagFromUsers") && request.getMethod() == HttpMethod.POST) {
+            removeFlagFromUsers(request, responseWriter);
+        } else if (uri.equals("/showUsersWithFlag") && request.getMethod() == HttpMethod.POST) {
+            showUsersWithFlag(request, responseWriter);
         } else if (uri.equals("/resetUserPassword") && request.getMethod() == HttpMethod.POST) {
             resetUserPassword(request, responseWriter);
         } else if (uri.equals("/deactivateMultiple") && request.getMethod() == HttpMethod.POST) {
@@ -135,65 +132,13 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         }
     }
 
-    private void showPlaytesters(HttpRequest request, ResponseWriter responseWriter) throws Exception {
-        validatePlaytestingAdmin(request);
-
-        List<Player> playtesters = _playerDAO.findPlaytesters();
-        if (playtesters == null)
-            throw new HttpProcessingException(404);
-
-        Collections.sort(playtesters, new SortPlayerByName());
-
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-
-        Document doc = documentBuilder.newDocument();
-        Element players = doc.createElement("players");
-
-        for (Player playtester : playtesters) {
-            Element playerElem = doc.createElement("player");
-            playerElem.setAttribute("name", playtester.getName());
-            players.appendChild(playerElem);
-        }
-
-        doc.appendChild(players);
-
-        responseWriter.writeXmlResponse(doc);
-    }
-
-    private void showCommentators(HttpRequest request, ResponseWriter responseWriter) throws Exception {
-        validateCommentatorAdmin(request);
-
-        List<Player> commentators = _playerDAO.findCommentators();
-        if (commentators == null)
-            throw new HttpProcessingException(404);
-
-        Collections.sort(commentators, new SortPlayerByName());
-
-        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
-
-        Document doc = documentBuilder.newDocument();
-        Element players = doc.createElement("players");
-
-        for (Player commentator : commentators) {
-            Element playerElem = doc.createElement("player");
-            playerElem.setAttribute("name", commentator.getName());
-            players.appendChild(playerElem);
-        }
-
-        doc.appendChild(players);
-
-        responseWriter.writeXmlResponse(doc);
-    }
-
     private void findMultipleAccounts(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         validateAdmin(request);
 
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
         String login = getFormParameterSafely(postDecoder, "login");
 
-        List<Player> similarPlayers = _playerDAO.findSimilarAccounts(new Player(0, login, null, null, null, null, login, login));
+        List<Player> similarPlayers = _playerDAO.findSimilarAccounts(login);
         if (similarPlayers == null)
             throw new HttpProcessingException(404);
 
@@ -225,8 +170,8 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
     private String getStatus(Player player) {
         if (!player.hasType(Player.Type.UNBANNED)) {
             if (player.getBannedUntil() != null) {
-                if (player.getBannedUntil().after(new Date())) {
-                    return "OK";
+                if (player.getBannedUntil().before(new Date())) {
+                    return "Unbanned (ban expired)";
                 }
                 else {
                     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -237,7 +182,24 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
                 return "Banned permanently";
             }
         }
-        return "OK";
+
+        String status = "Unbanned";
+        if(player.hasType(Player.Type.ADMIN))
+            status += ", Administrator";
+        if(player.hasType(Player.Type.COMMENTARY_ADMIN))
+            status += ", Commentary Admin";
+        if(player.hasType(Player.Type.COMMENTATOR))
+            status += ", Commentator";
+        if(player.hasType(Player.Type.PLAYTESTING_ADMIN))
+            status += ", Playtest Admin";
+        if(player.hasType(Player.Type.PLAYTESTER))
+            status += ", Playtester";
+        if(player.hasType(Player.Type.LEAGUE_ADMIN))
+            status += ", League Admin";
+        if(player.hasType(Player.Type.DEACTIVATED))
+            status += ", Deactivated";
+
+        return status;
     }
 
     private void resetUserPassword(HttpRequest request, ResponseWriter responseWriter) throws Exception {
@@ -246,71 +208,74 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
         String login = getFormParameterSafely(postDecoder, "login");
 
-        if (login==null)
+        if (login == null)
             throw new HttpProcessingException(404);
 
         if (!_adminService.resetUserPassword(login))
             throw new HttpProcessingException(404);
 
+        clearCache();
         responseWriter.writeHtmlResponse("OK");
     }
 
-    private void addPlaytester(HttpRequest request, ResponseWriter responseWriter) throws Exception {
-        validatePlaytestingAdmin(request);
-
+    private void showUsersWithFlag(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        String login = getFormParameterSafely(postDecoder, "login");
+        Player.Type flag = Player.Type.getFromName(getFormParameterSafely(postDecoder, "flag"));
 
-        if (login==null)
+        validateVariableAdmin(request, Objects.requireNonNull(flag));
+
+        List<Player> players = _playerDAO.findPlayersWithFlag(flag);
+        if (players == null)
             throw new HttpProcessingException(404);
 
-        if (!_adminService.setUserAsPlaytester(login, true))
-            throw new HttpProcessingException(404);
+        Collections.sort(players, new SortPlayerByName());
 
-        responseWriter.writeHtmlResponse("OK");
-    }
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
 
-    private void removePlaytesters(HttpRequest request, ResponseWriter responseWriter) throws Exception {
-        validatePlaytestingAdmin(request);
+        Document doc = documentBuilder.newDocument();
+        Element playerList = doc.createElement("players");
 
-        HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        List<String> logins = getFormParametersSafely(postDecoder, "login");
-        if (logins == null)
-            throw new HttpProcessingException(404);
-
-        for (String login : logins) {
-            if (!_adminService.setUserAsPlaytester(login, false))
-                throw new HttpProcessingException(404);
+        for (Player player : players) {
+            Element playerElem = doc.createElement("player");
+            playerElem.setAttribute("name", player.getName());
+            playerList.appendChild(playerElem);
         }
 
-        responseWriter.writeHtmlResponse("OK");
+        doc.appendChild(playerList);
+
+        responseWriter.writeXmlResponse(doc);
     }
 
-    private void addCommentator(HttpRequest request, ResponseWriter responseWriter) throws Exception {
-        validateCommentatorAdmin(request);
-
+    private void addFlagToUser(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
+        Player.Type flag = Player.Type.getFromName(getFormParameterSafely(postDecoder, "flag"));
+
+        validateVariableAdmin(request, Objects.requireNonNull(flag));
+
         String login = getFormParameterSafely(postDecoder, "login");
 
-        if (login==null)
+        if (login == null)
             throw new HttpProcessingException(404);
 
-        if (!_adminService.setUserAsCommentator(login, true))
+        if (!_adminService.setUserFlag(login, flag, true))
             throw new HttpProcessingException(404);
 
         responseWriter.writeHtmlResponse("OK");
     }
 
-    private void removeCommentators(HttpRequest request, ResponseWriter responseWriter) throws Exception {
-        validateCommentatorAdmin(request);
-
+    private void removeFlagFromUsers(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        List<String> logins = getFormParametersSafely(postDecoder, "login");
+        Player.Type flag = Player.Type.getFromName(getFormParameterSafely(postDecoder, "flag"));
+
+        validateVariableAdmin(request, Objects.requireNonNull(flag));
+
+        List<String> logins = getFormParametersSafely(postDecoder, "logins");
         if (logins == null)
             throw new HttpProcessingException(404);
 
         for (String login : logins) {
-            if (!_adminService.setUserAsCommentator(login, false))
+            if (!_adminService.setUserFlag(login, flag, false))
                 throw new HttpProcessingException(404);
         }
 
@@ -336,7 +301,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         validateAdmin(request);
 
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        List<String> logins = getFormParametersSafely(postDecoder, "login");
+        List<String> logins = getFormParametersSafely(postDecoder, "logins");
         if (logins == null)
             throw new HttpProcessingException(404);
 
@@ -352,7 +317,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         validateAdmin(request);
 
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        List<String> logins = getFormParametersSafely(postDecoder, "login");
+        List<String> logins = getFormParametersSafely(postDecoder, "logins");
         if (logins == null)
             throw new HttpProcessingException(404);
 
@@ -495,9 +460,6 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
                         cannotAdd.add(item.getBlueprintId());
                     break;
                 case PACK:
-                    if(!packList.contains(item.getBlueprintId()))
-                        cannotAdd.add(item.getBlueprintId());
-                    break;
                 case SELECTION:
                     if(!packList.contains(item.getBlueprintId()))
                         cannotAdd.add(item.getBlueprintId());
@@ -855,6 +817,14 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             }
 
             responseWriter.writeHtmlResponse("OK");
+
+    private void getMotd(HttpRequest request, ResponseWriter responseWriter) throws Exception {
+        validateAdmin(request);
+
+        String motd = _hallServer.getMOTD();
+
+        if(motd != null) {
+            responseWriter.writeJsonResponse(motd.replace("\n", "<br>"));
         }
     }
 
@@ -1025,7 +995,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
     private void validatePlaytestingAdmin(HttpRequest request) throws HttpProcessingException {
         Player player = getResourceOwnerSafely(request, null);
 
-        if (!player.hasType(Player.Type.ADMIN) && !player.hasType(Player.Type.PLAY_TESTING_ADMIN))
+        if (!player.hasType(Player.Type.ADMIN) && !player.hasType(Player.Type.PLAYTESTING_ADMIN))
             throw new HttpProcessingException(403);
     }
 
@@ -1037,7 +1007,21 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
     private void validateCommentatorAdmin(HttpRequest request) throws HttpProcessingException {
         Player player = getResourceOwnerSafely(request, null);
 
-        if (!player.hasType(Player.Type.ADMIN) && !player.hasType(Player.Type.COMMENTATOR_ADMIN))
+        if (!player.hasType(Player.Type.ADMIN) && !player.hasType(Player.Type.COMMENTARY_ADMIN))
             throw new HttpProcessingException(403);
+    }
+
+    private void validateVariableAdmin(HttpRequest request, Player.Type flag) throws Exception {
+        switch (flag) {
+            case PLAYTESTER:
+                validatePlaytestingAdmin(request);
+                break;
+            case COMMENTATOR:
+                validateCommentatorAdmin(request);
+                break;
+            default:
+                validateAdmin(request);
+                break;
+        }
     }
 }

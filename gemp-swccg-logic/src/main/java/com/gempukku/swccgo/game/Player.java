@@ -12,10 +12,10 @@ public class Player {
         ADMIN("a"),
         DEACTIVATED("d"),
         LEAGUE_ADMIN("l"),
-        PLAY_TESTER("t"),
-        PLAY_TESTING_ADMIN("p"),
+        PLAYTESTER("t"),
+        PLAYTESTING_ADMIN("p"),
         COMMENTATOR("c"),
-        COMMENTATOR_ADMIN("m"),
+        COMMENTARY_ADMIN("m"),
         UNBANNED("u");
 
         private String _value;
@@ -30,6 +30,14 @@ public class Player {
 
         public String toString() {
             return getValue();
+        }
+
+        public static Type getFromName(String typeString) {
+            for (Type type : values()) {
+                if (type.name().equalsIgnoreCase(typeString))
+                    return type;
+            }
+            return null;
         }
 
         public static List<Type> getTypes(String typeString) {

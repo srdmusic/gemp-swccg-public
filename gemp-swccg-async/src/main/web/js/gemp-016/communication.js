@@ -860,6 +860,196 @@ var GempSwccgCommunication = Class.extend({
             dataType:"html"
         });
     },
+    resetUserPassword:function (login, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/resetUserPassword",
+            cache:false,
+            data:{
+                login:login
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    permabanUser:function (login, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/banUser",
+            cache:false,
+            data:{
+                login:login
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    tempbanUser:function (login, duration, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/banUserTemp",
+            cache:false,
+            data:{
+                login:login,
+                duration:duration
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    unbanUser:function (login, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/unBanUser",
+            cache:false,
+            data:{
+                login:login
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    susUserSearch:function (login, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/findMultipleAccounts",
+            cache:false,
+            data:{
+                login:login
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"xml"
+        });
+    },
+    
+    banMultiple:function (logins, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/banMultiple",
+            cache:false,
+            data:{
+                logins:logins
+            },
+            traditional: true,
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    deactivateMultiple:function (logins, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/deactivateMultiple",
+            cache:false,
+            data:{
+                logins:logins
+            },
+            traditional: true,
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    
+    showUsersWithFlag:function (flag, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/showUsersWithFlag",
+            cache:false,
+            data:{
+                flag:flag
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"xml"
+        });
+    },
+    
+    showPlaytesters:function (callback, errorMap) {
+      this.showUsersWithFlag("PLAYTESTER", callback, errorMap)  
+    },
+    
+    showCommentators:function (callback, errorMap) {
+      this.showUsersWithFlag("COMMENTATOR", callback, errorMap)  
+    },
+    
+    addFlagToUser:function (login, flag, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/addFlagToUser",
+            cache:false,
+            data:{
+                login:login,
+                flag:flag
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    addPlaytesterToUser:function (login, callback, errorMap) {
+      this.addFlagToUser(login, "PLAYTESTER", callback, errorMap)  
+    },
+    
+    addCommentatorToUser:function (login, callback, errorMap) {
+      this.addFlagToUser(login, "COMMENTATOR", callback, errorMap)  
+    },
+    
+    removeFlagFromUsers:function (logins, flag, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/removeFlagFromUsers",
+            cache:false,
+            data:{
+                logins:logins,
+                flag:flag
+            },
+            traditional:true,
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    removeFlagFromUser:function (logins, flag, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/removeFlagFromUsers",
+            cache:false,
+            data:{
+                logins:logins,
+                flag:flag
+            },
+            traditional:false,
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    removePlaytesterFromUsers:function (logins, callback, errorMap) {
+      this.removeFlagFromUsers(logins, "PLAYTESTER", callback, errorMap)  
+    },
+    
+    removeCommentatorFromUsers:function (logins, callback, errorMap) {
+      this.removeFlagFromUsers(logins, "COMMENTATOR", callback, errorMap)  
+    },
+    
+    reactivateUser:function (logins, callback, errorMap) {
+      this.removeFlagFromUser(logins, "DEACTIVATED", callback, errorMap)  
+    },
     addTables:function (name, tournament, format, timer, playerones, playertwos, callback, errorMap) {
         $.ajax({
             type:"POST",
