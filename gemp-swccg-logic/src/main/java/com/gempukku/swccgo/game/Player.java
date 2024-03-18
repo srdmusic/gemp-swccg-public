@@ -133,5 +133,19 @@ public class Player {
     public int hashCode() {
         return _name != null ? _name.hashCode() : 0;
     }
+
+    public PlayerInfo GetUserInfo() {
+        return new PlayerInfo(_name, _type);
+    }
+
+    public class PlayerInfo {
+        public String name;
+        public String type;
+
+        public PlayerInfo(String name, String info) {
+            this.name = name;
+            type = info;
+        }
+    }
 }
 
