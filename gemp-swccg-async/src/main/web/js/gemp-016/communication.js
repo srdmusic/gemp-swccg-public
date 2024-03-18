@@ -699,6 +699,205 @@ var GempSwccgCommunication = Class.extend({
             dataType:"xml"
         });
     },
+    setShutdownMode:function (enabled, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/shutdown",
+            cache:false,
+            data:{
+                enabled:enabled
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    clearServerCache:function (callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/clearCache",
+            cache:false,
+            data:{},
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    setPrivateMode:function (enabled, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/setPrivateGames",
+            cache:false,
+            data:{
+                enabled:enabled
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    setNewAccountRegistration:function (enabled, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/setNewAccountRegistration",
+            cache:false,
+            data:{
+                enabled:enabled
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    setInGameStatTracking:function (enabled, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/setInGameStatTracking",
+            cache:false,
+            data:{
+                enabled:enabled
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    purgeInGameStatisticsListeners:function (callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/purgeInGameStatisticsListeners",
+            cache:false,
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    setBonusAbilities:function (enabled, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/setBonusAbilities",
+            cache:false,
+            data:{
+                enabled:enabled
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    getMOTD:function (callback, errorMap) {
+        $.ajax({
+            type:"GET",
+            url:this.url + "/admin/getMOTD",
+            cache:false,
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"json"
+        });
+    },
+    
+    setMOTD:function (motd, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/setMOTD",
+            cache:false,
+            data:{
+                motd:motd
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    addItems:function (collectionType, product, players, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/addItems",
+            cache:false,
+            data:{
+                collectionType:collectionType,
+                product:product,
+                players:players
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    addItemsToAllPlayers:function (collectionType, reason, product, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/addItemsToAllPlayers",
+            cache:false,
+            data:{
+                collectionType:collectionType,
+                reason:reason,
+                product:product
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    addCurrency:function (players, currencyAmount, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/addCurrency",
+            cache:false,
+            data:{
+                players:players,
+                currencyAmount:currencyAmount
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    addTables:function (name, tournament, format, timer, playerones, playertwos, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/addTables",
+            cache:false,
+            data:{
+                name:name,
+                tournament:tournament,
+                format:format,
+                timer:timer,
+                playerones:playerones,
+                playertwos:playertwos
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    //NEVER EVER EVER use this for actual authentication
+    // This is strictly to simplify things like auto-hiding
+    // of the admin panel.  If you actually need functionality
+    // gated behind authorization, it goes on the server
+    // and not in here.
+    
+    getPlayerInfo:function (callback, errorMap) {
+        $.ajax({
+            type:"GET",
+            url:this.url + "/playerStats/playerInfo",
+            cache:false,
+            data:{
+                participantId:getUrlParam("participantId")
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"json"
+        });
+    },
+    
     getFormat:function (formatCode, callback, errorMap) {
         $.ajax({
             type:"GET",
