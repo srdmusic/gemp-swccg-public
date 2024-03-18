@@ -94,6 +94,9 @@ finished = False
 session = Session()
 
 gemp_base_url = 'http://0.0.0.0:8080/'
+# If doing local testing, instead use the below line and
+# provide the appropriate port:
+#gemp_base_url = 'http://localhost:17010/'
 
 # HEAD requests ask for *just* the headers, which is all you need to grab the
 # session cookie
