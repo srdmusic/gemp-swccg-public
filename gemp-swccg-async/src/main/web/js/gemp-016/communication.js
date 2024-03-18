@@ -1050,6 +1050,148 @@ var GempSwccgCommunication = Class.extend({
     reactivateUser:function (logins, callback, errorMap) {
       this.removeFlagFromUser(logins, "DEACTIVATED", callback, errorMap)  
     },
+    
+    previewSealedLeague:function (name, cost, start, format, serieDuration, maxMatches, 
+                              allowTimeExtensions, allowSpectators, showPlayerNames, 
+                              invitationOnly, registrationInfo, decisionTimeoutSeconds, 
+                              timePerPlayerMinutes,
+                              callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/previewSealedLeague",
+            cache:false,
+            data:{
+                name:name,
+                cost:cost,
+                start:start,
+                format:format,
+                serieDuration:serieDuration,
+                maxMatches:maxMatches,
+                allowTimeExtensions:allowTimeExtensions,
+                allowSpectators:allowSpectators,
+                showPlayerNames:showPlayerNames,
+                invitationOnly:invitationOnly,
+                registrationInfo:registrationInfo,
+                decisionTimeoutSeconds:decisionTimeoutSeconds,
+                timePerPlayerMinutes:timePerPlayerMinutes
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"xml"
+        });
+    },
+    
+    addSealedLeague:function (name, cost, start, format, serieDuration, maxMatches, 
+                              allowTimeExtensions, allowSpectators, showPlayerNames, 
+                              invitationOnly, registrationInfo, decisionTimeoutSeconds, 
+                              timePerPlayerMinutes,
+                              callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/addSealedLeague",
+            cache:false,
+            data:{
+                name:name,
+                cost:cost,
+                start:start,
+                format:format,
+                serieDuration:serieDuration,
+                maxMatches:maxMatches,
+                allowTimeExtensions:allowTimeExtensions,
+                allowSpectators:allowSpectators,
+                showPlayerNames:showPlayerNames,
+                invitationOnly:invitationOnly,
+                registrationInfo:registrationInfo,
+                decisionTimeoutSeconds:decisionTimeoutSeconds,
+                timePerPlayerMinutes:timePerPlayerMinutes
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    
+    previewConstructedLeague:function (name, cost, start, collectionType,  
+                              allowTimeExtensions, allowSpectators, showPlayerNames, 
+                              invitationOnly, registrationInfo, decisionTimeoutSeconds, 
+                              timePerPlayerMinutes, formats, serieDurations, maxMatches,
+                              callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/previewConstructedLeague",
+            cache:false,
+            traditional: true,
+            data:{
+                name:name,
+                cost:cost,
+                start:start,
+                collectionType:collectionType,
+                allowTimeExtensions:allowTimeExtensions,
+                allowSpectators:allowSpectators,
+                showPlayerNames:showPlayerNames,
+                invitationOnly:invitationOnly,
+                registrationInfo:registrationInfo,
+                decisionTimeoutSeconds:decisionTimeoutSeconds,
+                timePerPlayerMinutes:timePerPlayerMinutes,
+                formats:formats,
+                serieDurations:serieDurations,
+                maxMatches:maxMatches
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"xml"
+        });
+    },
+    
+    addConstructedLeague:function (name, cost, start, collectionType,  
+                              allowTimeExtensions, allowSpectators, showPlayerNames, 
+                              invitationOnly, registrationInfo, decisionTimeoutSeconds, 
+                              timePerPlayerMinutes, formats, serieDurations, maxMatches,
+                              callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/addConstructedLeague",
+            cache:false,
+            traditional: true,
+            data:{
+                name:name,
+                cost:cost,
+                start:start,
+                collectionType:collectionType,
+                allowTimeExtensions:allowTimeExtensions,
+                allowSpectators:allowSpectators,
+                showPlayerNames:showPlayerNames,
+                invitationOnly:invitationOnly,
+                registrationInfo:registrationInfo,
+                decisionTimeoutSeconds:decisionTimeoutSeconds,
+                timePerPlayerMinutes:timePerPlayerMinutes,
+                formats:formats,
+                serieDurations:serieDurations,
+                maxMatches:maxMatches
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
+    addPlayersToLeague:function (leagueType, players, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/addPlayersToLeague",
+            cache:false,
+            traditional: true,
+            data:{
+                leagueType:leagueType,
+                players:players
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
+    
     addTables:function (name, tournament, format, timer, playerones, playertwos, callback, errorMap) {
         $.ajax({
             type:"POST",

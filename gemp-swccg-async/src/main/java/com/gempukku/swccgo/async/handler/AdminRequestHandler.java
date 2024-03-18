@@ -80,13 +80,13 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         } else if (uri.equals("/setMOTD") && request.getMethod() == HttpMethod.POST) {
             setMotd(request, responseWriter);
         } else if (uri.equals("/previewSealedLeague") && request.getMethod() == HttpMethod.POST) {
-            previewSealedLeague(request, responseWriter);
+            processSealedLeague(request, responseWriter, true);
         } else if (uri.equals("/addSealedLeague") && request.getMethod() == HttpMethod.POST) {
-            addSealedLeague(request, responseWriter);
+            processSealedLeague(request, responseWriter, false);
         } else if (uri.equals("/previewConstructedLeague") && request.getMethod() == HttpMethod.POST) {
-            previewConstructedLeague(request, responseWriter);
+            processConstructedLeague(request, responseWriter, true);
         } else if (uri.equals("/addConstructedLeague") && request.getMethod() == HttpMethod.POST) {
-            addConstructedLeague(request, responseWriter);
+            processConstructedLeague(request, responseWriter, false);
         } else if (uri.equals("/addPlayersToLeague") && request.getMethod() == HttpMethod.POST) {
             addPlayersToLeague(request, responseWriter, e);
         } else if (uri.equals("/addItems") && request.getMethod() == HttpMethod.POST) {
@@ -548,112 +548,90 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
     }
 
     /**
-     * Adds a constructed league using the specified parameters.
+     * Processes the passed parameters for a theoretical Sealed League.  Based on the preview parameter, this will
+     * either create the league for real, or just return the parsed values to the client so the admin can preview
+     * the input.
      * @param request the request
      * @param responseWriter the response writer
+     * @param preview If true, no league will be created and the client will have an XML payload returned representing
+     *                what the league would be upon creation.  If false, the league will be created for real.
      * @throws Exception
      */
-    private void addConstructedLeague(HttpRequest request, ResponseWriter responseWriter) throws Exception {
+    private void processSealedLeague(HttpRequest request, ResponseWriter responseWriter, boolean preview) throws Exception {
         validateLeagueAdmin(request);
 
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        String start = getFormParameterSafely(postDecoder, "start");
-        String collectionType = getFormParameterSafely(postDecoder, "collectionType");
-        List<String> formats = getFormMultipleParametersSafely(postDecoder, "format");
-        List<String> seriesDurations = getFormMultipleParametersSafely(postDecoder, "seriesDuration");
-        List<String> maxMatches = getFormMultipleParametersSafely(postDecoder, "maxMatches");
         String name = getFormParameterSafely(postDecoder, "name");
-        int cost = Integer.parseInt(getFormParameterSafely(postDecoder, "cost"));
+        String costStr = getFormParameterSafely(postDecoder, "cost");
+        String startStr = getFormParameterSafely(postDecoder, "start");
+        String format = getFormParameterSafely(postDecoder, "format");
+        String serieDurationStr = getFormParameterSafely(postDecoder, "serieDuration");
+        String maxMatchesStr = getFormParameterSafely(postDecoder, "maxMatches");
+        String allowTimeExtensionsStr = getFormParameterSafely(postDecoder, "allowTimeExtensions");
+        String allowSpectatorsStr = getFormParameterSafely(postDecoder, "allowSpectators");
+        String showPlayerNamesStr = getFormParameterSafely(postDecoder, "showPlayerNames");
+        String invitationOnlyStr = getFormParameterSafely(postDecoder, "invitationOnly");
+        String registrationInfo = getFormParameterSafely(postDecoder, "registrationInfo");
+        String decisionTimeoutStr = getFormParameterSafely(postDecoder, "decisionTimeoutSeconds");
+        String timePerPlayerStr = getFormParameterSafely(postDecoder, "timePerPlayerMinutes");
 
-        String allowSpectatorsOnOff = getFormParameterSafely(postDecoder, "allowSpectators");
-        boolean allowSpectators = allowSpectatorsOnOff != null && allowSpectatorsOnOff.equals("on");
+        Throw400IfStringNull("name", name);
+        int cost = Throw400IfNullOrNonInteger("cost", costStr);
+        int start = Throw400IfNullOrNonInteger("start", startStr);
+        if(startStr.length() != 8)
+            throw new HttpProcessingException(400, "Parameter 'start' must be exactly 8 digits long: YYYYMMDD");
+        Throw400IfStringNull("format", format);
+        int serieDuration = Throw400IfNullOrNonInteger("serieDuration", serieDurationStr);
+        int maxMatches = Throw400IfNullOrNonInteger("maxMatches", maxMatchesStr);
+        boolean allowTimeExtensions = Throw400IfNullOrNonBoolean("allowTimeExtensions", allowTimeExtensionsStr);
+        boolean allowSpectators = Throw400IfNullOrNonBoolean("allowSpectators", allowSpectatorsStr);
+        boolean showPlayerNames = Throw400IfNullOrNonBoolean("showPlayerNames", showPlayerNamesStr);
+        boolean invitationOnly = Throw400IfNullOrNonBoolean("invitationOnly", invitationOnlyStr);
+        //Throw400IfStringNull("registrationInfo", registrationInfo);
+        int decisionTimeoutSeconds = Throw400IfNullOrNonInteger("decisionTimeoutSeconds", decisionTimeoutStr);
+        int timePerPlayerMinutes = Throw400IfNullOrNonInteger("timePerPlayerMinutes", timePerPlayerStr);
 
-        String allowTimeExtensionsOnOff = getFormParameterSafely(postDecoder, "allowTimeExtensions");
-        boolean allowTimeExtensions = allowTimeExtensionsOnOff != null && allowTimeExtensionsOnOff.equals("on");
-
-        String showPlayerNamesOnOff = getFormParameterSafely(postDecoder, "showPlayerNames");
-        boolean showPlayerNames = showPlayerNamesOnOff != null && showPlayerNamesOnOff.equals("on");
-
-        String invitationOnlyOnOff = getFormParameterSafely(postDecoder, "invitationOnly");
-        boolean invitationOnly = invitationOnlyOnOff != null && invitationOnlyOnOff.equals("on");
-
-        String registrationInfoString = getFormParameterSafely(postDecoder, "registrationInfo");
-
-        int decisionTimeoutSeconds = Integer.parseInt(getFormParameterSafely(postDecoder, "decisionTimeoutSeconds"));
-        int timePerPlayerMinutes = Integer.parseInt(getFormParameterSafely(postDecoder, "timePerPlayerMinutes"));
+        if(registrationInfo.toLowerCase().contains("starwarsccg.org") && !registrationInfo.contains(" ")) {
+            registrationInfo = "<a href='" + registrationInfo + "' target='_blank'>" + registrationInfo + "</a>";
+        }
 
         String code = String.valueOf(System.currentTimeMillis());
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(start + "," + collectionType + "," + formats.size());
-        for (int i = 0; i < formats.size(); ++i) {
-            sb.append("," + formats.get(i) + "," + seriesDurations.get(i) + "," + maxMatches.get(i));
-        }
-
-        String parameters = sb.toString();
-        LeagueData leagueData = new NewConstructedLeagueData(_cardLibrary, parameters);
+        String parameters = format + "," + start + "," + serieDuration + "," + maxMatches + "," + code + "," + name;
+        LeagueData leagueData = new NewSealedLeagueData(_cardLibrary, parameters);
         List<LeagueSeriesData> series = leagueData.getSeries();
         int leagueStart = series.get(0).getStart();
         int displayEnd = DateUtils.offsetDate(series.get(series.size() - 1).getEnd(), 2);
 
-        _leagueDao.addLeague(cost, name, code, leagueData.getClass().getName(), parameters, leagueStart, displayEnd, allowSpectators, allowTimeExtensions, showPlayerNames, invitationOnly, registrationInfoString, decisionTimeoutSeconds, timePerPlayerMinutes);
+        if(!preview) {
+            _leagueDao.addLeague(cost, name, code, leagueData.getClass().getName(), parameters, leagueStart, displayEnd,
+                    allowSpectators, allowTimeExtensions, showPlayerNames, invitationOnly, registrationInfo,
+                    decisionTimeoutSeconds, timePerPlayerMinutes);
+            _leagueService.clearCache();
 
-        _leagueService.clearCache();
-
-        responseWriter.writeHtmlResponse("OK");
-    }
-
-    /**
-     * Creates a response with a preview of the sealed league using the specified parameters.
-     * @param request the request
-     * @param responseWriter the response writer
-     * @throws Exception
-     */
-    private void previewConstructedLeague(HttpRequest request, ResponseWriter responseWriter) throws Exception {
-        validateLeagueAdmin(request);
-
-        HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        String start = getFormParameterSafely(postDecoder, "start");
-        String collectionType = getFormParameterSafely(postDecoder, "collectionType");
-        List<String> formats = getFormMultipleParametersSafely(postDecoder, "format");
-        List<String> seriesDurations = getFormMultipleParametersSafely(postDecoder, "seriesDuration");
-        List<String> maxMatches = getFormMultipleParametersSafely(postDecoder, "maxMatches");
-        String name = getFormParameterSafely(postDecoder, "name");
-        int cost = Integer.parseInt(getFormParameterSafely(postDecoder, "cost"));
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(start + "," + collectionType + "," + formats.size());
-        for (int i = 0; i < formats.size(); ++i) {
-            sb.append("," + formats.get(i) + "," + seriesDurations.get(i) + "," + maxMatches.get(i));
+            responseWriter.writeHtmlResponse("OK");
+            return;
         }
-
-        String invitationOnlyOnOff = getFormParameterSafely(postDecoder, "invitationOnly");
-        boolean invitationOnly = invitationOnlyOnOff != null && invitationOnlyOnOff.equals("on");
-
-        String registrationInfoString = getFormParameterSafely(postDecoder, "registrationInfo");
-        if(registrationInfoString.toLowerCase().contains("starwarsccg.org") && !registrationInfoString.contains(" "))
-            registrationInfoString = "<a href='"+registrationInfoString+"' target='_new'>"+registrationInfoString+"</a>";
-
-        String parameters = sb.toString();
-        LeagueData leagueData = new NewConstructedLeagueData(_cardLibrary, parameters);
 
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
 
         Document doc = documentBuilder.newDocument();
 
-        final List<LeagueSeriesData> series = leagueData.getSeries();
-
-        int end = series.get(series.size() - 1).getEnd();
-
         Element leagueElem = doc.createElement("league");
 
         leagueElem.setAttribute("name", name);
         leagueElem.setAttribute("cost", String.valueOf(cost));
-        leagueElem.setAttribute("invitationOnly", String.valueOf(invitationOnly));
-        leagueElem.setAttribute("registrationInfo", registrationInfoString);
         leagueElem.setAttribute("start", String.valueOf(series.get(0).getStart()));
-        leagueElem.setAttribute("end", String.valueOf(end));
+        leagueElem.setAttribute("allowTimeExtensions", String.valueOf(allowTimeExtensions));
+        leagueElem.setAttribute("allowSpectators", String.valueOf(allowSpectators));
+        leagueElem.setAttribute("showPlayerNames", String.valueOf(showPlayerNames));
+        leagueElem.setAttribute("invitationOnly", String.valueOf(invitationOnly));
+        leagueElem.setAttribute("registrationInfo", registrationInfo);
+        leagueElem.setAttribute("decisionTimeoutSeconds", String.valueOf(decisionTimeoutSeconds));
+        leagueElem.setAttribute("timePerPlayerMinutes", String.valueOf(timePerPlayerMinutes));
+
+        leagueElem.setAttribute("end", String.valueOf(displayEnd));
 
         for (LeagueSeriesData serie : series) {
             Element serieElem = doc.createElement("serie");
@@ -674,100 +652,101 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
     }
 
     /**
-     * Adds a sealed league using the specified parameters.
+     * Processes the passed parameters for a theoretical Constructed League.  Based on the preview parameter, this will
+     * either create the league for real, or just return the parsed values to the client so the admin can preview
+     * the input.
      * @param request the request
      * @param responseWriter the response writer
+     * @param preview If true, no league will be created and the client will have an XML payload returned representing
+     *                what the league would be upon creation.  If false, the league will be created for real.
      * @throws Exception
      */
-    private void addSealedLeague(HttpRequest request, ResponseWriter responseWriter) throws Exception {
+    private void processConstructedLeague(HttpRequest request, ResponseWriter responseWriter, boolean preview) throws Exception {
         validateLeagueAdmin(request);
 
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        String format = getFormParameterSafely(postDecoder, "format");
-        String start = getFormParameterSafely(postDecoder, "start");
-        String seriesDuration = getFormParameterSafely(postDecoder, "seriesDuration");
-        String maxMatches = getFormParameterSafely(postDecoder, "maxMatches");
         String name = getFormParameterSafely(postDecoder, "name");
-        int cost = Integer.parseInt(getFormParameterSafely(postDecoder, "cost"));
+        String costStr = getFormParameterSafely(postDecoder, "cost");
+        String startStr = getFormParameterSafely(postDecoder, "start");
+        String collectionType = getFormParameterSafely(postDecoder, "collectionType");
+        //Individual serie definitions
+        List<String> formats = getFormMultipleParametersSafely(postDecoder, "formats");
+        List<String> serieDurationsStr = getFormMultipleParametersSafely(postDecoder, "serieDurations");
+        List<String> maxMatchesStr = getFormMultipleParametersSafely(postDecoder, "maxMatches");
+        String allowTimeExtensionsStr = getFormParameterSafely(postDecoder, "allowTimeExtensions");
+        String allowSpectatorsStr = getFormParameterSafely(postDecoder, "allowSpectators");
+        String showPlayerNamesStr = getFormParameterSafely(postDecoder, "showPlayerNames");
+        String invitationOnlyStr = getFormParameterSafely(postDecoder, "invitationOnly");
+        String registrationInfo = getFormParameterSafely(postDecoder, "registrationInfo");
+        String decisionTimeoutStr = getFormParameterSafely(postDecoder, "decisionTimeoutSeconds");
+        String timePerPlayerStr = getFormParameterSafely(postDecoder, "timePerPlayerMinutes");
 
-        String allowSpectatorsOnOff = getFormParameterSafely(postDecoder, "allowSpectators");
-        boolean allowSpectators = allowSpectatorsOnOff != null && allowSpectatorsOnOff.equals("on");
+        Throw400IfStringNull("name", name);
+        int cost = Throw400IfNullOrNonInteger("cost", costStr);
+        int start = Throw400IfNullOrNonInteger("start", startStr);
+        if(startStr.length() != 8)
+            throw new HttpProcessingException(400, "Parameter 'start' must be exactly 8 digits long: YYYYMMDD");
+        Throw400IfAnyStringNull("format", formats);
+        Throw400IfStringNull("collectionType", collectionType);
+        List<Integer> serieDurations = Throw400IfAnyNullOrNonInteger("serieDuration", serieDurationsStr);
+        List<Integer> maxMatches = Throw400IfAnyNullOrNonInteger("maxMatches", maxMatchesStr);
+        boolean allowTimeExtensions = Throw400IfNullOrNonBoolean("allowTimeExtensions", allowTimeExtensionsStr);
+        boolean allowSpectators = Throw400IfNullOrNonBoolean("allowSpectators", allowSpectatorsStr);
+        boolean showPlayerNames = Throw400IfNullOrNonBoolean("showPlayerNames", showPlayerNamesStr);
+        boolean invitationOnly = Throw400IfNullOrNonBoolean("invitationOnly", invitationOnlyStr);
+        //Throw400IfStringNull("registrationInfo", registrationInfo);
+        int decisionTimeoutSeconds = Throw400IfNullOrNonInteger("decisionTimeoutSeconds", decisionTimeoutStr);
+        int timePerPlayerMinutes = Throw400IfNullOrNonInteger("timePerPlayerMinutes", timePerPlayerStr);
 
-        String allowTimeExtensionsOnOff = getFormParameterSafely(postDecoder, "allowTimeExtensions");
-        boolean allowTimeExtensions = allowTimeExtensionsOnOff != null && allowTimeExtensionsOnOff.equals("on");
-
-        String showPlayerNamesOnOff = getFormParameterSafely(postDecoder, "showPlayerNames");
-        boolean showPlayerNames = showPlayerNamesOnOff != null && showPlayerNamesOnOff.equals("on");
-
-        String invitationOnlyOnOff = getFormParameterSafely(postDecoder, "invitationOnly");
-        boolean invitationOnly = invitationOnlyOnOff != null && invitationOnlyOnOff.equals("on");
-
-        String registrationInfoString = getFormParameterSafely(postDecoder, "registrationInfo");
-
-        int decisionTimeoutSeconds = Integer.parseInt(getFormParameterSafely(postDecoder, "decisionTimeoutSeconds"));
-        int timePerPlayerMinutes = Integer.parseInt(getFormParameterSafely(postDecoder, "timePerPlayerMinutes"));
+        if(registrationInfo.toLowerCase().contains("starwarsccg.org") && !registrationInfo.contains(" ")) {
+            registrationInfo = "<a href='" + registrationInfo + "' target='_blank'>" + registrationInfo + "</a>";
+        }
 
         String code = String.valueOf(System.currentTimeMillis());
 
-        String parameters = format + "," + start + "," + seriesDuration + "," + maxMatches + "," + code + "," + name;
-        LeagueData leagueData = new NewSealedLeagueData(_cardLibrary, parameters);
+        StringBuilder sb = new StringBuilder();
+        sb.append(start).append(",").append(collectionType).append(",").append(formats.size());
+        for (int i = 0; i < formats.size(); ++i) {
+            sb.append(",").append(formats.get(i)).append(",").append(serieDurations.get(i)).append(",").append(
+                    maxMatches.get(i));
+        }
+
+        String parameters = sb.toString();
+        LeagueData leagueData = new NewConstructedLeagueData(_cardLibrary, parameters);
         List<LeagueSeriesData> series = leagueData.getSeries();
         int leagueStart = series.get(0).getStart();
         int displayEnd = DateUtils.offsetDate(series.get(series.size() - 1).getEnd(), 2);
 
-        _leagueDao.addLeague(cost, name, code, leagueData.getClass().getName(), parameters, leagueStart, displayEnd, allowSpectators, allowTimeExtensions, showPlayerNames, invitationOnly, registrationInfoString, decisionTimeoutSeconds, timePerPlayerMinutes);
+        if(!preview) {
+            _leagueDao.addLeague(cost, name, code, leagueData.getClass().getName(), parameters, leagueStart, displayEnd,
+                    allowSpectators, allowTimeExtensions, showPlayerNames, invitationOnly, registrationInfo,
+                    decisionTimeoutSeconds, timePerPlayerMinutes);
 
-        _leagueService.clearCache();
+            _leagueService.clearCache();
 
-        responseWriter.writeHtmlResponse("OK");
-    }
-
-    /**
-     * Creates a response with a preview of the sealed league using the specified parameters.
-     * @param request the request
-     * @param responseWriter the response writer
-     * @throws Exception
-     */
-    private void previewSealedLeague(HttpRequest request, ResponseWriter responseWriter) throws Exception {
-        validateLeagueAdmin(request);
-
-        HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
-        String format = getFormParameterSafely(postDecoder, "format");
-        String start = getFormParameterSafely(postDecoder, "start");
-        String seriesDuration = getFormParameterSafely(postDecoder, "seriesDuration");
-        String maxMatches = getFormParameterSafely(postDecoder, "maxMatches");
-        String name = getFormParameterSafely(postDecoder, "name");
-        int cost = Integer.parseInt(getFormParameterSafely(postDecoder, "cost"));
-
-        String invitationOnlyOnOff = getFormParameterSafely(postDecoder, "invitationOnly");
-        boolean invitationOnly = invitationOnlyOnOff != null && invitationOnlyOnOff.equals("on");
-
-        String registrationInfoString = getFormParameterSafely(postDecoder, "registrationInfo");
-        if(registrationInfoString.toLowerCase().contains("starwarsccg.org") && !registrationInfoString.contains(" "))
-            registrationInfoString = "<a href='"+registrationInfoString+"' target='_new'>"+registrationInfoString+"</a>";
-
-        String code = String.valueOf(System.currentTimeMillis());
-
-        String parameters = format + "," + start + "," + seriesDuration + "," + maxMatches + "," + code + "," + name;
-        LeagueData leagueData = new NewSealedLeagueData(_cardLibrary, parameters);
+            responseWriter.writeHtmlResponse("OK");
+            return;
+        }
 
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
 
         Document doc = documentBuilder.newDocument();
 
-        final List<LeagueSeriesData> series = leagueData.getSeries();
-
-        int end = series.get(series.size() - 1).getEnd();
-
         Element leagueElem = doc.createElement("league");
 
         leagueElem.setAttribute("name", name);
         leagueElem.setAttribute("cost", String.valueOf(cost));
-        leagueElem.setAttribute("invitationOnly", String.valueOf(invitationOnly));
-        leagueElem.setAttribute("registrationInfo", registrationInfoString);
         leagueElem.setAttribute("start", String.valueOf(series.get(0).getStart()));
-        leagueElem.setAttribute("end", String.valueOf(end));
+        leagueElem.setAttribute("end", String.valueOf(displayEnd));
+        leagueElem.setAttribute("collectionType", collectionType);
+        leagueElem.setAttribute("allowTimeExtensions", String.valueOf(allowTimeExtensions));
+        leagueElem.setAttribute("allowSpectators", String.valueOf(allowSpectators));
+        leagueElem.setAttribute("showPlayerNames", String.valueOf(showPlayerNames));
+        leagueElem.setAttribute("invitationOnly", String.valueOf(invitationOnly));
+        leagueElem.setAttribute("registrationInfo", registrationInfo);
+        leagueElem.setAttribute("decisionTimeoutSeconds", String.valueOf(decisionTimeoutSeconds));
+        leagueElem.setAttribute("timePerPlayerMinutes", String.valueOf(timePerPlayerMinutes));
 
         for (LeagueSeriesData serie : series) {
             Element serieElem = doc.createElement("serie");
@@ -786,37 +765,40 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
 
         responseWriter.writeXmlResponse(doc);
     }
+
 
     private void addPlayersToLeague(HttpRequest request, ResponseWriter responseWriter, MessageEvent e) throws Exception {
         validateLeagueAdmin(request);
 
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
         String leagueType = getFormParameterSafely(postDecoder, "leagueType");
-        String players = getFormParameterSafely(postDecoder, "players");
+        List<String> playerNames = getFormParametersSafely(postDecoder, "players");
 
         League league = _leagueService.getLeagueByType(leagueType);
         if (league == null) {
-            throw new HttpProcessingException(409);
+            throw new HttpProcessingException(400, "League '" + leagueType + "' does not exist.");
         }
-        List<String> playerNames = getItems(players);
 
         List<String> invalidUsernames = getInvalidUsernameList(playerNames);
 
         if (!invalidUsernames.isEmpty()) {
-            responseWriter.writeHtmlResponse("Did not add any players to the league. "+invalidUsernameListToString(invalidUsernames));
-        } else {
-            for (String playerName : playerNames) {
-                Player player = _playerDao.getPlayer(playerName);
-                if (player != null) {
-                    if (!_leagueService.isPlayerInLeague(league, player)) {
-                        if (!_leagueService.playerJoinsLeague(league, player, e.getRemoteAddress().toString(), true, true)) {
-                            throw new HttpProcessingException(409);
-                        }
+            throw new HttpProcessingException(400, "Added no players to the league. " +
+                    invalidUsernameListToString(invalidUsernames) + ".");
+        }
+
+        for (String playerName : playerNames) {
+            Player player = _playerDao.getPlayer(playerName);
+            if (player != null) {
+                if (!_leagueService.isPlayerInLeague(league, player)) {
+                    if (!_leagueService.playerJoinsLeague(league, player, e.getRemoteAddress().toString(), true, true)) {
+                        throw new HttpProcessingException(500, "Failed to add player '" + player + "' to the league.  Aborting.");
                     }
                 }
             }
+        }
 
-            responseWriter.writeHtmlResponse("OK");
+        responseWriter.writeHtmlResponse("OK");
+    }
 
     private void getMotd(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         validateAdmin(request);
@@ -961,6 +943,70 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         doc.appendChild(deckCheckEntries);
 
         responseWriter.writeXmlResponse(doc);
+    }
+
+    private void Throw400IfStringNull(String paramName, String value) throws HttpProcessingException {
+        if(StringUtils.isEmpty(value)) {
+            throw new HttpProcessingException(400, "Parameter '" + paramName + "' cannot be blank.");
+        }
+    }
+
+    private void Throw400IfAnyStringNull(String paramName, List<String> values) throws HttpProcessingException {
+        for (String value : values) {
+            if(StringUtils.isEmpty(value)) {
+                throw new HttpProcessingException(400, "Parameter '" + paramName + "' cannot be blank.");
+            }
+        }
+    }
+
+    private int Throw400IfNullOrNonInteger(String paramName, String value) throws HttpProcessingException {
+        if(StringUtils.isEmpty(value)) {
+            throw new HttpProcessingException(400, "Parameter '" + paramName + "' cannot be blank.");
+        }
+        int newValue;
+        try {
+            newValue = Integer.parseInt(value);
+        }
+        catch (NumberFormatException ex) {
+            throw new HttpProcessingException(400, "Parameter '" + paramName + "' must be a valid numeric integer.");
+        }
+
+        return newValue;
+    }
+
+    private List<Integer> Throw400IfAnyNullOrNonInteger(String paramName, List<String> values) throws HttpProcessingException {
+        List<Integer> newValues = new ArrayList<>();
+
+        for(String value : values) {
+            if(StringUtils.isEmpty(value)) {
+                throw new HttpProcessingException(400, "Parameter '" + paramName + "' cannot be blank.");
+            }
+            int newValue;
+            try {
+                newValue = Integer.parseInt(value);
+            }
+            catch (NumberFormatException ex) {
+                throw new HttpProcessingException(400, "Parameter '" + paramName + "' must be a valid numeric integer: '" + value + "'.");
+            }
+            newValues.add(newValue);
+        }
+
+        return newValues;
+    }
+
+    private boolean Throw400IfNullOrNonBoolean(String paramName, String value) throws HttpProcessingException {
+        if(StringUtils.isEmpty(value)) {
+            throw new HttpProcessingException(400, "Parameter '" + paramName + "' cannot be blank.");
+        }
+        boolean newValue;
+        try {
+            newValue = Boolean.parseBoolean(value);
+        }
+        catch (NumberFormatException ex) {
+            throw new HttpProcessingException(400, "Parameter '" + paramName + "' must be a valid boolean value ('true' or 'false').");
+        }
+
+        return newValue;
     }
 
     /**
