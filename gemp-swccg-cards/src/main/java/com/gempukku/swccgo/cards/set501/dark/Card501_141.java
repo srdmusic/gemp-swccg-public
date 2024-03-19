@@ -17,7 +17,7 @@ import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromUsedPileEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.MayInitiateBattlesForFreeModifier;
+import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -36,11 +36,11 @@ import java.util.List;
 public class Card501_141 extends AbstractImperial {
     public Card501_141() {
         super(Side.DARK, 1, 4, 4, 4, 6, "Moff Gideon, Suited For Battle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("Leader");
-        setGameText("Adds 3 power to anything he pilots. If you just deployed Darksaber here, may take a card from Used Pile into hand; reshuffle. May initiate battle here for free. Your total battle destiny here is +1. Immune to attrition < 3.");
+        setLore("Imperial Remnant leader.");
+        setGameText("Adds 3 power to anything he pilots. If you just deployed Darksaber here, may take a card from Used Pile into hand; reshuffle. You initiate battles here for free. Your total battle destiny here is +1. Immune to attrition < 3.");
         addIcons(Icon.PILOT, Icon.WARRIOR);
         addPersona(Persona.GIDEON);
-        addKeywords(Keyword.LEADER, Keyword.MOFF);
+        addKeywords(Keyword.LEADER, Keyword.MOFF, Keyword.IMPERIAL_REMNANT);
         setTestingText("Moff Gideon, Suited for Battle");
     }
 
@@ -49,7 +49,7 @@ public class Card501_141 extends AbstractImperial {
         String playerId = self.getOwner();
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
-        modifiers.add(new MayInitiateBattlesForFreeModifier(self, Filters.here(self), playerId));
+        modifiers.add(new InitiateBattlesForFreeModifier(self, Filters.here(self), playerId));
         modifiers.add(new TotalBattleDestinyModifier(self, Filters.here(self), 1, playerId));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
         return modifiers;
