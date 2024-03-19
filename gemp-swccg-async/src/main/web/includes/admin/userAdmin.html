@@ -80,7 +80,6 @@
 	});
 	
 	function refreshUsers() {
-		debugger;
 		if($("#displayUsers").is(':visible')) {
 			hall.comm.susUserSearch($("#sus-input").val(), susUserPopulate, userModErrorMap($("#sus-result")));
 		}
