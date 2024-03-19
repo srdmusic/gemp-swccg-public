@@ -52,7 +52,7 @@
 			previewDialog.append("<div class='leagueName'>" + leagueName + "</div>");
 
 			if (invitationOnly) {
-				if (registrationInfo != "" && registrationInfo != "null")
+				if (registrationInfo != null && registrationInfo != "")
 					previewDialog.append("<div>Registration info: " + registrationInfo);
 				else
 					previewDialog.append("<div>Registration for this league by invitation only.</div>");
@@ -364,7 +364,7 @@
 		<h1>Add Sealed League</h1>
 
 		<div id="addSealedForm">
-			Name: <input type="text" name="name" required/><br/>
+			Name: <input type="text" name="name"/><br/>
 			Cost (in silver): <input type="number" name="cost" value="500"/><br/>
 			Start (YYYYMMDD): <input type="number" name="start" required/><br/>
 			Format:
