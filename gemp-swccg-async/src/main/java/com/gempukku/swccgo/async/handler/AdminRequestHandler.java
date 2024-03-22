@@ -918,12 +918,12 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
         String leagueId = getFormParameterSafely(postDecoder, "leagueId");
 
-        if (leagueId==null || leagueId.length()==0)
-            throw new HttpProcessingException(404);
+        Throw400IfStringNull("leagueId", leagueId);
+
+        if(_leagueService.getLeagueByType(leagueId) == null)
+            throw new HttpProcessingException(404, "No league with that type id could be found.");
 
         List<LeagueDecklistEntry> decklistEntries = _gameHistoryService.getDeckCheck(leagueId);
-        if (decklistEntries == null)
-            throw new HttpProcessingException(404);
 
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();

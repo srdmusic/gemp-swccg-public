@@ -1192,6 +1192,20 @@ var GempSwccgCommunication = Class.extend({
         });
     },
     
+    leagueDeckCheck:function (leagueId, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/league/deckcheck",
+            cache:false,
+            data:{
+                leagueId:leagueId
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"xml"
+        });
+    },
+    
     addTables:function (name, tournament, format, timer, playerones, playertwos, callback, errorMap) {
         $.ajax({
             type:"POST",

@@ -185,7 +185,47 @@
 					});
 				});
 			
+			$("#show-decklists-button").button().click(
+				function() {
+					let id = $("#decklists-league-id").val();
+					
+					$("#deck-check-response").html("Processing...");
+					
+					hall.comm.leagueDeckCheck(id, displayDecks);
+				})
+			
 		});
+
+	function displayDecks(xml) {
+		var root = xml.documentElement;
+		if(root == null || root.tagName != 'deckCheckEntries') {
+			$("#deck-check-response").html(xml);
+			return;
+		}
+
+		var deckCheckDiv = $("#displayDecks");
+		deckCheckDiv.html("");
+		deckCheckDiv.append("Deck check details:");
+
+		var table = $("<table class='tables' style='table-layout:fixed'></table>");
+		table.append("<tr><th style='width: 150px;'>LeagueName</th><th style='width: 80px;'>StartTime</th><th style='width: 80px;'>Username</th><th style='width: 40px;'>Side</th><th style='width: auto;'>Deck string</th></tr>");
+
+		var deckCheckEntries = root.getElementsByTagName("entry");
+		for (var j=0; j<deckCheckEntries.length; j++) {
+				var entry = deckCheckEntries[j];
+				var leagueName=entry.getAttribute("leagueName");
+				var startTime=formatDate(new Date(parseInt(entry.getAttribute("startTime"))));
+				var player=entry.getAttribute("player");
+				var side=entry.getAttribute("side");
+				var deck=entry.getAttribute("deck");
+
+				table.append("<tr><td>"+ leagueName +"</td><td>"+ startTime +"</td><td>"+ player +"</td><td>"+ side +"</td><td style='word-wrap: break-word'>"+ deck +"</td></tr>");
+		}
+		deckCheckDiv.append(table);
+		
+		$("#deck-check-response").html("OK");
+
+	}
 
 
 </script>
@@ -241,7 +281,7 @@
 			</td>
 			<td id="cards-response">Ready.</td>
 			<td>
-				New-style card definitions are JSON text files, and as such can be hot-reloaded at will.	This command will reload all definitions from file for cards that have been converted.
+				New-style card definitions are JSON text files, and as such can be hot-reloaded at will.  This command will reload all definitions from file for cards that have been converted.
 			</td>
 		</tr> -->
 		
@@ -329,14 +369,14 @@
 	
 	
 	<div>
-    <h1>Message of the Day</h1>
+		<h1>Message of the Day</h1>
 		<p>Sets the MOTD at the top of the hall. Supports HTML (preview on right).</p>
 		
 		<div id="motd-response"></div>
 
 		<div class="flex-horiz" style="gap:25px">
 			<div class="flex-vert" style="flex-basis:50%;">
-				<textarea type="text" id="motd-text"  oninput='$("#motd-preview").html($("#motd-text").val());'></textarea>
+				<textarea type="text" id="motd-text"	oninput='$("#motd-preview").html($("#motd-text").val());'></textarea>
 				<br />
 				<button id="motd-button" class="admin-button">
 					Set MOTD
@@ -346,11 +386,11 @@
 		</div>
 		<br/>
 	</div>
-    
+		
 	<br><br><hr><br>
-    
+		
 	<div>
-    <h1>Add Items to Collections</h1>
+		<h1>Add Items to Collections</h1>
 		<table class="tables">
 			<tr>
 				<th>Input</th>
@@ -526,6 +566,20 @@
 				</td>
 			</tr>
 		</table> 
+	</div>
+	
+	<br><br><hr><br>
+	
+	<div>
+		<h1>Deck Check</h1>
+		
+		<div id="deck-check-form">
+				League type ID (case sensitive): <input type="text" id="decklists-league-id"><br/>
+				<button id="show-decklists-button" class="admin-button">Get deck lists</button>
+				<span id="deck-check-response">Ready.</span>
+		</div>
+		
+		<div id="displayDecks"></div>
 	</div>
 
 </div>
