@@ -7,18 +7,20 @@ services:
   gempdb:
     container_name: gemp_swccg_db
     ports:
+      # Change this to any convenient ports on your host system.
       - target: 3306
-        published: 35010
+        published: 3306
       
   gemp:
     container_name: gemp_swccg_app
     ports:
+      # Change these to any convenient ports on your host system.
       # Gemp ports
       - target: 8080
-        published: 17010
+        published: 8080
       # Debugger ports
       - target: 8000
-        published: 8060
+        published: 8000
     volumes:
       - type: bind
         source: ./gemp-swccg-async/src/main/web/
