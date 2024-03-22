@@ -5,7 +5,7 @@ version: "3"
 services:
 
   gempdb:
-    container_name: gemp_swccg_db
+    container_name: gempdb
     hostname: gempdb
     build:
       context: .
@@ -28,7 +28,7 @@ services:
       - "traefik.enable=false"      
 
   gemp:
-    container_name: gemp_swccg_app
+    container_name: gemp
     hostname: gemp
     build:
       context: .
