@@ -20,6 +20,7 @@ services:
       - "3306/tcp"
     ports:
       # Change this to any convenient ports on your host system.
+      # Change the published port to any convenient port on your host system.
       - target: 3306
         published: 3306
     restart: unless-stopped
@@ -39,6 +40,7 @@ services:
     restart: unless-stopped
     ports:
       # Change these to any convenient ports on your host system.
+      # Change the published ports to any convenient ports on your host system.
       # Gemp ports
       - target: 8080
         published: 8080
