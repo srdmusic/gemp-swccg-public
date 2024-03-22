@@ -3,16 +3,40 @@
 version: "3"
 
 services:
-  
+
   gempdb:
     container_name: gemp_swccg_db
+    hostname: gempdb
+    build:
+      context: .
+      dockerfile: db.Dockerfile
+    environment:
+      - "MYSQL_ROOT_PASSWORD=gempukku"
+      - "MYSQL_DATABASE=gemp-swccg"
+      - "MYSQL_USER=gemp"
+      - "MYSQL_PASSWORD=Four_mason8pirate"
+    image: gempdb
+    expose:
+      - "3306/tcp"
     ports:
       # Change this to any convenient ports on your host system.
       - target: 3306
         published: 3306
-      
+    restart: unless-stopped
+    labels:
+      - "app=gempdb"
+      - "traefik.enable=false"      
+
   gemp:
     container_name: gemp_swccg_app
+    hostname: gemp
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gemp
+    expose:
+      - "8080/tcp"
+    restart: unless-stopped
     ports:
       # Change these to any convenient ports on your host system.
       # Gemp ports
@@ -34,7 +58,14 @@ services:
       - type: bind
         source: ./replay
         target: /replay
+    labels:
+      - "app=gemp"
+      - "traefik.enable=true"
+    tty: true
+    depends_on:
+      - gempdb
     environment:
+      - "db_hostname=gempdb"
       - "environment=test"
     command: ["/usr/bin/wait-for-it.sh", "gempdb:3306", "--",
               "/usr/bin/java",
