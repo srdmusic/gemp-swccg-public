@@ -71,61 +71,61 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
 
     @Override
     public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-        if (uri.equals("/clearCache") && request.getMethod() == HttpMethod.POST) {
+        if (uri.equals("/clearcache") && request.getMethod() == HttpMethod.POST) {
             clearCacheRequest(request, responseWriter);
         } else if (uri.equals("/shutdown") && request.getMethod() == HttpMethod.POST) {
             shutdown(request, responseWriter);
-        } else if (uri.equals("/getMOTD") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.equals("/motd/get") && request.getMethod() == HttpMethod.GET) {
             getMotd(request, responseWriter);
-        } else if (uri.equals("/setMOTD") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/motd/update") && request.getMethod() == HttpMethod.POST) {
             setMotd(request, responseWriter);
-        } else if (uri.equals("/previewSealedLeague") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/league/sealed/preview") && request.getMethod() == HttpMethod.POST) {
             processSealedLeague(request, responseWriter, true);
-        } else if (uri.equals("/addSealedLeague") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/league/sealed/create") && request.getMethod() == HttpMethod.POST) {
             processSealedLeague(request, responseWriter, false);
-        } else if (uri.equals("/previewConstructedLeague") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/league/constructed/preview") && request.getMethod() == HttpMethod.POST) {
             processConstructedLeague(request, responseWriter, true);
-        } else if (uri.equals("/addConstructedLeague") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/league/constructed/create") && request.getMethod() == HttpMethod.POST) {
             processConstructedLeague(request, responseWriter, false);
-        } else if (uri.equals("/addPlayersToLeague") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/league/addplayers") && request.getMethod() == HttpMethod.POST) {
             addPlayersToLeague(request, responseWriter, e);
-        } else if (uri.equals("/addItems") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/collections/additems") && request.getMethod() == HttpMethod.POST) {
             addItems(request, responseWriter);
-        } else if (uri.equals("/addCurrency") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/collections/addcurrency") && request.getMethod() == HttpMethod.POST) {
             addCurrency(request, responseWriter);
-        } else if (uri.equals("/addItemsToAllPlayers") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/collections/additemstoall") && request.getMethod() == HttpMethod.POST) {
             addItemsToAllPlayers(request, responseWriter);
-        } else if (uri.equals("/addFlagToUser") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/user/addflag") && request.getMethod() == HttpMethod.POST) {
             addFlagToUser(request, responseWriter);
-        } else if (uri.equals("/removeFlagFromUsers") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/users/removeflag") && request.getMethod() == HttpMethod.POST) {
             removeFlagFromUsers(request, responseWriter);
-        } else if (uri.equals("/showUsersWithFlag") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/users/findwithflag") && request.getMethod() == HttpMethod.POST) {
             showUsersWithFlag(request, responseWriter);
-        } else if (uri.equals("/resetUserPassword") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/user/passwordreset") && request.getMethod() == HttpMethod.POST) {
             resetUserPassword(request, responseWriter);
-        } else if (uri.equals("/deactivateMultiple") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/users/deactivate") && request.getMethod() == HttpMethod.POST) {
             deactivateMultiple(request, responseWriter);
-        } else if (uri.equals("/banUser") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/user/ban/permanent") && request.getMethod() == HttpMethod.POST) {
             banUser(request, responseWriter);
-        } else if (uri.equals("/banMultiple") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/users/ban/permanent") && request.getMethod() == HttpMethod.POST) {
             banMultiple(request, responseWriter);
-        } else if (uri.equals("/banUserTemp") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/user/ban/temporary") && request.getMethod() == HttpMethod.POST) {
             banUserTemp(request, responseWriter);
-        } else if (uri.equals("/unBanUser") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/user/ban/acquit") && request.getMethod() == HttpMethod.POST) {
             unBanUser(request, responseWriter);
-        } else if (uri.equals("/findMultipleAccounts") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/users/detailedsearch") && request.getMethod() == HttpMethod.POST) {
             findMultipleAccounts(request, responseWriter);
-        } else if (uri.equals("/setPrivateGames") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/settings/privategames") && request.getMethod() == HttpMethod.POST) {
             setPrivateGames(request, responseWriter);
-        } else if (uri.equals("/setBonusAbilities") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/settings/bonusabilities") && request.getMethod() == HttpMethod.POST) {
             setBonusAbilities(request, responseWriter);
-        } else if (uri.equals("/setInGameStatTracking") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/settings/stattracking") && request.getMethod() == HttpMethod.POST) {
             setInGameStatTracking(request, responseWriter);
-        } else if (uri.equals("/setNewAccountRegistration") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/settings/newaccounts") && request.getMethod() == HttpMethod.POST) {
             setNewAccountRegistration(request, responseWriter);
-        } else if (uri.equals("/purgeInGameStatisticsListeners") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/settings/purgestattrackers") && request.getMethod() == HttpMethod.POST) {
             purgeInGameStatisticListeners(request, responseWriter);
-		} else if (uri.equals("/getDeckCheck") && request.getMethod() == HttpMethod.POST) {
+		} else if (uri.equals("/league/deckcheck") && request.getMethod() == HttpMethod.POST) {
             deckCheck(request, responseWriter);
         } else {
             responseWriter.writeError(404);

@@ -715,7 +715,7 @@ var GempSwccgCommunication = Class.extend({
     clearServerCache:function (callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/clearCache",
+            url:this.url + "/admin/clearcache",
             cache:false,
             data:{},
             success:this.deliveryCheck(callback),
@@ -727,7 +727,7 @@ var GempSwccgCommunication = Class.extend({
     setPrivateMode:function (enabled, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/setPrivateGames",
+            url:this.url + "/admin/settings/privategames",
             cache:false,
             data:{
                 enabled:enabled
@@ -741,7 +741,7 @@ var GempSwccgCommunication = Class.extend({
     setNewAccountRegistration:function (enabled, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/setNewAccountRegistration",
+            url:this.url + "/admin/settings/newaccounts",
             cache:false,
             data:{
                 enabled:enabled
@@ -755,7 +755,7 @@ var GempSwccgCommunication = Class.extend({
     setInGameStatTracking:function (enabled, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/setInGameStatTracking",
+            url:this.url + "/admin/settings/stattracking",
             cache:false,
             data:{
                 enabled:enabled
@@ -769,7 +769,7 @@ var GempSwccgCommunication = Class.extend({
     purgeInGameStatisticsListeners:function (callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/purgeInGameStatisticsListeners",
+            url:this.url + "/admin/settings/purgestattrackers",
             cache:false,
             success:this.deliveryCheck(callback),
             error:this.errorCheck(errorMap),
@@ -780,7 +780,7 @@ var GempSwccgCommunication = Class.extend({
     setBonusAbilities:function (enabled, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/setBonusAbilities",
+            url:this.url + "/admin/settings/bonusabilities",
             cache:false,
             data:{
                 enabled:enabled
@@ -794,7 +794,7 @@ var GempSwccgCommunication = Class.extend({
     getMOTD:function (callback, errorMap) {
         $.ajax({
             type:"GET",
-            url:this.url + "/admin/getMOTD",
+            url:this.url + "/admin/motd/get",
             cache:false,
             success:this.deliveryCheck(callback),
             error:this.errorCheck(errorMap),
@@ -805,7 +805,7 @@ var GempSwccgCommunication = Class.extend({
     setMOTD:function (motd, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/setMOTD",
+            url:this.url + "/admin/motd/update",
             cache:false,
             data:{
                 motd:motd
@@ -818,7 +818,7 @@ var GempSwccgCommunication = Class.extend({
     addItems:function (collectionType, product, players, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/addItems",
+            url:this.url + "/admin/collections/additems",
             cache:false,
             data:{
                 collectionType:collectionType,
@@ -834,7 +834,7 @@ var GempSwccgCommunication = Class.extend({
     addItemsToAllPlayers:function (collectionType, reason, product, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/addItemsToAllPlayers",
+            url:this.url + "/admin/collections/additemstoall",
             cache:false,
             data:{
                 collectionType:collectionType,
@@ -849,7 +849,7 @@ var GempSwccgCommunication = Class.extend({
     addCurrency:function (players, currencyAmount, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/addCurrency",
+            url:this.url + "/admin/collections/addcurrency",
             cache:false,
             data:{
                 players:players,
@@ -863,7 +863,7 @@ var GempSwccgCommunication = Class.extend({
     resetUserPassword:function (login, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/resetUserPassword",
+            url:this.url + "/admin/user/passwordreset",
             cache:false,
             data:{
                 login:login
@@ -877,7 +877,7 @@ var GempSwccgCommunication = Class.extend({
     permabanUser:function (login, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/banUser",
+            url:this.url + "/admin/user/ban/permanent",
             cache:false,
             data:{
                 login:login
@@ -891,7 +891,7 @@ var GempSwccgCommunication = Class.extend({
     tempbanUser:function (login, duration, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/banUserTemp",
+            url:this.url + "/admin/user/ban/temporary",
             cache:false,
             data:{
                 login:login,
@@ -906,7 +906,7 @@ var GempSwccgCommunication = Class.extend({
     unbanUser:function (login, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/unBanUser",
+            url:this.url + "/admin/user/ban/acquit",
             cache:false,
             data:{
                 login:login
@@ -920,7 +920,7 @@ var GempSwccgCommunication = Class.extend({
     susUserSearch:function (login, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/findMultipleAccounts",
+            url:this.url + "/admin/users/detailedsearch",
             cache:false,
             data:{
                 login:login
@@ -934,7 +934,7 @@ var GempSwccgCommunication = Class.extend({
     banMultiple:function (logins, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/banMultiple",
+            url:this.url + "/admin/users/ban/permanent",
             cache:false,
             data:{
                 logins:logins
@@ -949,7 +949,7 @@ var GempSwccgCommunication = Class.extend({
     deactivateMultiple:function (logins, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/deactivateMultiple",
+            url:this.url + "/admin/users/deactivate",
             cache:false,
             data:{
                 logins:logins
@@ -965,7 +965,7 @@ var GempSwccgCommunication = Class.extend({
     showUsersWithFlag:function (flag, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/showUsersWithFlag",
+            url:this.url + "/admin/users/findwithflag",
             cache:false,
             data:{
                 flag:flag
@@ -987,7 +987,7 @@ var GempSwccgCommunication = Class.extend({
     addFlagToUser:function (login, flag, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/addFlagToUser",
+            url:this.url + "/admin/user/addflag",
             cache:false,
             data:{
                 login:login,
@@ -1010,7 +1010,7 @@ var GempSwccgCommunication = Class.extend({
     removeFlagFromUsers:function (logins, flag, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/removeFlagFromUsers",
+            url:this.url + "/admin/users/removeflag",
             cache:false,
             data:{
                 logins:logins,
@@ -1026,7 +1026,7 @@ var GempSwccgCommunication = Class.extend({
     removeFlagFromUser:function (logins, flag, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/removeFlagFromUsers",
+            url:this.url + "/admin/users/removeflag",
             cache:false,
             data:{
                 logins:logins,
@@ -1051,6 +1051,8 @@ var GempSwccgCommunication = Class.extend({
       this.removeFlagFromUser(logins, "DEACTIVATED", callback, errorMap)  
     },
     
+    
+    
     previewSealedLeague:function (name, cost, start, format, serieDuration, maxMatches, 
                               allowTimeExtensions, allowSpectators, showPlayerNames, 
                               invitationOnly, registrationInfo, decisionTimeoutSeconds, 
@@ -1058,7 +1060,7 @@ var GempSwccgCommunication = Class.extend({
                               callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/previewSealedLeague",
+            url:this.url + "/admin/league/sealed/preview",
             cache:false,
             data:{
                 name:name,
@@ -1088,7 +1090,7 @@ var GempSwccgCommunication = Class.extend({
                               callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/addSealedLeague",
+            url:this.url + "/admin/league/sealed/create",
             cache:false,
             data:{
                 name:name,
@@ -1119,7 +1121,7 @@ var GempSwccgCommunication = Class.extend({
                               callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/previewConstructedLeague",
+            url:this.url + "/admin/league/constructed/preview",
             cache:false,
             traditional: true,
             data:{
@@ -1151,7 +1153,7 @@ var GempSwccgCommunication = Class.extend({
                               callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/addConstructedLeague",
+            url:this.url + "/admin/league/constructed/create",
             cache:false,
             traditional: true,
             data:{
@@ -1179,7 +1181,7 @@ var GempSwccgCommunication = Class.extend({
     addPlayersToLeague:function (leagueType, players, callback, errorMap) {
         $.ajax({
             type:"POST",
-            url:this.url + "/admin/addPlayersToLeague",
+            url:this.url + "/admin/league/addplayers",
             cache:false,
             traditional: true,
             data:{
