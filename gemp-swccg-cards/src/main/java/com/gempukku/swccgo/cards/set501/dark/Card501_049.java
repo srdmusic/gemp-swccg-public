@@ -47,10 +47,10 @@ public class Card501_049 extends AbstractImperial {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
 
-        Condition pilotingSpeederBike = new PilotingCondition(self, Filters.speeder_bike), Filters.any, -1, Filters.and(Filters.your(self), Filters.speeder_bike);
+        Condition pilotingSpeederBike = new PilotingCondition(self, Filters.speeder_bike);
         
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
-        modifiers.add(new EachWeaponDestinyModifier(self, Filters.and(Filters.opponents(self), Filters.weapon), pilotingSpeederBike));
+        modifiers.add(new EachWeaponDestinyModifier(self, Filters.and(Filters.opponents(self), Filters.weapon), pilotingSpeederBike, Filters.any, -1, Filters.and(Filters.your(self), Filters.speeder_bike)));
         modifiers.add(new ForfeitModifier(self, Filters.Grogu, pilotingSpeederBike, -2));
         return modifiers;
     }
