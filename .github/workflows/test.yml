@@ -34,7 +34,7 @@ jobs:
       - name: Build the stack
         run: |
           docker-compose build
-          docker-compose up -d
+          docker-compose -f docker-compose.prod.yml up -d
 
       - name: Test
         run: |
