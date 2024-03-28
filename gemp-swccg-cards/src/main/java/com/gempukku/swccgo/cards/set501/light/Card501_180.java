@@ -35,7 +35,8 @@ public class Card501_180 extends AbstractDefensiveShield {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Close Race", ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'Poodoo!'");
         setGameText("Plays on table. You lose no Force to Boonta Eve Podrace. While you occupy three battlegrounds, Watto's Box is suspended. Nevar Yalnal may not target opponent's Undercover spies. If an Undercover spy was just lost, it is placed out of play.");
-        addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I);
+        addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I, Icon.VIRTUAL_DEFENSIVE_SHIELD);
+        setVirtualSuffix(true);
         setTestingText("A Close Race (V)");
     }
 
