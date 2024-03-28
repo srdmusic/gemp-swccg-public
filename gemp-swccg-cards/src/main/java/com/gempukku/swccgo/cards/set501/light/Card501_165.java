@@ -35,7 +35,7 @@ public class Card501_165 extends AbstractDroid {
     public Card501_165() {
         super(Side.LIGHT, Math.PI, 2, 1, 4, "BB-8, Keeper Of The Map", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         addPersona(Persona.BB8);
-        setGameText("[Episode VII] characters deploy -1 here.  While in battle with two [Episode VII] characters, each player may add a destiny to attrition. Gains Resistance Agent with Poe or Rey.");
+        setGameText("[Episode VII] characters deploy -1 here. During battle, each player with two other participating [Episode VII] characters may add a destiny to attrition. While with Poe or Rey, gains Resistance Agent.");
         addIcons(Icon.EPISODE_VII, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_23);
         addModelType(ModelType.ASTROMECH);
         setTestingText("BB-8, Keeper Of The Map");
