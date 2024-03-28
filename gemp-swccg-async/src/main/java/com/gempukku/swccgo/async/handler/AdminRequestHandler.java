@@ -686,9 +686,9 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         int start = Throw400IfNullOrNonInteger("start", startStr);
         if(startStr.length() != 8)
             throw new HttpProcessingException(400, "Parameter 'start' must be exactly 8 digits long: YYYYMMDD");
-        Throw400IfAnyStringNull("format", formats);
+        Throw400IfAnyStringNull("formats", formats);
         Throw400IfStringNull("collectionType", collectionType);
-        List<Integer> serieDurations = Throw400IfAnyNullOrNonInteger("serieDuration", serieDurationsStr);
+        List<Integer> serieDurations = Throw400IfAnyNullOrNonInteger("serieDurations", serieDurationsStr);
         List<Integer> maxMatches = Throw400IfAnyNullOrNonInteger("maxMatches", maxMatchesStr);
         boolean allowTimeExtensions = Throw400IfNullOrNonBoolean("allowTimeExtensions", allowTimeExtensionsStr);
         boolean allowSpectators = Throw400IfNullOrNonBoolean("allowSpectators", allowSpectatorsStr);
@@ -952,6 +952,9 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
     }
 
     private void Throw400IfAnyStringNull(String paramName, List<String> values) throws HttpProcessingException {
+        if(values == null || values.isEmpty())
+            throw new HttpProcessingException(400, "Parameter '" + paramName + "' must have values set.");
+
         for (String value : values) {
             if(StringUtils.isEmpty(value)) {
                 throw new HttpProcessingException(400, "Parameter '" + paramName + "' cannot be blank.");
@@ -977,6 +980,9 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
     private List<Integer> Throw400IfAnyNullOrNonInteger(String paramName, List<String> values) throws HttpProcessingException {
         List<Integer> newValues = new ArrayList<>();
 
+        if(values == null || values.isEmpty())
+            throw new HttpProcessingException(400, "Parameter '" + paramName + "' must have values set.");
+        
         for(String value : values) {
             if(StringUtils.isEmpty(value)) {
                 throw new HttpProcessingException(400, "Parameter '" + paramName + "' cannot be blank.");
