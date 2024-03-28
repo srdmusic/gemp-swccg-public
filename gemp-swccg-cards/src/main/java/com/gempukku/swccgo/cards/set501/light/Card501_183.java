@@ -41,6 +41,7 @@ public class Card501_183 extends AbstractSite {
         addIcons(Icon.HOTH, Icon.EXTERIOR_SITE, Icon.PLANET);
         addKeywords(Keyword.MARKER_3);
         setVirtualSuffix(true);
+        setTestingText("Hoth: Defensive Perimeter (3rd Marker) (V)");
     }
 
     @Override
