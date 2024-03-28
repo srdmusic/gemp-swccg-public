@@ -40,7 +40,7 @@ public class Card501_190 extends AbstractDefensiveShield {
         setGameText("Plays on table. Cancels A Dangerous Time, Bad Feeling Have I, Colo Claw Fish, Field Promotion and Imperial Supply. Each player may play only one card with 'sabacc' in title each turn. You may lose 1 Force to cancel a card with 'sabacc' in title.");
         addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setVirtualSuffix(true);
-        setTestingText("Your Ship?");
+        setTestingText("Your Ship? (V) (ERRATA)");
     }
 
     @Override
