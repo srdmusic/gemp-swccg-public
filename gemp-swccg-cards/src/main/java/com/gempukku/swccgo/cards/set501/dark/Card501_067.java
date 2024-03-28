@@ -40,7 +40,7 @@ public class Card501_067 extends AbstractDefensiveShield {
         setGameText("Plays on table. Cancels Beggar, Colo Claw Fish, Frozen Assets, Goo Nee Tay, and Revolution. Each player may only play one card with 'sabacc' in title each turn. You may lose 1 Force to cancel a card with 'sabacc' in title.");
         addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I, Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setVirtualSuffix(true);
-        setTestingText("We'll Let Fate-a Decide, Huh?");
+        setTestingText("We'll Let Fate-a Decide, Huh? (V)");
     }
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
