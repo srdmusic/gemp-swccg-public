@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.conditions.PresentAtCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -15,7 +14,6 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
-import com.gempukku.swccgo.logic.modifiers.IconModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotTargetToBeCapturedModifier;
@@ -40,11 +38,10 @@ public class Card501_120 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_23);
         setTestingText(Title.Docking_Control_Room_327);
-        setVirtualSuffix(true);
     }
 
     @Override
-    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         Condition lukeHere = new HereCondition(self, Filters.Luke);
         Condition c3p0Here = new HereCondition(self, Filters.C3PO);
@@ -54,9 +51,9 @@ public class Card501_120 extends AbstractSite {
     }
 
     @Override
-    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotBeCanceledModifier(self, Filters.and(Filters.Rebel_Barrier, Filters.cardBeingPlayedTargeting(self, Filters.here(self))), new UnlessCondition(new PresentAtCondition(Filters.and(Filters.your(self), Filters.blaster), Filters.here(self)))));
+        modifiers.add(new MayNotBeCanceledModifier(self, Filters.and(Filters.Rebel_Barrier, Filters.cardBeingPlayedTargeting(self, Filters.here(self))), new UnlessCondition(new PresentAtCondition(Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.blaster), Filters.here(self)))));
         return modifiers;
     }
 }
