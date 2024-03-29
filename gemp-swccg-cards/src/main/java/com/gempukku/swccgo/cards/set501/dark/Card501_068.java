@@ -14,6 +14,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -45,7 +46,7 @@ public class Card501_068 extends AbstractDefensiveShield {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new SuspendsCardModifier(self, Filters.I_Did_It, new OccupiesCondition(playerId, 3, Filters.battleground)));
+        modifiers.add(new SuspendsCardModifier(self, Filters.I_Did_It, new UnlessCondition(new OccupiesCondition(playerId, 3, Filters.battleground))));
         modifiers.add(new NoForceLossFromCardModifier(self, Filters.Boonta_Eve_Podrace, playerId));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.opponents(self.getOwner()), Filters.undercover_spy), Title.Double_Agent));
         return modifiers;
