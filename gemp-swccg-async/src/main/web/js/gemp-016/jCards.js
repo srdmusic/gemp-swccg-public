@@ -3667,8 +3667,10 @@ var fixedImages = {
 "501_55":"https://res.starwarsccg.org/cards/Virtual11-Light/large/ahsokatano.gif",
 "501_59":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
 "501_61":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/scurrier.gif",
+"501_66":"https://res.starwarsccg.org/cards/ResetDS-Dark/large/deathstarsentry.gif",
 "501_67":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/wellletfateadecidehuh.gif",
 "501_68":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/youveneverwonarace.gif",
+"501_70":"https://res.starwarsccg.org/cards/ResetDS-Dark/large/voteofnoconfidence.gif",
 "501_86":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/bomarrmonk.gif",
 "501_89":"https://res.starwarsccg.org/cards/Endor-Light/large/orrimaarko.gif",
 "501_90":"https://res.starwarsccg.org/cards/Premiere-Light/large/deathstarplans.gif",
@@ -3716,8 +3718,11 @@ var fixedImages = {
 "501_170":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/pucumirthryss.gif",
 "501_180":"https://res.starwarsccg.org/cards/ReflectionsIII-Light/large/acloserace.gif",
 "501_171":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/cloudcitynorthcorridor.gif",
+"501_182":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/luminous.gif",
 "501_183":"https://res.starwarsccg.org/cards/Hoth-Light/large/hothdefensiveperimeter.gif",
+"501_186":"https://res.starwarsccg.org/cards/ResetDS-Light/large/dontdothatagain.gif",
 "501_187":"https://res.starwarsccg.org/cards/Virtual0-Light/large/goldenrod.gif",
+"501_188":"https://res.starwarsccg.org/cards/ResetDS-Light/large/therepublicnolongerfunctions.gif",
 "501_190":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/yourship.gif",
 
 //legacy
