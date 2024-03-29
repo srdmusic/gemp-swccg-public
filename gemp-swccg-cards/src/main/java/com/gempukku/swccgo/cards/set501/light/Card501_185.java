@@ -1,12 +1,29 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
+import com.gempukku.swccgo.cards.effects.RevealTopCardsOfCardPileAndTakeCardsIntoHandEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.Zone;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeCanceledByModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeModifiedByModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Playtesting
@@ -17,7 +34,42 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_185 extends AbstractNormalEffect {
     public Card501_185() {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Eyes_In_The_Dark, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setGameText("Deploy on table. If 4-LOM at a non-battleground, once during your turn, may peek at the top two cards of Reserve Deck; take one into hand. While you occupy three battlegrounds, opponent's Effects may not cancel or modify your Force drains at battlegrounds. [Immune to Alter]");
+        addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
-        hideFromDeckBuilder();
+        setTestingText("Eyes In The Dark (V)");
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.LIKE_MY_FATHER_BEFORE_ME__DOWNLOAD_LUKES_LIGHTSABER_OR_PLACE_CARD_ON_FORCE_PILE;
+
+        // Check condition(s)
+        if (GameConditions.isOnceDuringYourTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.hasReserveDeck(game, playerId)
+                && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_CAPTIVE, Filters.and(Filters._4_LOM, Filters.at(Filters.non_battleground_location)))) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Reveal the top two cards of your Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new RevealTopCardsOfCardPileAndTakeCardsIntoHandEffect(action, playerId, playerId, Zone.RESERVE_DECK, Filters.any, 2));
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        String playerId = self.getOwner();
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ForceDrainsMayNotBeCanceledByModifier(self, Filters.and(Filters.opponents(self), Filters.Effect_of_any_Kind), new OccupiesCondition(playerId, 3, Filters.battleground), playerId, Filters.battleground));
+        modifiers.add(new ForceDrainsMayNotBeModifiedByModifier(self, Filters.and(Filters.opponents(self), Filters.Effect_of_any_Kind), new OccupiesCondition(playerId, 3, Filters.battleground), playerId, Filters.battleground));
+        return modifiers;
     }
 }
