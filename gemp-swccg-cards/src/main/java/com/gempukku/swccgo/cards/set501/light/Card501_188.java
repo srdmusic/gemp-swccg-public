@@ -61,7 +61,8 @@ public class Card501_188 extends AbstractDefensiveShield {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.Monnok)) {
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.Monnok)
+                && GameConditions.hasHand(game, playerId)) {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Place card from Hand in Used Pile");
             action.setActionMsg("Place card from Hand in Used Pile");
