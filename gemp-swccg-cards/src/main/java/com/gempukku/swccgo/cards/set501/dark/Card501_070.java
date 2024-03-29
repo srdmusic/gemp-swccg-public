@@ -61,7 +61,8 @@ public class Card501_070 extends AbstractDefensiveShield {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.Grimtaash)) {
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.Grimtaash)
+                && GameConditions.hasHand(game, playerId)) {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Place card from Hand in Used Pile");
             action.setActionMsg("Place card from Hand in Used Pile");
