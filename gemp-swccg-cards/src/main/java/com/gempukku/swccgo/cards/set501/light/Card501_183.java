@@ -1,11 +1,29 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.ControlsCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
+import com.gempukku.swccgo.logic.modifiers.EachWeaponDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Playtesting
@@ -15,8 +33,44 @@ import com.gempukku.swccgo.common.Uniqueness;
  */
 public class Card501_183 extends AbstractSite {
     public Card501_183() {
-        super(Side.LIGHT, Title.Defensive_Perimeter, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, Title.Defensive_Perimeter, Title.Hoth, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLocationLightSideGameText("Once during opponent's turn, if your [Hoth] card occupies, may activate 1 Force.");
+        setLocationDarkSideGameText("Add 1 to your weapon destiny draws here (2 if you control).");
+        addIcon(Icon.LIGHT_FORCE, 2);
+        addIcon(Icon.DARK_FORCE, 1);
+        addIcons(Icon.HOTH, Icon.EXTERIOR_SITE, Icon.PLANET);
+        addKeywords(Keyword.MARKER_3);
         setVirtualSuffix(true);
-        hideFromDeckBuilder();
+        setTestingText("Hoth: Defensive Perimeter (3rd Marker) (V)");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new EachWeaponDestinyModifier(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.weapon, Filters.here(self)), new ConditionEvaluator(1, 2, new ControlsCondition(playerOnDarkSideOfLocation, self))));
+        return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(final String playerOnLightSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (GameConditions.isOnceDuringOpponentsTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canActivateForce(game, playerOnLightSideOfLocation)
+                && GameConditions.occupiesWith(game, self, playerOnLightSideOfLocation, Filters.here(self), Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.icon(Icon.HOTH)))) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
+            action.setText("Activate 1 Force");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+
+            // Perform result(s)
+            action.appendEffect(
+                    new ActivateForceEffect(action, playerOnLightSideOfLocation, 1));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }
