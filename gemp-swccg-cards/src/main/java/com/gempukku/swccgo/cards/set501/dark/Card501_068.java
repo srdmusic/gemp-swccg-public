@@ -44,9 +44,10 @@ public class Card501_068 extends AbstractDefensiveShield {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new SuspendsCardModifier(self, Filters.I_Did_It, new UnlessCondition(new OccupiesCondition(playerId, 3, Filters.battleground))));
+        modifiers.add(new SuspendsCardModifier(self, Filters.I_Did_It, new UnlessCondition(new OccupiesCondition(opponent, 3, Filters.battleground))));
         modifiers.add(new NoForceLossFromCardModifier(self, Filters.Boonta_Eve_Podrace, playerId));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.opponents(self.getOwner()), Filters.undercover_spy), Title.Double_Agent));
         return modifiers;
