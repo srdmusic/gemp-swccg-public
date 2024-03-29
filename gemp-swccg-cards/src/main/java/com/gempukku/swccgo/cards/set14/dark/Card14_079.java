@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class Card14_079 extends AbstractDarkJediMaster {
     public Card14_079() {
-        super(Side.DARK, 1, 6, 5, 7, 8, "Darth Sidious", Uniqueness.UNIQUE, ExpansionSet.THEED_PALACE, Rarity.R);
+        super(Side.DARK, 1, 6, 5, 7, 8, Title.Darth_Sidious, Uniqueness.UNIQUE, ExpansionSet.THEED_PALACE, Rarity.R);
         setAlternateImageSuffix(true);
         setLore("Mysterious Sith Master who is manipulating the Trade Federation for his own nefarious ends. Shrouded in mystery, his identity and agenda remain unclear.");
         setGameText("While no other characters present, if opponent just lost a Jedi from table, may lose 1 Force to place that Jedi out of play. While on Coruscant, may use 1 Force to add one battle destiny in a battle your Neimoidian is in. Immune to attrition.");
