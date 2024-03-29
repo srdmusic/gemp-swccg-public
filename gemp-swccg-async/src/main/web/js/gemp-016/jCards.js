@@ -3668,6 +3668,7 @@ var fixedImages = {
 "501_59":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
 "501_61":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/scurrier.gif",
 "501_67":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/wellletfateadecidehuh.gif",
+"501_68":"https://res.starwarsccg.org/cards/ReflectionsIII-Dark/large/youveneverwonarace.gif",
 "501_86":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/bomarrmonk.gif",
 "501_89":"https://res.starwarsccg.org/cards/Endor-Light/large/orrimaarko.gif",
 "501_90":"https://res.starwarsccg.org/cards/Premiere-Light/large/deathstarplans.gif",
