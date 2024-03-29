@@ -10,6 +10,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
@@ -40,7 +41,7 @@ import java.util.List;
  */
 public class Card14_079 extends AbstractDarkJediMaster {
     public Card14_079() {
-        super(Side.DARK, 1, 6, 5, 7, 8, Title.Darth_Sidious, Uniqueness.UNIQUE, ExpansionSet.THEED_PALACE, Rarity.R);
+        super(Side.DARK, 1, 6, 5, 7, 8, "Darth Sidious", Uniqueness.UNIQUE, ExpansionSet.THEED_PALACE, Rarity.R);
         setAlternateImageSuffix(true);
         setLore("Mysterious Sith Master who is manipulating the Trade Federation for his own nefarious ends. Shrouded in mystery, his identity and agenda remain unclear.");
         setGameText("While no other characters present, if opponent just lost a Jedi from table, may lose 1 Force to place that Jedi out of play. While on Coruscant, may use 1 Force to add one battle destiny in a battle your Neimoidian is in. Immune to attrition.");
@@ -58,16 +59,19 @@ public class Card14_079 extends AbstractDarkJediMaster {
                 && !GameConditions.canSpot(game, self, Filters.and(Filters.other(self), Filters.character, Filters.present(self)))) {
             final PhysicalCard cardLost = ((LostFromTableResult) effectResult).getCard();
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place " + GameUtils.getFullName(cardLost) + " out of play");
-            action.setActionMsg("Place " + GameUtils.getCardLink(cardLost) + " out of play");
-            // Pay cost(s)
-            action.appendCost(
-                    new LoseForceEffect(action, playerId, 1, true));
-            // Perform result(s)
-            action.appendEffect(
-                    new PlaceCardOutOfPlayFromOffTableEffect(action, cardLost));
-            return Collections.singletonList(action);
+            if (GameConditions.canTarget(game, self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY, cardLost)) {
+
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Place " + GameUtils.getFullName(cardLost) + " out of play");
+                action.setActionMsg("Place " + GameUtils.getCardLink(cardLost) + " out of play");
+                // Pay cost(s)
+                action.appendCost(
+                        new LoseForceEffect(action, playerId, 1, true));
+                // Perform result(s)
+                action.appendEffect(
+                        new PlaceCardOutOfPlayFromOffTableEffect(action, cardLost));
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }

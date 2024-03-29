@@ -16,7 +16,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotTargetToBePlacedOutOfPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifierFlag;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
@@ -41,7 +41,7 @@ public class Card501_189 extends AbstractDefensiveShield {
         setGameText("Plays on table. Cancels Scanning Crew and 'insert' cards just revealed. Sidious may not place Skywalkers out of play. Let Them Make the First Move may target only Undercover Spies. Unless Inner Strength on table, opponent may only use one combat card per turn.");
         addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setVirtualSuffix(true);
-        setTestingText("Your Insights Serve You Well (V) (ERRATA)");
+        setTestingText("Your Insight Serve You Well (V) (ERRATA)");
     }
 
     @Override
@@ -49,7 +49,7 @@ public class Card501_189 extends AbstractDefensiveShield {
         String opponent = game.getOpponent(self.getOwner());
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.Skywalker, Title.Darth_Sidious));
+        modifiers.add(new MayNotTargetToBePlacedOutOfPlayModifier(self, Filters.Skywalker, Filters.Sidious));
         modifiers.add(new SpecialFlagModifier(self, new UnlessCondition(new OnTableCondition(self, Filters.Inner_Strength)), ModifierFlag.MAY_ONLY_USE_ONE_COMBAT_CARD_PER_TURN, opponent));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Let_Them_Make_The_First_Move, ModifyGameTextType.LET_THEM_MAKE_THE_FIRST_MOVE__ONLY_TARGET_UNDERCOVER_SPIES_AND_R2D2));
         return modifiers;

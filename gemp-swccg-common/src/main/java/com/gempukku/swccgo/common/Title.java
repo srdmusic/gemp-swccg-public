@@ -263,7 +263,6 @@ public interface Title {
     String Darklighter_Spin = "Darklighter Spin";
     String Darksaber = "Darksaber";
     String Darth_Vader_Dark_Lord_of_the_Sith = "Darth Vader, Dark Lord Of The Sith";
-    String Darth_Sidious = "Darth Sidious";
     String DataVault = "Scarif: Data Vault";
     String Dathcha = "Dathcha";
     String Dathomir = "Dathomir";
