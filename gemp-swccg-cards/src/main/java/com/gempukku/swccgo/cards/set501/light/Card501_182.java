@@ -17,11 +17,12 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.CancelImmunityToAttritionUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.HitCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.modifiers.FiresForFreeModifier;
+import com.gempukku.swccgo.logic.modifiers.FireWeaponFiredByForFreeModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
@@ -53,7 +54,7 @@ public class Card501_182 extends AbstractCapitalStarship {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new FiresForFreeModifier(self, Filters.and(Filters.Rebel, Filters.On_Hoth)));
+        modifiers.add(new FireWeaponFiredByForFreeModifier(self, Filters.and(Filters.Rebel, Filters.On_Hoth)));
         return modifiers;
     }
 
@@ -69,27 +70,24 @@ public class Card501_182 extends AbstractCapitalStarship {
                 && GameConditions.canTarget(game, self, targetFilter)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
-            action.setText("Cancel immunity to attrition");
+            action.setText("Cancel game text");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerBattleEffect(action));
             // Choose target(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose starship", targetFilter) {
+                    new TargetCardOnTableEffect(action, playerId, "Choose character", targetFilter) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
                             action.addAnimationGroup(targetedCard);
                             // Allow response(s)
-                            action.allowResponses("Cancel " + GameUtils.getCardLink(targetedCard) + "'s immunity to attrition",
+                            action.allowResponses("Cancel " + GameUtils.getCardLink(targetedCard) + "'s game text",
                                     new UnrespondableEffect(action) {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
                                             // Perform result(s)
                                             action.appendEffect(
-                                                    new CancelImmunityToAttritionUntilEndOfBattleEffect(action, targetedCard,
-                                                            "Cancels " + GameUtils.getCardLink(targetedCard) + "'s immunity to attrition"));
-                                            action.appendEffect(
-                                                    new HitCardEffect(action, self, self));
+                                                    new CancelGameTextUntilEndOfBattleEffect(action, targetedCard));
                                         }
                                     }
                             );
