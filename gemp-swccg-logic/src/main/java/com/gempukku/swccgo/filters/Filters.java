@@ -4220,6 +4220,18 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that are either:  "At" the site itself and "at" related sites to the specified site if
+     * the specified card is a site, otherwise "at" the site the specified card is "at" and "at" related sites
+     * to the location the specified card is "at".
+     *
+     * @param card a card
+     * @return Filter
+     */
+    public static Filter atRelatedSite(PhysicalCard card) {
+        return Filters.at(Filters.relatedSite(card));
+    }
+
+    /**
      * Filter that accepts cards that are either:  The specified card itself and related locations to the specified card if
      * the specified card is a location, otherwise the location the specified card is "at" and related locations to the location
      * the specified card is "at".
@@ -18019,6 +18031,7 @@ public class Filters {
     public static final Filter Fett = Filters.or(Filters.persona(Persona.BOBA_FETT), Filters.persona(Persona.JANGO_FETT));
     public static final Filter female = Filters.and(CardCategory.CHARACTER, Keyword.FEMALE);
     public static final Filter Free_Ride = Filters.title(Title.Free_Ride);
+    public static final Filter Field_Promotion = Filters.title(Title.Field_Promotion);
     public static final Filter Fifth_Marker = Filters.keyword(Keyword.MARKER_5);
     public static final Filter Fighters_Coming_In = Filters.title(Title.Fighters_Coming_In);
     public static final Filter Finalizer = Filters.title(Title.Finalizer);
@@ -18127,6 +18140,7 @@ public class Filters {
     public static final Filter Harvest = Filters.title(Title.Harvest);
     public static final Filter has_Scomp_link = Filters.icon(Icon.SCOMP_LINK);
     public static final Filter Haven = Filters.title(Title.Haven);
+    public static final Filter He_Hasnt_Come_Back_Yet = Filters.title(Title.He_Hasnt_Come_Back_Yet);
     public static final Filter He_Is_The_Chosen_One = Filters.title(Title.He_Is_The_Chosen_One);
     public static final Filter He_Will_Bring_Balance = Filters.title(Title.He_Will_Bring_Balance);
     public static final Filter Heart_Of_The_Chasm = Filters.title(Title.Heart_Of_The_Chasm);
