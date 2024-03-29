@@ -40,6 +40,7 @@ public class Card501_065 extends AbstractCapitalStarship {
                 "(< 6 while piloted by Thrawn or while a 'probed' or 'liberated' system on table).");
         addIcons(Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_23);
         addModelType(ModelType.DREADNAUGHT_CLASS_HEAVY_CRUISER);
+        setMatchingPilotFilter(Filters.Thrawn);
         setPilotCapacity(2);
         setPassengerCapacity(2);
         setTestingText("Eli Vanto In Dreadnaught");
