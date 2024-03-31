@@ -50,7 +50,7 @@ public class Card501_185 extends AbstractNormalEffect {
                 && GameConditions.canSpot(game, self, Filters.and(Filters._4_LOM, Filters.at(Filters.non_battleground_location)))) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Reveal the top two cards of your Reserve Deck");
+            action.setText("Peek at the top two cards of your Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
@@ -66,8 +66,8 @@ public class Card501_185 extends AbstractNormalEffect {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         String playerId = self.getOwner();
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainsMayNotBeCanceledByModifier(self, Filters.and(Filters.opponents(self), Filters.Effect_of_any_Kind), new OccupiesCondition(playerId, 3, Filters.battleground), playerId, Filters.battleground));
-        modifiers.add(new ForceDrainsMayNotBeModifiedByModifier(self, Filters.and(Filters.opponents(self), Filters.Effect_of_any_Kind), new OccupiesCondition(playerId, 3, Filters.battleground), playerId, Filters.battleground));
+        modifiers.add(new ForceDrainsMayNotBeCanceledByModifier(self, Filters.and(Filters.opponents(self), Filters.Effect), new OccupiesCondition(playerId, 3, Filters.battleground), playerId, Filters.battleground));
+        modifiers.add(new ForceDrainsMayNotBeModifiedByModifier(self, Filters.and(Filters.opponents(self), Filters.Effect), new OccupiesCondition(playerId, 3, Filters.battleground), playerId, Filters.battleground));
         return modifiers;
     }
 }
