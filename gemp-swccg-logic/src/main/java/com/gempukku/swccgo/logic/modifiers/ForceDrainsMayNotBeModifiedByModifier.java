@@ -33,7 +33,7 @@ public class ForceDrainsMayNotBeModifiedByModifier extends AbstractModifier {
      * @param playerDraining the player Force draining
      */
     public ForceDrainsMayNotBeModifiedByModifier(PhysicalCard source, Filterable affectFilter, Condition condition, String playerDraining) {
-        this(source, affectFilter, condition, playerDraining, null);
+        this(source, affectFilter, condition, playerDraining, Filters.any);
     }
 
     /**
@@ -53,7 +53,7 @@ public class ForceDrainsMayNotBeModifiedByModifier extends AbstractModifier {
 
     @Override
     public boolean isAffectedTarget(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard targetCard) {
-        return true;
+        return Filters.and(_locationFilter).accepts(gameState, modifiersQuerying, targetCard);
     }
 
     @Override
