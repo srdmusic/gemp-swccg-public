@@ -40,7 +40,7 @@ public class Card501_102 extends AbstractFirstOrder {
         setLore("Leader.");
         setGameText("Adds 2 power to anything he pilots and 2 to armor of Fulminatrix. While all your ability here is provided by Fulminatrix and First Order TIE pilots: opponent’s immunity to attrition (and reacts), Hit And Run and Alternatives To Fighting are canceled here.\n" + //
                 "");
-        addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.LEADER);
         setMatchingStarshipFilter(Filters.Fulminatrix);
         setTestingText("Captain Moden Canady");

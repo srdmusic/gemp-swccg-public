@@ -38,7 +38,7 @@ public class Card501_141 extends AbstractImperial {
         super(Side.DARK, 1, 4, 4, 4, 6, "Moff Gideon, Suited For Battle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Imperial Remnant leader.");
         setGameText("Adds 3 power to anything he pilots. If you just deployed Darksaber here, may take a card from Used Pile into hand; reshuffle. You initiate battles here for free. Your total battle destiny here is +1. Immune to attrition < 3.");
-        addIcons(Icon.PILOT, Icon.WARRIOR);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_23);
         addPersona(Persona.GIDEON);
         addKeywords(Keyword.LEADER, Keyword.MOFF, Keyword.IMPERIAL_REMNANT);
         setTestingText("Moff Gideon, Suited for Battle");

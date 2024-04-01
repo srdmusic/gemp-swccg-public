@@ -33,7 +33,7 @@ public class Card501_007 extends AbstractUniqueStarshipSite {
         setLocationLightSideGameText("Once per game, may retrieve Din into hand.");
         setLocationDarkSideGameText("You must first use 3 Force to deploy a character here.");
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.MUDHORN, Icon.INTERIOR_SITE, Icon.SCOMP_LINK, Icon.MOBILE, Icon.STARSHIP_SITE);
+        addIcons(Icon.MUDHORN, Icon.INTERIOR_SITE, Icon.SCOMP_LINK, Icon.MOBILE, Icon.STARSHIP_SITE, Icon.VIRTUAL_SET_24);
         setTestingText("Razor Crest: Cold Storage");
     }
 

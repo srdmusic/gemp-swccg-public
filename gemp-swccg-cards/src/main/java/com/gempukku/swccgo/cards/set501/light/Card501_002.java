@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractCharacterWeapon;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.Rarity;
@@ -45,6 +46,7 @@ public class Card501_002 extends AbstractCharacterWeapon {
                 "If fired by Din in battle, he is power +1 for remainder of battle.");
         addKeywords(Keyword.BLASTER);
         setMatchingCharacterFilter(Filters.Din);
+        addIcons(Icon.VIRTUAL_SET_24);
         setTestingText("Din's IB-94 Blaster Pistol");
     }
 

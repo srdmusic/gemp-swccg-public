@@ -40,12 +40,12 @@ import java.util.List;
  */
 public class Card501_009 extends AbstractNormalEffect {
     public Card501_009() {
-        super(Side.LIGHT, 2, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Weapons_Are_Part_Of_My_Religion, Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
+        super(Side.LIGHT, 2, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Weapons_Are_Part_Of_My_Religion, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on table. " +
                 "While armed, Din draws one battle destiny if unable to otherwise, and is immune to Disarmed and attrition <4. " +
                 "Once per turn, may [download] one unique character weapon or device on your Mandalorian; reshuffle. " +
                 "If Din about to leave table, your cards on him go to Used Pile. [Immune to Alter.]");
-        addIcons(Icon.VIRTUAL_SET_23);
+        addIcons(Icon.VIRTUAL_SET_24);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Weapons Are Part Of My Religion");
     }

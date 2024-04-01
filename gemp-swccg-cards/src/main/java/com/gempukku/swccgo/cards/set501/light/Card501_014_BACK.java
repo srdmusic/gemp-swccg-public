@@ -41,13 +41,13 @@ import java.util.List;
  */
 public class Card501_014_BACK extends AbstractObjective {
     public Card501_014_BACK() {
-        super(Side.LIGHT, 7, Title.Or_I_Can_Bring_You_In_Cold, ExpansionSet.SET_23, Rarity.V);
+        super(Side.LIGHT, 7, Title.Or_I_Can_Bring_You_In_Cold, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("May immediately re-circulate and shuffle your Reserve Deck. " +
                 "While this side up, during battles involving 'The Asset', " +
                 "opponent may not cancel your non-lightsaber weapon destiny draws and if 'The Asset' just lost, " +
                 "place that character out of play. The gametext of the 'The Asset' is cancelled." +
                 "Flip this card at the start of any move phase.");
-        addIcons(Icon.MUDHORN, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.MUDHORN, Icon.VIRTUAL_SET_24);
         setTestingText("...Or I Can Bring You In Cold");
     }
 
