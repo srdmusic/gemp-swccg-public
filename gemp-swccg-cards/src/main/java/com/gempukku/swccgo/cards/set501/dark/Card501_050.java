@@ -17,7 +17,6 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
@@ -31,16 +30,17 @@ import java.util.List;
  * Set: Playtesting
  * Type: Character
  * Subtype: Alien
- * Title: Gor Karesh
+ * Title: Gor Koresh
  */
 public class Card501_050 extends AbstractAlien {
     public Card501_050() {
-        super(Side.DARK, 3, 3, 3, 2, 5, "Gor Karesh", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("Information Broker. Abyssin.");
-        setGameText("Your mercenaries, scouts and thieves are power and forfeit +1 here. Opponent may not cancel your battle destiny draws where you have a gangster. When deployed, may deploy a non-[M] Gamorrean from Reserve Deck here for -2 Force; reshuffle.");
-        addKeywords(Keyword.INFORMATION_BROKER);
+        super(Side.DARK, 3, 3, 3, 2, 5, "Gor Koresh", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Abyssin gambler and information broker");
+        setGameText("Your mercenaries +1 here. Opponent may not cancel your battle destiny draws where you have a gangster or non-[Maintenance] bounty hunter. When deployed, may deploy a non-[M] Gamorrean here from Reserve Deck here for -2 Force; reshuffle.");
+        addKeywords(Keyword.GAMBLER, Keyword.INFORMATION_BROKER);
         setSpecies(Species.ABYSSIN);
-        setTestingText("Gor Karesh");
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_23);
+        setTestingText("Gor Koresh");
     }
 
     @Override
@@ -48,10 +48,12 @@ public class Card501_050 extends AbstractAlien {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
-        Filter affectFilter = Filters.and(Filters.your(self), Filters.or(Keyword.MERCENARY, Filters.scout, Filters.thief), Filters.atSameLocation(self));
+        Filter affectFilter = Filters.and(Filters.your(self), Keyword.MERCENARY, Filters.atSameLocation(self));
         modifiers.add(new PowerModifier(self, affectFilter, 1));
-        modifiers.add(new ForfeitModifier(self, affectFilter, 1));
-        modifiers.add(new MayNotCancelBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.gangster)), playerId, opponent));
+
+        Filter nonMHunter = Filters.and(Filters.not(Filters.icon(Icon.MAINTENANCE)), Filters.bounty_hunter);
+        Filter drainFilter = Filters.and(Filters.your(self), Filters.or(Filters.gangster, nonMHunter));
+        modifiers.add(new MayNotCancelBattleDestinyModifier(self, Filters.sameLocationAs(self, drainFilter), playerId, opponent));
         return modifiers;
     }
 
