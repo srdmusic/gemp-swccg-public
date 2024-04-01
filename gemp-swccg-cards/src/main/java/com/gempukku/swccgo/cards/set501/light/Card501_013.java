@@ -36,7 +36,7 @@ public class Card501_013 extends AbstractSite {
         setLocationDarkSideGameText("Whenever Holopuck relocates here, lose 1 force and stack it face up on opponent's [Mudhorn] Epic Event.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.MUDHORN);
+        addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.MUDHORN, Icon.VIRTUAL_SET_24);
         addKeyword(Keyword.NEVARRO_CITY_SITE);
         setTestingText("Nevarro City: Bounty Hunter's Guild");
     }

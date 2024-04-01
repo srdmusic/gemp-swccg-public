@@ -7,6 +7,7 @@ import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCar
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -34,6 +35,7 @@ public class Card501_185 extends AbstractNormalEffect {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Eyes_In_The_Dark, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on table. If 4-LOM at a non-battleground, once during your turn, may peek at the top two cards of Reserve Deck; take one into hand. While you occupy three battlegrounds, opponent's Effects may not cancel or modify your Force drains at battlegrounds. [Immune to Alter]");
         addImmuneToCardTitle(Title.Alter);
+        addIcons(Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
         setTestingText("Eyes In The Dark (V)");
     }

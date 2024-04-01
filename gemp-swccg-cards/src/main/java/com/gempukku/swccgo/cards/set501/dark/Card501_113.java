@@ -38,7 +38,7 @@ public class Card501_113 extends AbstractCapitalStarship {
         setAsHorizontal(true);
         setGameText("May add unlimited pilots, passengers, [First Order] TIEs, shuttles, and vehicles. If Hux aboard, hyperspeed +2. Immune to attrition < 10 (< 5 if with a Resistance ship).");
         addPersona(Persona.SUPREMACY);
-        addIcons(Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.FIRST_ORDER, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.FIRST_ORDER, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_24);
         addIcon(Icon.PILOT, 1);
         addModelType(ModelType.MEGA_CLASS_DREADNAUGHT);
         setPilotCapacity(Integer.MAX_VALUE);

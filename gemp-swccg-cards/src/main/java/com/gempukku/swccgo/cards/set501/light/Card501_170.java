@@ -32,7 +32,7 @@ public class Card501_170 extends AbstractAlien {
         setGameText("Opponent must first use 1 Force to deploy a character to same location as Holopuck." +
                 "Draws one battle destiny if unable to otherwise. " +
                 "Immune to attrition < 3.");
-        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.LEADER, Keyword.INFORMATION_BROKER);
         addPersona(Persona.GREEF);
         setTestingText("Greef Karga, Disgraced Magistrate");

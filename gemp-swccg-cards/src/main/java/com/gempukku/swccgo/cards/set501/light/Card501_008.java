@@ -28,7 +28,7 @@ public class Card501_008 extends AbstractSite{
         setLocationLightSideGameText("You may not deploy characters here (except Mandalorians). May not be deployed to Ahch_To, Bespin, Dagobah, Endor, Hoth, Jakku, or Tatooine.");
         setLocationDarkSideGameText("You may not deploy characters here (except Jango, Boba, and Jodo Kast). Immune to No Escape.");
         addIcon(Icon.LIGHT_FORCE, 2);
-        addIcons(Icon.INTERIOR_SITE, Icon.UNDERGROUND, Icon.PLANET);
+        addIcons(Icon.INTERIOR_SITE, Icon.UNDERGROUND, Icon.PLANET, Icon.VIRTUAL_SET_24);
         addImmuneToCardTitle(Title.No_Escape);
         addMayNotBePartOfSystem(Title.Ahch_To, Title.Bespin, Title.Dagobah, Title.Endor, Title.Hoth, Title.Jakku, Title.Tatooine);
         setTestingText("Mandalorian Covert");

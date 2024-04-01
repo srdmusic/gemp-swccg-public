@@ -38,7 +38,7 @@ public class Card501_182 extends AbstractCapitalStarship {
     public Card501_182() {
         super(Side.LIGHT, 3, 3, 2, 4, null, 4, 5, "Quantum Storm", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("May add 2 pilots and 6 passengers. Permanent pilot provides ability of 2. Rebels on Hoth fire weapons for free. During battle, if a [H] Cannon at a related site, may cancel a character's game text here.");
-        addIcons(Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK);
+        addIcons(Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_23);
         addModelType(ModelType.TRANSPORT);
         setPilotCapacity(2);
         setPassengerCapacity(6);

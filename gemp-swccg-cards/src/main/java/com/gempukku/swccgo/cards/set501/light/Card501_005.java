@@ -28,7 +28,7 @@ public class Card501_005 extends AbstractSystem{
         setLocationDarkSideGameText("Your non-[Independent] starships deploy +1 here.");
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.PLANET, Icon.MUDHORN);
+        addIcons(Icon.PLANET, Icon.MUDHORN, Icon.VIRTUAL_SET_24);
         setTestingText(Title.Nevarro);
     }
 

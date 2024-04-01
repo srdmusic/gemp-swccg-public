@@ -32,7 +32,7 @@ public class Card501_118 extends AbstractSite {
         setLocationLightSideGameText("During battle here, Force Projection is immune to Sense.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_24);
         setTestingText("Crait: The Rebellion's Abandoned Outpost");
     }
 

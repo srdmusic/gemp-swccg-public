@@ -40,7 +40,7 @@ public class Card501_054 extends AbstractStarfighter {
         setGameText("May add 1 pilot and Grogu as a passenger. " +
                 "Din Djarin deploys -1 aboard. While Din piloting, immune to attrition < 5 " +
                 "and once per game may use 3 Force to cancel a battle just initiated here.");
-        addIcons(Icon.NAV_COMPUTER, Icon.INDEPENDENT, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.NAV_COMPUTER, Icon.INDEPENDENT, Icon.VIRTUAL_SET_24);
         setPilotCapacity(1);
         setPassengerCapacity(1);
         setMatchingPilotFilter(Filters.Din);

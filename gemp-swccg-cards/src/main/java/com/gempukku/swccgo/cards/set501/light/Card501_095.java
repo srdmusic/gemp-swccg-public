@@ -68,7 +68,7 @@ public class Card501_095 extends AbstractEpicEventDeployable {
                 "Charges! Come On, Come On!: Draw destiny. Add 3 to total for each Explosive Charge on Bunker." +
                 "Move! Move! Move!: If total destiny > 8, your characters here may relocate to Back Door for free. " +
                 "Bunker is 'blown away,' opponent loses 4 Force (may not be reduced).");
-        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_24);
         setTestingText("Deactivate The Shield Generator (V)");
     }
 
@@ -79,7 +79,7 @@ public class Card501_095 extends AbstractEpicEventDeployable {
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.and(Filters.your(playerId), Filters.icon(Icon.VIRTUAL_SET_23), Filters.Objective));
+        return Filters.canSpot(game, self, Filters.and(Filters.your(playerId), Filters.icon(Icon.VIRTUAL_SET_24), Filters.Objective));
     }
 
     @Override

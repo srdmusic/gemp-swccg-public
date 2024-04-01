@@ -44,7 +44,7 @@ import java.util.List;
  */
 public class Card501_014 extends AbstractObjective {
     public Card501_014() {
-        super(Side.LIGHT, 0, Title.I_Can_Bring_You_In_Warm, ExpansionSet.SET_23, Rarity.V);
+        super(Side.LIGHT, 0, Title.I_Can_Bring_You_In_Warm, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Bounty Hunter's Guild (with Holopuck there), Cold Storage and Bounty Hunting Is A Dangerous Profession. " +
                 "For remainder of game you may not deploy Jedi (except Ahsoka and Luke), or [EPI] or [EPVII] characters. " +
@@ -53,7 +53,7 @@ public class Card501_014 extends AbstractObjective {
                 "If a battle just initiated involving Din and 'The Asset', opponent chooses:" +
                 "Lose the 'The Asset' to exclude Din from battle (you may [upload] any card; reshuffle)" +
                 "OR Flip this card.");
-        addIcons(Icon.MUDHORN, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.MUDHORN, Icon.VIRTUAL_SET_24);
         setTestingText("I Can Bring You In Warm");
     }
 

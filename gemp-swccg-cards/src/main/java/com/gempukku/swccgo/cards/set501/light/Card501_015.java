@@ -41,7 +41,7 @@ public class Card501_015 extends AbstractNormalEffect {
         setGameText("Deploy on Bounty Hunter's Guild. " +
                 "Unless on a character, if opponent just deployed a non-Dark Jedi character of ability > 2 (or a leader) to a site, " +
                 "relocate Bounty Puck to that character. That character is 'The Asset' for as long as that character remains on table.");
-        addIcons(Icon.VIRTUAL_SET_23);
+        addIcons(Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.DEPLOYS_ON_SITE);
         setTestingText("Holopuck");
     }

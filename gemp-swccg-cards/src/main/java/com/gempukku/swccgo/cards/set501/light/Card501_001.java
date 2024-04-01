@@ -40,7 +40,7 @@ public class Card501_001 extends AbstractUsedOrStartingInterrupt {
         setGameText("Used: Take a unique Mandalorian into hand from Reserve Deck, reshuffle." +
                 "Starting: Take Din, Weapons Are Part Of My Religion, The Razor Crest, and Mandalorian Covert into hand. " +
                 "Draw 6 cards instead of 8. Place Interrupt in Reserve Deck.");
-        addIcons(Icon.VIRTUAL_SET_23);
+        addIcons(Icon.VIRTUAL_SET_24);
         setTestingText("This Is The Way");
     }
 
