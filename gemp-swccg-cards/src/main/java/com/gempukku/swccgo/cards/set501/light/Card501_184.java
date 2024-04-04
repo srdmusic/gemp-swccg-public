@@ -51,71 +51,77 @@ public class Card501_184 extends AbstractLostInterrupt {
         String I_HAVE_IT = "I Have It";
         String YOU_HAVE_THAT_POWER_TOO = "You Have That Power, Too";
     
-        if (GameConditions.cardHasWhileInPlayDataEquals(skywalkerEpicEvent, I_HAVE_IT)
-            || GameConditions.cardHasWhileInPlayDataEquals(skywalkerEpicEvent, YOU_HAVE_THAT_POWER_TOO)) {
-            
-            if (GameConditions.hasForcePile(game, playerId)) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                action.setText("Place card from hand under Used Pile");
-                // Allow response(s)
-                action.allowResponses("Take a card from Force Pile into hand",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new TakeCardIntoHandFromForcePileEffect(action,  playerId, true));
-                        }
-                    });
-                actions.add(action);
-            }
-
-            GameTextActionId gameTextActionId = GameTextActionId.A_JEDIS_FOCUS__EXCLUDE_CHARACTERS;
-
-            if (GameConditions.isOncePerGame(game, skywalkerEpicEvent, gameTextActionId)
-                    && GameConditions.isDuringBattleWithParticipant(game, Filters.Luke)
-                    && GameConditions.canUseForceToPlayInterrupt(game, playerId, self, 2)) {
-                final GameState gameState = game.getGameState();
-                final ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
-                final PhysicalCard Luke = Filters.findFirstActive(game, self, Filters.and(Filters.your(self), Filters.Luke, Filters.presentInBattle, Filters.canBeTargetedBy(self)));
-                final float ability = modifiersQuerying.getAbility(gameState, Luke);
-                final Filter opponentsCharacterFilter = Filters.and(Filters.opponents(self), Filters.character, Filters.presentInBattle, Filters.not(Filters.abilityMoreThan(ability)));
-
-
-                if (GameConditions.canSpot(game, self, opponentsCharacterFilter)) {
-                    final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-                    action.setText("Exclude characters from battle");
-                    // Update usage limit(s)
-                    action.appendUsage(
-                            new OncePerGameEffect(action));
-                    // Choose target(s)
-                    action.appendTargeting(
-                            new TargetCardOnTableEffect(action, playerId, "Choose opponent's character", opponentsCharacterFilter) {
-                                @Override
-                                protected void cardTargeted(final int targetGroupId, final PhysicalCard opponentsCharacter) {
-                                    action.addAnimationGroup(Luke, opponentsCharacter);
-                                    // Pay cost(s)
-                                    action.appendCost(
-                                            new UseForceEffect(action, playerId, 2));
-                                    // Allow response(s)
-                                    action.allowResponses("Exclude " + GameUtils.getCardLink(Luke) + " and " + GameUtils.getCardLink(opponentsCharacter) + " from battle",
-                                            new RespondablePlayCardEffect(action) {
-                                                @Override
-                                                protected void performActionResults(Action targetingAction) {
-                                                    // Get the targeted card(s) from the action using the targetGroupId.
-                                                    // This needs to be done in case the target(s) were changed during the responses.
-                                                    PhysicalCard opponentsCharacterToExclude = action.getPrimaryTargetCard(targetGroupId);
-
-                                                    // Perform result(s)
-                                                    action.appendEffect(
-                                                            new ExcludeFromBattleEffect(action, Arrays.asList(Luke, opponentsCharacterToExclude)));
-                                                }
-                                            }
-                                    );
-                                }
+        if (skywalkerEpicEvent != null) {
+            if (GameConditions.cardHasWhileInPlayDataEquals(skywalkerEpicEvent, I_HAVE_IT)
+                || GameConditions.cardHasWhileInPlayDataEquals(skywalkerEpicEvent, YOU_HAVE_THAT_POWER_TOO)) {
+                
+                if (GameConditions.hasForcePile(game, playerId)) {
+                    final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                    action.setText("Take a card from Force Pile into hand");
+                    // Allow response(s)
+                    action.allowResponses("Take a card from Force Pile into hand",
+                        new RespondablePlayCardEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                // Perform result(s)
+                                action.appendEffect(
+                                        new TakeCardIntoHandFromForcePileEffect(action,  playerId, true));
                             }
-                    );
+                        });
                     actions.add(action);
+                }
+
+                GameTextActionId gameTextActionId = GameTextActionId.A_JEDIS_FOCUS__EXCLUDE_CHARACTERS;
+
+                if (GameConditions.isOncePerGame(game, skywalkerEpicEvent, gameTextActionId)
+                        && GameConditions.isDuringBattleWithParticipant(game, Filters.Luke)
+                        && GameConditions.canUseForceToPlayInterrupt(game, playerId, self, 2)) {
+
+                    final PhysicalCard Luke = Filters.findFirstActive(game, self, Filters.and(Filters.your(self), Filters.Luke, Filters.presentInBattle, Filters.canBeTargetedBy(self)));
+
+                    if (Luke != null) {
+                        final GameState gameState = game.getGameState();
+                        final ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
+                        final float ability = modifiersQuerying.getAbility(gameState, Luke);
+                        final Filter opponentsCharacterFilter = Filters.and(Filters.opponents(self), Filters.character, Filters.presentInBattle, Filters.not(Filters.abilityMoreThan(ability)));
+
+
+                        if (GameConditions.canSpot(game, self, opponentsCharacterFilter)) {
+                            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+                            action.setText("Exclude characters from battle");
+                            // Update usage limit(s)
+                            action.appendUsage(
+                                    new OncePerGameEffect(action));
+                            // Choose target(s)
+                            action.appendTargeting(
+                                    new TargetCardOnTableEffect(action, playerId, "Choose opponent's character", opponentsCharacterFilter) {
+                                        @Override
+                                        protected void cardTargeted(final int targetGroupId, final PhysicalCard opponentsCharacter) {
+                                            action.addAnimationGroup(Luke, opponentsCharacter);
+                                            // Pay cost(s)
+                                            action.appendCost(
+                                                    new UseForceEffect(action, playerId, 2));
+                                            // Allow response(s)
+                                            action.allowResponses("Exclude " + GameUtils.getCardLink(Luke) + " and " + GameUtils.getCardLink(opponentsCharacter) + " from battle",
+                                                    new RespondablePlayCardEffect(action) {
+                                                        @Override
+                                                        protected void performActionResults(Action targetingAction) {
+                                                            // Get the targeted card(s) from the action using the targetGroupId.
+                                                            // This needs to be done in case the target(s) were changed during the responses.
+                                                            PhysicalCard opponentsCharacterToExclude = action.getPrimaryTargetCard(targetGroupId);
+
+                                                            // Perform result(s)
+                                                            action.appendEffect(
+                                                                    new ExcludeFromBattleEffect(action, Arrays.asList(Luke, opponentsCharacterToExclude)));
+                                                        }
+                                                    }
+                                            );
+                                        }
+                                    }
+                            );
+                            actions.add(action);
+                        }
+                    }
                 }
             }
         }
