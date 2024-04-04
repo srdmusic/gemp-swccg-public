@@ -30,7 +30,7 @@ import java.util.List;
 public class Card501_061 extends AbstractCreature {
     public Card501_061() {
         super(Side.LIGHT, 5, 2, 1, 3, 0, "Porg", Uniqueness.RESTRICTED_3, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Habitat: Ahch-To sites, either player's starship (uses no capacity). Does not attack. Characters present (or starship aboard) are power and defense value -1 (+2 if yours). While at your location, adds one [Light Side] icon.");
+        setGameText("Habitat: Ahch-To sites, either player's starship (uses no capacity). Does not attack. Starship porg is aboard or characters present with porg are power and defense value -1 (+2 if yours). Adds one [Light Side] icon here.");
         addModelType(ModelType.SEADWELLING);
         addIcons(Icon.SELECTIVE_CREATURE, Icon.VIRTUAL_SET_23);
         setTestingText("Porg");
@@ -50,8 +50,8 @@ public class Card501_061 extends AbstractCreature {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotAttackModifier(self, self));
         modifiers.add(new IconModifier(self, Filters.sameLocation(self), Icon.LIGHT_FORCE));
-        modifiers.add(new PowerModifier(self, Filters.or(Filters.and(Filters.character, Filters.present(self)),  Filters.and(Filters.starship, Filters.or(Filters.hasAttached(self), Filters.hasAboard(self)))), new TrueCondition(), new CardMatchesEvaluator(-1, 2, Filters.your(self)), false));
-        modifiers.add(new DefenseValueModifier(self, Filters.or(Filters.and(Filters.character, Filters.present(self)),  Filters.and(Filters.starship, Filters.or(Filters.hasAttached(self), Filters.hasAboard(self)))), new TrueCondition(), new CardMatchesEvaluator(-1, 2, Filters.your(self)), false));
+        modifiers.add(new PowerModifier(self, Filters.or(Filters.and(Filters.character, Filters.presentWith(self)),  Filters.and(Filters.starship, Filters.or(Filters.hasAttached(self), Filters.hasAboard(self)))), new TrueCondition(), new CardMatchesEvaluator(-1, 2, Filters.your(self)), false));
+        modifiers.add(new DefenseValueModifier(self, Filters.or(Filters.and(Filters.character, Filters.presentWith(self)),  Filters.and(Filters.starship, Filters.or(Filters.hasAttached(self), Filters.hasAboard(self)))), new TrueCondition(), new CardMatchesEvaluator(-1, 2, Filters.your(self)), false));
         return modifiers;
     }
 }
