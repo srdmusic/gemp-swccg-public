@@ -83,7 +83,7 @@ public class Card501_184 extends AbstractLostInterrupt {
                         final GameState gameState = game.getGameState();
                         final ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
                         final float ability = modifiersQuerying.getAbility(gameState, Luke);
-                        final Filter opponentsCharacterFilter = Filters.and(Filters.opponents(self), Filters.character, Filters.presentInBattle, Filters.not(Filters.abilityMoreThan(ability)));
+                        final Filter opponentsCharacterFilter = Filters.and(Filters.opponents(self), Filters.character, Filters.presentInBattle, Filters.abilityLessThanOrEqualTo(ability));
 
 
                         if (GameConditions.canSpot(game, self, opponentsCharacterFilter)) {
