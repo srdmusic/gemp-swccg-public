@@ -36,7 +36,7 @@ public class Card501_050 extends AbstractAlien {
     public Card501_050() {
         super(Side.DARK, 3, 3, 3, 2, 5, "Gor Koresh", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Abyssin gambler and information broker");
-        setGameText("Your mercenaries +1 here. Opponent may not cancel your battle destiny draws where you have a gangster or non-[Maintenance] bounty hunter. When deployed, may deploy a non-[M] Gamorrean here from Reserve Deck here for -2 Force; reshuffle.");
+        setGameText("Your mercenaries are power +1 here. Opponent may not cancel your battle destiny draws where you have a gangster or non-[Maintenance] bounty hunter. When deployed, may deploy a non-[Maintenance] Gamorrean here from Reserve Deck here for -2 Force; reshuffle.");
         addKeywords(Keyword.GAMBLER, Keyword.INFORMATION_BROKER);
         setSpecies(Species.ABYSSIN);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_23);
