@@ -36,7 +36,7 @@ public class Card501_049 extends AbstractImperial {
     public Card501_049() {
         super(Side.DARK, 3, 2, 2, 2, 3, "JS-1975", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Biker Scout Trooper. Imperial Remnant");
-        setGameText("Adds 2 to power of anything he pilots. Once per game, may take Gideon into hand from Reserve Deck; reshuffle. While piloting a speeder bike, opponent's weapon destinies targeting your speeder bikes are -1 (and Grogu is forfeit -2) here.");
+        setGameText("Adds 2 to power of anything he pilots. Once per game, may take Gideon into hand from Reserve Deck; reshuffle. While piloting a speeder bike, Grogu is forfeit -2 here and opponent's weapon destinies targeting your speeder bikes are -1 here.");
         addKeywords(Keyword.BIKER_SCOUT, Keyword.IMPERIAL_REMNANT);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_23);
         setTestingText("JS-1975");
