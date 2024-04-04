@@ -41,7 +41,7 @@ public class Card501_189 extends AbstractDefensiveShield {
         setGameText("Plays on table. Cancels Scanning Crew and 'insert' cards just revealed. Sidious may not place Skywalkers out of play. Let Them Make the First Move may target only Undercover Spies. Unless Inner Strength on table, opponent may only use one combat card per turn.");
         addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setVirtualSuffix(true);
-        setTestingText("Your Insights Serve You Well (V) (ERRATA)");
+        setTestingText("Your Insight Serve You Well (V) (ERRATA)");
     }
 
     @Override
