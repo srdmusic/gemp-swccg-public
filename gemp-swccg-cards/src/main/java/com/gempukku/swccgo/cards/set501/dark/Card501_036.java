@@ -40,7 +40,8 @@ public class Card501_036 extends AbstractCapitalStarship {
                 "Permanent pilots provide ability of 4. " +
                 "Haven is suspended (and attrition immunity of starfighters is limited to < 5) here. " +
                 "Immune to attrition < 4 (< 6 if with opponent's starfighter).");
-        addIcons(Icon.DEATH_STAR_II, Icon.PILOT, Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_23);
+        addIcon(Icon.PILOT, 2);
+        addIcons(Icon.DEATH_STAR_II, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_23);
         addModelType(ModelType.VICTORY_CLASS_STAR_DESTROYER);
         setPilotCapacity(4);
         setPassengerCapacity(6);
