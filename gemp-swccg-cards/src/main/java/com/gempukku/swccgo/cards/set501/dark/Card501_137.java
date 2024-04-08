@@ -2,7 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.conditions.OnCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -43,9 +43,11 @@ public class Card501_137 extends AbstractNormalEffect {
         super(Side.DARK, 5, PlayCardZoneOption.ATTACHED, Title.Ominous_Rumors, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Rumors of a new 'technological terror' filled the galaxy with dread.");
-        setGameText("Deploy on Bunker; once per game may search your Force Pile; take one card into hand; reshuffle. " +
-                "Your Force generation and total power is +1 everywhere for each Imperial leader on Endor (limit +2). " +
-                "Place in Used Pile if opponent controls Bunker. [Immune to Alter]");
+        setGameText("Deploy on Bunker; " +
+                "may immediately take any one [Endor] or [Death Star II] battleground (or Effect) " +
+                "into hand from Force Pile; reshuffle. While an Imperial leader on Endor, " +
+                "your Force generation (and total power everywhere) is +1. " +
+                "If opponent controls Bunker, place Effect in Used Pile. [Immune to Alter]");
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_23);
         addKeywords(Keyword.DEPLOYS_ON_LOCATION);
         addImmuneToCardTitle(Title.Alter);
@@ -60,11 +62,10 @@ public class Card501_137 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         String playerId = self.getOwner();
-        int numImperialLeadersOnEndor =
-                Math.min(2, Filters.countAllOnTable(game, Filters.and(Filters.Imperial_leader, Filters.on(Title.Endor))));
+        OnCondition imperialLeaderOnEndorCondition = new OnCondition(self, Filters.Imperial_leader, Title.Endor);
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new TotalForceGenerationModifier(self, numImperialLeadersOnEndor, playerId));
-        modifiers.add(new TotalPowerModifier(self, Filters.any, numImperialLeadersOnEndor, playerId));
+        modifiers.add(new TotalForceGenerationModifier(self, imperialLeaderOnEndorCondition, 1, playerId));
+        modifiers.add(new TotalPowerModifier(self, Filters.any, imperialLeaderOnEndorCondition, 1, playerId));
         return modifiers;
     }
 
@@ -74,18 +75,14 @@ public class Card501_137 extends AbstractNormalEffect {
 
         // Check condition(s)
         if (TriggerConditions.justDeployed(game, effectResult, self)
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.canTakeCardsIntoHandFromForcePile(game, playerId, self, gameTextActionId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Take card into hand from Force Pile");
             action.setActionMsg("Take a card into hand from Force Pile");
-            // Perform result(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action)
-            );
             action.appendEffect(
-                    new TakeCardIntoHandFromForcePileEffect(action, playerId, true));
+                    new TakeCardIntoHandFromForcePileEffect(action, playerId,
+                            Filters.and(Filters.or(Icon.DEATH_STAR_II, Icon.ENDOR), Filters.or(Filters.Effect, Filters.battleground)), true));
             return Collections.singletonList(action);
         }
         return null;
