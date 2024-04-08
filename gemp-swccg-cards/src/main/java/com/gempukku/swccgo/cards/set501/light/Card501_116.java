@@ -39,7 +39,7 @@ public class Card501_116 extends AbstractStarfighter {
                 "Characters aboard apply their ability towards drawing battle destiny. " +
                 "Immune to attrition < 5 (<6 if Din aboard.)");
         addPersona(Persona.RAZOR_CREST);
-        addIcons(Icon.MUDHORN, Icon.NAV_COMPUTER, Icon.INDEPENDENT, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.MUDHORN, Icon.NAV_COMPUTER, Icon.INDEPENDENT, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_24);
         addModelType(ModelType.ST_70_CLASS_RAZOR_CREST_M_111_ASSAULT_SHIP);
         setPilotCapacity(1);
         setPassengerCapacity(2);

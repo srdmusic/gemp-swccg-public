@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.light;
+package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -28,12 +28,12 @@ import java.util.List;
  * Set: Playtesting
  * Type: Effect
  * Subtype: Normal
- * Title: Eyes In The Dark (V)
+ * Title: Your Eyes Can Deceive You (V)
  */
-public class Card501_185 extends AbstractNormalEffect {
-    public Card501_185() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Eyes_In_The_Dark, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on table. If 4-LOM at a non-battleground, once during your turn, may peek at the top two cards of Reserve Deck; take one into hand. While you occupy three battlegrounds, opponent's Effects may not cancel or modify your Force drains at battlegrounds. [Immune to Alter]");
+public class Card501_115 extends AbstractNormalEffect {
+    public Card501_115() {
+        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Your Eyes Can Deceive You", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
+        setGameText("Deploy on table. If C-3PO at a non-battleground, once during your turn, may peek at the top two cards of Reserve Deck; take one into hand. While you occupy three battlegrounds, opponent’s Effects may not cancel or modify your Force drains at battlegrounds. [Immune to Alter]");
         addImmuneToCardTitle(Title.Alter);
         addIcons(Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
@@ -49,7 +49,7 @@ public class Card501_185 extends AbstractNormalEffect {
         // Check condition(s)
         if (GameConditions.isOnceDuringYourTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.hasReserveDeck(game, playerId)
-                && GameConditions.canSpot(game, self, Filters.and(Filters._4_LOM, Filters.at(Filters.non_battleground_location)))) {
+                && GameConditions.canSpot(game, self, Filters.and(Filters.C3PO, Filters.at(Filters.non_battleground_location)))) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Peek at the top two cards of your Reserve Deck");

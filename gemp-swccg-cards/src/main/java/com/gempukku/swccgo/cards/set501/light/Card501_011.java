@@ -49,7 +49,7 @@ public class Card501_011 extends AbstractEpicEventDeployable {
                 "At the end of opponent's deploy phase, opponent loses 1 Force unless 'The Asset' present at a battleground site." +
                 "Your total force generation and battle destiny is +1 for each card stacked here. " +
                 "During your move phase, may take Din (and Grogu if with Din) into hand from a location.");
-        addIcons(Icon.MUDHORN, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.MUDHORN, Icon.VIRTUAL_SET_24);
         setTestingText("Bounty Hunting Is A Dangerous Profession");
     }
 

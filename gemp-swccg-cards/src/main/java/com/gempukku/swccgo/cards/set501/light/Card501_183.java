@@ -38,7 +38,7 @@ public class Card501_183 extends AbstractSite {
         setLocationDarkSideGameText("Add 1 to your weapon destiny draws here (2 if you control).");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.HOTH, Icon.EXTERIOR_SITE, Icon.PLANET);
+        addIcons(Icon.HOTH, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_23);
         addKeywords(Keyword.MARKER_3);
         setVirtualSuffix(true);
         setTestingText("Hoth: Defensive Perimeter (3rd Marker) (V)");

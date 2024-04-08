@@ -36,7 +36,7 @@ public class Card501_171 extends AbstractSite {
         setLocationDarkSideGameText("Force drain -1 here.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
-        addIcons(Icon.UNDERGROUND, Icon.INTERIOR_SITE, Icon.PLANET, Icon.MUDHORN, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.UNDERGROUND, Icon.INTERIOR_SITE, Icon.PLANET, Icon.MUDHORN, Icon.VIRTUAL_SET_24);
         addKeyword(Keyword.NEVARRO_CITY_SITE);
         setTestingText("Nevarro City: Sewers");
     }

@@ -36,7 +36,7 @@ import java.util.List;
  */
 public class Card501_003 extends AbstractAlien {
     public Card501_003() {
-        super(Side.LIGHT, 2, 3, 4, 4, 5, "The Armorer", Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
+        super(Side.LIGHT, 2, 3, 4, 4, 5, "The Armorer", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Female Mandalorian leader.");
         setGameText("Only deploys to non-battleground sites (-1 if [underground]). " +
                 "Once per game, may retrieve a non-lightsaber character weapon into hand. " +
@@ -45,7 +45,7 @@ public class Card501_003 extends AbstractAlien {
         addPersona(Persona.ARMORER);
         setSpecies(Species.MANDALORIAN);
         addKeywords(Keyword.LEADER, Keyword.FEMALE);
-        addIcons(Icon.VIRTUAL_SET_23);
+        addIcons(Icon.VIRTUAL_SET_24);
         addIcon(Icon.WARRIOR, 2);
         setTestingText("The Armorer");
     }
