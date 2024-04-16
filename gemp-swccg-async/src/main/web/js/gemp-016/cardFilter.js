@@ -160,6 +160,7 @@ var CardFilter = Class.extend({
             + "<option value='jawa'>Jawa</option>"
             + "<option value='legacy'>Legacy</option>"
             //+ "<option value='limited_resources'>Limited Resources</option>"
+            + "<option value='premiere_tatooine'>Premiere - Tatooine</option>"
             + "<option value='premiere_ref2'>Premiere - Reflections II</option>"
             + "<option value='premiere_jpsd'>Premiere - JPSD</option>"
             + "<option value='premiere_ds2'>Premiere - Death Star II</option>"
