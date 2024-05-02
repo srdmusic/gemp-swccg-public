@@ -77,7 +77,7 @@ CREATE  TABLE IF NOT EXISTS `gemp-swccg`.`game_history` (
   `dark_deck_string` TEXT CHARACTER SET 'utf8' COLLATE 'utf8_bin' ,
   `light_deck_string` TEXT CHARACTER SET 'utf8' COLLATE 'utf8_bin' ,
   PRIMARY KEY (`id`) ,
-  INDEX `game_history_winner` (`winner`),
+  INDEX `game_history_winner` (`winner`) ,
   INDEX `game_history_loser` (`loser`) )
 ENGINE = InnoDB
 AUTO_INCREMENT = 71300
@@ -279,8 +279,8 @@ CREATE  TABLE IF NOT EXISTS `gemp-swccg`.`transfer` (
   `collection` TEXT CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
   `transfer_date` DECIMAL(20,0) NOT NULL ,
   `direction` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
-  PRIMARY KEY (`id`),
-  INDEX `ix_player_notify` (`player`,`notify`),
+  PRIMARY KEY (`id`) ,
+  INDEX `ix_player_notify` (`player`,`notify`) ,
   FULLTEXT `ft_player` (`player`) )
 ENGINE = InnoDB
 AUTO_INCREMENT = 4
