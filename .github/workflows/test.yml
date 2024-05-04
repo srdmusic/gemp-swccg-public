@@ -1,4 +1,4 @@
-name: test-on-push
+name: Gemp Client Basic Access Test
 on:
   workflow_dispatch:
   push:
@@ -35,7 +35,7 @@ jobs:
 
       - name: Client Test
         run: |
-          docker exec gemp_swccg_app_1 curl --retry 10 --retry-connrefused http://localhost/gemp-swccg/index.html
+          docker exec gemp_swccg_app_1 curl -s --retry 10 --retry-connrefused http://localhost/gemp-swccg/index.html
           echo "Python3: $(which python3)"
           echo "pip3...: $(which pip3)"
           pip3 install -r src/requirements.txt
