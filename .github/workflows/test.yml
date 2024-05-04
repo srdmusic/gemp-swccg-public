@@ -23,7 +23,6 @@ jobs:
           java -version ; true
           sudo apt-get update
           sudo update-java-alternatives --set /usr/lib/jvm/temurin-21-jdk-amd64
-          export JAVA_HOME=/usr/lib/jvm/temurin-21-jdk-amd64
           sudo apt-get --only-upgrade install maven
 
           java -version ; true
@@ -31,13 +30,13 @@ jobs:
           
       - name: Maven build
         working-directory: ./src
-        run: mvn clean install
+        run: JAVA_HOME=/usr/lib/jvm/temurin-21-jdk-amd64 mvn clean install
 
         #I'm pretty sure that this is redundant; 
         # mvn install already runs mvn test
       - name: Maven re-test
         working-directory: ./src
-        run: mvn test
+        run: JAVA_HOME=/usr/lib/jvm/temurin-21-jdk-amd64 mvn test
 
       - name: Build the stack
         working-directory: ./src/docker
