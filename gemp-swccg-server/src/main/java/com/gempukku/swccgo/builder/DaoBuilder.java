@@ -15,7 +15,7 @@ import java.lang.reflect.Type;
 import java.util.Map;
 
 public class DaoBuilder {
-    public static void fillObjectMap(Map<Type, Object> objectMap) {
+    public static void CreateDatabaseAccessObjects(Map<Type, Object> objectMap) {
         DbAccess dbAccess = new DbAccess();
         CollectionSerializer collectionSerializer = new CollectionSerializer();
 

@@ -35,7 +35,8 @@ import com.gempukku.swccgo.logic.timing.GameResultListener;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
 import com.gempukku.swccgo.logic.vo.SwccgDeck;
 import com.google.common.base.Objects;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +49,7 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SwccgGameMediator {
-    private static final Logger LOG = Logger.getLogger(SwccgGameMediator.class);
+    private static final Logger LOG = LogManager.getLogger(SwccgGameMediator.class);
 
     private Map<String, GameCommunicationChannel> _communicationChannels = Collections.synchronizedMap(new HashMap<String, GameCommunicationChannel>());
     private DefaultUserFeedback _userFeedback;

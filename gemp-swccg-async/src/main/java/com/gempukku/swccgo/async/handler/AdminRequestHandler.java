@@ -20,12 +20,13 @@ import com.gempukku.swccgo.hall.HallServer;
 import com.gempukku.swccgo.league.*;
 import com.gempukku.swccgo.service.AdminService;
 import com.gempukku.swccgo.tournament.TournamentService;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -51,8 +52,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
     private final PlayerDAO _playerDAO;
     private final AdminService _adminService;
     private final GameHistoryService _gameHistoryService;
-
-    private static final Logger _log = Logger.getLogger(AdminRequestHandler.class);
+    private static final Logger _log = LogManager.getLogger(AdminRequestHandler.class);
 
     public AdminRequestHandler(Map<Type, Object> context) {
         super(context);
@@ -70,62 +70,62 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-        if (uri.equals("/clearcache") && request.getMethod() == HttpMethod.POST) {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
+        if (uri.equals("/clearcache") && request.method() == HttpMethod.POST) {
             clearCacheRequest(request, responseWriter);
-        } else if (uri.equals("/shutdown") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/shutdown") && request.method() == HttpMethod.POST) {
             shutdown(request, responseWriter);
-        } else if (uri.equals("/motd/get") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.equals("/motd/get") && request.method() == HttpMethod.GET) {
             getMotd(request, responseWriter);
-        } else if (uri.equals("/motd/update") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/motd/update") && request.method() == HttpMethod.POST) {
             setMotd(request, responseWriter);
-        } else if (uri.equals("/league/sealed/preview") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/league/sealed/preview") && request.method() == HttpMethod.POST) {
             processSealedLeague(request, responseWriter, true);
-        } else if (uri.equals("/league/sealed/create") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/league/sealed/create") && request.method() == HttpMethod.POST) {
             processSealedLeague(request, responseWriter, false);
-        } else if (uri.equals("/league/constructed/preview") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/league/constructed/preview") && request.method() == HttpMethod.POST) {
             processConstructedLeague(request, responseWriter, true);
-        } else if (uri.equals("/league/constructed/create") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/league/constructed/create") && request.method() == HttpMethod.POST) {
             processConstructedLeague(request, responseWriter, false);
-        } else if (uri.equals("/league/addplayers") && request.getMethod() == HttpMethod.POST) {
-            addPlayersToLeague(request, responseWriter, e);
-        } else if (uri.equals("/collections/additems") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/league/addplayers") && request.method() == HttpMethod.POST) {
+            addPlayersToLeague(request, responseWriter, remoteIp);
+        } else if (uri.equals("/collections/additems") && request.method() == HttpMethod.POST) {
             addItems(request, responseWriter);
-        } else if (uri.equals("/collections/addcurrency") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/collections/addcurrency") && request.method() == HttpMethod.POST) {
             addCurrency(request, responseWriter);
-        } else if (uri.equals("/collections/additemstoall") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/collections/additemstoall") && request.method() == HttpMethod.POST) {
             addItemsToAllPlayers(request, responseWriter);
-        } else if (uri.equals("/user/addflag") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/user/addflag") && request.method() == HttpMethod.POST) {
             addFlagToUser(request, responseWriter);
-        } else if (uri.equals("/users/removeflag") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/users/removeflag") && request.method() == HttpMethod.POST) {
             removeFlagFromUsers(request, responseWriter);
-        } else if (uri.equals("/users/findwithflag") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/users/findwithflag") && request.method() == HttpMethod.POST) {
             showUsersWithFlag(request, responseWriter);
-        } else if (uri.equals("/user/passwordreset") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/user/passwordreset") && request.method() == HttpMethod.POST) {
             resetUserPassword(request, responseWriter);
-        } else if (uri.equals("/users/deactivate") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/users/deactivate") && request.method() == HttpMethod.POST) {
             deactivateMultiple(request, responseWriter);
-        } else if (uri.equals("/user/ban/permanent") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/user/ban/permanent") && request.method() == HttpMethod.POST) {
             banUser(request, responseWriter);
-        } else if (uri.equals("/users/ban/permanent") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/users/ban/permanent") && request.method() == HttpMethod.POST) {
             banMultiple(request, responseWriter);
-        } else if (uri.equals("/user/ban/temporary") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/user/ban/temporary") && request.method() == HttpMethod.POST) {
             banUserTemp(request, responseWriter);
-        } else if (uri.equals("/user/ban/acquit") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/user/ban/acquit") && request.method() == HttpMethod.POST) {
             unBanUser(request, responseWriter);
-        } else if (uri.equals("/users/detailedsearch") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/users/detailedsearch") && request.method() == HttpMethod.POST) {
             findMultipleAccounts(request, responseWriter);
-        } else if (uri.equals("/settings/privategames") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/settings/privategames") && request.method() == HttpMethod.POST) {
             setPrivateGames(request, responseWriter);
-        } else if (uri.equals("/settings/bonusabilities") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/settings/bonusabilities") && request.method() == HttpMethod.POST) {
             setBonusAbilities(request, responseWriter);
-        } else if (uri.equals("/settings/stattracking") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/settings/stattracking") && request.method() == HttpMethod.POST) {
             setInGameStatTracking(request, responseWriter);
-        } else if (uri.equals("/settings/newaccounts") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/settings/newaccounts") && request.method() == HttpMethod.POST) {
             setNewAccountRegistration(request, responseWriter);
-        } else if (uri.equals("/settings/purgestattrackers") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/settings/purgestattrackers") && request.method() == HttpMethod.POST) {
             purgeInGameStatisticListeners(request, responseWriter);
-		} else if (uri.equals("/league/deckcheck") && request.getMethod() == HttpMethod.POST) {
+		} else if (uri.equals("/league/deckcheck") && request.method() == HttpMethod.POST) {
             deckCheck(request, responseWriter);
         } else {
             responseWriter.writeError(404);
@@ -766,8 +766,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         responseWriter.writeXmlResponse(doc);
     }
 
-
-    private void addPlayersToLeague(HttpRequest request, ResponseWriter responseWriter, MessageEvent e) throws Exception {
+    private void addPlayersToLeague(HttpRequest request, ResponseWriter responseWriter, String remoteIp) throws Exception {
         validateLeagueAdmin(request);
 
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
@@ -790,7 +789,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             Player player = _playerDao.getPlayer(playerName);
             if (player != null) {
                 if (!_leagueService.isPlayerInLeague(league, player)) {
-                    if (!_leagueService.playerJoinsLeague(league, player, e.getRemoteAddress().toString(), true, true)) {
+                    if (!_leagueService.playerJoinsLeague(league, player, remoteIp, true, true)) {
                         throw new HttpProcessingException(500, "Failed to add player '" + player + "' to the league.  Aborting.");
                     }
                 }
@@ -877,12 +876,10 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         _hallServer.setBonusAbilities(enabled);
 
         responseWriter.writeHtmlResponse("OK.  Bonus abilities enabled in casual games: " + _hallServer.bonusAbilitiesEnabled());
-
     }
 
     private void setNewAccountRegistration(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         validateAdmin(request);
-
 
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
         boolean enabled = Boolean.parseBoolean(getFormParameterSafely(postDecoder, "enabled"));

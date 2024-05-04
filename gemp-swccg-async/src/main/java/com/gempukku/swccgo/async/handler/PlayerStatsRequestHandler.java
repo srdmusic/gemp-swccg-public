@@ -7,10 +7,9 @@ import com.gempukku.swccgo.db.PlayerStatistic;
 import com.gempukku.swccgo.game.GameHistoryService;
 import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.game.state.SortPlayerByName;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -32,10 +31,10 @@ public class PlayerStatsRequestHandler extends SwccgoServerRequestHandler implem
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-        if ("".equals(uri) && request.getMethod() == HttpMethod.GET) {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
+        if ("".equals(uri) && request.method() == HttpMethod.GET) {
             getPlayerStats(request, responseWriter);
-        } else if ("/playerInfo".equals(uri) && request.getMethod() == HttpMethod.GET) {
+        } else if ("/playerInfo".equals(uri) && request.method() == HttpMethod.GET) {
             getPlayerInfo(request, responseWriter);
         } else {
             responseWriter.writeError(404);

@@ -2,7 +2,8 @@ package com.gempukku.swccgo.builder;
 
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.packagedProduct.*;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -12,13 +13,13 @@ import java.util.Map;
  * This builder class creates the packaged product storage and adds them to the object map.
  */
 public class PackagedProductStorageBuilder {
-    private static final Logger _logger = Logger.getLogger(PackagedProductStorageBuilder.class);
+    private static final Logger _logger = LogManager.getLogger(PackagedProductStorageBuilder.class);
 
     /**
      * Adds the packaged product storage to the object map.
      * @param objectMap the object map
      */
-    public static void fillObjectMap(Map<Type, Object> objectMap) {
+    public static void CreateProducts(Map<Type, Object> objectMap) {
         objectMap.put(PackagedProductStorage.class,
                 PackagedProductStorageBuilder.createPackagedProductStorage(extract(objectMap, SwccgCardBlueprintLibrary.class)));
     }

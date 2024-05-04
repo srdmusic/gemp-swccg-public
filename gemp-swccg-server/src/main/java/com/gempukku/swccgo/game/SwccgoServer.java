@@ -11,7 +11,8 @@ import com.gempukku.swccgo.logic.timing.GameResultListener;
 import com.gempukku.swccgo.logic.vo.SwccgDeck;
 import com.gempukku.util.SwccgUuid;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,7 +20,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SwccgoServer extends AbstractServer {
-    private static final Logger log = Logger.getLogger(SwccgoServer.class);
+    private static final Logger log = LogManager.getLogger(SwccgoServer.class);
 
     private SwccgCardBlueprintLibrary _swccgCardBlueprintLibrary;
 

@@ -3,7 +3,8 @@ package com.gempukku.swccgo.chat;
 import com.gempukku.swccgo.PrivateInformationException;
 import com.gempukku.swccgo.SubscriptionExpiredException;
 import com.gempukku.swccgo.game.ChatCommunicationChannel;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -26,7 +27,7 @@ public class ChatRoomMediator {
     private Map<String, ChatCommandCallback> _chatCommandCallbacks = new HashMap<String, ChatCommandCallback>();
 
     public ChatRoomMediator(String roomName, boolean muteJoinPartMessages, int secondsTimeoutPeriod, boolean privateRoom, Set<String> allowedPlayers, boolean allowSpectatorsToChat, boolean playtesting) {
-        _logger = Logger.getLogger("chat."+roomName);
+        _logger = LogManager.getLogger("chat."+roomName);
         _privateRoom = privateRoom;
         _allowedPlayers = allowedPlayers;
         _allowSpectatorsToChat = allowSpectatorsToChat;

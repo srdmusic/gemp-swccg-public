@@ -3,7 +3,7 @@ package com.gempukku.swccgo.league;
 import com.gempukku.swccgo.cache.Cached;
 import com.gempukku.swccgo.db.LeagueParticipationDAO;
 import com.gempukku.swccgo.game.Player;
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 
 import java.util.Collection;
 import java.util.Collections;

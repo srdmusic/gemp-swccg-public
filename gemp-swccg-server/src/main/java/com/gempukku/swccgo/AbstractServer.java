@@ -1,9 +1,10 @@
 package com.gempukku.swccgo;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 public abstract class AbstractServer {
-    private static Logger _logger = Logger.getLogger(AbstractServer.class);
+    private static Logger _logger = LogManager.getLogger(AbstractServer.class);
     private static ServerCleaner _cleaningTask = new ServerCleaner();
 
     private boolean _started;

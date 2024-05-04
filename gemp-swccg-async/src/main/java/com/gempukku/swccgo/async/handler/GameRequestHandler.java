@@ -15,9 +15,10 @@ import com.gempukku.swccgo.game.SwccgoServer;
 import com.gempukku.swccgo.game.state.EventSerializer;
 import com.gempukku.swccgo.game.state.GameCommunicationChannel;
 import com.gempukku.swccgo.game.state.GameEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.*;
-import org.jboss.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -31,14 +32,14 @@ import java.util.Map;
 import java.util.Set;
 
 public class GameRequestHandler extends SwccgoServerRequestHandler implements UriRequestHandler {
-    private SwccgoServer _swccgoServer;
-    private Set<Phase> _autoPassDefault = new HashSet<Phase>();
-    private LongPollingSystem _longPollingSystem;
+    private final SwccgoServer _swccgoServer;
+    private final Set<Phase> _autoPassDefault = new HashSet<>();
+    private final LongPollingSystem _longPollingSystem;
 
-    public GameRequestHandler(Map<Type, Object> context) {
+    public GameRequestHandler(Map<Type, Object> context, LongPollingSystem longPollingSystem) {
         super(context);
         _swccgoServer = extractObject(context, SwccgoServer.class);
-        _longPollingSystem = extractObject(context, LongPollingSystem.class);
+        _longPollingSystem = longPollingSystem;
 
         _autoPassDefault.add(Phase.ACTIVATE);
         _autoPassDefault.add(Phase.CONTROL);
@@ -49,26 +50,26 @@ public class GameRequestHandler extends SwccgoServerRequestHandler implements Ur
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-        if (uri.startsWith("/") && uri.endsWith("/cardInfo") && request.getMethod() == HttpMethod.GET) {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
+        if (uri.startsWith("/") && uri.endsWith("/cardInfo") && request.method() == HttpMethod.GET) {
             getCardInfo(request, uri.substring(1, uri.length() - 9), responseWriter);
         }
-        else if (uri.startsWith("/") && uri.endsWith("/concede") && request.getMethod() == HttpMethod.POST) {
+        else if (uri.startsWith("/") && uri.endsWith("/concede") && request.method() == HttpMethod.POST) {
             concede(request, uri.substring(1, uri.length() - 8), responseWriter);
         }
-        else if (uri.startsWith("/") && uri.endsWith("/cancel") && request.getMethod() == HttpMethod.POST) {
+        else if (uri.startsWith("/") && uri.endsWith("/cancel") && request.method() == HttpMethod.POST) {
             cancel(request, uri.substring(1, uri.length() - 7), responseWriter);
         }
-        else if (uri.startsWith("/") && uri.endsWith("/extendGameTimer") && request.getMethod() == HttpMethod.POST) {
+        else if (uri.startsWith("/") && uri.endsWith("/extendGameTimer") && request.method() == HttpMethod.POST) {
             extendGameTimer(request, uri.substring(1, uri.length() - 16), responseWriter);
         }
-        else if (uri.startsWith("/") && uri.endsWith("/disableActionTimer") && request.getMethod() == HttpMethod.POST) {
+        else if (uri.startsWith("/") && uri.endsWith("/disableActionTimer") && request.method() == HttpMethod.POST) {
             disableActionTimer(request, uri.substring(1, uri.length() - 19), responseWriter);
         }
-        else if (uri.startsWith("/") && request.getMethod() == HttpMethod.GET) {
+        else if (uri.startsWith("/") && request.method() == HttpMethod.GET) {
             getGameState(request, uri.substring(1), responseWriter);
         }
-        else if (uri.startsWith("/") && request.getMethod() == HttpMethod.POST) {
+        else if (uri.startsWith("/") && request.method() == HttpMethod.POST) {
             updateGameState(request, uri.substring(1), responseWriter);
         }
         else {
@@ -111,11 +112,11 @@ public class GameRequestHandler extends SwccgoServerRequestHandler implements Ur
     }
 
     private class GameUpdateLongPollingResource implements LongPollingResource {
-        private GameCommunicationChannel _gameCommunicationChannel;
-        private SwccgGameMediator _gameMediator;
-        private Player _resourceOwner;
-        private int _channelNumber;
-        private ResponseWriter _responseWriter;
+        private final GameCommunicationChannel _gameCommunicationChannel;
+        private final SwccgGameMediator _gameMediator;
+        private final Player _resourceOwner;
+        private final int _channelNumber;
+        private final ResponseWriter _responseWriter;
         private boolean _processed;
 
         private GameUpdateLongPollingResource(GameCommunicationChannel gameCommunicationChannel, int channelNumber, SwccgGameMediator gameMediator, Player resourceOwner, ResponseWriter responseWriter) {
@@ -263,13 +264,13 @@ public class GameRequestHandler extends SwccgoServerRequestHandler implements Ur
     }
 
     private Set<Phase> getAutoPassPhases(HttpRequest request) {
-        CookieDecoder cookieDecoder = new CookieDecoder();
-        String cookieHeader = request.getHeader(HttpHeaders.Names.COOKIE);
+        ServerCookieDecoder cookieDecoder = ServerCookieDecoder.STRICT;
+        String cookieHeader = request.headers().get(HttpHeaderNames.COOKIE);
         if (cookieHeader != null) {
             Set<Cookie> cookies = cookieDecoder.decode(cookieHeader);
             for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("autoPassPhases")) {
-                    final String[] phases = cookie.getValue().split("0");
+                if (cookie.name().equals("autoPassPhases")) {
+                    final String[] phases = cookie.value().split("0");
                     Set<Phase> result = new HashSet<Phase>();
                     for (String phase : phases)
                         result.add(Phase.valueOf(phase));
@@ -277,7 +278,7 @@ public class GameRequestHandler extends SwccgoServerRequestHandler implements Ur
                 }
             }
             for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("autoPass") && cookie.getValue().equals("false"))
+                if (cookie.name().equals("autoPass") && cookie.value().equals("false"))
                     return Collections.emptySet();
             }
         }
@@ -285,9 +286,9 @@ public class GameRequestHandler extends SwccgoServerRequestHandler implements Ur
     }
 
     private class SerializationVisitor implements ParticipantCommunicationVisitor {
-        private Document _doc;
-        private Element _element;
-        private EventSerializer _eventSerializer = new EventSerializer();
+        private final Document _doc;
+        private final Element _element;
+        private final EventSerializer _eventSerializer = new EventSerializer();
 
         private SerializationVisitor(Document doc, Element element) {
             _doc = doc;

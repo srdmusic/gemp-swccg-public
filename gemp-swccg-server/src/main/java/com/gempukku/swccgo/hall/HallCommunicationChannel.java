@@ -5,8 +5,8 @@ import com.gempukku.polling.WaitingRequest;
 import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.game.SwccgGameParticipant;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.mutable.MutableObject;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.mutable.MutableObject;
 
 import java.util.*;
 

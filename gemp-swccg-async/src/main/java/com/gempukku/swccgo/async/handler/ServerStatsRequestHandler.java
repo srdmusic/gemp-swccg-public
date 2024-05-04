@@ -5,10 +5,9 @@ import com.gempukku.swccgo.async.ResponseWriter;
 import com.gempukku.swccgo.game.GameHistoryService;
 import com.gempukku.swccgo.game.GameHistoryStatistics;
 import com.gempukku.swccgo.game.Player;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -32,8 +31,8 @@ public class ServerStatsRequestHandler extends SwccgoServerRequestHandler implem
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-        if ("".equals(uri) && request.getMethod() == HttpMethod.GET) {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
+        if ("".equals(uri) && request.method() == HttpMethod.GET) {
             QueryStringDecoder queryDecoder = new QueryStringDecoder(request.getUri());
             String participantId = getQueryParameterSafely(queryDecoder, "participantId");
             String startDay = getQueryParameterSafely(queryDecoder, "startDay");

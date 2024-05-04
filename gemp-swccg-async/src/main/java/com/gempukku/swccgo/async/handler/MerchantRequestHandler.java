@@ -9,11 +9,10 @@ import com.gempukku.swccgo.game.*;
 import com.gempukku.swccgo.game.formats.SwccgoFormatLibrary;
 import com.gempukku.swccgo.merchant.MerchantException;
 import com.gempukku.swccgo.merchant.MerchantService;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.QueryStringDecoder;
-import org.jboss.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -57,16 +56,16 @@ public class MerchantRequestHandler extends SwccgoServerRequestHandler implement
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-        if ("".equals(uri) && request.getMethod() == HttpMethod.GET) {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
+        if ("".equals(uri) && request.method() == HttpMethod.GET) {
             getMerchantOffers(request, responseWriter);
-        } else if (uri.equals("/buy") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/buy") && request.method() == HttpMethod.POST) {
             buy(request, responseWriter);
-        } else if (uri.equals("/sell") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/sell") && request.method() == HttpMethod.POST) {
             sell(request, responseWriter);
-        } else if (uri.equals("/sellAll") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/sellAll") && request.method() == HttpMethod.POST) {
             sellAll(request, responseWriter);
-        } else if (uri.equals("/tradeFoil") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/tradeFoil") && request.method() == HttpMethod.POST) {
             tradeInFoil(request, responseWriter);
         } else {
             responseWriter.writeError(404);

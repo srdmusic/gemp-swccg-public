@@ -5,7 +5,7 @@ package com.gempukku.swccgo.common;
  */
 public enum CardSubtype implements Filterable {
 
-    _(""),
+    NORMAL(""),
     ARTILLERY("Artillery"),
     AUTOMATED("Automated"),
     CAPITAL("Capital"),

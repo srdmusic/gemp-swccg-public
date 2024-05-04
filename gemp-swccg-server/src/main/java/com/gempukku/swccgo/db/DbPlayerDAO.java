@@ -1,7 +1,7 @@
 package com.gempukku.swccgo.db;
 
 import com.gempukku.swccgo.game.Player;
-import com.mysql.jdbc.StringUtils;
+import com.mysql.cj.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

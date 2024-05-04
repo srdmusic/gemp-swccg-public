@@ -2,13 +2,17 @@ package com.gempukku.swccgo.async;
 
 import com.gempukku.swccgo.async.handler.UriRequestHandler;
 import com.gempukku.swccgo.common.ApplicationConfiguration;
-import com.mysql.jdbc.StringUtils;
+
+import com.gempukku.swccgo.db.IpBanDAO;
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.http.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.util.CharsetUtil;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.*;
-import org.jboss.netty.handler.codec.http.*;
-import org.jboss.netty.util.CharsetUtil;
 import org.json.simple.JSONObject;
 import org.w3c.dom.Document;
 
@@ -25,25 +29,32 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.*;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.is100ContinueExpected;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.*;
-import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
-public class SwccgoHttpRequestHandler extends SimpleChannelUpstreamHandler {
+import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaders.Names.*;
+import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+
+public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     private static final long SIX_MONTHS = 1000L*60L*60L*24L*30L*6L;
-    private static final Logger _log = Logger.getLogger(SwccgoHttpRequestHandler.class);
+    private final Logger _log = LogManager.getLogger(SwccgoHttpRequestHandler.class);
+    private static final Logger _accesslog = LogManager.getLogger("access");
+    private final Map<String, byte[]> _fileCache = Collections.synchronizedMap(new HashMap<>());
+    private final Map<Type, Object> _objects;
+    private final UriRequestHandler _uriRequestHandler;
 
-    private Map<Type, Object> _objects;
-    private UriRequestHandler _uriRequestHandler;
+    private final IpBanDAO _ipBanDAO;
     private boolean _isLocalHost = false;
 
     public SwccgoHttpRequestHandler(Map<Type, Object> objects, UriRequestHandler uriRequestHandler) {
         _isLocalHost = ApplicationConfiguration.getProperty("environment").equals("test");
         _objects = objects;
         _uriRequestHandler = uriRequestHandler;
+        _ipBanDAO = (IpBanDAO) _objects.get(IpBanDAO.class);
     }
+
 
     private static class RequestInformation {
         private final String uri;
@@ -57,143 +68,95 @@ public class SwccgoHttpRequestHandler extends SimpleChannelUpstreamHandler {
         }
 
         public void printLog(int statusCode, long finishedTime) {
-            _log.debug(remoteIp + "," + statusCode + "," + uri + "," + (finishedTime - requestTime));
+            _accesslog.debug(remoteIp + "," + statusCode + "," + uri + "," + (finishedTime - requestTime));
         }
     }
 
-    /**
-     * Invoked when a message object was received from a remote peer.
-     * @param ctx
-     * @param e
-     * @throws Exception
-     */
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, final MessageEvent e) throws Exception {
-        final HttpRequest request = (HttpRequest) e.getMessage();
+    protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest httpRequest) {
+        if (HttpUtil.is100ContinueExpected(httpRequest))
+            send100Continue(ctx);
 
-        if (is100ContinueExpected(request)) {
-            send100Continue(e);
-        }
-
-        String uri = request.getUri();
+        String uri = httpRequest.uri();
 
         if (uri.contains("?"))
             uri = uri.substring(0, uri.indexOf("?"));
 
-        String ip = request.getHeader("X-Forwarded-For");
+        String ip = httpRequest.headers().get("X-Forwarded-For");
 
         if(ip == null)
-            ip = ((InetSocketAddress) ctx.getChannel().getRemoteAddress()).getAddress().getHostAddress();
+            ip = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress();
 
-        final RequestInformation requestInformation = new RequestInformation(request.getUri(),
+        final RequestInformation requestInformation = new RequestInformation(httpRequest.uri(),
                 ip,
                 System.currentTimeMillis());
 
-        if (request.isChunked()) {
-            send400Error(request, e);
-        } else {
-            ResponseWriter responseWriter = new ResponseWriter() {
-                @Override
-                public void writeError(int status) {
-                    writeHttpErrorResponse(request, status, null, e);
-                }
+        ResponseSender responseSender = new ResponseSender(ctx, httpRequest);
 
-                @Override
-                public void writeError(int status, Map<String, String> headers) {
-                    writeHttpErrorResponse(request, status, headers, e);
-                }
-
-                @Override
-                public void writeXmlResponse(Document document) {
-                    writeHttpXmlResponse(request, document, null, e);
-                }
-
-                @Override
-                public void writeXmlResponse(Document document, Map<String, String> headers) {
-                    writeHttpXmlResponse(request, document, headers, e);
-                }
-
-                @Override
-                public void writeHtmlResponse(String html) {
-                    writeHttpHtmlResponse(request, html, e);
-                }
-
-                @Override
-                public void writeJsonResponse(String json) {
-                    writeHttpJsonResponse(request, json, null, e);
-                }
-
-                @Override
-                public void writeByteResponse(String contentType, byte[] bytes) {
-                    Map<String, String> headers = new HashMap<String, String>();
-                    headers.put(CONTENT_TYPE, contentType);
-                    writeHttpByteResponse(request, bytes, headers, e);
-                }
-
-                @Override
-                public void writeFile(File file, Map<String, String> headers) {
-                    writeFileResponse(request, file, headers, e);
-                }
-            };
-
-            try {
-                _uriRequestHandler.handleRequest(uri, request, _objects, responseWriter, e);
-            } catch (HttpProcessingException exp) {
-                int code = exp.getStatus();
-                //401, 403, 404, and other 400-series errors should just do minimal logging,
-                if(code % 400 < 100 && code != 400) {
-                    _log.debug("HTTP " + code + " response for " + requestInformation.remoteIp + ": " + requestInformation.uri);
-                }
-                // but 400 itself should display a full readout of the exception
-                else if(code == 400 || code % 500 < 100) {
-                    _log.error("HTTP code " + code + " response for " + requestInformation.remoteIp + ": " + requestInformation.uri, exp);
-                }
-
-                //If there is a safe user-viewable message, display it
-                if(!StringUtils.isNullOrEmpty(exp.getMessage())) {
-                    responseWriter.writeError(exp.getStatus(), Collections.singletonMap("message", exp.getMessage()));
-                }
-                else {
-                    responseWriter.writeError(exp.getStatus());
-                }
-            } catch (Exception exp) {
-                _log.error("Error while processing request: " + request.getUri(), exp);
-                responseWriter.writeError(500);
-            }
-        }
-    }
-
-    private Map<String, byte[]> _fileCache = Collections.synchronizedMap(new HashMap<String, byte[]>());
-
-    private void writeFileResponse(HttpRequest request, File file, Map<String, String> headers, MessageEvent e) {
         try {
-            String canonicalPath = file.getCanonicalPath();
-            byte[] fileBytes = _fileCache.get(canonicalPath);
-            if (fileBytes == null || _isLocalHost) {
-                if (!file.exists() || !file.isFile()) {
-                    writeHttpErrorResponse(request, 404, null, e);
-                    return;
-                }
-
-                FileInputStream fis = new FileInputStream(file);
-                try {
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    IOUtils.copyLarge(fis, baos);
-                    fileBytes = baos.toByteArray();
-                    _fileCache.put(canonicalPath, fileBytes);
-                } finally {
-                    IOUtils.closeQuietly(fis);
-                }
+            if (isBanned(requestInformation.remoteIp)) {
+                responseSender.writeError(401);
+                _log.info("Denying entry to user from banned IP " + requestInformation.remoteIp);
+            }
+            else {
+                _uriRequestHandler.handleRequest(uri, httpRequest, _objects, responseSender, requestInformation.remoteIp);
+            }
+        } catch (HttpProcessingException exp) {
+            int code = exp.getStatus();
+            //401, 403, 404, and other 400-series errors should just do minimal logging,
+            if(code % 400 < 100 && code != 400) {
+                _log.debug("HTTP " + code + " response for " + requestInformation.remoteIp + ": " + requestInformation.uri);
+            }
+            // but 400 itself should error out
+            else if(code == 400 || code % 500 < 100) {
+                _log.error("HTTP code " + code + " response for " + requestInformation.remoteIp + ": " + requestInformation.uri, exp);
             }
 
-            writeHttpByteResponse(request, fileBytes, getHeadersForFile(headers, file), e);
-        } catch (IOException exp) {
-            writeHttpErrorResponse(request, 500, null, e);
+            if(exp.getMessage() != null) {
+                responseSender.writeError(exp.getStatus(), Collections.singletonMap("message", exp.getMessage()));
+            }
+            else {
+                responseSender.writeError(exp.getStatus());
+            }
+        } catch (Exception exp) {
+            _log.error("Error response for " + uri, exp);
+            responseSender.writeError(500);
         }
     }
+
+    private void sendResponse(ChannelHandlerContext ctx, HttpRequest request, FullHttpResponse response) {
+        boolean keepAlive = HttpUtil.isKeepAlive(request);
+
+        if (keepAlive) {
+            // Add 'Content-Length' header only for a keep-alive connection.
+            response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+            // Add keep alive header as per:
+            // - http://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01.html#Connection
+            response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+        }
+
+        ctx.write(response);
+        ctx.flush();
+
+        if (!keepAlive) {
+            // If keep-alive is off, close the connection once the content is fully written.
+            ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        }
+    }
+
+    private boolean isBanned(String ipAddress) {
+        if (_ipBanDAO.getIpBans().contains(ipAddress))
+            return true;
+        for (String bannedRange : _ipBanDAO.getIpPrefixBans()) {
+            if (ipAddress.startsWith(bannedRange))
+                return true;
+        }
+        return false;
+    }
+
 
     private Map<String, String> getHeadersForFile(Map<String, String> headers, File file) {
-        Map<String, String> fileHeaders = new HashMap<String, String>(headers);
+        Map<String, String> fileHeaders = new HashMap<>(headers);
 
         boolean disableCaching = false;
         boolean cache = false;
@@ -235,146 +198,113 @@ public class SwccgoHttpRequestHandler extends SimpleChannelUpstreamHandler {
             fileHeaders.put(EXPIRES, dateFormat.format(new Date(sixMonthsFromNow)));
         }
 
-        fileHeaders.put(CONTENT_TYPE, contentType);
+        fileHeaders.put(CONTENT_TYPE.toString(), contentType);
         return fileHeaders;
     }
 
-    private void writeHttpErrorResponse(HttpRequest request, int status, Map<String, String> headers, MessageEvent e) {
-        boolean keepAlive = isKeepAlive(request);
-
-        HttpResponse response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(status));
-
-        if (headers != null) {
-            for (Map.Entry<String, String> header : headers.entrySet())
-                response.setHeader(header.getKey(), header.getValue());
+    private HttpHeaders convertToHeaders(Map<? extends CharSequence, String> headersMap) {
+        HttpHeaders headers = new DefaultHttpHeaders();
+        if (headersMap != null) {
+            for (Map.Entry<? extends CharSequence, String> headerEntry : headersMap.entrySet()) {
+                headers.set(headerEntry.getKey(), headerEntry.getValue());
+            }
         }
-
-        if (keepAlive) {
-            // Add 'Content-Length' header only for a keep-alive connection.
-            response.setHeader(CONTENT_LENGTH, response.getContent().readableBytes());
-        }
-
-        ChannelFuture future = e.getChannel().write(response);
-        if (!keepAlive) {
-            future.addListener(ChannelFutureListener.CLOSE);
-        }
+        return headers;
     }
 
-    private void writeHttpByteResponse(HttpRequest request, byte[] bytes, Map<String, String> headers, MessageEvent e) {
-        // Decide whether to close the connection or not.
-        boolean keepAlive = isKeepAlive(request);
-
-        try {
-            // Build the response object.
-            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
-
-            if (headers != null) {
-                for (Map.Entry<String, String> header : headers.entrySet())
-                    response.setHeader(header.getKey(), header.getValue());
-            }
-
-            response.setContent(ChannelBuffers.copiedBuffer(bytes));
-
-            int length = bytes.length;
-
-            if (keepAlive) {
-                // Add 'Content-Length' header only for a keep-alive connection.
-                response.setHeader(CONTENT_LENGTH, length);
-            }
-
-            // Write the response.
-            ChannelFuture future = e.getChannel().write(response);
-            if (!keepAlive) {
-                future.addListener(ChannelFutureListener.CLOSE);
-            }
-        } catch (Exception exp) {
-            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(500));
-
-            if (keepAlive) {
-                // Add 'Content-Length' header only for a keep-alive connection.
-                response.setHeader(CONTENT_LENGTH, response.getContent().readableBytes());
-            }
-
-            // Write the response.
-            ChannelFuture future = e.getChannel().write(response);
-            if (!keepAlive) {
-                future.addListener(ChannelFutureListener.CLOSE);
-            }
-        }
+    private static void send100Continue(ChannelHandlerContext ctx) {
+        FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, CONTINUE);
+        ctx.write(response);
+        ctx.flush();
     }
 
-    private void writeHttpXmlResponse(HttpRequest request, Document document, Map<String, String> headers, MessageEvent e) {
-        // Decide whether to close the connection or not.
-        boolean keepAlive = isKeepAlive(request);
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        if (!(cause instanceof IOException) && !(cause instanceof IllegalArgumentException))
+            _log.error("Error while processing request", cause);
+        ctx.close();
+    }
 
-        try {
+    private class ResponseSender implements ResponseWriter {
+        private final ChannelHandlerContext ctx;
+        private final HttpRequest request;
+
+        public ResponseSender(ChannelHandlerContext ctx, HttpRequest request) {
+            this.ctx = ctx;
+            this.request = request;
+        }
+
+        @Override
+        public void writeError(int status) {
+            byte[] content = new byte[0];
             // Build the response object.
-            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
+            FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(status), Unpooled.wrappedBuffer(content), convertToHeaders(null), EmptyHttpHeaders.INSTANCE);
+            sendResponse(ctx, request, response);
+        }
 
-            if (headers != null) {
-                for (Map.Entry<String, String> header : headers.entrySet())
-                    response.setHeader(header.getKey(), header.getValue());
-            }
+        @Override
+        public void writeError(int status, Map<String, String> headers) {
+            byte[] content = new byte[0];
+            // Build the response object.
+            FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(status), Unpooled.wrappedBuffer(content), convertToHeaders(headers), EmptyHttpHeaders.INSTANCE);
+            sendResponse(ctx, request, response);
+        }
 
-            int length = 0;
-            String responseString;
-            if (document != null) {
-                DOMSource domSource = new DOMSource(document);
-                StringWriter writer = new StringWriter();
-                StreamResult result = new StreamResult(writer);
-                TransformerFactory tf = TransformerFactory.newInstance();
-                Transformer transformer = tf.newTransformer();
-                transformer.transform(domSource, result);
+        @Override
+        public void writeXmlResponse(Document document) {
+            writeXmlResponse(document, null);
+        }
 
-                responseString = writer.toString();
-            }
-            else {
-                responseString = "<result>OK</result>";
-            }
+        @Override
+        public void writeXmlResponse(Document document, Map<? extends CharSequence, String> headers) {
+            try {
+                String contentType;
+                String response1;
+                if (document != null) {
+                    DOMSource domSource = new DOMSource(document);
+                    StringWriter writer = new StringWriter();
+                    StreamResult result = new StreamResult(writer);
+                    TransformerFactory tf = TransformerFactory.newInstance();
+                    Transformer transformer = tf.newTransformer();
+                    transformer.transform(domSource, result);
 
-            length = responseString.length();
-            response.setContent(ChannelBuffers.copiedBuffer(responseString, CharsetUtil.UTF_8));
-            response.setHeader(CONTENT_TYPE, "application/xml; charset=UTF-8");
+                    response1 = writer.toString();
+                    contentType = "application/xml; charset=UTF-8";
+                } else {
+                    response1 = "<result>OK</result>";
+                    contentType = "application/xml; charset=UTF-8";
+                }
+                HttpHeaders headers1 = convertToHeaders(headers);
+                headers1.set(CONTENT_TYPE, contentType);
 
-            if (keepAlive) {
-                // Add 'Content-Length' header only for a keep-alive connection.
-                response.setHeader(CONTENT_LENGTH, length);
-            }
-
-            // Write the response.
-            ChannelFuture future = e.getChannel().write(response);
-            if (!keepAlive) {
-                future.addListener(ChannelFutureListener.CLOSE);
-            }
-        } catch (Exception exp) {
-            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(500));
-
-            if (keepAlive) {
-                // Add 'Content-Length' header only for a keep-alive connection.
-                response.setHeader(CONTENT_LENGTH, response.getContent().readableBytes());
-            }
-
-            // Write the response.
-            ChannelFuture future = e.getChannel().write(response);
-            if (!keepAlive) {
-                future.addListener(ChannelFutureListener.CLOSE);
+                // Build the response object.
+                FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(response1.getBytes(CharsetUtil.UTF_8)), headers1, EmptyHttpHeaders.INSTANCE);
+                sendResponse(ctx, request, response);
+            } catch (Exception exp) {
+                byte[] content = new byte[0];
+                // Build the response object.
+                _log.error("Error response for " + request.uri(), exp);
+                FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR, Unpooled.wrappedBuffer(content), null, EmptyHttpHeaders.INSTANCE);
+                sendResponse(ctx, request, response);
             }
         }
 
-    }
+        @Override
+        public void writeHtmlResponse(String html) {
+            HttpHeaders headers = new DefaultHttpHeaders();
+            headers.set(CONTENT_TYPE, "text/html; charset=UTF-8");
 
-    private void writeHttpJsonResponse(HttpRequest request, String json, Map<String, String> headers, MessageEvent e) {
-        // Decide whether to close the connection or not.
-        boolean keepAlive = isKeepAlive(request);
-
-        try {
+            if (html == null)
+                html = "";
             // Build the response object.
-            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
+            FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(html.getBytes(CharsetUtil.UTF_8)), headers, EmptyHttpHeaders.INSTANCE);
+            sendResponse(ctx, request, response);
+        }
 
-            if (headers != null) {
-                for (Map.Entry<String, String> header : headers.entrySet())
-                    response.setHeader(header.getKey(), header.getValue());
-            }
+        @Override
+        public void writeJsonResponse(String json) {
+            HttpHeaders headers = new DefaultHttpHeaders();
+            headers.set(CONTENT_TYPE, "application/json; charset=UTF-8");
 
             if (json == null)
                 json = "{}";
@@ -384,97 +314,54 @@ public class SwccgoHttpRequestHandler extends SimpleChannelUpstreamHandler {
                 obj.put("response", json);
                 json = obj.toString();
             }
-
-            int length = json.length();
-            response.setContent(ChannelBuffers.copiedBuffer(json, CharsetUtil.UTF_8));
-            response.setHeader(CONTENT_TYPE, "application/json; charset=UTF-8");
-
-            if (keepAlive) {
-                // Add 'Content-Length' header only for a keep-alive connection.
-                response.setHeader(CONTENT_LENGTH, length);
-            }
-
-            // Write the response.
-            ChannelFuture future = e.getChannel().write(response);
-            if (!keepAlive) {
-                future.addListener(ChannelFutureListener.CLOSE);
-            }
-        } catch (Exception exp) {
-            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(500));
-
-            if (keepAlive) {
-                // Add 'Content-Length' header only for a keep-alive connection.
-                response.setHeader(CONTENT_LENGTH, response.getContent().readableBytes());
-            }
-
-            // Write the response.
-            ChannelFuture future = e.getChannel().write(response);
-            if (!keepAlive) {
-                future.addListener(ChannelFutureListener.CLOSE);
-            }
-        }
-
-    }
-
-    private void writeHttpHtmlResponse(HttpRequest request, String html, MessageEvent e) {
-        // Decide whether to close the connection or not.
-        boolean keepAlive = isKeepAlive(request);
-
-        try {
             // Build the response object.
-            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, OK);
+            FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(json.getBytes(CharsetUtil.UTF_8)), headers, EmptyHttpHeaders.INSTANCE);
+            sendResponse(ctx, request, response);
+        }
 
-            response.setContent(ChannelBuffers.copiedBuffer(html, CharsetUtil.UTF_8));
-            response.setHeader(CONTENT_TYPE, "text/html; charset=UTF-8");
+        @Override
+        public void writeByteResponse(byte[] bytes, Map<? extends CharSequence, String> headers) {
+            HttpHeaders headers1 = convertToHeaders(headers);
 
-            int length = html.length();
+            // Build the response object.
+            FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(bytes), headers1, EmptyHttpHeaders.INSTANCE);
+            sendResponse(ctx, request, response);
+        }
 
-            if (keepAlive) {
-                // Add 'Content-Length' header only for a keep-alive connection.
-                response.setHeader(CONTENT_LENGTH, length);
-            }
+        @Override
+        public void writeFile(File file, Map<String, String> headers) {
+            try {
+                String canonicalPath = file.getCanonicalPath();
+                byte[] fileBytes = _fileCache.get(canonicalPath);
+                if (fileBytes == null) {
+                    if (!file.exists() || !file.isFile()) {
+                        byte[] content = new byte[0];
+                        // Build the response object.
+                        FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(404), Unpooled.wrappedBuffer(content), convertToHeaders(null), EmptyHttpHeaders.INSTANCE);
+                        sendResponse(ctx, request, response);
+                        return;
+                    }
 
-            // Write the response.
-            ChannelFuture future = e.getChannel().write(response);
-            if (!keepAlive) {
-                future.addListener(ChannelFutureListener.CLOSE);
-            }
-        } catch (Exception exp) {
-            HttpResponse response = new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(500));
+                    try (FileInputStream fis = new FileInputStream(file)) {
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        IOUtils.copy(fis, baos);
+                        fileBytes = baos.toByteArray();
+                        _fileCache.put(canonicalPath, fileBytes);
+                    }
+                }
 
-            if (keepAlive) {
-                // Add 'Content-Length' header only for a keep-alive connection.
-                response.setHeader(CONTENT_LENGTH, response.getContent().readableBytes());
-            }
+                HttpHeaders headers1 = convertToHeaders(getHeadersForFile(headers, file));
 
-            // Write the response.
-            ChannelFuture future = e.getChannel().write(response);
-            if (!keepAlive) {
-                future.addListener(ChannelFutureListener.CLOSE);
+                // Build the response object.
+                FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(fileBytes), headers1, EmptyHttpHeaders.INSTANCE);
+                sendResponse(ctx, request, response);
+            } catch (IOException exp) {
+                byte[] content = new byte[0];
+                // Build the response object.
+                _log.error("Error response for " + request.uri(), exp);
+                FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(500), Unpooled.wrappedBuffer(content), convertToHeaders(null), EmptyHttpHeaders.INSTANCE);
+                sendResponse(ctx, request, response);
             }
         }
-    }
-
-    private void send400Error(HttpRequest request, MessageEvent e) {
-        boolean keepAlive = isKeepAlive(request);
-
-        HttpResponse response = new DefaultHttpResponse(HTTP_1_1, BAD_REQUEST);
-        ChannelFuture future = e.getChannel().write(response);
-        if (!keepAlive) {
-            future.addListener(ChannelFutureListener.CLOSE);
-        }
-    }
-
-    private void send100Continue(MessageEvent e) {
-        HttpResponse response = new DefaultHttpResponse(HTTP_1_1, CONTINUE);
-        e.getChannel().write(response);
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
-            throws Exception {
-        if (!(e.getCause() instanceof IOException))
-            _log.error("Error while processing request", e.getCause());
-        e.getChannel().close();
     }
 }

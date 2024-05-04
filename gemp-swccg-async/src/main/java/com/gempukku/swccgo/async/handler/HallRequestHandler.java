@@ -25,11 +25,10 @@ import com.gempukku.swccgo.league.LeagueSeriesData;
 import com.gempukku.swccgo.league.LeagueService;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.vo.SwccgDeck;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.QueryStringDecoder;
-import org.jboss.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -51,48 +50,48 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
     private LongPollingSystem _longPollingSystem;
     private SwccgoServer _swccgoServer;
 
-    public HallRequestHandler(Map<Type, Object> context) {
+    public HallRequestHandler(Map<Type, Object> context, LongPollingSystem longPollingSystem) {
         super(context);
         _collectionManager = extractObject(context, CollectionsManager.class);
         _formatLibrary = extractObject(context, SwccgoFormatLibrary.class);
         _hallServer = extractObject(context, HallServer.class);
         _leagueService = extractObject(context, LeagueService.class);
         _library = extractObject(context, SwccgCardBlueprintLibrary.class);
-        _longPollingSystem = extractObject(context, LongPollingSystem.class);
         _swccgoServer = extractObject(context, SwccgoServer.class);
+        _longPollingSystem = longPollingSystem;
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-        if ("".equals(uri) && request.getMethod() == HttpMethod.GET) {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
+        if ("".equals(uri) && request.method() == HttpMethod.GET) {
             getHall(request, responseWriter);
-        } else if ("".equals(uri) && request.getMethod() == HttpMethod.POST) {
+        } else if ("".equals(uri) && request.method() == HttpMethod.POST) {
             createTable(request, responseWriter);
-        } else if (uri.equals("/update") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/update") && request.method() == HttpMethod.POST) {
             updateHall(request, responseWriter);
-        } else if (uri.startsWith("/draft/") && uri.endsWith("/update") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.startsWith("/draft/") && uri.endsWith("/update") && request.method() == HttpMethod.POST) {
             updateDraft(request, uri.substring(7, uri.length() - 7), responseWriter);
-        } else if (uri.startsWith("/draft/") && uri.endsWith("/pick") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.startsWith("/draft/") && uri.endsWith("/pick") && request.method() == HttpMethod.POST) {
             draftPick(request, uri.substring(7, uri.length() - 5), responseWriter);
-        } else if (uri.startsWith("/draft/") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.startsWith("/draft/") && request.method() == HttpMethod.GET) {
             getDraft(request, uri.substring(7), responseWriter);
-        } else if (uri.equals("/formats/html") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.equals("/formats/html") && request.method() == HttpMethod.GET) {
             getFormats(request, responseWriter);
-        } else if (uri.startsWith("/format/") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.startsWith("/format/") && request.method() == HttpMethod.GET) {
             getFormat(request, uri.substring(8), responseWriter);
-        } else if (uri.startsWith("/queue/") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.startsWith("/queue/") && request.method() == HttpMethod.POST) {
             if (uri.endsWith("/leave")) {
                 leaveQueue(request, uri.substring(7, uri.length() - 6), responseWriter);
             } else {
                 joinQueue(request, uri.substring(7), responseWriter);
             }
-        } else if (uri.startsWith("/tournament/") && uri.endsWith("/deck") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.startsWith("/tournament/") && uri.endsWith("/deck") && request.method() == HttpMethod.POST) {
             submitTournamentDeck(request, uri.substring(12, uri.length() - 5), responseWriter);
-        } else if (uri.startsWith("/tournament/") && uri.endsWith("/leave") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.startsWith("/tournament/") && uri.endsWith("/leave") && request.method() == HttpMethod.POST) {
             dropFromTournament(request, uri.substring(12, uri.length() - 6), responseWriter);
-        } else if (uri.startsWith("/") && uri.endsWith("/leave") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.startsWith("/") && uri.endsWith("/leave") && request.method() == HttpMethod.POST) {
             leaveTable(request, uri.substring(1, uri.length() - 6), responseWriter);
-        } else if (uri.startsWith("/") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.startsWith("/") && request.method() == HttpMethod.POST) {
             joinTable(request, uri.substring(1), responseWriter);
         } else {
             responseWriter.writeError(404);

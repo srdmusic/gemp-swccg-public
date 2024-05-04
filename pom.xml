@@ -21,8 +21,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit-bom.version>5.7.2</junit-bom.version>
-        <mockito-core.version>3.10.0</mockito-core.version>
+        <mockito-core.version>4.7.0</mockito-core.version>
         <surefire.version>2.22.2</surefire.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>21</java.version>
     </properties>
 
     <build>
@@ -30,14 +32,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.0.2</version>
+                <version>3.8.1</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                     <encoding>UTF-8</encoding>
-                    <fork>true</fork>
-                    <meminitial>512m</meminitial>
-                    <maxmem>1048m</maxmem>
                 </configuration>
             </plugin>
         </plugins>
@@ -48,12 +47,6 @@
             <name>Java.net Repository for Maven</name>
             <url>http://download.java.net/maven/2/</url>
             <layout>default</layout>
-        </repository>
-        <repository>
-            <id>maven-repository.java.net</id>
-            <name>Java.net Maven 1 Repository (legacy)</name>
-            <url>http://download.java.net/maven/1</url>
-            <layout>legacy</layout>
         </repository>
     </repositories>
 </project>

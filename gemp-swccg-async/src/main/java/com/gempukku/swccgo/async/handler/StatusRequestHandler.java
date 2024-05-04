@@ -4,9 +4,8 @@ import com.gempukku.swccgo.async.ResponseWriter;
 import com.gempukku.swccgo.chat.ChatServer;
 import com.gempukku.swccgo.game.GameHistoryService;
 import com.gempukku.swccgo.hall.HallServer;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
 
 import java.lang.reflect.Type;
 import java.util.Map;
@@ -32,8 +31,8 @@ public class StatusRequestHandler extends SwccgoServerRequestHandler implements 
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-        if ("".equals(uri) && request.getMethod() == HttpMethod.GET) {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
+        if ("".equals(uri) && request.method() == HttpMethod.GET) {
             StringBuilder sb = new StringBuilder();
 
             int day = 1000 * 60 * 60 * 24;

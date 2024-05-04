@@ -1,11 +1,8 @@
 package com.gempukku.swccgo.db;
 
 import com.gempukku.swccgo.common.ApplicationConfiguration;
-import org.apache.commons.dbcp.ConnectionFactory;
-import org.apache.commons.dbcp.DriverManagerConnectionFactory;
-import org.apache.commons.dbcp.PoolableConnectionFactory;
-import org.apache.commons.dbcp.PoolingDataSource;
-import org.apache.commons.pool.impl.GenericObjectPool;
+import org.apache.commons.dbcp2.*;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 
 import javax.sql.DataSource;
 
@@ -49,9 +46,19 @@ public class DbAccess {
         // using the connect string passed in the command line
         // arguments.
         //
-        ConnectionFactory connectionFactory =
-                new DriverManagerConnectionFactory(connectURI, ApplicationConfiguration.getProperty("db.connection.username"),
-                        ApplicationConfiguration.getProperty("db.connection.password"));
+        var connectionFactory = new DriverManagerConnectionFactory(connectURI,
+                ApplicationConfiguration.getProperty("db.connection.username"),
+                ApplicationConfiguration.getProperty("db.connection.password"));
+
+        //
+        // Next we'll create the PoolableConnectionFactory, which wraps
+        // the "real" Connections created by the ConnectionFactory with
+        // the classes that implement the pooling functionality.
+        //
+        var poolableConnectionFactory = new PoolableConnectionFactory(connectionFactory, null);
+        poolableConnectionFactory.setDefaultAutoCommit(true);
+        poolableConnectionFactory.setDefaultReadOnly(false);
+        poolableConnectionFactory.setValidationQuery(ApplicationConfiguration.getProperty("db.connection.validateQuery"));
 
         //
         // Now we'll need a ObjectPool that serves as the
@@ -60,25 +67,17 @@ public class DbAccess {
         // We'll use a GenericObjectPool instance, although
         // any ObjectPool implementation will suffice.
         //
-        GenericObjectPool connectionPool =
-                new GenericObjectPool();
+        var connectionPool = new GenericObjectPool<>(poolableConnectionFactory);
         connectionPool.setTestOnBorrow(true);
 
-        //
-        // Next we'll create the PoolableConnectionFactory, which wraps
-        // the "real" Connections created by the ConnectionFactory with
-        // the classes that implement the pooling functionality.
-        //
-        PoolableConnectionFactory poolableConnectionFactory =
-                new PoolableConnectionFactory(connectionFactory, connectionPool, null, ApplicationConfiguration.getProperty("db.connection.validateQuery"), false, true);
-
-        connectionPool.setFactory(poolableConnectionFactory);
+        // Set the factory's pool property to the owning pool
+        poolableConnectionFactory.setPool(connectionPool);
 
         //
         // Finally, we create the PoolingDriver itself,
         // passing in the object pool we created.
         //
 
-        return new PoolingDataSource(connectionPool);
+        return new PoolingDataSource<>(connectionPool);
     }
 }

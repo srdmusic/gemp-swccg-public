@@ -11,7 +11,7 @@ import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.packagedProduct.ProductName;
 import com.gempukku.swccgo.packagedProduct.ProductPrice;
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 
 import java.util.*;
 import java.util.concurrent.locks.Lock;
