@@ -1,5 +1,6 @@
 name: test-on-push
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -9,10 +10,7 @@ on:
     types:
       - opened
       - edited
-      - synchronize
-    
-  - workflow_dispatch
-    
+      - synchronize    
 
 jobs:
   test:
