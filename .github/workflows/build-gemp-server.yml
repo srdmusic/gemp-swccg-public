@@ -26,6 +26,14 @@ jobs:
           sudo update-java-alternatives --set /usr/lib/jvm/temurin-21-jdk-amd64
           sudo apt-get --only-upgrade install maven
           java -version ; true
+          
+          
+      - name: Verify Java and Maven versions
+        run:  |
+          which java ; true
+          java -version ; true
+          which maven
+          mvn -v
 
       - name: Maven Build
         run: |
