@@ -33,7 +33,7 @@ jobs:
           # .git and .github are specific to their repositories.
           rsync --exclude=set501 --exclude=.git --exclude=.github -av gemp-swccg-private/ gemp-swccg-public/
           cd gemp-swccg-public/
-          git config --local user.email "devon+github-actions[bot]@hubner.org"
+          git config --local user.email "rules@starwarsccg.org"
           git config --local user.name "github-actions[bot]"
           git status
           git add -A .
