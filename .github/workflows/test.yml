@@ -7,9 +7,11 @@ on:
 
   pull_request:
     types:
-    - opened
-    - edited
-    - synchronize
+      - opened
+      - edited
+      - synchronize
+    
+  workflow_dispatch
 
 jobs:
   test:
@@ -17,41 +19,24 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Install Java via OpenJDK
-        run:  |
-          which java ; true
-          java -version ; true
-          sudo apt-get update
-          sudo apt-get install -y openjdk-21-jdk-headless
-          sudo apt-get --only-upgrade install maven
-          java -version ; true
-
-      - name: Verify Java and Maven versions
-        run:  |
-          which java ; true
-          java -version ; true
-          which maven
-          mvn -v
-          
-      - name: Maven build
-        working-directory: ./src
-        run: mvn clean install
-
-        #I'm pretty sure that this is redundant; 
-        # mvn install already runs mvn test
-      - name: Maven re-test
-        working-directory: ./src
-        run: mvn test
-
       - name: Build the stack
         working-directory: ./src/docker
         run: |
-          docker-compose build
-          docker-compose up -d
+          docker compose build
+          docker compose up -d
+          
+      - name: Building Gemp within the container using Maven
+        run: |
+          docker exec gemp_swccg_app_1 mvn clean install
+          
+      - name: Restarting container post-rebuild
+        working-directory: ./src/docker
+        run: |
+          docker compose restart
 
       - name: Client Test
         run: |
-          docker exec gemp curl -s --retry 10 --retry-connrefused http://127.0.0.1:8080/gemp-swccg/index.html
+          curl -s --retry 10 --retry-connrefused http://127.0.0.1:17001/gemp-swccg/index.html
           echo "Python3: $(which python3)"
           echo "pip3...: $(which pip3)"
           pip3 install -r src/requirements.txt
