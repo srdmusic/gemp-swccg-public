@@ -46,7 +46,7 @@ jobs:
 
       - name: Client Test
         run: |
-          docker exec gemp_swccg_app_1 curl -s --retry 10 --retry-connrefused http://127.0.0.1:8080/gemp-swccg/index.html
+          docker exec gemp_swccg_app_1 curl -s --retry 10 --retry-connrefused http://127.0.0.1:17001/gemp-swccg/index.html
           echo "Python3: $(which python3)"
           echo "pip3...: $(which pip3)"
           pip3 install -r src/requirements.txt
