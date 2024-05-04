@@ -24,6 +24,7 @@ jobs:
           java -version ; true
           sudo apt-get update
           sudo update-java-alternatives --set /usr/lib/jvm/temurin-21-jdk-amd64
+          export JAVA_HOME=/usr/lib/jvm/temurin-21-jdk-amd64
           sudo apt-get --only-upgrade install maven
           java -version ; true
 
