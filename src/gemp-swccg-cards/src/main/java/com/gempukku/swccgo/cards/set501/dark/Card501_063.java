@@ -180,8 +180,8 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
                     && GameConditions.canSpot(game, self, trooperFilter)) {
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId3, CardSubtype.LOST);
 
-                action.setText("Add a battle destiny and choke a trooper");
-                action.setActionMsg("Add one battle destiny and choke a Rebel trooper");
+                action.setText("Choke a trooper");
+                action.setActionMsg("Choke a Rebel trooper");
                 action.allowResponses(
                     new RespondablePlayCardEffect(action) {
                         @Override
