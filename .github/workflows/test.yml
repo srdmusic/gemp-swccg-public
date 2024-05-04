@@ -22,7 +22,7 @@ jobs:
         working-directory: ./src/docker
         run: |
           docker build -f ./gemp_app.Dockerfile --tag 'gemp_build' .
-          docker run --detach 'gemp_build'
+          docker run -v ${GITHUB_WORKSPACE}:/opt/gemp-swccg --detach --name 'gemp_build' -it 'gemp_build'
           docker exec gemp_build mvn clean install
           docker stop gemp_build
           
