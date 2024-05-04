@@ -68,15 +68,17 @@ CREATE  TABLE IF NOT EXISTS `gemp-swccg`.`game_history` (
   `format_name` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT NULL ,
   `winner_deck_name` VARCHAR(255) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT NULL ,
   `loser_deck_name` VARCHAR(255) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT NULL ,
+  `tournament` VARCHAR(255) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT NULL ,
+  `league_type` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
+  `sealed_league_type` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
   `winner_deck_archetype` VARCHAR(255) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT NULL ,
   `loser_deck_archetype` VARCHAR(255) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT NULL ,
   `winner_side` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT NULL ,
-  `tournament` VARCHAR(255) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT NULL ,
-  `league_type` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
-  `sealed_league_type` VARCHAR(255) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
   `dark_deck_string` TEXT CHARACTER SET 'utf8' COLLATE 'utf8_bin' ,
   `light_deck_string` TEXT CHARACTER SET 'utf8' COLLATE 'utf8_bin' ,
-  PRIMARY KEY (`id`) )
+  PRIMARY KEY (`id`) ,
+  INDEX `game_history_winner` (`winner`) ,
+  INDEX `game_history_loser` (`loser`) )
 ENGINE = InnoDB
 AUTO_INCREMENT = 71300
 DEFAULT CHARACTER SET = utf8
@@ -123,10 +125,10 @@ CREATE  TABLE IF NOT EXISTS `gemp-swccg`.`league` (
   `allowSpectators` BIT DEFAULT 1,
   `allowTimeExtensions` BIT DEFAULT 0,
   `showPlayerNames` BIT DEFAULT 0,
-  `invitationOnly` BIT DEFAULT 0,
-  `registrationInfo` TEXT,
   `decisionTimeoutSeconds` INT(11) DEFAULT 300 ,
   `timePerPlayerMinutes` INT(11) DEFAULT 50 ,
+  `invitationOnly` BIT DEFAULT 0,
+  `registrationInfo` TEXT,
   PRIMARY KEY (`id`) )
 ENGINE = InnoDB
 AUTO_INCREMENT = 32
@@ -160,7 +162,8 @@ CREATE  TABLE IF NOT EXISTS `gemp-swccg`.`league_participation` (
   `league_type` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
   `player_name` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
   `join_ip` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT NULL ,
-  PRIMARY KEY (`id`) )
+  PRIMARY KEY (`id`) ,
+  INDEX `league_participation_league_type` (`league_type`) )
 ENGINE = InnoDB
 AUTO_INCREMENT = 4417
 DEFAULT CHARACTER SET = utf8
@@ -195,9 +198,9 @@ CREATE  TABLE IF NOT EXISTS `gemp-swccg`.`player` (
   `password` VARCHAR(64) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
   `type` VARCHAR(15) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL DEFAULT 'u' ,
   `last_login_reward` INT(11) NULL DEFAULT NULL ,
+  `banned_until` DECIMAL(20,0) NULL DEFAULT NULL ,
   `last_ip` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT NULL ,
   `create_ip` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NULL DEFAULT NULL ,
-  `banned_until` DECIMAL(20,0) NULL DEFAULT NULL ,
   `account_creation_date` DATETIME DEFAULT NOW() ,
   PRIMARY KEY (`id`) ,
   UNIQUE INDEX `name_UNIQUE` (`name` ASC) )
@@ -276,7 +279,9 @@ CREATE  TABLE IF NOT EXISTS `gemp-swccg`.`transfer` (
   `collection` TEXT CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
   `transfer_date` DECIMAL(20,0) NOT NULL ,
   `direction` VARCHAR(45) CHARACTER SET 'utf8' COLLATE 'utf8_bin' NOT NULL ,
-  PRIMARY KEY (`id`) )
+  PRIMARY KEY (`id`) ,
+  INDEX `ix_player_notify` (`player`,`notify`) ,
+  FULLTEXT `ft_player` (`player`) )
 ENGINE = InnoDB
 AUTO_INCREMENT = 4
 DEFAULT CHARACTER SET = utf8
@@ -291,7 +296,7 @@ CREATE TABLE IF NOT EXISTS `gemp-swccg`.`pile_count_by_turn` (
   `activeGame` BOOLEAN,
   `sequence` INT(11),
   `turnNumber` INT(11),
-  `side` NVARCHAR(45),
+  `side` VARCHAR(45),
   `darkHand` INT(11),
   `darkReserveDeck` INT(11),
   `darkForcePile` INT(11),
