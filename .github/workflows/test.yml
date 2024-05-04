@@ -17,36 +17,24 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Install Java via OpenJDK
-        run:  |
-          which java ; true
-          java -version ; true
-          sudo apt-get update
-          sudo update-java-alternatives --set /usr/lib/jvm/temurin-21-jdk-amd64
-          sudo apt-get --only-upgrade install maven
-
-          java -version ; true
-
-          
-      - name: Maven build
-        working-directory: ./src
-        run: JAVA_HOME=/usr/lib/jvm/temurin-21-jdk-amd64 mvn clean install
-
-        #I'm pretty sure that this is redundant; 
-        # mvn install already runs mvn test
-      - name: Maven re-test
-        working-directory: ./src
-        run: JAVA_HOME=/usr/lib/jvm/temurin-21-jdk-amd64 mvn test
-
       - name: Build the stack
         working-directory: ./src/docker
         run: |
           docker compose build
           docker compose up -d
+          
+      - name: Building Gemp within the container using Maven
+        run: |
+          docker exec gemp_swccg_app_1 mvn clean install
+          
+      - name: Restarting container post-rebuild
+        working-directory: ./src/docker
+        run: |
+          docker compose restart
 
       - name: Client Test
         run: |
-          docker exec gemp_swccg_app_1 curl -s --retry 10 --retry-connrefused http://127.0.0.1:17001/gemp-swccg/index.html
+          curl -s --retry 10 --retry-connrefused http://127.0.0.1:17001/gemp-swccg/index.html
           echo "Python3: $(which python3)"
           echo "pip3...: $(which pip3)"
           pip3 install -r src/requirements.txt
