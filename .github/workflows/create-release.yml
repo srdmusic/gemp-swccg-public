@@ -35,6 +35,13 @@ jobs:
           sudo apt-get install -y openjdk-21-jdk-headless
           sudo apt-get --only-upgrade install maven
           java -version ; true
+          
+      - name: Verify Java and Maven versions
+        run:  |
+          which java ; true
+          java -version ; true
+          which maven
+          mvn -v
 
       - name: Maven Build
         working-directory: ./src
