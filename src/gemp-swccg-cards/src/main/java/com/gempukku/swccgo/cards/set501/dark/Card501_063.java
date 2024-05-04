@@ -4,13 +4,33 @@ import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
+import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.timing.Action;
+
+import java.util.LinkedList;
+import java.util.List;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -36,6 +56,8 @@ import java.util.List;
 public class Card501_063 extends AbstractUsedOrLostInterrupt {
     public Card501_063() {
         super(Side.DARK, 3, Title.Physical_Choke, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity. V);
+        setLore("Darth Vader often used physical means of 'persuasion' to get information. Captain Antilles of Tantive IV chose to die rather than reveal the location of the stolen Death Star plans.");
+        setGameText("USED: Place Deactivated Hyperdrive or an Admiral's Order in owner's Used Pile. OR [upload] Deactivated Hyperdrive. LOST: If Vader in battle against two characters of ability < 4, add one battle destiny (and if one is a Rebel trooper, it is 'choked' (lost)).");
         setLore("Darth Vader often used physical means of 'persuasion' to get information. Captain Antilles of Tantive IV chose to die rather than reveal the location of the stolen Death Star plans.");
         setGameText("USED: Place Deactivated Hyperdrive or an Admiral's Order in owner's Used Pile. OR [upload] Deactivated Hyperdrive. LOST: If Vader in battle against two characters of ability < 4, add one battle destiny (and if one is a Rebel trooper, it is 'choked' (lost)).");
         setVirtualSuffix(true);
@@ -158,8 +180,8 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
                     && GameConditions.canSpot(game, self, trooperFilter)) {
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId3, CardSubtype.LOST);
 
-                action.setText("Choke a trooper");
-                action.setActionMsg("Choke a Rebel trooper");
+                action.setText("Add a battle destiny and choke a trooper");
+                action.setActionMsg("Add one battle destiny and choke a Rebel trooper");
                 action.allowResponses(
                     new RespondablePlayCardEffect(action) {
                         @Override
