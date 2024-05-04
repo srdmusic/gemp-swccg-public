@@ -7,9 +7,11 @@ on:
 
   pull_request:
     types:
-    - opened
-    - edited
-    - synchronize
+      - opened
+      - edited
+      - synchronize
+    
+  workflow_dispatch
 
 jobs:
   test:
