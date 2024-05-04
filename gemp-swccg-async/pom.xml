@@ -7,7 +7,6 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.gempukku.swccgo</groupId>
     <artifactId>gemp-swccg-async</artifactId>
     <version>1.0-SNAPSHOT</version>
     <dependencies>
@@ -18,8 +17,19 @@
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
-            <artifactId>netty</artifactId>
-            <version>3.6.5.Final</version>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.108.Final</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.23.1</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.9.0</version>
         </dependency>
     </dependencies>
     <build>
@@ -30,7 +40,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.gempukku.swccgo.async.swccgoAsyncServer</mainClass>
+                            <mainClass>com.gempukku.swccgo.async.SwccgoAsyncServer</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -38,12 +48,6 @@
                     </descriptorRefs>
                     <finalName>gemp-swccg-async</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
                     <descriptors>
                         <descriptor>zip-web-descriptor.xml</descriptor>
                     </descriptors>

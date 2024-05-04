@@ -29,7 +29,7 @@ public abstract class AbstractNormalEffect extends AbstractEffect {
      */
     protected AbstractNormalEffect(Side side, float destiny, PlayCardZoneOption playCardZoneOption, String title, Uniqueness uniqueness, ExpansionSet expansionSet, Rarity rarity) {
         super(side, destiny, playCardZoneOption, title, uniqueness, expansionSet, rarity);
-        setCardSubtype(CardSubtype._);
+        setCardSubtype(CardSubtype.NORMAL);
     }
 
     /**

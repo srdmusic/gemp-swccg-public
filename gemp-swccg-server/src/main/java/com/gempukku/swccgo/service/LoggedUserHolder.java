@@ -8,14 +8,14 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class LoggedUserHolder {
-    private long _loggedUserExpireLength = 1000 * 60 * 10; // 10 minutes session length
-    private long _expireCheckInterval = 1000 * 60; // check every minute
+    private final long _loggedUserExpireLength = 1000 * 60 * 10; // 10 minutes session length
+    private final long _expireCheckInterval = 1000 * 60; // check every minute
 
-    private Map<String, String> _sessionIdsToUsers = new HashMap<String, String>();
-    private Multimap<String, String> _usersToSessionIds = HashMultimap.create();
+    private final Map<String, String> _sessionIdsToUsers = new HashMap<String, String>();
+    private final Multimap<String, String> _usersToSessionIds = HashMultimap.create();
 
-    private Map<String, Long> _lastAccess = Collections.synchronizedMap(new HashMap<String, Long>());
-    private ReadWriteLock _readWriteLock = new ReentrantReadWriteLock();
+    private final Map<String, Long> _lastAccess = Collections.synchronizedMap(new HashMap<String, Long>());
+    private final ReadWriteLock _readWriteLock = new ReentrantReadWriteLock();
     private ClearExpiredRunnable _clearExpiredRunnable;
 
     public void start() {
@@ -38,14 +38,12 @@ public class LoggedUserHolder {
         return null;
     }
 
-    public Map<String, String> logUser(String userName) {
+    public String logUser(String userName) {
         _readWriteLock.writeLock().lock();
         try {
-            Map<String, String> cookies = new HashMap<String, String>();
             String userValue = insertValueForUser(userName);
-            cookies.put("loggedUser", userValue);
             _lastAccess.put(userValue, System.currentTimeMillis());
-            return cookies;
+            return userValue;
         } finally {
             _readWriteLock.writeLock().unlock();
         }
@@ -64,7 +62,7 @@ public class LoggedUserHolder {
         }
     }
 
-    private char[] _chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
+    private final char[] _chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".toCharArray();
 
     private String insertValueForUser(String userName) {
         Random rnd = new Random();

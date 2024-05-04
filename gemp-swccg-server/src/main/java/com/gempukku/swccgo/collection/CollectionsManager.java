@@ -6,7 +6,8 @@ import com.gempukku.swccgo.db.PlayerDAO;
 import com.gempukku.swccgo.db.vo.CollectionType;
 import com.gempukku.swccgo.game.*;
 import com.gempukku.swccgo.packagedProduct.PackagedProductStorage;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -15,7 +16,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class CollectionsManager {
-    private static Logger _logger = Logger.getLogger(CollectionsManager.class);
+    private static Logger _logger = LogManager.getLogger(CollectionsManager.class);
     private ReentrantReadWriteLock _readWriteLock = new ReentrantReadWriteLock();
 
     private PlayerDAO _playerDAO;

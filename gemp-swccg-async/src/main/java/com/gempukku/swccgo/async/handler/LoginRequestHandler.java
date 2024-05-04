@@ -3,11 +3,10 @@ package com.gempukku.swccgo.async.handler;
 import com.gempukku.swccgo.async.HttpProcessingException;
 import com.gempukku.swccgo.async.ResponseWriter;
 import com.gempukku.swccgo.game.Player;
-import com.mysql.jdbc.StringUtils;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import com.mysql.cj.util.StringUtils;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 
 import java.lang.reflect.Type;
 import java.util.Date;
@@ -19,8 +18,8 @@ public class LoginRequestHandler extends SwccgoServerRequestHandler implements U
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-        if ("".equals(uri) && request.getMethod() == HttpMethod.POST) {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
+        if ("".equals(uri) && request.method() == HttpMethod.POST) {
             HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
             String login = getFormParameterSafely(postDecoder, "login");
             String password = getFormParameterSafely(postDecoder, "password");
@@ -49,7 +48,7 @@ public class LoginRequestHandler extends SwccgoServerRequestHandler implements U
                     throw new HttpProcessingException(409);
             }
 
-            responseWriter.writeXmlResponse(null, logUserReturningHeaders(e, login));
+            responseWriter.writeXmlResponse(null, logUserReturningHeaders(remoteIp, login));
         }
         else {
             throw new HttpProcessingException(404);

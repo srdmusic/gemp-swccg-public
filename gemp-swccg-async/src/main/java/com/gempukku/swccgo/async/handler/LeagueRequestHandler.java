@@ -11,11 +11,10 @@ import com.gempukku.swccgo.game.formats.SwccgoFormatLibrary;
 import com.gempukku.swccgo.league.LeagueData;
 import com.gempukku.swccgo.league.LeagueSeriesData;
 import com.gempukku.swccgo.league.LeagueService;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.QueryStringDecoder;
-import org.jboss.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -28,8 +27,8 @@ import java.util.List;
 import java.util.Map;
 
 public class LeagueRequestHandler extends SwccgoServerRequestHandler implements UriRequestHandler {
-    private LeagueService _leagueService;
-    private SwccgoFormatLibrary _formatLibrary;
+    private final LeagueService _leagueService;
+    private final SwccgoFormatLibrary _formatLibrary;
 
     public LeagueRequestHandler(Map<Type, Object> context) {
         super(context);
@@ -39,19 +38,19 @@ public class LeagueRequestHandler extends SwccgoServerRequestHandler implements 
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-        if ("".equals(uri) && request.getMethod() == HttpMethod.GET) {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
+        if ("".equals(uri) && request.method() == HttpMethod.GET) {
             getNonExpiredLeagues(request, responseWriter);
-        } else if (uri.startsWith("/") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.startsWith("/") && request.method() == HttpMethod.GET) {
             getLeagueInformation(request, uri.substring(1), responseWriter);
-        } else if (uri.startsWith("/") && request.getMethod() == HttpMethod.POST) {
-            joinLeague(request, uri.substring(1), responseWriter, e);
+        } else if (uri.startsWith("/") && request.method() == HttpMethod.POST) {
+            joinLeague(request, uri.substring(1), responseWriter, remoteIp);
         } else {
             responseWriter.writeError(404);
         }
     }
 
-    private void joinLeague(HttpRequest request, String leagueType, ResponseWriter responseWriter, MessageEvent e) throws Exception {
+    private void joinLeague(HttpRequest request, String leagueType, ResponseWriter responseWriter, String remoteIp) throws Exception {
         HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
         String participantId = getFormParameterSafely(postDecoder, "participantId");
 
@@ -61,7 +60,7 @@ public class LeagueRequestHandler extends SwccgoServerRequestHandler implements 
         if (league == null)
             throw new HttpProcessingException(404);
 
-        if (!_leagueService.playerJoinsLeague(league, resourceOwner, e.getRemoteAddress().toString(), false))
+        if (!_leagueService.playerJoinsLeague(league, resourceOwner, remoteIp, false))
             throw new HttpProcessingException(409);
 
         responseWriter.writeXmlResponse(null);

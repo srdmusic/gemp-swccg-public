@@ -12,12 +12,11 @@ import com.gempukku.swccgo.chat.ChatRoomMediator;
 import com.gempukku.swccgo.chat.ChatServer;
 import com.gempukku.swccgo.game.ChatCommunicationChannel;
 import com.gempukku.swccgo.game.Player;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.QueryStringDecoder;
-import org.jboss.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import org.apache.commons.text.StringEscapeUtils;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -28,20 +27,20 @@ import java.net.URLDecoder;
 import java.util.*;
 
 public class ChatRequestHandler extends SwccgoServerRequestHandler implements UriRequestHandler {
-    private ChatServer _chatServer;
-    private LongPollingSystem _longPollingSystem;
+    private final ChatServer _chatServer;
+    private final LongPollingSystem _longPollingSystem;
 
-    public ChatRequestHandler(Map<Type, Object> context) {
+    public ChatRequestHandler(Map<Type, Object> context, LongPollingSystem longPollingSystem) {
         super(context);
         _chatServer = extractObject(context, ChatServer.class);
-        _longPollingSystem = extractObject(context, LongPollingSystem.class);
+        _longPollingSystem = longPollingSystem;
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-        if (uri.startsWith("/") && request.getMethod() == HttpMethod.GET) {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
+        if (uri.startsWith("/") && request.method() == HttpMethod.GET) {
             getMessages(request, URLDecoder.decode(uri.substring(1)), responseWriter);
-        } else if (uri.startsWith("/") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.startsWith("/") && request.method() == HttpMethod.POST) {
             postMessages(request, URLDecoder.decode(uri.substring(1)), responseWriter);
         } else {
             responseWriter.writeError(404);
@@ -62,7 +61,7 @@ public class ChatRequestHandler extends SwccgoServerRequestHandler implements Ur
 
         try {
             if (message != null && !message.trim().isEmpty()) {
-                chatRoom.sendMessage(resourceOwner.getName(), StringEscapeUtils.escapeHtml(message), resourceOwner.hasType(Player.Type.ADMIN));
+                chatRoom.sendMessage(resourceOwner.getName(), StringEscapeUtils.escapeHtml3(message), resourceOwner.hasType(Player.Type.ADMIN));
                 responseWriter.writeXmlResponse(null);
             } else {
                 ChatCommunicationChannel pollableResource = chatRoom.getChatRoomListener(resourceOwner.getName());
@@ -79,11 +78,11 @@ public class ChatRequestHandler extends SwccgoServerRequestHandler implements Ur
     }
 
     private class ChatUpdateLongPollingResource implements LongPollingResource {
-        private ChatRoomMediator _chatRoom;
-        private String _room;
-        private String _playerId;
-        private Integer _latestMsgIdRcvd;
-        private ResponseWriter _responseWriter;
+        private final ChatRoomMediator _chatRoom;
+        private final String _room;
+        private final String _playerId;
+        private final Integer _latestMsgIdRcvd;
+        private final ResponseWriter _responseWriter;
         private boolean _processed;
 
         private ChatUpdateLongPollingResource(ChatRoomMediator chatRoom, String room, String playerId, Integer latestMsgIdRcvd, ResponseWriter responseWriter) {

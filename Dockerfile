@@ -1,4 +1,4 @@
-FROM public.ecr.aws/ubuntu/ubuntu:focal
+FROM public.ecr.aws/ubuntu/ubuntu:jammy
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -8,7 +8,7 @@ RUN useradd -r -s /bin/bash -m -d /opt/gemp-swccg -c gemp gemp
 ## Install dependencies
 RUN apt-get update && \
     apt-get install -y unzip netcat nmap wget curl && \
-    apt-get install -y openjdk-11-jre
+    apt-get install -y openjdk-21-jre
 
 ## wait-for-it used for docker-compose testing
 RUN wget -O /usr/bin/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \

@@ -12,11 +12,12 @@ public interface ResponseWriter {
     void writeFile(File file, Map<String, String> headers);
 
     void writeHtmlResponse(String html);
-    public void writeJsonResponse(String json);
 
-    void writeByteResponse(String contentType, byte[] bytes);
+    void writeJsonResponse(String json);
+
+    void writeByteResponse(byte[] bytes, Map<? extends CharSequence, String> headers);
 
     void writeXmlResponse(Document document);
 
-    void writeXmlResponse(Document document, Map<String, String> addHeaders);
+    void writeXmlResponse(Document document, Map<? extends CharSequence, String> addHeaders);
 }

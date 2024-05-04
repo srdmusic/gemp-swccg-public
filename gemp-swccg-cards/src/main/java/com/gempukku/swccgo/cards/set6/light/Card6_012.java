@@ -61,7 +61,7 @@ public class Card6_012 extends AbstractAlien {
             action.setText(null);
             action.skipInitialMessageAndAnimation();
             action.appendUsage(new OncePerGameEffect(action));
-            action.appendEffect(new AddUntilEndOfGameModifierEffect(action, new ChangeCardSubtypeModifier(self, Filters.Plastoid_Armor, CardSubtype._), null));
+            action.appendEffect(new AddUntilEndOfGameModifierEffect(action, new ChangeCardSubtypeModifier(self, Filters.Plastoid_Armor, CardSubtype.NORMAL), null));
             action.appendEffect(new AddUntilEndOfGameModifierEffect(action, new NotUniqueModifier(self, Filters.Plastoid_Armor), null));
             action.appendEffect(new AddUntilEndOfGameModifierEffect(action, new ImmuneToTitleModifier(self, Filters.and(Filters.Plastoid_Armor, Filters.onTable), Title.Alter), null));
             action.appendEffect(new AddUntilEndOfGameModifierEffect(action, new ModifyGameTextModifier(self, Filters.Plastoid_Armor, ModifyGameTextType.PLASTOID_ARMOR__CHANGE_DEPLOYMENT), null));

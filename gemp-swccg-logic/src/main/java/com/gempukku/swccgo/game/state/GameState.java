@@ -21,7 +21,8 @@ import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.GameStats;
 import com.gempukku.swccgo.logic.timing.SnapshotData;
 import com.gempukku.swccgo.logic.timing.Snapshotable;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 import java.util.*;
 
@@ -29,7 +30,7 @@ import java.util.*;
 // game of Gemp-Swccg.
 //
 public class GameState implements Snapshotable<GameState> {
-    private static Logger _log = Logger.getLogger(GameState.class);
+    private static Logger _log = LogManager.getLogger(GameState.class);
     private static final int LAST_MESSAGE_STORED_COUNT = 25000;
     private SwccgGame _game;
     private PlayerOrder _playerOrder;

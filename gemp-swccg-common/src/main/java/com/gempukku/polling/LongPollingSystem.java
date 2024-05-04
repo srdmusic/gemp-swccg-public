@@ -1,26 +1,28 @@
 package com.gempukku.polling;
 
-import org.apache.log4j.Logger;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class LongPollingSystem {
-    private static Logger _log = Logger.getLogger(LongPollingSystem.class);
+    private static final Logger _log = LogManager.getLogger(LongPollingSystem.class);
 
     private final Set<ResourceWaitingRequest> _waitingActions = Collections.synchronizedSet(new HashSet<ResourceWaitingRequest>());
 
-    private long _pollingInterval = 1000;
-    private long _pollingLength = 2500;
+    private final long _pollingInterval = 1000;
+    private final long _pollingLength = 2500;
 
     private ProcessingRunnable _timeoutRunnable;
-    private ExecutorService _executorService = new ThreadPoolExecutor(10, Integer.MAX_VALUE,
+    private final ExecutorService _executorService = new ThreadPoolExecutor(10, Integer.MAX_VALUE,
             60L, TimeUnit.SECONDS,
             new SynchronousQueue<Runnable>());
 
@@ -92,9 +94,9 @@ public class LongPollingSystem {
     }
 
     private class ResourceWaitingRequest implements WaitingRequest {
-        private LongPollingResource _longPollingResource;
-        private LongPollableResource _longPollableResource;
-        private long _start;
+        private final LongPollingResource _longPollingResource;
+        private final LongPollableResource _longPollableResource;
+        private final long _start;
 
         private ResourceWaitingRequest(LongPollableResource longPollableResource, LongPollingResource longPollingResource, long start) {
             _longPollableResource = longPollableResource;

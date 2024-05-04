@@ -17965,7 +17965,7 @@ public class Filters {
     public static final Filter Echo_Med_Lab = Filters.title(Title.Echo_Med_Lab);
     public static final Filter Echo_site = Filters.and(CardSubtype.SITE, Filters.titleContains("Echo"));
     public static final Filter Egregious_Pilot_Error = Filters.title(Title.Egregious_Pilot_Error);
-    public static final Filter Effect = Filters.and(CardType.EFFECT, CardSubtype._);
+    public static final Filter Effect = Filters.and(CardType.EFFECT, CardSubtype.NORMAL);
     public static final Filter Effect_of_any_Kind = Filters.type(CardType.EFFECT);
     public static final Filter electropole = Filters.keyword(Keyword.ELECTROPOLE);
     public static final Filter Elis_Helrot = Filters.title(Title.Elis_Helrot);

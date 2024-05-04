@@ -12,10 +12,9 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.vo.SwccgDeck;
 import com.gempukku.swccgo.tournament.Tournament;
 import com.gempukku.swccgo.tournament.TournamentService;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
+import org.apache.commons.text.StringEscapeUtils;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -42,14 +41,14 @@ public class TournamentRequestHandler extends SwccgoServerRequestHandler impleme
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-        if ("".equals(uri) && request.getMethod() == HttpMethod.GET) {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
+        if ("".equals(uri) && request.method() == HttpMethod.GET) {
             getCurrentTournaments(request, responseWriter);
-        } else if (uri.equals("/history") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.equals("/history") && request.method() == HttpMethod.GET) {
             getTournamentHistory(request, responseWriter);
-        } else if (uri.startsWith("/") && uri.endsWith("/html") && uri.contains("/deck/") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.startsWith("/") && uri.endsWith("/html") && uri.contains("/deck/") && request.method() == HttpMethod.GET) {
             getTournamentDeck(request, uri.substring(1, uri.indexOf("/deck/")), uri.substring(uri.indexOf("/deck/") + 6, uri.lastIndexOf("/html")), responseWriter);
-        } else if (uri.startsWith("/") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.startsWith("/") && request.method() == HttpMethod.GET) {
             getTournamentInfo(request, uri.substring(1), responseWriter);
         } else {
             responseWriter.writeError(404);
@@ -110,7 +109,7 @@ public class TournamentRequestHandler extends SwccgoServerRequestHandler impleme
 
         StringBuilder result = new StringBuilder();
         result.append("<html><body>");
-        result.append("<h1>" + StringEscapeUtils.escapeHtml(deck.getDeckName()) + "</h1>");
+        result.append("<h1>" + StringEscapeUtils.escapeHtml3(deck.getDeckName()) + "</h1>");
         result.append("<h2>by " + playerName + "</h2>");
         DefaultCardCollection deckCards = new DefaultCardCollection();
         for (String card : deck.getCards())

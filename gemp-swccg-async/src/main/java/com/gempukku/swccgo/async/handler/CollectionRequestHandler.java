@@ -16,11 +16,10 @@ import com.gempukku.swccgo.league.LeagueSeriesData;
 import com.gempukku.swccgo.league.LeagueService;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.packagedProduct.PackagedProductStorage;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.QueryStringDecoder;
-import org.jboss.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -68,14 +67,14 @@ public class CollectionRequestHandler extends SwccgoServerRequestHandler impleme
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
-            if (uri.equals("") && request.getMethod() == HttpMethod.GET) {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
+            if (uri.equals("") && request.method() == HttpMethod.GET) {
                 getCollectionTypes(request, responseWriter);
-            } else if (uri.startsWith("/") && request.getMethod() == HttpMethod.POST) {
+            } else if (uri.startsWith("/") && request.method() == HttpMethod.POST) {
                 openPack(request, uri.substring(1), responseWriter);
-            } else if (uri.startsWith("playerCollectionStats") && request.getMethod() == HttpMethod.GET) {
+            } else if (uri.startsWith("playerCollectionStats") && request.method() == HttpMethod.GET) {
                 playerCollectionStats(request, uri.substring(21), responseWriter);
-            } else if (uri.startsWith("/") && request.getMethod() == HttpMethod.GET) {
+            } else if (uri.startsWith("/") && request.method() == HttpMethod.GET) {
                 getCollection(request, uri.substring(1), responseWriter);
             } else {
                 responseWriter.writeError(404);

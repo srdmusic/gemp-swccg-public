@@ -22,7 +22,13 @@ import java.lang.reflect.Type;
 import java.util.Map;
 
 public class ServerBuilder {
-    public static void fillObjectMap(Map<Type, Object> objectMap) {
+
+    public static void CreatePrerequisites(Map<Type, Object> objectMap) {
+        LoggedUserHolder loggedUserHolder = new LoggedUserHolder();
+        loggedUserHolder.start();
+        objectMap.put(LoggedUserHolder.class, loggedUserHolder);
+    }
+    public static void CreateServices(Map<Type, Object> objectMap) {
         objectMap.put(SwccgoFormatLibrary.class,
                 new SwccgoFormatLibrary(
                         extract(objectMap, SwccgCardBlueprintLibrary.class)));
@@ -110,13 +116,13 @@ public class ServerBuilder {
         return result;
     }
 
-    public static void constructObjects(Map<Type, Object> objectMap) {
+    public static void StartServers(Map<Type, Object> objectMap) {
         extract(objectMap, HallServer.class).startServer();
         extract(objectMap, SwccgoServer.class).startServer();
         extract(objectMap, ChatServer.class).startServer();
     }
 
-    public static void destroyObjects(Map<Type, Object> objectMap) {
+    public static void StopServers(Map<Type, Object> objectMap) {
         extract(objectMap, HallServer.class).stopServer();
         extract(objectMap, SwccgoServer.class).stopServer();
         extract(objectMap, ChatServer.class).stopServer();

@@ -294,7 +294,7 @@ public class SortAndFilterCards {
             if (filterParam.startsWith("cardType:")) {
                 String filterValue = filterParam.substring("cardType:".length());
                 if (filterValue.startsWith("EFFECT_NO_SUBTYPE")) {
-                    return CardSubtype._;
+                    return CardSubtype.NORMAL;
                 }
                 if (filterValue.startsWith("EFFECT_IMMEDIATE")) {
                     return CardSubtype.IMMEDIATE;

@@ -7,12 +7,11 @@ import com.gempukku.swccgo.game.*;
 import com.gempukku.swccgo.game.formats.SwccgoFormatLibrary;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.vo.SwccgDeck;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.QueryStringDecoder;
-import org.jboss.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import org.apache.commons.text.StringEscapeUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -46,58 +45,58 @@ public class DeckRequestHandler extends SwccgoServerRequestHandler implements Ur
      * These are all calls to /gemp-swccg-server/deck/{} where {} is the uri below
      */
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
         /*
          * GET /gemp-swccg-server/deck/list
          */
-        if (uri.equals("/list") && request.getMethod() == HttpMethod.GET) {
+        if (uri.equals("/list") && request.method() == HttpMethod.GET) {
             listDecks(request, responseWriter);
         /*
          * GET /gemp-swccg-server/deck/libraryList
          */
-        } else if (uri.equals("/libraryList") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.equals("/libraryList") && request.method() == HttpMethod.GET) {
             listLibraryDecks(request, responseWriter);
         /*
          * GET /gemp-swccg-server/deck
          * returns an XML format deck list.
          */
-        } else if (uri.equals("") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.equals("") && request.method() == HttpMethod.GET) {
             getDeck(request, responseWriter);
         /*
          * GET /gemp-swccg-server/deck/library
          */
-        } else if (uri.equals("/library") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.equals("/library") && request.method() == HttpMethod.GET) {
             getLibraryDeck(request, responseWriter);
         /*
          * POST /gemp-swccg-server/deck
          */
-        } else if (uri.equals("") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("") && request.method() == HttpMethod.POST) {
             saveDeck(request, responseWriter);
         /*
          * GET /gemp-swccg-server/deck/html
          * returns an HTML format deck list.
          */
-        } else if (uri.equals("/html") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.equals("/html") && request.method() == HttpMethod.GET) {
             getDeckInHtml(request, responseWriter);
         /*
          * GET /gemp-swccg-server/deck/libraryHtml
          */
-        } else if (uri.equals("/libraryHtml") && request.getMethod() == HttpMethod.GET) {
+        } else if (uri.equals("/libraryHtml") && request.method() == HttpMethod.GET) {
             getLibraryDeckInHtml(request, responseWriter);
         /*
          * GET /gemp-swccg-server/deck/rename
          */
-        } else if (uri.equals("/rename") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/rename") && request.method() == HttpMethod.POST) {
             renameDeck(request, responseWriter);
         /*
          * GET /gemp-swccg-server/deck/delete
          */
-        } else if (uri.equals("/delete") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/delete") && request.method() == HttpMethod.POST) {
             deleteDeck(request, responseWriter);
         /*
          * GET /gemp-swccg-server/deck/stats
          */
-        } else if (uri.equals("/stats") && request.getMethod() == HttpMethod.POST) {
+        } else if (uri.equals("/stats") && request.method() == HttpMethod.POST) {
             getDeckStats(request, responseWriter);
         /*
          * The requested URL and METHOD are unknown, return access denied.
@@ -230,7 +229,7 @@ public class DeckRequestHandler extends SwccgoServerRequestHandler implements Ur
 
         StringBuilder result = new StringBuilder();
         result.append("<html><body>");
-        result.append("<h1>" + StringEscapeUtils.escapeHtml(deck.getDeckName()) + "</h1>");
+        result.append("<h1>" + StringEscapeUtils.escapeHtml3(deck.getDeckName()) + "</h1>");
 
         DefaultCardCollection deckCards = new DefaultCardCollection();
         for (String card : deck.getCards())
@@ -445,7 +444,7 @@ public class DeckRequestHandler extends SwccgoServerRequestHandler implements Ur
 
         StringBuilder result = new StringBuilder();
         result.append("<html><body>");
-        result.append("<h1>" + StringEscapeUtils.escapeHtml(deck.getDeckName()) + "</h1>");
+        result.append("<h1>" + StringEscapeUtils.escapeHtml3(deck.getDeckName()) + "</h1>");
 
         DefaultCardCollection deckCards = new DefaultCardCollection();
         for (String card : deck.getCards())

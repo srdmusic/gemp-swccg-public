@@ -2,7 +2,7 @@ package com.gempukku.swccgo.db;
 
 import com.gempukku.swccgo.cache.Cached;
 import com.gempukku.swccgo.game.Player;
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 
 import java.sql.SQLException;
 import java.util.Collections;

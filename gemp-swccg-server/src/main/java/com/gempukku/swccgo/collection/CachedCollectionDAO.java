@@ -3,7 +3,7 @@ package com.gempukku.swccgo.collection;
 import com.gempukku.swccgo.cache.Cached;
 import com.gempukku.swccgo.db.CollectionDAO;
 import com.gempukku.swccgo.game.CardCollection;
-import org.apache.commons.collections.map.LRUMap;
+import org.apache.commons.collections4.map.LRUMap;
 
 import java.io.IOException;
 import java.sql.SQLException;

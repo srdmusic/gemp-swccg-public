@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.common;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,7 +12,7 @@ import java.util.regex.Pattern;
  * configuration options.
  */
 public class ApplicationConfiguration {
-    private static Logger LOGGER = Logger.getLogger(ApplicationConfiguration.class);
+    private static Logger LOGGER = LogManager.getLogger(ApplicationConfiguration.class);
     private static Properties _properties;
 
     private static synchronized Properties getProperties() {

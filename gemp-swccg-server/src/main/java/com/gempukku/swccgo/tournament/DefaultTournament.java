@@ -10,7 +10,7 @@ import com.gempukku.swccgo.draft.DraftPack;
 import com.gempukku.swccgo.game.CardCollection;
 import com.gempukku.swccgo.logic.vo.SwccgDeck;
 import com.gempukku.swccgo.packagedProduct.PackagedProductStorage;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
