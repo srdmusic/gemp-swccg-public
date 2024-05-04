@@ -1,4 +1,4 @@
-name: test-on-push
+name: Gemp Client Basic Access Test
 on:
   workflow_dispatch:
   push:
@@ -18,24 +18,24 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Build the stack
+      - name: Building Gemp within the container using Maven
+        working-directory: ./src/docker
+        run: |
+          docker build -f ./gemp_app.Dockerfile --tag 'gemp_build' .
+          docker run -v ${GITHUB_WORKSPACE}:/opt/gemp-swccg --detach --name 'gemp_build' -it 'gemp_build'
+          docker exec gemp_build mvn clean install
+          docker stop gemp_build
+          
+          
+      - name: Build the Gemp containers
         working-directory: ./src/docker
         run: |
           docker compose build
           docker compose up -d
-          
-      - name: Building Gemp within the container using Maven
-        run: |
-          docker exec gemp_swccg_app_1 mvn clean install
-          
-      - name: Restarting container post-rebuild
-        working-directory: ./src/docker
-        run: |
-          docker compose restart
 
       - name: Client Test
         run: |
-          curl -s --retry 10 --retry-connrefused http://127.0.0.1:17001/gemp-swccg/index.html
+          docker exec gemp_swccg_app_1 curl -s --retry 10 --retry-connrefused http://localhost/gemp-swccg/index.html
           echo "Python3: $(which python3)"
           echo "pip3...: $(which pip3)"
           pip3 install -r src/requirements.txt

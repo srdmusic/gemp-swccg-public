@@ -1,6 +1,6 @@
 ---
 
-name: Build GEMP Server
+name: Promote to Public GEMP Repository
 
 on:
   push:
@@ -17,32 +17,7 @@ jobs:
           persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal token
           fetch-depth: 1
           path: gemp-swccg-private
-
-      - name: Install Java via OpenJDK
-        run:  |
-          which java ; true
-          java -version ; true
-          sudo apt-get update
-          sudo update-java-alternatives --set /usr/lib/jvm/temurin-21-jdk-amd64
-          export JAVA_HOME=/usr/lib/jvm/temurin-21-jdk-amd64
-          sudo apt-get --only-upgrade install maven
-          java -version ; true
-
-
-      - name: Maven Build
-        run: |
-          export STARTDIR=$(pwd)
-          echo
-          echo "Starting Directory: [$(pwd)]"
-          echo
-          cd gemp-swccg-private/src
-          mvn clean install
-
-      - name: list jars
-        run: |
-          ls gemp-swccg-private/src/gemp-swccg-async/target/web.jar ; true
-          md5sum gemp-swccg-private/src/gemp-swccg-async/target/web.jar ; true
-
+          
       - name: Replicate changes to public repo
         run: |
           cd "${STARTDIR}"
@@ -58,7 +33,7 @@ jobs:
           # .git and .github are specific to their repositories.
           rsync --exclude=set501 --exclude=.git --exclude=.github -av gemp-swccg-private/ gemp-swccg-public/
           cd gemp-swccg-public/
-          git config --local user.email "devon+github-actions[bot]@hubner.org"
+          git config --local user.email "rules@starwarsccg.org"
           git config --local user.name "github-actions[bot]"
           git status
           git add -A .
