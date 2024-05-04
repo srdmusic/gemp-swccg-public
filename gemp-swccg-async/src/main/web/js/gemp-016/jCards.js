@@ -3670,6 +3670,7 @@ var fixedImages = {
 "501_59":"https://res.starwarsccg.org/cards/EnhancedPremiere-Light/large/lukewithlightsaber.gif",
 "501_61":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/scurrier.gif",
 "501_62":"https://res.starwarsccg.org/cards/Virtual13-Dark/large/ninthsister.gif",
+"501_63":"https://res.starwarsccg.org/cards/Premiere-Dark/large/physicalchoke.gif",
 "501_64":"https://res.starwarsccg.org/cards/Premiere-Dark/large/theempiresback.gif",
 "501_65":"https://res.starwarsccg.org/cards/OfficialTournamentSealedDeck-Dark/large/dreadnaughtclassheavycruiser.gif",
 "501_66":"https://res.starwarsccg.org/cards/ResetDS-Dark/large/deathstarsentry.gif",
