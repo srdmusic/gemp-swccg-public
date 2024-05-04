@@ -1,5 +1,18 @@
 ---
 
+# This action may no longer be needed, or may need retooled
+# to fit the modern docker paradigm. 
+# It's now intended that performing production releases looks
+# like this:
+# 1- Open the container within Portainer
+# 2- git pull
+# 3- mvn install
+# 4- Restart the container in Portainer 
+# These steps may be performable using Github actions, but 
+# it's unknown at this time if they could be performed
+# remotely in the right place.
+# At any rate, there's no longer a need to prepare an artifact
+# for transfer, as it now never leaves the docker container.
 name: Create GEMP Server Release
 
 on:
@@ -15,14 +28,15 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: apt-get install OpenJDK
+      - name: Install Java via OpenJDK
         run:  |
           which java ; true
           java -version ; true
-          sudo apt-get install -y openjdk-11-jdk-headless
+          sudo apt-get install -y openjdk-21-jdk-headless
           java -version ; true
 
-      - name: mvn build
+      - name: Maven Build
+        working-directory: ./src
         run: mvn clean install
 
       # https://github.com/actions/create-release
@@ -46,7 +60,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: ./gemp-swccg-async/target/web.jar
+          asset_path: ./src/gemp-swccg-async/target/web.jar
           asset_name: web.jar
           asset_content_type: application/zip
 
