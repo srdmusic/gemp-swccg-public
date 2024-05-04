@@ -93,7 +93,7 @@ finished = False
 
 session = Session()
 
-gemp_base_url = 'http://0.0.0.0:8080/'
+gemp_base_url = 'http://localhost:17001/'
 # If doing local testing, instead use the below line and
 # provide the appropriate port:
 #gemp_base_url = 'http://localhost:17010/'
