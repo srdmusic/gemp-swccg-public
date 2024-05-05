@@ -142,6 +142,7 @@ var GempSwccgGameUI = Class.extend({
     windowHeight: null,
 
     tabPane: null,
+    autoZoomToggle: null,
 
     animations: null,
     replayPlay: false,
@@ -865,11 +866,30 @@ var GempSwccgGameUI = Class.extend({
             tabsLabels += "<li><a href='#playersInRoomBox' class='slimTab'>Players</a></li>";
             tabsBodies += "<div id='playersInRoomBox' class='slimPanel'></div>";
         }
+        
+            //<button id='auto-zoom-toggle' title='Auto-zoom cards on hover' class='ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only'><span class='ui-button-icon-primary ui-icon ui-icon-search'></span></button>  
+        
+        if(!is_touch_device) {
+            tabsLabels += "<li id='auto-zoom-li'>";
+            
+            this.autoZoomToggle = $("<button id='auto-zoom-toggle'>Auto-zoom cards on hover</button>").button(
+                {
+                    icons:{
+                        primary:"ui-icon-search"
+                    }, 
+                    text:false
+                });
+        }
+        
         var tabsStr = "<div id='bottomLeftTabs' style='border-radius: 0px'><ul>" + tabsLabels + "</ul>" + tabsBodies + "</div>";
 
         this.tabPane = $(tabsStr).tabs();
-
+        
         $("#main").append(this.tabPane);
+        
+        if (this.autoZoomToggle != null) {
+            this.autoZoomToggle.appendTo("#auto-zoom-li");
+        }
 
         this.chatBoxDiv = $("#chatBox");
 
@@ -1138,12 +1158,21 @@ var GempSwccgGameUI = Class.extend({
             //
             // Show large image on hover
             //
-            $("#settingsBox").append("<input id='previewImageOnHover' type='checkbox' value='selected' /><label for='previewImageOnHover'>Show large card image on hover</label><br />");
+            $("#settingsBox").append("<input id='previewImageOnHover' type='checkbox' value='selected' /><label for='previewImageOnHover'>Enable auto-zoom on hover by default</label><br />");
 
             var previewImageOnHover = $.cookie("previewImageOnHover");
             if (previewImageOnHover == "true") {
                 $("#previewImageOnHover").prop("checked", true);
                 this.settingsShowPreviewImage = true;
+            } 
+            else if (previewImageOnHover == "false") {
+                $("#previewImageOnHover").prop("checked", false);
+                this.settingsShowPreviewImage = false;
+            }
+            else {
+                $("#previewImageOnHover").prop("checked", true);
+                this.settingsShowPreviewImage = true;
+                $.cookie("previewImageOnHover", "true", { expires: 365 });
             }
 
             $("#previewImageOnHover").bind("change", function () {
@@ -1151,6 +1180,25 @@ var GempSwccgGameUI = Class.extend({
                 that.settingsShowPreviewImage = selected;
                 $.cookie("previewImageOnHover", "" + selected, { expires: 365 });
             });
+            
+            if (this.autoZoomToggle != null) {
+                this.autoZoomToggle.click(
+                    function () {
+                        if (that.settingsShowPreviewImage) {
+                            that.autoZoomToggle.button("option", "icons", {primary:'ui-icon-circle-close'});
+                            that.settingsShowPreviewImage = false;
+                        } else {
+                            that.autoZoomToggle.button("option", "icons", {primary:'ui-icon-search'});
+                            that.settingsShowPreviewImage = true;
+                        }
+                    });
+                
+                var selected = $("#previewImageOnHover").prop("checked");
+                
+                if(!this.settingsShowPreviewImage) {
+                    this.autoZoomToggle.button("option", "icons", {primary:'ui-icon-circle-close'});
+                }
+            }
 
             //$("#settingsBox").append("<br />Phases to auto-pass if no actions to perform<br />");
             //$("#settingsBox").append("<input id='autoPassACTIVATE' type='checkbox' value='selected' /><label for='autoPassACTIVATE'>Activate</label> ");

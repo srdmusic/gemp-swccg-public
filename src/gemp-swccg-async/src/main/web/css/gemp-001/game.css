@@ -538,3 +538,12 @@ div.playerStats {
     z-index: 1099;
     pointer-events: none;
 }
+
+#auto-zoom-li {
+    float: right;
+}
+
+#auto-zoom-toggle {
+    width: 25px;
+    height: 20px;
+}
