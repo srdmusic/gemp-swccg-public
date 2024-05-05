@@ -532,3 +532,9 @@ div#forceGeneration1 {
 div.playerStats {
    font-family: "Hack", monospace;
 }
+
+.previewImage {
+    position: absolute;
+    z-index: 1099;
+    pointer-events: none;
+}
