@@ -1177,7 +1177,6 @@ var GempSwccgGameUI = Class.extend({
 
             $("#previewImageOnHover").bind("change", function () {
                 var selected = $("#previewImageOnHover").prop("checked");
-                that.settingsShowPreviewImage = selected;
                 $.cookie("previewImageOnHover", "" + selected, { expires: 365 });
             });
             
