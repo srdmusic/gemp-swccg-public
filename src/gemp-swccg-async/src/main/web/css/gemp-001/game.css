@@ -539,6 +539,10 @@ div.playerStats {
     pointer-events: none;
 }
 
+.previewImage, .previewImage img {
+    border-radius: 5%;
+}
+
 #auto-zoom-li {
     float: right;
 }
