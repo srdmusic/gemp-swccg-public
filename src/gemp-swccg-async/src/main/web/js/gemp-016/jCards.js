@@ -4258,34 +4258,34 @@ var packBlueprints = {
 
 };
 
-var Card = Class.extend({
-    blueprintId:null,
-    bareBlueprint:null,
-    foil:null,
-    alternateImage:null,
-    horizontal:null,
-    imageUrl:null,
-    backSideImageUrl:null,
-    testingText:null,
-    zone:null,
-    cardId:null,
-    owner:null,
-    attachedCards:null,
-    locationIndex:null,
-    inverted:false,
-    upsideDown:false,
-    sideways:false,
-    onSide:false,
-    inBattle:false,
-    attackingInAttack:false,
-    defendingInAttack:false,
-    inDuelOrLightsaberCombat:false,
-    incomplete:null,
-    frozen:null,
-    suspended:null,
-    collapsed:null,
+class Card {
+    blueprintId = null;
+    bareBlueprint = null;
+    foil = null;
+    alternateImage = null;
+    horizontal = null;
+    imageUrl = null;
+    backSideImageUrl = null;
+    testingText = null;
+    zone = null;
+    cardId = null;
+    owner = null;
+    attachedCards = null;
+    locationIndex = null;
+    inverted = false;
+    upsideDown = false;
+    sideways = false;
+    onSide = false;
+    inBattle = false;
+    attackingInAttack = false;
+    defendingInAttack = false;
+    inDuelOrLightsaberCombat = false;
+    incomplete = null;
+    frozen = null;
+    suspended = null;
+    collapsed = null;
 
-    init:function (blueprintId, testingText, backSideTestingText, zone, cardId, owner, locationIndex, upsideDown, onSide, frozen, suspended, collapsed) {
+    constructor (blueprintId, testingText, backSideTestingText, zone, cardId, owner, locationIndex, upsideDown, onSide, frozen, suspended, collapsed) {
         this.blueprintId = blueprintId;
 
         var imageBlueprint = blueprintId;
@@ -4354,7 +4354,7 @@ var Card = Class.extend({
                 this.backSideImageUrl = cardFromCache.backSideImageUrl;
                 this.incomplete = cardFromCache.incomplete;
             } else {
-                this.imageUrl = this.getUrlByBlueprintId(this.bareBlueprint);
+                this.imageUrl = Card.getImageUrl(this.bareBlueprint);
                 this.backSideImageUrl = this.getBackSideUrlByBlueprintId(this.bareBlueprint);
                 this.incomplete = this.isIncomplete(this.bareBlueprint);
 
@@ -4367,9 +4367,9 @@ var Card = Class.extend({
                 }
             }
         }
-    },
+    }
 
-    flipOverCard:function () {
+    flipOverCard() {
         this.bareBlueprint = this.getBackSideBlueprintId(this.bareBlueprint);
         this.horizontal = this.isHorizontal(this.bareBlueprint, this.zone);
         var tempText = this.testingText;
@@ -4382,7 +4382,7 @@ var Card = Class.extend({
             this.backSideImageUrl = cardFromCache.backSideImageUrl;
             this.incomplete = cardFromCache.incomplete;
         } else {
-            this.imageUrl = this.getUrlByBlueprintId(this.bareBlueprint);
+            this.imageUrl = Card.getImageUrl(this.bareBlueprint);
             this.backSideImageUrl = this.getBackSideUrlByBlueprintId(this.bareBlueprint);
             this.incomplete = this.isIncomplete(this.bareBlueprint);
 
@@ -4395,9 +4395,9 @@ var Card = Class.extend({
             }
         }
         $(".card:cardId(" + this.cardId + ") > img").attr('src', this.imageUrl);
-    },
+    }
 
-    turnCardOver:function(tempBlueprintId) {
+    turnCardOver(tempBlueprintId) {
         this.bareBlueprint = tempBlueprintId;
         this.horizontal = this.isHorizontal(this.bareBlueprint, this.zone);
         var tempText = this.testingText;
@@ -4410,7 +4410,7 @@ var Card = Class.extend({
             this.backSideImageUrl = cardFromCache.backSideImageUrl;
             this.incomplete = cardFromCache.incomplete;
         } else {
-            this.imageUrl = this.getUrlByBlueprintId(this.bareBlueprint);
+            this.imageUrl = Card.getImageUrl(this.bareBlueprint);
             this.backSideImageUrl = this.getBackSideUrlByBlueprintId(this.bareBlueprint);
             this.incomplete = this.isIncomplete(this.bareBlueprint);
 
@@ -4423,17 +4423,17 @@ var Card = Class.extend({
             }
         }
         $(".card:cardId(" + this.cardId + ") > img").attr('src', this.imageUrl);
-    },
+    }
 
-    isFoil:function () {
+    isFoil() {
         return this.foil;
-    },
+    }
 
-    isPack:function () {
+    isPack() {
         return packBlueprints[this.blueprintId] != null;
-    },
+    }
 
-    isZoneNeverHorizontal:function (zone) {
+    isZoneNeverHorizontal(zone) {
         if (zone == "RESERVE_DECK" || zone == "FORCE_PILE"
                 || zone == "USED_PILE" || zone == "LOST_PILE"
                 || zone == "TOP_OF_RESERVE_DECK" || zone == "TOP_OF_FORCE_PILE"
@@ -4443,9 +4443,9 @@ var Card = Class.extend({
         }
 
         return false;
-    },
+    }
 
-    isBlueprintHorizontal:function (blueprintId) {
+    isBlueprintHorizontal(blueprintId) {
         var separator = blueprintId.indexOf("_");
         var setNo = parseInt(blueprintId.substr(0, separator));
         var cardNo = parseInt(blueprintId.substr(separator + 1));
@@ -4704,9 +4704,9 @@ var Card = Class.extend({
        }
 
         return false;
-    },
+    }
 
-    isHorizontal:function (blueprintId, zone) {
+    isHorizontal(blueprintId, zone) {
 
         // For some zones, never show the card as horizontal
         if (this.isZoneNeverHorizontal(zone)) {
@@ -4718,9 +4718,9 @@ var Card = Class.extend({
         }
 
         return false;
-    },
+    }
 
-    isIncomplete:function (blueprintId) {
+    isIncomplete(blueprintId) {
         var separator = blueprintId.indexOf("_");
         var setNo = parseInt(blueprintId.substr(0, separator));
         var cardNo = parseInt(blueprintId.substr(separator + 1));
@@ -4730,9 +4730,9 @@ var Card = Class.extend({
         }
 
         return false;
-    },
+    }
 
-    getUrlByBlueprintId:function (blueprintId) {
+    static getImageUrl(blueprintId) {
         if (fixedImages[blueprintId] != null)
             return fixedImages[blueprintId];
 
@@ -4740,43 +4740,43 @@ var Card = Class.extend({
             return packBlueprints[blueprintId];
 
         return null;
-    },
+    }
 
-    getBackSideBlueprintId:function (blueprintId) {
+    getBackSideBlueprintId(blueprintId) {
         if (this.endsWith(blueprintId, "_BACK")) {
             return blueprintId.substring(0, blueprintId.length - 5);
         }
-        var backSideUrl = this.getUrlByBlueprintId(blueprintId.concat("_BACK"));
+        var backSideUrl = Card.getImageUrl(blueprintId.concat("_BACK"));
         if (backSideUrl != null) {
             return blueprintId.concat("_BACK");
         }
-        var genericBackUrl = this.getUrlByBlueprintId(blueprintId);
+        var genericBackUrl = Card.getImageUrl(blueprintId);
         if (genericBackUrl != null) {
-            if (this.getUrlByBlueprintId(blueprintId).includes("-DARK/") || this.getUrlByBlueprintId(blueprintId).includes("-Dark/"))
+            if (Card.getImageUrl(blueprintId).includes("-DARK/") || Card.getImageUrl(blueprintId).includes("-Dark/"))
                     return "-1_2";
                 else
                     return "-1_1";
         }
-    },
+    }
 
-    getBackSideUrlByBlueprintId:function (blueprintId) {
-        return this.getUrlByBlueprintId(this.getBackSideBlueprintId(blueprintId));
-    },
+    getBackSideUrlByBlueprintId(blueprintId) {
+        return Card.getImageUrl(this.getBackSideBlueprintId(blueprintId));
+    }
 
-    endsWith:function (str, suffix) {
+    endsWith(str, suffix) {
         return str.indexOf(suffix, str.length - suffix.length) !== -1;
-    },
+    }
 
-    formatSetNo:function (setNo) {
+    formatSetNo(setNo) {
         var setNoStr;
         if (setNo < 10)
             setNoStr = "0" + setNo;
         else
             setNoStr = setNo;
         return setNoStr;
-    },
+    }
 
-    formatCardNo:function (setNo, cardNo) {
+    formatCardNo(setNo, cardNo) {
         var setNoStr = this.formatSetNo(setNo);
 
         var cardStr;
@@ -4788,47 +4788,47 @@ var Card = Class.extend({
             cardStr = setNoStr + "" + cardNo;
 
         return cardStr;
-    },
+    }
 
-    getMainLocation:function (setNo, cardNo) {
+    getMainLocation(setNo, cardNo) {
         return "https://res.starwarsccg.org/cards/";
-    },
+    }
 
-    getHeightForWidth:function (width) {
+    getHeightForWidth(width) {
         if (this.horizontal)
             return Math.floor(width * cardScale);
         else
             return Math.floor(width / cardScale);
-    },
+    }
 
-    getHeightForColumnWidth:function (columnWidth) {
+    getHeightForColumnWidth(columnWidth) {
         if (this.horizontal)
             return columnWidth;
         else
             return Math.floor(columnWidth / cardScale);
-    },
+    }
 
-    getWidthForHeight:function (height) {
+    getWidthForHeight(height) {
         if (this.horizontal)
             return Math.floor(height / cardScale);
         else
             return Math.floor(height * cardScale);
-    },
+    }
 
-    getWidthForMaxDimension:function (maxDimension) {
+    getWidthForMaxDimension(maxDimension) {
         if (this.horizontal)
             return maxDimension;
         else
             return Math.floor(maxDimension * cardScale);
-    },
+    }
 
-    getHeightForMaxDimension:function (maxDimension) {
+    getHeightForMaxDimension(maxDimension) {
         if (this.horizontal)
             return Math.floor(maxDimension * cardScale);
         else
             return maxDimension;
     }
-});
+}
 
 function createCardDiv(image, testingText, text, foil, tokens, noBorder, incomplete) {
     var cardDiv = $("<div class='card'><img src='" + image + "' width='100%' height='100%'>" + ((text != null) ? text : "") + "</div>");

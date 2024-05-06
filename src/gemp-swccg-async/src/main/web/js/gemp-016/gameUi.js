@@ -142,7 +142,7 @@ var GempSwccgGameUI = Class.extend({
     windowHeight: null,
 
     tabPane: null,
-    autoZoomToggle: null,
+    autoZoom: null,
 
     animations: null,
     replayPlay: false,
@@ -218,6 +218,8 @@ var GempSwccgGameUI = Class.extend({
         this.opponentInDuelOrLightsaberCombatGroups = new Array();
         this.outOfPlayPileDialogs = {};
         this.outOfPlayPileGroups = {};
+        
+        this.autoZoom = new AutoZoom("autoZoomInGame");
 
         this.initializeDialogs();
 
@@ -227,11 +229,11 @@ var GempSwccgGameUI = Class.extend({
     initializeGameUI: function () {
 
         var that = this;
-        $('div').not('#main,.replay').remove();
+        //$('div').not('#main,.replay').remove();
 
-        this.initializeDialogs();
+        // this.initializeDialogs();
 
-        this.addBottomLeftTabPane();
+        // this.addBottomLeftTabPane();
 
         var playerSide = null;
         var opponentSide = null;
@@ -562,49 +564,26 @@ var GempSwccgGameUI = Class.extend({
         $('body').unbind('mouseover');
         $("body").mouseover(
             function (event) {
-                return that.mouseOverCardFunction(event);
+                return that.autoZoom.handleMouseOver(event, 
+                   that.dragCardId != null, that.infoDialog.dialog("isOpen"));
             });
 
         $('body').unbind('keydown');
         $("body").keydown(
             function (event) {
-                const canShowPreviewImages = that.settingsShowPreviewImage && !is_touch_device;
-                if (canShowPreviewImages && event.which === 16 && that.previewImageBlueprintId != "0") {
-                    const reverseSideImage = fixedImages[that.previewImageBlueprintId + "_BACK"];
-                    if (reverseSideImage) {
-                        const previewImageImg = $(previewImage).find('img:first')[0];
-                        that.previewImageBlueprintId = that.previewImageBlueprintId + "_BACK";
-                        previewImageImg.src = reverseSideImage;
-                    } else {
-                        that.flipRotatePreviewImage(true)
-                    }
-                };
-                return true;
+                return that.autoZoom.handleKeyDown(event);
             });
 
         $('body').unbind('keyup');
         $("body").keyup(
             function (event) {
-                const canShowPreviewImages = that.settingsShowPreviewImage && !is_touch_device;
-                if (canShowPreviewImages && event.which === 16 && that.previewImageBlueprintId != "0") {
-                    const isBackImage = that.previewImageBlueprintId.endsWith('_BACK');
-                    if (isBackImage) {
-                        const previewImageImg = $(previewImage).find('img:first')[0];
-                        that.previewImageBlueprintId = that.previewImageBlueprintId.substring(0, that.previewImageBlueprintId.length - 5);
-                        previewImageImg.src = fixedImages[that.previewImageBlueprintId];
-                    } else {
-                        that.flipRotatePreviewImage(false)
-                    }
-                };
-                return true;
+                return that.autoZoom.handleKeyUp(event);
             });
 
         $('body').unbind('mousedown');
         $("body").mousedown(
             function (event) {
-                if (that.previewImageBlueprintId !== 0) {
-                    that.hidePreviewImage();
-                }
+                that.autoZoom.handleMouseDown(event);
 
                 $("body").bind("mousemove", dragFunc);
                 return that.dragStartCardFunction(event);
@@ -867,18 +846,8 @@ var GempSwccgGameUI = Class.extend({
             tabsBodies += "<div id='playersInRoomBox' class='slimPanel'></div>";
         }
         
-            //<button id='auto-zoom-toggle' title='Auto-zoom cards on hover' class='ui-button ui-widget ui-state-default ui-corner-all ui-button-icon-only'><span class='ui-button-icon-primary ui-icon ui-icon-search'></span></button>  
-        
-        if(!is_touch_device) {
+        if(!this.autoZoom.isTouchDevice) {
             tabsLabels += "<li id='auto-zoom-li'>";
-            
-            this.autoZoomToggle = $("<button id='auto-zoom-toggle'>Auto-zoom cards on hover</button>").button(
-                {
-                    icons:{
-                        primary:"ui-icon-search"
-                    }, 
-                    text:false
-                });
         }
         
         var tabsStr = "<div id='bottomLeftTabs' style='border-radius: 0px'><ul>" + tabsLabels + "</ul>" + tabsBodies + "</div>";
@@ -887,8 +856,8 @@ var GempSwccgGameUI = Class.extend({
         
         $("#main").append(this.tabPane);
         
-        if (this.autoZoomToggle != null) {
-            this.autoZoomToggle.appendTo("#auto-zoom-li");
+        if (this.autoZoom.autoZoomToggle != null) {
+            this.autoZoom.autoZoomToggle.appendTo("#auto-zoom-li");
         }
 
         this.chatBoxDiv = $("#chatBox");
@@ -1155,50 +1124,6 @@ var GempSwccgGameUI = Class.extend({
                 $.cookie("cardActionsSilent", "" + selected, { expires: 365 });
             });
 
-            //
-            // Show large image on hover
-            //
-            $("#settingsBox").append("<input id='previewImageOnHover' type='checkbox' value='selected' /><label for='previewImageOnHover'>Enable auto-zoom on hover by default</label><br />");
-
-            var previewImageOnHover = $.cookie("previewImageOnHover");
-            if (previewImageOnHover == "true") {
-                $("#previewImageOnHover").prop("checked", true);
-                this.settingsShowPreviewImage = true;
-            } 
-            else if (previewImageOnHover == "false") {
-                $("#previewImageOnHover").prop("checked", false);
-                this.settingsShowPreviewImage = false;
-            }
-            else {
-                $("#previewImageOnHover").prop("checked", true);
-                this.settingsShowPreviewImage = true;
-                $.cookie("previewImageOnHover", "true", { expires: 365 });
-            }
-
-            $("#previewImageOnHover").bind("change", function () {
-                var selected = $("#previewImageOnHover").prop("checked");
-                $.cookie("previewImageOnHover", "" + selected, { expires: 365 });
-            });
-            
-            if (this.autoZoomToggle != null) {
-                this.autoZoomToggle.click(
-                    function () {
-                        if (that.settingsShowPreviewImage) {
-                            that.autoZoomToggle.button("option", "icons", {primary:'ui-icon-circle-close'});
-                            that.settingsShowPreviewImage = false;
-                        } else {
-                            that.autoZoomToggle.button("option", "icons", {primary:'ui-icon-search'});
-                            that.settingsShowPreviewImage = true;
-                        }
-                    });
-                
-                var selected = $("#previewImageOnHover").prop("checked");
-                
-                if(!this.settingsShowPreviewImage) {
-                    this.autoZoomToggle.button("option", "icons", {primary:'ui-icon-circle-close'});
-                }
-            }
-
             //$("#settingsBox").append("<br />Phases to auto-pass if no actions to perform<br />");
             //$("#settingsBox").append("<input id='autoPassACTIVATE' type='checkbox' value='selected' /><label for='autoPassACTIVATE'>Activate</label> ");
             //$("#settingsBox").append("<input id='autoPassCONTROL' type='checkbox' value='selected' /><label for='autoPassCONTROL'>Control</label> ");
@@ -1387,156 +1312,6 @@ var GempSwccgGameUI = Class.extend({
             return false;
         }
 
-        return true;
-    },
-
-    // make the preview image shown be the reference image that's hovered on:
-    showPreviewImage: function (refImageDiv) {
-        const previewImage = this.previewImage;
-        const imgEl = $(previewImage).find("img")[0];
-        
-        imgEl.onload = function () {
-            previewImage.style.display = "block";
-
-            // get position and size of the reference image (actually the parent div):
-            var rect = refImageDiv.getBoundingClientRect();
-            var srcImageX = rect.left;
-            var srcImageY = rect.top;
-            var srcImageWidth = rect.right - rect.left;
-            var srcImageHeight = rect.bottom - rect.top;
-            // get the size of the browser window:
-            var windowWidth = window.innerWidth;
-            var windowHeight = window.innerHeight;
-            // get the elements to be altered:
-            var previewImageStyle = previewImage.style;
-            var previewImageImgStyle = imgEl.style;
-            var previewImageHeight = imgEl.naturalHeight;
-            var previewImageWidth = imgEl.naturalWidth;
-
-            var ratio = previewImageWidth / previewImageHeight;
-
-            if (previewImageHeight > windowHeight / 2) {
-                previewImageHeight = windowHeight / 2;
-                previewImageWidth = ratio * previewImageHeight;
-            } else if (previewImageWidth > windowWidth / 2) {
-                previewImageWidth = windowWidth / 2;
-                previewImageHeight = previewImageWidth / ratio;
-            }
-
-            // set the horizontal position of the preview image:
-            const rightEdge = srcImageX + srcImageWidth;
-            const leftEdge = srcImageX;
-            const goesPastRightBound = rightEdge + previewImageWidth > windowWidth;
-            const goesPastLeftBound = leftEdge - previewImageWidth < 0;
-            var previewImageLeft = rightEdge;
-            
-            if (goesPastRightBound && goesPastLeftBound) {
-                // if previewImage would extend past either left or right side
-                // of screen, display the previewImage in the biggest space 
-                // available and shrink to fit
-                const rightSpace = windowWidth - (leftEdge + srcImageWidth);
-                const leftSpace = leftEdge;
-                if (rightSpace > leftSpace) {
-                    previewImageWidth = rightSpace;
-                    previewImageLeft = rightEdge;
-                } else {
-                    previewImageWidth = leftSpace;
-                    previewImageLeft = leftEdge - previewImageWidth;
-                }
-                previewImageHeight = previewImageWidth / ratio;
-            } else {
-                if (goesPastRightBound) {
-                    previewImageLeft = leftEdge - previewImageWidth;
-                } else if (goesPastLeftBound) {
-                    previewImageLeft = rightEdge;
-                }
-            }
-
-            // set the vertical position of the preview image (and make sure it isn't extending over the edge of the window):
-            var previewImageTop = (srcImageY + (srcImageHeight / 2)) - (previewImageHeight / 2);
-            if ((previewImageTop + previewImageHeight) > windowHeight) {
-                previewImageTop = windowHeight - previewImageHeight;
-            } else if (previewImageTop < 0) {
-                previewImageTop = 0;
-            }
-
-            // assign the positions to the preview image element:
-            previewImageStyle.left = previewImageLeft + "px";
-            previewImageStyle.top = previewImageTop + "px";
-            previewImageImgStyle.width = previewImageWidth + 'px';
-            previewImageImgStyle.height = previewImageHeight + 'px';
-        }
-
-        if (fixedImages[this.previewImageBlueprintId] != null) {
-            imgEl.src = fixedImages[this.previewImageBlueprintId];
-        }
-    },
-
-    hidePreviewImage: function () {
-        if (this.previewImage) {
-            const previewImage = this.previewImage;
-            this.previewImageBlueprintId = "0";
-            const previewImageImg = $(previewImage).find('img:first')[0];
-            previewImageImg.src = "";
-            previewImage.style.display = "none";
-        }
-    },
-
-    flipRotatePreviewImage: function (shouldRotate) {
-        const previewImageImg = $(this.previewImage).find('img')[0];
-
-        var previewImageStyle = previewImageImg.style;
-        if (!shouldRotate) {
-            previewImageStyle.transform = "rotate(0deg)";
-        }
-        else {
-            previewImageStyle.transform = "rotate(180deg)";
-        }
-    },
-
-    mouseOverCardFunction: function (event) {
-        const tar = $(event.target);
-        const tarIsCard = tar.hasClass("actionArea");
-
-        // if mouse over target is a card on table, and client supports image previews, showImage
-        if (!is_touch_device && this.settingsShowPreviewImage && tarIsCard && !this.dragCardId && !this.infoDialog.dialog("isOpen")) {
-            const refCard = tar.closest(".card");
-            const refCardDiv = refCard[0];
-            const card = refCard.data("card");
-            
-            // don't show preview image if card is animating
-            if (this.showPreviewImage && !$(refCardDiv).hasClass('card-animating')) {
-                const startFlipped = event.shiftKey;
-                const blueprintId = card.blueprintId;
-                const reverseSideImage = fixedImages[blueprintId + "_BACK"];
-                const imageBlueprintId = startFlipped && reverseSideImage ? blueprintId + "_BACK" : blueprintId;
-
-                // don't show preview image if hovered card is the DS/LS card back art
-                if (imageBlueprintId !== "-1_1" && imageBlueprintId !== "-1_2") {
-                    this.previewImageBlueprintId = imageBlueprintId;
-                    this.showPreviewImage(refCardDiv);
-
-                    if (!reverseSideImage) {
-                        // set the starting rotation based on if shift key
-                        // is active when event was triggered, as long as the
-                        // card doesn't have a reverse side
-                        this.flipRotatePreviewImage(startFlipped);
-                    }
-                    
-                    event.stopPropagation();
-                    return false;
-                }
-            }
-        // if previewImage is active and either the event target isn't a card 
-        // on table OR the user shift+clicked to bring up the card detail 
-        // dialogue, we need to hide the current previewImage
-        } else if (this.previewImageBlueprintId !== "0" && !tarIsCard) {
-            if (this.hidePreviewImage) {
-                this.hidePreviewImage();
-                event.stopPropagation();
-                return false;
-            }
-        }
         return true;
     },
 

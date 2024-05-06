@@ -40,6 +40,9 @@ var GempSwccgDeckBuildingUI = Class.extend({
     cardFilter:null,
 
     collectionType:null,
+    
+    autoZoom: null,
+
 
     init:function () {
         var that = this;
@@ -67,6 +70,8 @@ var GempSwccgDeckBuildingUI = Class.extend({
                 function () {
                     that.finishCollection();
                 });
+        
+        this.autoZoom = new AutoZoom("autoZoomInDeckbuilder");
 
         this.deckDiv = $("#deckDiv");
 
@@ -102,6 +107,10 @@ var GempSwccgDeckBuildingUI = Class.extend({
         var validateDeckBut = $("<button title='Validate Deck'><span class='ui-icon ui-icon-check'></span></button>").button();
         this.manageDecksDiv.append(validateDeckBut);
 
+        if(this.autoZoom.autoZoomToggle != null) {
+            this.autoZoom.autoZoomToggle.appendTo(this.manageDecksDiv);
+        }
+        
         // Hidden file-input field for browsing for decks on the user's computer
         var browseInputDeckInput = $("<input type=file id='browseInputDeckInput' style='display:none'>");
         this.manageDecksDiv.append(browseInputDeckInput);
@@ -258,14 +267,36 @@ var GempSwccgDeckBuildingUI = Class.extend({
                 }
                 return true;
             });
+        $('body').unbind('mouseover');
+        $("body").mouseover(
+            function (event) {
+                return that.autoZoom.handleMouseOver(event, 
+                   that.dragCardId != null, that.infoDialog.dialog("isOpen"));
+            });
+        
         $("body").mousedown(
                 function (event) {
+                    that.autoZoom.handleMouseDown(event);
+                    
                     return that.dragStartCardFunction(event);
                 });
         $("body").mouseup(
                 function (event) {
                     return that.dragStopCardFunction(event);
                 });
+        
+        $('body').unbind('keydown');
+        $("body").keydown(
+            function (event) {
+                return that.autoZoom.handleKeyDown(event);
+            });
+
+        $('body').unbind('keyup');
+        $("body").keyup(
+            function (event) {
+                return that.autoZoom.handleKeyUp(event);
+            });
+
 
         var width = $(window).width();
         var height = $(window).height();
