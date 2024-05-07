@@ -207,6 +207,8 @@ class AutoZoom {
 			const startFlipped = event.shiftKey;
 			const blueprintId = card.blueprintId;
 			const reverseSideImage = Card.getImageUrl(blueprintId + "_BACK");
+			const alreadyReversed = blueprintId.includes("_BACK");
+
 			const imageBlueprintId = startFlipped && reverseSideImage ? blueprintId + "_BACK" : blueprintId;
 
 			// don't show preview image if hovered card is the DS/LS card back art
@@ -214,7 +216,7 @@ class AutoZoom {
 				this.previewImageBPID = imageBlueprintId;
 				this.displayPreviewImage(refCardDiv);
 
-				if (!reverseSideImage) {
+				if (!reverseSideImage && !alreadyReversed) {
 					// set the starting rotation based on if shift key
 					// is active when event was triggered, as long as the
 					// card doesn't have a reverse side
@@ -237,12 +239,13 @@ class AutoZoom {
 		if (this.showPreviewImage && !this.isTouchDevice 
 				&& event.which === 16 && this.previewImageBPID != "0") {
 			const reverseSideImage = Card.getImageUrl(this.previewImageBPID + "_BACK");
+			const alreadyReversed = this.previewImageBPID.includes("_BACK");
 		
 			if (reverseSideImage) {
 				this.previewImageBPID = this.previewImageBPID + "_BACK";
 				this.previewImage.src = reverseSideImage;
 			} 
-			else {
+			else if(!alreadyReversed){
 				this.rotatePreviewImage(true)
 			}
 		};
