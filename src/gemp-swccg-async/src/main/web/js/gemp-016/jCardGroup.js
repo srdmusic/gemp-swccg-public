@@ -304,7 +304,6 @@ var TableCardGroup = CardGroup.extend({
         this.heightPadding = 1;
         this.widthPadding = 5;
         this.columnWidthToAttachedHeightAboveRatio = 0.17;
-        this.cardScale = 350 / 490;
     },
 
    /**
@@ -390,7 +389,7 @@ var TableCardGroup = CardGroup.extend({
     */
     getWidthForLayoutInColumns:function (cardsToLayout, columnCount) {
         var columnWidth = Math.min(this.maxCardWidth, (this.width - (this.widthPadding * columnCount)) / columnCount);
-        var maxVerticalCardWidth = Math.min(this.maxCardWidth, columnWidth * this.cardScale);
+        var maxVerticalCardWidth = Math.min(this.maxCardWidth, columnWidth * Card.CardScale);
         var numColumnsRemainingToLayout = columnCount;
         var numCardsRemainingToLayout = cardsToLayout.length;
         var largestTotalCardHeight = 0;
@@ -437,7 +436,7 @@ var TableCardGroup = CardGroup.extend({
     * @param {Number} the x-offset for the column
     */
     layoutInColumn:function (cardsToLayout, columnWidth, xOffset) {
-        var maxVerticalCardWidth = Math.min(this.maxCardWidth, columnWidth * this.cardScale);
+        var maxVerticalCardWidth = Math.min(this.maxCardWidth, columnWidth * Card.CardScale);
         var totalCardHeight = this.heightPadding;
         var overlappedHeight = 0;
 

@@ -196,7 +196,7 @@ var GempSwccgMerchantUI = Class.extend({
          this.infoDialog.html("");
          this.infoDialog.html("<div style='scroll: auto'></div>");
          var floatCardDiv = $("<div style='float: left;'></div>");
-         var cardDiv = createFullCardDiv(card.imageUrl, null, card.foil, card.horizontal, card.isPack());
+         var cardDiv = Card.CreateFullCardDiv(card.imageUrl, null, card.foil, card.horizontal, card.isPack());
 
          // Check if card div needs to be inverted
          this.infoDialog.cardImageRotation = 0;
@@ -267,13 +267,13 @@ var GempSwccgMerchantUI = Class.extend({
 
         if (type == "pack") {
             card = new Card(blueprintId, null, null, "merchant", "collection", "player");
-            cardDiv = createCardDiv(card.imageUrl, card.testingText, null, false, true, true, card.incomplete, null);
+            cardDiv = Card.CreateCardDiv(card.imageUrl, card.testingText, null, false, true, true, card.incomplete, null);
             cardDiv.data("card", card);
             cardDiv.data("sizeListeners", sizeListeners);
             this.cardsDiv.append(cardDiv);
         } else if (type == "card") {
             card = new Card(blueprintId, testingText, backSideTestingText, "merchant", "collection", "player");
-            cardDiv = createCardDiv(card.imageUrl, card.testingText, null, card.isFoil(), true, false, card.incomplete, null);
+            cardDiv = Card.CreateCardDiv(card.imageUrl, card.testingText, null, card.isFoil(), true, false, card.incomplete, null);
             cardDiv.data("card", card);
             cardDiv.data("sizeListeners", sizeListeners);
             this.cardsDiv.append(cardDiv);
@@ -353,7 +353,7 @@ var GempSwccgMerchantUI = Class.extend({
         this.questionDialog.html("");
         this.questionDialog.html("<div style='scroll: auto'></div>");
         var floatCardDiv = $("<div style='float: left;'></div>");
-        floatCardDiv.append(createFullCardDiv(card.imageUrl, null, card.foil, card.horizontal, card.isPack()));
+        floatCardDiv.append(Card.CreateFullCardDiv(card.imageUrl, null, card.foil, card.horizontal, card.isPack()));
         this.questionDialog.append(floatCardDiv);
         var questionDiv = $("<div id='cardEffects'>" + text + "</div>");
         questionDiv.append("<br/>");

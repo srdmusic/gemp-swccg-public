@@ -1425,7 +1425,7 @@ var GempSwccgGameUI = Class.extend({
         this.infoDialog.html("<div style='scroll: auto'></div>");
         var floatCardDiv = $("<div style='float: left;'></div>");
         var showAsHorizontal = card.isHorizontal(card.bareBlueprint, card.zone);
-        var cardDiv = createFullCardDiv(card.imageUrl, card.testingText, card.foil, showAsHorizontal);
+        var cardDiv = Card.CreateFullCardDiv(card.imageUrl, card.testingText, card.foil, showAsHorizontal);
         // Check if card div needs to be inverted
         this.infoDialog.cardImageRotation = 0;
         this.infoDialog.cardImageFlipped = false;
@@ -2542,7 +2542,7 @@ var GempSwccgGameUI = Class.extend({
     },
 
     createCardDiv: function (card, text) {
-        var cardDiv = createCardDiv(card.imageUrl, card.testingText, text, card.isFoil(), false, false, card.incomplete);
+        var cardDiv = Card.CreateCardDiv(card.imageUrl, card.testingText, text, card.isFoil(), false, false, card.incomplete);
 
         cardDiv.data("card", card);
 

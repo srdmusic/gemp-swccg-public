@@ -61,7 +61,7 @@ var GameAnimations = Class.extend({
 
             // Play-out game event animation to both players
             var card = new Card(blueprintId, testingText, backSideTestingText, "ANIMATION", "anim", participantId);
-            var cardDiv = createSimpleCardDiv(card.imageUrl, card.testingText, card.foil, card.incomplete, 16);
+            var cardDiv = Card.CreateSimpleCardDiv(card.imageUrl, card.testingText, card.foil, card.incomplete, 16);
             // Overlay destiny card with text explaining destiny type
             var destinyTypeOverlayDiv = $("<div class='destinyTypeOverlay'></div>");
             destinyTypeOverlayDiv.text(destinyText);
@@ -122,7 +122,7 @@ var GameAnimations = Class.extend({
 
             // Play-out game event animation to both players
             var card = new Card(blueprintId, testingText, backSideTestingText, "ANIMATION", "anim", participantId);
-            var cardDiv = createSimpleCardDiv(card.imageUrl, card.testingText, card.foil, card.incomplete, 16);
+            var cardDiv = Card.CreateSimpleCardDiv(card.imageUrl, card.testingText, card.foil, card.incomplete, 16);
 
             $("#main").queue(
                 function (next) {
@@ -196,7 +196,7 @@ var GameAnimations = Class.extend({
                         var targetCardId = targetCardIds[i];
 
                         var card = new Card(blueprintId, testingText, backSideTestingText, "ANIMATION", "anim" + i, participantId);
-                        var cardDiv = createSimpleCardDiv(card.imageUrl, card.testingText, card.foil, card.incomplete, 6);
+                        var cardDiv = Card.CreateSimpleCardDiv(card.imageUrl, card.testingText, card.foil, card.incomplete, 6);
 
                         var targetCard = $(".card:cardId(" + targetCardId + ")");
                         if (targetCard.length > 0) {

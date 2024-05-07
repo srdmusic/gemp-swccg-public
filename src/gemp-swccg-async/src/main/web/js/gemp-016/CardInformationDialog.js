@@ -16,7 +16,7 @@ var CardInformationDialog = Class.extend({
 
         this.infoDialog.html("");
         this.infoDialog.html("<div style='scroll: auto'></div>");
-        this.infoDialog.append(createFullCardDiv(card.imageUrl, card.testingText, card.foil, card.horizontal, card.isPack()));
+        this.infoDialog.append(Card.CreateFullCardDiv(card.imageUrl, card.testingText, card.foil, card.horizontal, card.isPack()));
         var windowWidth = $(window).width();
         var windowHeight = $(window).height();
 

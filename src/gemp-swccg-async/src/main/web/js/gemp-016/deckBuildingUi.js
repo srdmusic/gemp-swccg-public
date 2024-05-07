@@ -639,7 +639,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
                         var blueprintIds = selection.split("|");
                         for (var i = 0; i < blueprintIds.length; i++) {
                             var card = new Card(blueprintIds[i], cardData.testingText, cardData.backSideTestingText, "selection", "selection" + i, "player");
-                            var cardDiv = createCardDiv(card.imageUrl, card.testingText, null, card.isFoil(), false, card.isPack(), card.incomplete);
+                            var cardDiv = Card.CreateCardDiv(card.imageUrl, card.testingText, null, card.isFoil(), false, card.isPack(), card.incomplete);
                             cardDiv.data("card", card);
                             cardDiv.addClass("cardToSelect");
                             this.selectionDialog.append(cardDiv);
@@ -696,7 +696,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
         this.infoDialog.html("");
         this.infoDialog.html("<div style='scroll: auto'></div>");
         var floatCardDiv = $("<div style='float: left;'></div>");
-        var cardDiv = createFullCardDiv(card.imageUrl, card.testingText, card.foil, card.horizontal, card.isPack());
+        var cardDiv = Card.CreateFullCardDiv(card.imageUrl, card.testingText, card.foil, card.horizontal, card.isPack());
 
         // Check if card div needs to be inverted
         this.infoDialog.cardImageRotation = 0;
@@ -795,7 +795,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
 
     addCardToContainer:function (blueprintId, testingText, backSideTestingText, zone, container, tokens) {
         var card = new Card(blueprintId, testingText, backSideTestingText, zone, "deck", "player");
-        var cardDiv = createCardDiv(card.imageUrl, card.testingText, null, card.isFoil(), tokens, card.isPack(), card.incomplete);
+        var cardDiv = Card.CreateCardDiv(card.imageUrl, card.testingText, null, card.isFoil(), tokens, card.isPack(), card.incomplete);
         cardDiv.data("card", card);
         container.append(cardDiv);
         return cardDiv;
@@ -967,14 +967,14 @@ var GempSwccgDeckBuildingUI = Class.extend({
             if (blueprintId.substr(0, 3) == "(S)") {
                 var card = new Card(blueprintId, null, null, "pack", "collection", "player");
                 card.tokens = {"count":count};
-                var cardDiv = createCardDiv(card.imageUrl, card.testingText, null, false, true, true, false, card.incomplete);
+                var cardDiv = Card.CreateCardDiv(card.imageUrl, card.testingText, null, false, true, true, false, card.incomplete);
                 cardDiv.data("card", card);
                 cardDiv.data("selection", contents);
                 cardDiv.addClass("selectionInCollection");
             } else {
                 var card = new Card(blueprintId, null, null, "pack", "collection", "player");
                 card.tokens = {"count":count};
-                var cardDiv = createCardDiv(card.imageUrl, card.testingText, null, false, true, true, false, card.incomplete);
+                var cardDiv = Card.CreateCardDiv(card.imageUrl, card.testingText, null, false, true, true, false, card.incomplete);
                 cardDiv.data("card", card);
                 cardDiv.addClass("packInCollection");
             }
@@ -989,7 +989,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
                             countInDeck++;
                     });
             card.tokens = {"count":count - countInDeck};
-            var cardDiv = createCardDiv(card.imageUrl, card.testingText, null, card.isFoil(), true, false, card.incomplete);
+            var cardDiv = Card.CreateCardDiv(card.imageUrl, card.testingText, null, card.isFoil(), true, false, card.incomplete);
             cardDiv.data("card", card);
             cardDiv.addClass("cardInCollection");
             this.normalCollectionDiv.append(cardDiv);
