@@ -547,3 +547,13 @@ div.playerStats {
 ul.ui-tabs-nav {
     height: 14px;
 }
+
+#auto-zoom-message {
+    position: relative;
+    bottom: 1em;
+    color: #FFFF00;
+    background-color: #000000;
+    text-align: center;
+    width: fit-content;
+    margin: 0 auto;
+}

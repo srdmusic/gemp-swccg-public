@@ -270,13 +270,13 @@ var GempSwccgDeckBuildingUI = Class.extend({
         $('body').unbind('mouseover');
         $("body").mouseover(
             function (event) {
-                return that.autoZoom.handleMouseOver(event, 
+                return that.autoZoom.handleMouseOver(event.originalEvent, 
                    that.dragCardId != null, that.infoDialog.dialog("isOpen"));
             });
         
         $("body").mousedown(
                 function (event) {
-                    that.autoZoom.handleMouseDown(event);
+                    that.autoZoom.handleMouseDown(event.originalEvent);
                     
                     return that.dragStartCardFunction(event);
                 });
@@ -288,13 +288,13 @@ var GempSwccgDeckBuildingUI = Class.extend({
         $('body').unbind('keydown');
         $("body").keydown(
             function (event) {
-                return that.autoZoom.handleKeyDown(event);
+                return that.autoZoom.handleKeyDown(event.originalEvent);
             });
 
         $('body').unbind('keyup');
         $("body").keyup(
             function (event) {
-                return that.autoZoom.handleKeyUp(event);
+                return that.autoZoom.handleKeyUp(event.originalEvent);
             });
 
 

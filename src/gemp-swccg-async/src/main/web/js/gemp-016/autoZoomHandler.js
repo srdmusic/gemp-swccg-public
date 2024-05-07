@@ -8,6 +8,10 @@ class AutoZoom {
 	autoZoomToggle = null;
 	previewImageDiv = null;
 	previewImage = null;
+	flipMessageDiv = null;
+	//The actual card on the table, referenced so that we know
+	// what the original rotation is.
+	baseImageDiv = null;
 
 	constructor(cookieName) {
 		const that = this;
@@ -32,8 +36,17 @@ class AutoZoom {
 			class: 'previewImage',
 			style: ""
 		}).appendTo('body');
-		this.previewImageDiv.append("<img></img>")
-		this.previewImage = this.previewImageDiv.find("img")[0];
+		//this.previewImageDiv.append("<img></img>")
+		
+		this.previewImage = $('<img></img>')
+			.appendTo(this.previewImageDiv)[0];
+		
+		this.flipMessageDiv = $('<div>', {
+			id: 'auto-zoom-message'
+		}).appendTo(this.previewImageDiv);
+		
+		
+		//this.previewImage = this.previewImageDiv.find("img")[0];
 		
 		this.previewImageDiv = this.previewImageDiv[0];		
 	}
@@ -140,8 +153,8 @@ class AutoZoom {
 
 			// set the vertical position of the preview image (and make sure it isn't extending over the edge of the window):
 			var previewImageTop = (srcImageY + (srcImageHeight / 2)) - (previewImageHeight / 2);
-			if ((previewImageTop + previewImageHeight) > windowHeight) {
-				previewImageTop = windowHeight - previewImageHeight;
+			if ((previewImageTop + previewImageHeight + 15) > windowHeight) {
+				previewImageTop = windowHeight - previewImageHeight - 15;
 			}
 			else if (previewImageTop < 0) {
 				previewImageTop = 0;
@@ -165,30 +178,84 @@ class AutoZoom {
 		this.previewImageBPID = "0";
 		this.previewImage.src = "";
 		this.previewImage.style.display = "none";
+		this.previewImage.style.transform = "rotate(0deg)";
+		this.hidePreviewMessage();
 	}
 
-	rotatePreviewImage(shouldRotate) {
-		var previewImageStyle = this.previewImage.style;
-		if (!shouldRotate) {
-			previewImageStyle.transform = "rotate(0deg)";
+	rotatePreviewImage(shiftHeld, reversible) {
+		const baseRotated = this.baseImageDiv.style.transform.includes("180");
+		//If the base image is already rotated (such as a location facing 
+		// the player), then we act as if Shift is held, even if it's not.  
+		// However if shift IS held AND it's rotated, we act like it's not.  
+		// This is basically XOR; when they are the same they cancel out,
+		// but when they are different they cause a rotation.
+		// Also, if this card is a reversible (like an objective), just 
+		// always make it face right-side up.
+		if ((shiftHeld == baseRotated) || reversible) {
+			this.previewImage.style.transform = "rotate(0deg)";
 		}
 		else {
-			previewImageStyle.transform = "rotate(180deg)";
+			this.previewImage.style.transform = "rotate(180deg)";
 		}
+	}
+	
+	setPreviewMessage(reversible) {
+		let message = "";
+		
+		if(reversible) {
+			message = "Press <b>[Shift]</b> to flip.";
+		}
+		else if(this.baseImageDiv.style.transform.includes("180")) {
+			message = "Hold <b>[Shift]</b> to rotate.";
+		}
+		
+		if(message) {
+			this.flipMessageDiv.html(message);
+			this.flipMessageDiv[0].style.display = "block";
+		}
+		else {
+			this.hidePreviewMessage();	
+		}
+	}
+	
+	hidePreviewMessage() {
+		this.flipMessageDiv.html("");
+		this.flipMessageDiv[0].style.display = "none";
+	}
+	
+	getShiftedId(blueprintId, isHoldingShift) {
+		const reverseId = this.getReverseId(blueprintId);
+
+		return isHoldingShift && reverseId
+				? reverseId : blueprintId;
+	}
+	
+	getReverseId(blueprintId) {
+		if(blueprintId.includes("_BACK"))
+			return blueprintId.replace("_BACK", "");
+		
+		if(Card.getImageUrl(blueprintId + "_BACK"))
+			return blueprintId + "_BACK";
+		
+		return null;
+	}
+	
+	isReversible(blueprintId) {
+		return blueprintId.includes("_BACK") ||
+			Card.getImageUrl(blueprintId + "_BACK");
 	}
 
 	handleMouseOver(event, isDragging, infoDialogOpen) {
 		const target = $(event.target);
 		const tarIsCard = target.hasClass("actionArea");
 		
-		// if mouse over target is a card on table, and client supports image previews, showImage
+		// Reasons to cancel the popup: we're on a touch device,
+		// auto zoom has been disabled, we're not hovering over a card,
+		// we are currently click-dragging, the card preview box is open.
 		if(this.isTouchDevice || !this.showPreviewImage
 		   || !tarIsCard || isDragging || infoDialogOpen) {
 			
-			// if previewImage is active and either the event target isn't a card 
-			// on table OR the user shift+clicked to bring up the card detail 
-			// dialogue, we need to hide the current previewImage
-			if (this.previewImageBPID !== "0" && !tarIsCard) {
+			if (this.previewImageBPID !== "0") {
 				this.hidePreviewImage();
 				event.stopPropagation();
 				return false;
@@ -197,36 +264,33 @@ class AutoZoom {
 			return true;
 		}
 
-		
+
 		const refCard = target.closest(".card");
-		const refCardDiv = refCard[0];
+		this.baseImageDiv = refCard[0];
 		const card = refCard.data("card");
 		
 		// don't show preview image if card is animating
-		if (!$(refCardDiv).hasClass('card-animating')) {
-			const startFlipped = event.shiftKey;
-			const blueprintId = card.blueprintId;
-			const reverseSideImage = Card.getImageUrl(blueprintId + "_BACK");
-			const alreadyReversed = blueprintId.includes("_BACK");
-
-			const imageBlueprintId = startFlipped && reverseSideImage ? blueprintId + "_BACK" : blueprintId;
+		if (!$(this.baseImageDiv).hasClass('card-animating')) {
+			const imageBlueprintId = this.getShiftedId(card.blueprintId, event.shiftKey);
 
 			// don't show preview image if hovered card is the DS/LS card back art
 			if (imageBlueprintId !== "-1_1" && imageBlueprintId !== "-1_2") {
 				this.previewImageBPID = imageBlueprintId;
-				this.displayPreviewImage(refCardDiv);
-
-				if (!reverseSideImage && !alreadyReversed) {
-					// set the starting rotation based on if shift key
-					// is active when event was triggered, as long as the
-					// card doesn't have a reverse side
-					this.rotatePreviewImage(startFlipped);
-				}
+				this.displayPreviewImage(this.baseImageDiv);
+				this.rotatePreviewImage(event.shiftKey, imageBlueprintId !== card.blueprintId);
+				this.setPreviewMessage(this.isReversible(card.blueprintId));
 				
 				event.stopPropagation();
 				return false;
 			}
 		}
+		else if (this.previewImageBPID !== "0") {
+			this.hidePreviewImage();
+			event.stopPropagation();
+			return false;
+		}
+		
+		return true;
 	}
 	
 	handleMouseDown(event) {
@@ -236,33 +300,34 @@ class AutoZoom {
 	}
 	
 	handleKeyDown(event) {
-		if (this.showPreviewImage && !this.isTouchDevice 
-				&& event.which === 16 && this.previewImageBPID != "0") {
-			const reverseSideImage = Card.getImageUrl(this.previewImageBPID + "_BACK");
-			const alreadyReversed = this.previewImageBPID.includes("_BACK");
+		if (!event.repeat && this.showPreviewImage && !this.isTouchDevice 
+				&& event.key === "Shift" && this.previewImageBPID != "0") {
+			
+			const imageBlueprintId = this.getShiftedId(this.previewImageBPID, true);
+			const reversible = imageBlueprintId !== this.previewImageBPID;
+			const image = Card.getImageUrl(imageBlueprintId);
+			
+			this.previewImageBPID = imageBlueprintId;
+			this.previewImage.src = image;
+			this.rotatePreviewImage(true, reversible);
+		}
 		
-			if (reverseSideImage) {
-				this.previewImageBPID = this.previewImageBPID + "_BACK";
-				this.previewImage.src = reverseSideImage;
-			} 
-			else if(!alreadyReversed){
-				this.rotatePreviewImage(true)
-			}
-		};
 		return true;
 	}
 	
 	handleKeyUp(event) {
 		if (this.showPreviewImage && !this.isTouchDevice 
-				&& event.which === 16 && this.previewImageBPID != "0") {
-			const isBackImage = this.previewImageBPID.endsWith('_BACK');
-			if (isBackImage) {
-				this.previewImageBPID = this.previewImageBPID.substring(0, this.previewImageBPID.length - 5);
-				this.previewImage.src = Card.getImageUrl(this.previewImageBPID);
-			} else {
-				this.rotatePreviewImage(false)
-			}
-		};
+				&& event.key === "Shift" && this.previewImageBPID != "0") {
+			
+			const imageBlueprintId = this.getShiftedId(this.previewImageBPID, false);
+			const reversible = imageBlueprintId !== this.previewImageBPID;
+			const image = Card.getImageUrl(imageBlueprintId);
+			
+			this.previewImageBPID = imageBlueprintId;
+			this.previewImage.src = image;
+			this.rotatePreviewImage(false, reversible);
+		}
+		
 		return true;
 	}
 	
