@@ -31,7 +31,7 @@ jobs:
           echo "rsync changes to public"
           # set501 is the playtesting cards and they must be excluded.
           # .git and .github are specific to their repositories.
-          rsync --exclude=set501 --exclude=.git --exclude=.github -av --delete gemp-swccg-private/ gemp-swccg-public/
+          rsync --exclude=set501 --exclude=.git --exclude=.github -av gemp-swccg-private/ gemp-swccg-public/
           cd gemp-swccg-public/
           git config --local user.email "rules@starwarsccg.org"
           git config --local user.name "github-actions[bot]"
