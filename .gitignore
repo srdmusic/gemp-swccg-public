@@ -6,7 +6,6 @@
 *.iml
 
 # Log file
-./logs/*.out
 *.log
 
 # BlueJ files
@@ -56,7 +55,7 @@ src/logs/
 # Default files that we wish to exist when a new user pulls down, 
 # but not actually tracked most of the time.
 nohup.out
-src/replays/*
+replays/*
 !replays/.placeholder
 logs/*
 !logs/.placeholder
