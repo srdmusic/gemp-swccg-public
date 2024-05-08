@@ -9,7 +9,6 @@ import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.ModelType;
-import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -29,23 +28,24 @@ import java.util.List;
  * Set: Playtesting
  * Type: Character
  * Subtype: Droid
- * Title: BB-8, Keeper of the Map
+ * Title: CB-23
  */
 public class Card501_165 extends AbstractDroid {
     public Card501_165() {
-        super(Side.LIGHT, Math.PI, 2, 1, 4, "BB-8, Keeper Of The Map", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        addPersona(Persona.BB8);
-        setGameText("[Episode VII] characters deploy -1 here. During battle, each player with two other participating [Episode VII] characters may add a destiny to attrition. While with Poe or Rey, gains Resistance Agent.");
+        super(Side.LIGHT, 3, 2, 1, 4, "CB-23", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Female.");
+        setGameText("[Episode VII] characters deploy -1 here. During battle, each player with two other participating [Episode VII] characters may add a destiny to attrition. While with Kazuda, Poe or Rey, gains Resistance Agent.");
         addIcons(Icon.EPISODE_VII, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_23);
+        addKeyword(Keyword.FEMALE);
         addModelType(ModelType.ASTROMECH);
-        setTestingText("BB-8, Keeper Of The Map");
+        setTestingText("CB-23");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.icon(Icon.EPISODE_VII), Filters.character), -1, Filters.here(self)));
-        modifiers.add(new KeywordModifier(self, new WithCondition(self, Filters.or(Filters.Poe, Filters.Rey)), Keyword.RESISTANCE_AGENT));
+        modifiers.add(new KeywordModifier(self, new WithCondition(self, Filters.or(Filters.Kazuda, Filters.Poe, Filters.Rey)), Keyword.RESISTANCE_AGENT));
         return modifiers;
     }
 
