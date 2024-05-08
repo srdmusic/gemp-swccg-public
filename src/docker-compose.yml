@@ -27,7 +27,7 @@ services:
          source: ./gemp-swccg-async/src/main/web
          target: /opt/gemp-swccg/web
        - type: bind
-         source: ./
+         source: ../
          target: /opt/gemp-swccg
        - type: bind
          source: ../logs
@@ -43,8 +43,8 @@ services:
       nohup 
       java -Xmx4g 
       -Dlog4j.debug 
-      -Dlog4j.configurationFile=/opt/gemp-swccg/gemp-swccg-async/src/main/resources/prod-log4j.xml 
-      -jar /opt/gemp-swccg/gemp-swccg-async/target/web.jar 
+      -Dlog4j.configurationFile=/opt/gemp-swccg/src/gemp-swccg-async/src/main/resources/prod-log4j.xml 
+      -jar /opt/gemp-swccg/src/gemp-swccg-async/target/web.jar 
       com.gempukku.swccgo.async.SwccgoAsyncServer &
 
 
