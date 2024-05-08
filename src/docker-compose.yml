@@ -27,7 +27,7 @@ services:
          source: ./gemp-swccg-async/src/main/web
          target: /opt/gemp-swccg/web
        - type: bind
-         source: ./.
+         source: ./
          target: /opt/gemp-swccg
        - type: bind
          source: ../logs
