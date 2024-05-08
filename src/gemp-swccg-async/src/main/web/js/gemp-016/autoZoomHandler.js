@@ -271,14 +271,14 @@ class AutoZoom {
 		
 		// don't show preview image if card is animating
 		if (!$(this.baseImageDiv).hasClass('card-animating')) {
-			const imageBlueprintId = this.getShiftedId(card.blueprintId, event.shiftKey);
+			const imageBlueprintId = this.getShiftedId(card.bareBlueprint, event.shiftKey);
 
 			// don't show preview image if hovered card is the DS/LS card back art
 			if (imageBlueprintId !== "-1_1" && imageBlueprintId !== "-1_2") {
 				this.previewImageBPID = imageBlueprintId;
 				this.displayPreviewImage(this.baseImageDiv);
-				this.rotatePreviewImage(event.shiftKey, imageBlueprintId !== card.blueprintId);
-				this.setPreviewMessage(this.isReversible(card.blueprintId));
+				this.rotatePreviewImage(event.shiftKey, imageBlueprintId !== card.bareBlueprint);
+				this.setPreviewMessage(this.isReversible(card.bareBlueprint));
 				
 				event.stopPropagation();
 				return false;

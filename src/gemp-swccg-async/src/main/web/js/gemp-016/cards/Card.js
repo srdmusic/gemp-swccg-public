@@ -29,27 +29,38 @@ class Card {
     
     static CardCache = {};
     static CardScale = 350 / 490;
+    
+    static StripBlueprintId(blueprintId) {
+        var stripped = blueprintId;
+        
+        stripped = stripped.replace("*", "");
+        stripped = stripped.replace("^", "");
+
+        return stripped;
+    }
+    
+    static GetFoil(bpid) {
+       //At the very smallest, a card id can be 3 characters, i.e. 1_1
+        //Thus we start searching at the 2nd character
+        return bpid.includes("*", 2); 
+    }
+    
+    static GetAlternateImage(bpid) {
+        return bpid.includes("^", 2);
+    }
 
     constructor (blueprintId, testingText, backSideTestingText, zone, cardId, owner, locationIndex, upsideDown, onSide, frozen, suspended, collapsed) {
         this.blueprintId = blueprintId;
-
-        var imageBlueprint = blueprintId;
-        var len = imageBlueprint.length;
-        this.foil = imageBlueprint.substring(len - 1, len) == "*";
-        if (this.foil) {
-            imageBlueprint = imageBlueprint.substring(0, len - 1);
-        }
-
-        this.alternateImage = imageBlueprint.substring(len - 1, len) == "^";
+        this.bareBlueprint = Card.StripBlueprintId(this.blueprintId);
+        
+        this.foil = Card.GetFoil(blueprintId);
+        this.alternateImage = Card.GetAlternateImage(blueprintId);
+        
         if (this.alternateImage) {
-            imageBlueprint = imageBlueprint.substring(0, len - 1);
-             if (fixedImages[imageBlueprint+"ai"] != null)
-                imageBlueprint = imageBlueprint + "ai";
-             if (fixedImages[imageBlueprint+"ai_BACK"] != null)
-                backSideImageUrl = backSideImageUrl + "ai";
+            if (fixedImages[this.bareBlueprint + "ai"] != null)
+                this.bareBlueprint = this.bareBlueprint + "ai";
         }
 
-        this.bareBlueprint = imageBlueprint;
 
         this.testingText = null;
         if (testingText !== undefined) {
@@ -87,29 +98,30 @@ class Card {
             this.collapsed = collapsed;
         }
         this.attachedCards = new Array();
-        if (imageBlueprint == "rules") {
+        if (this.bareBlueprint == "rules") {
             this.imageUrl = "https://res.starwarsccg.org/cards/rules.png";
+            return;
         }
-        else {
-            this.horizontal = this.isHorizontal(this.bareBlueprint, this.zone);
 
-            if (imageBlueprint != "-1_1" && imageBlueprint != "-1_2" && Card.CardCache[imageBlueprint] != null) {
-                var cardFromCache = Card.CardCache[imageBlueprint];
-                this.imageUrl = cardFromCache.imageUrl;
-                this.backSideImageUrl = cardFromCache.backSideImageUrl;
-                this.incomplete = cardFromCache.incomplete;
-            } else {
-                this.imageUrl = Card.getImageUrl(this.bareBlueprint);
-                this.backSideImageUrl = this.getBackSideUrlByBlueprintId(this.bareBlueprint);
-                this.incomplete = this.isIncomplete(this.bareBlueprint);
 
-                if (imageBlueprint != "-1_1" && imageBlueprint != "-1_2") {
-                    Card.CardCache[imageBlueprint] = {
-                        imageUrl:this.imageUrl,
-                        backSideImageUrl:this.backSideImageUrl,
-                        incomplete:this.incomplete
-                    };
-                }
+        this.horizontal = Card.isHorizontal(this.bareBlueprint, this.zone);
+
+        if (this.bareBlueprint != "-1_1" && this.bareBlueprint != "-1_2" && Card.CardCache[this.bareBlueprint] != null) {
+            var cardFromCache = Card.CardCache[this.bareBlueprint];
+            this.imageUrl = cardFromCache.imageUrl;
+            this.backSideImageUrl = cardFromCache.backSideImageUrl;
+            this.incomplete = cardFromCache.incomplete;
+        } else {
+            this.imageUrl = Card.getImageUrl(this.bareBlueprint);
+            this.backSideImageUrl = this.getBackSideUrl(this.bareBlueprint);
+            this.incomplete = Card.isIncomplete(this.bareBlueprint);
+
+            if (this.bareBlueprint != "-1_1" && this.bareBlueprint != "-1_2") {
+                Card.CardCache[this.bareBlueprint] = {
+                    imageUrl:this.imageUrl,
+                    backSideImageUrl:this.backSideImageUrl,
+                    incomplete:this.incomplete
+                };
             }
         }
     }
@@ -128,8 +140,8 @@ class Card {
             this.incomplete = cardFromCache.incomplete;
         } else {
             this.imageUrl = Card.getImageUrl(this.bareBlueprint);
-            this.backSideImageUrl = this.getBackSideUrlByBlueprintId(this.bareBlueprint);
-            this.incomplete = this.isIncomplete(this.bareBlueprint);
+            this.backSideImageUrl = this.getBackSideUrl(this.bareBlueprint);
+            this.incomplete = Card.isIncomplete(this.bareBlueprint);
 
             if (this.bareBlueprint != "-1_1" && this.bareBlueprint != "-1_2") {
                 Card.CardCache[this.bareBlueprint] = {
@@ -156,8 +168,8 @@ class Card {
             this.incomplete = cardFromCache.incomplete;
         } else {
             this.imageUrl = Card.getImageUrl(this.bareBlueprint);
-            this.backSideImageUrl = this.getBackSideUrlByBlueprintId(this.bareBlueprint);
-            this.incomplete = this.isIncomplete(this.bareBlueprint);
+            this.backSideImageUrl = this.getBackSideUrl(this.bareBlueprint);
+            this.incomplete = Card.isIncomplete(this.bareBlueprint);
 
             if (this.bareBlueprint != "-1_1" && this.bareBlueprint != "-1_2") {
                 Card.CardCache[this.bareBlueprint] = {
@@ -177,7 +189,7 @@ class Card {
     isPack() {
         return packBlueprints[this.blueprintId] != null;
     }
-
+    
     isZoneNeverHorizontal(zone) {
         if (zone == "RESERVE_DECK" || zone == "FORCE_PILE"
                 || zone == "USED_PILE" || zone == "LOST_PILE"
@@ -190,12 +202,12 @@ class Card {
         return false;
     }
 
-    isBlueprintHorizontal(blueprintId) {
+    static isBlueprintHorizontal(blueprintId, alternateImage) {
         var separator = blueprintId.indexOf("_");
         var setNo = parseInt(blueprintId.substr(0, separator));
         var cardNo = parseInt(blueprintId.substr(separator + 1));
 
-        if (this.alternateImage) {
+        if (alternateImage) {
             // AIs that are horizontal and the non-AI is not
             if (blueprintId == "204_47ai"
                     || blueprintId == "200_41ai"
@@ -451,21 +463,17 @@ class Card {
         return false;
     }
 
-    isHorizontal(blueprintId, zone) {
+    static isHorizontal(blueprintId, zone) {
 
         // For some zones, never show the card as horizontal
-        if (this.isZoneNeverHorizontal(zone)) {
+        if (Card.isZoneNeverHorizontal(zone)) {
             return false;
         }
 
-        if (this.isBlueprintHorizontal(blueprintId)) {
-            return true;
-        }
-
-        return false;
+        return Card.isBlueprintHorizontal(blueprintId);
     }
 
-    isIncomplete(blueprintId) {
+    static isIncomplete(blueprintId) {
         var separator = blueprintId.indexOf("_");
         var setNo = parseInt(blueprintId.substr(0, separator));
         var cardNo = parseInt(blueprintId.substr(separator + 1));
@@ -488,7 +496,7 @@ class Card {
     }
 
     getBackSideBlueprintId(blueprintId) {
-        if (this.endsWith(blueprintId, "_BACK")) {
+        if (blueprintId.endsWith("_BACK")) {
             return blueprintId.substring(0, blueprintId.length - 5);
         }
         var backSideUrl = Card.getImageUrl(blueprintId.concat("_BACK"));
@@ -497,46 +505,15 @@ class Card {
         }
         var genericBackUrl = Card.getImageUrl(blueprintId);
         if (genericBackUrl != null) {
-            if (Card.getImageUrl(blueprintId).includes("-DARK/") || Card.getImageUrl(blueprintId).includes("-Dark/"))
+            if (Card.getImageUrl(blueprintId).includes("-Dark/"))
                     return "-1_2";
                 else
                     return "-1_1";
         }
     }
 
-    getBackSideUrlByBlueprintId(blueprintId) {
+    getBackSideUrl(blueprintId) {
         return Card.getImageUrl(this.getBackSideBlueprintId(blueprintId));
-    }
-
-    endsWith(str, suffix) {
-        return str.indexOf(suffix, str.length - suffix.length) !== -1;
-    }
-
-    formatSetNo(setNo) {
-        var setNoStr;
-        if (setNo < 10)
-            setNoStr = "0" + setNo;
-        else
-            setNoStr = setNo;
-        return setNoStr;
-    }
-
-    formatCardNo(setNo, cardNo) {
-        var setNoStr = this.formatSetNo(setNo);
-
-        var cardStr;
-        if (cardNo < 10)
-            cardStr = setNoStr + "00" + cardNo;
-        else if (cardNo < 100)
-            cardStr = setNoStr + "0" + cardNo;
-        else
-            cardStr = setNoStr + "" + cardNo;
-
-        return cardStr;
-    }
-
-    getMainLocation(setNo, cardNo) {
-        return "https://res.starwarsccg.org/cards/";
     }
 
     getHeightForWidth(width) {
