@@ -38,7 +38,7 @@ import java.util.List;
 public class Card501_120 extends AbstractSite {
     public Card501_120() {
         super(Side.LIGHT, Title.Docking_Control_Room_327, Title.Death_Star, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationLightSideGameText("May deploy [ANH] C-3PO from Reserve Deck here; reshuffle. Restraining Bolt canceled here.");
+        setLocationLightSideGameText("May deploy [Set 14] C-3PO from Reserve Deck here; reshuffle. Restraining Bolt canceled here.");
         setLocationDarkSideGameText("Luke may not be captured here.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
@@ -55,7 +55,7 @@ public class Card501_120 extends AbstractSite {
             action.setText("Deploy [ANH] C-3PO here from Reserve Deck");
             action.setActionMsg("Deploy [ANH] C-3PO here from Reserve Deck");
             action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Filters.icon(Icon.A_NEW_HOPE), Filters.C3PO), Filters.here(self), true)
+                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Filters.icon(Icon.VIRTUAL_SET_14), Filters.C3PO), Filters.here(self), true)
             );
             return Collections.singletonList(action);
         }
