@@ -190,7 +190,12 @@ class Card {
         return packBlueprints[this.blueprintId] != null;
     }
     
-    isZoneNeverHorizontal(zone) {
+    effectivelyHorizontal() {
+        return (this.zone.startsWith("TOP_OF") &&
+            Card.isBlueprintHorizontal(this.blueprintId, this.alternateImage));
+    }
+
+    static isZoneNeverHorizontal(zone) {
         if (zone == "RESERVE_DECK" || zone == "FORCE_PILE"
                 || zone == "USED_PILE" || zone == "LOST_PILE"
                 || zone == "TOP_OF_RESERVE_DECK" || zone == "TOP_OF_FORCE_PILE"
