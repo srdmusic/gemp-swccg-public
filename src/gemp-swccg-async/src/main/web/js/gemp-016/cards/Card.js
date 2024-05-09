@@ -9,6 +9,8 @@ class Card {
     imageUrl = null;
     backSideImageUrl = null;
     testingText = null;
+    backSideTestingText = null;
+
     zone = null;
     cardId = null;
     owner = null;
@@ -113,7 +115,7 @@ class Card {
             this.incomplete = cardFromCache.incomplete;
         } else {
             this.imageUrl = Card.getImageUrl(this.bareBlueprint);
-            this.backSideImageUrl = this.getBackSideUrl(this.bareBlueprint);
+            this.backSideImageUrl = Card.getBackSideUrl(this.bareBlueprint);
             this.incomplete = Card.isIncomplete(this.bareBlueprint);
 
             if (this.bareBlueprint != "-1_1" && this.bareBlueprint != "-1_2") {
@@ -127,7 +129,7 @@ class Card {
     }
 
     flipOverCard() {
-        this.bareBlueprint = this.getBackSideBlueprintId(this.bareBlueprint);
+        this.bareBlueprint = Card.getBackSideBlueprintId(this.bareBlueprint);
         this.horizontal = this.isHorizontal(this.bareBlueprint, this.zone);
         var tempText = this.testingText;
         this.testingText = this.backSideTestingText;
@@ -500,7 +502,7 @@ class Card {
         return null;
     }
 
-    getBackSideBlueprintId(blueprintId) {
+    static getBackSideBlueprintId(blueprintId) {
         if (blueprintId.endsWith("_BACK")) {
             return blueprintId.substring(0, blueprintId.length - 5);
         }
@@ -517,8 +519,8 @@ class Card {
         }
     }
 
-    getBackSideUrl(blueprintId) {
-        return Card.getImageUrl(this.getBackSideBlueprintId(blueprintId));
+    static getBackSideUrl(blueprintId) {
+        return Card.getImageUrl(Card.getBackSideBlueprintId(blueprintId));
     }
 
     getHeightForWidth(width) {

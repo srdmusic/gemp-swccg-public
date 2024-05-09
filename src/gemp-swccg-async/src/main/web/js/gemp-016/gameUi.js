@@ -1,17 +1,3 @@
-var is_touch_device = 'ontouchstart' in document.documentElement;
-
-if (!String.prototype.endsWith) {
-    String.prototype.endsWith = function (searchString, position) {
-        var subjectString = this.toString();
-        if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
-            position = subjectString.length;
-        }
-        position -= searchString.length;
-        var lastIndex = subjectString.indexOf(searchString, position);
-        return lastIndex !== -1 && lastIndex === position;
-    };
-}
-
 var GempSwccgGameUI = Class.extend({
     padding: 1,
 
@@ -1424,32 +1410,20 @@ var GempSwccgGameUI = Class.extend({
         this.infoDialog.html("");
         this.infoDialog.html("<div style='scroll: auto'></div>");
         var floatCardDiv = $("<div style='float: left;'></div>");
-        var showAsHorizontal = card.isHorizontal(card.bareBlueprint, card.zone);
-        var cardDiv = Card.CreateFullCardDiv(card.imageUrl, card.testingText, card.foil, showAsHorizontal);
+
+        var windowWidth = window.innerWidth * 0.9;
+        var windowHeight = window.innerHeight * 0.9;
+        
+        var cardDisplay = new CardDisplay(card, windowWidth, windowHeight);
+        var cardDiv = cardDisplay.baseDiv;
+        
         // Check if card div needs to be inverted
-        this.infoDialog.cardImageRotation = 0;
-        this.infoDialog.cardImageFlipped = false;
         if (card.inverted == true) {
-            that.infoDialog.cardImageRotation = (that.infoDialog.cardImageRotation + 180) % 360;
-            $(cardDiv).rotate(this.infoDialog.cardImageRotation);
+            cardDisplay.invert();
         }
         $(cardDiv).click(
             function(event) {
-                // Check if need to show other card image if the image has two sides
-                if (card.backSideImageUrl != null && !card.backSideImageUrl.includes("CardBack") && !card.backSideImageUrl.includes("cardback")) {
-                    that.infoDialog.cardImageFlipped = !that.infoDialog.cardImageFlipped;
-                    if (that.infoDialog.cardImageFlipped) {
-                        $(cardDiv).find("div.fullcard img").attr('src', card.backSideImageUrl);
-                    }
-                    else {
-                        $(cardDiv).find("div.fullcard img").attr('src', card.imageUrl);
-                    }
-                }
-                // Otherwise rotate the image
-                else {
-                    that.infoDialog.cardImageRotation = (that.infoDialog.cardImageRotation + 180) % 360;
-                    $(cardDiv).rotate(that.infoDialog.cardImageRotation);
-                }
+                cardDisplay.invert();
                 event.stopPropagation();
             });
         floatCardDiv.append(cardDiv);
@@ -1458,19 +1432,11 @@ var GempSwccgGameUI = Class.extend({
         if (extraSpace)
             this.infoDialog.append("<div id='cardEffects'></div>");
 
-        var windowWidth = $(window).width();
-        var windowHeight = $(window).height();
+        this.infoDialog.dialog({ 
+            width: cardDiv.width() + 30 + (extraSpace ? 400 : 0), 
+            height: cardDiv.height() + 45 
+        });
 
-        var horSpace = (extraSpace ? 400 : 0) + 30;
-        var vertSpace = 45;
-
-        if (showAsHorizontal) {
-            // 500x360
-            this.infoDialog.dialog({ width: Math.min(500 + horSpace, windowWidth), height: Math.min(360 + vertSpace, windowHeight) });
-        } else {
-            // 360x500
-            this.infoDialog.dialog({ width: Math.min(360 + horSpace, windowWidth), height: Math.min(500 + vertSpace, windowHeight) });
-        }
         this.infoDialog.dialog("open");
     },
 
@@ -1532,7 +1498,7 @@ var GempSwccgGameUI = Class.extend({
                 autoOpen: false,
                 closeOnEscape: true,
                 resizable: false,
-                title: "Card information"
+                title: "Card Information"
             });
 
         var swipeOptions = {
