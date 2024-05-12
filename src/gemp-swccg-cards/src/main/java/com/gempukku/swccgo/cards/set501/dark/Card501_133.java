@@ -61,9 +61,9 @@ public class Card501_133 extends AbstractNormalEffect {
                     new PutCardFromHandOnBottomOfReserveDeckEffect(action, playerId));
             // Perform result(s)
             action.appendEffect(
-                    new ActivateForceEffect(action, playerId, 1));
-            action.appendEffect(
                     new ShuffleReserveDeckEffect(action));
+            action.appendEffect(
+                    new ActivateForceEffect(action, playerId, 1));
 
             actions.add(action);
         }
