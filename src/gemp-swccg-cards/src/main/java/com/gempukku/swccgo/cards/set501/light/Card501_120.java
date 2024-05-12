@@ -84,7 +84,8 @@ public class Card501_120 extends AbstractSite {
     protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         Filter restrainingBoltHere = Filters.and(Filters.Restraining_Bolt, Filters.atLocation(self));
         // Check conditions(s)
-        if (TriggerConditions.isTableChanged(game, effectResult) && GameConditions.canSpot(game, self, Filters.and(Filters.Restraining_Bolt, Filters.atLocation(self)))) {
+        if (TriggerConditions.isTableChanged(game, effectResult) 
+                && GameConditions.canTargetToCancel(game, self, Filters.and(Filters.Restraining_Bolt, Filters.atLocation(self)))) {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             CancelCardActionBuilder.buildCancelCardAction(action, restrainingBoltHere, "Cancel Restraining Bolt");
             return Collections.singletonList(action);
