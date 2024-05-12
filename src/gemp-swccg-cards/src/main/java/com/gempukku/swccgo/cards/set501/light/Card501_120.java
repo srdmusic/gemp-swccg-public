@@ -11,6 +11,7 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -23,6 +24,7 @@ import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveD
 import com.gempukku.swccgo.logic.modifiers.MayNotTargetToBeCapturedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -65,13 +67,26 @@ public class Card501_120 extends AbstractSite {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredBeforeTriggers(String playerOnLightSideOfLocation, SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
+        Filter restrainingBoltHere = Filters.and(Filters.Restraining_Bolt, Filters.atLocation(self));
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.Restraining_Bolt)
+        if (TriggerConditions.isPlayingCard(game, effect, restrainingBoltHere)
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             // Build action using common utility
             CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        Filter restrainingBoltHere = Filters.and(Filters.Restraining_Bolt, Filters.atLocation(self));
+        // Check conditions(s)
+        if (TriggerConditions.isTableChanged(game, effectResult) && GameConditions.canSpot(game, self, Filters.and(Filters.Restraining_Bolt, Filters.atLocation(self)))) {
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            CancelCardActionBuilder.buildCancelCardAction(action, restrainingBoltHere, "Cancel Restraining Bolt");
             return Collections.singletonList(action);
         }
         return null;
