@@ -26,10 +26,9 @@ import com.gempukku.swccgo.logic.effects.DeployCardsSimultaneouslyEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardCombinationFromHandAndOrReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
-import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToDeployCostModifiersToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotHaveDeployCostDecreasedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.StandardEffect;
 
 import java.util.ArrayList;
@@ -46,6 +45,7 @@ import java.util.List;
 public class Card501_160 extends AbstractNormalEffect {
     public Card501_160() {
         super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Passage To The Alderaan System", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setGameText("Deploy on table if Stolen Data Tapes on table. Once per game, may simultaneously deploy non-[E7] Falcon and Han from hand and/or Reserve Deck (-1 each); reshuffle. Imperial starships may not have deploy cost reduced at Tatooine system. [Immune to Alter.]");
         addIcon(Icon.VIRTUAL_SET_23);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Passage To The Alderaan System");
@@ -186,7 +186,7 @@ public class Card501_160 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ImmuneToDeployCostModifiersToLocationModifier(self, Filters.alien, Filters.any, Filters.Tatooine_location));
+        modifiers.add(new MayNotHaveDeployCostDecreasedModifier(self, Filters.Imperial_starship, ));
         return modifiers;
     }
 
