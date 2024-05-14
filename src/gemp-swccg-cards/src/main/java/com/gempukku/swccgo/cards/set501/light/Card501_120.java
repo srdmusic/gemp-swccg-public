@@ -40,8 +40,8 @@ import java.util.List;
 public class Card501_120 extends AbstractSite {
     public Card501_120() {
         super(Side.LIGHT, Title.Docking_Control_Room_327, Title.Death_Star, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationLightSideGameText("May deploy [Set 15] C-3PO from Reserve Deck here; reshuffle. Restraining Bolt canceled here.");
-        setLocationDarkSideGameText("Luke may not be captured here.");
+        setLocationLightSideGameText("May deploy [Set 15] C-3PO from Reserve Deck here; reshuffle.");
+        setLocationDarkSideGameText("Luke may not be captured here. Restraining Bolt canceled here.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_23);
@@ -66,7 +66,7 @@ public class Card501_120 extends AbstractSite {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredBeforeTriggers(String playerOnLightSideOfLocation, SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredBeforeTriggers(String playerOnDarkSideOfLocation, SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
         Filter restrainingBoltHere = Filters.and(Filters.Restraining_Bolt, Filters.atLocation(self));
         // Check condition(s)
         if (TriggerConditions.isPlayingCard(game, effect, restrainingBoltHere)
@@ -81,7 +81,7 @@ public class Card501_120 extends AbstractSite {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         Filter restrainingBoltHere = Filters.and(Filters.Restraining_Bolt, Filters.atLocation(self));
         // Check conditions(s)
         if (TriggerConditions.isTableChanged(game, effectResult) 
