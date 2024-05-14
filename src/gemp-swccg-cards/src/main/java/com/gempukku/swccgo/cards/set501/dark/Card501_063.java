@@ -4,16 +4,12 @@ import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
 import com.gempukku.swccgo.common.CardSubtype;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
-import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
-import com.gempukku.swccgo.common.GameTextActionId;
-import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
@@ -113,7 +109,7 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
         if (GameConditions.isDuringBattleWithParticipant(game, Filters.Vader)
                 && GameConditions.canSpot(game, self, 2, characterFilter)){
 
-            final Filter trooperFilter = Filters.and(Filters.opponents(self), Filters.Rebel, Filters.trooper, Filters.abilityLessThan(4), Filters.participatingInBattle);
+            final Filter trooperFilter = Filters.and(Filters.opponents(self), Filters.Rebel, Filters.trooper, Filters.abilityLessThan(4), Filters.participatingInBattle, Filters.canBeTargetedBy(self, TargetingReason.TO_BE_LOST), Filters.canBeTargetedBy(self, TargetingReason.TO_BE_CHOKED));
 
             if (GameConditions.canAddBattleDestinyDraws(game, self)
                     && GameConditions.canSpot(game, self, trooperFilter)) {
@@ -159,33 +155,7 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
                     }
                 );
                 actions.add(action);
-            } else if (!GameConditions.canAddBattleDestinyDraws(game, self)
-                    && GameConditions.canSpot(game, self, trooperFilter)) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId3, CardSubtype.LOST);
-
-                action.setText("Choke a trooper");
-                action.setActionMsg("Choke a Rebel trooper");
-                action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            action.appendTargeting(
-                                new TargetCardOnTableEffect(action, playerId, "Choose Rebel trooper", trooperFilter) {
-                                    @Override
-                                    protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                                        action.addAnimationGroup(targetedCard);
-                                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
-                                            action.appendEffect(
-                                                new LoseCardFromTableEffect(action, finalTarget)
-                                            );
-                                    }
-                                }
-                            );
-                        }
-                    }
-                );
-                actions.add(action);
-            }
+            } 
         }
         return actions;
     }
