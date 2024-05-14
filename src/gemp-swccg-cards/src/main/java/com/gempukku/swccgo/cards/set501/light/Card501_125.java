@@ -40,8 +40,8 @@ import java.util.List;
 public class Card501_125 extends AbstractRebel {
     public Card501_125() {
         super(Side.LIGHT, 1, 5, 4, 6, 6, "Corran Horn, Jedi", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("Corellian.  Rogue Squadron pilot.");
-        setGameText("Adds 1 to maneuver of anything he pilots. Once per game, may deploy a blaster on Corran from hand or Reserve Deck (reshuffle) as a 'react.' During battle, may subtract 1 from a just drawn blaster weapon destiny; Corran is power +2. Immune to attrition < 5.");
+        setLore("Corellian.  Former counter-intelligence agent for CorSec (Corellian Security). Gifted tactician. One of Wedge Antilles' best pilots. Member of Rogue Squadron.");
+        setGameText("Adds 1 to maneuver of anything he pilots. Once per game, during battle, may deploy a blaster on Corran from hand (or Reserve Deck; reshuffle). During battle, may subtract 1 from a just drawn blaster weapon destiny; Corran is power +2. Immune to attrition < 5.");
         addPersona(Persona.CORRAN_HORN);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_23);
         setSpecies(Species.CORELLIAN);
@@ -90,12 +90,12 @@ public class Card501_125 extends AbstractRebel {
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId2, true)) {
 
             final OptionalGameTextTriggerAction action2 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId2);
-            action2.setText("Deploy blaster from Reserve Deck as a 'react'");
+            action2.setText("Deploy blaster from Reserve Deck");
             // Allow response(s)
             action2.appendUsage(
                     new OncePerGameEffect(action2));
             action2.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action2, Filters.blaster, false, true, true));
+                    new DeployCardFromReserveDeckEffect(action2, Filters.blaster, false, false, true));
             actions.add(action2);
         }
 
@@ -104,7 +104,7 @@ public class Card501_125 extends AbstractRebel {
                 && GameConditions.hasInHand(game, playerId, Filters.blaster)) {
 
             final OptionalGameTextTriggerAction action3 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId2);
-            action3.setText("Deploy blaster from hand as 'react'");
+            action3.setText("Deploy blaster from hand");
             // Allow response(s)
             action3.appendUsage(
                     new OncePerGameEffect(action3));
