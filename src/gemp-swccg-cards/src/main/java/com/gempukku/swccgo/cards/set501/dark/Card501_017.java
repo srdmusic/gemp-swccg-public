@@ -58,22 +58,26 @@ public class Card501_017 extends AbstractUsedOrLostInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
             action.setText("Activate up to 2 Force");
 
-            action.allowResponses("Activate up to 2 Force",
+            action.allowResponses(
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
-                            action.appendEffect(                                                            
-                                new PlayoutDecisionEffect(action, playerId,
-                                    new IntegerAwaitingDecision("Choose amount of Force to activate", 1, 2, 2) {
-                                        @Override
-                                        public void decisionMade(final int result) throws DecisionResultInvalidException {
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new ActivateForceEffect(action, playerId, result));
-                                        }
-                                    }
-                                )
-                            );
+                            // Perform result(s)
+                            int maxForceToActivate = Math.min(2, game.getGameState().getReserveDeckSize(playerId));
+                            if (maxForceToActivate > 0) {
+                                action.appendEffect(
+                                        new PlayoutDecisionEffect(action, playerId,
+                                                new IntegerAwaitingDecision("Choose amount of Force to activate ", 1, maxForceToActivate, maxForceToActivate) {
+                                                    @Override
+                                                    public void decisionMade(final int result) throws DecisionResultInvalidException {
+                                                        // Perform result(s)
+                                                        action.appendEffect(
+                                                                new ActivateForceEffect(action, playerId, result));
+                                                    }
+                                                }
+                                        )
+                                );
+                            }
                         }
                     }
             );
