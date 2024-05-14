@@ -18,6 +18,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.ModifyPowerUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromHandEffect;
@@ -58,6 +59,43 @@ public class Card501_125 extends AbstractRebel {
     }
 
     @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+        GameTextActionId gameTextActionId2 = GameTextActionId.CORRAN_HORN_JEDI__DOWNLOAD_BLASTER;
+
+        // Check condition(s)
+        if (GameConditions.isDuringBattleWithParticipant(game, self)
+                && GameConditions.isOncePerGame(game, self, gameTextActionId2)
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId2, false)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId2);
+            action.setText("Deploy blaster from Reserve Deck");
+            // Allow response(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.blaster, false, false, true));
+            actions.add(action);
+        }
+
+        if (GameConditions.isDuringBattleWithParticipant(game, self)
+                && GameConditions.isOncePerGame(game, self, gameTextActionId2)
+                && GameConditions.hasInHand(game, playerId, Filters.blaster)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId2);
+            action.setText("Deploy blaster from hand");
+            // Allow response(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            action.appendEffect(
+                    new DeployCardFromHandEffect(action, playerId, Filters.blaster, 0));
+            actions.add(action); 
+        }
+
+        return actions;
+    }
+
+    @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
@@ -81,37 +119,6 @@ public class Card501_125 extends AbstractRebel {
             actions.add(action);
         }
 
-        GameTextActionId gameTextActionId2 = GameTextActionId.CORRAN_HORN_JEDI__DOWNLOAD_BLASTER;
-        final String opponent = game.getOpponent(playerId);
-
-        // Check condition(s)
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.sameLocation(self))
-                && GameConditions.isOncePerGame(game, self, gameTextActionId2)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId2, true)) {
-
-            final OptionalGameTextTriggerAction action2 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId2);
-            action2.setText("Deploy blaster from Reserve Deck");
-            // Allow response(s)
-            action2.appendUsage(
-                    new OncePerGameEffect(action2));
-            action2.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action2, Filters.blaster, false, false, true));
-            actions.add(action2);
-        }
-
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.sameLocation(self))
-                && GameConditions.isOncePerGame(game, self, gameTextActionId2)
-                && GameConditions.hasInHand(game, playerId, Filters.blaster)) {
-
-            final OptionalGameTextTriggerAction action3 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId2);
-            action3.setText("Deploy blaster from hand");
-            // Allow response(s)
-            action3.appendUsage(
-                    new OncePerGameEffect(action3));
-            action3.appendEffect(
-                    new DeployCardFromHandEffect(action3, playerId, Filters.blaster, 0));
-            actions.add(action3); 
-        }
         return actions;
     }
 }
