@@ -13,13 +13,11 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.PlaceRandomCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.RecirculateEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.LinkedList;
@@ -35,7 +33,7 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
     public Card501_064() {
         super(Side.DARK, 3, "The Empire's Back", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("No star system will dare oppose the Emperor now.");
-        setGameText("USED: Deploy Empire's New Order or Overseeing It Personally from Reserve Deck; reshuffle. LOST: Once per game, choose: Stack an Interrupt from opponent’s Lost Pile on [V] A Useless Gesture. OR If Xizor (or two Imperial leaders) in battle, re-circulate.");
+        setGameText("USED: Deploy Empire's New Order or Overseeing It Personally from Reserve Deck; reshuffle. LOST: Once per game, choose: Place an Interrupt from opponent's Lost Pile out of play. OR If Xizor (or two Imperial leaders) in battle, re-circulate.");
         addIcons(Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
         setTestingText("The Empire's Back (V)");
@@ -67,32 +65,22 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
             actions.add(action);
         }
 
-        GameTextActionId gameTextActionId2 = GameTextActionId.THE_EMPIRES_BACK_V__STACK_CARD_OR_RECIRCULATE;
+        GameTextActionId gameTextActionId2 = GameTextActionId.THE_EMPIRES_BACK_V__OUT_OF_PLAY_OR_RECIRCULATE;
         final String opponent = game.getOpponent(playerId);
 
         // Check Condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId2)) {
-            if (GameConditions.canTarget(game, self, Filters.and(Filters.A_Useless_Gesture, Filters.icon(Icon.VIRTUAL_DEFENSIVE_SHIELD)))) {
-                final PhysicalCard auselessgesturev = Filters.findFirstActive(game, self, Filters.and(Filters.A_Useless_Gesture, Filters.icon(Icon.VIRTUAL_DEFENSIVE_SHIELD)));
-
+            if (GameConditions.hasLostPile(game, opponent)) {
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId2, CardSubtype.LOST);
-                action.setText("Stack a card on " + GameUtils.getFullName(auselessgesturev) + " from opponent's Lost Pile.");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerGameEffect(action));
+                action.setText("Place card from Lost Pile out of play");
                 // Allow response(s)
-                action.allowResponses(
+                action.allowResponses("Place a random card from opponent's Lost Pile out of play",
                         new RespondablePlayCardEffect(action) {
                             @Override
                             protected void performActionResults(Action targetingAction) {
                                 // Perform result(s)
-                                action.appendEffect(new ChooseCardFromLostPileEffect(action, playerId, opponent, Filters.Interrupt) {
-                                        @Override
-                                        protected void cardSelected(SwccgGame game, PhysicalCard selectedCard) {
-                                            action.appendEffect(
-                                                new StackOneCardFromLostPileEffect(action, selectedCard, auselessgesturev, false, false, false));
-                                        }
-                                    });
+                                action.appendEffect(
+                                        new PlaceRandomCardOutOfPlayFromLostPileEffect(action, opponent));
                             }
                         }
                 );
