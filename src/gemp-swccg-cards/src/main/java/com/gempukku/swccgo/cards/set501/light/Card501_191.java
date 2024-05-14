@@ -58,7 +58,9 @@ public class Card501_191 extends AbstractRebel {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         String playerId = self.getOwner();
         List<Modifier> modifiers = new ArrayList<>();
-        modifiers.add(new TotalBattleDestinyModifier(self, Filters.here(self), new WithCondition(self, Filters.or(Filters.Ahsoka, Filters.Ezra)), new CardMatchesEvaluator(1, 2, Filters.and(Filters.sameLocationAs(self, Filters.Ahsoka), Filters.sameLocationAs(self, Filters.Ezra))), playerId));
+        Condition withAhsoka = new WithCondition(self, Filters.Ahsoka);
+        Condition withEzra = new WithCondition(self, Filters.Ezra);
+        modifiers.add(new TotalBattleDestinyModifier(self, Filters.here(self), new OrCondition(withAhsoka, withEzra), new ConditionEvaluator(1, 2, new AndCondition(withAhsoka, withEzra)), playerId));
         modifiers.add(new MayNotBeTargetedByPermanentWeaponsModifier(self));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
         return modifiers;
@@ -88,17 +90,13 @@ public class Card501_191 extends AbstractRebel {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Place artwork card in Used Pile");
-            action.setActionMsg("Peek at cards stacked on Thrawn's Art Collection and reveal one 'artwork' card");
+            action.setActionMsg("Place card stacked on Thrawn's Art Collection in Used Pile");
 
             action.appendEffect(new ChooseStackedCardEffect(action, playerId, Filters.Thrawns_Art_Collection) {
                 @Override
                 protected void cardSelected(final PhysicalCard selectedCard) {
-                    game.getGameState().sendMessage("Revealed "+ GameUtils.getCardLink(selectedCard));
-                    game.getGameState().showCardOnScreen(selectedCard);
-                    game.getActionsEnvironment().emitEffectResult(
-                            new ArtworkCardRevealedResult(selectedCard));
-                        action.appendEffect(
-                                new PutStackedCardInUsedPileEffect(action, playerId, selectedCard, false));
+                    action.appendEffect(
+                            new PutStackedCardInUsedPileEffect(action, playerId, selectedCard, false));
                 }
             });
             return Collections.singletonList(action);
