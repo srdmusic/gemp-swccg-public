@@ -66,7 +66,7 @@ public class Card501_125 extends AbstractRebel {
         // Check condition(s)
         if (GameConditions.isDuringBattleWithParticipant(game, self)
                 && GameConditions.isOncePerGame(game, self, gameTextActionId2)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId2, false)) {
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId2, true, false)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId2);
             action.setText("Deploy blaster from Reserve Deck");
