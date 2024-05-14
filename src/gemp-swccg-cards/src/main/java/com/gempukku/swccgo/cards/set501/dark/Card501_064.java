@@ -14,10 +14,10 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.PlaceRandomCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.RecirculateEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.LinkedList;
@@ -74,13 +74,13 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId2, CardSubtype.LOST);
                 action.setText("Place card from Lost Pile out of play");
                 // Allow response(s)
-                action.allowResponses("Place a random card from opponent's Lost Pile out of play",
+                action.allowResponses("Place an Interrupt from opponent's Lost Pile out of play",
                         new RespondablePlayCardEffect(action) {
                             @Override
                             protected void performActionResults(Action targetingAction) {
                                 // Perform result(s)
                                 action.appendEffect(
-                                        new PlaceRandomCardOutOfPlayFromLostPileEffect(action, opponent));
+                                        new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, opponent, Filters.Interrupt, false));
                             }
                         }
                 );
