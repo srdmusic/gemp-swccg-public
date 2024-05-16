@@ -3,7 +3,7 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
-import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
+import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -19,6 +19,9 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.ModifyForfeitEffect;
 import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
@@ -27,7 +30,6 @@ import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByPermanentWeaponsMod
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.ArtworkCardRevealedResult;
 import com.gempukku.swccgo.logic.timing.results.HitResult;
 
 import java.util.ArrayList;
