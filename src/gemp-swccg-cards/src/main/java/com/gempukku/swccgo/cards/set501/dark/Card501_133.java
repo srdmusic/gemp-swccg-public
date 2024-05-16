@@ -17,6 +17,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromHandOnBottomOfReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromForcePileEffect;
 
 import java.util.LinkedList;
@@ -32,7 +33,7 @@ import java.util.List;
 public class Card501_133 extends AbstractNormalEffect {
     public Card501_133() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Echo Base Destroyed", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on table. Once per turn, if Main Power Generators on table, may place a card from hand under Reserve Deck to activate 1 Force. Once per turn, if 1st Marker 'blown away,' may take any one [Hoth] card into hand from Force Pile; reshuffle. [Immune to Alter.]");
+        setGameText("Deploy on table. Once per turn, if Main Power Generators on table, may place a card from hand under Reserve Deck to activate 1 Force; reshuffle. Once per turn, if 1st Marker 'blown away,' may take any one [Hoth] card into hand from Force Pile; reshuffle. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_23);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Echo Base Destroyed");
@@ -61,6 +62,8 @@ public class Card501_133 extends AbstractNormalEffect {
             // Perform result(s)
             action.appendEffect(
                     new ActivateForceEffect(action, playerId, 1));
+            action.appendEffect(
+                    new ShuffleReserveDeckEffect(action));
 
             actions.add(action);
         }

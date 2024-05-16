@@ -18350,6 +18350,7 @@ public class Filters {
     public static final Filter Kashyyyk_location = Filters.partOfSystem(Title.Kashyyyk);
     public static final Filter Kashyyyk_site = Filters.and(Filters.partOfSystem(Title.Kashyyyk), CardSubtype.SITE);
     public static final Filter Kashyyyk_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Kashyyyk));
+    public static final Filter Kazuda = Filters.persona(Persona.KAZUDA);
     public static final Filter Kowakian = Filters.species(Species.KOWAKIAN);
     public static final Filter Keep_Your_Eyes_Open = Filters.title(Title.Keep_Your_Eyes_Open);
     public static final Filter Kef_Bir_site = Filters.and(Filters.partOfSystem(Title.Kef_Bir), CardSubtype.SITE);
@@ -18613,6 +18614,7 @@ public class Filters {
     public static final Filter Paploo = Filters.persona(Persona.PAPLOO);
     public static final Filter parasite = Filters.and(CardCategory.CREATURE, Keyword.PARASITE);
     public static final Filter Passenger_Deck = Filters.title(Title.Passenger_Deck);
+    public static final Filter Path_Of_Least_Resistance = Filters.title(Title.Path_Of_Least_Resistance);
     public static final Filter Patrol_Craft = Filters.title(Title.Patrol_Craft);
     public static final Filter peace_agenda = Filters.agenda(Agenda.PEACE);
     public static final Filter Perimeter_Patrol = Filters.title(Title.Perimeter_Patrol);
@@ -18792,7 +18794,7 @@ public class Filters {
     public static final Filter Saber_3 = Filters.title(Title.Saber_3);
     public static final Filter Saber_Squadron = Filters.keyword(Keyword.SABER_SQUADRON);
     public static final Filter Saber_Squadron_pilot = Filters.and(CardCategory.CHARACTER, Icon.PILOT, Filters.or(Keyword.SABER_SQUADRON, Filters.piloting(Filters.keyword(Keyword.SABER_SQUADRON))));
-    public static final Filter Sabine = Filters.title(Title.Sabine);
+    public static final Filter Sabine = Filters.persona(Persona.SABINE);
     public static final Filter Sabotage = Filters.title(Title.Sabotage);
     public static final Filter Sache = Filters.persona(Persona.SACHE);
     public static final Filter Saitorr_Kal_Fas = Filters.title(Title.Saitorr_Kal_Fas);

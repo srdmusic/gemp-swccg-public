@@ -17,8 +17,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeCanceledByModifier;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeModifiedByModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -33,7 +32,7 @@ import java.util.List;
 public class Card501_115 extends AbstractNormalEffect {
     public Card501_115() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Your Eyes Can Deceive You", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on table. If C-3PO at a non-battleground, once during your turn, may peek at the top two cards of Reserve Deck; take one into hand. While you occupy three battlegrounds, opponent’s Effects may not cancel or modify your Force drains at battlegrounds. [Immune to Alter]");
+        setGameText("Deploy on table. If C-3PO at a non-battleground, once during your turn, may peek at the top two cards of Reserve Deck and take one into hand. While you occupy three battlegrounds, opponent may not cancel your Force drains at battlegrounds. [Immune to Alter]");
         addImmuneToCardTitle(Title.Alter);
         addIcons(Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
@@ -67,9 +66,9 @@ public class Card501_115 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainsMayNotBeCanceledByModifier(self, Filters.and(Filters.opponents(self), Filters.Effect), new OccupiesCondition(playerId, 3, Filters.battleground), playerId, Filters.battleground));
-        modifiers.add(new ForceDrainsMayNotBeModifiedByModifier(self, Filters.and(Filters.opponents(self), Filters.Effect), new OccupiesCondition(playerId, 3, Filters.battleground), playerId, Filters.battleground));
+        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.battleground, new OccupiesCondition(playerId, 3, Filters.battleground), opponent, playerId));
         return modifiers;
     }
 }
