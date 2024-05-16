@@ -3739,6 +3739,7 @@ var fixedImages = {
 "501_189":"https://res.starwarsccg.org/cards/ResetDS-Light/large/yourinsightservesyouwell.gif",
 "501_188":"https://res.starwarsccg.org/cards/ResetDS-Light/large/therepublicnolongerfunctions.gif",
 "501_190":"https://res.starwarsccg.org/cards/VirtualPremium-Light/large/yourship.gif",
+"501_192":"https://res.starwarsccg.org/cards/Tatooine-Light/large/neckandneck.gif",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",
