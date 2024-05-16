@@ -28,18 +28,19 @@ import java.util.List;
  * Set: Playtesting
  * Type: Starship
  * Subtype: Starfighter
- * Title: Maul In Maul's Sith Infiltrator
+ * Title: Maul In Scimitar
  */
 
 public class Card501_135 extends AbstractStarfighter {
     public Card501_135() {
-        super(Side.DARK, 4, 4, 4, null, 5, 6, 7, "Maul In Maul's Sith Infiltrator", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 4, 4, 4, null, 5, 6, 6, "Maul In Scimitar", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Maul's Sith Infiltrator.");
         setGameText("Permanent pilot is •Maul, who provides 6 ability. May add 1 pilot. Once per battle may lose 1 force to ‘cloak’ (either add one destiny to your total power or this starship is immune to attrition < 6).");
         addPersona(Persona.MAULS_SITH_INFILTRATOR);
-        addIcons(Icon.INDEPENDENT, Icon.SCOMP_LINK, Icon.NAV_COMPUTER, Icon.PILOT, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.TRADE_FEDERATION, Icon.SCOMP_LINK, Icon.NAV_COMPUTER, Icon.PILOT, Icon.VIRTUAL_SET_23);
         addModelType(ModelType.SITH_INFILTRATOR);
         setPilotCapacity(1);
-        setTestingText("Maul In Maul's Sith Infiltrator");
+        setTestingText("Maul In Scimitar");
     }
 
     @Override
