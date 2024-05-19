@@ -60,7 +60,6 @@ public class Card501_161 extends AbstractUsedInterrupt {
 
         // Check condition(s)
         if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
             action.setText("Take an Interrupt into hand from Reserve Deck");
             action.setActionMsg("Take an Interrupt with printed destiny = 4 into hand from Reserve Deck; reshuffle");
@@ -97,8 +96,6 @@ public class Card501_161 extends AbstractUsedInterrupt {
 
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
-
         Filter characterAbilityLessThanFour = Filters.and(Filters.canBeTargetedBy(self), Filters.character, Filters.abilityLessThan(4));
         // Check condition(s)
         if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.or(Filters.First_Light_site, Filters.Jabbas_Palace_site))
@@ -121,8 +118,8 @@ public class Card501_161 extends AbstractUsedInterrupt {
                         }
                     }
             );
-            actions.add(action);
+            return Collections.singletonList(action);
         }
-        return actions;
+        return null;
     }
 }
