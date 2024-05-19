@@ -50,7 +50,7 @@ public class Card501_192 extends AbstractUsedInterrupt {
             int creditCount = Filters.countStacked(game, Filters.creditCard);
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Make Anakin power +" +creditCount);
+            action.setText("Make Anakin power + " + creditCount);
 
             // Choose target(s)
             action.appendTargeting(
