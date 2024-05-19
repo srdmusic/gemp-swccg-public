@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 23
+ * Set: Set 24
  * Type: Interrupt
  * Subtype: Used
  * Title: Neck And Neck (V)
@@ -39,7 +39,7 @@ public class Card501_192 extends AbstractUsedInterrupt {
         setLore("When Anakin had finally caught up with Sebulba, he knew he needed to make some kind of a move to break away from the Dug to win the race.");
         setGameText("If [Set 21] Anakin in battle, he is power +1 for each 'credit' card (if any) and opponent may not draw more than one battle destiny. OR If [Set 21] Anakin just won a battle (or Force drained at a battleground), opponent loses 1 Force and stacks lost card under Credits Will Do Fine.");
         setVirtualSuffix(true);
-        addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_24);
         setTestingText("Neck And Neck (V)");
     }
 
@@ -50,7 +50,7 @@ public class Card501_192 extends AbstractUsedInterrupt {
             int creditCount = Filters.countStacked(game, Filters.creditCard);
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Make Anakin power +"+creditCount);
+            action.setText("Make Anakin power +" +creditCount);
 
             // Choose target(s)
             action.appendTargeting(
