@@ -15,14 +15,13 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.OrCondition;
-import com.gempukku.swccgo.logic.effects.ModifyForfeitEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
@@ -30,11 +29,9 @@ import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByPermanentWeaponsMod
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.HitResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /*
@@ -70,18 +67,16 @@ public class Card501_191 extends AbstractRebel {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
         if (TriggerConditions.justHitBy(game, effectResult, Filters.character, self)) {
-            final PhysicalCard card = ((HitResult) effectResult).getCardHit();
+            String opponent = game.getOpponent(self.getOwner());
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Make " + GameUtils.getCardLink(card) + " forfeit -4");
-            action.setActionMsg("Make " + GameUtils.getCardLink(card) + " forfeit -4");
+            action.setText("Make opponent lose 2 Force");
+            // Perform result(s)
             action.appendEffect(
-                new ModifyForfeitEffect(action, card, -4));
-            actions.add(action);
+                    new LoseForceEffect(action, opponent, 2));
+            return Collections.singletonList(action);        
         }
-
-        return actions;
+        return null;
     }
 
     @Override
