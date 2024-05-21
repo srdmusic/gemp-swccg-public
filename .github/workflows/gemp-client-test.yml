@@ -19,16 +19,16 @@ jobs:
       - uses: actions/checkout@master
 
       - name: Building Gemp within the container using Maven
-        working-directory: ./src/docker
+        working-directory: ./src
         run: |
-          docker build -f ./gemp_app.Dockerfile --tag 'gemp_build' .
+          docker build -f ./docker/gemp_app.Dockerfile --tag 'gemp_build' .
           docker run -v ${GITHUB_WORKSPACE}:/opt/gemp-swccg --detach --name 'gemp_build' -it 'gemp_build'
           docker exec gemp_build mvn clean install
           docker stop gemp_build
           
           
       - name: Build the Gemp containers
-        working-directory: ./src/docker
+        working-directory: ./src
         run: |
           docker compose build
           docker compose up -d
