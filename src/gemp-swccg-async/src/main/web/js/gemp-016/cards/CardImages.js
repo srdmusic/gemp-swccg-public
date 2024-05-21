@@ -1,4 +1,4 @@
-var fixedImages = {
+const fixedImages = {
 "-1_1":"https://res.starwarsccg.org/gemp/lightcardback.png",
 "-1_2":"https://res.starwarsccg.org/gemp/darkcardback.png",
 "1_1":"https://res.starwarsccg.org/cards/Premiere-Light/large/2x3kpr.gif",

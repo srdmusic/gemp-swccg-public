@@ -1,4 +1,4 @@
-var packBlueprints = {
+const packBlueprints = {
     "Premiere Booster Pack":"https://res.starwarsccg.org/packs/premiere_booster_pack.png",
     "A New Hope Booster Pack":"https://res.starwarsccg.org/packs/a_new_hope_booster_pack.png",
     "Hoth Booster Pack":"https://res.starwarsccg.org/packs/hoth_booster_pack.png",
