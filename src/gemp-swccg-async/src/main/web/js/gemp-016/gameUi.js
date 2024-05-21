@@ -20,7 +20,7 @@ var GempSwccgGameUI = Class.extend({
     alertTextMsg: null,
     alertButtons: null,
     mouseInAlertBox: false,
-    infoDialog: null,
+    cardInfoDialog: null,
 
     sideOfTableOpponent: null,
     sideOfTablePlayer: null,
@@ -111,8 +111,6 @@ var GempSwccgGameUI = Class.extend({
     communication: null,
     channelNumber: null,
 
-    previewImageBlueprintId: "0",
-
     settingsAutoAccept: false,
     settingsAlwaysDropDown: false,
     settingsAutoPassYourTurnEnabled: false,
@@ -122,7 +120,6 @@ var GempSwccgGameUI = Class.extend({
     settingsMimicDecisionDelayEnabled: false,
     settingsMimicDecisionDelayTime: 1,
     settingsCardActionsSilent: false,
-    settingsShowPreviewImage: true,
 
     windowWidth: null,
     windowHeight: null,
@@ -530,9 +527,9 @@ var GempSwccgGameUI = Class.extend({
 
         $('body').unbind('click');
         $("body").click(
-                function (event) {
-                    return that.clickCardFunction(event);
-                });
+            function (event) {
+                return that.clickCardFunction(event);
+            });
         
         if (!this.rightClickListenerAdded) {
             $("body")[0].addEventListener("contextmenu",
@@ -551,7 +548,13 @@ var GempSwccgGameUI = Class.extend({
         $("body").mouseover(
             function (event) {
                 return that.autoZoom.handleMouseOver(event.originalEvent, 
-                   that.dragCardId != null, that.infoDialog.dialog("isOpen"));
+                   that.dragCardId != null, that.cardInfoDialog.isOpen());
+            });
+
+        $('body').unbind('mouseout');
+        $("body").mouseout(
+            function (event) {
+                return that.autoZoom.handleMouseOut(event.originalEvent);
             });
 
         $('body').unbind('keydown');
@@ -1262,13 +1265,13 @@ var GempSwccgGameUI = Class.extend({
             var testingText = tar.attr("data-testingText");
             var backSideTestingText = tar.attr("data-backSideTestingText");
             var card = new Card(blueprintId, testingText, backSideTestingText, "SPECIAL", "hint", "");
-            this.displayCard(card, false);
+            this.displayCardInfo(card);
             event.stopPropagation();
             return false;
         }
 
-        if (!this.successfulDrag && this.infoDialog.dialog("isOpen")) {
-            this.infoDialog.dialog("close");
+        if (!this.successfulDrag && this.cardInfoDialog.isOpen()) {
+            this.cardInfoDialog.mouseUp();
             event.stopPropagation();
             return false;
         }
@@ -1405,55 +1408,19 @@ var GempSwccgGameUI = Class.extend({
         return true;
     },
 
-    displayCard: function (card, extraSpace) {
-        var that = this;
-        this.infoDialog.html("");
-        this.infoDialog.html("<div style='scroll: auto'></div>");
-        var floatCardDiv = $("<div style='float: left;'></div>");
-
-        var windowWidth = window.innerWidth * 0.9;
-        var windowHeight = window.innerHeight * 0.9;
-        
-        var cardDisplay = new CardDisplay(card, windowWidth, windowHeight);
-        var cardDiv = cardDisplay.baseDiv;
-        
-        // Check if card div needs to be inverted
-        if (card.inverted == true) {
-            cardDisplay.invert();
-        }
-        $(cardDiv).click(
-            function(event) {
-                cardDisplay.invert();
-                event.stopPropagation();
-            });
-        floatCardDiv.append(cardDiv);
-
-        this.infoDialog.append(floatCardDiv);
-        if (extraSpace)
-            this.infoDialog.append("<div id='cardEffects'></div>");
-
-        this.infoDialog.dialog({ 
-            width: cardDiv.width() + 30 + (extraSpace ? 400 : 0), 
-            height: cardDiv.height() + 45 
-        });
-
-        this.infoDialog.dialog("open");
-    },
-
     displayCardInfo: function (card) {
         var showModifiers = false;
         var cardId = card.cardId;
-        if (!this.replayMode && (cardId.length < 4 || cardId.substring(0, 4) != "temp"))
+        var that = this;
+        if (!this.replayMode && cardId != "hint" && (cardId.length < 4 || cardId.substring(0, 4) != "temp"))
             showModifiers = true;
 
-        this.displayCard(card, showModifiers);
+        this.cardInfoDialog.showCard(card, showModifiers ? "<div>Retrieving data...</div>" : null);
 
         if (showModifiers)
-            this.getCardModifiersFunction(cardId, this.setCardModifiers);
-    },
-
-    setCardModifiers: function (html) {
-        $("#cardEffects").replaceWith(html);
+            this.getCardModifiersFunction(cardId, function (html) {
+                that.cardInfoDialog.setDetails(html);
+        });
     },
 
     initializeDialogs: function () {
@@ -1483,40 +1450,12 @@ var GempSwccgGameUI = Class.extend({
 
         $(".ui-dialog-titlebar-close").hide();
 
-        if (!document.getElementById('previewImage')) {
-            var previewImage = $('<div>', {
-                id: 'previewImage',
-                class: 'previewImage',
-            }).appendTo('body');
-            previewImage.append("<img></img>")
-
-            this.previewImage = previewImage[0];
-        }
-
-        this.infoDialog = $("<div></div>")
-            .dialog({
-                autoOpen: false,
-                closeOnEscape: true,
-                resizable: false,
-                title: "Card Information"
-            });
-
-        var swipeOptions = {
-            threshold: 20,
-            swipeUp: function (event) {
-                that.infoDialog.prop({ scrollTop: that.infoDialog.prop("scrollHeight") });
-                return false;
-            },
-            swipeDown: function (event) {
-                that.infoDialog.prop({ scrollTop: 0 });
-                return false;
-            }
-        };
-        this.infoDialog.swipe(swipeOptions);
+        this.cardInfoDialog = new CardInfoDialog(window.innerWidth, window.innerHeight);
     },
 
     windowResized: function () {
         this.animations.windowResized();
+        this.cardInfoDialog.updateMaxBoundaries(window.innerWidth, window.innerHeight);
     },
 
     // Performs the layout of the UI for the game.
@@ -2085,11 +2024,7 @@ var GempSwccgGameUI = Class.extend({
     },
 
     getCardModifiersFunction: function (cardId, func) {
-        var that = this;
-        this.communication.getGameCardModifiers(cardId,
-            function (html) {
-                that.setCardModifiers(html);
-            });
+        this.communication.getGameCardModifiers(cardId, func);
     },
 
     processXml: function (xml, animate) {

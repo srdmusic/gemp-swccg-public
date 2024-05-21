@@ -42,6 +42,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
     collectionType:null,
     
     autoZoom: null,
+    cardInfoDialog: null,
 
 
     init:function () {
@@ -60,7 +61,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
                             alert("You don't have collection of that type.");
                         }
                     });
-                },
+                }, 
                 function () {
                     that.clearCollection();
                 },
@@ -271,7 +272,13 @@ var GempSwccgDeckBuildingUI = Class.extend({
         $("body").mouseover(
             function (event) {
                 return that.autoZoom.handleMouseOver(event.originalEvent, 
-                   that.dragCardId != null, that.infoDialog.dialog("isOpen"));
+                   that.dragCardId != null, that.cardInfoDialog.isOpen());
+            });
+
+        $('body').unbind('mouseout');
+        $("body").mouseout(
+            function (event) {
+                return that.autoZoom.handleMouseOut(event.originalEvent);
             });
         
         $("body").mousedown(
@@ -298,29 +305,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
             });
 
 
-        var width = $(window).width();
-        var height = $(window).height();
-
-        this.infoDialog = $("<div></div>")
-                .dialog({
-            autoOpen:false,
-            closeOnEscape:true,
-            resizable:false,
-            title:"Card information"
-        });
-
-        var swipeOptions = {
-            threshold:20,
-            swipeUp:function (event) {
-                that.infoDialog.prop({ scrollTop:that.infoDialog.prop("scrollHeight") });
-                return false;
-            },
-            swipeDown:function (event) {
-                that.infoDialog.prop({ scrollTop:0 });
-                return false;
-            }
-        };
-        this.infoDialog.swipe(swipeOptions);
+        this.cardInfoDialog = new CardInfoDialog(window.innerWidth, window.innerHeight);
 
         this.getCollectionTypes();
 
@@ -570,8 +555,8 @@ var GempSwccgDeckBuildingUI = Class.extend({
         if (tar.length == 1 && tar[0].tagName == "A")
             return true;
 
-        if (!this.successfulDrag && this.infoDialog.dialog("isOpen")) {
-            this.infoDialog.dialog("close");
+        if (!this.successfulDrag && this.cardInfoDialog.isOpen()) {
+            this.cardInfoDialog.mouseUp();
             event.stopPropagation();
             return false;
         }
@@ -581,7 +566,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
             if (event.which >= 1) {
                 if (!this.successfulDrag) {
                     if (event.shiftKey || event.which > 1) {
-                        this.displayCardInfo(selectedCardElem.data("card"));
+                        this.cardInfoDialog.showCard(selectedCardElem.data("card"));
                         return false;
                     } else if (selectedCardElem.hasClass("cardInCollection")) {
                         var cardData = selectedCardElem.data("card");
@@ -680,7 +665,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
     dragStopCardFunction:function (event) {
         if (this.dragCardData != null) {
             if (this.dragStartY - event.clientY >= 20) {
-                this.displayCardInfo(this.dragCardData);
+                this.cardInfoDialog.showCard(this.dragCardData);
                 this.successfulDrag = true;
             }
             this.dragCardData = null;
@@ -689,69 +674,6 @@ var GempSwccgDeckBuildingUI = Class.extend({
             return false;
         }
         return true;
-    },
-
-    displayCardInfo:function (card) {
-        var that = this;
-        this.infoDialog.html("");
-        this.infoDialog.html("<div style='scroll: auto'></div>");
-        var floatCardDiv = $("<div style='float: left;'></div>");
-        var cardDiv = Card.CreateFullCardDiv(card.imageUrl, card.testingText, card.foil, card.horizontal, card.isPack());
-
-        // Check if card div needs to be inverted
-        this.infoDialog.cardImageRotation = 0;
-        this.infoDialog.cardImageFlipped = false;
-        $(cardDiv).click(
-                function(event) {
-                    // Check if need to show other card image if the image has two sides
-                    if (card.backSideImageUrl != null && !card.backSideImageUrl.includes("CardBack") && !card.backSideImageUrl.includes("cardback")) {
-                        that.infoDialog.cardImageFlipped = !that.infoDialog.cardImageFlipped;
-                        if (that.infoDialog.cardImageFlipped) {
-                            $(cardDiv).find("div.fullcard img").attr('src', card.backSideImageUrl);
-                            if (card.backSideTestingText != null) {
-                                $(cardDiv).find("div.testingTextOverlay").html(card.backSideTestingText.replace(/\|/g, "<br/>"));
-                                $(cardDiv).find("div.testingTextOverlay").attr('display', "block");
-                            }
-                            else {
-                                $(cardDiv).find("div.testingTextOverlay").attr('display', "none");
-                            }
-                        }
-                        else {
-                            $(cardDiv).find("div.fullcard img").attr('src', card.imageUrl);
-                            if (card.testingText != null) {
-                                $(cardDiv).find("div.testingTextOverlay").html(card.testingText.replace(/\|/g, "<br/>"));
-                                $(cardDiv).find("div.testingTextOverlay").attr('display', "block");
-                            }
-                            else {
-                                $(cardDiv).find("div.testingTextOverlay").attr('display', "none");
-                            }
-                        }
-                    }
-                    // Otherwise rotate the image
-                    else {
-                        that.infoDialog.cardImageRotation = (that.infoDialog.cardImageRotation + 180) % 360;
-                        $(cardDiv).rotate(that.infoDialog.cardImageRotation);
-                    }
-                    event.stopPropagation();
-                });
-        floatCardDiv.append(cardDiv);
-
-        this.infoDialog.append(floatCardDiv);
-
-        var windowWidth = $(window).width();
-        var windowHeight = $(window).height();
-
-        var horSpace = 30;
-        var vertSpace = 45;
-
-        if (card.horizontal) {
-            // 500x360
-            this.infoDialog.dialog({width:Math.min(500 + horSpace, windowWidth), height:Math.min(380 + vertSpace, windowHeight)});
-        } else {
-            // 360x500
-            this.infoDialog.dialog({width:Math.min(360 + horSpace, windowWidth), height:Math.min(520 + vertSpace, windowHeight)});
-        }
-        this.infoDialog.dialog("open");
     },
 
     getDeckContents:function () {

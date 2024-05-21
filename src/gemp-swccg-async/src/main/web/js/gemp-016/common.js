@@ -49,3 +49,17 @@ function getMapSize(map) {
         if (map.hasOwnProperty(key)) size++;
     return size;
 }
+
+function loadFromCookie(cookieName, defaultValue) {
+    let cookie = $.cookie(cookieName);
+    if (cookie === undefined || cookie === null){
+        saveToCookie(cookieName, defaultValue);
+        return defaultValue;
+    } else {
+        return cookie;
+    }
+}
+
+function saveToCookie(cookieName, value) {
+    $.cookie(cookieName, value, { expires: 365 });
+}

@@ -1,5 +1,3 @@
-
-
 class Card {
     blueprintId = null;
     bareBlueprint = null;

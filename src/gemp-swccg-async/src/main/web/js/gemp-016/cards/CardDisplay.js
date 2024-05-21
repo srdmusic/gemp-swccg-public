@@ -1,3 +1,8 @@
+
+/*
+	A low-level class for displaying a card.  This handles the sizing and layout given maximum boundaries,
+	and also overlays foiling and borders.  This is used by both the AutoZoomHandler and the CardInfoDialog.
+*/
 class CardDisplay {
 	
 	baseDiv = null;
@@ -22,6 +27,9 @@ class CardDisplay {
 	
 	static TargetLong  = 1039;
 	static TargetShort = 745;
+
+	static MaxTarget = 1039;
+	static MinTarget = 497;
 
 	static TargetHorizRatio = CardDisplay.TargetLong / CardDisplay.TargetShort;
 	static TargetVertRatio  = CardDisplay.TargetShort / CardDisplay.TargetLong;
@@ -84,11 +92,10 @@ class CardDisplay {
 			display: "none"
 		});
 		this.cardImage.src = "";
-		this.setInvert(true);
+		this.setInvert(false);
 
 		this.populated = false;
 		this.currentBP = null;
-		this.inverted = false;
 
 		this.reversible = false;
 		this.frontside = null;
@@ -101,13 +108,17 @@ class CardDisplay {
 
 		let back = Card.getBackSideBlueprintId(this.currentBP);
 		//We don't care about the LS/DS card back
-		if(!back.startsWith("-")) {
+		if(back && !back.startsWith("-")) {
 			this.reversible = true;
 			this.backside = Card.getImageUrl(back);
 		}
+		else {
+			this.reversible = false;
+			this.backside = null;
+		}
 
 		this.reload(maxWidth, maxHeight, card.imageUrl, 
-			card.horizontal, card.foil, noborder, card.testingText);
+			card.horizontal || card.effectivelyHorizontal(), card.foil, noborder, card.testingText);
 	}
 
 	reload(maxWidth, maxHeight, image, horizontal, foil, noborder, testingText) {
@@ -123,7 +134,7 @@ class CardDisplay {
 		});
 
 		this.baseDiv.css({
-			display: "initial"
+			display: "inline-block"
 		});
 
 		this.populated = true;
@@ -181,8 +192,8 @@ class CardDisplay {
 		}
 
 		this.borderDiv.css({
-			width: px(widthSide - (2 * borderSize)),
-			height: px(heightSide - (2 * borderSize))
+			width: px(widthSide - (2 * borderSize) + 2),
+			height: px(heightSide - (2 * borderSize) + 2)
 		})
 	}
 
@@ -208,5 +219,28 @@ class CardDisplay {
 
 	invert() {
 		this.setInvert(!this.inverted);
+	}
+
+	appendTo(parent) {
+		this.baseDiv.appendTo(parent);
+	}
+
+	width() {
+		return this.baseDiv.width();
+	}
+
+	height() {
+		return this.baseDiv.height();
+	}
+
+	addInvertClick() {
+		var that = this;
+
+		this.baseDiv.unbind('click');
+		this.baseDiv.click(
+			function(event) {
+				that.invert();
+				event.stopPropagation();
+			});
 	}
 }

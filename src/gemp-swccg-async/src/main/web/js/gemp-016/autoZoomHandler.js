@@ -15,19 +15,20 @@ class AutoZoom {
 	// what the original rotation is.
 	baseImageDiv = null;
 
+	hoverTimer = null;
+	hoverValid = false;
+	cooldownTimer = null;
+
+	static HoverDelay = 700;
+	static HoverCooldown = 2000;
+
 	constructor(cookieName) {
 		const that = this;
 		this.cookieName = cookieName;
 		this.isTouchDevice = 'ontouchstart' in document.documentElement;
-		const cookie = $.cookie(this.cookieName);
-		
+
 		//An unset cookie should default to true.
-		if(cookie == "false") {
-			this.showPreviewImage = false;
-		}
-		else {
-			this.showPreviewImage = true;
-		}
+		this.showPreviewImage = loadFromCookie(this.cookieName, true);
 		
 		if(!this.isTouchDevice) {
 			this._setupToggleButton();
@@ -72,34 +73,20 @@ class AutoZoom {
 				if (that.showPreviewImage) {
 					that.autoZoomToggle.button("option", "icons", {primary:disabledIcon});
 					that.showPreviewImage = false;
-					that.saveCookieValue();
+					saveToCookie(that.cookieName, "" + that.showPreviewImage);
 				} else {
 					that.autoZoomToggle.button("option", "icons", {primary:enabledIcon});
 					that.showPreviewImage = true;
-					that.saveCookieValue();
+					saveToCookie(that.cookieName, "" + that.showPreviewImage);
 				}
 			});
 	}
 	
-	saveCookieValue() {
-		$.cookie(this.cookieName, "" + this.showPreviewImage, { expires: 365 });
-	}
-	
 	// make the preview image shown be the reference image that's hovered on:
-	displayPreviewImage(refImageDiv, card) {
+	displayPreviewImage(card, refImageDiv) {
 	
 		const that = this;
-		
-		// this.previewImage.onload = function () {
-			
-		//that.previewImage.style.display = "block";
-		
-		// get position and size of the reference image (actually the parent div):
-		var rect = refImageDiv.getBoundingClientRect();
-		var srcImageX = rect.left;
-		var srcImageY = rect.top;
-		var srcImageWidth = rect.right - rect.left;
-		var srcImageHeight = rect.bottom - rect.top;
+
 		// get the size of the browser window:
 		var windowWidth = window.innerWidth;
 		var windowHeight = window.innerHeight;
@@ -124,28 +111,27 @@ class AutoZoom {
 		var targetLong = Math.min(maxLongSide, CardDisplay.TargetLong);
 		var targetShort = Math.min(maxShortSide, CardDisplay.TargetShort);
 
-		
-
 		if(card.horizontal || card.effectivelyHorizontal()) {
 			this.cardDisplay.reloadFromCard(card, targetLong, targetShort);
 		}
 		else {
 			this.cardDisplay.reloadFromCard(card, targetShort, targetLong);
 		}
+		
+		// get position and size of the reference image (or card hint):
+		var rect = refImageDiv.getBoundingClientRect();
+		const isHint = $(refImageDiv).hasClass("cardHint");
+		if(isHint) {
+			//For hints (i.e. the links in the chat log) we use the parent, which is
+			// the whole chat line, which prevents us from covering up too much log
+			// text with the hover preview.
+			rect = $(refImageDiv).parent()[0].getBoundingClientRect();
+		}
 
-		// var previewImageWidth = this.cardDisplay.baseDiv.width;
-		// var previewImageWidth = this.cardDisplay.baseDiv.width;
-
-		// // horizontal cards
-		// if(card.horizontal || card.effectivelyHorizontal()) {
-		// 	previewImageHeight = targetShort;
-		// 	previewImageWidth  = targetLong;
-		// }
-		// // vertical cards
-		// else {
-		// 	previewImageHeight = targetLong;
-		// 	previewImageWidth  = targetShort;
-		// }
+		var srcImageX = rect.left;
+		var srcImageY = rect.top;
+		var srcImageWidth = rect.right - rect.left;
+		var srcImageHeight = rect.bottom - rect.top;
 
 		var previewImageWidth = this.cardDisplay.baseDiv.width();
 		var previewImageHeight = this.cardDisplay.baseDiv.height();
@@ -164,13 +150,11 @@ class AutoZoom {
 			// of screen, (i.e. it is the center location on a narrow display)
 			// then we must find the best place to put it.
 			
-			//if(srcImageY > windowHeight / 2)
 			//display the previewImage in the biggest space 
 			// available and shrink to fit
 			const rightSpace = windowWidth - (leftEdge + srcImageWidth);
 			const leftSpace = leftEdge;
 			
-			// const topSpace = windowHeight - (topEdge)
 			if (rightSpace > leftSpace) {
 				previewImageWidth = rightSpace;
 				previewImageLeft = rightEdge;
@@ -190,12 +174,9 @@ class AutoZoom {
 			}
 		}
 
-		console.log("srcImageY: " + srcImageY);
-		console.log("srcImageHeight: " + srcImageHeight);
-		console.log("previewImageHeight: " + previewImageHeight);
 		// set the vertical position of the preview image (and make sure it isn't extending over the edge of the window):
 		var previewImageTop = (srcImageY + (srcImageHeight / 2)) - (previewImageHeight / 2);
-		console.log("previewImageTop: " + previewImageTop);
+		//console.log("previewImageTop: " + previewImageTop);
 		if ((previewImageTop + previewImageHeight + 15) > windowHeight) {
 			previewImageTop = windowHeight - previewImageHeight - 15;
 		}
@@ -203,15 +184,10 @@ class AutoZoom {
 			previewImageTop = 0;
 		}
 
-		console.log("previewImageTop: " + previewImageTop);
-
 		this.cardDisplay.baseDiv[0].style.left = previewImageLeft + "px";
 		this.cardDisplay.baseDiv[0].style.top = previewImageTop + "px";
 		
 		previewImageTop = (srcImageY + (srcImageHeight / 2)) - (previewImageHeight / 2);;
-		//previewImageLeft = srcImageX;
-
-		
 	}
 
 	hidePreviewImage() {
@@ -253,16 +229,39 @@ class AutoZoom {
 		this.flipMessageDiv.html("");
 		this.flipMessageDiv[0].style.display = "none";
 	}
+
+	triggerHover(target, shift) {
+		const refCard = target.closest(".card");
+		this.baseImageDiv = refCard[0];
+		var card = refCard.data("card");
+
+		// don't show preview image if card is animating
+		if (!$(this.baseImageDiv).hasClass('card-animating')) {
+
+			let bp = card.bareBlueprint;
+			// don't show preview image if hovered card is the DS/LS card back art
+			if (bp !== "-1_1" && bp !== "-1_2") {
+				this.displayPreviewImage(card, this.baseImageDiv);
+				this.invertPreviewImage(shift);
+				this.setPreviewMessage(this.cardDisplay.reversible);
+			}
+		}
+		else if (this.cardDisplay.populated) {
+			this.hidePreviewImage();
+		}
+	}
 	
 	handleMouseOver(event, isDragging, infoDialogOpen) {
+		const that = this;
 		const target = $(event.target);
 		const tarIsCard = target.hasClass("actionArea");
+		const tarIsHint = target.hasClass("cardHint");
 		
 		// Reasons to cancel the popup: we're on a touch device,
 		// auto zoom has been disabled, we're not hovering over a card,
 		// we are currently click-dragging, the card preview box is open.
-		if(this.isTouchDevice || !this.showPreviewImage
-		   || !tarIsCard || isDragging || infoDialogOpen) {
+		if(this.isTouchDevice || !this.showPreviewImage || (!tarIsHint && !tarIsCard)
+			 || isDragging || infoDialogOpen) {
 			
 			if (this.cardDisplay.populated) {
 				this.hidePreviewImage();
@@ -273,34 +272,108 @@ class AutoZoom {
 			return true;
 		}
 
-		const refCard = target.closest(".card");
-		this.baseImageDiv = refCard[0];
-		const card = refCard.data("card");
-		
-		// don't show preview image if card is animating
-		if (!$(this.baseImageDiv).hasClass('card-animating')) {
+		this.abortCooldownTimer();
 
-			let bp = card.bareBlueprint;
-			// don't show preview image if hovered card is the DS/LS card back art
-			if (bp !== "-1_1" && bp !== "-1_2") {
-				this.displayPreviewImage(this.baseImageDiv, card);
-				this.invertPreviewImage(event.shiftKey);
-				this.setPreviewMessage(this.cardDisplay.reversible);
-				
+		if(tarIsCard) {
+
+			if(this.hoverValid) {
+				this.triggerHover(target, event.shiftKey);
+
 				event.stopPropagation();
 				return false;
 			}
+			else if(!this.hoverTimer) {
+				this.startHoverTimer(function(){
+					that.triggerHover(target, event.shiftKey);
+				});
+			}
 		}
-		else if (this.cardDisplay.populated) {
-			this.hidePreviewImage();
+		else if(tarIsHint) {
+			const blueprintId = target.attr("value");
+			const testingText = target.attr("data-testingText");
+			const backSideTestingText = target.attr("data-backSideTestingText");
+			const card = new Card(blueprintId, testingText, backSideTestingText, "SPECIAL", "hint", "");
+
+			this.baseImageDiv = target[0];
+			this.displayPreviewImage(card, this.baseImageDiv);
+			this.invertPreviewImage(event.shiftKey);
+			this.setPreviewMessage(this.cardDisplay.reversible);
+
+			this.abortHoverTimer();
+			this.hoverValid = true;
+
 			event.stopPropagation();
 			return false;
 		}
+
+		return true;
+	}
+
+	startHoverTimer(callback) {
+		var that = this;
 		
+		this.hoverTimer = setTimeout(function(){
+			if(that.hoverTimer !== null) {
+				//console.log("completing hoverTimer" + that.hoverTimer);
+				that.hoverTimer = null;
+				that.hoverValid = true;
+	
+				if(callback !== undefined) {
+					callback();
+				}
+			}
+		}, AutoZoom.HoverDelay);
+
+		//console.log("beginning hoverTimer " + this.hoverTimer);
+	}
+
+	abortHoverTimer() {
+		//console.log("aborting hoverTimer" + this.hoverTimer);
+		clearTimeout(this.hoverTimer);
+		this.hoverTimer = null;
+	}
+
+	startCooldownTimer() {
+		var that = this;
+
+		this.cooldownTimer = setTimeout(function(){
+			if(that.cooldownTimer !== null) {
+				//console.log("completing cooldownTimer" + that.cooldownTimer);
+				that.cooldownTimer = null;
+				that.hoverValid = false;
+			}
+		}, AutoZoom.HoverCooldown);
+
+		//console.log("beginning cooldownTimer" + this.cooldownTimer);
+	}
+
+	abortCooldownTimer() {
+		//console.log("aborting cooldownTimer" + this.cooldownTimer);
+		clearTimeout(this.cooldownTimer);
+		this.cooldownTimer = null;
+	}
+
+	handleMouseOut(event) {
+		if(this.hoverTimer) {
+			this.abortHoverTimer();
+
+			event.stopPropagation();
+			return false;
+		}
+
+		if(this.hoverValid && !this.cooldownTimer) {
+			this.startCooldownTimer();
+
+			event.stopPropagation();
+			return false;
+		}
+
 		return true;
 	}
 	
 	handleMouseDown(event) {
+		this.abortHoverTimer();
+		this.startCooldownTimer();
 		if (this.cardDisplay.populated) {
 			this.hidePreviewImage();
 		}
