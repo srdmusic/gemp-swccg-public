@@ -512,7 +512,7 @@ div.playerStats .darkOutOfPlayPileSize, div.playerStats .lightOutOfPlayPileSize 
 }
 
 div.playerStats .darkForceGeneration, div.playerStats .lightForceGeneration {
-    color: #000000
+    color: #000000;
     text-shadow: -1px  1px 0 #ffffff,
                   1px  1px 0 #ffffff,
                   1px -1px 0 #ffffff,
@@ -550,7 +550,7 @@ ul.ui-tabs-nav {
 
 #auto-zoom-message {
     position: relative;
-    bottom: 1em;
+    bottom: 0em;
     color: #FFFF00;
     background-color: #000000;
     text-align: center;
