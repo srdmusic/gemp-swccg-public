@@ -76,6 +76,12 @@ class CardInfoDialog {
 			}
 		}).appendTo(this.outerDiv);
 
+		if(onTouchDevice()) {
+			this.zoomSlider.css({
+				display: "none"
+			});
+		}
+
 		this.updateCurrentZoom(sliderCookie);
 
 		var inner = $("<div>", {

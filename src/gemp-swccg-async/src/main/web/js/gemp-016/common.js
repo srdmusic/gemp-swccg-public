@@ -63,3 +63,7 @@ function loadFromCookie(cookieName, defaultValue) {
 function saveToCookie(cookieName, value) {
     $.cookie(cookieName, value, { expires: 365 });
 }
+
+function onTouchDevice() {
+    return 'ontouchstart' in document.documentElement;
+}

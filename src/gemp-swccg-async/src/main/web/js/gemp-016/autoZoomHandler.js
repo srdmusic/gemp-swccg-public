@@ -25,7 +25,7 @@ class AutoZoom {
 	constructor(cookieName) {
 		const that = this;
 		this.cookieName = cookieName;
-		this.isTouchDevice = 'ontouchstart' in document.documentElement;
+		this.isTouchDevice = onTouchDevice();
 
 		//An unset cookie should default to true.
 		this.showPreviewImage = loadFromCookie(this.cookieName, true);
