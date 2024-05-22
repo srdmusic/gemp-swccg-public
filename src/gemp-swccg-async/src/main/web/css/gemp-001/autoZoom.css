@@ -6,6 +6,8 @@
 
 .previewImage, .previewImage img,
 .card, .card img,
-.fullcard, .fullcard img  {
+.fullcard, .fullcard img,
+.foilOverlay, .foilOverlay img,
+.borderOverlay, .borderOverlay img  {
     border-radius: 5%;
 }
