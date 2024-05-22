@@ -836,7 +836,7 @@ var GempSwccgGameUI = Class.extend({
         }
         
         if(!this.autoZoom.isTouchDevice) {
-            tabsLabels += "<li id='auto-zoom-li'>";
+            tabsLabels += "<li id='auto-zoom-li'></li>";
         }
         
         var tabsStr = "<div id='bottomLeftTabs' style='border-radius: 0px'><ul>" + tabsLabels + "</ul>" + tabsBodies + "</div>";
@@ -846,6 +846,7 @@ var GempSwccgGameUI = Class.extend({
         $("#main").append(this.tabPane);
         
         if (this.autoZoom.autoZoomToggle != null) {
+            $("<span>Auto-zoom: </span>").appendTo("#auto-zoom-li");
             this.autoZoom.autoZoomToggle.appendTo("#auto-zoom-li");
         }
 

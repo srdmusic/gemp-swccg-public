@@ -28,7 +28,7 @@ class AutoZoom {
 		this.isTouchDevice = onTouchDevice();
 
 		//An unset cookie should default to true.
-		this.showPreviewImage = loadFromCookie(this.cookieName, true);
+		this.showPreviewImage = loadFromCookie(this.cookieName, "true") === "true";
 		
 		if(!this.isTouchDevice) {
 			this._setupToggleButton();
