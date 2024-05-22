@@ -19,8 +19,8 @@ class AutoZoom {
 	hoverValid = false;
 	cooldownTimer = null;
 
-	static HoverDelay = 700;
-	static HoverCooldown = 2000;
+	static HoverDelay = 500;
+	static HoverCooldown = 500;
 
 	constructor(cookieName) {
 		const that = this;
