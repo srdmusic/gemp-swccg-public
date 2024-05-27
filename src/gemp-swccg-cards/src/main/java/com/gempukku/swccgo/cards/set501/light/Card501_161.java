@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -59,8 +58,9 @@ public class Card501_161 extends AbstractUsedInterrupt {
         GameTextActionId gameTextActionId = GameTextActionId.CHOKE__UPLOAD_DESTINY4;
 
         // Check condition(s)
-        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)
+                && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.character, Filters.abilityEqualTo(5)))) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setText("Take an Interrupt into hand from Reserve Deck");
             action.setActionMsg("Take an Interrupt with printed destiny = 4 into hand from Reserve Deck; reshuffle");
             // Allow response(s)
