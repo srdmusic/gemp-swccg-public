@@ -11,18 +11,26 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.conditions.NotCondition;
+import com.gempukku.swccgo.logic.conditions.PhaseCondition;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromOutsideTheGameEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -46,6 +54,40 @@ public class Card501_016 extends AbstractUsedInterrupt {
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+        Filter filter = Filters.and(Filters.opponents(self), Filters.character);
+
+        if (GameConditions.canSpot(game, self, filter)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Make character not able move");
+            // Choose target(s)
+            action.appendTargeting(
+                new TargetCardOnTableEffect(action, playerId, "Choose character", filter) {
+                    @Override
+                    protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                        // Allow response(s)
+                        action.allowResponses("Make " + GameUtils.getCardLink(targetedCard) + " not able to move (except during move phase)",
+                                new RespondablePlayCardEffect(action) {
+                                    @Override
+                                    protected void performActionResults(Action targetingAction) {
+                                        // Get the targeted card(s) from the action using the targetGroupId.
+                                        // This needs to be done in case the target(s) were changed during the responses.
+                                        final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+                                        final String opponent = game.getOpponent(playerId);
+
+                                        // Perform result(s)
+                                        action.appendEffect(
+                                            new AddUntilEndOfTurnModifierEffect(action, 
+                                                new MayNotMoveModifier(self, finalTarget, new NotCondition(new PhaseCondition(Phase.MOVE, opponent))), 
+                                            "May not move"));
+                                    }
+                                }
+                        );
+                    }
+                }
+            );
+            return Collections.singletonList(action);
+
+        }
 
         GameTextActionId gameTextActionId = GameTextActionId.PUT_ALL_SECTIONS_ON_ALERT__DOWNLOAD_LIFT_TUBE;
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
