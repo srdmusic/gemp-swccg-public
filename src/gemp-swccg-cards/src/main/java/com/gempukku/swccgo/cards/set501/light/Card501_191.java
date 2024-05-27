@@ -3,7 +3,7 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -74,7 +74,7 @@ public class Card501_191 extends AbstractRebel {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make opponent lose 2 Force");
             action.appendUsage(
-                new OncePerGameEffect(action));
+                new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new LoseForceEffect(action, opponent, 2));
