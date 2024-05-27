@@ -37,7 +37,7 @@ public class Card501_016 extends AbstractUsedInterrupt {
     public Card501_016() {
         super(Side.DARK, 6, Title.Put_All_Sections_On_Alert, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("We have an emergency alert in detention block AA-twenty-three");
-        setGameText("Once per game, deploy a Lift Tube from outside your deck. OR Take [Set 0] Imperial Decree into hand from Reserve Deck; reshuffle. OR Cancel Rebel Ambush or Run Luke, Run! OR Cancel an attempt by opponent to move during their control phase.");
+        setGameText("Prevent a character from moving (except during owner's move phase) until end of turn. OR Take [Set 0] Imperial Decree into hand from Reserve Deck; reshuffle. OR Cancel Jedi Presence or Rebel Ambush. OR Once per game, deploy a Lift Tube from outside your deck.");
         setVirtualSuffix(true);
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_23);
         setTestingText("Put All Sections On Alert (V)");
@@ -82,17 +82,18 @@ public class Card501_016 extends AbstractUsedInterrupt {
             actions.add(action);
         }
 
+        if (GameConditions.canTargetToCancel(game, self, Filters.Jedi_Presence)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Jedi_Presence, Title.Jedi_Presence);
+            actions.add(action);
+        }
+        
         if (GameConditions.canTargetToCancel(game, self, Filters.Rebel_Ambush)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             CancelCardActionBuilder.buildCancelCardAction(action, Filters.Rebel_Ambush, Title.Rebel_Ambush);
             actions.add(action);
         }
 
-        if (GameConditions.canTargetToCancel(game, self, Filters.Run_Luke_Run)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Run_Luke_Run, Title.Run_Luke_Run);
-            actions.add(action);
-        }
         return actions;
     }
 
@@ -101,7 +102,7 @@ public class Card501_016 extends AbstractUsedInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Rebel_Ambush, Filters.Run_Luke_Run))
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Jedi_Presence, Filters.Rebel_Ambush))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             PlayInterruptAction action = new PlayInterruptAction(game, self);
