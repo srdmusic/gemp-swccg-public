@@ -32,7 +32,7 @@ import java.util.List;
  * Set: Set 23
  * Type: Interrupt
  * Subtype: Used
- * Title: Out Of Commission (V)
+ * Title: Choke (V)
  */
 public class Card501_161 extends AbstractUsedInterrupt {
     public Card501_161() {
