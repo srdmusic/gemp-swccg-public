@@ -23,8 +23,8 @@ public class MayNotHaveDeployCostDecreasedModifier extends AbstractModifier {
      * @param affectFilter the filter for cards that may not have deploy cost decreased
      * @param playerId the player that may not increase deploy cost
      */
-    public MayNotHaveDeployCostDecreasedModifier(PhysicalCard source, Filterable affectFilter, String playerId) {
-        this(source, affectFilter, null, playerId);
+    public MayNotHaveDeployCostDecreasedModifier(PhysicalCard source, Filterable affectFilter) {
+        this(source, affectFilter, null, null);
     }
 
     /**
