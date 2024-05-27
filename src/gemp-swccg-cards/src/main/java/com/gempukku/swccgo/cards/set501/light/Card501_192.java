@@ -92,7 +92,7 @@ public class Card501_192 extends AbstractUsedInterrupt {
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
         Filter set21Anakin = Filters.and(Filters.icon(Icon.VIRTUAL_SET_21), Filters.Anakin);
         if (GameConditions.canSpot(game, self, Filters.Credits_Will_Do_Fine)
-                && (TriggerConditions.wonBattle(game, effectResult, set21Anakin)
+                && (TriggerConditions.wonBattle(game, effectResult, Filters.sameLocationAs(self, set21Anakin))
                     || TriggerConditions.forceDrainCompleted(game, effectResult, Filters.and(set21Anakin, Filters.at(Filters.battleground))))) {
             final String opponent = game.getOpponent(playerId);
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
