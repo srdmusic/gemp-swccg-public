@@ -20,7 +20,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.modifiers.FireWeaponFiredByForFreeModifier;
+import com.gempukku.swccgo.logic.modifiers.FiresForFreeModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
@@ -52,7 +52,7 @@ public class Card501_182 extends AbstractCapitalStarship {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new FireWeaponFiredByForFreeModifier(self, Filters.and(Filters.Rebel, Filters.On_Hoth), Filters.any));
+        modifiers.add(new FiresForFreeModifier(self, Filters.and(Filters.your(self), Filters.weapon, Filters.On_Hoth)));
         return modifiers;
     }
 
