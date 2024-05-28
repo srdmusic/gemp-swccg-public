@@ -17,12 +17,15 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.PutStackedCardInLostPileEffect;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotHaveForfeitValueIncreasedModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotTargetToBeLostModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Collection;
@@ -63,7 +66,17 @@ public class Card501_162 extends AbstractUsedInterrupt {
             actions.add(action);
         }
 
-        // forfeit/hit logic here
+        PlayInterruptAction action1 = new PlayInterruptAction(game, self);
+        action1.setText("Modify forfeit values and prevent 'hit' cards from being lost");
+        action1.setActionMsg("Prevent forfeit values from being increased and opponent from targeting your 'hit' cards to be lost.");
+        action1.appendEffect(
+            new AddUntilEndOfTurnModifierEffect(action1, 
+                new MayNotHaveForfeitValueIncreasedModifier(self, Filters.any), playerId));
+        action1.appendEffect(
+            new AddUntilEndOfTurnModifierEffect(action1, 
+            new MayNotTargetToBeLostModifier(self, Filters.and(Filters.your(self), Filters.hit, Filters.any)), playerId));
+        actions.add(action1);
+
 
         Filter setOneObi = Filters.and(Filters.icon(Icon.VIRTUAL_SET_1), Filters.ObiWan);
         GameTextActionId gameTextActionId = GameTextActionId.OUT_OF_COMMISSION__MOVE_OBI;
@@ -72,7 +85,7 @@ public class Card501_162 extends AbstractUsedInterrupt {
                 && GameConditions.isDuringYourPhase(game, playerId, Phase.CONTROL)
                 && GameConditions.canSpot(game, self, setOneObi)
                 && GameConditions.hasForcePile(game, playerId)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Relocate [Set 1] Obi-Wan to adjacent site");
             // Choose target(s)
             action.appendTargeting(
