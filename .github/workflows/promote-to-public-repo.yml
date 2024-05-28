@@ -3,6 +3,7 @@
 name: Promote to Public GEMP Repository
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
