@@ -37,11 +37,9 @@ import java.util.List;
 public class Card501_134 extends AbstractDevice {
     public Card501_134() {
         super(Side.DARK, 6, PlayCardZoneOption.ATTACHED, "Electro-Rangefinder", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
+        setVirtualSuffix(true);
         setLore("Long-range stereoscopic sighting device connected to the cannons of an Imperial walker. Calibrated to allow the AT-AT commander to accurately fire at distant targets.");
-        setGameText("Deploy on a [Hoth] or [Premium] AT-AT on Hoth. " +
-                "Once per game, when deployed, may take any card from Force Pile into hand; reshuffle. " +
-                "When this AT-AT fires an AT-AT Cannon with your [Hoth] Epic Event from a site you control, " +
-                "may add one destiny to your total.");
+        setGameText("Deploy on a [Hoth] or [Premium] AT-AT on Hoth. Once per game, when deployed, may search Force Pile or Used Pile and take any one card into hand; reshuffle. When this AT-AT fires an AT-AT Cannon with your [Hoth] Epic Event from a site you control, add one destiny to your total.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_23);
         setTestingText("Electro-Rangefinder (V)");
     }
@@ -87,8 +85,8 @@ public class Card501_134 extends AbstractDevice {
 
             if (GameConditions.canTakeCardsIntoHandFromUsedPile(game, playerId, self, gameTextActionId)) {
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Take card into hand from Force Pile");
-                action.setActionMsg("Take a card into hand from Force Pile");
+                action.setText("Take card into hand from Used Pile");
+                action.setActionMsg("Take a card into hand from Used Pile");
                 action.appendUsage(
                     new OncePerGameEffect(action));
                 // Perform result(s)
