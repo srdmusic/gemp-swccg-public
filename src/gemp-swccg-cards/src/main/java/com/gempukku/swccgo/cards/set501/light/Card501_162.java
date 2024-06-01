@@ -84,7 +84,8 @@ public class Card501_162 extends AbstractUsedInterrupt {
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.isDuringYourPhase(game, playerId, Phase.CONTROL)
                 && GameConditions.canSpot(game, self, setOneObi)
-                && GameConditions.hasForcePile(game, playerId)) {
+                && GameConditions.canUseForceToPlayInterrupt(game, playerId, self, 1)
+                && GameConditions.canSpotLocation(game, Filters.adjacentSiteTo(self, setOneObi))) {
             PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Relocate [Set 1] Obi-Wan to adjacent site");
             // Choose target(s)
