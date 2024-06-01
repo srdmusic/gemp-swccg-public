@@ -5,7 +5,6 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
-import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
@@ -44,7 +43,7 @@ public class Card501_191 extends AbstractRebel {
     public Card501_191() {
         super(Side.LIGHT, 2, 4, 4, 4, 6, "Sabine, Padawan Learner", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Female Mandalorian Padawan.");
-        setGameText("If Sabine just deployed (or won a battle), may place an artwork card in owner's Used Pile. Characters Sabine 'hits' are forfeit -4. While with Ahsoka or Ezra, your battle destiny here is +1 (+2 if both). Immune to [Permanent Weapon] and attrition <3");
+        setGameText("If Sabine just deployed (or won a battle), may place an artwork card in owner's Used Pile. Once per turn, if Sabine just 'hit' a character, opponent loses 2 Force. While with Ahsoka or Ezra, your total battle destiny here is +1. Immune to [Permanent Weapon] weapons and attrition < 3.");
         setArmor(5);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_23);
         addKeywords(Keyword.FEMALE, Keyword.PADAWAN);
@@ -67,11 +66,10 @@ public class Card501_191 extends AbstractRebel {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.SABINE_PADAWAN__TWO_FORCE;
         if (TriggerConditions.justHitBy(game, effectResult, Filters.character, self)
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
+                && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId)) {
             String opponent = game.getOpponent(self.getOwner());
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Make opponent lose 2 Force");
             action.appendUsage(
                 new OncePerTurnEffect(action));
