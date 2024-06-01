@@ -25,6 +25,12 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Set: Set 23
+ * Type: Effect
+ * Subtype: Normal
+ * Title: Dark Deal (V)
+ */
 public class Card501_037 extends AbstractNormalEffect {
     public Card501_037() {
         super(Side.DARK, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Dark_Deal, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
@@ -52,7 +58,7 @@ public class Card501_037 extends AbstractNormalEffect {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceDrainModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.alien, Filters.Imperial)), 1, playerId));
+        modifiers.add(new ForceDrainModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial)))), 1, playerId));
         return modifiers;
     }
 
