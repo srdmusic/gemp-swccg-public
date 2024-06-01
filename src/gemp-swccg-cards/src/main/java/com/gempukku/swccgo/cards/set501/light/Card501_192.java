@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractJediMaster;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -14,7 +15,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
@@ -58,9 +59,11 @@ public class Card501_192 extends AbstractJediMaster {
 
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Retrieve a musician into hand");
+                action.appendUsage(
+                    new OncePerGameEffect(action));
                 // Perform result(s)
                 action.appendEffect(
-                        new RetrieveCardIntoHandEffect(action, playerId, Filters.musician));
+                        new RetrieveCardEffect(action, playerId, Filters.musician));
                 // Perform result(s)
                 actions.add(action);
             }
@@ -68,6 +71,8 @@ public class Card501_192 extends AbstractJediMaster {
 
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Take a musician into hand from Reserve Deck");
+                action.appendUsage(
+                    new OncePerGameEffect(action));
                 // Perform result(s)
                 action.appendEffect(
                         new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.musician, true));
