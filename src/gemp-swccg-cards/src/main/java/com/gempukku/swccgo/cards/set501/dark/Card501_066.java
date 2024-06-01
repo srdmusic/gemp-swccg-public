@@ -49,7 +49,6 @@ public class Card501_066 extends AbstractDefensiveShield {
         modifiers.add(new ExtraForceCostToPlayInterruptModifier(self, Filters.and(Filters.Interrupt, Filters.inLostPile(opponent),
                 Filters.not(Filters.sameTitleAsStackedOn(self, Filters.and(Filters.grabber, Filters.not(self))))),
                 new AddEvaluator(new StackedEvaluator(self), 1)));
-        modifiers.add(new ExtraForceCostToDeployCardForFreeExceptByOwnGametextModifier(self, Filters.and(Filters.opponents(self), Filters.or(Filters.character, Filters.starship, Filters.vehicle), Filters.not(Filters.unique)), 2));
         modifiers.add(new ExtraForceCostToDeployCardForFreeExceptByOwnGametextModifier(self, Filters.and(Filters.opponents(self), Filters.or(Filters.character, Filters.starship, Filters.vehicle)), 2));
         return modifiers;
     }
