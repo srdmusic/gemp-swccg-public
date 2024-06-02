@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class Card501_187 extends AbstractDefensiveShield {
     public Card501_187() {
-        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Goldenrod", ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Goldenrod, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setGameText("Plays on table. They Must Never Again Leave This City is suspended during opponent's first turn. For opponent to deploy a character, starship, or vehicle for free (unless that card is unique (•) and using its own game text), opponent must first use 2 Force.");
         addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_DEFENSIVE_SHIELD);
