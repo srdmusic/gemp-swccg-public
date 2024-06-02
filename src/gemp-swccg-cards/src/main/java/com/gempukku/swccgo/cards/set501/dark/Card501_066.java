@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractDefensiveShield;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.StackCardFromVoidEffect;
 import com.gempukku.swccgo.cards.evaluators.AddEvaluator;
+import com.gempukku.swccgo.cards.evaluators.NumCopiesOfCardAtLocationEvaluator;
 import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -19,6 +20,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.RespondablePlayingCardEffect;
 import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToDeployCardForFreeExceptByOwnGametextModifier;
+import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToDeployCardToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToPlayInterruptModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Effect;
@@ -49,6 +51,8 @@ public class Card501_066 extends AbstractDefensiveShield {
         modifiers.add(new ExtraForceCostToPlayInterruptModifier(self, Filters.and(Filters.Interrupt, Filters.inLostPile(opponent),
                 Filters.not(Filters.sameTitleAsStackedOn(self, Filters.and(Filters.grabber, Filters.not(self))))),
                 new AddEvaluator(new StackedEvaluator(self), 1)));
+        modifiers.add(new ExtraForceCostToDeployCardToLocationModifier(self, Filters.and(Filters.opponents(self), Filters.non_unique, Filters.except(Filters.Jawa)),
+                new NumCopiesOfCardAtLocationEvaluator(self)));
         modifiers.add(new ExtraForceCostToDeployCardForFreeExceptByOwnGametextModifier(self, Filters.and(Filters.opponents(self), Filters.or(Filters.character, Filters.starship, Filters.vehicle)), 2));
         return modifiers;
     }
