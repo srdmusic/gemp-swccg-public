@@ -3659,6 +3659,7 @@ var fixedImages = {
 "501_33": "https://res.starwarsccg.org/cards/Virtual4-Dark/hires/kylorenscommandshuttle.png",
 "501_34":"https://res.starwarsccg.org/cards/CloudCity-Dark/large/bounty.gif",
 "501_36":"https://res.starwarsccg.org/cards/Hoth-Dark/large/probetelemetry.gif",
+"501_36":"https://res.starwarsccg.org/cards/CloudCity-Dark/large/darkdeal.gif",
 "501_38":"https://res.starwarsccg.org/cards/TheedPalace-Dark/large/takethemaway.gif",
 "501_39":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/lobot.gif",
 "501_41":"https://res.starwarsccg.org/cards/Tatooine-Dark/large/iwillfindthemquicklymaster.gif",
@@ -3744,6 +3745,7 @@ var fixedImages = {
 "501_192":"https://res.starwarsccg.org/cards/Coruscant-Light/large/depabillaba.gif",
 "501_193":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/imustbeallowedtospeak.gif",
 "501_194":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/princessleiaorgana.gif",
+"501_195":"https://res.starwarsccg.org/cards/Virtual0-Light/large/goldenrod.gif",
 "501_196":"https://res.starwarsccg.org/cards/Tatooine-Light/large/neckandneck.gif",
 
 //legacy

@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -33,13 +32,13 @@ import java.util.List;
  * Set: Set 23
  * Type: Interrupt
  * Subtype: Used
- * Title: Out Of Commission (V)
+ * Title: Choke (V)
  */
 public class Card501_161 extends AbstractUsedInterrupt {
     public Card501_161() {
         super(Side.LIGHT, 4, "Choke", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Reaching out with the Force, Luke rendered Ortugg unconscious without doing the Gamorrean any actual harm.");
-        setGameText("Cancel None Shall Pass. OR If a battle just initiated at a Jabba's Palace or First Light site, cancel game text of a character of ability < 4. OR Take an Interrupt with printed destiny = 4 into hand from Reserve Deck; reshuffle.");
+        setGameText("Cancel None Shall Pass. OR If a battle just initiated at a First Light or Jabba’s Palace site, cancel game text of a participating character of ability < 4. OR If your character of ability = 5 on table, take an Interrupt with printed destiny = 4 into hand from Reserve Deck; reshuffle.");
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
         setTestingText("Choke (V)");
@@ -59,8 +58,9 @@ public class Card501_161 extends AbstractUsedInterrupt {
         GameTextActionId gameTextActionId = GameTextActionId.CHOKE__UPLOAD_DESTINY4;
 
         // Check condition(s)
-        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)
+                && GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.character, Filters.abilityEqualTo(5)))) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setText("Take an Interrupt into hand from Reserve Deck");
             action.setActionMsg("Take an Interrupt with printed destiny = 4 into hand from Reserve Deck; reshuffle");
             // Allow response(s)
