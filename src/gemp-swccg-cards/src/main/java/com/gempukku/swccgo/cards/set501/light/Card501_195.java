@@ -33,8 +33,8 @@ import java.util.List;
  * Subtype: Used
  * Title: Neck And Neck (V)
  */
-public class Card501_192 extends AbstractUsedInterrupt {
-    public Card501_192() {
+public class Card501_195 extends AbstractUsedInterrupt {
+    public Card501_195() {
         super(Side.LIGHT, 4, Title.Neck_And_Neck, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("When Anakin had finally caught up with Sebulba, he knew he needed to make some kind of a move to break away from the Dug to win the race.");
         setGameText("If [Set 21] Anakin in battle, he is power +1 for each 'credit' card (if any) and opponent may not draw more than one battle destiny. OR If [Set 21] Anakin just won a battle (or Force drained at a battleground), opponent loses 1 Force and stacks lost card under Credits Will Do Fine.");
