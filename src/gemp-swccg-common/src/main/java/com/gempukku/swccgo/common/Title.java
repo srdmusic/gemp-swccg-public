@@ -141,6 +141,7 @@ public interface Title {
     String Bounty = "Bounty";
     String Bounty_Hunters_Guild = "Nevarro City: Bounty Hunter's Guild";
     String Bounty_Hunting_Is_A_Dangerous_Profession = "Bounty Hunting Is A Dangerous Profession";
+    String Boushh = "Boushh";
     String Holopuck = "Holopuck";
     String Bow_To_The_First_Order = "Bow To The First Order";
     String Bowcaster = "Bowcaster";
@@ -448,6 +449,7 @@ public interface Title {
     String Gold_4 = "Gold 4";
     String Gold_5 = "Gold 5";
     String Gold_6 = "Gold 6";
+    String Goldenrod = "Goldenrod";
     String Goo_Nee_Tay = "Goo Nee Tay";
     String Graak = "Graak";
     String Gravel_Storm = "Gravel Storm";

@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractDefensiveShield;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.StackCardFromVoidEffect;
 import com.gempukku.swccgo.cards.evaluators.AddEvaluator;
+import com.gempukku.swccgo.cards.evaluators.NumCopiesOfCardAtLocationEvaluator;
 import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -19,6 +20,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.RespondablePlayingCardEffect;
 import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToDeployCardForFreeExceptByOwnGametextModifier;
+import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToDeployCardToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToPlayInterruptModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Effect;
@@ -36,7 +38,7 @@ public class Card501_066 extends AbstractDefensiveShield {
     public Card501_066() {
         super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Useless Gesture & Death Star Sentry", ExpansionSet.PLAYTESTING, Rarity.V);
         addComboCardTitles(Title.A_Useless_Gesture, Title.Death_Star_Sentry);
-        setGameText("Plays on table. In order to play an Interrupt from Lost Pile, opponent must first stack it here (if possible) and use +1 Force for each card here. For opponent to deploy a character, starship, or vehicle for free (unless that card is unique (•) and using its own game text), opponent must first use 2 Force.");
+        setGameText("Plays on table. In order to play an Interrupt from Lost Pile, opponent must first stack it here (if possible) and use +1 Force for each card here, even if Interrupt is normally free. For opponent to deploy a character, starship, or vehicle for free (except by that card's own game text), opponent must first use 2 Force. Opponent must first use X Force to deploy a non-unique card (except a Jawa) to a location, where X = the number of copies of that card at that location.");
         addIcons(Icon.GRABBER, Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setTestingText("A Useless Gesture & Death Star Sentry");
     }
@@ -49,7 +51,9 @@ public class Card501_066 extends AbstractDefensiveShield {
         modifiers.add(new ExtraForceCostToPlayInterruptModifier(self, Filters.and(Filters.Interrupt, Filters.inLostPile(opponent),
                 Filters.not(Filters.sameTitleAsStackedOn(self, Filters.and(Filters.grabber, Filters.not(self))))),
                 new AddEvaluator(new StackedEvaluator(self), 1)));
-        modifiers.add(new ExtraForceCostToDeployCardForFreeExceptByOwnGametextModifier(self, Filters.and(Filters.opponents(self), Filters.or(Filters.character, Filters.starship, Filters.vehicle), Filters.not(Filters.unique)), 2));
+        modifiers.add(new ExtraForceCostToDeployCardToLocationModifier(self, Filters.and(Filters.opponents(self), Filters.non_unique, Filters.except(Filters.Jawa)),
+                new NumCopiesOfCardAtLocationEvaluator(self)));
+        modifiers.add(new ExtraForceCostToDeployCardForFreeExceptByOwnGametextModifier(self, Filters.and(Filters.opponents(self), Filters.or(Filters.character, Filters.starship, Filters.vehicle)), 2));
         return modifiers;
     }
 
