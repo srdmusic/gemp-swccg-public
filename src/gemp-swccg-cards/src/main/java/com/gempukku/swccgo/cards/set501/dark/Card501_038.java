@@ -36,15 +36,14 @@ import java.util.List;
 /*
  * Set: Set 23
  * Type: Interrupt
- * Subtype: Used or Lost
+ * Subtype: Used Or Lost
  * Title: The Emperor's Hand
  */
 public class Card501_038 extends AbstractUsedOrLostInterrupt {
     public Card501_038() {
         super(Side.DARK, 4, "The Emperor's Hand", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("USED: Take Mara Jade, The Emperor’s Hand into hand from Reserve Deck; reshuffle. OR If a battle just ended that your Mara won, opponent loses 1 Force and, if Emperor and your Mara on table, may relocate your Mara to a battleground site. LOST: Retrieve Mara Jade’s Lightsaber.");
+        setGameText("USED: Take Mara Jade, The Emperor's Hand into hand from Reserve Deck; reshuffle. OR If a battle just ended that your Mara won, opponent loses 1 Force and, if Emperor and your Mara on table, may relocate your Mara to a battleground site. LOST: Retrieve Mara Jade's Lightsaber.");        addIcons(Icon.VIRTUAL_SET_23);
         addIcons(Icon.VIRTUAL_SET_23);
-        setVirtualSuffix(true);
         setTestingText("The Emperor's Hand");
     }
 
