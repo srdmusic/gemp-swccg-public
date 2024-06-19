@@ -2532,25 +2532,6 @@ public interface ModifiersQuerying {
     boolean isDeployCostNotAllowedToBeIncreased(GameState gameState, PhysicalCard card, String playerIncreasingCost, ModifierCollector modifierCollector);
 
     /**
-     * Determines if the specified card's deploy cost is not allowed to be increased.
-     * @param gameState the game state
-     * @param card the card
-     * @param playerDecreasingCost the player to decrease the deploy cost
-     * @return true if deploy cost may not be decreased, otherwise false
-     */
-    boolean isDeployCostNotAllowedToBeDecreased(GameState gameState, PhysicalCard card, String playerDecreasingCost);
-
-    /**
-     * Determines if the specified card's deploy cost is not allowed to be increased.
-     * @param gameState the game state
-     * @param card the card
-     * @param playerDecreasingCost the player to decrease the deploy cost
-     * @param modifierCollector collector of affecting modifiers
-     * @return true if deploy cost may not be decreased, otherwise false
-     */
-    boolean isDeployCostNotAllowedToBeDecreased(GameState gameState, PhysicalCard card, String playerDecreasingCost, ModifierCollector modifierCollector);
-
-    /**
      * Determines if the specified card's own deployment modifiers are applied at any location.
      * @param gameState the game state
      * @param card the card

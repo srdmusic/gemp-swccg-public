@@ -26,7 +26,7 @@ import com.gempukku.swccgo.logic.effects.DeployCardsSimultaneouslyEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardCombinationFromHandAndOrReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
-import com.gempukku.swccgo.logic.modifiers.MayNotHaveDeployCostDecreasedModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotHaveDeployCostModifiedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.StandardEffect;
 
@@ -185,7 +185,7 @@ public class Card501_160 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotHaveDeployCostDecreasedModifier(self, Filters.and(Filters.Imperial_starship, Filters.at(Filters.Tatooine_system))));
+        modifiers.add(new MayNotHaveDeployCostModifiedModifier(self, Filters.and(Filters.Imperial_starship, Filters.at(Filters.Tatooine_system))));
         return modifiers;
     }
 }

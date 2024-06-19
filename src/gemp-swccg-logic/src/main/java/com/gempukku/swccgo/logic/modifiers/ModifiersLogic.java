@@ -10150,38 +10150,6 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
     }
 
     /**
-     * Determines if the specified card's deploy cost is not allowed to be decreased.
-     * @param gameState the game state
-     * @param card the card
-     * @param playerDecreasingCost the player to decrease the deploy cost
-     * @return true if deploy cost may not be increased, otherwise false
-     */
-    @Override
-    public boolean isDeployCostNotAllowedToBeDecreased(GameState gameState, PhysicalCard card, String playerDecreasingCost) {
-        return isDeployCostNotAllowedToBeDecreased(gameState, card, playerDecreasingCost, new ModifierCollectorImpl());
-    }
-
-    /**
-     * Determines if the specified card's deploy cost is not allowed to be decreased.
-     * @param gameState the game state
-     * @param card the card
-     * @param playerDecreasingCost the player to decrease the deploy cost
-     * @param modifierCollector collector of affecting modifiers
-     * @return true if deploy cost may not be increased, otherwise false
-     */
-    @Override
-    public boolean isDeployCostNotAllowedToBeDecreased(GameState gameState, PhysicalCard card, String playerDecreasingCost, ModifierCollector modifierCollector) {
-        boolean retVal = false;
-        for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.MAY_NOT_HAVE_DEPLOY_COST_DECREASED, card)) {
-            if (modifier.isForPlayer(playerDecreasingCost)) {
-                retVal = true;
-                modifierCollector.addModifier(modifier);
-            }
-        }
-        return retVal;
-    }
-
-    /**
      * Determines if the specified card's own deployment modifiers are applied at any location.
      * @param gameState the game state
      * @param card the card
@@ -10240,9 +10208,6 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         boolean deployCostMayNotBeIncreased = deployCostMayNotBeModified || isDeployCostNotAllowedToBeIncreased(gameState, cardToDeploy, null, modifierCollector);
         boolean deployCostMayNotBeIncreasedByOwner = deployCostMayNotBeIncreased || isDeployCostNotAllowedToBeIncreased(gameState, cardToDeploy, owner, modifierCollector);
         boolean deployCostMayNotBeIncreasedByOpponent = deployCostMayNotBeIncreased || isDeployCostNotAllowedToBeIncreased(gameState, cardToDeploy, opponent, modifierCollector);
-        boolean deployCostMayNotBeDecreased = deployCostMayNotBeModified || isDeployCostNotAllowedToBeDecreased(gameState, cardToDeploy, null, modifierCollector);
-        boolean deployCostMayNotBeDecreasedByOwner = deployCostMayNotBeDecreased || isDeployCostNotAllowedToBeDecreased(gameState, cardToDeploy, owner, modifierCollector);
-        boolean deployCostMayNotBeDecreasedByOpponent = deployCostMayNotBeDecreased || isDeployCostNotAllowedToBeDecreased(gameState, cardToDeploy, opponent, modifierCollector);
 
         // Use destiny number instead if "Dejarik Rules"
         if (isDejarikRules || cardToDeploy.isDejarikHologramAtHolosite()) {
@@ -10255,8 +10220,6 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
                     if (modifierOwner == null || !(opponent.equals(modifierOwner) ? deployCostMayNotBeModifiedByOpponent : deployCostMayNotBeModifiedByOwner)) {
                         float modifierValue = modifier.getDeployCostModifier(gameState, this, cardToDeploy);
                         if (modifierValue < 0 || (!deployCostMayNotBeIncreased && (modifierOwner == null || !(opponent.equals(modifierOwner) ? deployCostMayNotBeIncreasedByOpponent : deployCostMayNotBeIncreasedByOwner)))) {
-                            result += modifierValue;
-                        } else if (modifierValue > 0 || (!deployCostMayNotBeDecreased && (modifierOwner == null || !(opponent.equals(modifierOwner) ? deployCostMayNotBeDecreasedByOpponent : deployCostMayNotBeDecreasedByOwner)))) {
                             result += modifierValue;
                         } 
                     }
