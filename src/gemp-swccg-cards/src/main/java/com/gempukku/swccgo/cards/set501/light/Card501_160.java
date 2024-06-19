@@ -44,7 +44,7 @@ import java.util.List;
 public class Card501_160 extends AbstractNormalEffect {
     public Card501_160() {
         super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Passage To The Alderaan System", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on table if Stolen Data Tapes on table. Once per game, may simultaneously deploy non-[E7] Falcon and Han from hand and/or Reserve Deck (-1 each); reshuffle. Imperial starships may not have deploy cost reduced at Tatooine system. [Immune to Alter.]");
+        setGameText("If Stolen Data Tapes on table, deploy on table. Once per game, may simultaneously deploy non-[Episode VII] Falcon and non-[Episode VII] Han (for -1 Force each) from hand and/or Reserve Deck; reshuffle. At Tatooine system, Imperial starships may not have their deploy cost modified. [Immune to Alter.]");
         addIcon(Icon.VIRTUAL_SET_23);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Passage To The Alderaan System");
@@ -67,7 +67,7 @@ public class Card501_160 extends AbstractNormalEffect {
             final List<PhysicalCard> validStarfighters = new ArrayList<PhysicalCard>();
             Collection<PhysicalCard> starfighters = Filters.filter(cardsInHand, game, Filters.and(Filters.not(Filters.icon(Icon.EPISODE_VII)), Filters.Falcon));
             for (PhysicalCard starfighter : starfighters) {
-                if (Filters.canSpot(cardsInHand, game, Filters.and(Filters.Han, Filters.deployableSimultaneouslyWith(self, starfighter, false, -1, false, -1)))) {
+                if (Filters.canSpot(cardsInHand, game, Filters.and(Filters.not(Filters.icon(Icon.EPISODE_VII)), Filters.Han, Filters.deployableSimultaneouslyWith(self, starfighter, false, -1, false, -1)))) {
                     validStarfighters.add(starfighter);
                 }
             }
@@ -85,13 +85,13 @@ public class Card501_160 extends AbstractNormalEffect {
                                     new YesNoDecision("You have valid starfighter and pilot combinations in hand. Do you want to search Reserve Deck as well?") {
                                         @Override
                                         protected void yes() {
-                                            action.setActionMsg("Deploy a non-[E7] Falcon and Han from hand and/or Reserve Deck");
+                                            action.setActionMsg("Deploy a non-[E7] Falcon and non-[E7] Han from hand and/or Reserve Deck");
                                             // Perform result(s)
                                             action.appendEffect(getChooseCardsEffect(action));
                                         }
                                         @Override
                                         protected void no() {
-                                            action.setActionMsg("Deploy a non-[E7] Falcon and Han from hand");
+                                            action.setActionMsg("Deploy a non-[E7] Falcon and non-[E7] Han from hand");
                                             action.appendTargeting(
                                                     new ChooseCardFromHandEffect(action, playerId, Filters.in(validStarfighters)) {
                                                         @Override
@@ -100,13 +100,13 @@ public class Card501_160 extends AbstractNormalEffect {
                                                         }
                                                         @Override
                                                         protected void cardSelected(SwccgGame game, final PhysicalCard starfighter) {
-                                                            Collection<PhysicalCard> pilots = Filters.filter(cardsInHand, game, Filters.and(Filters.Han,
-                                                                    Filters.deployableSimultaneouslyWith(self, starfighter, false, -1, false, -1)));
+                                                            Collection<PhysicalCard> pilots = Filters.filter(cardsInHand, game, Filters.and(Filters.not(Filters.icon(Icon.EPISODE_VII)),
+                                                                    Filters.Han, Filters.deployableSimultaneouslyWith(self, starfighter, false, -1, false, -1)));
                                                             action.appendTargeting(
                                                                     new ChooseCardFromHandEffect(action, playerId, Filters.in(pilots)) {
                                                                         @Override
                                                                         public String getChoiceText(int numCardsToChoose) {
-                                                                            return "Choose a Han";
+                                                                            return "Choose a non-[E7] Han";
                                                                         }
                                                                         @Override
                                                                         protected void cardSelected(SwccgGame game, PhysicalCard pilot) {
