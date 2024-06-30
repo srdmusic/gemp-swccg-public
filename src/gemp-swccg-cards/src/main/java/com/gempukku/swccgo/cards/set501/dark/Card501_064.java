@@ -35,7 +35,7 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
     public Card501_064() {
         super(Side.DARK, 3, "The Empire's Back", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("No star system will dare oppose the Emperor now.");
-        setGameText("USED: Deploy Empire's New Order or Overseeing It Personally from Reserve Deck; reshuffle. LOST: Once per game, choose: Place an Interrupt from opponent's Lost Pile out of play. OR If Xizor (or two Imperial leaders) in battle, re-circulate.");
+        setGameText("USED: Deploy Empire's New Order or Overseeing It Personally from Reserve Deck; reshuffle. LOST: Once per game, choose: if two Imperial leaders (or Xizor) in battle, recirculate. OR Place opponent's just-played Interrupt out of play.");
         addIcons(Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
         setTestingText("The Empire's Back (V)");
@@ -103,8 +103,9 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
 
         GameTextActionId gameTextActionId = GameTextActionId.THE_EMPIRES_BACK_V__OUT_OF_PLAY_OR_RECIRCULATE;
         final PhysicalCard cardBeingPlayed = ((RespondablePlayCardEffect) effect).getCard();
+        String opponent = game.getOpponent(playerId);
 
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.Interrupt)
+        if (TriggerConditions.isPlayingCard(game, effect, opponent, Filters.Interrupt)
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.interruptCanBePlacedOutOfPlay(game, cardBeingPlayed)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
