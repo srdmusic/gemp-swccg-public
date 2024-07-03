@@ -3656,7 +3656,8 @@ var fixedImages = {
 "501_31": "https://res.starwarsccg.org/cards/TheedPalace-Dark/large/fightersstraightahead.gif",
 "501_32": "https://res.starwarsccg.org/cards/TheedPalace-Dark/large/3b321.gif",
 "501_33": "https://res.starwarsccg.org/cards/Virtual4-Dark/hires/kylorenscommandshuttle.png",
-"501_34":"https://res.starwarsccg.org/cards/CloudCity-Dark/large/bounty.gif",
+"501_34": "https://res.starwarsccg.org/cards/CloudCity-Dark/large/bounty.gif",
+"501_35": "https://res.starwarsccg.org/cards/CloudCity-Dark/large/trooperassault.gif",
 "501_41":"https://res.starwarsccg.org/cards/Tatooine-Dark/large/iwillfindthemquicklymaster.gif",
 "501_42":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/tc14.gif",
 "501_43":"https://res.starwarsccg.org/cards/TheedPalace-Dark/large/darthsidious.gif",
@@ -3709,7 +3710,9 @@ var fixedImages = {
 "501_139":"https://res.starwarsccg.org/cards/Premiere-Dark/large/wuher.gif",
 "501_140":"https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/sandtrooper.gif",
 "501_141":"https://res.starwarsccg.org/cards/Virtual12-Dark/large/moffgideon.gif",
-"501_164":"https://res.starwarsccg.org/cards/Premiere-Light/large/scomplinkaccess.gif",
+"501_164": "https://res.starwarsccg.org/cards/Premiere-Light/large/scomplinkaccess.gif",
+"501_166": "https://res.starwarsccg.org/cards/SpecialEdition-Light/large/rebelambush.gif",
+"501_167": "https://res.starwarsccg.org/cards/JabbasPalaceSealedDeck-Light/large/tatooinehutttraderoutedesert.gif",
 "501_170":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/pucumirthryss.gif",
 
 
