@@ -32,7 +32,7 @@ import java.util.List;
 public class Card501_115 extends AbstractNormalEffect {
     public Card501_115() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Your Eyes Can Deceive You", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on table. If C-3PO at a non-battleground, once during your turn, may peek at the top two cards of Reserve Deck and take one into hand. While you occupy three battlegrounds, opponent may not cancel your Force drains at battlegrounds. [Immune to Alter]");
+        setGameText("Deploy on table. If C-3PO at a non-battleground, once during your turn, may peek at the top two cards of Reserve Deck and take one into hand. While you occupy two battlegrounds, opponent may not cancel your Force drains at battlegrounds. [Immune to Alter]");
         addImmuneToCardTitle(Title.Alter);
         addIcons(Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
@@ -68,7 +68,7 @@ public class Card501_115 extends AbstractNormalEffect {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.battleground, new OccupiesCondition(playerId, 3, Filters.battleground), opponent, playerId));
+        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.battleground, new OccupiesCondition(playerId, 2, Filters.battleground), opponent, playerId));
         return modifiers;
     }
 }
