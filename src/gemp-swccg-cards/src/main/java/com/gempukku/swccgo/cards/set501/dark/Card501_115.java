@@ -36,7 +36,7 @@ public class Card501_115 extends AbstractNormalEffect {
         addImmuneToCardTitle(Title.Alter);
         addIcons(Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
-        setTestingText("Eyes In The Dark (V)");
+        setTestingText("Your Eyes Can Deceive You (V)");
     }
 
     @Override
