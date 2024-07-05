@@ -19,14 +19,12 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.conditions.NotCondition;
-import com.gempukku.swccgo.logic.conditions.PhaseCondition;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromOutsideTheGameEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
+import com.gempukku.swccgo.logic.modifiers.CancelsGameTextOnSideOfLocationModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 
@@ -37,34 +35,35 @@ import java.util.List;
  * Set: Set 23
  * Type: Interrupt
  * Subtype: Used
- * Title: Put All Sections On Alert (V)
+ * Title: Rite Of Passage (V)
  */
 
 public class Card501_016 extends AbstractUsedInterrupt {
     public Card501_016() {
-        super(Side.DARK, 6, Title.Put_All_Sections_On_Alert, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("We have an emergency alert in detention block AA-twenty-three");
-        setGameText("Prevent a character from moving (except during owner's move phase) until end of turn. OR Take [Set 0] Imperial Decree into hand from Reserve Deck; reshuffle. OR Cancel Jedi Presence or Rebel Ambush. OR Once per game, deploy a Lift Tube from outside your deck.");
+        super(Side.DARK, 4, Title.Rite_Of_Passage, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("There are many different paths to becoming a Jedi, each with its own risks and consequences. A student must choose wisely.");
+        setGameText("Once per game, deploy a Lift Tube from outside your deck. [Immune to Sense.] OR ▲ [Set 0] Imperial Decree. OR Cancel Path Of Least Resistance or Run Luke, Run! OR Cancel opponent's Mos Eisley or Upper Plaza Corridor site game text for remainder of turn.");
         setVirtualSuffix(true);
-        addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_23);
-        setTestingText("Put All Sections On Alert (V)");
+        addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_23);
+        setTestingText("Rite Of Passage (V)");
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
-        Filter filter = Filters.and(Filters.opponents(self), Filters.character);
+        Filter filter = Filters.or(Filters.Mos_Eisley, Filters.Upper_Plaza_Corridor);
 
         if (GameConditions.canSpot(game, self, filter)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Make character not able move");
+            action.setText("Cancel opponent's site game text.");
+            action.setActionMsg("Cancel opponent's Mos Eisley or Upper Plaza Corridor game text for remainder of turn.");
             // Choose target(s)
             action.appendTargeting(
-                new TargetCardOnTableEffect(action, playerId, "Choose character", filter) {
+                new TargetCardOnTableEffect(action, playerId, "Choose site", filter) {
                     @Override
                     protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                         // Allow response(s)
-                        action.allowResponses("Make " + GameUtils.getCardLink(targetedCard) + " not able to move (except during move phase)",
+                        action.allowResponses("Cancel opponent's " + GameUtils.getCardLink(targetedCard) + " game text for remainder of turn.",
                                 new RespondablePlayCardEffect(action) {
                                     @Override
                                     protected void performActionResults(Action targetingAction) {
@@ -76,8 +75,8 @@ public class Card501_016 extends AbstractUsedInterrupt {
                                         // Perform result(s)
                                         action.appendEffect(
                                             new AddUntilEndOfTurnModifierEffect(action, 
-                                                new MayNotMoveModifier(self, finalTarget, new NotCondition(new PhaseCondition(Phase.MOVE, opponent))), 
-                                            "May not move"));
+                                                new CancelsGameTextOnSideOfLocationModifier(self, finalTarget, opponent), 
+                                            "Game text canceled."));
                                     }
                                 }
                         );
@@ -88,7 +87,7 @@ public class Card501_016 extends AbstractUsedInterrupt {
 
         }
 
-        GameTextActionId gameTextActionId = GameTextActionId.PUT_ALL_SECTIONS_ON_ALERT__DOWNLOAD_LIFT_TUBE;
+        GameTextActionId gameTextActionId = GameTextActionId.RITE_OF_PASSAGE__DOWNLOAD_LIFT_TUBE;
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.isDuringYourPhase(game, playerId, Phase.DEPLOY)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
@@ -107,7 +106,7 @@ public class Card501_016 extends AbstractUsedInterrupt {
             actions.add(action);
         }
 
-        GameTextActionId gameTextActionId1 = GameTextActionId.PUT_ALL_SECTIONS_ON_ALERT__DOWNLOAD_IMPERIAL_DECREE;
+        GameTextActionId gameTextActionId1 = GameTextActionId.RITE_OF_PASSAGE__DOWNLOAD_IMPERIAL_DECREE;
 
         if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId1)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId1);
@@ -123,15 +122,15 @@ public class Card501_016 extends AbstractUsedInterrupt {
             actions.add(action);
         }
 
-        if (GameConditions.canTargetToCancel(game, self, Filters.Jedi_Presence)) {
+        if (GameConditions.canTargetToCancel(game, self, Filters.Path_Of_Least_Resistance)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Jedi_Presence, Title.Jedi_Presence);
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Path_Of_Least_Resistance, Title.Path_Of_Least_Resistance);
             actions.add(action);
         }
         
-        if (GameConditions.canTargetToCancel(game, self, Filters.Rebel_Ambush)) {
+        if (GameConditions.canTargetToCancel(game, self, Filters.Run_Luke_Run)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Rebel_Ambush, Title.Rebel_Ambush);
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Run_Luke_Run, Title.Run_Luke_Run);
             actions.add(action);
         }
 
@@ -143,7 +142,7 @@ public class Card501_016 extends AbstractUsedInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Jedi_Presence, Filters.Rebel_Ambush))
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Path_Of_Least_Resistance, Filters.Run_Luke_Run))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             PlayInterruptAction action = new PlayInterruptAction(game, self);
