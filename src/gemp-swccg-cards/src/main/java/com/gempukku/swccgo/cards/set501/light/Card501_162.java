@@ -4,7 +4,6 @@ import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
-import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
@@ -42,7 +41,7 @@ public class Card501_162 extends AbstractUsedInterrupt {
     public Card501_162() {
         super(Side.LIGHT, 5, Title.Out_Of_Commission, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("I hope that old man got that tractor beam out of commission or this is gonna be a real short trip.");
-        setGameText("Choose an artwork card to be lost. OR For remainder of turn, forfeit values may not be increased and opponent may not target your 'hit' cards to be lost. OR Once per game, during your control phase, use 1 Force to relocate [Set 1] Obi-Wan to an adjacent site.");
+        setGameText("Choose an artwork card to be lost. OR For remainder of turn, forfeit values may not be increased and opponent may not target your 'hit' cards to be lost. OR During your control phase, use 1 Force to relocate [Set 1] Obi-Wan to an adjacent site.");
         addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
         setTestingText("Out Of Commission (V)");
@@ -79,10 +78,8 @@ public class Card501_162 extends AbstractUsedInterrupt {
 
 
         Filter setOneObi = Filters.and(Filters.icon(Icon.VIRTUAL_SET_1), Filters.ObiWan);
-        GameTextActionId gameTextActionId = GameTextActionId.OUT_OF_COMMISSION__MOVE_OBI;
 
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.isDuringYourPhase(game, playerId, Phase.CONTROL)
+        if (GameConditions.isDuringYourPhase(game, playerId, Phase.CONTROL)
                 && GameConditions.canSpot(game, self, setOneObi)
                 && GameConditions.canUseForceToPlayInterrupt(game, playerId, self, 1)
                 && GameConditions.canSpotLocation(game, Filters.adjacentSiteTo(self, setOneObi))) {
