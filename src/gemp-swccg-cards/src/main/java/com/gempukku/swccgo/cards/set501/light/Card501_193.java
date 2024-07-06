@@ -39,7 +39,7 @@ public class Card501_193 extends AbstractNormalEffect {
         setGameText("If Han is frozen, deploy on table. " +
                 "Chewie, Lando, and Leia are immune to attrition < 4. " +
                 "Once per turn, may deploy a unique character weapon from Reserve Deck; reshuffle. " +
-                "Once per game, if Artoo in battle, may exchange a card from hand with any card from Reserve Deck; reshuffle. [Immune to Alter.]");
+                "Once per game, if R2-D2 in battle, may exchange a card from hand with any card from Reserve Deck; reshuffle. [Immune to Alter.]");
         addIcon(Icon.VIRTUAL_SET_23);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Jabba's Last Chance");
