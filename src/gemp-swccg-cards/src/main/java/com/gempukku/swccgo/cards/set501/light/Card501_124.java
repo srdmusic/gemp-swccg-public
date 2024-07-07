@@ -41,7 +41,7 @@ import java.util.Objects;
  */
 public class Card501_124 extends AbstractAlien {
     public Card501_124() {
-        super(Side.LIGHT, 2, 3, 3, 3, 5, Title.Jaxxon_T_Tumperakki, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 3, 3, 3, 3, 5, Title.Jaxxon_T_Tumperakki, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Lepi gambler, smuggler and thief. Star-hopper mercenary.");
         setGameText("Deploys -1 to Cloud City. " +
                 "Any blaster may deploy on Jaxxon. " +
