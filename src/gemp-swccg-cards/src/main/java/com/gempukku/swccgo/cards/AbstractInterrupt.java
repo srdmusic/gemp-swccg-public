@@ -123,6 +123,13 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
             }
         }
 
+        if (self.getZone() == Zone.HAND) {
+            List<PlayInterruptAction> actionList4 = getGameTextTopLevelInHandActions(playerId, game, self);
+            if (actionList4 != null) {
+                actions.addAll(actionList4);
+            }
+        }
+
         removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifier(game, self, actions);
 
         return actions;
@@ -649,6 +656,17 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
         return null;
     }
 
+    /**
+     * This method is overridden by individual cards to specify top-level actions that can be performed by the specified
+     * player when the card is in hand.
+     * @param playerId the player
+     * @param game the game
+     * @param self the card
+     * @return the actions, or null
+     */
+    protected List<PlayInterruptAction> getGameTextTopLevelInHandActions(String playerId, SwccgGame game, PhysicalCard self) {
+        return null;
+    }
 
     /**
      * This method is overridden by individual cards to specify top-level actions during an Attack Run.
