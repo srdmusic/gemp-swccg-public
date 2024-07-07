@@ -133,7 +133,7 @@ public class Card501_036 extends AbstractUsedInterrupt {
                             // Perform result(s)
                             action.appendEffect(
                                     new AddUntilEndOfEpicEventModifierEffect(action,
-                                            new RestoreFreedomToTheGalaxyTotalModifier(self, 1), "Adds 1 to Deactivate The Shield Generator total"));
+                                            new RestoreFreedomToTheGalaxyTotalModifier(self, -3), "Subtracts 3 from attempt to 'liberate' a system"));
                         }
                     }
             );
