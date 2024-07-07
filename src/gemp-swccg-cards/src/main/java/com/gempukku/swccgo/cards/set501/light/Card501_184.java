@@ -19,6 +19,7 @@ import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.ExcludeFromBattleEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromForcePileEffect;
 import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -89,6 +90,9 @@ public class Card501_184 extends AbstractLostInterrupt {
                             // Update usage limit(s)
                             action.appendUsage(
                                     new OncePerGameEffect(action));
+                            // Pay cost(s)
+                            action.appendCost(
+                                new UseForceEffect(action, playerId, 2));
                             // Choose target(s)
                             action.appendTargeting(
                                     new TargetCardOnTableEffect(action, playerId, "Choose opponent's character", opponentsCharacterFilter) {
