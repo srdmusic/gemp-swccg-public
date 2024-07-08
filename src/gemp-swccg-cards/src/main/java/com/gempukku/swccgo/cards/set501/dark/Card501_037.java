@@ -58,7 +58,7 @@ public class Card501_037 extends AbstractNormalEffect {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceDrainModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial)))), 1, playerId));
+        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial)))), Filters.atRelatedSite(self)), 1, playerId));
         return modifiers;
     }
 
