@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
+import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -34,7 +34,7 @@ import java.util.List;
  * Subtype: Used
  * Title: Choke (V)
  */
-public class Card501_161 extends AbstractUsedInterrupt {
+public class Card501_161 extends AbstractLostInterrupt {
     public Card501_161() {
         super(Side.LIGHT, 4, "Choke", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Reaching out with the Force, Luke rendered Ortugg unconscious without doing the Gamorrean any actual harm.");
