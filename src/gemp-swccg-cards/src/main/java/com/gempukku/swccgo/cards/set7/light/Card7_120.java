@@ -51,9 +51,6 @@ public class Card7_120 extends AbstractSite {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
             action.setActionMsg("Deploy a Hydroponics Station or Vaporator from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new DeployCardToLocationFromReserveDeckEffect(action, Filters.or(Filters.Hydroponics_Station, Filters.Vaporator), Filters.sameLocation(self), DeploymentRestrictionsOption.ignoreLocationDeploymentRestrictions(), true));
