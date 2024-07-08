@@ -14,6 +14,8 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
@@ -24,8 +26,6 @@ import com.gempukku.swccgo.logic.modifiers.DeploysFreeToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotTargetToBeLostModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.game.PhysicalCard;
-import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class Card501_039 extends AbstractAlien {
     public Card501_039() {
-        super(Side.DARK, 1, 2, 2, 2, 4, "Lobot, Lando's Broker", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 3, 2, 2, 2, 4, "Lobot, Lando's Broker", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Son of a traveling slaver. Helps run Cloud City with Administrator Lando Calrissian. Speech capability worn away by constant cyborg neural connection.");
         setGameText("Deploys free to Cloud City. " +
                 "Your characters of ability < 5 at same Cloud City site are immune to Clash Of Sabers, " +
