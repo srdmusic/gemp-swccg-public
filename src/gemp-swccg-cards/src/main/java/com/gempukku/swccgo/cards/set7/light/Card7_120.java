@@ -45,8 +45,7 @@ public class Card7_120 extends AbstractSite {
         GameTextActionId gameTextActionId = GameTextActionId.FARM__DOWNLOAD_HYDROPONICS_STATION_OR_VAPORATOR;
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId)) {
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerOnLightSideOfLocation, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
