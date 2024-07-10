@@ -73,8 +73,7 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
         if (GameConditions.isOncePerGame(game, self, gameTextActionId2) 
                 && (GameConditions.isDuringBattle(game)
                 && (GameConditions.canTarget(game, self, Filters.and(Filters.Xizor, Filters.participatingInBattle)) 
-                    || GameConditions.canTarget(game, self, 2, Filters.and(Filters.Imperial_leader, Filters.participatingInBattle)))
-                && GameConditions.hasUsedPile(game, playerId))) {
+                    || GameConditions.canTarget(game, self, 2, Filters.and(Filters.Imperial_leader, Filters.participatingInBattle))))) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId2, CardSubtype.LOST);
             action.setText("Re-circulate");
