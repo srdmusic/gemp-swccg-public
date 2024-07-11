@@ -52,11 +52,15 @@ public class Card501_018 extends AbstractSystem {
                 && GameConditions.occupies(game, playerOnDarkSideOfLocation, self)
                 && GameConditions.canSpot(game, self, Filters.Dark_Deal)
                 && GameConditions.canSpot(game, self, Filters.This_Deal_Is_Getting_Worse_All_The_Time)){
+
             PhysicalCard thisDeal = Filters.findFirstActive(game, self, Filters.This_Deal_Is_Getting_Worse_All_The_Time);
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            action.appendEffect(new FlipCardEffect(action, thisDeal));
-            return Collections.singletonList(action);
+            
+            if (GameConditions.canBeFlipped(game, thisDeal)) {
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                // Build action using common utility
+                action.appendEffect(new FlipCardEffect(action, thisDeal));
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }
