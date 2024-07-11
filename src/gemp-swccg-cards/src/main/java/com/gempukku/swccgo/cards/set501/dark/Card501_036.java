@@ -13,14 +13,16 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfEpicEventModifierEffect;
-import com.gempukku.swccgo.logic.effects.ProbeSystemEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.StackOneCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.RestoreFreedomToTheGalaxyTotalModifier;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -40,7 +42,7 @@ import java.util.List;
 public class Card501_036 extends AbstractUsedInterrupt {
     public Card501_036() {
         super(Side.DARK, 4, Title.Probe_Telemetry, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("Probe droids use electromagnetic, seismic, acoustic, olfactory and optical sensors. They report their findings using an omnisignal unicode..");
+        setLore("Probe droids use electromagnetic, seismic, acoustic, olfactory and optical sensors. They report their findings using an omnisignal unicode...");
         setGameText("If Systems Will Slip Through Your Fingers on table, may reveal from hand and place face down under a system to 'probe' there. Take a probe droid into hand from Reserve Deck; reshuffle. OR Cancel Alternatives To Fighting or It Can Wait. OR Subtract 3 from an attempt to 'liberate' a system.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
@@ -63,9 +65,17 @@ public class Card501_036 extends AbstractUsedInterrupt {
                     @Override
                     protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
                         action.addAnimationGroup(targetedCard);
-                        // Perform result(s)
-                        action.appendEffect(
-                                new ProbeSystemEffect(action, targetedCard));
+                        // Allow response(s)
+                        action.allowResponses("'Probe' " + GameUtils.getCardLink(targetedCard),
+                                new UnrespondableEffect(action) {
+                                    @Override
+                                    protected void performActionResults(Action targetingAction) {
+                                        PhysicalCard finalSystem = action.getPrimaryTargetCard(targetGroupId);
+                                        action.appendEffect(
+                                                new StackOneCardFromHandEffect(action, self, finalSystem, true, true, false, false, false));
+                                    }
+                                }
+                        );
                     }
                 }
             );
