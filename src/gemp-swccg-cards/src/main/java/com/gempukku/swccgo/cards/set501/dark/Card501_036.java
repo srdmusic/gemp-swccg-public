@@ -16,6 +16,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfEpicEventModifierEffect;
 import com.gempukku.swccgo.logic.effects.ProbeSystemEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
@@ -39,7 +40,7 @@ import java.util.List;
 public class Card501_036 extends AbstractUsedInterrupt {
     public Card501_036() {
         super(Side.DARK, 4, Title.Probe_Telemetry, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("Probe droids use electromagnetic, seismic, acoustic, olfactory and optical sensors. They report their findings using an omnisignal unicode.");
+        setLore("Probe droids use electromagnetic, seismic, acoustic, olfactory and optical sensors. They report their findings using an omnisignal unicode..");
         setGameText("If Systems Will Slip Through Your Fingers on table, may reveal from hand and place face down under a system to 'probe' there. Take a probe droid into hand from Reserve Deck; reshuffle. OR Cancel Alternatives To Fighting or It Can Wait. OR Subtract 3 from an attempt to 'liberate' a system.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
@@ -47,13 +48,13 @@ public class Card501_036 extends AbstractUsedInterrupt {
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelInHandActions(String playerId, SwccgGame game, PhysicalCard self) {
+    protected List<TopLevelGameTextAction> getGameTextTopLevelInHandActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         Filter systemsFilter = Filters.and(Filters.system, Filters.not(Filters.hasStacked(Filters.probeCard)));
 
         if (GameConditions.canSpot(game, self, Filters.Systems_Will_Slip_Through_Your_Fingers)
                 && GameConditions.canSpotLocation(game, systemsFilter)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
             action.setText("'Probe' a system");
             action.setActionMsg("Reveal to probe for opponent's Hidden Base");
             // Perform result(s)

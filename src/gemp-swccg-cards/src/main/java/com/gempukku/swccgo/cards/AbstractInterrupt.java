@@ -27,6 +27,7 @@ import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayingCardEffect;
@@ -124,7 +125,7 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
         }
 
         if (self.getZone() == Zone.HAND) {
-            List<PlayInterruptAction> actionList4 = getGameTextTopLevelInHandActions(playerId, game, self);
+            List<TopLevelGameTextAction> actionList4 = getGameTextTopLevelInHandActions(playerId, game, self, self.getCardId());
             if (actionList4 != null) {
                 actions.addAll(actionList4);
             }
@@ -662,9 +663,10 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
      * @param playerId the player
      * @param game the game
      * @param self the card
+     * @param gameTextSourceCardId the card id of the game text for this action comes from (when copied from another card) 
      * @return the actions, or null
      */
-    protected List<PlayInterruptAction> getGameTextTopLevelInHandActions(String playerId, SwccgGame game, PhysicalCard self) {
+    protected List<TopLevelGameTextAction> getGameTextTopLevelInHandActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         return null;
     }
 
