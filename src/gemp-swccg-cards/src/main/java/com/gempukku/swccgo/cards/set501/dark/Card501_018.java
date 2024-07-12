@@ -14,7 +14,9 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromCardModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeConvertedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -31,8 +33,8 @@ import java.util.List;
 public class Card501_018 extends AbstractSystem {
     public Card501_018() {
         super(Side.DARK, Title.Bespin, 6, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("If you occupy and Dark Deal on table, flip This Deal Is Getting Worse All The Time.");
-        setLocationLightSideGameText("While you occupy, you lose no more than 1 Force to Cloud City Occupation.");
+        setLocationDarkSideGameText("If you occupy and Dark Deal on table, flip This Deal Is Getting Worse All The Time. Immune to Revolution.");
+        setLocationLightSideGameText("While you occupy, you lose no more than 1 Force to Cloud City Occupation. May not be converted.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.CLOUD_CITY, Icon.PLANET, Icon.VIRTUAL_SET_23);
@@ -42,7 +44,9 @@ public class Card501_018 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new LimitForceLossFromCardModifier(self, Filters.That_Things_Operational, new OccupiesCondition(playerOnLightSideOfLocation, self), 1, playerOnLightSideOfLocation));
+        modifiers.add(new LimitForceLossFromCardModifier(self, Filters.This_Deal_Is_Getting_Worse_All_The_Time, new OccupiesCondition(playerOnLightSideOfLocation, self), 1, playerOnLightSideOfLocation));
+        modifiers.add(new MayNotBeConvertedModifier(self));
+        modifiers.add(new ImmuneToTitleModifier(self, Title.Revolution));
         return modifiers;
     }
 
