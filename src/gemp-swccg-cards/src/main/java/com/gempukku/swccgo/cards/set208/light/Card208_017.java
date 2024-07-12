@@ -90,12 +90,17 @@ public class Card208_017 extends AbstractEpicEventDeployable {
                             // Emit effect result that Restore Freedom To The Galaxy total is being calculated
                             action.appendEffect(
                                 new TriggeringResultEffect(action, new CalculatingEpicEventTotalResult(playerId, self)));
-                            final ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
-                            final float finalTotal = modifiersQuerying.getEpicEventCalculationTotal(gameState, self, (totalDestiny != null ? totalDestiny : 0));
                             action.appendEffect(
                                 new PassthruEffect(action) {
                                     @Override
                                     protected void doPlayEffect(SwccgGame game) {
+                                        if (totalDestiny == null) {
+                                            gameState.sendMessage("Result: Failed due to failed destiny draw");
+                                            return;
+                                        }
+                                        final ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
+                                        final float finalTotal = modifiersQuerying.getEpicEventCalculationTotal(gameState, self, (totalDestiny != null ? totalDestiny : 0));
+            
                                         gameState.sendMessage("Destiny: " + GuiUtils.formatAsString(finalTotal));
                                         if (finalTotal > 5) {
                                             gameState.sendMessage("Result: Succeeded");
