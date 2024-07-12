@@ -44,7 +44,7 @@ public class Card501_018 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new LimitForceLossFromCardModifier(self, Filters.This_Deal_Is_Getting_Worse_All_The_Time, new OccupiesCondition(playerOnLightSideOfLocation, self), 1, playerOnLightSideOfLocation));
+        modifiers.add(new LimitForceLossFromCardModifier(self, Filters.Cloud_City_Occupation, new OccupiesCondition(playerOnLightSideOfLocation, self), 1, playerOnLightSideOfLocation));
         modifiers.add(new MayNotBeConvertedModifier(self));
         modifiers.add(new ImmuneToTitleModifier(self, Title.Revolution));
         return modifiers;
