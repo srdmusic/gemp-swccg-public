@@ -38,9 +38,10 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
     public Card501_063() {
         super(Side.DARK, 3, Title.Physical_Choke, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity. V);
         setLore("Darth Vader often used physical means of 'persuasion' to get information. Captain Antilles of Tantive IV chose to die rather than reveal the location of the stolen Death Star plans.");
-        setGameText("USED: Place Deactivated Hyperdrive or an Admiral's Order in owner's Used Pile. OR [upload] Deactivated Hyperdrive. LOST: If Vader in battle against two characters of ability < 4, add one battle destiny (and if one is a Rebel trooper, it is 'choked' (lost)).");
+        setGameText("USED: ▲ (or place in owner's Used Pile) Deactivated Hyperdrive or an Admiral's Order. LOST: If Vader in battle against two characters of ability < 4 present with him, add one battle destiny and, if one is a Rebel trooper, it is 'choked' (lost).");
         setVirtualSuffix(true);
         addIcon(Icon.VIRTUAL_SET_23);
+        setTestingText("Physical Choke (V)");
     }
 
     @Override
@@ -87,7 +88,7 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
 
         if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId2)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId2, CardSubtype.USED);
-            action.setText("Take Deactivated Hyperdrive into hand from Reserve Deck");
+            action.setText("Take Deactivated Hyperdrive or an Admiral's Order into hand from Reserve Deck");
 
             // Allow response(s)
             action.allowResponses(
@@ -96,7 +97,7 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Deactivated_Hyperdrive, true));
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.Deactivated_Hyperdrive, Filters.Admirals_Order), true));
                         }
                     }
             );
