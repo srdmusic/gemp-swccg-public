@@ -124,14 +124,14 @@ public abstract class AbstractInterrupt extends AbstractSwccgCardBlueprint {
             }
         }
 
+        removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifier(game, self, actions);
+
         if (self.getZone() == Zone.HAND) {
             List<TopLevelGameTextAction> actionList4 = getGameTextTopLevelInHandActions(playerId, game, self, self.getCardId());
             if (actionList4 != null) {
                 actions.addAll(actionList4);
             }
         }
-
-        removeDueToMayNotBePlayedUnlessImmuneToSpecificTitleModifier(game, self, actions);
 
         return actions;
     }
