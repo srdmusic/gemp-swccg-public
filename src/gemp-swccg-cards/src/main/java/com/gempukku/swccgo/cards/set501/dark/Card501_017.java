@@ -38,7 +38,7 @@ public class Card501_017 extends AbstractUsedOrLostInterrupt {
     public Card501_017() {
         super(Side.DARK, 6, "Young Fool", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Now, young Skywalker... you will die");
-        setGameText("USED: If you have two battlegrounds on table and opponent does not, activate up to 2 Force. LOST: Cancel Path Of Least Resistance. OR During your turn, if Sidious in battle and no other Dark Jedi participating, add one destiny to total power.");
+        setGameText("USED: If you have two battlegrounds on table and opponent does not, activate up to 2 Force. LOST: Cancel Disarmed or Jedi Presence. OR During your turn, if Sidious in battle and no other Dark Jedi participating, add one destiny to total power.");
         setVirtualSuffix(true);
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_23);
         setTestingText("Young Fool (V)");
@@ -84,9 +84,15 @@ public class Card501_017 extends AbstractUsedOrLostInterrupt {
             actions.add(action);
         }
 
-        if (GameConditions.canTargetToCancel(game, self, Filters.Path_Of_Least_Resistance)) {
+        if (GameConditions.canTargetToCancel(game, self, Filters.Disarmed)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Path_Of_Least_Resistance, Title.Path_Of_Least_Resistance);
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Disarmed, Title.Disarmed);
+            actions.add(action);
+        }
+
+        if (GameConditions.canTargetToCancel(game, self, Filters.Jedi_Presence)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Jedi_Presence, Title.Jedi_Presence);
             actions.add(action);
         }
 
@@ -117,7 +123,7 @@ public class Card501_017 extends AbstractUsedOrLostInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.Path_Of_Least_Resistance)
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Disarmed, Filters.Jedi_Presence))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
             PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             // Build action using common utility
