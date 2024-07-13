@@ -91,6 +91,7 @@ public class Card501_016 extends AbstractUsedInterrupt {
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.isDuringYourPhase(game, playerId, Phase.DEPLOY)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setImmuneTo(Title.Sense);
             action.setText("Deploy Lift Tube from outside your deck.");
             action.appendUsage(
                     new OncePerGameEffect(action));
