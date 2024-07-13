@@ -58,14 +58,14 @@ public class Card501_037 extends AbstractNormalEffect {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial)))), Filters.atRelatedSite(self)), 1, playerId));
+        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial)))), Filters.relatedSite(self)), 1, playerId));
         return modifiers;
     }
 
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.wonBattle(game, effectResult, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial)), Filters.relatedSite(self)))) {
+        if (TriggerConditions.wonBattle(game, effectResult, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial)), Filters.atRelatedSite(self)))) {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Take a card into hand from Used Pile");
             action.setActionMsg("Take a card into handle from Used Pile; reshuffle");
