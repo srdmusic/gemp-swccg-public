@@ -65,7 +65,7 @@ public class Card501_037 extends AbstractNormalEffect {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.wonBattle(game, effectResult, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial)), Filters.atRelatedSite(self)))) {
+        if (TriggerConditions.wonBattle(game, effectResult, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial)), Filters.relatedSite(self)))) {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Take a card into hand from Used Pile");
             action.setActionMsg("Take a card into handle from Used Pile; reshuffle");
