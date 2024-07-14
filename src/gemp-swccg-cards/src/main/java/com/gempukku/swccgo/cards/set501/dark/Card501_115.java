@@ -11,7 +11,6 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -32,8 +31,7 @@ import java.util.List;
 public class Card501_115 extends AbstractNormalEffect {
     public Card501_115() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Your Eyes Can Deceive You", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on table. If C-3PO at a non-battleground, once during your turn, may peek at the top two cards of Reserve Deck and take one into hand. While you occupy two battlegrounds, opponent may not cancel your Force drains at battlegrounds. [Immune to Alter]");
-        addImmuneToCardTitle(Title.Alter);
+        setGameText("Deploy on table. If C-3PO at a non-battleground, once during your turn, may peek at the top two cards of Reserve Deck and take one into hand. While you occupy two battlegrounds, opponent may not cancel your Force drains at battlegrounds.");
         addIcons(Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
         setTestingText("Your Eyes Can Deceive You (V)");
