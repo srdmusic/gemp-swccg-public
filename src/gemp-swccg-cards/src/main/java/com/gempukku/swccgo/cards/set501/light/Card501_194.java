@@ -125,10 +125,11 @@ public class Card501_194 extends AbstractRebel {
             actions.add(action);
         }
 
+        GameTextActionId gameTextActionId2 = GameTextActionId.OTHER_CARD_ACTION_1;
         if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId)
                 && GameConditions.isInBattleWith(game, self, Filters.Chewie)
                 && GameConditions.canAddDestinyDrawsToAttrition(game, playerId)) {
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId2);
             action.setText("Add one destiny to total attrition");
             // Update usage limit(s)
             action.appendUsage(
