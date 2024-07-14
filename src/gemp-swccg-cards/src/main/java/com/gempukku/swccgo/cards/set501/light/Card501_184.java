@@ -38,7 +38,7 @@ public class Card501_184 extends AbstractLostInterrupt {
     public Card501_184() {
         super(Side.LIGHT, 4, "A Jedi's Focus", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Vader was surprised at how far the 'young apprentice' had come in his training.");
-        setGameText("If you chose I Have It on your [Skywalker] Epic Event, choose: Take any card into hand from Force Pile; reshuffle. OR Once per game during battle, if Luke present with an opponent's character of equal or lesser ability, exclude them both from battle.");
+        setGameText("If you chose I Have It on your [Skywalker] Epic Event, choose: Take any card into hand from Force Pile; reshuffle. OR Once per game during battle, if Luke present with an opponent's character of equal or lesser ability, use 2 Force to exclude them both from battle.");
         addIcons(Icon.TATOOINE, Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
         setTestingText("A Jedi's Focus (V)");
