@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractDevice;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -68,8 +67,6 @@ public class Card501_134 extends AbstractDevice {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Take card into hand from Used Pile");
             action.setActionMsg("Take an AT-AT Cannon or [Hoth] Epic Event into hand from Used Pile");
-            action.appendUsage(
-                new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new TakeCardIntoHandFromUsedPileEffect(action, playerId, Filters.or(Filters.AT_AT_Cannon, Filters.and(Filters.icon(Icon.HOTH), Filters.Epic_Event)), true));
