@@ -48,7 +48,7 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
-        Filter targetFilter = Filters.or(Filters.Deactivated_Hyperdrive, Filters.and(Filters.opponents(self), Filters.Admirals_Order));
+        Filter targetFilter = Filters.or(Filters.Deactivated_Hyperdrive, Filters.Admirals_Order);
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
 
@@ -105,12 +105,12 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
         }
 
         GameTextActionId gameTextActionId3 = GameTextActionId.OTHER_CARD_ACTION_2;
-        Filter characterFilter = Filters.and(Filters.opponents(self), Filters.character, Filters.abilityLessThan(4), Filters.participatingInBattle);
+        Filter characterFilter = Filters.and(Filters.opponents(self), Filters.character, Filters.abilityLessThan(4), Filters.participatingInBattle, Filters.presentWith(self, Filters.Vader));
 
         if (GameConditions.isDuringBattleWithParticipant(game, Filters.Vader)
                 && GameConditions.canSpot(game, self, 2, characterFilter)){
 
-            final Filter trooperFilter = Filters.and(Filters.opponents(self), Filters.Rebel, Filters.trooper, Filters.abilityLessThan(4), Filters.participatingInBattle, Filters.canBeTargetedBy(self, TargetingReason.TO_BE_LOST), Filters.canBeTargetedBy(self, TargetingReason.TO_BE_CHOKED));
+            final Filter trooperFilter = Filters.and(characterFilter, Filters.canBeTargetedBy(self, TargetingReason.TO_BE_LOST), Filters.canBeTargetedBy(self, TargetingReason.TO_BE_CHOKED));
 
             if (GameConditions.canAddBattleDestinyDraws(game, self)
                     && GameConditions.canSpot(game, self, trooperFilter)) {
