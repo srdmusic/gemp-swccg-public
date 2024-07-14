@@ -65,7 +65,7 @@ public class Card501_166 extends AbstractUsedInterrupt {
         {
 
             final PlayInterruptAction forcePileAction = new PlayInterruptAction(game, self);
-            forcePileAction.setText("If you have deployed four battlegrounds this game: place this card in your force pile and shuffle.");
+            forcePileAction.setText("Place this card in your force pile.");
             // Allow response(s)
             forcePileAction.allowResponses(
                     new RespondablePlayCardEffect(forcePileAction) {
