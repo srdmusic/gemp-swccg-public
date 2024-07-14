@@ -110,7 +110,7 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
         if (GameConditions.isDuringBattleWithParticipant(game, Filters.Vader)
                 && GameConditions.canSpot(game, self, 2, characterFilter)){
 
-            final Filter trooperFilter = Filters.and(characterFilter, Filters.canBeTargetedBy(self, TargetingReason.TO_BE_LOST), Filters.canBeTargetedBy(self, TargetingReason.TO_BE_CHOKED));
+            final Filter trooperFilter = Filters.and(characterFilter, Filters.Rebel, Filters.trooper, Filters.canBeTargetedBy(self, TargetingReason.TO_BE_LOST), Filters.canBeTargetedBy(self, TargetingReason.TO_BE_CHOKED));
 
             if (GameConditions.canAddBattleDestinyDraws(game, self)
                     && GameConditions.canSpot(game, self, trooperFilter)) {
