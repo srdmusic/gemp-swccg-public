@@ -48,7 +48,7 @@ public class Card501_035 extends AbstractUsedInterrupt {
         List<Modifier> modifiers = new LinkedList<Modifier>();;
         String playerId = self.getOwner();
 
-        modifiers.add(new DestinyWhenDrawnForWeaponDestinyModifier(self, self, new MaxLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.your(playerId), Filters.battleground)), 4)));
+        modifiers.add(new DestinyWhenDrawnForWeaponDestinyModifier(self, self, new MinLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.your(playerId), Filters.battleground)), 4)));
         modifiers.add(new DestinyWhenDrawnForBattleDestinyModifier(self, self, new MaxLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.your(playerId), Filters.battleground)), 4)));
 
         return modifiers;
