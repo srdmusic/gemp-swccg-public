@@ -21,7 +21,7 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.PutStackedCardInLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByPermanentWeaponsModifier;
@@ -95,7 +95,7 @@ public class Card501_191 extends AbstractRebel {
                 @Override
                 protected void cardSelected(final PhysicalCard selectedCard) {
                     action.appendEffect(
-                            new PutStackedCardInUsedPileEffect(action, playerId, selectedCard, false));
+                            new PutStackedCardInLostPileEffect(action, playerId, selectedCard, false));
                 }
             });
             return Collections.singletonList(action);
