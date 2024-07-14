@@ -13,12 +13,14 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.PlaceCardFromVoidOutOfPlayEffect;
 import com.gempukku.swccgo.logic.effects.RecirculateEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.Effect;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +35,7 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
     public Card501_064() {
         super(Side.DARK, 3, "The Empire's Back", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("No star system will dare oppose the Emperor now.");
-        setGameText("USED: Deploy Empire's New Order or Overseeing It Personally from Reserve Deck; reshuffle. LOST: Once per game, choose: Place an Interrupt from opponent's Lost Pile out of play. OR If Xizor (or two Imperial leaders) in battle, re-circulate.");
+        setGameText("USED: Deploy Empire's New Order or Overseeing It Personally from Reserve Deck; reshuffle. LOST: Once per game, choose: if two Imperial leaders (or Xizor) in battle, recirculate. OR Place opponent's just-played Interrupt out of play.");
         addIcons(Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
         setTestingText("The Empire's Back (V)");
@@ -66,50 +68,57 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
         }
 
         GameTextActionId gameTextActionId2 = GameTextActionId.THE_EMPIRES_BACK_V__OUT_OF_PLAY_OR_RECIRCULATE;
-        final String opponent = game.getOpponent(playerId);
 
         // Check Condition(s)
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId2)) {
-            if (GameConditions.hasLostPile(game, opponent)) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId2, CardSubtype.LOST);
-                action.setText("Place card from Lost Pile out of play");
-                // Allow response(s)
-                action.allowResponses("Place an Interrupt from opponent's Lost Pile out of play",
-                        new RespondablePlayCardEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, opponent, Filters.Interrupt, false));
-                            }
-                        }
-                );
-                actions.add(action);
-            }
-        
-            if (GameConditions.isDuringBattle(game)
-                    && (GameConditions.canTarget(game, self, Filters.and(Filters.Xizor, Filters.participatingInBattle)) 
-                        || GameConditions.canTarget(game, self, 2, Filters.and(Filters.Imperial_leader, Filters.participatingInBattle)))
-                    && GameConditions.hasUsedPile(game, playerId)) {
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId2) 
+                && (GameConditions.isDuringBattle(game)
+                && (GameConditions.canTarget(game, self, Filters.and(Filters.Xizor, Filters.participatingInBattle)) 
+                    || GameConditions.canTarget(game, self, 2, Filters.and(Filters.Imperial_leader, Filters.participatingInBattle))))) {
 
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId2, CardSubtype.LOST);
-                action.setText("Re-circulate");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerGameEffect(action));
-                // Allow response(s)
-                action.allowResponses(
-                        new RespondablePlayCardEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new RecirculateEffect(action, playerId));                                            
-                            }
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId2, CardSubtype.LOST);
+            action.setText("Re-circulate");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new RecirculateEffect(action, playerId));                                            
                         }
-                );
-                actions.add(action);
-            }
+                    }
+            );
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, Effect effect, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.THE_EMPIRES_BACK_V__OUT_OF_PLAY_OR_RECIRCULATE;
+        final PhysicalCard cardBeingPlayed = ((RespondablePlayCardEffect) effect).getCard();
+        String opponent = game.getOpponent(playerId);
+
+        if (TriggerConditions.isPlayingCard(game, effect, opponent, Filters.Interrupt)
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.interruptCanBePlacedOutOfPlay(game, cardBeingPlayed)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+            action.setText("Place Interrupt out of play");
+            action.allowResponses("Place a just-played interrupt out of play",
+                new RespondablePlayCardEffect(action) {
+                    @Override
+                    protected void performActionResults(Action targetingAction) {
+                        // Perform result(s)
+                        action.appendEffect(
+                            new PlaceCardFromVoidOutOfPlayEffect(action, cardBeingPlayed));
+                    }
+                }
+            );
         }
         return actions;
     }
