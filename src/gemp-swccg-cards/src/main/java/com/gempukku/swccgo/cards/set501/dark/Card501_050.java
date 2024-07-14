@@ -69,7 +69,7 @@ public class Card501_050 extends AbstractAlien {
             action.setText("Deploy a mercenary ");
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.characteristic(Keyword.MERCENARY), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.characteristic(Keyword.MERCENARY), Filters.here(self), true));
             return Collections.singletonList(action);
         }
         return null;
