@@ -40,6 +40,7 @@ public class Card501_200 extends AbstractDefensiveShield {
         setVirtualSuffix(true);
         setGameText("Plays on table. At end of a turn, if opponent has 15 or more cards in hand, may use 3 Force to shuffle all but 9 (random selection) into Used Pile. If Monnok or Drop! just targeted your hand, may reveal 3 cards from hand; they cannot be removed or checked for duplicates.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_DEFENSIVE_SHIELD);
+        setTestingText("Thrown Back (V) (ERRATA)");
     }
 
     @Override
@@ -72,7 +73,7 @@ public class Card501_200 extends AbstractDefensiveShield {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ModifyGameTextModifier(self, Filters.or(Filters.Monnok, Filters.title(Title.Drop)), new HasStackedCondition(self, Filters.any), ModifyGameTextType.REMOVE_TWO_MORE_CARDS));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.or(Filters.Monnok, Filters.title(Title.Drop)), new HasStackedCondition(self, Filters.any), ModifyGameTextType.REMOVE_THREE_MORE_CARDS));
         return modifiers;
     }
 
