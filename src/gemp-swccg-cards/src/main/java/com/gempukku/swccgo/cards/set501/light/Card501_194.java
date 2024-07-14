@@ -4,7 +4,9 @@ import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.InPlayDataSetCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.effects.AddDestinyToAttritionEffect;
 import com.gempukku.swccgo.cards.effects.SetWhileInPlayDataEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -32,7 +34,6 @@ import com.gempukku.swccgo.logic.modifiers.MayNotParticipateInBattleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -106,6 +107,7 @@ public class Card501_194 extends AbstractRebel {
 	
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
         GameTextActionId gameTextActionId = GameTextActionId.BOUSHH__UPLOAD_SOMEONE_WHO_LOVES_YOU;
 
         // Check condition(s)
@@ -120,8 +122,23 @@ public class Card501_194 extends AbstractRebel {
             // Perform result(s)
             action.appendEffect(
                     new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Someone_Who_Loves_You, true));
-            return Collections.singletonList(action);
+            actions.add(action);
         }
-        return null;
+
+        if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId)
+                && GameConditions.isInBattleWith(game, self, Filters.Chewie)
+                && GameConditions.canAddDestinyDrawsToAttrition(game, playerId)) {
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Add one destiny to total attrition");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerBattleEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new AddDestinyToAttritionEffect(action, 1));
+            actions.add(action);
+        }
+
+        return actions;
     }
 }
