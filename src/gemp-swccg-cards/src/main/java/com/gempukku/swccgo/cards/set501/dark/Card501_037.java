@@ -35,7 +35,7 @@ public class Card501_037 extends AbstractNormalEffect {
     public Card501_037() {
         super(Side.DARK, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Dark_Deal, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'Perhaps you think you're being treated unfairly?' 'No.' 'Good. It would be unfortunate if I had to leave a garrison here.'");
-        setGameText("If you control two Cloud City sites and opponent controls none, deploy on Bespin. At sites where you have an alien/Imperial pair, your Force drains are +1 and, if you just won a battle there, may take any one card into hand from Used Pile; reshuffle.");
+        setGameText("If you control two Cloud City sites and opponent controls none, deploy on Bespin. At related sites where you have an alien/Imperial pair, your Force drains are +1 and, if you just won a battle there, may take any one card into hand from Used Pile; reshuffle.");
         addImmuneToCardTitle(Title.Alter);
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
@@ -58,14 +58,14 @@ public class Card501_037 extends AbstractNormalEffect {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceDrainModifier(self, Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial)))), 1, playerId));
+        modifiers.add(new ForceDrainModifier(self, Filters.and(Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial)))), Filters.relatedSite(self)), 1, playerId));
         return modifiers;
     }
 
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.wonBattle(game, effectResult, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial))))) {
+        if (TriggerConditions.wonBattle(game, effectResult, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial)), Filters.atRelatedSite(self)))) {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Take a card into hand from Used Pile");
             action.setActionMsg("Take a card into handle from Used Pile; reshuffle");
