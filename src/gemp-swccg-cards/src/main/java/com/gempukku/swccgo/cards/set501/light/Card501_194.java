@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.InPlayDataSetCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.SetWhileInPlayDataEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
@@ -27,6 +28,7 @@ import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsDestinyToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotParticipateInBattleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -60,13 +62,13 @@ public class Card501_194 extends AbstractRebel {
 
         modifiers.add(new AddsDestinyToAttritionModifier(self, new WithCondition(self, Filters.Chewie), 1));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.your(self), Filters.here(self), Filters.character), Title.Imperial_Barrier));
+        modifiers.add(new MayNotParticipateInBattleModifier(self, self, new InPlayDataSetCondition(self)));
         return modifiers;
     }
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
-        String playerId = self.getOwner();
 
         if (TriggerConditions.justDeployedToLocation(game, effectResult, self, Filters.sameSiteAs(self, SpotOverride.INCLUDE_CAPTIVE, Filters.and(Filters.frozenCaptive, Filters.Han)))) {
         
@@ -80,7 +82,13 @@ public class Card501_194 extends AbstractRebel {
                     new SendMessageEffect(action, "Boushh may not battle"));
             actions.add(action);
         }
+        return actions;
+    }
 
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggersAlwaysWhenInPlay(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
+        String playerId = self.getOwner();
         if (TriggerConditions.isStartOfYourTurn(game, effectResult, playerId)
                 && GameConditions.cardHasWhileInPlayDataSet(self)) {
 
