@@ -75,7 +75,6 @@ public enum ModifyGameTextType {
     SURPRISE_ASSAULT__ADD_DESTINY_TO_TOTAL("Add one destiny to total"),
     TALLON_ROLL__OPPONENT_ADDS_MANEUVER_AND_ABILITY("Opponent adds maneuver and ability"),
     TARKIN__CANNOT_CANCEL_DESTINY("Cannot cancel destiny"),
-    TARGET_THE_MAIN_GENERATOR__ADDS_ONE_DESTINY("Adds One Destiny to Target the Main Generator attempt"),
     TARGET_THE_MAIN_GENERATOR__MODIFY_X("X on Target The Main Generator is -2 (unless firing at or below the 3rd Marker) and maximum X = 3"),
     THE_MYTHROL__DESPAIR_V_TARGETS_THE_MYTHROL_INSTEAD_OF_JABBAS_PRIZE("Targets The Mythrol instead of Jabba's Prize"),
     THERE_IS_ANOTHER__DOES_NOT_MAKE_REFII_LUKE_LOST("Does not cause [Reflections II] Luke to be lost"),
@@ -97,6 +96,7 @@ public enum ModifyGameTextType {
     YOU_OVERESTIMATE_THEIR_CHANCES__TRIPLE_RESULT("Triple result"),
     YOURE_A_SLAVE__DRAW_TOP_CARD_OF_RESERVE_DECK_WHEN_PLACING_A_CARD_IN_USED_PILE("Draw top card of Reserve Deck when you place a card in Used Pile."),
     REMOVE_TWO_MORE_CARDS("Remove two more cards"),
+    REMOVE_THREE_MORE_CARDS("Remove three more cards"),
 
 
     //Legacy
