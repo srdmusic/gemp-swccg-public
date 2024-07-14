@@ -40,6 +40,7 @@ public class Card501_045 extends AbstractDefensiveShield {
         setVirtualSuffix(true);
         setGameText("Plays on table. At end of a turn, if opponent has 15 or more cards in hand, may use 3 Force to shuffle all but 9 (random selection) into Used Pile. If Grimtaash or Thrown Back just targeted your hand, may reveal 3 cards from hand; they cannot be removed or checked for duplicates.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_DEFENSIVE_SHIELD);
+        setTestingText("Drop! (V) (ERRATA)");
     }
 
     @Override
