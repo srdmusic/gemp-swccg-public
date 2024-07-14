@@ -49,7 +49,7 @@ public class Card501_166 extends AbstractUsedInterrupt {
         String playerId = self.getOwner();
 
         modifiers.add(new DestinyWhenDrawnForWeaponDestinyModifier(self, self, new MinLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.your(playerId), Filters.battleground)), 4)));
-        modifiers.add(new DestinyWhenDrawnForBattleDestinyModifier(self, self, new MaxLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.your(playerId), Filters.battleground)), 4)));
+        modifiers.add(new DestinyWhenDrawnForBattleDestinyModifier(self, self, new MinLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.your(playerId), Filters.battleground)), 4)));
 
         return modifiers;
     }
