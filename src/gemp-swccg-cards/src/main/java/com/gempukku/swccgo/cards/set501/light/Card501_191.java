@@ -21,7 +21,7 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.PutStackedCardInLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByPermanentWeaponsModifier;
@@ -43,7 +43,7 @@ public class Card501_191 extends AbstractRebel {
     public Card501_191() {
         super(Side.LIGHT, 2, 4, 4, 4, 6, "Sabine, Padawan Learner", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Female Mandalorian Padawan.");
-        setGameText("If Sabine just deployed (or won a battle), may place an artwork card in owner's Used Pile. Once per turn, if Sabine just 'hit' a character, opponent loses 2 Force. While with Ahsoka or Ezra, your total battle destiny here is +1. Immune to [Permanent Weapon] weapons and attrition < 3.");
+        setGameText("If Sabine just deployed (or won a battle), may choose an artwork card to be lost. Once per turn, if Sabine just 'hit' a character, opponent loses 2 Force. While with Ahsoka or Ezra, your total battle destiny here is +1. Immune to [Permanent Weapon] weapons and attrition < 3.");
         setArmor(5);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_23);
         addKeywords(Keyword.FEMALE, Keyword.PADAWAN);
@@ -95,7 +95,7 @@ public class Card501_191 extends AbstractRebel {
                 @Override
                 protected void cardSelected(final PhysicalCard selectedCard) {
                     action.appendEffect(
-                            new PutStackedCardInUsedPileEffect(action, playerId, selectedCard, false));
+                            new PutStackedCardInLostPileEffect(action, playerId, selectedCard, false));
                 }
             });
             return Collections.singletonList(action);

@@ -35,7 +35,7 @@ public class Card501_037 extends AbstractNormalEffect {
     public Card501_037() {
         super(Side.DARK, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Dark_Deal, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'Perhaps you think you're being treated unfairly?' 'No.' 'Good. It would be unfortunate if I had to leave a garrison here.'");
-        setGameText("If you control two Cloud City sites and opponent controls none, deploy on Bespin. At related sites where you have an alien/Imperial pair, your Force drains are +1 and, if you just won a battle there, may take any one card into hand from Used Pile; reshuffle.");
+        setGameText("If you control two Cloud City sites and opponent controls none, deploy on [Special Edition] Bespin. At related sites where you have an alien/Imperial pair, your Force drains are +1 and, if you just won a battle there, may take any one card into hand from Used Pile; reshuffle.");
         addImmuneToCardTitle(Title.Alter);
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
@@ -44,7 +44,7 @@ public class Card501_037 extends AbstractNormalEffect {
     
     @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.Bespin_system;
+        return Filters.and(Filters.Bespin_system, Filters.icon(Icon.SPECIAL_EDITION));
     }
 
     @Override

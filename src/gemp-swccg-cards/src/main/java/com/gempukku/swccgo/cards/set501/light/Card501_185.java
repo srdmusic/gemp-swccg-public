@@ -32,8 +32,7 @@ import java.util.List;
 public class Card501_185 extends AbstractNormalEffect {
     public Card501_185() {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Eyes_In_The_Dark, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on table. If 4-LOM at a non-battleground, once during your turn, may peek at the top two cards of Reserve Deck and take one into hand. While you occupy two battlegrounds, opponent may not cancel your Force drains at battlegrounds. [Immune to Alter]");
-        addImmuneToCardTitle(Title.Alter);
+        setGameText("Deploy on table. If 4-LOM at a non-battleground, once during your turn, may peek at the top two cards of Reserve Deck and take one into hand. While you occupy two battlegrounds, opponent may not cancel your Force drains at battlegrounds.");
         addIcons(Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
         setTestingText("Eyes In The Dark (V)");

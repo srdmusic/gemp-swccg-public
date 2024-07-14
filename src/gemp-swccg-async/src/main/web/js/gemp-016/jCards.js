@@ -3668,7 +3668,6 @@ var fixedImages = {
 "501_42":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/tc14.gif",
 "501_43":"https://res.starwarsccg.org/cards/TheedPalace-Dark/large/darthsidious.gif",
 "501_45":"https://res.starwarsccg.org/cards/Virtual20-Dark/large/drop.gif",
-"501_47":"https://res.starwarsccg.org/cards/DeathStarII-Dark/large/captainsarkli.gif",
 "501_48":"https://res.starwarsccg.org/cards/TheedPalace-Dark/large/theretheyare.gif",
 "501_49":"https://res.starwarsccg.org/cards/Endor-Dark/large/bikerscouttrooper.gif",
 "501_50":"https://res.starwarsccg.org/cards/JabbasPalace-Dark/large/abyssin.gif",
