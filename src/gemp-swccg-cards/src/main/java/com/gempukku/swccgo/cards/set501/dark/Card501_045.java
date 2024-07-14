@@ -73,7 +73,7 @@ public class Card501_045 extends AbstractDefensiveShield {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ModifyGameTextModifier(self, Filters.or(Filters.Grimtaash, Filters.title(Title.Thrown_Back)), new HasStackedCondition(self, Filters.any), ModifyGameTextType.REMOVE_TWO_MORE_CARDS));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.or(Filters.Grimtaash, Filters.title(Title.Thrown_Back)), new HasStackedCondition(self, Filters.any), ModifyGameTextType.REMOVE_THREE_MORE_CARDS));
         return modifiers;
     }
 
