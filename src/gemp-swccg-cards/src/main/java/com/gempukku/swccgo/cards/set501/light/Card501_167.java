@@ -20,8 +20,9 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.EndOfTurnLimitCounterNotReachedCondition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.evaluators.ConstantEvaluator;
+import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToDeployCardToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToTargetModifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -59,8 +60,7 @@ public class Card501_167 extends AbstractSite {
         Filter yourCharacterHere = Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.character, Filters.here(self));
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ImmuneToTitleModifier(self, yourCharacterHere, Title.Sandwhirl));
-        modifiers.add(new DeployCostToLocationModifier(self, yourNonAlienCharacters, unlessYouOccupy, 1, self));       
+        modifiers.add(new ExtraForceCostToDeployCardToLocationModifier(self, yourNonAlienCharacters, unlessYouOccupy, new ConstantEvaluator(1), self));     
         return modifiers;
     }
 
@@ -68,11 +68,11 @@ public class Card501_167 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {   
         Filter yourAliens = Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.alien);
-        Filter yourCharacterHere = Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.character, Filters.here(self));
+        Filter CharacterHere = Filters.and(Filters.character, Filters.here(self));
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
 
-        modifiers.add(new ImmuneToTitleModifier(self, yourCharacterHere, Title.Sandwhirl));
+        modifiers.add(new ImmuneToTitleModifier(self, CharacterHere, Title.Sandwhirl));
         modifiers.add(new DeployCostToLocationModifier(self, yourAliens, new EndOfTurnLimitCounterNotReachedCondition(self, 1), -1, self));
 
         return modifiers;

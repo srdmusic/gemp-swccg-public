@@ -1,8 +1,9 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
-import com.gempukku.swccgo.cards.evaluators.MaxLimitEvaluator;
+import com.gempukku.swccgo.cards.evaluators.MinLimitEvaluator;
 import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -16,7 +17,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.ModifyTotalPowerUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromVoidInForcePileEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.ShufflePileEffect;
@@ -56,12 +57,11 @@ public class Card501_035 extends AbstractUsedInterrupt {
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
-       int yourBattlegroundCount = Filters.countTopLocationsOnTable(game, Filters.and(Filters.your(self), Filters.battleground));
 
        List<PlayInterruptAction> actions = new LinkedList<>();
 
        // Check condition(s)
-        if (yourBattlegroundCount >= 4) 
+        if (GameConditions.hasDeployedAtLeastXCardsThisGame(game, playerId, 4, Filters.battleground)) 
         {
 
             final PlayInterruptAction forcePileAction = new PlayInterruptAction(game, self);
@@ -73,17 +73,9 @@ public class Card501_035 extends AbstractUsedInterrupt {
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             forcePileAction.appendEffect(
-                                    new PutCardFromVoidInForcePileEffect(forcePileAction, playerId, self) {
-                                        @Override
-                                        protected final void afterCardPutInCardPile() {
-                                            forcePileAction.appendEffect(
+                                    new PutCardFromVoidInForcePileEffect(forcePileAction, playerId, self));
+                            forcePileAction.appendEffect(
                                                 new ShufflePileEffect(forcePileAction, playerId, Zone.FORCE_PILE));
-
-                                        }
-                                    }
-                            );
-
-
                         }
                     }
             );
@@ -96,9 +88,8 @@ public class Card501_035 extends AbstractUsedInterrupt {
                     new RespondablePlayCardEffect(powerAction) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
-                            powerAction.appendEffect(new AddUntilEndOfTurnModifierEffect(powerAction,
-                                    new TotalPowerModifier(self, Filters.battleLocation, 2, playerId),
-                                    "Adds 2 to total power during battles"));
+                            powerAction.appendEffect(
+                                                new ModifyTotalPowerUntilEndOfBattleEffect(powerAction, 2, playerId, "Adds 2 to total power"));
                         }
                     }
             );

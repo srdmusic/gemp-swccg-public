@@ -52,6 +52,7 @@ public class Card501_122 extends AbstractUsedInterrupt {
      protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
         GameTextActionId gameTextActionId = GameTextActionId.LIFE_DAY__UPLOAD_WOOKIE_OR_EWOK;
+        GameTextActionId gameTextActionId2 = GameTextActionId.LIFE_DAY__DEPLOY_WEAPON_FROM_LOST_PILE;
 
         //Take a Ewok or Wookiee into hand from reserve deck
         // Check condition(s)
@@ -76,9 +77,9 @@ public class Card501_122 extends AbstractUsedInterrupt {
 
         //Deploy a Ewok Weapon or Bowcaster from lost pile
         // Check condition(s)
-        if (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId))   {
+        if (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId2))   {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId2);
             action.setText("Deploy card from Lost Pile");
             action.setActionMsg("Deploy a Bowcaster or Ewok Weapon from your lost pile.");
             // Allow response(s)
