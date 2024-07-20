@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.light;
+package com.gempukku.swccgo.cards.set223.light;
 
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -38,14 +38,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 /*
- * Set: Playtesting
+ * Set: Set 23
  * Type: Character
  * Subtype: Rebel
  * Title: Boushh (V)
  */
-public class Card501_194 extends AbstractRebel {
-    public Card501_194() {
-        super(Side.LIGHT, 1, 4, 4, 4, 6, Title.Boushh, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+public class Card223_032 extends AbstractRebel {
+    public Card223_032() {
+        super(Side.LIGHT, 1, 4, 4, 4, 6, Title.Boushh, Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
         setLore("Leia obtained the armor of a notorious mercenary to sneak onto Coruscant. She later assumed the same role to spy on Jabba. Fearless and inventive. Jabba's kind of scum.");
         setGameText("If with Chewie, may add one destiny to your total attrition. If deployed to same site as frozen Han, Leia may not participate in battle until your next turn. Your characters here are immune to Imperial Barrier. Once per game, may take Someone Who Loves You into hand from Reserve Deck; reshuffle.");
         setArmor(5);
@@ -54,7 +54,6 @@ public class Card501_194 extends AbstractRebel {
         addPersona(Persona.LEIA);
         setSpecies(Species.ALDERAANIAN);
         setVirtualSuffix(true);
-        setTestingText("Boushh (V)");
     }
 
     @Override

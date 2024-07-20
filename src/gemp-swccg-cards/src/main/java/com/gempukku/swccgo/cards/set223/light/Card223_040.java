@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.light;
+package com.gempukku.swccgo.cards.set223.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -27,17 +27,16 @@ import java.util.List;
 
 
 /**
- * Set: Playtesting
+ * Set: Set 23
  * Type: Interrupt
  * Subtype: Used
  * Title: Life Day
  */
-public class Card501_122 extends AbstractUsedInterrupt {
-    public Card501_122() {
-        super(Side.LIGHT, 4, Title.Life_Day, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);       
+public class Card223_040 extends AbstractUsedInterrupt {
+    public Card223_040() {
+        super(Side.LIGHT, 4, Title.Life_Day, Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);       
         setGameText("Destiny +2 if 3 Wookiees and/or Ewoks on table. Take a Ewok or Wookiee of power < 6 into hand from reserve deck; reshuffle. OR Deploy a Bowcaster or Ewok Weapon from your lost pile. OR Add one battle destiny at same site as Part of the Tribe.");
         addIcon(Icon.VIRTUAL_SET_23);
-        setTestingText(Title.Life_Day);
     }
 
      @Override
@@ -91,7 +90,6 @@ public class Card501_122 extends AbstractUsedInterrupt {
         //Add one battle destiny with Part of the Tribe
         // Check condition(s)
         if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.Part_of_the_Tribe, Filters.at(Filters.site)))) {
-            final String opponent = game.getOpponent(playerId);
             if (GameConditions.canAddBattleDestinyDraws(game, self)) {
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self);

@@ -37,13 +37,13 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 23
+ * Set: Playtesting
  * Type: Epic Event
  *  Title: Bounty Hunting Is A Dangerous Profession
  */
 public class Card501_011 extends AbstractEpicEventDeployable {
     public Card501_011() {
-        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Bounty_Hunting_Is_A_Dangerous_Profession, Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
+        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Bounty_Hunting_Is_A_Dangerous_Profession, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on table if your [Mudhorn] objective on table. " +
                 "Your Boba, Cara Dune, and Grogu are deploy -1. " +
                 "At the end of opponent's deploy phase, opponent loses 1 Force unless 'The Asset' present at a battleground site." +
