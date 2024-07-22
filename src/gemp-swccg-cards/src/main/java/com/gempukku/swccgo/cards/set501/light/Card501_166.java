@@ -79,7 +79,7 @@ public class Card501_166 extends AbstractUsedInterrupt {
             final PlayInterruptAction powerAction = new PlayInterruptAction(game, self);
             powerAction.setText("Add 2 to total power");
 
-            powerAction.allowResponses("Add 2 to total power during battles for remainder of turn",
+            powerAction.allowResponses("Add 2 to total power",
                     new RespondablePlayCardEffect(powerAction) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
