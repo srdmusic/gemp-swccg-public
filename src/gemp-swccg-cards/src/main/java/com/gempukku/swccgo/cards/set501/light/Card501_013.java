@@ -24,14 +24,14 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 23
+ * Set: Playtesting
  * Type: Location
  * Subtype: Site
  * Title: Nevarro City: Bounty Hunter's Guild
  */
 public class Card501_013 extends AbstractSite {
     public Card501_013() {
-        super(Side.LIGHT, Title.Bounty_Hunters_Guild, Title.Nevarro, Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
+        super(Side.LIGHT, Title.Bounty_Hunters_Guild, Title.Nevarro, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationLightSideGameText("If Holopuck about to leave table (for any reason, even if inactive), relocate it here.");
         setLocationDarkSideGameText("Whenever Holopuck relocates here, lose 1 force and stack it face up on opponent's [Mudhorn] Epic Event.");
         addIcon(Icon.LIGHT_FORCE, 2);

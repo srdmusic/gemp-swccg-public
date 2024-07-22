@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.light;
+package com.gempukku.swccgo.cards.set223.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
@@ -31,14 +31,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Playtesting
+ * Set: Set 23
  * Type: Location
  * Subtype: Site
  * Title: Tatooine: Hutt Trade Route (V)
  */
-public class Card501_167 extends AbstractSite {
-    public Card501_167() {
-        super(Side.LIGHT, Title.Hutt_Trade_Route, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+public class Card223_048 extends AbstractSite {
+    public Card223_048() {
+        super(Side.LIGHT, Title.Hutt_Trade_Route, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
         setVirtualSuffix(true);
         setLocationLightSideGameText("The first alien you deploy here each turn is deploy -1. Characters here are immune to Sandwhirl.");
         setLocationDarkSideGameText("Unless you occupy, you must first use 1 Force to deploy a non-alien character here.");
@@ -46,14 +46,12 @@ public class Card501_167 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_23);
         addKeywords(Keyword.DESERT);
-        setTestingText(Title.Hutt_Trade_Route);
     }
 
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         Condition unlessYouOccupy = new UnlessCondition(new OccupiesCondition(playerOnDarkSideOfLocation, self));
         Filter yourNonAlienCharacters = Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.character, Filters.not(Filters.alien));
-        Filter yourCharacterHere = Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.character, Filters.here(self));
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new ExtraForceCostToDeployCardToLocationModifier(self, yourNonAlienCharacters, unlessYouOccupy, new ConstantEvaluator(1), self));     

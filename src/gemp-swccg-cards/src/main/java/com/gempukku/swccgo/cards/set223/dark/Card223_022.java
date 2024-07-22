@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.dark;
+package com.gempukku.swccgo.cards.set223.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -38,14 +38,13 @@ import java.util.List;
  * Title: Rite Of Passage (V)
  */
 
-public class Card501_016 extends AbstractUsedInterrupt {
-    public Card501_016() {
-        super(Side.DARK, 4, Title.Rite_Of_Passage, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+public class Card223_022 extends AbstractUsedInterrupt {
+    public Card223_022() {
+        super(Side.DARK, 4, Title.Rite_Of_Passage, Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
         setLore("There are many different paths to becoming a Jedi, each with its own risks and consequences. A student must choose wisely.");
         setGameText("Once per game, deploy a Lift Tube from outside your deck. [Immune to Sense.] OR [Upload] [Set 0] Imperial Decree. OR Cancel Path Of Least Resistance or Run Luke, Run! OR Cancel opponent's Mos Eisley or Upper Plaza Corridor site game text for remainder of turn.");
         setVirtualSuffix(true);
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_23);
-        setTestingText("Rite Of Passage (V)");
     }
 
     @Override

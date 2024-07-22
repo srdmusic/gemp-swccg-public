@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.dark;
+package com.gempukku.swccgo.cards.set223.dark;
 
 import com.gempukku.swccgo.cards.AbstractDefensiveShield;
 import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
@@ -27,18 +27,17 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Playtesting
+ * Set: Set 23
  * Type: Defensive Shield
  * Title: You've Never Won A Race? (V)
  */
-public class Card501_068 extends AbstractDefensiveShield {
-    public Card501_068() {
-        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "You've Never Won A Race?", ExpansionSet.PLAYTESTING, Rarity.V);
+public class Card223_029 extends AbstractDefensiveShield {
+    public Card223_029() {
+        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "You've Never Won A Race?", ExpansionSet.SET_23, Rarity.V);
         setLore("'Not even finished?'");
         setGameText("Plays on table. You lose no Force to Boonta Eve Podrace. Unless opponent occupies three battlegrounds, I Did It! is suspended. Double Agent may not target opponent's Undercover spies. If an Undercover spy was just lost, it is placed out of play.");
         addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I, Icon.VIRTUAL_DEFENSIVE_SHIELD);
         setVirtualSuffix(true);
-        setTestingText("You've Never Won A Race? (V)");
     }
 
     @Override
