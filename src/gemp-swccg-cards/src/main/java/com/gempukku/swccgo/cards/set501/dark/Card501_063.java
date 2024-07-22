@@ -38,7 +38,7 @@ public class Card501_063 extends AbstractUsedOrLostInterrupt {
     public Card501_063() {
         super(Side.DARK, 3, Title.Physical_Choke, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity. V);
         setLore("Darth Vader often used physical means of 'persuasion' to get information. Captain Antilles of Tantive IV chose to die rather than reveal the location of the stolen Death Star plans.");
-        setGameText("USED: ▲ (or place in owner's Used Pile) Deactivated Hyperdrive or an Admiral's Order. LOST: If Vader in battle against two characters of ability < 4 present with him, add one battle destiny and, if one is a Rebel trooper, it is 'choked' (lost).");
+        setGameText("USED: [Upload] (or place in owner's Used Pile) Deactivated Hyperdrive or an Admiral's Order. LOST: If Vader in battle against two characters of ability < 4 present with him, add one battle destiny and, if one is a Rebel trooper, it is 'choked' (lost).");
         setVirtualSuffix(true);
         addIcon(Icon.VIRTUAL_SET_23);
         setTestingText("Physical Choke (V)");
