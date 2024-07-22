@@ -1,21 +1,18 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
-import com.gempukku.swccgo.cards.evaluators.MinLimitEvaluator;
-import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.evaluators.MaxLimitEvaluator;
+import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.common.Zone;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.ModifyTotalPowerUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromVoidInForcePileEffect;
@@ -23,11 +20,9 @@ import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.ShufflePileEffect;
 import com.gempukku.swccgo.logic.modifiers.DestinyWhenDrawnForBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.DestinyWhenDrawnForWeaponDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -49,8 +44,8 @@ public class Card501_166 extends AbstractUsedInterrupt {
         List<Modifier> modifiers = new LinkedList<Modifier>();;
         String playerId = self.getOwner();
 
-        modifiers.add(new DestinyWhenDrawnForWeaponDestinyModifier(self, self, new MinLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.your(playerId), Filters.battleground)), 4)));
-        modifiers.add(new DestinyWhenDrawnForBattleDestinyModifier(self, self, new MinLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.your(playerId), Filters.battleground)), 4)));
+        modifiers.add(new DestinyWhenDrawnForWeaponDestinyModifier(self, self, new MaxLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.your(playerId), Filters.battleground)), 4)));
+        modifiers.add(new DestinyWhenDrawnForBattleDestinyModifier(self, self, new MaxLimitEvaluator(new OnTableEvaluator(self, Filters.and(Filters.your(playerId), Filters.battleground)), 4)));
 
         return modifiers;
     }
