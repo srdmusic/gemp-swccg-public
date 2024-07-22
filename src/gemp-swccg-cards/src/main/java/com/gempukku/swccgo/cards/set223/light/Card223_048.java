@@ -75,7 +75,7 @@ public class Card223_048 extends AbstractSite {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.justDeployed(game, effectResult, self.getOwner(), Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.alien))) {
+        if (TriggerConditions.justDeployedTo(game, effectResult, self.getOwner(), Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.alien), Filters.here(self))) {
             //need to account for deploying simultaneously with another card
             PhysicalCard card1 = ((PlayCardResult) effectResult).getPlayedCard();
             PhysicalCard card2 = ((PlayCardResult) effectResult).getOtherPlayedCard();
