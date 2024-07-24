@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class Card501_037 extends AbstractNormalEffect {
     public Card501_037() {
-        super(Side.DARK, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Dark_Deal, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, Title.Dark_Deal, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'Perhaps you think you're being treated unfairly?' 'No.' 'Good. It would be unfortunate if I had to leave a garrison here.'");
         setGameText("If you control two Cloud City sites and opponent controls none, deploy on [Special Edition] Bespin. At related sites where you have an alien/Imperial pair, your Force drains are +1 and, if you just won a battle there, may take any one card into hand from Used Pile; reshuffle.");
         addImmuneToCardTitle(Title.Alter);
