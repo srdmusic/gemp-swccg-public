@@ -76,20 +76,21 @@ public class Card501_166 extends AbstractUsedInterrupt {
             );
             actions.add(forcePileAction);
 
-            final PlayInterruptAction powerAction = new PlayInterruptAction(game, self);
-            powerAction.setText("Add 2 to total power");
+            if (GameConditions.isDuringBattle(game)) {
+                final PlayInterruptAction powerAction = new PlayInterruptAction(game, self);
+                powerAction.setText("Add 2 to total power");
 
-            powerAction.allowResponses("Add 2 to total power during battles for remainder of turn",
-                    new RespondablePlayCardEffect(powerAction) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            powerAction.appendEffect(
-                                                new ModifyTotalPowerUntilEndOfBattleEffect(powerAction, 2, playerId, "Adds 2 to total power"));
+                powerAction.allowResponses("Add 2 to total power",
+                        new RespondablePlayCardEffect(powerAction) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                powerAction.appendEffect(
+                                                    new ModifyTotalPowerUntilEndOfBattleEffect(powerAction, 2, playerId, "Adds 2 to total power"));
+                            }
                         }
-                    }
-            );
-            actions.add(powerAction);
-
+                );
+                actions.add(powerAction);
+            }
 
         }
         return actions;
