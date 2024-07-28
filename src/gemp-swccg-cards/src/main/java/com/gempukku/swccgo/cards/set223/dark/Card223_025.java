@@ -106,19 +106,23 @@ public class Card223_025 extends AbstractUsedOrLostInterrupt {
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
 
 			final PhysicalCard cardBeingPlayed = ((RespondablePlayCardEffect) effect).getCard();
-			if (GameConditions.interruptCanBePlacedOutOfPlay(game, cardBeingPlayed)) {
-				final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
-				action.setText("Place Interrupt out of play");
-				action.allowResponses("Place a just-played interrupt out of play",
-					new RespondablePlayCardEffect(action) {
-						@Override
-						protected void performActionResults(Action targetingAction) {
-							// Perform result(s)
-							action.appendEffect(
-								new PlaceCardFromVoidOutOfPlayEffect(action, cardBeingPlayed));
+			
+			if (cardBeingPlayed != null) {
+				if (GameConditions.interruptCanBePlacedOutOfPlay(game, cardBeingPlayed)) {
+					final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+					action.setText("Place Interrupt out of play");
+					action.allowResponses("Place a just-played interrupt out of play",
+						new RespondablePlayCardEffect(action) {
+							@Override
+							protected void performActionResults(Action targetingAction) {
+								// Perform result(s)
+								action.appendEffect(
+									new PlaceCardFromVoidOutOfPlayEffect(action, cardBeingPlayed));
+							}
 						}
-					}
-				);
+					);
+					actions.add(action);
+				}
 			}
         }
         return actions;
