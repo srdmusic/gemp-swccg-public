@@ -77,7 +77,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
         collectionSelect.append("<option value='default'>All cards</option>");
         collectionSelect.append("<option value='permanent'>My cards</option>");
         this.manageDecksDiv.append(collectionSelect);
-
+        
         var newDeckBut = $("<button title='New deck'><span class='ui-icon ui-icon-document'></span></button>").button();
         this.manageDecksDiv.append(newDeckBut);
 
@@ -101,6 +101,16 @@ var GempSwccgDeckBuildingUI = Class.extend({
 
         var validateDeckBut = $("<button title='Validate Deck'><span class='ui-icon ui-icon-check'></span></button>").button();
         this.manageDecksDiv.append(validateDeckBut);
+        
+        // Charlie Code
+        var addLightShieldsBut = $("<button title='Add Light Shields'><span class='ui-icon ui-icon-circlesmall-plus'></span></button>").button();
+        addLightShieldsBut.css({"float":"right"})
+        this.manageDecksDiv.append(addLightShieldsBut);
+
+        // Charlie Code
+        var addDarkShieldsBut = $("<button title='Add Dark Shields'><span class='ui-icon ui-icon-squaresmall-plus'></span></button>").button();
+        addDarkShieldsBut.css({"float":"right"})
+        this.manageDecksDiv.append(addDarkShieldsBut);
 
         // Hidden file-input field for browsing for decks on the user's computer
         var browseInputDeckInput = $("<input type=file id='browseInputDeckInput' style='display:none'>");
@@ -195,6 +205,20 @@ var GempSwccgDeckBuildingUI = Class.extend({
                 function () {
                     that.validateDeck();
                 });
+        
+        // Charlie Code
+        addLightShieldsBut.click(
+            function () {
+                that.loadLightSideShields();
+            });
+
+
+        // Charlie Code
+        addDarkShieldsBut.click(
+            function () {
+                that.loadDarkSideShields();
+            });
+        
 
         this.collectionDiv = $("#collectionDiv");
 
@@ -781,9 +805,52 @@ var GempSwccgDeckBuildingUI = Class.extend({
 
     addCardToOutsideDeckAndLayout:function (blueprintId, testingText, backSideTestingText) {
         var that = this;
-
         var cardDiv = this.addCardToContainer(blueprintId, testingText, backSideTestingText, "outsideDeck", that.outsideDeckDiv, false);
         cardDiv.addClass("cardOutsideDeck");
+        that.outsideDeckGroup.layoutCards()
+        that.deckDirty = true;
+        that.deckModified(true);
+    },
+
+    // Charlie Code
+    loadDarkSideShields:function () {
+        $(".cardOutsideDeck").remove();
+        var that = this;
+        var darkSideShields = [
+            "13_51","223_7","13_52","13_54",
+            "13_61","13_63","216_5","13_66",
+            "220_2","213_13","13_68","200_95",
+            "13_72","13_78","13_81","13_84",
+            "13_86","13_90","200_99","13_96",
+            "223_26","13_95","13_98","13_99",
+            "200_100","13_100","223_29"
+        ];
+        for (let blueprintId of darkSideShields) {
+            var cardDiv = this.addCardToContainer(blueprintId, null, null, "outsideDeck", that.outsideDeckDiv, false);
+            cardDiv.addClass("cardOutsideDeck");
+        }
+        that.outsideDeckGroup.layoutCards()
+        that.deckDirty = true;
+        that.deckModified(true);
+    },
+
+    // Charlie Code
+    loadLightSideShields:function () {
+        $(".cardOutsideDeck").remove();
+        var that = this;
+        var lightSideShields = [
+            "13_1","223_30","13_3","13_4",
+            "13_6","13_8","13_15","13_16",
+            "200_26","13_22","13_30","13_35",
+            "221_68","13_37","13_38","203_13",
+            "200_28","200_29","209_15","220_10",
+            "13_44","13_47","223_49","13_49",
+            "200_32","13_50","301_5", "200_16"
+        ];
+        for (let blueprintId of lightSideShields) {
+            var cardDiv = this.addCardToContainer(blueprintId, null, null, "outsideDeck", that.outsideDeckDiv, false);
+            cardDiv.addClass("cardOutsideDeck");
+        }
         that.outsideDeckGroup.layoutCards()
         that.deckDirty = true;
         that.deckModified(true);
