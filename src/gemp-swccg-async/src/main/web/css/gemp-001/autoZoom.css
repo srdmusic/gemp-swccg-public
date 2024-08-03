@@ -11,3 +11,7 @@
 .borderOverlay, .borderOverlay img  {
     border-radius: 5%;
 }
+
+#auto-zoom-message {
+    font-family: Verdana, Arial, sans-serif;
+}

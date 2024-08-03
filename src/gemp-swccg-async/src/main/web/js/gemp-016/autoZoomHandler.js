@@ -50,7 +50,9 @@ class AutoZoom {
 			id: 'auto-zoom-message'
 		}).appendTo(this.cardDisplay.baseDiv);
 		
-		this.previewImageDiv = this.previewImageDiv[0];		
+		this.previewImageDiv = this.previewImageDiv[0];
+		
+		this.hidePreviewImage();		
 	}
 	
 	_setupToggleButton() {
@@ -209,6 +211,8 @@ class AutoZoom {
 	setPreviewMessage(reversible) {
 		let message = "";
 		
+		let focus = document.hasFocus();
+		
 		if(reversible) {
 			message = "Press <b>[Shift]</b> to flip.";
 		}
@@ -217,6 +221,11 @@ class AutoZoom {
 		}
 		
 		if(message) {
+			
+			if(!focus) {
+				message = "Focus this window for key controls."
+			}
+			
 			this.flipMessageDiv.html(message);
 			this.flipMessageDiv[0].style.display = "block";
 		}

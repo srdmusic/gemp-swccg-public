@@ -193,7 +193,7 @@ class CardDisplay {
 
 		this.borderDiv.css({
 			width: px(widthSide - (2 * borderSize) + 2), //Covering up white bordered cards a little better on the sides
-			height: px(heightSide - (2 * borderSize))
+			height: px(heightSide - (2 * borderSize) + 2)
 		})
 	}
 
