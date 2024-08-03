@@ -17744,6 +17744,7 @@ public class Filters {
     public static final Filter Cloud_City_trooper = Filters.keyword(Keyword.CLOUD_CITY_TROOPER);
     public static final Filter cloud_sector = Filters.keyword(Keyword.CLOUD_SECTOR);
     public static final Filter Close_Call = Filters.title(Title.Close_Call);
+    public static final Filter Cody = Filters.title(Title.Cody);
     public static final Filter Collision = Filters.title(Title.Collision);
     public static final Filter Colo_Claw_Fish = Filters.title(Title.Colo_Claw_Fish);
     public static final Filter Combat_Readiness = Filters.title(Title.Combat_Readiness);
@@ -17826,6 +17827,7 @@ public class Filters {
     public static final Filter DataVault = Filters.title(Title.DataVault);
     public static final Filter Daughter_Of_Skywalker = Filters.title(Title.Daughter_Of_Skywalker);
     public static final Filter Deactivate_The_Shield_Generator = Filters.title(Title.Deactivate_The_Shield_Generator);
+    public static final Filter Deactivated_Hyperdrive = Filters.title(Title.Deactivated_Hyperdrive);
     public static final Filter Dead_Ewok = Filters.title(Title.Dead_Ewok);
     public static final Filter Death_Mark = Filters.title(Title.Death_Mark);
     public static final Filter Death_Squadron = Filters.title(Title.Death_Squadron);
@@ -18280,6 +18282,7 @@ public class Filters {
     public static final Filter ISB_Operations = Filters.title(Title.ISB_Operations);
     public static final Filter Ishi_Tib = Filters.species(Species.ISHI_TIB);
     public static final Filter IT0 = Filters.title(Title.IT0);
+    public static final Filter It_Can_Wait = Filters.title(Title.It_Can_Wait);
     public static final Filter It_Could_Be_Worse = Filters.title(Title.It_Could_Be_Worse);
     public static final Filter Its_A_Trap = Filters.title(Title.Its_A_Trap);
     public static final Filter Its_An_Older_Code = Filters.title(Title.Its_An_Older_Code);
@@ -18400,6 +18403,7 @@ public class Filters {
     public static final Filter Lieutenant_Blount = Filters.title(Title.Lieutenant_Blount);
     public static final Filter Lieutenant_Page = Filters.title(Title.Lieutenant_Page);
     public static final Filter Life_Debt = Filters.title(Title.Life_Debt);
+    public static final Filter Lift_Tube = Filters.title(Title.Lift_Tube);
     public static final Filter lightsaber = Filters.keyword(Keyword.LIGHTSABER);
     public static final Filter Lightsaber_Proficiency = Filters.title(Title.Lightsaber_Proficiency);
     public static final Filter Limited_Resources = Filters.title(Title.Limited_Resources);
@@ -18453,7 +18457,7 @@ public class Filters {
     public static final Filter marker_site = Filters.or(Keyword.MARKER_1, Keyword.MARKER_2, Keyword.MARKER_3, Keyword.MARKER_4, Keyword.MARKER_5, Keyword.MARKER_6, Keyword.MARKER_7);
     public static final Filter Marketplace = Filters.title(Title.Marketplace);
     public static final Filter Marmor = Filters.title(Title.Marmor);
-    public static final Filter Marquand = Filters.title(Title.Marquand);
+    public static final Filter Marquand = Filters.persona(Persona.MARQUAND);
     public static final Filter Mas_Amedda = Filters.title(Title.Mas_Amedda);
     public static final Filter Massassi_Base_Operations = Filters.title(Title.Massassi_Base_Operations);
     public static final Filter Massassi_Headquarters = Filters.title(Title.Massassi_Headquarters);
@@ -18613,6 +18617,7 @@ public class Filters {
     public static final Filter Panic = Filters.title(Title.Panic);
     public static final Filter Paploo = Filters.persona(Persona.PAPLOO);
     public static final Filter parasite = Filters.and(CardCategory.CREATURE, Keyword.PARASITE);
+    public static final Filter Part_of_the_Tribe = Filters.title(Title.Part_of_the_Tribe);
     public static final Filter Passenger_Deck = Filters.title(Title.Passenger_Deck);
     public static final Filter Path_Of_Least_Resistance = Filters.title(Title.Path_Of_Least_Resistance);
     public static final Filter Patrol_Craft = Filters.title(Title.Patrol_Craft);
@@ -19131,6 +19136,7 @@ public class Filters {
     public static final Filter Unkar_Plutt = Filters.title(Title.Unkar_Plutt);
     public static final Filter Until_We_Win_Or_The_Chances_Are_Spent = Filters.title(Title.Until_We_Win_Or_The_Chances_Are_Spent);
     public static final Filter Uplink_Station = Filters.title(Title.Uplink_Station);
+    public static final Filter Upper_Plaza_Corridor = Filters.title(Title.Upper_Plaza_Corridor);
     public static final Filter Upper_Walkway = Filters.title(Title.Upper_Walkway);
     public static final Filter URoRRuRRR = Filters.title(Title.URoRRuRRR);
     public static final Filter Utapau_location = Filters.partOfSystem(Title.Utapau);

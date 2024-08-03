@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class Card501_065 extends AbstractCapitalStarship {
     public Card501_065() {
-        super(Side.DARK, 1, 4, 5, 8, null, 3, 6, "Eli Vanto In Dreadnaught", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 1, 4, 5, 6, null, 3, 6, "Eli Vanto In Dreadnaught", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("May add 2 pilots, and 2 passengers. " +
                 "Permanent pilot is •Vanto, who provides ability of 3. " +

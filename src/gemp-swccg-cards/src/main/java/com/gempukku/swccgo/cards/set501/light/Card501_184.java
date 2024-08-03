@@ -38,7 +38,7 @@ public class Card501_184 extends AbstractLostInterrupt {
     public Card501_184() {
         super(Side.LIGHT, 4, "A Jedi's Focus", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Vader was surprised at how far the 'young apprentice' had come in his training.");
-        setGameText("If you chose I Have It or You Have That Power, Too on your [Skywalker] Epic Event, choose: Take any card into hand from Force Pile; reshuffle. OR Once per game during battle, use 2 Force to exclude Luke and an opponent's character of equal or lesser ability present from battle.");
+        setGameText("If you chose I Have It on your [Skywalker] Epic Event, choose: Take any card into hand from Force Pile; reshuffle. OR Once per game during battle, if Luke present with an opponent's character of equal or lesser ability, use 2 Force to exclude them both from battle.");
         addIcons(Icon.TATOOINE, Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
         setTestingText("A Jedi's Focus (V)");
@@ -49,11 +49,9 @@ public class Card501_184 extends AbstractLostInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
         final PhysicalCard skywalkerEpicEvent = Filters.findFirstActive(game, self, Filters.and(Filters.icon(Icon.SKYWALKER), Filters.Epic_Event));
         String I_HAVE_IT = "I Have It";
-        String YOU_HAVE_THAT_POWER_TOO = "You Have That Power, Too";
     
         if (skywalkerEpicEvent != null) {
-            if (GameConditions.cardHasWhileInPlayDataEquals(skywalkerEpicEvent, I_HAVE_IT)
-                || GameConditions.cardHasWhileInPlayDataEquals(skywalkerEpicEvent, YOU_HAVE_THAT_POWER_TOO)) {
+            if (GameConditions.cardHasWhileInPlayDataEquals(skywalkerEpicEvent, I_HAVE_IT)) {
                 
                 if (GameConditions.hasForcePile(game, playerId)) {
                     final PlayInterruptAction action = new PlayInterruptAction(game, self);
@@ -92,15 +90,15 @@ public class Card501_184 extends AbstractLostInterrupt {
                             // Update usage limit(s)
                             action.appendUsage(
                                     new OncePerGameEffect(action));
+                            // Pay cost(s)
+                            action.appendCost(
+                                new UseForceEffect(action, playerId, 2));
                             // Choose target(s)
                             action.appendTargeting(
                                     new TargetCardOnTableEffect(action, playerId, "Choose opponent's character", opponentsCharacterFilter) {
                                         @Override
                                         protected void cardTargeted(final int targetGroupId, final PhysicalCard opponentsCharacter) {
                                             action.addAnimationGroup(Luke, opponentsCharacter);
-                                            // Pay cost(s)
-                                            action.appendCost(
-                                                    new UseForceEffect(action, playerId, 2));
                                             // Allow response(s)
                                             action.allowResponses("Exclude " + GameUtils.getCardLink(Luke) + " and " + GameUtils.getCardLink(opponentsCharacter) + " from battle",
                                                     new RespondablePlayCardEffect(action) {

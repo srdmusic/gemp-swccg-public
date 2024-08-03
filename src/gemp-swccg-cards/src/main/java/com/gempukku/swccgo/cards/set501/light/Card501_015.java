@@ -31,13 +31,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 23
+ * Set: Playtesting
  * Type: Effect
  * Title: Holopuck
  */
 public class Card501_015 extends AbstractNormalEffect {
     public Card501_015() {
-        super(Side.LIGHT, 0, PlayCardZoneOption.ATTACHED, Title.Holopuck, Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
+        super(Side.LIGHT, 0, PlayCardZoneOption.ATTACHED, Title.Holopuck, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on Bounty Hunter's Guild. " +
                 "Unless on a character, if opponent just deployed a non-Dark Jedi character of ability > 2 (or a leader) to a site, " +
                 "relocate Bounty Puck to that character. That character is 'The Asset' for as long as that character remains on table.");

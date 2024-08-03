@@ -3,7 +3,7 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
-import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -15,26 +15,22 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.OrCondition;
-import com.gempukku.swccgo.logic.effects.ModifyForfeitEffect;
-import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.PutStackedCardInLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByPermanentWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.HitResult;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /*
@@ -47,7 +43,7 @@ public class Card501_191 extends AbstractRebel {
     public Card501_191() {
         super(Side.LIGHT, 2, 4, 4, 4, 6, "Sabine, Padawan Learner", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Female Mandalorian Padawan.");
-        setGameText("If Sabine just deployed (or won a battle), may place an artwork card in owner's Used Pile. Characters Sabine 'hits' are forfeit -4. While with Ahsoka or Ezra, your battle destiny here is +1 (+2 if both). Immune to [Permanent Weapon] and attrition <3");
+        setGameText("If Sabine just deployed (or won a battle), may choose an artwork card to be lost. Once per turn, if Sabine just 'hit' a character, opponent loses 2 Force. While with Ahsoka or Ezra, your total battle destiny here is +1. Immune to [Permanent Weapon] weapons and attrition < 3.");
         setArmor(5);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_23);
         addKeywords(Keyword.FEMALE, Keyword.PADAWAN);
@@ -62,7 +58,7 @@ public class Card501_191 extends AbstractRebel {
         List<Modifier> modifiers = new ArrayList<>();
         Condition withAhsoka = new WithCondition(self, Filters.Ahsoka);
         Condition withEzra = new WithCondition(self, Filters.Ezra);
-        modifiers.add(new TotalBattleDestinyModifier(self, Filters.here(self), new OrCondition(withAhsoka, withEzra), new ConditionEvaluator(1, 2, new AndCondition(withAhsoka, withEzra)), playerId));
+        modifiers.add(new TotalBattleDestinyModifier(self, Filters.here(self), new OrCondition(withAhsoka, withEzra), 1, playerId));
         modifiers.add(new MayNotBeTargetedByPermanentWeaponsModifier(self));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
         return modifiers;
@@ -70,18 +66,19 @@ public class Card501_191 extends AbstractRebel {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
-        if (TriggerConditions.justHitBy(game, effectResult, Filters.character, self)) {
-            final PhysicalCard card = ((HitResult) effectResult).getCardHit();
+        if (TriggerConditions.justHitBy(game, effectResult, Filters.character, self)
+                && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId)) {
+            String opponent = game.getOpponent(self.getOwner());
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Make " + GameUtils.getCardLink(card) + " forfeit -4");
-            action.setActionMsg("Make " + GameUtils.getCardLink(card) + " forfeit -4");
+            action.setText("Make opponent lose 2 Force");
+            action.appendUsage(
+                new OncePerTurnEffect(action));
+            // Perform result(s)
             action.appendEffect(
-                new ModifyForfeitEffect(action, card, -4));
-            actions.add(action);
+                    new LoseForceEffect(action, opponent, 2));
+            return Collections.singletonList(action);        
         }
-
-        return actions;
+        return null;
     }
 
     @Override
@@ -98,7 +95,7 @@ public class Card501_191 extends AbstractRebel {
                 @Override
                 protected void cardSelected(final PhysicalCard selectedCard) {
                     action.appendEffect(
-                            new PutStackedCardInUsedPileEffect(action, playerId, selectedCard, false));
+                            new PutStackedCardInLostPileEffect(action, playerId, selectedCard, false));
                 }
             });
             return Collections.singletonList(action);

@@ -28,13 +28,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 23
+ * Set: Playtesting
  * Type: Device
  * Title: Beskar Armor
  */
 public class Card501_010 extends AbstractDevice {
     public Card501_010() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Beskar_Armor, Uniqueness.UNRESTRICTED, ExpansionSet.SET_23, Rarity.V);
+        super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Beskar_Armor, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on your Mandalorian. Character is defense value +2 and immunity to attrition +2. " +
                 "Once per game, may [upload] Beskar Deflection. Character's game text may not be cancelled.");
         addIcons(Icon.VIRTUAL_SET_24);

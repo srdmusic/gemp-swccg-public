@@ -34,20 +34,20 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Set: Playtesting
+ * Set: Set 23
  * Type: Character
  * Subtype: Alien
  * Title: Jaxxon T. Tumperakki
  */
 public class Card501_124 extends AbstractAlien {
     public Card501_124() {
-        super(Side.LIGHT, 2, 3, 3, 3, 5, Title.Jaxxon_T_Tumperakki, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("Lepi gambler, smuggler and thief.");
+        super(Side.LIGHT, 3, 3, 3, 3, 5, Title.Jaxxon_T_Tumperakki, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Lepi gambler, smuggler and thief. Star-hopper mercenary.");
         setGameText("Deploys -1 to Cloud City. " +
                 "Any blaster may deploy on Jaxxon. " +
                 "Once per game, may deploy a blaster on Jaxxon from Lost Pile (or Jaxxon may steal one from opponent's Lost Pile). " +
                 "While at opponent's battleground, Imperial Enforcement is suspended.");
-        addKeywords(Keyword.GAMBLER, Keyword.SMUGGLER, Keyword.THIEF);
+        addKeywords(Keyword.GAMBLER, Keyword.SMUGGLER, Keyword.THIEF, Keyword.MERCENARY);
         setSpecies(Species.LEPI);
         addIcons(Icon.PILOT, Icon.VIRTUAL_SET_23);
         addIcon(Icon.WARRIOR, 2);

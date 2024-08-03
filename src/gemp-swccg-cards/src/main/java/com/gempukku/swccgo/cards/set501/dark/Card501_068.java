@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class Card501_068 extends AbstractDefensiveShield {
     public Card501_068() {
-        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "You've Neve Won A Race?", ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "You've Never Won A Race?", ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'Not even finished?'");
         setGameText("Plays on table. You lose no Force to Boonta Eve Podrace. Unless opponent occupies three battlegrounds, I Did It! is suspended. Double Agent may not target opponent's Undercover spies. If an Undercover spy was just lost, it is placed out of play.");
         addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I, Icon.VIRTUAL_DEFENSIVE_SHIELD);

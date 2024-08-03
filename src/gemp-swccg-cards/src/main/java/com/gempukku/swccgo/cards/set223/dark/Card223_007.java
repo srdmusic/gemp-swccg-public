@@ -1,9 +1,10 @@
-package com.gempukku.swccgo.cards.set200.dark;
+package com.gempukku.swccgo.cards.set223.dark;
 
 import com.gempukku.swccgo.cards.AbstractDefensiveShield;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.StackCardFromVoidEffect;
 import com.gempukku.swccgo.cards.evaluators.AddEvaluator;
+import com.gempukku.swccgo.cards.evaluators.NumCopiesOfCardAtLocationEvaluator;
 import com.gempukku.swccgo.cards.evaluators.StackedEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -16,30 +17,29 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.RespondablePlayingCardEffect;
+import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToDeployCardForFreeExceptByOwnGametextModifier;
+import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToDeployCardToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToPlayInterruptModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Effect;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 0
- * Type: Effect
- * Title: A Useless Gesture (V)
+ * Set: Set 23
+ * Type: Defensive Shield
+ * Title: A Useless Gesture & Death Star Sentry
  */
-public class Card200_093 extends AbstractDefensiveShield {
-    public Card200_093() {
-        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.A_Useless_Gesture, ExpansionSet.SET_0, Rarity.V);
-        setVirtualSuffix(true);
-        setLore("Imperial officers aboard the Death Star considered the Rebellion a minor threat.");
-        setGameText("Plays on table. In order to play an Interrupt from Lost Pile, opponent must first stack it here (if possible) and use +1 Force for each card here, even if Interrupt is normally free. Revolution is canceled.");
-        addIcons(Icon.REFLECTIONS_III, Icon.GRABBER, Icon.VIRTUAL_DEFENSIVE_SHIELD);
+public class Card223_007 extends AbstractDefensiveShield {
+    public Card223_007() {
+        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Useless Gesture & Death Star Sentry", ExpansionSet.SET_23, Rarity.V);
+        addComboCardTitles(Title.A_Useless_Gesture, Title.Death_Star_Sentry);
+        setGameText("Plays on table. In order to play an Interrupt from Lost Pile, opponent must first stack it here (if possible) and use +1 Force for each card here, even if Interrupt is normally free. For opponent to deploy a character, starship, or vehicle for free (except by that card's own game text), opponent must first use 2 Force. Opponent must first use X Force to deploy a non-unique card (except a Jawa) to a location, where X = the number of copies of that card at that location.");
+        addIcons(Icon.GRABBER, Icon.VIRTUAL_DEFENSIVE_SHIELD);
     }
 
     @Override
@@ -50,6 +50,9 @@ public class Card200_093 extends AbstractDefensiveShield {
         modifiers.add(new ExtraForceCostToPlayInterruptModifier(self, Filters.and(Filters.Interrupt, Filters.inLostPile(opponent),
                 Filters.not(Filters.sameTitleAsStackedOn(self, Filters.and(Filters.grabber, Filters.not(self))))),
                 new AddEvaluator(new StackedEvaluator(self), 1)));
+        modifiers.add(new ExtraForceCostToDeployCardToLocationModifier(self, Filters.and(Filters.opponents(self), Filters.non_unique, Filters.except(Filters.Jawa)),
+                new NumCopiesOfCardAtLocationEvaluator(self)));
+        modifiers.add(new ExtraForceCostToDeployCardForFreeExceptByOwnGametextModifier(self, Filters.and(Filters.opponents(self), Filters.or(Filters.character, Filters.starship, Filters.vehicle)), 2));
         return modifiers;
     }
 
@@ -73,31 +76,6 @@ public class Card200_093 extends AbstractDefensiveShield {
             }
         }
 
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.Revolution)
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            return Collections.singletonList(action);
-        }
         return null;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
-
-        // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canTargetToCancel(game, self, Filters.Revolution)) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Revolution, Title.Revolution);
-            actions.add(action);
-        }
-        return actions;
     }
 }

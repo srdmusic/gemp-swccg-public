@@ -67,3 +67,5 @@ logs/*
 !logs/.placeholder
 database/*
 !database/.placeholder
+
+/.vs
