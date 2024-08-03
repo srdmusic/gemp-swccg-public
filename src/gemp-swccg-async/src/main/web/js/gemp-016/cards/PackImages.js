@@ -65,6 +65,7 @@ const packBlueprints = {
     "Virtual Alternate Image Booster Pack Series 3":"https://res.starwarsccg.org/packs/virtualalternateimageboosterpackseries3.png",
     "Virtual Alternate Image Booster Pack Series 4":"https://res.starwarsccg.org/packs/virtualalternateimageboosterpackseries4.png",
     "Virtual Alternate Image Booster Pack Series 5":"https://res.starwarsccg.org/packs/virtualalternateimageboosterpackseries5.png",
+    "Virtual Alternate Image Booster Pack Series 6":"https://res.starwarsccg.org/packs/virtualalternateimageboosterpackseries6.png",
 
     "First Anthology Box":"https://res.starwarsccg.org/packs/first_anthology_box.png",
     "Second Anthology Box":"https://res.starwarsccg.org/packs/second_anthology_box.png",
