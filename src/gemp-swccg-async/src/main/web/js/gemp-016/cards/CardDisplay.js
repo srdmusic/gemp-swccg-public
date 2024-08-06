@@ -159,7 +159,7 @@ class CardDisplay {
 		}
 
 		//Calculating the various borders sizes proportionate to the longest side
-		const borderSize = Math.floor(Math.max(widthSide, heightSide) / 31);
+		const borderSize = Math.floor(Math.max(widthSide, heightSide) / 30);
 		const testBorderWidth = Math.floor(Math.max(widthSide, heightSide) / 24);
 		const testBorderHeight = Math.floor(Math.max(widthSide, heightSide) / 27.6);
 

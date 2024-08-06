@@ -214,7 +214,7 @@ class AutoZoom {
 		let focus = document.hasFocus();
 		
 		if(reversible) {
-			message = "Press <b>[Shift]</b> to flip.";
+			message = "Tap <b>[Shift]</b> to flip.";
 		}
 		else if(this.baseImageDiv.style.transform.includes("180")) {
 			message = "Hold <b>[Shift]</b> to rotate.";
@@ -260,6 +260,24 @@ class AutoZoom {
 		}
 	}
 	
+	
+	triggerHintHover(target, shift) {
+		const blueprintId = target.attr("value");
+		const testingText = target.attr("data-testingText");
+		const backSideTestingText = target.attr("data-backSideTestingText");
+		const card = new Card(blueprintId, testingText, backSideTestingText, "SPECIAL", "hint", "");
+
+		this.baseImageDiv = target[0];
+		this.displayPreviewImage(card, this.baseImageDiv);
+		this.invertPreviewImage(event.shiftKey);
+		this.setPreviewMessage(this.cardDisplay.reversible);
+
+		this.abortHoverTimer();
+		this.hoverValid = true;
+
+		event.stopPropagation();
+	}
+	
 	handleMouseOver(event, isDragging, infoDialogOpen) {
 		const that = this;
 		const target = $(event.target);
@@ -283,36 +301,26 @@ class AutoZoom {
 
 		this.abortCooldownTimer();
 
-		if(tarIsCard) {
-
-			if(this.hoverValid) {
-				this.triggerHover(target, event.shiftKey);
-
-				event.stopPropagation();
-				return false;
+		if(this.hoverValid) {
+			if(tarIsCard) {
+				this.triggerHover(target, event.shiftKey);	
 			}
-			else if(!this.hoverTimer) {
-				this.startHoverTimer(function(){
-					that.triggerHover(target, event.shiftKey);
-				});
+			else if(tarIsHint) {
+				this.triggerHintHover(target, event.shiftKey);
 			}
-		}
-		else if(tarIsHint) {
-			const blueprintId = target.attr("value");
-			const testingText = target.attr("data-testingText");
-			const backSideTestingText = target.attr("data-backSideTestingText");
-			const card = new Card(blueprintId, testingText, backSideTestingText, "SPECIAL", "hint", "");
-
-			this.baseImageDiv = target[0];
-			this.displayPreviewImage(card, this.baseImageDiv);
-			this.invertPreviewImage(event.shiftKey);
-			this.setPreviewMessage(this.cardDisplay.reversible);
-
-			this.abortHoverTimer();
-			this.hoverValid = true;
 
 			event.stopPropagation();
 			return false;
+		}
+		else if(!this.hoverTimer) {
+			this.startHoverTimer(function(){
+				if(tarIsCard) {
+					that.triggerHover(target, event.shiftKey);	
+				}
+				else if(tarIsHint) {
+					that.triggerHintHover(target, event.shiftKey);
+				}
+			});
 		}
 
 		return true;
