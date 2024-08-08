@@ -130,7 +130,7 @@ class CardInfoDialog {
 			return;
 		}
 		// long should be a value between 0.1 and 1.0
-		console.log(long);
+		//console.log(long);
 		saveToCookie(CardInfoDialog.SliderCookieName, "" + long);
 		this.currentLongSetting = long * CardDisplay.MaxTarget;
 		this.currentShortSetting = this.currentLongSetting * CardDisplay.TargetVertRatio;
@@ -198,7 +198,7 @@ class CardInfoDialog {
 	}
 
 	isOpen() {
-		return this.infoDialog.dialog("isOpen")
+		return this.infoDialog.dialog("isOpen");
 	}
 
 	open() {
