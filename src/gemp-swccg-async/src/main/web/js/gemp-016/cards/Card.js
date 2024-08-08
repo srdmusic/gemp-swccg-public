@@ -128,7 +128,7 @@ class Card {
 
     flipOverCard() {
         this.bareBlueprint = Card.getBackSideBlueprintId(this.bareBlueprint);
-        this.horizontal = this.isHorizontal(this.bareBlueprint, this.zone);
+        this.horizontal = Card.isHorizontal(this.bareBlueprint, this.zone);
         var tempText = this.testingText;
         this.testingText = this.backSideTestingText;
         this.backSideTestingText = tempText;
@@ -140,7 +140,7 @@ class Card {
             this.incomplete = cardFromCache.incomplete;
         } else {
             this.imageUrl = Card.getImageUrl(this.bareBlueprint);
-            this.backSideImageUrl = this.getBackSideUrl(this.bareBlueprint);
+            this.backSideImageUrl = Card.getBackSideUrl(this.bareBlueprint);
             this.incomplete = Card.isIncomplete(this.bareBlueprint);
 
             if (this.bareBlueprint != "-1_1" && this.bareBlueprint != "-1_2") {
@@ -156,7 +156,7 @@ class Card {
 
     turnCardOver(tempBlueprintId) {
         this.bareBlueprint = tempBlueprintId;
-        this.horizontal = this.isHorizontal(this.bareBlueprint, this.zone);
+        this.horizontal = Card.isHorizontal(this.bareBlueprint, this.zone);
         var tempText = this.testingText;
         this.testingText = this.backSideTestingText;
         this.backSideTestingText = tempText;
@@ -168,7 +168,7 @@ class Card {
             this.incomplete = cardFromCache.incomplete;
         } else {
             this.imageUrl = Card.getImageUrl(this.bareBlueprint);
-            this.backSideImageUrl = this.getBackSideUrl(this.bareBlueprint);
+            this.backSideImageUrl = Card.getBackSideUrl(this.bareBlueprint);
             this.incomplete = Card.isIncomplete(this.bareBlueprint);
 
             if (this.bareBlueprint != "-1_1" && this.bareBlueprint != "-1_2") {

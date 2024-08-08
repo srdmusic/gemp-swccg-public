@@ -212,11 +212,20 @@ var GempSwccgGameUI = Class.extend({
     initializeGameUI: function () {
 
         var that = this;
-        //$('div').not('#main,.replay').remove();
-
-        // this.initializeDialogs();
-
-        // this.addBottomLeftTabPane();
+        
+        //The very first time we draw the game state, we don't
+        // need to wipe out the dialogs + chat pane and redraw.
+        //However, reverts assume that this redraw is happening,
+        // as this code is downstream of the "Participant" event,
+        // which is the only signal the UI receives that a revert
+        // is happening before the game state is re-sent.  
+        // TODO: If reverts are reworked to special events, the 
+        // wipe and re-draw can be moved there instead of here.
+        if(this.gameUiInitialized) {
+            $('div').not('#main,.replay').remove();
+            this.initializeDialogs();
+            this.addBottomLeftTabPane();
+        }
 
         var playerSide = null;
         var opponentSide = null;
