@@ -39,7 +39,7 @@ import java.util.Map;
  * Set: Block 9
  * Type: Character
  * Subtype: Republic
- * Title: Dorme
+ * Title: Dorme'
  */
 public class Card601_223 extends AbstractRepublic {
     public Card601_223() {
