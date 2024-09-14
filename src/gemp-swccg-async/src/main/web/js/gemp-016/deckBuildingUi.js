@@ -103,13 +103,14 @@ var GempSwccgDeckBuildingUI = Class.extend({
         this.manageDecksDiv.append(validateDeckBut);
         
         // Charlie Code
-        var addLightShieldsBut = $("<button title='Add Light Shields'><span class='ui-icon ui-icon-circlesmall-plus'></span></button>").button();
-        addLightShieldsBut.css({"float":"right"})
+        // Swapped Icons, removed float-right property 9/14
+        var addLightShieldsBut = $("<button title='Add Light Shields'><span class='ui-icon ui-icon-squaresmall-plus'></span></button>").button();
+        // addLightShieldsBut.css({"float":"right"})
         this.manageDecksDiv.append(addLightShieldsBut);
 
         // Charlie Code
-        var addDarkShieldsBut = $("<button title='Add Dark Shields'><span class='ui-icon ui-icon-squaresmall-plus'></span></button>").button();
-        addDarkShieldsBut.css({"float":"right"})
+        var addDarkShieldsBut = $("<button title='Add Dark Shields'><span class='ui-icon ui-icon-circlesmall-plus'></span></button>").button();
+        // addDarkShieldsBut.css({"float":"right"})
         this.manageDecksDiv.append(addDarkShieldsBut);
 
         // Hidden file-input field for browsing for decks on the user's computer
@@ -789,6 +790,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
     addCardToContainer:function (blueprintId, testingText, backSideTestingText, zone, container, tokens) {
         var card = new Card(blueprintId, testingText, backSideTestingText, zone, "deck", "player");
         var cardDiv = createCardDiv(card.imageUrl, card.testingText, null, card.isFoil(), tokens, card.isPack(), card.incomplete);
+        console.log(card.imageUrl, card.destiny)
         cardDiv.data("card", card);
         container.append(cardDiv);
         return cardDiv;
