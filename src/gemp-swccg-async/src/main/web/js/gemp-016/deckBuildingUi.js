@@ -103,13 +103,13 @@ var GempSwccgDeckBuildingUI = Class.extend({
         this.manageDecksDiv.append(validateDeckBut);
         
         // Charlie Code
-        var addLightShieldsBut = $("<button title='Add Light Shields'><span class='ui-icon ui-icon-circlesmall-plus'></span></button>").button();
-        addLightShieldsBut.css({"float":"right"})
+        var addLightShieldsBut = $("<button title='Add Light Shields'><span class='ui-icon ui-icon-squaresmall-plus'></span></button>").button();
+        // addLightShieldsBut.css({"float":"right"})
         this.manageDecksDiv.append(addLightShieldsBut);
 
         // Charlie Code
-        var addDarkShieldsBut = $("<button title='Add Dark Shields'><span class='ui-icon ui-icon-squaresmall-plus'></span></button>").button();
-        addDarkShieldsBut.css({"float":"right"})
+        var addDarkShieldsBut = $("<button title='Add Dark Shields'><span class='ui-icon ui-icon-circlesmall-plus'></span></button>").button();
+        // addDarkShieldsBut.css({"float":"right"})
         this.manageDecksDiv.append(addDarkShieldsBut);
 
         // Hidden file-input field for browsing for decks on the user's computer
