@@ -103,7 +103,6 @@ var GempSwccgDeckBuildingUI = Class.extend({
         this.manageDecksDiv.append(validateDeckBut);
         
         // Charlie Code
-        // Swapped Icons, removed float-right property 9/14
         var addLightShieldsBut = $("<button title='Add Light Shields'><span class='ui-icon ui-icon-squaresmall-plus'></span></button>").button();
         // addLightShieldsBut.css({"float":"right"})
         this.manageDecksDiv.append(addLightShieldsBut);
@@ -790,7 +789,6 @@ var GempSwccgDeckBuildingUI = Class.extend({
     addCardToContainer:function (blueprintId, testingText, backSideTestingText, zone, container, tokens) {
         var card = new Card(blueprintId, testingText, backSideTestingText, zone, "deck", "player");
         var cardDiv = createCardDiv(card.imageUrl, card.testingText, null, card.isFoil(), tokens, card.isPack(), card.incomplete);
-        console.log(card.imageUrl, card.destiny)
         cardDiv.data("card", card);
         container.append(cardDiv);
         return cardDiv;
