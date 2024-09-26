@@ -538,7 +538,6 @@ var GempSwccgCommunication = Class.extend({
     },
     // Charlie Code
     loadShields:function (shieldUrl, callback, errorMap) {
-        console.log(shieldUrl)
         $.ajax({
             type:"GET",
             url: shieldUrl,
