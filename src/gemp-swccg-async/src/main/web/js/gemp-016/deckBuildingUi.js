@@ -814,7 +814,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
     loadShields: function (side) {
         $(".cardOutsideDeck").remove();
         var that = this;
-        var shieldUrl = "https://gemp.starwarsccg.org/gemp-swccg-server/collection/default?participantId=null&filter=side%253A" + side + "+format%3Aall+cardType%3ADEFENSIVE_SHIELD+sort%3Aname%2Cset%2CcardType+product%3Acard&start=0&count=100&_=1726509590294";
+        var shieldUrl = "https://gemp.starwarsccg.org/gemp-swccg-server/collection/default?participantId=null&filter=side%3A" + side + "+format%3Aall+cardType%3ADEFENSIVE_SHIELD+sort%3Aname%2Cset%2CcardType+product%3Acard&start=0&count=100&_=1726509590294";
         this.comm.loadShields(shieldUrl, function (xml) {
               var $xml = $(xml);
               var blueprintIds = $xml.find('card').map(function() {
@@ -823,7 +823,11 @@ var GempSwccgDeckBuildingUI = Class.extend({
               for (let blueprintId of blueprintIds) {
                   var cardDiv = that.addCardToContainer(blueprintId, null, null, "outsideDeck", that.outsideDeckDiv, false);
                   cardDiv.addClass("cardOutsideDeck");
-              }
+              };
+              if (side === "LIGHT") {
+                var addMythrol = that.addCardToContainer("200_16", null, null, "outsideDeck", that.outsideDeckDiv, false);
+                addMythrol.addClass("cardOutsideDeck");
+              };
               that.outsideDeckGroup.layoutCards();
               that.deckDirty = true;
               that.deckModified(true);
