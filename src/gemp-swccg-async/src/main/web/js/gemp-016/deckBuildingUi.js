@@ -814,7 +814,7 @@ var GempSwccgDeckBuildingUI = Class.extend({
     loadShields: function (side) {
         $(".cardOutsideDeck").remove();
         var that = this;
-        var shieldUrl = "http://localhost:17001/gemp-swccg-server/collection/default?participantId=null&filter=side%3A" + side + "+format%3Aall+cardType%3ADEFENSIVE_SHIELD+sort%3Aname%2Cset%2CcardType+product%3Acard&start=0&count=100&_=1726509590294";
+        var shieldUrl = "https://gemp.starwarsccg.org/gemp-swccg-server/collection/default?participantId=null&filter=side%253A" + side + "+format%3Aall+cardType%3ADEFENSIVE_SHIELD+sort%3Aname%2Cset%2CcardType+product%3Acard&start=0&count=100&_=1726509590294";
         this.comm.loadShields(shieldUrl, function (xml) {
               var $xml = $(xml);
               var blueprintIds = $xml.find('card').map(function() {
