@@ -3,7 +3,8 @@ var CardFilter = Class.extend({
     addCardFunc:null,
     finishCollectionFunc:null,
     getCollectionFunc:null,
-
+    //charlie code
+    addShields:null,
     collectionType:null,
 
     filter:null,
@@ -846,6 +847,11 @@ var CardFilter = Class.extend({
         this.previousPageBut.button("option", "disabled", true);
         this.nextPageBut.button("option", "disabled", true);
         this.countSlider.button("option", "disabled", true);
+    },
+    //charlie code
+    addShields:function(side) {
+        var testText = `side:${side} format:all cardType:DEFENSIVE_SHIELD sort:name,set,cardType product:card`;
+        return textText.trim()
     },
 
     calculateDeckFilter:function () {

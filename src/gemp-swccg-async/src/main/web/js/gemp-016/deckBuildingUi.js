@@ -104,12 +104,10 @@ var GempSwccgDeckBuildingUI = Class.extend({
         
         // Charlie Code
         var addLightShieldsBut = $("<button title='Add Light Shields'><span class='ui-icon ui-icon-squaresmall-plus'></span></button>").button();
-        // addLightShieldsBut.css({"float":"right"})
         this.manageDecksDiv.append(addLightShieldsBut);
 
         // Charlie Code
         var addDarkShieldsBut = $("<button title='Add Dark Shields'><span class='ui-icon ui-icon-circlesmall-plus'></span></button>").button();
-        // addDarkShieldsBut.css({"float":"right"})
         this.manageDecksDiv.append(addDarkShieldsBut);
 
         // Hidden file-input field for browsing for decks on the user's computer
@@ -209,14 +207,14 @@ var GempSwccgDeckBuildingUI = Class.extend({
         // Charlie Code
         addLightShieldsBut.click(
             function () {
-                that.loadLightSideShields();
+                that.loadShields("LIGHT");
             });
 
 
         // Charlie Code
         addDarkShieldsBut.click(
             function () {
-                that.loadDarkSideShields();
+                that.loadShields("DARK");
             });
         
 
@@ -813,49 +811,29 @@ var GempSwccgDeckBuildingUI = Class.extend({
     },
 
     // Charlie Code
-    loadDarkSideShields:function () {
+    loadShields: function (side) {
         $(".cardOutsideDeck").remove();
         var that = this;
-        var darkSideShields = [
-            "13_51","223_7","13_52","13_54",
-            "13_61","13_63","216_5","13_66",
-            "220_2","213_13","13_68","200_95",
-            "13_72","13_78","13_81","13_84",
-            "13_86","13_90","200_99","13_96",
-            "223_26","13_95","13_98","13_99",
-            "200_100","13_100","223_29"
-        ];
-        for (let blueprintId of darkSideShields) {
-            var cardDiv = this.addCardToContainer(blueprintId, null, null, "outsideDeck", that.outsideDeckDiv, false);
-            cardDiv.addClass("cardOutsideDeck");
-        }
-        that.outsideDeckGroup.layoutCards()
-        that.deckDirty = true;
-        that.deckModified(true);
+        var shieldUrl = "http://localhost:17001/gemp-swccg-server/collection/default?participantId=null&filter=side%3A" + side + "+format%3Aall+cardType%3ADEFENSIVE_SHIELD+sort%3Aname%2Cset%2CcardType+product%3Acard&start=0&count=100&_=1726509590294";
+        this.comm.loadShields(shieldUrl, function (xml) {
+              var $xml = $(xml);
+              var blueprintIds = $xml.find('card').map(function() {
+                  return $(this).attr('blueprintId');
+              }).get();
+              for (let blueprintId of blueprintIds) {
+                  var cardDiv = that.addCardToContainer(blueprintId, null, null, "outsideDeck", that.outsideDeckDiv, false);
+                  cardDiv.addClass("cardOutsideDeck");
+              }
+              that.outsideDeckGroup.layoutCards();
+              that.deckDirty = true;
+              that.deckModified(true);
+          }, {
+                "400":function ()
+                {
+                    alert("Could not locate shields");
+                }
+          });
     },
-
-    // Charlie Code
-    loadLightSideShields:function () {
-        $(".cardOutsideDeck").remove();
-        var that = this;
-        var lightSideShields = [
-            "13_1","223_30","13_3","13_4",
-            "13_6","13_8","13_15","13_16",
-            "200_26","13_22","13_30","13_35",
-            "221_68","13_37","13_38","203_13",
-            "200_28","200_29","209_15","220_10",
-            "13_44","13_47","223_49","13_49",
-            "200_32","13_50","301_5", "200_16"
-        ];
-        for (let blueprintId of lightSideShields) {
-            var cardDiv = this.addCardToContainer(blueprintId, null, null, "outsideDeck", that.outsideDeckDiv, false);
-            cardDiv.addClass("cardOutsideDeck");
-        }
-        that.outsideDeckGroup.layoutCards()
-        that.deckDirty = true;
-        that.deckModified(true);
-    },
-
     deckModified:function (value) {
         var name = (this.deckName == null) ? "New deck" : this.deckName;
         if (this.sampleDeck) {
