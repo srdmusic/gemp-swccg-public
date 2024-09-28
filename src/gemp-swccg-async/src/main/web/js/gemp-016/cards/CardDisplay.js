@@ -104,18 +104,31 @@ class CardDisplay {
 
 	reloadFromCard(card, maxWidth, maxHeight, noborder) {
 		this.currentBP = card.blueprintId;
-		this.frontside = Card.getImageUrl(this.currentBP);
-
-		let back = Card.getBackSideBlueprintId(this.currentBP);
-		//We don't care about the LS/DS card back
-		if(back && !back.startsWith("-")) {
+		this.frontside = card.imageUrl;
+		if(!this.frontside) {
+			this.frontside = Card.getImageUrl(this.currentBP);
+		}
+		
+		let back = card.backSideImageUrl;
+		if(back && !back.includes("darkcardback") && !back.includes("lightcardback")) {
 			this.reversible = true;
-			this.backside = Card.getImageUrl(back);
+			this.backside = back;
 		}
 		else {
-			this.reversible = false;
-			this.backside = null;
+			//Attempt to look it up instead by card ID
+			back = Card.getBackSideBlueprintId(this.currentBP);
+			//We don't care about the LS/DS card back
+			if(back && !back.startsWith("-")) {
+				this.reversible = true;
+				this.backside = Card.getImageUrl(back);
+			}
+			else {
+				this.reversible = false;
+				this.backside = null;
+			}
 		}
+		
+		
 
 		this.reload(maxWidth, maxHeight, card.imageUrl, 
 			card.horizontal || card.effectivelyHorizontal(), card.foil, noborder, card.testingText);
@@ -198,6 +211,8 @@ class CardDisplay {
 	}
 
 	setInvert(invert) {
+		this.inverted = invert;
+		
 		if(this.reversible) {
 			if(!invert) {
 				this.cardImage.src = this.frontside;
@@ -207,6 +222,13 @@ class CardDisplay {
 			}
 		}
 		else {
+			//If a card is already "naturally" inverted, such as a location
+			// that is owned by your opponent, then we treat the incoming
+			// shift button instruction as if it's the opposite of what it is.
+			if(this.baseDiv.style && this.baseDiv.style.transform.includes("180") && invert) {
+				invert = !invert;
+			}
+			
 			if(!invert) {
 				this.cardImage.style.transform = "rotate(0deg)";
 			}
@@ -214,7 +236,6 @@ class CardDisplay {
 				this.cardImage.style.transform = "rotate(180deg)";
 			}
 		}
-		this.inverted = invert;
 	}
 
 	invert() {

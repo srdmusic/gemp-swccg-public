@@ -199,13 +199,14 @@ class AutoZoom {
 	}
 
 	invertPreviewImage(shiftHeld) {
-		const baseRotated = this.baseImageDiv.style.transform.includes("180");
+		const invertShift = !this.cardDisplay.reversible  
+			&& this.baseImageDiv.style.transform.includes("180");
 		//If the base image is already rotated (such as a location facing 
 		// the player), then we act as if Shift is held, even if it's not.  
 		// However if shift IS held AND it's rotated, we act like it's not.  
 		// This is basically XOR; when they are the same they cancel out,
 		// but when they are different they cause a rotation.
-		this.cardDisplay.setInvert((shiftHeld != baseRotated));
+		this.cardDisplay.setInvert(shiftHeld != invertShift);
 	}
 	
 	setPreviewMessage(reversible) {
@@ -269,13 +270,11 @@ class AutoZoom {
 
 		this.baseImageDiv = target[0];
 		this.displayPreviewImage(card, this.baseImageDiv);
-		this.invertPreviewImage(event.shiftKey);
+		this.invertPreviewImage(shift);
 		this.setPreviewMessage(this.cardDisplay.reversible);
 
 		this.abortHoverTimer();
 		this.hoverValid = true;
-
-		event.stopPropagation();
 	}
 	
 	handleMouseOver(event, isDragging, infoDialogOpen) {
@@ -319,6 +318,7 @@ class AutoZoom {
 				}
 				else if(tarIsHint) {
 					that.triggerHintHover(target, event.shiftKey);
+					event.stopPropagation();
 				}
 			});
 		}
