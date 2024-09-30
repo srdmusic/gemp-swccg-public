@@ -304,7 +304,6 @@ var TableCardGroup = CardGroup.extend({
         this.heightPadding = 1;
         this.widthPadding = 5;
         this.columnWidthToAttachedHeightAboveRatio = 0.17;
-        this.cardScale = 350 / 490;
     },
 
    /**
@@ -390,7 +389,7 @@ var TableCardGroup = CardGroup.extend({
     */
     getWidthForLayoutInColumns:function (cardsToLayout, columnCount) {
         var columnWidth = Math.min(this.maxCardWidth, (this.width - (this.widthPadding * columnCount)) / columnCount);
-        var maxVerticalCardWidth = Math.min(this.maxCardWidth, columnWidth * this.cardScale);
+        var maxVerticalCardWidth = Math.min(this.maxCardWidth, columnWidth * Card.CardScale);
         var numColumnsRemainingToLayout = columnCount;
         var numCardsRemainingToLayout = cardsToLayout.length;
         var largestTotalCardHeight = 0;
@@ -437,7 +436,7 @@ var TableCardGroup = CardGroup.extend({
     * @param {Number} the x-offset for the column
     */
     layoutInColumn:function (cardsToLayout, columnWidth, xOffset) {
-        var maxVerticalCardWidth = Math.min(this.maxCardWidth, columnWidth * this.cardScale);
+        var maxVerticalCardWidth = Math.min(this.maxCardWidth, columnWidth * Card.CardScale);
         var totalCardHeight = this.heightPadding;
         var overlappedHeight = 0;
 
@@ -575,6 +574,20 @@ function layoutCardElem(cardElem, x, y, width, height, index) {
         && cardElem.css("width") == (width + "px") && cardElem.css("height") == (height + "px")
         && cardElem.css("zIndex") == index)
         return;
+    
+    var img = $(cardElem).find("img")[0];
+    if(cardData.effectivelyHorizontal()) {
+        img.style.transform = "rotate(90deg) translateX(7px) translateY(6px)"; 
+        img.style.height = "" + width + "px";
+        img.style.width = "" + height + "px";
+        img.style.marginBottom = "15px";
+    }
+    else {
+        img.style.transform = "rotate(0deg) translate(0px, 0px)";
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.marginBottom = "0px";
+    }
 
     cardElem.css({position:"absolute", left:x + "px", top:y + "px", width:width, height:height, zIndex:index });
 
