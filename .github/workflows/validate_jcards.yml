@@ -1,0 +1,17 @@
+name: Validate jCards.js
+
+on:
+    pull_request:
+        branches: [master, main]
+
+jobs:
+    validate-jcards:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: ./
+        steps:
+            - name: Check out repo
+              uses: actions/checkout@master
+            - name: Validate jCards.js
+              run: ./src/scripts/validate_jcards.sh
