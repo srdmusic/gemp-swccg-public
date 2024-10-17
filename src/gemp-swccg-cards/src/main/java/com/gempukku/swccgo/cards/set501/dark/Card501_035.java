@@ -21,6 +21,7 @@ public class Card501_035 extends AbstractNormalEffect {
         setLore("Panels control blast doors and key security lock-downs during alerts. Luke destroyed one, locking Imperial forces out of Hangar Bay 327.");
         setGameText("Deploy on table. Cancels Narrow Escape, Blast The Door, Kid!, and Rebel Barrier. Players may not search their Used Piles more than once each turn. Opponent must lose 1 Force in order to cancel a battle (or move a card with ability away from battle).");
         addIcons(Icon.VIRTUAL_SET_24);
+        setVirtualSuffix(true);
         setTestingText("Blast Door Controls (V)");
         hideFromDeckBuilder();
     }
