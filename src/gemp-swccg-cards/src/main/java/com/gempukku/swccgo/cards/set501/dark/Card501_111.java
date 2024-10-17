@@ -40,7 +40,7 @@ public class Card501_111 extends AbstractObjective {
                 "For remainder of game, you may not deploy non-[Episode VII] Dark Jedi, Imperials, Imperial starships, or Imperial vehicles.\n" +
                 "While this side up, once per turn may deploy an [Episode VII] battleground system (or Crait location) from Reserve Deck; reshuffle. Opponent loses no more than 1 Force to Force drains at your locations.\n" +
                 "Flip if Tracked Fleet is 'blown away.'");
-        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText("The First Order Reigns");
     }
 

@@ -63,12 +63,12 @@ public class Card501_095 extends AbstractEpicEventDeployable {
     public Card501_095() {
         super(Side.LIGHT, PlayCardZoneOption.ATTACHED, Title.Deactivate_The_Shield_Generator, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
-        setGameText("Deploy on Bunker if your [V23] objective on table. " +
+        setGameText("Deploy on Bunker if your [V25] objective on table. " +
                 "Once during your control phase, if you control Bunker (or have at least 5 more power than opponent there), may attempt to 'blow away' Bunker:" +
                 "Charges! Come On, Come On!: Draw destiny. Add 3 to total for each Explosive Charge on Bunker." +
                 "Move! Move! Move!: If total destiny > 8, your characters here may relocate to Back Door for free. " +
                 "Bunker is 'blown away,' opponent loses 4 Force (may not be reduced).");
-        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_25);
         setTestingText("Deactivate The Shield Generator (V)");
     }
 
@@ -79,7 +79,7 @@ public class Card501_095 extends AbstractEpicEventDeployable {
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.and(Filters.your(playerId), Filters.icon(Icon.VIRTUAL_SET_24), Filters.Objective));
+        return Filters.canSpot(game, self, Filters.and(Filters.your(playerId), Filters.icon(Icon.VIRTUAL_SET_25), Filters.Objective));
     }
 
     @Override

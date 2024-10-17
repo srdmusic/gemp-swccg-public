@@ -50,7 +50,7 @@ public class Card501_106 extends AbstractEpicEventDeployable {
         setGameText("Deploy on D'Qar (only at start of game). You may not deploy starships here. Your movement to here is free and opponent's movement from here is free. " +
                 "Once during opponent's move phase, if less than three cards here, opponent may stack a card from hand here to move Tracked Fleet (for free) as if a capital " +
                 "starship (hyperspeed = 3).  If you control this system at the start of your turn, Tracked Fleet 'blown away' (place this card out of play).");
-        addIcons(Icon.VIRTUAL_SET_24, Icon.EPISODE_VII);
+        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText(Title.Tracked_Fleet);
     }
 

@@ -42,7 +42,7 @@ public class Card501_022 extends AbstractRepublic {
         setGameText("While with a battle droid, opponent may not draw more than one battle destiny here. Once per game, may deploy Dooku here from Reserve Deck; reshuffle. While on Geonosis and The Galaxy Torn Apart on table, you initiate battles for free.");
         addKeywords(Keyword.LEADER);
         setSpecies(Species.GEONOSIAN);
-        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.PILOT, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.EPISODE_I, Icon.SEPARATIST, Icon.PILOT, Icon.VIRTUAL_SET_25);
         setTestingText("Poggle The Lesser");
     }
 

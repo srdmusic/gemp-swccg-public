@@ -42,7 +42,7 @@ public class Card501_111_BACK extends AbstractObjective {
                     "your First Order Leader controls with another First Order character and once per turn, may peek at the top X cards " +
                     "of your Reserve Deck and take one into hand, where X = number of locations both players occupy; shuffle Reserve Deck. Kylo is power +2 on Crait. " +
                     "Place out of play if Kylo lost a battle involving Luke.");
-        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText(Title.The_Resistance_Is_Doomed);
     }
 

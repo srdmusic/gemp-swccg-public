@@ -40,7 +40,7 @@ public class Card501_042 extends AbstractDroid {
         addComboCardTitles("BT-1", "Triple Zero");
         setLore("Assassin and information broker.");
         setGameText("Armor = 5. If with Aphra, may add one destiny to attrition. If opponent’s character of ability < 4 here is about to leave table, may use 1 Force; opponent loses 1 Force.");
-        addIcons(Icon.PRESENCE, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.PRESENCE, Icon.VIRTUAL_SET_25);
         addIcon(Icon.WARRIOR, 2);
         addModelTypes(ModelType.ASTROMECH, ModelType.PROTOCOL);
         addKeywords(Keyword.ASSASSIN, Keyword.INFORMATION_BROKER);

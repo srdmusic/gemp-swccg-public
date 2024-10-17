@@ -3699,6 +3699,8 @@ const fixedImages = {
 "501_32": "https://res.starwarsccg.org/cards/TheedPalace-Dark/large/3b321.gif",
 "501_33": "https://res.starwarsccg.org/cards/Virtual4-Dark/hires/kylorenscommandshuttle.png",
 "501_34": "https://res.starwarsccg.org/cards/CloudCity-Dark/large/bounty.gif",
+"501_35": "https://res.starwarsccg.org/cards/Premiere-Dark/large/blastdoorcontrols.gif",
+"501_36": "https://res.starwarsccg.org/cards/SpecialEdition-Dark/large/swamp.gif",
 "501_41":"https://res.starwarsccg.org/cards/Tatooine-Dark/large/iwillfindthemquicklymaster.gif",
 "501_42":"https://res.starwarsccg.org/cards/Coruscant-Dark/large/tc14.gif",
 "501_43":"https://res.starwarsccg.org/cards/TheedPalace-Dark/large/darthsidious.gif",
@@ -3749,6 +3751,9 @@ const fixedImages = {
 "501_169":"https://res.starwarsccg.org/cards/TheedPalace-Light/large/electropole.gif",
 "501_170":"https://res.starwarsccg.org/cards/JabbasPalace-Light/large/pucumirthryss.gif",
 "501_171":"https://res.starwarsccg.org/cards/SpecialEdition-Light/large/cloudcitynorthcorridor.gif",
+"501_172": "https://res.starwarsccg.org/cards/Premiere-Light/large/hansolo.gif",
+"501_173": "https://res.starwarsccg.org/cards/Premiere-Light/large/tatooinedunesea.gif",
+"501_174": "https://res.starwarsccg.org/cards/Premiere-Light/large/corelliancorvette.gif",
 "501_192":"https://res.starwarsccg.org/cards/Coruscant-Light/large/depabillaba.gif",
 "501_196":"https://res.starwarsccg.org/cards/Tatooine-Light/large/neckandneck.gif",
 

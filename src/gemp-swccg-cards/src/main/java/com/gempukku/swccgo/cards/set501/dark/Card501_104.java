@@ -43,7 +43,7 @@ public class Card501_104 extends AbstractFirstOrder {
         setLore("Leader.");
         setGameText("Adds 2 to power of anything he pilots. Snoke is forfeit -6. Once per turn, if an [E7] Objective on table, may take an [E7] character or starship drawn for destiny into hand. While with two First Order characters, adds one battle destiny. Immune to attrition < 5.");
         addPersona(Persona.KYLO);
-        addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.LEADER);
         setTestingText("Supreme Leader Kylo Ren");
     }
