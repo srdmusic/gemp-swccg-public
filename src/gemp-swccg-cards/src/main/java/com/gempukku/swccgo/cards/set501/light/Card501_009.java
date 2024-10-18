@@ -34,7 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 23
+ * Set: Playtesting
  * Type: Effect
  * Title: Weapons Are Part Of My Religion
  */
