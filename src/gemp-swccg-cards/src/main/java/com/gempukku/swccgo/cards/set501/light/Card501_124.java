@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Set: Set 23
+ * Set: Playtesting
  * Type: Character
  * Subtype: Alien
  * Title: Jaxxon T. Tumperakki
@@ -49,7 +49,7 @@ public class Card501_124 extends AbstractAlien {
                 "While at opponent's battleground, Imperial Enforcement is suspended.");
         addKeywords(Keyword.GAMBLER, Keyword.SMUGGLER, Keyword.THIEF, Keyword.MERCENARY);
         setSpecies(Species.LEPI);
-        addIcons(Icon.PILOT, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.PILOT, Icon.VIRTUAL_SET_24);
         addIcon(Icon.WARRIOR, 2);
         addPersona(Persona.JAXXON);
         setTestingText("Jaxxon T. Tumperakki");
