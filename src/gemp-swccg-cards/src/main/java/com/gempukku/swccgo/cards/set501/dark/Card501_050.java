@@ -33,7 +33,7 @@ public class Card501_050 extends AbstractSystem {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.PLANET, Icon.VIRTUAL_SET_19);
-        setTestingText("Lothal (LS) (ERRATA)");
+        setTestingText("Lothal (DS) (ERRATA)");
         hideFromDeckBuilder();
     }
 
