@@ -22,7 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Set 23
+ * Set: Playtesting
  * Type: Location
  * Subtype: Site
  * Title: Razor Crest: Cold Storage

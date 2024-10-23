@@ -49,7 +49,7 @@ public class Card501_094 extends AbstractObjective {
                 "While this side up, once per turn may deploy one Explosive Charge or [Endor] Epic Event to Bunker; reshuffle. " +
                 "You may not Force drain on Endor unless your Ewok or [En] Han present." +
                 "Flip this card if bunker 'blown away.'");
-        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_25);
         setTestingText("Rebel Strike Team (V)");
     }
 

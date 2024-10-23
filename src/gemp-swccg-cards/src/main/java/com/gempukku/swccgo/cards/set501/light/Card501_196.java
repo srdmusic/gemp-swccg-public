@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Set 24
+ * Set: Playtesting
  * Type: Interrupt
  * Subtype: Used
  * Title: Neck And Neck (V)

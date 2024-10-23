@@ -46,7 +46,7 @@ public class Card501_034 extends AbstractImmediateEffect {
     public Card501_034() {
         super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, "The Client's Bounty", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Unless a [Death Star II] objective on table, deploy on a just captured character. During your control phase, if with your leader (or The Client) at a site you control, may take this card into hand; captive is lost and you retrieve 3 Force. (Immune to Control while Greef or The Client on table.)");
-        addIcons(Icon.VIRTUAL_SET_24);
+        addIcons(Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.BOUNTY);
         setTestingText("The Client's Bounty");
     }

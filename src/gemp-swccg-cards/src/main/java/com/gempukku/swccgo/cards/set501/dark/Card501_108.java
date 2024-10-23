@@ -30,7 +30,7 @@ public class Card501_108 extends AbstractSite {
         setLocationDarkSideGameText("Your combat vehicles are defense value +1 here.");
         setLocationLightSideGameText("Gains [Light icon] while The Resistance Is Doomed on table.");
         addIcon(Icon.DARK_FORCE, 2);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText(Title.Crait_Salt_Plateau);
     }
 

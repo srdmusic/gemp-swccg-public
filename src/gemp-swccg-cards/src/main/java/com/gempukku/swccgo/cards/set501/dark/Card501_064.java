@@ -1,12 +1,17 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
+import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.cards.conditions.ArmedWithCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.conditions.PresentAtCondition;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -14,112 +19,76 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.PlaceCardFromVoidOutOfPlayEffect;
-import com.gempukku.swccgo.logic.effects.RecirculateEffect;
-import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotReactFromLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotReactToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+
 /**
  * Set: Playtesting
- * Type: Interrupt
- * Subtype: Used Or Lost
- * Title: The Empire's Back (V)
+ * Type: Character
+ * Subtype: Alien
+ * Title: Dryden Vos
  */
-public class Card501_064 extends AbstractUsedOrLostInterrupt {
+public class Card501_064 extends AbstractAlien {
     public Card501_064() {
-        super(Side.DARK, 3, "The Empire's Back", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("No star system will dare oppose the Emperor now.");
-        setGameText("USED: Deploy Empire's New Order or Overseeing It Personally from Reserve Deck; reshuffle. LOST: Once per game, choose: if two Imperial leaders (or Xizor) in battle, recirculate. OR Place opponent's just-played Interrupt out of play.");
-        addIcons(Icon.VIRTUAL_SET_23);
-        setVirtualSuffix(true);
-        setTestingText("The Empire's Back (V)");
+        super(Side.DARK, 1, 6, 4, 3, 6, "Dryden Vos", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Crimson Dawn leader. Gangster.");
+        setGameText("Deploys -2 if Maul on table. When deployed, may deploy a weapon on Vos from Reserve Deck; reshuffle. While armed and present at a site, opponent may not 'react' to or from here. Immune to attrition < 5 (< 3 if with Qi'ra).");
+        addIcons(Icon.WARRIOR, Icon.PILOT, Icon.VIRTUAL_SET_13);
+        addKeywords(Keyword.CRIMSON_DAWN, Keyword.LEADER, Keyword.GANGSTER);
+        setArmor(5);
+        addPersona(Persona.VOS);
+        setTestingText("Dryden Vos (ERRATA)");
+        hideFromDeckBuilder();
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new DeployCostModifier(self, new OnTableCondition(self, Filters.or(Filters.Maul)), -2));
+        return modifiers;
+    }
 
-        GameTextActionId gameTextActionId = GameTextActionId.THE_EMPIRES_BACK_V__DOWNLOAD_EFFECTS;
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, new ConditionEvaluator(5, 3, new WithCondition(self, Filters.persona(Persona.QIRA)))));
+        modifiers.add(new MayNotReactToLocationModifier(self, Filters.sameSite(self), new AndCondition(new ArmedWithCondition(self, Filters.any), new PresentAtCondition(self, Filters.site)), game.getOpponent(self.getOwner())));
+        modifiers.add(new MayNotReactFromLocationModifier(self, Filters.sameSite(self), new AndCondition(new ArmedWithCondition(self, Filters.any), new PresentAtCondition(self, Filters.site)), game.getOpponent(self.getOwner())));
+        return modifiers;
+    }
+
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.DRYDEN__DOWNLOAD_WEAPON;
 
         // Check condition(s)
-        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
+        if (TriggerConditions.justDeployed(game, effectResult, self)
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, true, false)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
-            action.setText("Deploy a card from Reserve Deck");
-            action.setActionMsg("Deploy Empire's New Order or Overseeing It Personally from Reserve Deck");
-            // Allow response(s)
-            action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Empires_New_Order, Filters.Overseeing_It_Personally), true));
-                        }
-                    }
-            );
-            actions.add(action);
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy weapon from Reserve Deck");
+            action.setActionMsg("Deploy a weapon on Vos from Reserve Deck");
+
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.weapon, Filters.sameCardId(self), true));
+            return Collections.singletonList(action);
         }
-
-        GameTextActionId gameTextActionId2 = GameTextActionId.THE_EMPIRES_BACK_V__OUT_OF_PLAY_OR_RECIRCULATE;
-
-        // Check Condition(s)
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId2) 
-                && (GameConditions.isDuringBattle(game)
-                && (GameConditions.canTarget(game, self, Filters.and(Filters.Xizor, Filters.participatingInBattle)) 
-                    || GameConditions.canTarget(game, self, 2, Filters.and(Filters.Imperial_leader, Filters.participatingInBattle))))) {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId2, CardSubtype.LOST);
-            action.setText("Re-circulate");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            // Allow response(s)
-            action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new RecirculateEffect(action, playerId));                                            
-                        }
-                    }
-            );
-            actions.add(action);
-        }
-        return actions;
+        return null;
     }
 
-    @Override
-    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, Effect effect, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.THE_EMPIRES_BACK_V__OUT_OF_PLAY_OR_RECIRCULATE;
-        final PhysicalCard cardBeingPlayed = ((RespondablePlayCardEffect) effect).getCard();
-        String opponent = game.getOpponent(playerId);
-
-        if (TriggerConditions.isPlayingCard(game, effect, opponent, Filters.Interrupt)
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.interruptCanBePlacedOutOfPlay(game, cardBeingPlayed)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
-            action.setText("Place Interrupt out of play");
-            action.allowResponses("Place a just-played interrupt out of play",
-                new RespondablePlayCardEffect(action) {
-                    @Override
-                    protected void performActionResults(Action targetingAction) {
-                        // Perform result(s)
-                        action.appendEffect(
-                            new PlaceCardFromVoidOutOfPlayEffect(action, cardBeingPlayed));
-                    }
-                }
-            );
-        }
-        return actions;
-    }
 }

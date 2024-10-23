@@ -34,7 +34,7 @@ public class Card501_031 extends AbstractNormalEffect {
     public Card501_031() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Battle Droid Reinforcements", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("If Geonosis on table, use 2 Force to deploy on table. When deployed, stack two B-1 Clankers face up here from outside your deck. B-1 Clankers may deploy from here as if from hand (for -2 Force). [Immune to Alter.]");
-        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Battle Droid Reinforcements");
     }

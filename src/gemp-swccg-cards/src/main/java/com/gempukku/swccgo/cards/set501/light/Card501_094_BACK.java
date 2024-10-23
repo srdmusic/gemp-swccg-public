@@ -50,7 +50,7 @@ public class Card501_094_BACK extends AbstractObjective {
                 "opponent loses 1 Force for each Endor site you occupy with [Endor] Chewie, [Endor] Han, or [Endor] Leia and, " +
                 "once during each of your draw phases, may retrieve an [Endor] Rebel" +
                 "Flip this card if opponent controls Bunker.");
-        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_25);
         setTestingText("Garrison Destroyed (V)");
     }
 

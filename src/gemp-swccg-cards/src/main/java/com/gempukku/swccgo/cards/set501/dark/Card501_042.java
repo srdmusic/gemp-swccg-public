@@ -32,7 +32,7 @@ import java.util.List;
  * Set: Playtesting
  * Type: Character
  * Subtype: Droid
- * Title: Triple Zero & BT-1
+ * Title: BT-1 & Triple Zero
  */
 public class Card501_042 extends AbstractDroid {
     public Card501_042() {

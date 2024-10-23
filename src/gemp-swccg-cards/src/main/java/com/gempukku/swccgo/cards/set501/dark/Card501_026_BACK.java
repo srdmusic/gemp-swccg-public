@@ -34,7 +34,7 @@ public class Card501_026_BACK extends AbstractSystem {
         setLocationLightSideGameText("If you just initiated a Force drain (or won a battle) at a Christophsis site, 'conquer' (flip) Christophsis.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.SEPARATIST, Icon.EPISODE_I, Icon.PLANET, Icon.VIRTUAL_SET_25);
         setTestingText("Christophsis (Separatist controlled)");
     }
 

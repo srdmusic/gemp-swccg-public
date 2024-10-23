@@ -46,7 +46,7 @@ public class Card501_062 extends AbstractImperial {
                 "OR Deploy a lightsaber on this character from Lost Pile. " +
                 "Immune to attrition < 4 while Vader not here.");
         addKeywords(Keyword.INQUISITOR, Keyword.FEMALE);
-        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_23);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
         setTestingText("Second Sister");
     }
 
