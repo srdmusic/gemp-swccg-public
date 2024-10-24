@@ -41,13 +41,12 @@ import java.util.List;
  */
 public class Card501_188 extends AbstractJediMaster {
     public Card501_188() {
-        super(Side.LIGHT, 1, 6, 6, 7, 8, "Qui-Gon Jinn, Serene Jedi", Uniqueness.UNIQUE, ExpansionSet.SET_13, Rarity.V);
+        super(Side.LIGHT, 1, 7, 6, 7, 8, "Qui-Gon Jinn, Serene Jedi", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("Once per game, may deploy Meditation on Qui-Gon from Lost Pile. During battle, while alone, opponent may not cancel your destiny draws and your total battle destiny is +1 for each weapon destiny that was drawn while alone. Immune to attrition.");
         addPersona(Persona.QUIGON);
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.WARRIOR, Icon.VIRTUAL_SET_13);
         setTestingText("Qui-Gon Jinn, Serene Jedi (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
