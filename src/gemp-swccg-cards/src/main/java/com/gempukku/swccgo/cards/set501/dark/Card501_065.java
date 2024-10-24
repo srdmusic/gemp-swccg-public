@@ -34,12 +34,12 @@ public class Card501_065 extends AbstractAlien {
         super(Side.DARK, 1, 4, 2, 4, 4, "Djas Puhr", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Male Sakiyan, a race often employed as assassins. Bounty hunter. Incredible infrared peripheral vision. Has excellent aural and olfactory senses. Often tracks by scent.");
-        setGameText("Power, defense value, and forfeit +1 for each [Dark Force] icon here. Your total ability may not be reduced at same site. Your Force drains here may not be canceled by [Reflections III] Leia.");
+        setGameText("Assassin. Power, defense value, and forfeit +1 for each [Dark Force] icon here. Your total ability may not be reduced at same site. Your Force drains here may not be canceled by [Reflections III] Leia.");
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_1);
         addKeywords(Keyword.BOUNTY_HUNTER);
         setSpecies(Species.SAKIYAN);
+        addKeyword(Keyword.ASSASSIN);
         setTestingText("Djas Puhr (V) (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
