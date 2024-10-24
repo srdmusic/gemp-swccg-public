@@ -41,6 +41,7 @@ public class Card501_047 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 0);
         addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_19);
         setTestingText("Lothal: Imperial Complex (ERRATA)");
+        hideFromDeckBuilder();
     }
 
     @Override

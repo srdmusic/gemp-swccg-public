@@ -38,7 +38,6 @@ public class Card501_197 extends AbstractCapitalStarship {
         addKeywords(Keyword.PHOENIX_SQUADRON);
         addModelType(ModelType.HAMMERHEAD_CORVETTE);
         setTestingText("Lightmaker (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
