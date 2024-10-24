@@ -2,6 +2,8 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.conditions.UtinniEffectCompletedCondition;
 import com.gempukku.swccgo.cards.effects.CancelCardResultEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -16,11 +18,12 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.DestinyWhenDrawnForDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotHaveDeployCostIncreasedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -39,16 +42,18 @@ public class Card501_193 extends AbstractAlien {
     public Card501_193() {
         super(Side.LIGHT, 1, 3, 3, 4, 5, "BoShek, Gritty Smuggler", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Rogue pilot. Outlaw starship tech. Has secret lab in Mos Eisley. He bragged about beating Han Solo's Kessel Run record. Left fringe life behind after meeting Obi-Wan Kenobi.");
-        setGameText("[Pilot] 3. BoShek's deploy cost may not be increased. During battle, may use 1 Force to subtract 1 from opponent's just drawn destiny or cancel an attempt to cancel and redraw a destiny. Immune to attrition < 3.");
+        setGameText("Destiny +2 if Obi-Wan on table (or a Kessel Run completed). [Pilot] 3. During battle, may use 1 Force to subtract 1 from opponent's just drawn destiny or cancel an attempt to cancel and redraw a destiny. Immune to attrition < 3.");
         addIcons(Icon.PILOT, Icon.VIRTUAL_SET_10);
         setTestingText("BoShek, Gritty Smuggler");
-        hideFromDeckBuilder();
     }
 
     @Override
     protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+        OnTableCondition ObiWanOnTable = new OnTableCondition(self, Filters.ObiWan);
+        UtinniEffectCompletedCondition KesselRunCompleted = new UtinniEffectCompletedCondition(self.getOwner(), Filters.Kessel_Run);
+
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotHaveDeployCostIncreasedModifier(self));
+        modifiers.add(new DestinyWhenDrawnForDestinyModifier(self, new OrCondition(ObiWanOnTable, KesselRunCompleted), 2));
         return modifiers;
     }
 
