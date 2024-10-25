@@ -41,7 +41,6 @@ public class Card501_178_BACK extends AbstractObjective {
         setGameText("While this side up, your total battle destiny is +X, where X = number of battlegrounds occupied by Rebels of ability < 4. Once per turn, may [download] a Tatooine battleground site. Once per turn, if you just won a battle, may retrieve 1 Force. Flip this card if you do not occupy a battleground site and a battleground system (or you do not control any locations).");
         addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_3);
         setTestingText("A Weakness Can Be Found (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override

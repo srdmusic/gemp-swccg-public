@@ -17525,6 +17525,7 @@ public class Filters {
     public static final Filter ambition_agenda = Filters.agenda(Agenda.AMBITION);
     public static final Filter Ambush = Filters.title(Title.Ambush);
     public static final Filter Amidala = Filters.persona(Persona.AMIDALA);
+    public static final Filter An_Inkling_Of_Its_Destructive_Potential = Filters.title(Title.An_Inkling_Of_Its_Destructive_Potential);
     public static final Filter Anakin = Filters.persona(Persona.ANAKIN);
     public static final Filter Anakin_Skywalker = Filters.title(Title.Anakin_Skywalker);
     public static final Filter Anakins_Podracer = Filters.title(Title.Anakins_Podracer);
@@ -18341,6 +18342,7 @@ public class Filters {
     public static final Filter Juno = Filters.persona(Persona.JUNO);
     public static final Filter Juri_Juice = Filters.title(Title.Juri_Juice);
     public static final Filter justice_agenda = Filters.agenda(Agenda.JUSTICE);
+    public static final Filter Jyn = Filters.persona(Persona.JYN);
     public static final Filter K2SO = Filters.title(Title.K2SO);
     public static final Filter Kaadu = Filters.keyword(Keyword.KAADU);
     public static final Filter Kabe = Filters.title(Title.Kabe);
@@ -18927,6 +18929,7 @@ public class Filters {
     public static final Filter Starkiller_Base_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Starkiller_Base));
     public static final Filter starship = Filters.type(CardType.STARSHIP);
     public static final Filter starship_cannon = Filters.and(CardType.WEAPON, CardSubtype.STARSHIP, Filters.or(Keyword.CANNON, Keyword.ION_CANNON, Keyword.LASER_CANNON));
+    public static final Filter Strike_Planning = Filters.title(Title.Strike_Planning);
     public static final Filter Super_class_Star_Destroyer = Filters.modelType(ModelType.SUPER_CLASS_STAR_DESTROYER);
     public static final Filter Taking_Control_Of_The_Weapon = Filters.title(Title.Taking_Control_Of_The_Weapon);
 
