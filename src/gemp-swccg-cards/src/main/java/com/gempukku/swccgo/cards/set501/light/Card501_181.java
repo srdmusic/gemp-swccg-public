@@ -32,18 +32,18 @@ public class Card501_181 extends AbstractStarfighter {
     public Card501_181() {
         super(Side.LIGHT, 2, 5, 4, 4, null, 4, 6, "Madakor In Radiant VII", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Optimized for diplomatic missions with sensor-proof pods that have ejection capabilities. Easily identified by its red coloration.");
-        setGameText("May add 1 pilot. Permanent pilot is •Obi-Wan, who provides ability of 6. Opponent's starships may not 'cloak'. Your total ability here may not be reduced.");
+        setGameText("Permanent pilot is •Madakor, who provides ability of 2. May add 1 pilot and 2 passengers. Opponent's starships may not 'cloak'. Your total ability here may not be reduced.");
         addPersona(Persona.RADIANT_VII);
-        addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.REPUBLIC, Icon.PILOT, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_0);
+        addIcons(Icon.EPISODE_I, Icon.REPUBLIC, Icon.PILOT, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_0);
         addModelType(ModelType.CORELLIAN_REPUBLIC_CRUISER);
         setPilotCapacity(1);
+        setPassengerCapacity(2);
         setTestingText("Madakor In Radiant VII");
-        hideFromDeckBuilder();
     }
 
     @Override
     protected List<? extends AbstractPermanentAboard> getGameTextPermanentsAboard() {
-        return Collections.singletonList(new AbstractPermanentPilot(Persona.OBIWAN, 6) {});
+        return Collections.singletonList(new AbstractPermanentPilot(Persona.MADAKOR, 2) {});
     }
 
     @Override

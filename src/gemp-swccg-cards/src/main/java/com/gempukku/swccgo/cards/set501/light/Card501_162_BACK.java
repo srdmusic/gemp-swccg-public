@@ -45,7 +45,6 @@ public class Card501_162_BACK extends AbstractObjective {
                 "Flip this card if opponent controls more Lothal locations than you.");
         addIcons(Icon.VIRTUAL_SET_19);
         setTestingText("Liberation Of Lothal (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
