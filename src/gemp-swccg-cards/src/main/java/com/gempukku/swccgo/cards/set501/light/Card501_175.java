@@ -3,7 +3,7 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractCharacterDevice;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.UseDeviceEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -70,7 +70,7 @@ public class Card501_175 extends AbstractCharacterDevice {
             action.setActionMsg("Exchange a card in hand for an Interrupt in Lost Pile");
             // Update usage limit(s)
             action.appendUsage(
-                    new OncePerBattleEffect(action));
+                    new OncePerGameEffect(action));
             action.appendUsage(
                     new UseDeviceEffect(action, self));
             // Perform result(s)
