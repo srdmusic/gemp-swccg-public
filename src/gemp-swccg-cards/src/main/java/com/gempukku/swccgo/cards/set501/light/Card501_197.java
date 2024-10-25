@@ -15,9 +15,9 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
+import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.CancelImmunityToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -48,7 +48,7 @@ public class Card501_197 extends AbstractCapitalStarship {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new TotalBattleDestinyModifier(self, new InBattleCondition(self), new PresentEvaluator(self,
+        modifiers.add(new AttritionModifier(self, new InBattleCondition(self), new PresentEvaluator(self,
                 Filters.and(Filters.opponents(self), Filters.starship)), self.getOwner()));
         modifiers.add(new CancelImmunityToAttritionModifier(self, Filters.and(Filters.opponents(self), Filters.atSameLocation(self))));
         return modifiers;
