@@ -96,7 +96,7 @@ public enum Persona implements Filterable {
     LOTT("Lott"),
     LUKE("Luke"),
     MAAREK_STELE("Maarek Stele"),
-    MADAKOR("Captain Madakor"),
+    MADAKOR("Madakor"),
     MARA_JADE("Mara Jade"),
     MARA_SKYWALKER("Mara Skywalker"),
     MARGO("Margo"),
