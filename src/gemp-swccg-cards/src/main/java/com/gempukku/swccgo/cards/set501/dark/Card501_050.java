@@ -46,9 +46,9 @@ public class Card501_050 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, final SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.Rebel_starship, Filters.here(self)), 1));
-        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.Rebel_starship, Filters.here(self)), 1));
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.Rebel_starship, Title.Gravity_Shadow));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.and(Filters.Rebel_starship, Filters.piloted), Filters.here(self)), 1));
+        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.and(Filters.Rebel_starship, Filters.piloted), Filters.here(self)), 1));
+        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.Rebel_starship, Filters.here(self)), Title.Gravity_Shadow));
         return modifiers;
     }
 }
