@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractStarfighter;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.HasPilotingCondition;
-import com.gempukku.swccgo.cards.conditions.PilotingCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -76,12 +75,11 @@ public class Card501_176 extends AbstractStarfighter {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Condition hanPiloting = new HasPilotingCondition(self, Filters.Han);
         Condition chewiePiloting = new HasPilotingCondition(self, Filters.Chewie);
-        PhysicalCard ANH_Han = Filters.findFirstActive(game, self,Filters.and(Icon.A_NEW_HOPE, Filters.Han));
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, new OrCondition(hanPiloting, chewiePiloting), new ConditionEvaluator(5, 7, new AndCondition(hanPiloting, chewiePiloting))));
-        modifiers.add(new ForceDrainModifier(self, Filters.here(self), new PilotingCondition(ANH_Han, self), 1, playerId));
+        modifiers.add(new ForceDrainModifier(self, Filters.here(self), new HasPilotingCondition(self, Filters.and(Icon.A_NEW_HOPE, Filters.Han)), 1, playerId));
         return modifiers;
     }
 }
