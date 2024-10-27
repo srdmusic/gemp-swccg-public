@@ -8,6 +8,7 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
@@ -46,9 +47,10 @@ public class Card501_050 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, final SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new PowerModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.and(Filters.Rebel_starship, Filters.piloted), Filters.here(self)), 1));
-        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.and(Filters.Rebel_starship, Filters.piloted), Filters.here(self)), 1));
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.Rebel_starship, Filters.here(self)), Title.Gravity_Shadow));
+        Filter pilotedRebelStarshipsHere = Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.Rebel_starship, Filters.piloted, Filters.here(self));
+        modifiers.add(new PowerModifier(self, pilotedRebelStarshipsHere, 1));
+        modifiers.add(new ForfeitModifier(self, pilotedRebelStarshipsHere, 1));
+        modifiers.add(new ImmuneToTitleModifier(self, pilotedRebelStarshipsHere, Title.Gravity_Shadow));
         return modifiers;
     }
 }
