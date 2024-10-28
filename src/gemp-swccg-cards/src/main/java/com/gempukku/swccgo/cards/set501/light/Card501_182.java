@@ -17,6 +17,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -38,7 +39,6 @@ public class Card501_182 extends AbstractCapitalStarship {
         addIcons(Icon.RESISTANCE, Icon.NAV_COMPUTER, Icon.PILOT, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_13, Icon.EPISODE_VII);
         addModelType(ModelType.RESISTANCE_TRANSPORT);
         setTestingText("Leia's Resistance Transport (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -70,7 +70,23 @@ public class Card501_182 extends AbstractCapitalStarship {
             action.setActionMsg("Deploy a Resistance female aboard " + GameUtils.getCardLink(self) + " from Reserve Deck");
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.and(Filters.resistance, Filters.female), Filters.sameCardId(self), true, true));
+                new ChooseCardFromReserveDeckEffect(action, playerId, Filters.and(Filters.female, Filters.Resistance_character)) {
+                    @Override
+                    protected void cardSelected(SwccgGame game, final PhysicalCard femaleResistanceCharacter) {
+                        action.setText("Deploy " + GameUtils.getCardLink(femaleResistanceCharacter));
+                        action.setActionMsg("Deploy " + GameUtils.getCardLink(femaleResistanceCharacter));
+                        if (Filters.leader.accepts(game, femaleResistanceCharacter)) {
+                            action.appendEffect(
+                                new DeployCardToTargetFromReserveDeckEffect(action, Filters.sameCardId(femaleResistanceCharacter), Filters.sameCardId(self), -2, true));
+                        } else {
+                            action.appendEffect(
+                                new DeployCardToTargetFromReserveDeckEffect(action, Filters.sameCardId(femaleResistanceCharacter), Filters.sameCardId(self), false, true));
+
+                        }
+                    }
+
+                }
+            );
             return Collections.singletonList(action);
         }
         return null;
