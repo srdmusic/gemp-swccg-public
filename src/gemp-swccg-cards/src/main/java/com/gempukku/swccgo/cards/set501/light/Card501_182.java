@@ -77,10 +77,10 @@ public class Card501_182 extends AbstractCapitalStarship {
                         action.setActionMsg("Deploy " + GameUtils.getCardLink(femaleResistanceCharacter));
                         if (Filters.leader.accepts(game, femaleResistanceCharacter)) {
                             action.appendEffect(
-                                new DeployCardToTargetFromReserveDeckEffect(action, Filters.sameCardId(femaleResistanceCharacter), Filters.sameCardId(self), -2, true));
+                                new DeployCardToTargetFromReserveDeckEffect(action, femaleResistanceCharacter, Filters.sameCardId(self), false, -2, true));
                         } else {
                             action.appendEffect(
-                                new DeployCardToTargetFromReserveDeckEffect(action, Filters.sameCardId(femaleResistanceCharacter), Filters.sameCardId(self), false, true));
+                                new DeployCardToTargetFromReserveDeckEffect(action, femaleResistanceCharacter, Filters.sameCardId(self), false, 0, true));
 
                         }
                     }
