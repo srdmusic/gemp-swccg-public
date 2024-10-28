@@ -1,7 +1,11 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractRebel;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
@@ -11,6 +15,23 @@ import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.CancelDestinyAndCauseRedrawEffect;
+import com.gempukku.swccgo.logic.effects.RecirculateEffect;
+import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
+import com.gempukku.swccgo.logic.modifiers.ManeuverModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /*
  * Set: Playtesting
@@ -31,6 +52,57 @@ public class Card501_172 extends AbstractRebel {
         setMatchingStarshipFilter(Filters.Falcon);
         setVirtualSuffix(true);
         setTestingText("Han Solo (V)");
-        hideFromDeckBuilder();
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
+        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, 1));
+        modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.Chewie), 1));
+        modifiers.add(new ManeuverModifier(self, Filters.and(Filters.Falcon, Filters.hasPiloting(self)), 2));
+        return modifiers;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.HAN_SOLO__REDRAW_DESTINY_OR_RECIRCULATE;
+
+        // Check condition(s)
+        if (TriggerConditions.isDestinyJustDrawn(game, effectResult)
+                && GameConditions.isPiloting(game, self, Filters.Falcon)
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canCancelDestinyAndCauseRedraw(game, effectResult.getPerformingPlayerId())) {
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Cancel and re-draw destiny");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new CancelDestinyAndCauseRedrawEffect(action));
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.HAN_SOLO__REDRAW_DESTINY_OR_RECIRCULATE;
+        if (GameConditions.hasUsedPile(game, playerId)
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
+            
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+
+            action.setText("Re-circulate");
+            action.setActionMsg("Re-circulate");
+            action.appendUsage(
+                new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                new RecirculateEffect(action, playerId));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }
