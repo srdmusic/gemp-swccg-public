@@ -33,7 +33,7 @@ import java.util.List;
 public class Card501_182 extends AbstractCapitalStarship {
     public Card501_182() {
         super(Side.LIGHT, 3, 3, 3, 4, null, 3, 5, "Leia's Resistance Transport", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("May add 2 pilot and 5 passengers. Permanent pilot provides ability of 2. Deploys and moves like a starfighter. When deployed, may deploy a Resistance female aboard for free from Reserve Deck; reshuffle.");
+        setGameText("May add 2 pilots and 5 passengers. Permanent pilot provides ability of 2. Deploys and moves like a starfighter. When deployed, may [download] a female Resistance character aboard (deploy -2 if a leader).");
         setPilotCapacity(2);
         setPassengerCapacity(5);
         addIcons(Icon.RESISTANCE, Icon.NAV_COMPUTER, Icon.PILOT, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_13, Icon.EPISODE_VII);
