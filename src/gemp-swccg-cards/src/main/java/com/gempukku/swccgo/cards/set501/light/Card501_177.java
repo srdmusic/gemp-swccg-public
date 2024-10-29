@@ -70,7 +70,7 @@ public class Card501_177 extends AbstractNormalEffect {
             final List<PhysicalCard> validStarfighters = new ArrayList<PhysicalCard>();
             Collection<PhysicalCard> starfighters = Filters.filter(cardsInHand, game, Filters.and(Filters.icon(Icon.A_NEW_HOPE), Filters.Falcon));
             for (PhysicalCard starfighter : starfighters) {
-                if (Filters.canSpot(cardsInHand, game, Filters.and(Filters.icon(Icon.EPISODE_VII), Filters.Han, Filters.deployableSimultaneouslyWith(self, starfighter, false, -1, false, 0)))) {
+                if (Filters.canSpot(cardsInHand, game, Filters.and(Filters.icon(Icon.A_NEW_HOPE), Filters.Han, Filters.deployableSimultaneouslyWith(self, starfighter, false, -1, false, 0)))) {
                     validStarfighters.add(starfighter);
                 }
             }
@@ -173,7 +173,7 @@ public class Card501_177 extends AbstractNormalEffect {
                     final List<PhysicalCard> validStarfighters = new ArrayList<PhysicalCard>();
                     Collection<PhysicalCard> starfighters = Filters.filter(cardsToChooseFrom, game, Filters.and(Filters.icon(Icon.A_NEW_HOPE), Filters.Falcon));
                     for (PhysicalCard starfighter : starfighters) {
-                        if (Filters.canSpot(cardsToChooseFrom, game, Filters.and(Filters.Han, Filters.deployableSimultaneouslyWith(action.getActionSource(), starfighter, false, -1, false, 0)))) {
+                        if (Filters.canSpot(cardsToChooseFrom, game, Filters.and(Icon.A_NEW_HOPE, Filters.Han, Filters.deployableSimultaneouslyWith(action.getActionSource(), starfighter, false, -1, false, 0)))) {
                             validStarfighters.add(starfighter);
                         }
                     }
