@@ -96,7 +96,7 @@ public class Card501_049_BACK extends AbstractObjective {
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.or(Filters.Imperial_leader, Filters.and(Filters.TIE_Defender, Filters.or(Filters.piloted, Filters.hasPermanentPilot, Filters.hasAboard(self, Filters.character)))))
                 && GameConditions.canSpot(game, self, Filters.and(Filters.Thrawns_Art_Collection, Filters.hasStacked(Filters.any)))) {
 
-            final GameTextActionId gameTextActionId = GameTextActionId.THE_RESULT_IS_OFTEN_RESENTMENT__DOWNLOAD_CARD;
+            final GameTextActionId gameTextActionId = GameTextActionId.THE_RESULT_IS_OFTEN_RESENTMENT__UPLOAD_CARD;
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Study artwork");
             action.setActionMsg("Peek at cards stacked on Thrawn's Art Collection and reveal one 'artwork' card");
