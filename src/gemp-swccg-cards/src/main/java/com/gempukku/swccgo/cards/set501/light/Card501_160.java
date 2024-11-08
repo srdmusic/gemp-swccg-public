@@ -45,8 +45,8 @@ import java.util.List;
 public class Card501_160 extends AbstractSystem {
     public Card501_160() {
         super(Side.LIGHT, Title.Lothal, 6, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationLightSideGameText("Once per game, may deploy Ghost and/or Hera (-1 each) here from hand (or Reserve Deck; reshuffle).");
-        setLocationDarkSideGameText("Thrawn and Pryce deploy -1 (and move to here for free) here. While Lothal converted, gains one [Dark Side] icon.");
+        setLocationLightSideGameText("Once per game, may simultaneously deploy Ghost and Hera here from hand (or Reserve Deck; reshuffle).");
+        setLocationDarkSideGameText("Thrawn and Pryce deploy -1 (and move for free) to here. While Lothal converted, gains one [Dark Side] icon.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.PLANET, Icon.VIRTUAL_SET_19);
@@ -66,7 +66,7 @@ public class Card501_160 extends AbstractSystem {
             final List<PhysicalCard> validGhostsInHand = new ArrayList<PhysicalCard>();
             Collection<PhysicalCard> ghostsInHand = Filters.filter(cardsInHand, game, Filters.Ghost);
             for (PhysicalCard ghostInHand : ghostsInHand) {
-                if (Filters.canSpot(cardsInHand, game, Filters.and(Filters.Hera, Filters.deployableSimultaneouslyWith(self, ghostInHand, false, -1, false, -1)))) {
+                if (Filters.canSpot(cardsInHand, game, Filters.and(Filters.Hera, Filters.deployableSimultaneouslyWith(self, ghostInHand, false, 0, false, 0)))) {
                     validGhostsInHand.add(ghostInHand);
                 }
             }
@@ -100,7 +100,7 @@ public class Card501_160 extends AbstractSystem {
                                                     @Override
                                                     protected void cardSelected(SwccgGame game, final PhysicalCard ghost) {
                                                         Collection<PhysicalCard> heras = Filters.filter(cardsInHand, game, Filters.and(Filters.Hera,
-                                                                Filters.deployableSimultaneouslyWith(self, ghost, false, -1, false, -1)));
+                                                                Filters.deployableSimultaneouslyWith(self, ghost, false, 0, false, 0)));
                                                         action.appendTargeting(
                                                                 new ChooseCardFromHandEffect(action, playerOnLightSideOfLocation, Filters.in(heras)) {
                                                                     @Override
@@ -110,7 +110,7 @@ public class Card501_160 extends AbstractSystem {
                                                                     @Override
                                                                     protected void cardSelected(SwccgGame game, PhysicalCard hera) {
                                                                         action.appendEffect(
-                                                                                new DeployCardsSimultaneouslyEffect(action, ghost, false, -1, hera, false, -1));
+                                                                                new DeployCardsSimultaneouslyEffect(action, ghost, false, 0, hera, false, 0));
                                                                     }
                                                                 }
                                                         );
@@ -150,14 +150,14 @@ public class Card501_160 extends AbstractSystem {
                     final List<PhysicalCard> validGhosts = new ArrayList<PhysicalCard>();
                     Collection<PhysicalCard> ghosts = Filters.filter(cardsToChooseFrom, game, Filters.Ghost);
                     for (PhysicalCard ghost : ghosts) {
-                        if (Filters.canSpot(cardsToChooseFrom, game, Filters.and(Filters.Hera, Filters.deployableSimultaneouslyWith(action.getActionSource(), ghost, false, -1, false, -1)))) {
+                        if (Filters.canSpot(cardsToChooseFrom, game, Filters.and(Filters.Hera, Filters.deployableSimultaneouslyWith(action.getActionSource(), ghost, false, 0, false, 0)))) {
                             validGhosts.add(ghost);
                         }
                     }
                     return Filters.in(validGhosts);
                 } else if (cardsSelected.size() == 1) {
                     PhysicalCard ghost = cardsSelected.iterator().next();
-                    return Filters.and(Filters.Hera, Filters.deployableSimultaneouslyWith(action.getActionSource(), ghost, false, -1, false, -1));
+                    return Filters.and(Filters.Hera, Filters.deployableSimultaneouslyWith(action.getActionSource(), ghost, false, 0, false, 0));
                 }
                 return Filters.none;
             }
@@ -172,7 +172,7 @@ public class Card501_160 extends AbstractSystem {
                 PhysicalCard ghost = cardsChosen.get(0);
                 PhysicalCard hera = cardsChosen.get(1);
                 action.appendEffect(
-                        new DeployCardsSimultaneouslyEffect(action, ghost, false, -1, hera, false, -1));
+                        new DeployCardsSimultaneouslyEffect(action, ghost, false, 0, hera, false, 0));
             }
         };
     }
