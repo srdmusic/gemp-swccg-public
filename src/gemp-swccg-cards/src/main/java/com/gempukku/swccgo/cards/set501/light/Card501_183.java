@@ -21,7 +21,7 @@ import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.TotalForceGenerationModifier;
+import com.gempukku.swccgo.logic.modifiers.ResetPersonalForceGenerationModifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -40,7 +40,6 @@ public class Card501_183 extends AbstractNormalEffect {
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_0);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Wokling (V) (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -50,8 +49,8 @@ public class Card501_183 extends AbstractNormalEffect {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new TotalForceGenerationModifier(self, 1, self.getOwner()));
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new ResetPersonalForceGenerationModifier(self, 2, self.getOwner()));
         return modifiers;
     }
 
