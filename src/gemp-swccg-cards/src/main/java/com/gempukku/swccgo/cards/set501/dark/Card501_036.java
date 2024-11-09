@@ -23,18 +23,18 @@ import java.util.List;
  * Set: Playtesting
  * Type: Location
  * Subtype: Site
- * Title: Scarif: Ocean
+ * Title: Scarif: Ocean Shallows
  */
 
 public class Card501_036 extends AbstractSite {
     public Card501_036() {
-        super(Side.DARK, "Scarif: Ocean", Title.Scarif, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, Title.OceanShallows, Title.Scarif, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Once per game, may download An Inkling Of Its Destructive Potential here.");
         setLocationLightSideGameText("");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.PLANET, Icon.EXTERIOR_SITE, Icon.VIRTUAL_SET_24);
-        setTestingText("Scarif: Ocean");
+        setTestingText(Title.OceanShallows);
     }
 
     @Override
