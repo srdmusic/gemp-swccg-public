@@ -49,20 +49,25 @@ public class Card501_040 extends AbstractSystem {
             game.getModifiersEnvironment().addUntilEndOfGameModifier(
                     new DeployCostToLocationModifier(self, Filters.and(Filters.opponents(playerOnDarkSideOfLocation), Filters.not(Filters.spy), Filters.character),
                     shieldGateHere, 1, Filters.Scarif_site));
+            game.getModifiersEnvironment().addUntilEndOfGameModifier(
+                    new AttemptToBlowAwayShieldGateTotalModifier(self, new MultiplyEvaluator(2, new HereEvaluator(self, Filters.or(Filters.Profundity, Filters.Lightmaker)))));    
         }
         return null;
     }
 
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (!GameConditions.cardHasAnyForRemainderOfGameDataSet(self)) {
-            self.setForRemainderOfGameData(self.getCardId(), new ForRemainderOfGameData());
-            // Add modifier here without creating an action
-            game.getModifiersEnvironment().addUntilEndOfGameModifier(
-                    new AttemptToBlowAwayShieldGateTotalModifier(self, new MultiplyEvaluator(2, new HereEvaluator(self, Filters.or(Filters.Profundity, Filters.Lightmaker))))
-            );
-        }
-        return null;
-    }
+    // the way we typically setup `for remainder of the game` doesn't work being run twice on one card
+    // normally we have the LS and DS logic under their respective separate code blocks but because of the way the logic around
+    // setting for remainder of game data, the LS logic is included in the DS code block.
+    // @Override
+    // protected List<RequiredGameTextTriggerAction> getGameTextLightSideRequiredAfterTriggers(String playerOnLightSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+    //     // Check condition(s)
+    //     if (!GameConditions.cardHasAnyForRemainderOfGameDataSet(self)) {
+    //         self.setForRemainderOfGameData(self.getCardId(), new ForRemainderOfGameData());
+    //         // Add modifier here without creating an action
+    //         game.getModifiersEnvironment().addUntilEndOfGameModifier(
+    //                 new AttemptToBlowAwayShieldGateTotalModifier(self, new MultiplyEvaluator(2, new HereEvaluator(self, Filters.or(Filters.Profundity, Filters.Lightmaker))))
+    //         );
+    //     }
+    //     return null;
+    // }
 }
