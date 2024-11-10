@@ -20,6 +20,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.BlowAwayEffect;
 import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -40,7 +41,6 @@ public class Card501_045 extends AbstractDevice {
         setGameText("Deploy on Scarif system. If a starship was just lost from here or opponent just Force drained here, opponent may draw destiny. Add 1 for each Scarif location opponent occupies. If total destiny > 8, Shield Gate 'blown away' (place out of play).");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("Shield Gate (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -76,8 +76,9 @@ public class Card501_045 extends AbstractDevice {
 
                             float attemptTotal = game.getModifiersQuerying().getBlowAwayShieldGateAttemptTotal(game.getGameState(), totalDestiny);
 
+                            int deathStarLocationOccupiedByOpponent = Filters.countActive(game, self, Filters.and(Filters.Death_Star_location, Filters.occupies(game.getOpponent(self.getOwner()))));
                             int scarifLocationsOccupiedByOpponent = Filters.countActive(game, self, Filters.and(Filters.Scarif_location, Filters.occupies(game.getOpponent(self.getOwner()))));
-                            attemptTotal = attemptTotal + scarifLocationsOccupiedByOpponent;
+                            attemptTotal = attemptTotal + deathStarLocationOccupiedByOpponent + scarifLocationsOccupiedByOpponent;
                             game.getGameState().sendMessage("Total: " + attemptTotal);
                             if (attemptTotal > 8) {
                                 game.getGameState().sendMessage("Result: Success.");
@@ -88,6 +89,7 @@ public class Card501_045 extends AbstractDevice {
                                                 return new PlaceCardOutOfPlayFromTableEffect(blowAwaySubAction, self);
                                             }
                                         });
+                                action.appendEffect(new LoseForceEffect(action, self.getOwner(), 3));
                             } else {
                                 game.getGameState().sendMessage("Result: Failed.");
                             }
