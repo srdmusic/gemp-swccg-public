@@ -34,9 +34,8 @@ public class Card501_017 extends AbstractImperial {
         setLore("Corellian Baron. Leader of famed 181st Imperial Fighter Wing. Taught at the Imperial Academy on Prefsbelt IV. Instructed Biggs Darklighter.");
         setGameText("Deploys -1 to Endor. Adds 3 to the power of anything he pilots. When piloting a starship, adds one battle destiny. Anything he pilots is immune to attrition <5.");
         addIcons(Icon.DEATH_STAR_II, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
-        addKeywords(Keyword.LEADER, Keyword.SABER_SQUADRON);
+        addKeywords(Keyword.LEADER);
         setSpecies(Species.CORELLIAN);
-        setMatchingStarshipFilter(Filters.Saber_1);
         setVirtualSuffix(true);
         setTestingText("Baron Soontir Fel (V)");
     }
