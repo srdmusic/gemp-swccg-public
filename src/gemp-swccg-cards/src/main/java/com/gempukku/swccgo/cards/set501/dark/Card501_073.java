@@ -41,7 +41,7 @@ public class Card501_073 extends AbstractStarfighter {
     public Card501_073() {
         super(Side.DARK, 2, 2, 3, null, 4, 3, 4, "Kylo Ren's TIE Silencer", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("May add 1 pilot. Kylo deploys -2 aboard. May reveal from hand to ▲ Kylo and deploy both simultaneously. Kylo and Silencer are immune to It Can Wait, Rebel Barrier and attrition < 5.");
+        setGameText("May add 1 pilot. Kylo deploys -2 aboard. May reveal from hand to ▲ Kylo and deploy both simultaneously. While Kylo piloting, Kylo and Silencer are immune to It Can Wait, Rebel Barrier and attrition < 5.");
         addIcons(Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_10, Icon.EPISODE_VII, Icon.FIRST_ORDER);
         addModelType(ModelType.TIE_VN);
         setPilotCapacity(1);
@@ -66,8 +66,10 @@ public class Card501_073 extends AbstractStarfighter {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ImmuneToTitleModifier(self, Title.It_Can_Wait));
-        modifiers.add(new ImmuneToTitleModifier(self, Title.Rebel_Barrier));
+        modifiers.add(new ImmuneToTitleModifier(self, new HasPilotingCondition(self, Filters.Kylo), Title.It_Can_Wait));
+        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.Kylo, Filters.piloting(self)), new HasPilotingCondition(self, Filters.Kylo), Title.It_Can_Wait));
+        modifiers.add(new ImmuneToTitleModifier(self, new HasPilotingCondition(self, Filters.Kylo), Title.Rebel_Barrier));
+        modifiers.add(new ImmuneToTitleModifier(self, Filters.and(Filters.Kylo, Filters.piloting(self)), new HasPilotingCondition(self, Filters.Kylo), Title.Rebel_Barrier));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, new HasPilotingCondition(self, Filters.Kylo), 5));
         return modifiers;
     }
