@@ -77,7 +77,7 @@ public class Card501_162 extends AbstractObjective {
         RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new DeployCostModifier(self, Filters.or(Filters.and(Filters.Harc, Filters.Jedi, Filters.except(Filters.or(Filters.Ahsoka, Filters.Kanan))), Filters.and(Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.hasAbilityOrHasPermanentPilotWithAbility)), 2),
+                        new DeployCostModifier(self, Filters.or(Filters.Harc, Filters.and(Filters.Jedi, Filters.except(Filters.or(Filters.Ahsoka, Filters.Kanan))), Filters.and(Filters.or(Icon.EPISODE_I, Icon.EPISODE_VII), Filters.hasAbilityOrHasPermanentPilotWithAbility)), 2),
                         null));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
