@@ -50,11 +50,17 @@ public class Card501_210 extends AbstractStarfighter {
     }
 
     @Override
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new DeployCostToLocationModifier(self, -2, Filters.Lothal_location));        
+        return modifiers;
+    }
+
+    @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Condition heraPiloting = new HasPilotingCondition(self, Filters.Hera);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostToLocationModifier(self, -2, Filters.Lothal_location));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, heraPiloting, 5));
         modifiers.add(new ImmunityToAttritionMayNotBeCanceledModifier(self, heraPiloting));
         return modifiers;
