@@ -3,7 +3,9 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractAlienRebel;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.InBattleWithCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
@@ -15,8 +17,8 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.decisions.YesNoDecision;
 import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
@@ -43,13 +45,12 @@ public class Card501_213 extends AbstractAlienRebel {
         super(Side.LIGHT, 2, 4, 4, 3, 5, "Fenn Rau", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setArmor(5);
         setLore("Mandalorian scout.");
-        setGameText("[Pilot] 3. During battle, if another Mandalorian here, opponent's total power is -3. At the end of a battle here, " +
+        setGameText("[Pilot] 3. During battle, if another Mandalorian here, opponent's total power is -2. Once per game, " +
                 "may return Fenn Rau to hand to activate 2 Force (if Fenn Rau won a battle this turn, may also retrieve 1 Force).");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
         addKeywords(Keyword.SCOUT);
         setSpecies(Species.MANDALORIAN);
         setTestingText("Fenn Rau (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -61,12 +62,18 @@ public class Card501_213 extends AbstractAlienRebel {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.POGGLE_THE_LESSER__DEPLOY_DOOKU_FROM_RESERVE_DECK;
+
         // Check condition(s)
-        if (TriggerConditions.battleEndingAt(game, effectResult, Filters.here(self))
-                && GameConditions.canActivateForce(game, playerId)) {
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canActivateForce(game, playerId)
+                && (GameConditions.numCardsInReserveDeck(game, playerId) >= 2)) {
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Activate 2 Force");
+            action.setActionMsg("Return to hand to activate 2 Force.");
+            action.appendUsage(
+                    new OncePerGameEffect(action));
             action.appendCost(
                     new ReturnCardToHandFromTableEffect(action, self));
             action.appendEffect(
