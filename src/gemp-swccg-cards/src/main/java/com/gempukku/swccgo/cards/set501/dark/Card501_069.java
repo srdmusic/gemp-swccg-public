@@ -55,6 +55,7 @@ public class Card501_069 extends AbstractAlien {
         addIcons(Icon.DAGOBAH, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_5);
         addKeywords(Keyword.BOUNTY_HUNTER, Keyword.ASSASSIN);
         setSpecies(Species.CORELLIAN);
+        setMatchingStarshipFilter(Filters.Punishing_One);
         setTestingText("Dengar (V) (ERRATA)");
     }
 
@@ -112,7 +113,7 @@ public class Card501_069 extends AbstractAlien {
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.hasReserveDeck(game, playerId)) {
+                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Take Bounty (or a blaster) into hand");
