@@ -37,7 +37,7 @@ public class Card501_068 extends AbstractSystem {
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.JABBAS_PALACE, Icon.PLANET, Icon.VIRTUAL_SET_24);
         setVirtualSuffix(true);
-        setTestingText("Ord Mantell (DS) (ERRATA)");
+        setTestingText("Ord Mantell (DS)");
     }
 
     @Override
