@@ -67,8 +67,7 @@ public class Card501_213 extends AbstractAlienRebel {
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canActivateForce(game, playerId)
-                && (GameConditions.numCardsInReserveDeck(game, playerId) >= 2)) {
+                && GameConditions.canActivateForce(game, playerId)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Activate 2 Force");
             action.setActionMsg("Return to hand to activate 2 Force.");
@@ -78,7 +77,8 @@ public class Card501_213 extends AbstractAlienRebel {
                     new ReturnCardToHandFromTableEffect(action, self));
             action.appendEffect(
                     new ActivateForceEffect(action, playerId, 2));
-            if (GameConditions.cardHasWhileInPlayDataEquals(self, true)) {
+            if (GameConditions.cardHasWhileInPlayDataEquals(self, true)
+                    && (GameConditions.numCardsInReserveDeck(game, playerId) >= 2)) {
                 action.appendEffect(new PlayoutDecisionEffect(action, playerId, new YesNoDecision("Retrieve 1 Force?") {
                     @Override
                     protected void yes() {
