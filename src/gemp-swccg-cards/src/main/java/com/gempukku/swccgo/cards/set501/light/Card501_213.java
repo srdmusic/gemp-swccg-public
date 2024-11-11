@@ -63,7 +63,7 @@ public class Card501_213 extends AbstractAlienRebel {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.POGGLE_THE_LESSER__DEPLOY_DOOKU_FROM_RESERVE_DECK;
+        GameTextActionId gameTextActionId = GameTextActionId.FENN_RAU__RETURN_TO_HAND;
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
