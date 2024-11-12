@@ -50,6 +50,7 @@ public class Card501_200 extends AbstractRebel {
 
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
+                && GameConditions.isPresentAt(game, self, Filters.battleground)
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
@@ -68,10 +69,9 @@ public class Card501_200 extends AbstractRebel {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalBeforeTriggers(final String playerId, SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
-        final PhysicalCard ackbar = Filters.findFirstActive(game, self, Filters.Ackbar);
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.Critical_Error_Revealed)
-                && (GameConditions.isInBattle(game, self) || GameConditions.isInBattleAt(game, ackbar, Filters.system))
+        if (TriggerConditions.isPlayingCard(game, effect, self.getOwner(), Filters.Critical_Error_Revealed)
+                && (GameConditions.isInBattle(game, self) || GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.Ackbar, Filters.at(Filters.system))))
                 && GameConditions.hasLostPile(game, playerId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
