@@ -45,7 +45,6 @@ public class Card501_199 extends AbstractRepublic {
         addKeywords(Keyword.ROYAL_NABOO_SECURITY);
         setVirtualSuffix(true);
         setTestingText("Corporal Rushing (V)");
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -93,7 +92,7 @@ public class Card501_199 extends AbstractRepublic {
 
         // Check condition(s)
         if ((TriggerConditions.isBattleDestinyJustDrawn(game, effectResult)
-                    || TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult, Filters.and(Filters.not(Filters.lightsaber), Filters.weapon)))
+                    || TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult, Filters.not(Filters.lightsaber)))
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.isArmedWith(game, self, Filters.weapon)
                 && GameConditions.isWith(game, self, Filters.Panaka)){
