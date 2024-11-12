@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.RepCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -37,18 +38,17 @@ public class Card501_037 extends AbstractAlien {
     public Card501_037() {
         super(Side.DARK, 2, 4, 4, 2, 5, "Alien Mob", Uniqueness.DIAMOND_1, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("This card has your Rep's species. When deployed, may retrieve a Rep or place a Rep stacked on your Objective in Used Pile. " +
+        setGameText("This card has your non-[Maintenance] Rep's species. When deployed, may retrieve a Rep or place a Rep stacked on your Objective in Used Pile. " +
                 "Once per turn, if Fearless And Inventive on table and you just retrieved Force, may place top card of Used Pile on Force Pile.");
         addIcons(Icon.VIRTUAL_SET_16);
         addIcon(Icon.WARRIOR, 3);
         setTestingText("Alien Mob (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
     protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new SpeciesModifier(self, true));
+        modifiers.add(new SpeciesModifier(self, new RepCondition(self.getOwner(), Filters.not(Icon.MAINTENANCE)), true));
         return modifiers;
     }
 
