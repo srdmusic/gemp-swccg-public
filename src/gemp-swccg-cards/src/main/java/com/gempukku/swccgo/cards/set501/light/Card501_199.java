@@ -49,7 +49,7 @@ public class Card501_199 extends AbstractRepublic {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        final Filter targetFilter = Filters.and(Filters.opponents(self), Filters.character, Filters.atSameSite(self), Filters.abilityLessThan(3));
+        final Filter targetFilter = Filters.and(Filters.character, Filters.here(self), Filters.abilityLessThan(3));
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId)
