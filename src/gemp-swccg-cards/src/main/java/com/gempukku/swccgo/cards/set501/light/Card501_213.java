@@ -19,7 +19,6 @@ import com.gempukku.swccgo.game.state.WhileInPlayData;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.decisions.YesNoDecision;
 import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
@@ -69,14 +68,17 @@ public class Card501_213 extends AbstractAlienRebel {
         if (TriggerConditions.battleEndingAt(game, effectResult, Filters.here(self))
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.canActivateForce(game, playerId)) {
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Activate 2 Force");
+            action.setActionMsg("Return to hand to activate 2 Force.");
+            action.appendUsage(
+                new OncePerGameEffect(action));
             action.appendCost(
                     new ReturnCardToHandFromTableEffect(action, self));
             action.appendEffect(
                     new ActivateForceEffect(action, playerId, 2));
             if (GameConditions.cardHasWhileInPlayDataEquals(self, true)
-                && (GameConditions.numCardsInReserveDeck(game, playerId) >= 2)) {
+                    && (GameConditions.numCardsInReserveDeck(game, playerId) >= 2)) {
                 action.appendEffect(new PlayoutDecisionEffect(action, playerId, new YesNoDecision("Retrieve 1 Force?") {
                     @Override
                     protected void yes() {
