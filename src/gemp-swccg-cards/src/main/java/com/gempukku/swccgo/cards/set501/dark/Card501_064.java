@@ -44,7 +44,7 @@ public class Card501_064 extends AbstractAlien {
     public Card501_064() {
         super(Side.DARK, 1, 4, 4, 3, 6, "Dryden Vos", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Crimson Dawn leader. Gangster.");
-        setGameText("When deployed, may ▼ a weapon on Vos. While armed and present at a site, draws one battle destiny if unable to otherwise and opponent may not 'react' to or from here. Immune to attrition < 5 (<3 if with Qi'ra).");
+        setGameText("When deployed, may [download] a weapon on Vos. While armed and present at a site, draws one battle destiny if unable to otherwise and opponent may not 'react' to or from here. Immune to attrition < 5 (< 3 if with Qi'ra).");
         addIcons(Icon.WARRIOR, Icon.PILOT, Icon.VIRTUAL_SET_13);
         addKeywords(Keyword.CRIMSON_DAWN, Keyword.LEADER, Keyword.GANGSTER);
         setArmor(5);
