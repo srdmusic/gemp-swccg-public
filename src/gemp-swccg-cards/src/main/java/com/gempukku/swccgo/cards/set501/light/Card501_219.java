@@ -33,9 +33,10 @@ public class Card501_219 extends AbstractCombatVehicle {
     public Card501_219(){
         super(Side.LIGHT, 2, 4, 6, null, 6, 4, 6, "Zev In Rogue 2", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Enclosed. First snowspeeder to be successfully adapted to Hoth's environment. Piloted by Zev Senesca. Led team in search of Captain Solo and Commander Skywalker.");
-        setGameText("May add 1 pilot or passenger. Permanent pilot is •Zev, who provides ability of 2. Draws one battle destiny if unable to otherwise. May move as a 'react.' Weapons deploy for free on Rogue 2.");
+        setGameText("May add 1 pilot or passenger. Permanent pilot is •Zev, who provides ability of 2. Draws one battle destiny if unable to otherwise. May move as a 'react.' Vehicle weapons deploy for free on Rogue 2.");
         addModelType(ModelType.T_47);
-        addIcons(Icon.PILOT, Icon.VIRTUAL_SET_24);
+        addPersona(Persona.ROGUE2);
+        addIcons(Icon.PILOT, Icon.HOTH, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.ENCLOSED, Keyword.SNOWSPEEDER, Keyword.ROGUE_SQUADRON);
         setPilotOrPassengerCapacity(1);
         setTestingText("Zev In Rogue 2");
