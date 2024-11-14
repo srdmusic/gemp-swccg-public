@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.ArmedWithCondition;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.conditions.PresentAtCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
@@ -21,8 +20,9 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotReactFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotReactToLocationModifier;
@@ -42,30 +42,25 @@ import java.util.List;
  */
 public class Card501_064 extends AbstractAlien {
     public Card501_064() {
-        super(Side.DARK, 1, 6, 4, 3, 6, "Dryden Vos", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 1, 4, 4, 3, 6, "Dryden Vos", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Crimson Dawn leader. Gangster.");
-        setGameText("Deploys -2 if Maul on table. When deployed, may deploy a weapon on Vos from Reserve Deck; reshuffle. While armed and present at a site, opponent may not 'react' to or from here. Immune to attrition < 5 (< 3 if with Qi'ra).");
+        setGameText("When deployed, may ▼ a weapon on Vos. While armed and present at a site, draws one battle destiny if unable to otherwise and opponent may not 'react' to or from here. Immune to attrition < 5 (<3 if with Qi'ra).");
         addIcons(Icon.WARRIOR, Icon.PILOT, Icon.VIRTUAL_SET_13);
         addKeywords(Keyword.CRIMSON_DAWN, Keyword.LEADER, Keyword.GANGSTER);
         setArmor(5);
         addPersona(Persona.VOS);
         setTestingText("Dryden Vos (ERRATA)");
-        hideFromDeckBuilder();
-    }
-
-    @Override
-    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostModifier(self, new OnTableCondition(self, Filters.or(Filters.Maul)), -2));
-        return modifiers;
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        Condition armedAndPresentAtSiteCondition = new AndCondition(new ArmedWithCondition(self, Filters.any), new PresentAtCondition(self, Filters.site));
+
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, new ConditionEvaluator(5, 3, new WithCondition(self, Filters.persona(Persona.QIRA)))));
-        modifiers.add(new MayNotReactToLocationModifier(self, Filters.sameSite(self), new AndCondition(new ArmedWithCondition(self, Filters.any), new PresentAtCondition(self, Filters.site)), game.getOpponent(self.getOwner())));
-        modifiers.add(new MayNotReactFromLocationModifier(self, Filters.sameSite(self), new AndCondition(new ArmedWithCondition(self, Filters.any), new PresentAtCondition(self, Filters.site)), game.getOpponent(self.getOwner())));
+        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, armedAndPresentAtSiteCondition, 1));
+        modifiers.add(new MayNotReactToLocationModifier(self, Filters.sameSite(self), armedAndPresentAtSiteCondition, game.getOpponent(self.getOwner())));
+        modifiers.add(new MayNotReactFromLocationModifier(self, Filters.sameSite(self), armedAndPresentAtSiteCondition, game.getOpponent(self.getOwner())));
         return modifiers;
     }
 
