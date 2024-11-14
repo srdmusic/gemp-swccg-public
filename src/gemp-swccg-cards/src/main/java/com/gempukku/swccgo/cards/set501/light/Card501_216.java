@@ -12,7 +12,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceGenerationImmuneToCancelModifier;
-import com.gempukku.swccgo.logic.modifiers.LimitForceGenerationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -27,27 +27,26 @@ import java.util.List;
 public class Card501_216 extends AbstractSite {
     public Card501_216() {
         super(Side.LIGHT, Title.Chief_Chirpas_Hut, Title.Endor, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("Force generation here may not be prevented by Objectives.");
-        setLocationLightSideGameText("You may not generate more than 2 Force at non-battlegrounds. Ewoks deploy -2 here.");
+        setLocationDarkSideGameText("Force generation here may not be prevented.");
+        setLocationLightSideGameText("You may not Force drain here. Ewoks deploy -2 here.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.ENDOR, Icon.INTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_14);
         setVirtualSuffix(true);
         setTestingText("Endor: Chief Chirpa's Hut (V) (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceGenerationImmuneToCancelModifier(self, self, Filters.Objective));
+        modifiers.add(new ForceGenerationImmuneToCancelModifier(self, self, Filters.any));
         return modifiers;
     }
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.Ewok), -2, self));
-        modifiers.add(new LimitForceGenerationModifier(self, Filters.non_battleground_location, 2, self.getOwner()));
+        modifiers.add(new MayNotForceDrainAtLocationModifier(self, playerOnLightSideOfLocation));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.Ewok, -2, self));
         return modifiers;
     }
 }
