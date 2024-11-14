@@ -3843,6 +3843,7 @@ const fixedImages = {
 "501_218": "https://res.starwarsccg.org/cards/SpecialEdition-Light/large/balancedattack.gif",
 "501_219": "https://res.starwarsccg.org/cards/Hoth-Light/large/rogue2.gif",
 "501_220": "https://res.starwarsccg.org/cards/Virtual17-Light/large/kefbiroceanicwreckage.gif",
+"501_221": "https://res.starwarsccg.org/cards/Endor-Light/large/yt1300transport.gif",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",
