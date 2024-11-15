@@ -53,7 +53,7 @@ public class Card501_180 extends AbstractCombatVehicle {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Condition unlessHit = new UnlessCondition(new HitCondition(self));
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.your(self), Filters.other(self), Filters.vehicle, Filters.here(self)),
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.your(self), Filters.other(self), Filters.T_47, Filters.here(self)),
                 unlessHit, Filters.or(Filters.weapon, Filters.Highspeed_Tactics, Filters.Crash_Landing)));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
         return modifiers;
