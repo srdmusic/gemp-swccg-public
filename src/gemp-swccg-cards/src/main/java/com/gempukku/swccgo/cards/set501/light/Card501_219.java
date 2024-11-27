@@ -39,10 +39,10 @@ public class Card501_219 extends AbstractCombatVehicle {
         addPersona(Persona.ROGUE2);
         addIcons(Icon.PILOT, Icon.HOTH, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.ENCLOSED, Keyword.SNOWSPEEDER, Keyword.ROGUE_SQUADRON);
-		setPilotCapacity(1);
+        setPilotCapacity(1);
         setTestingText("Zev In Rogue 2");
     }
-	
+
     @Override
     protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
