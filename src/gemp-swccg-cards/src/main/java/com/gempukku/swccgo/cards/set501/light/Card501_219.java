@@ -14,6 +14,7 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.DeploysFreeAboardModifier;
 import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
 import com.gempukku.swccgo.logic.modifiers.MayMoveAsReactModifier;
@@ -31,15 +32,22 @@ import java.util.List;
  */
 public class Card501_219 extends AbstractCombatVehicle {
     public Card501_219(){
-        super(Side.LIGHT, 2, 4, 6, null, 6, 4, 6, "Zev In Rogue 2", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 2, 6, 6, null, 6, 4, 6, "Zev In Rogue 2", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Enclosed. First snowspeeder to be successfully adapted to Hoth's environment. Piloted by Zev Senesca. Led team in search of Captain Solo and Commander Skywalker.");
-        setGameText("May add 1 pilot or passenger. Permanent pilot is •Zev, who provides ability of 2. Draws one battle destiny if unable to otherwise. May move as a 'react.' Vehicle weapons deploy for free on Rogue 2.");
+        setGameText("Deploys -2 to Hoth. May add 1 pilot. Permanent pilot is •Zev, who provides ability of 2. Draws one battle destiny if unable to otherwise. May move as a 'react.' Vehicle weapons deploy free aboard.");
         addModelType(ModelType.T_47);
         addPersona(Persona.ROGUE2);
         addIcons(Icon.PILOT, Icon.HOTH, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.ENCLOSED, Keyword.SNOWSPEEDER, Keyword.ROGUE_SQUADRON);
-        setPilotOrPassengerCapacity(1);
+        setPilotCapacity(1);
         setTestingText("Zev In Rogue 2");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new DeployCostToLocationModifier(self, -2, Filters.Deploys_at_Hoth));
+        return modifiers;
     }
 
     @Override
