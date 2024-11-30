@@ -72,7 +72,7 @@ public class Card501_172 extends AbstractRebel {
         if (TriggerConditions.isDestinyJustDrawn(game, effectResult)
                 && GameConditions.isPiloting(game, self, Filters.Falcon)
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canCancelDestinyAndCauseRedraw(game, effectResult.getPerformingPlayerId())) {
+                && GameConditions.canCancelDestinyAndCauseRedraw(game, playerId)) {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Cancel and re-draw destiny");
             // Update usage limit(s)
