@@ -62,7 +62,7 @@ public class Card501_195 extends AbstractStarfighter {
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActionsEvenIfUnpiloted(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.STARSPEEDER_3000__RELOCATE;
 
         Filter validLocationFilter = Filters.locationCanBeRelocatedTo(self, 2);
