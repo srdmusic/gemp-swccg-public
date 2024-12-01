@@ -71,6 +71,7 @@ public class Card501_195 extends AbstractStarfighter {
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.isDuringYourPhase(game, self, Phase.MOVE)
                 && GameConditions.canUseForceToRelocateCard(game, self, 2, validLocationFilter)
+                && Filters.pilotedForTakeOff.accepts(game, self)
         ) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
