@@ -4,8 +4,10 @@ import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PeekAtBottomCardOfCardPileEffect;
 import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
@@ -26,6 +28,7 @@ import com.gempukku.swccgo.logic.effects.PutCardFromForcePileOnTopOfCardPileEffe
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.StealCardIntoHandFromTableEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -52,73 +55,78 @@ public class Card501_165 extends AbstractUsedOrLostInterrupt {
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new ArrayList<>();
-
-        if (GameConditions.isDuringBattle(game)
-                && TriggerConditions.justHit(game, effectResult, Filters.and(Filters.character, Filters.abilityMoreThan(4)))
-                && GameConditions.canTarget(game, self, Filters.title(Title.His_Destiny))) {
-
-            final String opponent = game.getOpponent(playerId);
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
+        
+        // Check condition(s)
+        if (GameConditions.hasForcePile(game, playerId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-            action.setText("Opponent loses 1 Force");
+            action.setText("Peek at bottom card of Force Pile");
+            // Allow response(s)
             action.allowResponses(new RespondablePlayCardEffect(action) {
-                @Override
-                protected void performActionResults(Action targetingAction) {
-                    action.appendEffect(
-                            new LoseForceEffect(action, opponent, 1));
-                }
-            });
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new PeekAtBottomCardOfCardPileEffect(action, playerId, playerId, Zone.FORCE_PILE) {
+                                                        @Override
+                                                        protected void cardsPeekedAt(List<PhysicalCard> peekedAtCards) {
+                                                            final PhysicalCard card = peekedAtCards.iterator().next();
+                                                            if (card != null) {
+                                                                action.appendEffect(new PlayoutDecisionEffect(action, playerId, new YesNoDecision("Move card to top of Force Pile?") {
+                                                                    @Override
+                                                                    protected void yes() {
+                                                                        action.appendEffect(new PutCardFromForcePileOnTopOfCardPileEffect(action, playerId, card, Zone.FORCE_PILE, true));
+                                                                    }
 
+                                                                    @Override
+                                                                    protected void no() {
+                                                                        action.appendEffect(new SendMessageEffect(action, playerId + " chooses not to move card to top of Force Pile"));
+                                                                    }
+                                                                }));
+                                                            }
+                                                        }
+                                                    });
+                                        }
+                                    }
+            );
             actions.add(action);
         }
 
-        return actions;
-    }
+        Filter filterStolenLukesLightsaber = Filters.and(Filters.stolen, Filters.Lukes_Lightsaber, Filters.weapon);
+        if (GameConditions.canTarget(game, self, filterStolenLukesLightsaber) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            action.setText("Steal Luke's Lightsaber into hand");
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose Luke's Lightsaber", filterStolenLukesLightsaber) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Steal " + GameUtils.getCardLink(targetedCard) + " into hand",
+                                    new RespondablePlayCardEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Get the targeted card(s) from the action using the targetGroupId.
+                                            // This needs to be done in case the target(s) were changed during the responses.
+                                            final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
 
-    @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new StealCardIntoHandFromTableEffect(action, finalTarget));
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
 
         if (GameConditions.canTarget(game, self, Filters.title(Title.His_Destiny))) {
-            // Check condition(s)
-            if (GameConditions.hasForcePile(game, playerId)) {
-
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-                action.setText("Peek at bottom card of Force Pile");
-                // Allow response(s)
-                action.allowResponses(new RespondablePlayCardEffect(action) {
-                                          @Override
-                                          protected void performActionResults(Action targetingAction) {
-                                              // Perform result(s)
-                                              action.appendEffect(
-                                                      new PeekAtBottomCardOfCardPileEffect(action, playerId, playerId, Zone.FORCE_PILE) {
-                                                          @Override
-                                                          protected void cardsPeekedAt(List<PhysicalCard> peekedAtCards) {
-                                                              final PhysicalCard card = peekedAtCards.iterator().next();
-                                                              if (card != null) {
-                                                                  action.appendEffect(new PlayoutDecisionEffect(action, playerId, new YesNoDecision("Move card to top of Force Pile?") {
-                                                                      @Override
-                                                                      protected void yes() {
-                                                                          action.appendEffect(new PutCardFromForcePileOnTopOfCardPileEffect(action, playerId, card, Zone.FORCE_PILE, true));
-                                                                      }
-
-                                                                      @Override
-                                                                      protected void no() {
-                                                                          action.appendEffect(new SendMessageEffect(action, playerId + " chooses not to move card to top of Force Pile"));
-                                                                      }
-                                                                  }));
-                                                              }
-                                                          }
-                                                      });
-                                          }
-                                      }
-                );
-                actions.add(action);
-            }
-
-
             Filter filter = Filters.and(Filters.opponents(self), Filters.Dark_Jedi, Filters.with(self, Filters.Luke));
 
             if (GameConditions.canTarget(game, self, filter)) {
