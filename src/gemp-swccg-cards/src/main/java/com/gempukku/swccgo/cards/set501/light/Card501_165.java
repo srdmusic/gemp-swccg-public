@@ -4,7 +4,6 @@ import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PeekAtBottomCardOfCardPileEffect;
 import com.gempukku.swccgo.common.CardSubtype;
-import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -28,7 +27,6 @@ import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.StealCardIntoHandFromTableEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -91,8 +89,9 @@ public class Card501_165 extends AbstractUsedOrLostInterrupt {
         }
 
         Filter filterStolenLukesLightsaber = Filters.and(Filters.stolen, Filters.Lukes_Lightsaber, Filters.weapon);
-        if (GameConditions.canTarget(game, self, filterStolenLukesLightsaber) {
+        if (GameConditions.canTarget(game, self, filterStolenLukesLightsaber)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            action.setImmuneTo(Title.Weapon_Of_A_Sith);
             action.setText("Steal Luke's Lightsaber into hand");
             // Choose target(s)
             action.appendTargeting(

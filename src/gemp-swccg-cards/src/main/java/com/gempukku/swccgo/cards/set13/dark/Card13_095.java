@@ -6,6 +6,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -30,7 +31,7 @@ import java.util.List;
  */
 public class Card13_095 extends AbstractDefensiveShield {
     public Card13_095() {
-        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE,"Weapon Of A Sith", ExpansionSet.REFLECTIONS_III, Rarity.PM);
+        super(Side.DARK, PlayCardZoneOption.YOUR_SIDE_OF_TABLE,Title.Weapon_Of_A_Sith, ExpansionSet.REFLECTIONS_III, Rarity.PM);
         setLore("In order to use his double-bladed weapon Maul trained under Darth Sidious for years.");
         setGameText("Plays on table. For opponent to steal a weapon from target character using a non-[Episode I] card, must first draw destiny. If destiny +1 > target's ability, weapon stolen. Otherwise, attempt fails and stealing card is placed out of play.");
         addIcons(Icon.REFLECTIONS_III, Icon.EPISODE_I);
