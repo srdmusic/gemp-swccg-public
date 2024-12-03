@@ -87,9 +87,10 @@ public class Card501_165 extends AbstractUsedOrLostInterrupt {
             );
             actions.add(action);
         }
-
-        Filter filterLukesLightsaber = Filters.and(Filters.opponents(self), Filters.Lukes_Lightsaber, Filters.weapon, Filters.canBeTargetedBy(self, TargetingReason.TO_BE_STOLEN));
-        if (GameConditions.canTarget(game, self, filterLukesLightsaber)) {
+        
+        TargetingReason targetingReason = TargetingReason.TO_BE_STOLEN;
+        Filter filterLukesLightsaber = Filters.and(Filters.opponents(self), Filters.Lukes_Lightsaber, Filters.weapon);
+        if (GameConditions.canTarget(game, self, targetingReason, filterLukesLightsaber)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setImmuneTo(Title.Weapon_Of_A_Sith);
             action.setText("Steal Luke's Lightsaber into hand");
