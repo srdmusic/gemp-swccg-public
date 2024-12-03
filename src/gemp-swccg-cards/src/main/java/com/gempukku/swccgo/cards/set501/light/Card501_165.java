@@ -8,6 +8,7 @@ import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.common.Zone;
@@ -87,14 +88,14 @@ public class Card501_165 extends AbstractUsedOrLostInterrupt {
             actions.add(action);
         }
 
-        Filter filterStolenLukesLightsaber = Filters.and(Filters.stolen, Filters.Lukes_Lightsaber, Filters.weapon);
-        if (GameConditions.canTarget(game, self, filterStolenLukesLightsaber)) {
+        Filter filterLukesLightsaber = Filters.and(Filters.opponents(self), Filters.Lukes_Lightsaber, Filters.weapon, Filters.canBeTargetedBy(self, TargetingReason.TO_BE_STOLEN));
+        if (GameConditions.canTarget(game, self, filterLukesLightsaber)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setImmuneTo(Title.Weapon_Of_A_Sith);
             action.setText("Steal Luke's Lightsaber into hand");
             // Choose target(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose Luke's Lightsaber", filterStolenLukesLightsaber) {
+                    new TargetCardOnTableEffect(action, playerId, "Choose Luke's Lightsaber", filterLukesLightsaber) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                             action.addAnimationGroup(targetedCard);
