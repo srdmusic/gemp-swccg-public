@@ -96,7 +96,7 @@ public class Card501_165 extends AbstractUsedOrLostInterrupt {
             action.setText("Steal Luke's Lightsaber into hand");
             // Choose target(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose Luke's Lightsaber", filterLukesLightsaber) {
+                    new TargetCardOnTableEffect(action, playerId, "Choose Luke's Lightsaber", targetingReason, filterLukesLightsaber) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                             action.addAnimationGroup(targetedCard);
