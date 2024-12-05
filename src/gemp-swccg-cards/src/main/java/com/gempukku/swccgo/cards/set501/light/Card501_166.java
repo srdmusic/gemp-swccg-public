@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
 import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -26,9 +27,11 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
+import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.PlayInterruptFromOutsideTheGameEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.NoForceLossFromCardModifier;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -70,7 +73,6 @@ public class Card501_166 extends AbstractEpicEventDeployable {
         final Filter dsiisiteFilter = Filters.and(Filters.your(self), Filters.Death_Star_II_site);
         final Filter lukeFilter = Filters.Luke;
 
-
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
                 && !Filters.filterStacked(game, Filters.and(Filters.stackedOn(self, Filters.I_Feel_The_Conflict), Filters.face_down)).isEmpty()) {
 
@@ -82,6 +84,7 @@ public class Card501_166 extends AbstractEpicEventDeployable {
                 actions.add(getRelocationAction(playerId, game, self, gameTextSourceCardId, gameTextActionId, "Relocate Luke to a battleground site", dsiisiteFilter, battlegroundFilter, lukeFilter));
             }
         }
+
         return actions;
     }
 
@@ -90,7 +93,6 @@ public class Card501_166 extends AbstractEpicEventDeployable {
         List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
         if((TriggerConditions.wonBattle(game, effectResult, playerId) || TriggerConditions.wonDuel(game, effectResult, playerId))
                 && GameConditions.hasReserveDeck(game, playerId)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
@@ -108,6 +110,25 @@ public class Card501_166 extends AbstractEpicEventDeployable {
                 action.appendEffect(
                         new ShuffleReserveDeckEffect(action, playerId));
             }
+            actions.add(action);
+        }
+
+        GameTextActionId gameTextActionId2 = GameTextActionId.HIS_DESTINY__PLAY_ANAKIN_SKYWALKER_FROM_OUTSIDE_OF_DECK;
+        // Check condition(s)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId2)
+                && GameConditions.canPlayInterruptAsResponseFromOutsideOfDeck(game, playerId, self, effectResult, gameTextActionId2)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId2);
+            action.setText("Play Anakin Skywalker from outside your deck");
+            // Send Easter Egg Message (copied from Scomp Link Access V)
+            action.appendCost(
+                new SendMessageEffect(action, "Luke: Father, please!"));
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new PlayInterruptFromOutsideTheGameEffect(action, Filters.and(Filters.Anakin_Skywalker, Filters.not(Icon.VIRTUAL_SET_13)), effectResult, false));
             actions.add(action);
         }
 
@@ -173,4 +194,6 @@ public class Card501_166 extends AbstractEpicEventDeployable {
         modifiers.add(new NoForceLossFromCardModifier(self, Filters.and(Filters.Anakin_Skywalker, Filters.not(Icon.VIRTUAL_SET_13)), opponent));
         return modifiers;
     }
+
+
 }
