@@ -120,12 +120,12 @@ public class Card501_166 extends AbstractEpicEventDeployable {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId2);
             action.setText("Play Anakin Skywalker from outside your deck");
-            // Send Easter Egg Message (copied from Scomp Link Access V)
-            action.appendCost(
-                new SendMessageEffect(action, "Luke: Father, please!"));
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerGameEffect(action));
+            // Send Easter Egg Message (copied from Scomp Link Access V)
+            action.appendCost(
+                new SendMessageEffect(action, "Luke: Father, please!"));
             // Perform result(s)
             action.appendEffect(
                     new PlayInterruptFromOutsideTheGameEffect(action, Filters.and(Filters.Anakin_Skywalker, Filters.not(Icon.VIRTUAL_SET_13)), effectResult, false));
