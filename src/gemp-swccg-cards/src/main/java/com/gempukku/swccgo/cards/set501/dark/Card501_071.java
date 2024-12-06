@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractImperial;
+import com.gempukku.swccgo.cards.conditions.CantSpotCondition;
 import com.gempukku.swccgo.cards.conditions.PilotingCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -9,6 +10,7 @@ import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -37,7 +39,6 @@ public class Card501_071 extends AbstractImperial {
         addIcons(Icon.HOTH, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_0);
         addKeywords(Keyword.GENERAL, Keyword.LEADER);
         setTestingText("General Veers (V) (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -45,7 +46,11 @@ public class Card501_071 extends AbstractImperial {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
         modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, new PilotingCondition(self, Filters.AT_AT), 2));
-        modifiers.add(new ImmunityToAttritionChangeModifier(self, Filters.and(Filters.combat_vehicle, Filters.hasPiloting(self)), 2));
+
+        String playerId = self.getOwner();
+        Filter ownersOtherCharacterHereFilter = Filters.and(Filters.owner(playerId), Filters.other(self), Filters.character, Filters.here(self));
+        modifiers.add(new ImmunityToAttritionChangeModifier(self, Filters.and(Filters.combat_vehicle, Filters.hasPiloting(self)), new CantSpotCondition(self, ownersOtherCharacterHereFilter), 2));
+
         return modifiers;
     }
 }
