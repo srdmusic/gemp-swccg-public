@@ -79,9 +79,18 @@ public class Card501_037 extends AbstractAlien {
             }
         }
 
+        boolean matchesRepSpecies = false;
+        if (rep != null) {
+            if (self.getBlueprint().hasSpeciesAttribute() && rep.getBlueprint().hasSpeciesAttribute()) {
+                if (self.getBlueprint().getSpecies() == rep.getBlueprint().getSpecies()) {
+                    matchesRepSpecies = true;
+                }
+            }
+        }
+
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canSpot(game, self, Filters.Fearless_And_Inventive)
+                && matchesRepSpecies
                 && GameConditions.hasUsedPile(game, playerId)
                 && TriggerConditions.justRetrievedForce(game, effectResult, playerId)) {
             OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
