@@ -48,7 +48,7 @@ public class Card501_053 extends AbstractNormalEffect {
     public Card501_053() {
         super(Side.DARK, 7, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Working Much More Closely", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Hologram.");
-        setGameText("Deploy on table. Your other holograms are canceled. While present with an opponent's Jedi, Maul is defense value +2 and immune to attrition. Once per game, if [Set 13] Maul on table, may ▼ Qi'ra. If Maul just lost, place Effect in Used Pile. [Immune to Alter.]");
+        setGameText("Deploy on table. Your other holograms are canceled. While present with an opponent's Jedi, Maul is defense value +2 and immune to attrition. Once per game, if [Set 13] Maul on table, may [download] Qi'ra. If Maul just lost, place Effect in Used Pile. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_13);
         addKeyword(Keyword.HOLOGRAM);
         addImmuneToCardTitle(Title.Alter);
