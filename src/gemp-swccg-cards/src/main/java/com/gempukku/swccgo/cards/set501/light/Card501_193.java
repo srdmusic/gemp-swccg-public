@@ -19,13 +19,13 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.DestinyWhenDrawnForDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -51,11 +51,10 @@ public class Card501_193 extends AbstractAlien {
 
     @Override
     protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
-        OnTableCondition ObiWanOnTable = new OnTableCondition(self, Filters.ObiWan);
         UtinniEffectCompletedCondition KesselRunCompleted = new UtinniEffectCompletedCondition(self.getOwner(), Filters.Kessel_Run);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DestinyWhenDrawnForDestinyModifier(self, new OrCondition(ObiWanOnTable, KesselRunCompleted), 2));
+        modifiers.add(new TotalPowerModifier(self, Filters.here(self), KesselRunCompleted, 2, self.getOwner()));
         return modifiers;
     }
 
