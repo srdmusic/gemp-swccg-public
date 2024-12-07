@@ -43,7 +43,7 @@ public class Card501_193 extends AbstractAlien {
     public Card501_193() {
         super(Side.LIGHT, 1, 3, 3, 4, 5, "BoShek, Gritty Smuggler", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Rogue pilot. Outlaw starship tech. Has secret lab in Mos Eisley. He bragged about beating Han Solo's Kessel Run record. Left fringe life behind after meeting Obi-Wan Kenobi.");
-        setGameText("Destiny +2 if Obi-Wan on table (or a Kessel Run completed). [Pilot] 3. During battle, may use 1 Force to subtract 1 from opponent's just drawn destiny or cancel an attempt to cancel and redraw a destiny. Immune to attrition < 3.");
+        setGameText("[Pilot] 3. If you have completed a Kessel Run, your total power here is +2. Once during battle, may use 1 Force to choose: Subtract 1 from an opponent's just drawn destiny or cancel an attempt to cancel and redraw a destiny. Immune to attrition < 3.");
         addIcons(Icon.PILOT, Icon.VIRTUAL_SET_10);
         addKeywords(Keyword.SMUGGLER);
         setTestingText("BoShek, Gritty Smuggler");
