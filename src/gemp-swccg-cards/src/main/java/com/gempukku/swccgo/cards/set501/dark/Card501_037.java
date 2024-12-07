@@ -18,7 +18,6 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.PlaceTopCardOfUsedPileOnTopOfForcePileEffect;
 import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.SpeciesModifier;
@@ -61,16 +60,6 @@ public class Card501_037 extends AbstractAlien {
         // Check condition(s)
         if (TriggerConditions.justDeployed(game, effectResult, self)
                 && rep != null) {
-
-            if (GameConditions.hasLostPile(game, playerId)) {
-                OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Retrieve " + GameUtils.getCardLink(rep));
-                action.setActionMsg("Retrieve " + GameUtils.getCardLink(rep));
-                // Perform result(s)
-                action.appendEffect(
-                        new RetrieveCardEffect(action, playerId, Filters.sameTitle(rep)));
-                actions.add(action);
-            }
 
             if (GameConditions.canSpot(game, self, Filters.and(Filters.your(playerId), Filters.Objective, Filters.hasStacked(Filters.sameTitle(rep))))) {
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
