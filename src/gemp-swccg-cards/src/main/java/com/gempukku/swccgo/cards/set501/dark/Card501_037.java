@@ -38,8 +38,8 @@ public class Card501_037 extends AbstractAlien {
     public Card501_037() {
         super(Side.DARK, 2, 4, 4, 2, 5, "Alien Mob", Uniqueness.DIAMOND_1, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("This card has your non-[Maintenance] Rep's species. When deployed, may retrieve a Rep or place a Rep stacked on your Objective in Used Pile. " +
-                "Once per turn, if Fearless And Inventive on table and you just retrieved Force, may place top card of Used Pile on Force Pile.");
+        setGameText("This card has your non-[Maintenance] Rep's species. When deployed, may place a Rep stacked on your Objective in Used Pile. " +
+                "Once per turn, If this card has your Rep's species and you just retrieved Force, may place top card of Used Pile on Force Pile.");
         addIcons(Icon.VIRTUAL_SET_16);
         addIcon(Icon.WARRIOR, 3);
         setTestingText("Alien Mob (ERRATA)");
