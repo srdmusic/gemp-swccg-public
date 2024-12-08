@@ -8,13 +8,14 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotCloakModifier;
+import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.UsedInterruptModifier;
+import com.gempukku.swccgo.logic.modifiers.MovesForFreeModifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -42,8 +43,10 @@ public class Card501_215 extends AbstractAlien {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
-        modifiers.add(new MayNotCloakModifier(self, Filters.and(Filters.opponents(self), Filters.starship, Filters.here(self))));
-        modifiers.add(new UsedInterruptModifier(self, Filters.and(Filters.Smoke_Screen, Filters.cardBeingPlayedTargeting(self, self))));
+
+        Filter yourStarSpeederFilter = Filters.and(Filters.your(self), Filters.titleContains("StarSpeeder"));
+        modifiers.add(new DestinyModifier(self, yourStarSpeederFilter, 2));
+        modifiers.add(new MovesForFreeModifier(self, yourStarSpeederFilter));
         return modifiers;
     }
 }
