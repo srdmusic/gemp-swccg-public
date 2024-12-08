@@ -46,7 +46,6 @@ public class Card501_215 extends AbstractAlien {
         setSpecies(Species.SARKAN);
         addKeywords(Keyword.SMUGGLER);
         setTestingText("Melas (V) (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
