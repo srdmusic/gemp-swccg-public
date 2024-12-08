@@ -30,7 +30,7 @@ public class Card501_215 extends AbstractAlien {
         super(Side.LIGHT, 2, 3, 2, 4, 4, "Melas", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Sarkan smuggler. Smokes an Essoomian gruu pipe to heighten awareness. Exiled from his home planet of Sarka for displaying curiosity in other aliens. Misses his homeworld.");
-        setGameText("[Pilot] 2. Opponent's starships here may not 'cloak'. Smoke Screen is a Used Interrupt when targeting Melas.");
+        setGameText("[Pilot] 2. Your StarSpeeders are destiny +2 and move for free. Once per turn, may place a card from hand on Used Pile to 'smoke pipe' (for remainder of turn, Melas is power and defense value +2 and may not move).");
         addIcons(Icon.SPECIAL_EDITION, Icon.PILOT, Icon.VIRTUAL_SET_1);
         setSpecies(Species.SARKAN);
         addKeywords(Keyword.SMUGGLER);
