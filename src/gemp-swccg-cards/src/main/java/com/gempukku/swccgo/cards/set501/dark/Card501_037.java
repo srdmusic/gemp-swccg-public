@@ -9,6 +9,7 @@ import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -79,30 +80,25 @@ public class Card501_037 extends AbstractAlien {
             }
         }
 
-        boolean matchesRepSpecies = false;
         if (rep != null) {
-            if (self.getBlueprint().hasSpeciesAttribute() && rep.getBlueprint().hasSpeciesAttribute()) {
-                if (self.getBlueprint().getSpecies() == rep.getBlueprint().getSpecies()) {
-                    matchesRepSpecies = true;
-                }
+            final Species repSpecies = rep.getBlueprint().getSpecies();
+        
+            gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+            if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                    && game.getModifiersQuerying().isSpecies(game.getGameState(), self, repSpecies)
+                    && GameConditions.hasUsedPile(game, playerId)
+                    && TriggerConditions.justRetrievedForce(game, effectResult, playerId)) {
+                OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Place top card of Used Pile on Force Pile");
+                action.setActionMsg("Place top card of Used Pile on Force Pile");
+                action.appendUsage(
+                        new OncePerTurnEffect(action)
+                );
+                // Perform result(s)
+                action.appendEffect(
+                        new PlaceTopCardOfUsedPileOnTopOfForcePileEffect(action, playerId));
+                actions.add(action);
             }
-        }
-
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && matchesRepSpecies
-                && GameConditions.hasUsedPile(game, playerId)
-                && TriggerConditions.justRetrievedForce(game, effectResult, playerId)) {
-            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place top card of Used Pile on Force Pile");
-            action.setActionMsg("Place top card of Used Pile on Force Pile");
-            action.appendUsage(
-                    new OncePerTurnEffect(action)
-            );
-            // Perform result(s)
-            action.appendEffect(
-                    new PlaceTopCardOfUsedPileOnTopOfForcePileEffect(action, playerId));
-            actions.add(action);
         }
         return actions;
     }
