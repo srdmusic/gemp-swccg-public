@@ -1,7 +1,10 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
@@ -12,11 +15,18 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromHandOnUsedPileEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
 import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.MovesForFreeModifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -48,5 +58,36 @@ public class Card501_215 extends AbstractAlien {
         modifiers.add(new DestinyModifier(self, yourStarSpeederFilter, 2));
         modifiers.add(new MovesForFreeModifier(self, yourStarSpeederFilter));
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.hasHand(game, playerId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Place card from hand on Used Pile");
+            action.setActionMsg("Smoke pipe (power and defense value +2 and may not move)");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Pay cost(s)
+            action.appendCost(
+                    new PutCardFromHandOnUsedPileEffect(action, playerId));
+            // Perform result(s)
+            action.appendEffect(
+                    new AddUntilEndOfTurnModifierEffect(action, new PowerModifier(self, Filters.title("Melas"), 2), "make Melas power +2 until end of turn"));
+            action.appendEffect(
+                    new AddUntilEndOfTurnModifierEffect(action, new DefenseValueModifier(self, Filters.title("Melas"), 2), "make Melas defense value +2 until end of turn"));
+            action.appendEffect(
+                    new AddUntilEndOfTurnModifierEffect(action, new MayNotMoveModifier(self, Filters.title("Melas")), "make Melas unable to move until end of turn"));
+            
+            return Collections.singletonList(action);
+        }
+
+        return null;
     }
 }
