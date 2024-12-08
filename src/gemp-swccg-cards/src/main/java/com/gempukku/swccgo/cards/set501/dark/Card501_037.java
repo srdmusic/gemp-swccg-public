@@ -9,6 +9,7 @@ import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -18,7 +19,6 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.PlaceTopCardOfUsedPileOnTopOfForcePileEffect;
 import com.gempukku.swccgo.logic.effects.PutStackedCardInUsedPileEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.SpeciesModifier;
@@ -38,8 +38,8 @@ public class Card501_037 extends AbstractAlien {
     public Card501_037() {
         super(Side.DARK, 2, 4, 4, 2, 5, "Alien Mob", Uniqueness.DIAMOND_1, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("This card has your non-[Maintenance] Rep's species. When deployed, may retrieve a Rep or place a Rep stacked on your Objective in Used Pile. " +
-                "Once per turn, if Fearless And Inventive on table and you just retrieved Force, may place top card of Used Pile on Force Pile.");
+        setGameText("This card has your non-[Maintenance] Rep's species. When deployed, may place a Rep stacked on your Objective in Used Pile. " +
+                "Once per turn, If this card has your Rep's species and you just retrieved Force, may place top card of Used Pile on Force Pile.");
         addIcons(Icon.VIRTUAL_SET_16);
         addIcon(Icon.WARRIOR, 3);
         setTestingText("Alien Mob (ERRATA)");
@@ -62,16 +62,6 @@ public class Card501_037 extends AbstractAlien {
         if (TriggerConditions.justDeployed(game, effectResult, self)
                 && rep != null) {
 
-            if (GameConditions.hasLostPile(game, playerId)) {
-                OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Retrieve " + GameUtils.getCardLink(rep));
-                action.setActionMsg("Retrieve " + GameUtils.getCardLink(rep));
-                // Perform result(s)
-                action.appendEffect(
-                        new RetrieveCardEffect(action, playerId, Filters.sameTitle(rep)));
-                actions.add(action);
-            }
-
             if (GameConditions.canSpot(game, self, Filters.and(Filters.your(playerId), Filters.Objective, Filters.hasStacked(Filters.sameTitle(rep))))) {
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Place stacked " + GameUtils.getCardLink(rep) + " in Used Pile");
@@ -90,21 +80,25 @@ public class Card501_037 extends AbstractAlien {
             }
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canSpot(game, self, Filters.Fearless_And_Inventive)
-                && GameConditions.hasUsedPile(game, playerId)
-                && TriggerConditions.justRetrievedForce(game, effectResult, playerId)) {
-            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place top card of Used Pile on Force Pile");
-            action.setActionMsg("Place top card of Used Pile on Force Pile");
-            action.appendUsage(
-                    new OncePerTurnEffect(action)
-            );
-            // Perform result(s)
-            action.appendEffect(
-                    new PlaceTopCardOfUsedPileOnTopOfForcePileEffect(action, playerId));
-            actions.add(action);
+        if (rep != null) {
+            final Species repSpecies = rep.getBlueprint().getSpecies();
+        
+            gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+            if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                    && game.getModifiersQuerying().isSpecies(game.getGameState(), self, repSpecies)
+                    && GameConditions.hasUsedPile(game, playerId)
+                    && TriggerConditions.justRetrievedForce(game, effectResult, playerId)) {
+                OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Place top card of Used Pile on Force Pile");
+                action.setActionMsg("Place top card of Used Pile on Force Pile");
+                action.appendUsage(
+                        new OncePerTurnEffect(action)
+                );
+                // Perform result(s)
+                action.appendEffect(
+                        new PlaceTopCardOfUsedPileOnTopOfForcePileEffect(action, playerId));
+                actions.add(action);
+            }
         }
         return actions;
     }
