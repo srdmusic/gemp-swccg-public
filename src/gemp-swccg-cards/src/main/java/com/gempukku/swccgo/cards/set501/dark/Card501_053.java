@@ -14,6 +14,7 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -47,7 +48,7 @@ public class Card501_053 extends AbstractNormalEffect {
     public Card501_053() {
         super(Side.DARK, 7, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Working Much More Closely", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Hologram.");
-        setGameText("Deploy on table. Your other holograms are canceled. Maul is defense value +2 and immune to attrition. Once per game, if [Set 13] Maul on table, may ▼ Qi'ra. If Maul just lost, place Effect in Used Pile. [Immune to Alter.]");
+        setGameText("Deploy on table. Your other holograms are canceled. While present with an opponent's Jedi, Maul is defense value +2 and immune to attrition. Once per game, if [Set 13] Maul on table, may [download] Qi'ra. If Maul just lost, place Effect in Used Pile. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_13);
         addKeyword(Keyword.HOLOGRAM);
         addImmuneToCardTitle(Title.Alter);
@@ -56,9 +57,11 @@ public class Card501_053 extends AbstractNormalEffect {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        Filter maulPresentWithOpponentsJedi = Filters.and(Filters.Maul, Filters.presentWith(self, Filters.and(Filters.opponents(self), Filters.Jedi)));
+        
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DefenseValueModifier(self, Filters.Maul, 2));
-        modifiers.add(new ImmuneToAttritionModifier(self, Filters.Maul));
+        modifiers.add(new DefenseValueModifier(self, maulPresentWithOpponentsJedi, 2));
+        modifiers.add(new ImmuneToAttritionModifier(self, maulPresentWithOpponentsJedi));
         return modifiers;
     }
 
