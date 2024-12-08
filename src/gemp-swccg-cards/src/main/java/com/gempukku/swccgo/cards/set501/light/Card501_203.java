@@ -38,11 +38,10 @@ public class Card501_203 extends AbstractNormalEffect {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Strike_Planning, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("'General Solo, is your strike team assembled?'");
-        setGameText("If an [A New Hope] objective on table, deploy on table. Twice per game, may [upload] Mon Mothma or any general. During your first turn, while Stolen Data Tapes at Dune Sea, [Set 1] Obi-Wan deploys -6 there. [Immune to Alter.]");
+        setGameText("If Rebel Strike Team on table, deploy on table. Your personal Force generation = 2. Unless opponent's [Endor] objective on table, opponent generates no Force at your Endor system. Twice per game, may [upload] an [Endor] or [Death Star II] leader. May [download] [Death Star II] Falcon to Endor. [Immune to Alter.]");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Strike Planning (V) (ERRATA)");
-        hideFromDeckBuilder();
     }
 
     @Override
