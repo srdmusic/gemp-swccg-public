@@ -7,7 +7,6 @@ import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
-import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -29,7 +28,7 @@ import com.gempukku.swccgo.logic.effects.ShuffleReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardsFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardsFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.modifiers.KeywordModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -57,13 +56,7 @@ public class Card501_055 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DestinyModifier(self, Filters.or(
-                Filters.Aurra,
-                Filters.Bossk,
-                Filters.Cad,
-                Filters.hasPermanentAboard(Filters.persona(Persona.AURRA)),
-                Filters.hasPermanentAboard(Filters.persona(Persona.BOSSK)),
-                Filters.hasPermanentAboard(Filters.persona(Persona.CAD))), 2));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.alone, Filters.assassin), 1));
         return modifiers;
     }
 
