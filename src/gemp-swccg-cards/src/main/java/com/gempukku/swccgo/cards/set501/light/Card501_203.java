@@ -7,6 +7,7 @@ import com.gempukku.swccgo.cards.effects.usage.TwicePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
@@ -54,7 +55,7 @@ public class Card501_203 extends AbstractNormalEffect {
 
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ResetPersonalForceGenerationModifier(self, 2, self.getOwner()));
-        modifiers.add(new GenerateNoForceModifier(self, Filters.Endor_system, new UnlessCondition(new OnTableCondition(self, Filters.and(Filters.owner(opponent), Icon.ENDOR, Filters.Objective))), opponent));
+        modifiers.add(new GenerateNoForceModifier(self, Filters.and(Filters.your(self), Filters.Endor_system), new UnlessCondition(new OnTableCondition(self, Filters.and(Filters.owner(opponent), Icon.ENDOR, Filters.Objective))), opponent));
         return modifiers;
     }
 
@@ -81,7 +82,7 @@ public class Card501_203 extends AbstractNormalEffect {
         }
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)){
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.FALCON)){
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy Falcon from Reserve Deck");
             action.setActionMsg("Deploy Falcon from Reserve Deck");
