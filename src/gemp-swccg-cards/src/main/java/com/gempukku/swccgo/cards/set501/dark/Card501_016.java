@@ -76,7 +76,7 @@ public class Card501_016 extends AbstractDroid {
                         new TargetCardOnTableEffect(action, playerId, "Choose character", characterFilter) {
                             @Override
                             protected void cardTargeted(int targetGroupId, final PhysicalCard characterTargeted) {
-                                Filter siteToRelocateTo = Filters.and(sameSiteAsDarkJediOrJedi, Filters.locationCanBeRelocatedTo(characterTargeted, 2));
+                                Filter siteToRelocateTo = Filters.and(sameSiteAsDarkJediOrJedi, Filters.locationCanBeRelocatedTo(characterTargeted, false, true, false, 2, false));
                                 action.appendTargeting(
                                         new ChooseCardOnTableEffect(action, playerId, "Choose site to relocate " + GameUtils.getCardLink(characterTargeted) + " to", siteToRelocateTo) {
                                             @Override
