@@ -50,7 +50,7 @@ public class Card501_163 extends AbstractNormalEffect {
             repFilter = Filters.sameTitle(rep);
         }
         Filter yourAlienFilter = Filters.and(Filters.your(playerId), Filters.alien);
-        Filter locationsWithYourAlien = Filters.sameSiteAs(self, yourAlienFilter);
+        Filter battlegroundsWithYourAlien = Filters.and(Filters.battleground, Filters.sameSiteAs(self, yourAlienFilter));
 
         Condition fiveDifferentSpeciesCondition = new AtLeastNumberOfAlienSpeciesOnTableCondition(game, self, 5);
         Condition yourAlienInBattle = new InBattleCondition(self, yourAlienFilter);
@@ -58,7 +58,7 @@ public class Card501_163 extends AbstractNormalEffect {
         modifiers.add(new ImmuneToAttritionModifier(self, repFilter));
         modifiers.add(new TotalBattleDestinyModifier(self, new AndCondition(fiveDifferentSpeciesCondition, yourAlienInBattle), 1, playerId));
         modifiers.add(new ForfeitModifier(self, yourAlienFilter, fiveDifferentSpeciesCondition, 1));
-        modifiers.add(new ForceDrainModifier(self, locationsWithYourAlien, fiveDifferentSpeciesCondition, 1, playerId));
+        modifiers.add(new ForceDrainModifier(self, battlegroundsWithYourAlien, fiveDifferentSpeciesCondition, 1, playerId));
 
         return modifiers;
     }
