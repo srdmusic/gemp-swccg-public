@@ -97,8 +97,8 @@ public class Card501_191 extends AbstractAlien {
 
             final PhysicalCard justLostCard = ((LostFromTableResult) effectResult).getCard();
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take " + GameUtils.getFullName(justLostCard) + " into hand");
-            action.setActionMsg("Take " + GameUtils.getCardLink(justLostCard) + " into hand");
+            action.setText("Place " + GameUtils.getFullName(justLostCard) + " in Used Pile");
+            action.setActionMsg("Place " + GameUtils.getCardLink(justLostCard) + " in Used Pile");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerGameEffect(action));
