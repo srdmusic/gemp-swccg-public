@@ -18,9 +18,9 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.PutCardFromLostPileInUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Effect;
@@ -39,7 +39,7 @@ import java.util.List;
  */
 public class Card501_191 extends AbstractAlien {
     public Card501_191() {
-        super(Side.LIGHT, 2, 3, 2, 4, 6, "Grogu", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 2, 3, 2, 4, 4, "Grogu", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("May deploy Foundling on Grogu from Reserve Deck (reshuffle) or Lost Pile. " +
                 "Once per game, during battle, may either cancel a non-[Sense] Interrupt or take your just-lost Mandalorian into hand. " +
@@ -102,7 +102,7 @@ public class Card501_191 extends AbstractAlien {
                     new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new TakeCardIntoHandFromLostPileEffect(action, playerId, justLostCard, false, true));
+                    new PutCardFromLostPileInUsedPileEffect(action, playerId, justLostCard, true));
             return Collections.singletonList(action);
         }
 
