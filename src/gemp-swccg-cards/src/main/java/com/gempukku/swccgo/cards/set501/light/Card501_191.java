@@ -41,8 +41,8 @@ public class Card501_191 extends AbstractAlien {
     public Card501_191() {
         super(Side.LIGHT, 2, 3, 2, 4, 4, "Grogu", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("May deploy Foundling on Grogu from Reserve Deck (reshuffle) or Lost Pile. " +
-                "Once per game, during battle, may either cancel a non-[Sense] Interrupt or take your just-lost Mandalorian into hand. " +
+        setGameText("May [download] (or deploy from Lost Pile) Foundling on Grogu. " +
+                "Once per game, if present during battle, may cancel a non-[Immune to Sense] Interrupt or place your just lost Mandalorian in Used Pile. " +
                 "Immune to attrition < 3.");
         addPersona(Persona.GROGU);
         addIcons(Icon.VIRTUAL_SET_16);
@@ -91,6 +91,8 @@ public class Card501_191 extends AbstractAlien {
 
         GameTextActionId gameTextActionId = GameTextActionId.GROGU__CANCEL_INTERRUPT_OR_TAKE_JUST_LOST_MANDALORIAN_INTO_HAND;
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+            && GameConditions.isPresent(game, self)
+            && GameConditions.isInBattle(game, self)
             && TriggerConditions.justLost(game, effectResult, Filters.and(Filters.your(self), Filters.Mandalorian))) {
 
             final PhysicalCard justLostCard = ((LostFromTableResult) effectResult).getCard();
@@ -116,7 +118,8 @@ public class Card501_191 extends AbstractAlien {
         // Check condition(s)
         if (TriggerConditions.isPlayingCard(game, effect, Filters.and(Filters.Interrupt, Filters.not(Filters.immune_to_Sense)))
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.isDuringBattle(game)
+                && GameConditions.isPresent(game, self)
+                && GameConditions.isInBattle(game, self)
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
