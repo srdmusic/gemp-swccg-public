@@ -89,7 +89,7 @@ public class Card501_191 extends AbstractAlien {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.GROGU__CANCEL_INTERRUPT_OR_TAKE_JUST_LOST_MANDALORIAN_INTO_HAND;
+        GameTextActionId gameTextActionId = GameTextActionId.GROGU__CANCEL_INTERRUPT_OR_PLACE_JUST_LOST_MANDALORIAN_IN_USED;
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
             && GameConditions.isPresent(game, self)
             && GameConditions.isInBattle(game, self)
@@ -113,7 +113,7 @@ public class Card501_191 extends AbstractAlien {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalBeforeTriggers(final String playerId, SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.GROGU__CANCEL_INTERRUPT_OR_TAKE_JUST_LOST_MANDALORIAN_INTO_HAND;
+        GameTextActionId gameTextActionId = GameTextActionId.GROGU__CANCEL_INTERRUPT_OR_PLACE_JUST_LOST_MANDALORIAN_IN_USED;
 
         // Check condition(s)
         if (TriggerConditions.isPlayingCard(game, effect, Filters.and(Filters.Interrupt, Filters.not(Filters.immune_to_Sense)))
