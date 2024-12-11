@@ -17,7 +17,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.DeploysFreeAboardModifier;
 import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
-import com.gempukku.swccgo.logic.modifiers.MayMoveAsReactModifier;
+import com.gempukku.swccgo.logic.modifiers.MayMoveAsReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
@@ -34,7 +34,7 @@ public class Card501_219 extends AbstractCombatVehicle {
     public Card501_219(){
         super(Side.LIGHT, 2, 6, 6, null, 6, 4, 6, "Zev In Rogue 2", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Enclosed. First snowspeeder to be successfully adapted to Hoth's environment. Piloted by Zev Senesca. Led team in search of Captain Solo and Commander Skywalker.");
-        setGameText("Deploys -2 to Hoth. May add 1 pilot. Permanent pilot is •Zev, who provides ability of 2. Draws one battle destiny if unable to otherwise. May move as a 'react.' Vehicle weapons deploy free aboard.");
+        setGameText("Deploys -2 to Hoth. May add 1 pilot. Permanent pilot is •Zev, who provides ability of 2. Draws one battle destiny if unable to otherwise. May move as a 'react' to Hoth sites. Vehicle weapons deploy free aboard.");
         addModelType(ModelType.T_47);
         addPersona(Persona.ROGUE2);
         addIcons(Icon.PILOT, Icon.HOTH, Icon.VIRTUAL_SET_24);
@@ -59,7 +59,7 @@ public class Card501_219 extends AbstractCombatVehicle {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, 1));
-        modifiers.add(new MayMoveAsReactModifier(self));
+        modifiers.add(new MayMoveAsReactToLocationModifier(self, Filters.Hoth_site));
         modifiers.add(new DeploysFreeAboardModifier(self, Filters.and(Filters.your(self), Filters.vehicle_weapon), self));
         return modifiers;
     }
