@@ -104,7 +104,7 @@ public class Card501_178 extends AbstractObjective {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceDrainModifier(self, Filters.Tatooine_system, -1, playerId));
+        modifiers.add(new ForceDrainModifier(self, Filters.Tatooine_system, -2, playerId));
         return modifiers;
     }
 
