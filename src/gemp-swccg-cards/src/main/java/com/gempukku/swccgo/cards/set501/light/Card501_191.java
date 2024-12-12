@@ -18,9 +18,9 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.PutCardFromLostPileInUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Effect;
@@ -39,10 +39,10 @@ import java.util.List;
  */
 public class Card501_191 extends AbstractAlien {
     public Card501_191() {
-        super(Side.LIGHT, 2, 3, 2, 4, 6, "Grogu", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 2, 3, 2, 4, 4, "Grogu", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("May deploy Foundling on Grogu from Reserve Deck (reshuffle) or Lost Pile. " +
-                "Once per game, during battle, may either cancel a non-[Sense] Interrupt or take your just-lost Mandalorian into hand. " +
+        setGameText("May [download] (or deploy from Lost Pile) Foundling on Grogu. " +
+                "Once per game, if present during battle, may cancel a non-[Immune to Sense] Interrupt or place your just lost Mandalorian in Used Pile. " +
                 "Immune to attrition < 3.");
         addPersona(Persona.GROGU);
         addIcons(Icon.VIRTUAL_SET_16);
@@ -89,20 +89,22 @@ public class Card501_191 extends AbstractAlien {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.GROGU__CANCEL_INTERRUPT_OR_TAKE_JUST_LOST_MANDALORIAN_INTO_HAND;
+        GameTextActionId gameTextActionId = GameTextActionId.GROGU__CANCEL_INTERRUPT_OR_PLACE_JUST_LOST_MANDALORIAN_IN_USED;
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+            && GameConditions.isPresent(game, self)
+            && GameConditions.isInBattle(game, self)
             && TriggerConditions.justLost(game, effectResult, Filters.and(Filters.your(self), Filters.Mandalorian))) {
 
             final PhysicalCard justLostCard = ((LostFromTableResult) effectResult).getCard();
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Take " + GameUtils.getFullName(justLostCard) + " into hand");
-            action.setActionMsg("Take " + GameUtils.getCardLink(justLostCard) + " into hand");
+            action.setText("Place " + GameUtils.getFullName(justLostCard) + " in Used Pile");
+            action.setActionMsg("Place " + GameUtils.getCardLink(justLostCard) + " in Used Pile");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new TakeCardIntoHandFromLostPileEffect(action, playerId, justLostCard, false, true));
+                    new PutCardFromLostPileInUsedPileEffect(action, playerId, justLostCard, true));
             return Collections.singletonList(action);
         }
 
@@ -111,12 +113,13 @@ public class Card501_191 extends AbstractAlien {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalBeforeTriggers(final String playerId, SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.GROGU__CANCEL_INTERRUPT_OR_TAKE_JUST_LOST_MANDALORIAN_INTO_HAND;
+        GameTextActionId gameTextActionId = GameTextActionId.GROGU__CANCEL_INTERRUPT_OR_PLACE_JUST_LOST_MANDALORIAN_IN_USED;
 
         // Check condition(s)
         if (TriggerConditions.isPlayingCard(game, effect, Filters.and(Filters.Interrupt, Filters.not(Filters.immune_to_Sense)))
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.isDuringBattle(game)
+                && GameConditions.isPresent(game, self)
+                && GameConditions.isInBattle(game, self)
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
