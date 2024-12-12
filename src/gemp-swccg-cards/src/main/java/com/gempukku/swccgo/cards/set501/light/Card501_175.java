@@ -39,7 +39,7 @@ public class Card501_175 extends AbstractCharacterDevice {
     public Card501_175() {
         super(Side.LIGHT, 7, "Luke's Bionic Hand", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Uses state-of-the-art digital processors. Although Luke had lost his hand, the Alliance could rebuild it. They had the technology. They could make it better, stronger, faster.");
-        setGameText("Deploy on Luke. Luke's power and immunity to attrition are +2. During battle at a battleground, once per game, may exchange a card in hand with an Interrupt in Lost Pile. This device lost if Luke Disarmed.");
+        setGameText("Deploy on Luke. Luke's power and immunity to attrition are +2. Once per game, during battle, may exchange a card in hand with an Interrupt in Lost Pile. This device lost if Luke Disarmed.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_0);
         setTestingText("Luke's Bionic Hand (ERRATA)");
     }
@@ -60,7 +60,7 @@ public class Card501_175 extends AbstractCharacterDevice {
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.isInBattleAt(game, self, Filters.battleground)
+                && GameConditions.isInBattle(game, self)
                 && GameConditions.canUseDevice(game, self)
                 && GameConditions.hasHand(game, playerId)
                 && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
