@@ -92,13 +92,13 @@ public class Card501_201 extends AbstractRebel {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy Anakin's Lightsaber from Reserve Deck");
-            action.setActionMsg("Deploy Anakin's Lightsaber on " + GameUtils.getCardLink(self) + " from Reserve Deck");
+            action.setActionMsg("Deploy Anakin's Lightsaber on Luke from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.persona(Persona.ANAKINS_LIGHTSABER), Filters.sameCardId(self), true, true));
+                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.persona(Persona.ANAKINS_LIGHTSABER), Filters.Luke, true, true));
             return Collections.singletonList(action);
         }
         return null;
@@ -119,14 +119,17 @@ public class Card501_201 extends AbstractRebel {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Exclude cards from battle");
+            action.setActionMsg("Deploy Anakin's Lightsaber on Luke from Reserve Deck");
             // Choose target(s)
             action.appendTargeting(
                     new TargetCardOnTableEffect(action, playerId, "Choose a Dark Jedi to battle", darkJediFilter) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
-                            otherCharactersAndVehicles.remove(targetedCard);
+                            //generate a "New" list in case anything has changed
+                            Collection<PhysicalCard> otherCharactersAndVehiclesNew = Filters.filterActive(game, self, otherCharactersAndVehiclesFilter);
+                            otherCharactersAndVehiclesNew.remove(targetedCard);
                             Collection<PhysicalCard> cardsToExclude = new LinkedList<PhysicalCard>();
-                            for (PhysicalCard someCard : otherCharactersAndVehicles) {
+                            for (PhysicalCard someCard : otherCharactersAndVehiclesNew) {
                                 if (GameConditions.canTarget(game, self, targetingReason, someCard)) {
                                     cardsToExclude.add(someCard);
                                 }
