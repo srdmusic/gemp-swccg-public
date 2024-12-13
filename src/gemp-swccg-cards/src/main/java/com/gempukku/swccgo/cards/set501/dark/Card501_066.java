@@ -45,7 +45,7 @@ public class Card501_066 extends AbstractNormalEffect {
     public Card501_066() {
         super(Side.DARK, 2, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.All_Wrapped_Up, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("A capture cable is a quick and effective way for bounty hunters to suddenly snare their target.");
-        setGameText("Deploy on table. Unless Court Of The Vile Gangster on table, [Dagobah] and [Cloud City] bounty hunters are forfeit +2. May [download] [Jabba's Palace] Ord Mantell. If opponent's character is about to be forfeited, your bounty hunter present may capture that character (character is first restored to normal). [Immune to Alter.]");
+        setGameText("Deploy on table. May [download] [Jabba's Palace] Ord Mantell. Unless Court Of The Vile Gangster on table, [Dagobah] and [Cloud City] bounty hunters are forfeit +2. If opponent's character is about to be forfeited, your bounty hunter present may capture that character (character is first restored to normal). [Immune to Alter.]");
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_24);
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
