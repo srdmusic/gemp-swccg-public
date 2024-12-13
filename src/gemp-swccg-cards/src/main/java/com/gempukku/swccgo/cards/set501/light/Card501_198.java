@@ -19,7 +19,7 @@ public class Card501_198 extends AbstractResistance {
         super(Side.LIGHT, 1, 5, 6, 5, 8, "Ben Solo", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("If drawn for destiny, may [upload] Rey or a lightsaber. [Pilot] 3. Deploys only if an [Episode VII] Epic Event on table. Your total battle destiny here is +1 for each of your Interrupts out of play (limit +3). Once per game, may deploy a lightsaber on Ben from Lost Pile.");
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
-        addPersona(Persona.KYLO); //----double checking this with EBT----
+        addPersona(Persona.BEN_SOLO);
         setTestingText("Ben Solo");
     }
 }
