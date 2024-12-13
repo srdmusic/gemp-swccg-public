@@ -118,10 +118,10 @@ public class Card501_201 extends AbstractRebel {
                 && otherCharactersAndVehicles.size() > 1) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Exclude all characters and vehicles (except Luke and a Dark Jedi) from battle");
+            action.setText("Exclude cards from battle");
             // Choose target(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose Dark Jedi", darkJediFilter) {
+                    new TargetCardOnTableEffect(action, playerId, "Choose a Dark Jedi to battle", darkJediFilter) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
                             otherCharactersAndVehicles.remove(targetedCard);
