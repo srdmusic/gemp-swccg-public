@@ -1,10 +1,14 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
@@ -19,10 +23,15 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.CaptureCharacterOnTableEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.effects.RestoreCardToNormalEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.AboutToForfeitCardFromTableResult;
@@ -41,6 +50,33 @@ public class Card501_066 extends AbstractNormalEffect {
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
         setTestingText("All Wrapped Up (V)");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.or(Icon.DAGOBAH, Icon.CLOUD_CITY), Filters.bounty_hunter), new UnlessCondition(new OnTableCondition(self, Filters.Court_Of_The_Vile_Gangster)), 2));
+        return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.ALL_WRAPPED_UP__DOWNLOAD_ORD_MANTELL;
+
+        // Check condition(s)
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Ord_Mantell)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Ord Mantell from Reserve Deck");
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.JABBAS_PALACE, Filters.Ord_Mantell_system), true));
+            actions.add(action);
+        }
+
+        return actions;
     }
 
     @Override
