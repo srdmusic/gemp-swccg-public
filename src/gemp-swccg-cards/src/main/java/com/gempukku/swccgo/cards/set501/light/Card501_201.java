@@ -119,7 +119,6 @@ public class Card501_201 extends AbstractRebel {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Exclude cards from battle");
-            action.setActionMsg("Deploy Anakin's Lightsaber on Luke from Reserve Deck");
             // Choose target(s)
             action.appendTargeting(
                     new TargetCardOnTableEffect(action, playerId, "Choose a Dark Jedi to battle", darkJediFilter) {
