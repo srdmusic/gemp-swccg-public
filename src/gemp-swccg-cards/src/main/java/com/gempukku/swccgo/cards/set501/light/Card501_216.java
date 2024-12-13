@@ -47,8 +47,9 @@ public class Card501_216 extends AbstractSite {
         Filter destination = Filters.Landing_Platform;
         
         if (GameConditions.canSpot(game, self, Filters.and(Filters.Imperial, Filters.atLocation(Filters.Landing_Platform)))
-            && GameConditions.isOpponentsTurn(game, self)
-            && GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, character, self, destination, true)) {
+                && GameConditions.isOpponentsTurn(game, self)
+                && GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, character, self, destination, true)) {
+            
             MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnLightSideOfLocation, game, self, gameTextSourceCardId, character, self, destination, true);
             action.setText("Move Luke to Landing Platform");
             actions.add(action);
