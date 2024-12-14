@@ -92,7 +92,7 @@ public class Card501_202 extends AbstractNormalEffect {
 
         // Check condition(s)
         if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker)
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.Skywalker, Filters.warrior))
                 && GameConditions.canActivateForce(game, playerId)
                 && GameConditions.canActivateForce(game, opponentId)) {
             
@@ -120,9 +120,6 @@ public class Card501_202 extends AbstractNormalEffect {
                         }
                     }
             );
-            // Perform result(s)
-            action.appendEffect(
-                    new ActivateForceEffect(action, playerId, 1));
             actions.add(action);
         }
 
