@@ -84,7 +84,7 @@ public class Card501_201 extends AbstractRebel {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.SON_OF_SKYWALKER__DOWNLOAD_LIGHTSABER;
+        GameTextActionId gameTextActionId = GameTextActionId.SON_OF_SKYWALKER_V__DOWNLOAD_ANAKINS_LIGHTSABER;
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
