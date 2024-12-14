@@ -40,7 +40,7 @@ public class Card501_202 extends AbstractNormalEffect {
     public Card501_202() {
         super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Cunning Warrior", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Luke's experience on Dagobah gave him great skill in using the Force. Vader had to keep his focus on Luke at all times, or face the consequences.");
-        setGameText("If your [Skywalker] Epic Event on table, deploy on table. Where you have a Skywalker, you initiate battles for free. Once per turn, may ▼ Anakin's Lightsaber or a Cloud City corridor. During battle involving a Skywalker warrior, may select a player to activate 1 Force. [Immune to Alter.]");
+        setGameText("If your [Skywalker] Epic Event on table, deploy on table. Where you have a Skywalker, you initiate battles for free. Once per turn, may ▼ Anakin's Lightsaber or a [Cloud City] corridor. During battle involving a Skywalker warrior, may select a player to activate 1 Force. [Immune to Alter.]");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_24);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("A Cunning Warrior");
@@ -70,11 +70,11 @@ public class Card501_202 extends AbstractNormalEffect {
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             Filter anakinsLightsaber = Filters.and(Filters.weapon, Filters.persona(Persona.ANAKINS_LIGHTSABER));
-            Filter cloudCityCorridor = Filters.and(Filters.Cloud_City_site, Filters.titleContains("Corridor"));
+            Filter cloudCityCorridor = Filters.and(Icon.CLOUD_CITY, Filters.titleContains("Corridor"));
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy Anakin's Lightsaber or a Cloud City corridor from Reserve Deck");
+            action.setActionMsg("Deploy Anakin's Lightsaber or a [Cloud City] corridor from Reserve Deck");
 
             // Update usage limit(s)
             action.appendUsage(
