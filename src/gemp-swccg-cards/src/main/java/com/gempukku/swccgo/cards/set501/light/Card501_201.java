@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -87,18 +86,14 @@ public class Card501_201 extends AbstractRebel {
         GameTextActionId gameTextActionId = GameTextActionId.SON_OF_SKYWALKER_V__DOWNLOAD_ANAKINS_LIGHTSABER;
 
         // Check condition(s)
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.ANAKINS_LIGHTSABER)) {
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.ANAKINS_LIGHTSABER)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy Anakin's Lightsaber from Reserve Deck");
-            action.setActionMsg("Deploy Anakin's Lightsaber on Luke from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
+            action.setActionMsg("Deploy Anakin's Lightsaber to Luke's location from Reserve Deck");
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.persona(Persona.ANAKINS_LIGHTSABER), Filters.Luke, true, true));
+                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.persona(Persona.ANAKINS_LIGHTSABER), Filters.sameLocation(self), true, true));
             return Collections.singletonList(action);
         }
         return null;
