@@ -19,7 +19,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ResetPersonalForceGenerationModifier;
@@ -39,7 +39,7 @@ public class Card501_185 extends AbstractNormalEffect {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Seeking_An_Audience, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("'With your wisdom, I'm sure that we can work out an arrangement which will be mutually beneficial and enable us to avoid any unpleasant confrontation.'");
-        setGameText("If Han is frozen, deploy on table. Your personal Force generation = 2. Once per turn, may [download] C-3PO, R2-D2, Underworld Contacts, [Jabba's Palace] Lando, or [Jabba's Palace] Leia to a Jabba's Palace site. May place this Effect out of play to retrieve an alien or [Independent] starship into hand. [Immune to Alter.]");
+        setGameText("If Han is frozen, deploy on table. Your personal Force generation = 2. Once per turn, may [download] C-3PO, R2-D2, [Jabba's Palace] Lando, or [Jabba's Palace] Leia to a Jabba's Palace site. May place this Effect out of play to retrieve R2-D2. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_1);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Seeking An Audience (V) (ERRATA)");
@@ -69,14 +69,14 @@ public class Card501_185 extends AbstractNormalEffect {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy C-3PO, R2-D2, Underworld Contacts, [Jabba's Palace] Lando, or [Jabba's Palace] Leia to a Jabba's Palace site from Reserve Deck");
+            action.setActionMsg("Deploy C-3PO, R2-D2, [Jabba's Palace] Lando, or [Jabba's Palace] Leia to a Jabba's Palace site from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new DeployCardToLocationFromReserveDeckEffect(action,
-                            Filters.or(Filters.C3PO, Filters.R2D2, Filters.Underworld_Contacts, Filters.and(Icon.JABBAS_PALACE, Filters.Lando), Filters.and(Icon.JABBAS_PALACE, Filters.Leia)),
+                            Filters.or(Filters.C3PO, Filters.R2D2, Filters.and(Icon.JABBAS_PALACE, Filters.Lando), Filters.and(Icon.JABBAS_PALACE, Filters.Leia)),
                             Filters.Jabbas_Palace_site, true));
             actions.add(action);
         }
@@ -84,14 +84,14 @@ public class Card501_185 extends AbstractNormalEffect {
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-        action.setText("Place out of play to retrieve card into hand");
-        action.setActionMsg("Retrieve an alien or [Independent] starship into hand");
+        action.setText("Place out of play to retrieve R2-D2");
+        action.setActionMsg("Retrieve R2-D2");
         // Pay cost(s)
         action.appendCost(
                 new PlaceCardOutOfPlayFromTableEffect(action, self));
         // Perform result(s)
         action.appendEffect(
-                new RetrieveCardIntoHandEffect(action, playerId, Filters.or(Filters.alien, Filters.and(Icon.INDEPENDENT, Filters.starship))));
+                new RetrieveCardEffect(action, playerId, Filters.R2D2));
         actions.add(action);
 
         return actions;
