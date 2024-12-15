@@ -25,6 +25,7 @@ import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.ExcludedFromBattleModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotFireWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -101,42 +102,48 @@ public class Card501_201 extends AbstractRebel {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        Filter darkJediFilter = Filters.and(Filters.Dark_Jedi, Filters.presentWith(self), Filters.participatingInBattle);
-        Filter otherCharactersAndVehiclesFilter = Filters.and(Filters.or(Filters.character, Filters.vehicle), Filters.participatingInBattle, Filters.not(self));
-        Collection<PhysicalCard> otherCharactersAndVehicles = Filters.filterActive(game, self, otherCharactersAndVehiclesFilter);
+        Filter darkJediFilter = Filters.and(Filters.Dark_Jedi, Filters.sameLocation(self), Filters.participatingInBattle);
+        Filter otherCharactersFilter = Filters.and(Filters.character, Filters.participatingInBattle, Filters.not(self));
+        Collection<PhysicalCard> otherCharacters = Filters.filterActive(game, self, otherCharactersFilter);
 
         TargetingReason targetingReason = TargetingReason.TO_BE_EXCLUDED_FROM_BATTLE;
 
         // Check condition(s)
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.here(self))
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.sameSite(self))
+                && !GameConditions.canSpot(game, self, Filters.and(Filters.vehicle, Filters.sameLocation((self))))
                 && GameConditions.canTarget(game, self, darkJediFilter)
-                && otherCharactersAndVehicles.size() > 1) {
+                && otherCharacters.size() > 1) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Exclude cards from battle");
+            action.setText("Exclude characters from battle");
             // Choose target(s)
             action.appendTargeting(
                     new TargetCardOnTableEffect(action, playerId, "Choose a Dark Jedi to battle", darkJediFilter) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
                             //generate a "New" list in case anything has changed
-                            Collection<PhysicalCard> otherCharactersAndVehiclesNew = Filters.filterActive(game, self, otherCharactersAndVehiclesFilter);
-                            otherCharactersAndVehiclesNew.remove(targetedCard);
+                            Collection<PhysicalCard> otherCharactersNew = Filters.filterActive(game, self, otherCharactersFilter);
+                            otherCharactersNew.remove(targetedCard);
                             Collection<PhysicalCard> cardsToExclude = new LinkedList<PhysicalCard>();
-                            for (PhysicalCard someCard : otherCharactersAndVehiclesNew) {
+                            for (PhysicalCard someCard : otherCharactersNew) {
                                 if (GameConditions.canTarget(game, self, targetingReason, someCard)) {
                                     cardsToExclude.add(someCard);
                                 }
                             }
                             action.addAnimationGroup(cardsToExclude);
                             // Allow response(s)
-                            action.allowResponses("Exclude all characters and vehicles (except " + GameUtils.getCardLink(self) + " and " + GameUtils.getCardLink(targetedCard) + ") from battle",
+                            action.allowResponses("Exclude all characters (except " + GameUtils.getCardLink(self) + " and " + GameUtils.getCardLink(targetedCard) + ") from battle",
                                     new UnrespondableEffect(action) {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
                                             // Perform result(s)
                                             action.appendEffect(
                                                     new ExcludeFromBattleEffect(action, cardsToExclude));
+
+                                            Filter ongoingExclusionFilter = Filters.and(Filters.character, Filters.participatingInBattle, Filters.canBeTargetedBy(self, targetingReason), Filters.not(self), Filters.not(targetedCard));
+                                            action.appendEffect(
+                                                    new AddUntilEndOfBattleModifierEffect(action,
+                                                            new ExcludedFromBattleModifier(self, ongoingExclusionFilter), null));
                                         }
                                     }
                             );
