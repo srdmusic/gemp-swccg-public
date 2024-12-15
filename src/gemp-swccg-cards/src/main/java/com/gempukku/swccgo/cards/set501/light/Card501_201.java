@@ -49,7 +49,7 @@ public class Card501_201 extends AbstractRebel {
     public Card501_201() {
         super(Side.LIGHT, 1, 5, 5, 5, 8, "Son Of Skywalker", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Luke Skywalker. Son of Anakin. Seeker of Yoda. Levitator of rocks. Ignorer of advice. Incapable of impossible. Reckless is he.");
-        setGameText("[Pilot] 2. During battle, characters 'hit' by Luke may not fire weapons. Once per game, may [download] Anakin's Lightsaber on Luke. If a battle just initiated where Luke present with a Dark Jedi, may exclude all other characters and vehicles. Immune to attrition < 4.");
+        setGameText("[Pilot] 2. During battle, characters 'hit' by Luke may not fire weapons. May [download] Anakin's Lightsaber here. If a battle just initiated at same site, unless a vehicle here, may target a Dark Jedi here; for remainder of battle, exclude all other characters. Immune to attrition < 4.");
         addIcons(Icon.CLOUD_CITY, Icon.DAGOBAH, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
         addPersona(Persona.LUKE);
         setVirtualSuffix(true);
