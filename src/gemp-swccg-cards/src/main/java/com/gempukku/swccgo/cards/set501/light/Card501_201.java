@@ -94,7 +94,7 @@ public class Card501_201 extends AbstractRebel {
             action.setActionMsg("Deploy Anakin's Lightsaber to Luke's location from Reserve Deck");
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.persona(Persona.ANAKINS_LIGHTSABER), Filters.sameLocation(self), true, true));
+                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.persona(Persona.ANAKINS_LIGHTSABER), Filters.atSameLocation(self), true, true));
             return Collections.singletonList(action);
         }
         return null;
@@ -104,13 +104,13 @@ public class Card501_201 extends AbstractRebel {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         TargetingReason targetingReason = TargetingReason.TO_BE_EXCLUDED_FROM_BATTLE;
 
-        Filter darkJediFilter = Filters.and(Filters.Dark_Jedi, Filters.sameLocation(self), Filters.participatingInBattle);
+        Filter darkJediFilter = Filters.and(Filters.Dark_Jedi, Filters.atSameLocation(self), Filters.participatingInBattle);
         Filter otherCharactersFilter = Filters.and(Filters.character, Filters.participatingInBattle, Filters.not(self));
         Collection<PhysicalCard> otherCharacters = Filters.filterActive(game, self, otherCharactersFilter);
 
         // Check condition(s)
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.sameSite(self))
-                && !GameConditions.canSpot(game, self, Filters.and(Filters.vehicle, Filters.sameLocation((self))))
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.atSameSite(self))
+                && !GameConditions.canSpot(game, self, Filters.and(Filters.vehicle, Filters.atSameLocation((self))))
                 && GameConditions.canTarget(game, self, darkJediFilter)
                 && otherCharacters.size() > 1) {
 
