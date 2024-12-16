@@ -109,7 +109,7 @@ public class Card501_201 extends AbstractRebel {
         Collection<PhysicalCard> otherCharacters = Filters.filterActive(game, self, otherCharactersFilter);
 
         // Check condition(s)
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.atSameSite(self))
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.sameSite(self))
                 && !GameConditions.canSpot(game, self, Filters.and(Filters.vehicle, Filters.atSameLocation((self))))
                 && GameConditions.canTarget(game, self, darkJediFilter)
                 && otherCharacters.size() > 1) {
