@@ -36,7 +36,7 @@ public class Card501_200 extends AbstractRebel {
     public Card501_200() {
         super(Side.LIGHT, 1, 3, 3, 3, 6, Title.Madine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Military advisor to Mon Mothma. Leader of commando project. Corellian native. Defected to the Alliance shortly after the Battle of Yavin. Rescued by Rogue Squadron.");
-        setGameText("Scout. While present at a battleground, once during your deploy phase, may take one non-jedi scout into hand from Reserve Deck; reshuffle. During battle here (or same system as Ackbar) may retrieve 1 Force if you played Critical Error Revealed.");
+        setGameText("Scout. Once during your deploy phase, if present at a battleground, may [upload] a scout of ability < 3 (or any [Endor] scout). During battle here (or same system as Ackbar) may retrieve 1 Force if you played Critical Error Revealed.");
         addIcons(Icon.ENDOR, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.GENERAL, Keyword.LEADER, Keyword.SCOUT);
         setSpecies(Species.CORELLIAN);
@@ -55,13 +55,13 @@ public class Card501_200 extends AbstractRebel {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Take card into hand from Reserve Deck");
-            action.setActionMsg("Take a non-Jedi scout into hand from Reserve Deck");
+            action.setActionMsg("Take a scout into hand from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.and(Filters.scout, Filters.not(Filters.Jedi)), true));
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.and(Filters.scout, Filters.abilityLessThan(3)), Filters.and(Icon.ENDOR, Filters.scout)), true));
             return Collections.singletonList(action);
         }
         return null;
