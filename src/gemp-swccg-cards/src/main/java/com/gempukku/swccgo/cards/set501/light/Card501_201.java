@@ -102,11 +102,11 @@ public class Card501_201 extends AbstractRebel {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        TargetingReason targetingReason = TargetingReason.TO_BE_EXCLUDED_FROM_BATTLE;
+
         Filter darkJediFilter = Filters.and(Filters.Dark_Jedi, Filters.sameLocation(self), Filters.participatingInBattle);
         Filter otherCharactersFilter = Filters.and(Filters.character, Filters.participatingInBattle, Filters.not(self));
         Collection<PhysicalCard> otherCharacters = Filters.filterActive(game, self, otherCharactersFilter);
-
-        TargetingReason targetingReason = TargetingReason.TO_BE_EXCLUDED_FROM_BATTLE;
 
         // Check condition(s)
         if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.sameSite(self))
@@ -121,15 +121,8 @@ public class Card501_201 extends AbstractRebel {
                     new TargetCardOnTableEffect(action, playerId, "Choose a Dark Jedi to battle", darkJediFilter) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, final PhysicalCard targetedCard) {
-                            //generate a "New" list in case anything has changed
-                            Collection<PhysicalCard> otherCharactersNew = Filters.filterActive(game, self, otherCharactersFilter);
-                            otherCharactersNew.remove(targetedCard);
-                            Collection<PhysicalCard> cardsToExclude = new LinkedList<PhysicalCard>();
-                            for (PhysicalCard someCard : otherCharactersNew) {
-                                if (GameConditions.canTarget(game, self, targetingReason, someCard)) {
-                                    cardsToExclude.add(someCard);
-                                }
-                            }
+                            Filter exclusionFilter = Filters.and(Filters.character, Filters.participatingInBattle, Filters.canBeTargetedBy(self, targetingReason), Filters.not(self), Filters.not(targetedCard));
+                            Collection<PhysicalCard> cardsToExclude = Filters.filterActive(game, self, exclusionFilter);
                             action.addAnimationGroup(cardsToExclude);
                             // Allow response(s)
                             action.allowResponses("Exclude all characters (except " + GameUtils.getCardLink(self) + " and " + GameUtils.getCardLink(targetedCard) + ") from battle",
@@ -139,11 +132,9 @@ public class Card501_201 extends AbstractRebel {
                                             // Perform result(s)
                                             action.appendEffect(
                                                     new ExcludeFromBattleEffect(action, cardsToExclude));
-
-                                            Filter ongoingExclusionFilter = Filters.and(Filters.character, Filters.participatingInBattle, Filters.canBeTargetedBy(self, targetingReason), Filters.not(self), Filters.not(targetedCard));
                                             action.appendEffect(
                                                     new AddUntilEndOfBattleModifierEffect(action,
-                                                            new ExcludedFromBattleModifier(self, ongoingExclusionFilter), null));
+                                                            new ExcludedFromBattleModifier(self, exclusionFilter), null));
                                         }
                                     }
                             );
