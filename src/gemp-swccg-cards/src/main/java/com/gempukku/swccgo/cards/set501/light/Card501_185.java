@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -18,7 +19,6 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -39,7 +39,7 @@ public class Card501_185 extends AbstractNormalEffect {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Seeking_An_Audience, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("'With your wisdom, I'm sure that we can work out an arrangement which will be mutually beneficial and enable us to avoid any unpleasant confrontation.'");
-        setGameText("If Han is frozen, deploy on table. Your personal Force generation = 2. Once per turn, may [download] C-3PO, R2-D2, [Jabba's Palace] Lando, or [Jabba's Palace] Leia to a Jabba's Palace site. May place this Effect out of play to retrieve R2-D2. [Immune to Alter.]");
+        setGameText("If Han is frozen, deploy on table. Your personal Force generation = 2. Once per turn, may [download] C-3PO, R2-D2, [Jabba's Palace] Lando, or [Jabba's Palace] Leia to a Jabba's Palace site. Once per game, may retrieve R2-D2. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_1);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Seeking An Audience (V) (ERRATA)");
@@ -81,19 +81,21 @@ public class Card501_185 extends AbstractNormalEffect {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        gameTextActionId = GameTextActionId.SEEKING_AN_AUDIENCE__RETRIEVE_R2D2;
 
-        final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-        action.setText("Place out of play to retrieve R2-D2");
-        action.setActionMsg("Retrieve R2-D2");
-        // Pay cost(s)
-        action.appendCost(
-                new PlaceCardOutOfPlayFromTableEffect(action, self));
-        // Perform result(s)
-        action.appendEffect(
-                new RetrieveCardEffect(action, playerId, Filters.R2D2));
-        actions.add(action);
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)){
 
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Retrieve R2-D2");
+            action.setActionMsg("Retrieve R2-D2");
+            // Update usage limit(s)
+            action.appendUsage(
+                new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new RetrieveCardEffect(action, playerId, Filters.R2D2));
+            actions.add(action);
+        }
         return actions;
     }
 }
