@@ -42,7 +42,7 @@ public class Card501_067 extends AbstractStarfighter {
     public Card501_067() {
         super(Side.DARK, 4, 2, 2, null, 3, 6, 4, "StarSpeeder 1000", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("May add 6 passengers. Has ship-docking capability. Permanent pilot provides no ability. May deploy to exterior sites. Once per game, during your move phase, may use 2 Force to relocate (even if landed).");
-        addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_24);
+        addIcons(Icon.EPISODE_VII, Icon.INDEPENDENT, Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.SHIP_DOCKING_CAPABILITY);
         addModelType(ModelType.TRANSPORT);
         setPassengerCapacity(6);
