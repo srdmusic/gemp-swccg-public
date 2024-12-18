@@ -45,7 +45,7 @@ public class Card501_204 extends AbstractSite {
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         Filter yourInterrupts = Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.Interrupt);
-        Condition lukeAloneHere = new HereCondition(self, Filters.and(Filters.or(Filters.Rey, Filters.Luke), Filters.alone));
+        Condition lukeAloneHere = new HereCondition(self, Filters.and(Filters.or(Filters.Luke, Filters.Rey), Filters.alone));
         modifiers.add(new DestinyModifier(self, yourInterrupts, lukeAloneHere, -1));
         return modifiers;
     }
