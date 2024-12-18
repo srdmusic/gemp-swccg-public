@@ -23,7 +23,6 @@ import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveD
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.GenerateNoForceModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ResetPersonalForceGenerationModifier;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -80,7 +79,7 @@ public class Card501_203 extends AbstractNormalEffect {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        gameTextActionId = GameTextActionId.STRIKE_PLANNING_V__DOWNLOAD_FALCON;
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.FALCON)){
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy Falcon from Reserve Deck");
