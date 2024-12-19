@@ -3,8 +3,8 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AloneCondition;
-import com.gempukku.swccgo.cards.conditions.CantSpotCondition;
 import com.gempukku.swccgo.cards.conditions.DuringBattleCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -57,7 +57,7 @@ public class Card501_070 extends AbstractAlien {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         Condition duringBattle = new DuringBattleCondition();
-        Condition quietlyObservingOnTable = new CantSpotCondition(self, Filters.Quietly_Observing);
+        Condition quietlyObservingOnTable = new OnTableCondition(self, Filters.Quietly_Observing);
 
         modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, new AloneCondition(self), 1));
         modifiers.add(new EachWeaponDestinyForWeaponFiredByModifier(self, new AndCondition(duringBattle, quietlyObservingOnTable), 2));
