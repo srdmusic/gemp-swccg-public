@@ -17,6 +17,7 @@ import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeConvertedModifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
 import java.util.LinkedList;
@@ -46,6 +47,8 @@ public class Card501_204 extends AbstractSite {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         Filter yourInterrupts = Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.Interrupt);
         Condition lukeAloneHere = new HereCondition(self, Filters.and(Filters.or(Filters.Luke, Filters.Rey), Filters.alone));
+
+        modifiers.add(new MayNotBeConvertedModifier(self));
         modifiers.add(new DestinyModifier(self, yourInterrupts, lukeAloneHere, -1));
         return modifiers;
     }
