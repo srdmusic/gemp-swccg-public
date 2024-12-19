@@ -32,7 +32,7 @@ import java.util.List;
 public class Card501_204 extends AbstractSite {
     public Card501_204() {
         super(Side.LIGHT, Title.Lower_Corridor, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("While Luke or Rey alone here, your Interrupts are destiny -1.");
+        setLocationDarkSideGameText("May not be converted. While Luke or Rey alone here, your Interrupts are destiny -1.");
         setLocationLightSideGameText("While Luke alone here, [Cloud City] Rebels are destiny, power, and forfeit +1.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
@@ -46,10 +46,10 @@ public class Card501_204 extends AbstractSite {
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         Filter yourInterrupts = Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.Interrupt);
-        Condition lukeAloneHere = new HereCondition(self, Filters.and(Filters.or(Filters.Luke, Filters.Rey), Filters.alone));
+        Condition lukeOrReyAloneHere = new HereCondition(self, Filters.and(Filters.or(Filters.Luke, Filters.Rey), Filters.alone));
 
         modifiers.add(new MayNotBeConvertedModifier(self));
-        modifiers.add(new DestinyModifier(self, yourInterrupts, lukeAloneHere, -1));
+        modifiers.add(new DestinyModifier(self, yourInterrupts, lukeOrReyAloneHere, -1));
         return modifiers;
     }
 
