@@ -24,12 +24,9 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
-import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChoosePlayerBySideEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.InitiateBattlesForFreeModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.Action;
 
 /**
  * Set: Playtesting
@@ -40,7 +37,7 @@ public class Card501_202 extends AbstractNormalEffect {
     public Card501_202() {
         super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Cunning Warrior", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Luke's experience on Dagobah gave him great skill in using the Force. Vader had to keep his focus on Luke at all times, or face the consequences.");
-        setGameText("If your [Skywalker] Epic Event on table, deploy on table. Where you have a Skywalker, you initiate battles for free. Once per turn, may ▼ Anakin's Lightsaber or a [Cloud City] corridor. During battle involving a Skywalker warrior, may select a player to activate 1 Force. [Immune to Alter.]");
+        setGameText("If your [Skywalker] Epic Event on table, deploy on table. Where you have a Skywalker, you initiate battles for free. Once per turn, may ▼ Anakin's Lightsaber or a [Cloud City] corridor. During battle involving a Skywalker warrior, you may activate 1 Force. [Immune to Alter.]");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_24);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("A Cunning Warrior");
@@ -93,33 +90,16 @@ public class Card501_202 extends AbstractNormalEffect {
         // Check condition(s)
         if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.Skywalker, Filters.warrior))
-                && GameConditions.canActivateForce(game, playerId)
-                && GameConditions.canActivateForce(game, opponentId)) {
+                && GameConditions.canActivateForce(game, playerId)) {
             
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Select player to activate 1 Force");
+            action.setText("Activate 1 Force");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerBattleEffect(action));
-            // Choose target(s)
-            action.appendTargeting(
-                    new ChoosePlayerBySideEffect(action, playerId) {
-                        @Override
-                        protected void playerChosen(SwccgGame game, final String playerChosen) {
-                            // Allow response(s)
-                            action.allowResponses(playerChosen.equals(playerId) ? ("Activate 1 Force") : ("Make " + playerChosen + " activate 1 Force"),
-                                    new UnrespondableEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new ActivateForceEffect(action, playerChosen, 1));
-                                        }
-                                    }
-                            );
-                        }
-                    }
-            );
+            // Perform result(s)
+            action.appendEffect(
+                    new ActivateForceEffect(action, playerId, 1));
             actions.add(action);
         }
 
