@@ -48,8 +48,8 @@ public class Card501_053 extends AbstractNormalEffect {
     public Card501_053() {
         super(Side.DARK, 7, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Working Much More Closely", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Hologram.");
-        setGameText("Deploy on table. Your other holograms are canceled. While present with an opponent's Jedi, Maul is defense value +2 and immune to attrition. Once per game, if [Set 13] Maul on table, may [download] Qi'ra. If Maul just lost, place Effect in Used Pile. [Immune to Alter.]");
-        addIcons(Icon.VIRTUAL_SET_13);
+        setGameText("Deploy on table. Your non-[Dagobah] holograms are canceled. While present with an opponent's Jedi, Maul is defense value +2 and immune to attrition. Once per game, if [Set 13] Maul on table, may [download] Qi'ra. If Maul just lost, place Effect in Used Pile. [Immune to Alter.]");
+        addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_13);
         addKeyword(Keyword.HOLOGRAM);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Working Much More Closely (ERRATA)");
@@ -92,7 +92,7 @@ public class Card501_053 extends AbstractNormalEffect {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.and(Filters.your(self), Filters.other(self), Filters.hologram))
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.and(Filters.your(self), Filters.not(Icon.DAGOBAH), Filters.hologram))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
@@ -109,9 +109,9 @@ public class Card501_053 extends AbstractNormalEffect {
 
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canTargetToCancel(game, self, Filters.and(Filters.your(self), Filters.other(self), Filters.hologram))) {
+                && GameConditions.canTargetToCancel(game, self, Filters.and(Filters.your(self), Filters.not(Icon.DAGOBAH), Filters.hologram))) {
 
-            Collection<PhysicalCard> cardsToCancel = Filters.filterActive(game, self, TargetingReason.TO_BE_CANCELED, Filters.and(Filters.your(self), Filters.other(self), Filters.hologram));
+            Collection<PhysicalCard> cardsToCancel = Filters.filterActive(game, self, TargetingReason.TO_BE_CANCELED, Filters.and(Filters.your(self), Filters.not(Icon.DAGOBAH), Filters.hologram));
 
             if (!cardsToCancel.isEmpty()) {
                 final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
