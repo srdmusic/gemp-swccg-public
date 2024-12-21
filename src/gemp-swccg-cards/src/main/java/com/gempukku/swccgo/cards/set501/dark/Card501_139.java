@@ -58,7 +58,7 @@ public class Card501_139 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         String playerId = self.getOwner();
-        AtSameSiteAsCondition imperialLeaderHere = new AtSameSiteAsCondition(self, Filters.Imperial_leader);
+        Condition imperialLeaderHere = new AtSameSiteAsCondition(self, Filters.Imperial_leader);
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new TotalForceGenerationModifier(self, imperialLeaderHere, 1, playerId));
         modifiers.add(new SuspendsCardModifier(self, Filters.Perimeter_Patrol));
