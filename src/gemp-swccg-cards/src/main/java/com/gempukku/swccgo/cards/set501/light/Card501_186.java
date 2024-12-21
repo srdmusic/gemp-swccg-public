@@ -40,9 +40,9 @@ import java.util.List;
  */
 public class Card501_186 extends AbstractAlien {
     public Card501_186() {
-        super(Side.LIGHT, 2, 4, 2, 2, 4, "Wookiee Warrior", Uniqueness.RESTRICTED_3, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 2, 4, 4, 2, 4, "Wookiee Warrior", Uniqueness.RESTRICTED_3, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("Power +1 at a Kashyyyk site. While present at a Kashyyyk site: opponent may not  may not cancel or modify Force drains here and unless 'hit', may forfeit in place of any other character hit by a weapon at same site, restoring that character to normal.");
+        setGameText("Power +1 at a Kashyyyk site. While present at a Kashyyyk site, opponent may not  may not cancel or modify Force drains here. Unless 'hit', may forfeit in place of any other character hit by a weapon at same site, restoring that character to normal.");
         setSpecies(Species.WOOKIEE);
         addIcons(Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
         setTestingText("Wookiee Warrior (ERRATA)");
@@ -76,7 +76,6 @@ public class Card501_186 extends AbstractAlien {
 
         // Check condition(s)
         if (TriggerConditions.isResolvingBattleDamageAndAttrition(game, effectResult, playerId)
-                && GameConditions.isPresentAt(game, self, Filters.Kashyyyk_site)
                 && !GameConditions.isHit(game, self)
                 && GameConditions.canTarget(game, self, targetFilter)) {
 
