@@ -8,7 +8,6 @@ import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
-import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -19,7 +18,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.NotCondition;
 import com.gempukku.swccgo.logic.effects.PutStackedCardInLostPileEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromUsedPileEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
@@ -63,55 +62,50 @@ public class Card501_062 extends AbstractImperial {
         final List<TopLevelGameTextAction> actions = new ArrayList<>();
 
         final GameTextActionId gameTextActionId = GameTextActionId.SECOND_SISTER__USE_HATRED_CARD;
-        final Filter hatredCardStackedHere = Filters.and(Filters.hatredCard, Filters.stacked, Filters.here(self));
+        final Filter hasHatredCard = Filters.and(Filters.here(self), Filters.hasStacked(Filters.hatredCard));
 
 
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canSpot(game, self, hatredCardStackedHere)) {
+                && GameConditions.canSpot(game, self, hasHatredCard)) {
 
-            if (GameConditions.hasUsedPile(game, playerId)) {
+            if (GameConditions.canSearchUsedPile(game, playerId, self, gameTextActionId)) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Take any card into hand from Used Pile");
                 action.appendUsage(
-                        new OncePerGameEffect(action)
-                );
+                        new OncePerGameEffect(action));
                 action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Target 'Hatred' card", hatredCardStackedHere) {
+                        new ChooseStackedCardEffect(action, playerId, hasHatredCard, Filters.hatredCard, true) {
                             @Override
-                            protected void cardTargeted(int targetGroupId, PhysicalCard targetedCard) {
-                                action.appendEffect(
-                                        new PutStackedCardInLostPileEffect(action, playerId, targetedCard, false)
-                                );
-                                // Update usage limit(s)
+                            protected void cardSelected(PhysicalCard selectedCard) {
+                                action.appendCost(
+                                        new PutStackedCardInLostPileEffect(action, playerId, selectedCard, false));
+
                                 action.appendEffect(
                                         new TakeCardIntoHandFromUsedPileEffect(action, playerId, true));
-                                actions.add(action);
                             }
                         }
                 );
+                actions.add(action);
             }
 
-            if (GameConditions.hasLostPile(game, playerId)
-                    && GameConditions.isDuringYourPhase(game, playerId, Phase.DEPLOY)) {
+            if (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Deploy a lightsaber on this character from Lost Pile");
+                action.setText("Deploy a lightsaber from Lost Pile");
                 action.appendUsage(
-                        new OncePerGameEffect(action)
-                );
+                        new OncePerGameEffect(action));
                 action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Target 'Hatred' card", hatredCardStackedHere) {
+                        new ChooseStackedCardEffect(action, playerId, hasHatredCard, Filters.hatredCard, true) {
                             @Override
-                            protected void cardTargeted(int targetGroupId, PhysicalCard targetedCard) {
-                                action.appendEffect(
-                                        new PutStackedCardInLostPileEffect(action, playerId, targetedCard, false)
-                                );
-                                // Update usage limit(s)
+                            protected void cardSelected(PhysicalCard selectedCard) {
+                                action.appendCost(
+                                        new PutStackedCardInLostPileEffect(action, playerId, selectedCard, false));
+
                                 action.appendEffect(
                                         new DeployCardToTargetFromLostPileEffect(action, Filters.lightsaber, Filters.sameCardId(self), true));
-                                actions.add(action);
                             }
                         }
                 );
+                actions.add(action);
             }
         }
 
