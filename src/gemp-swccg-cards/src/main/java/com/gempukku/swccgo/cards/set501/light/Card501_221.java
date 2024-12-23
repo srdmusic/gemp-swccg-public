@@ -42,7 +42,7 @@ public class Card501_221 extends AbstractStarfighter {
         super(Side.LIGHT, 3, 4, 4, null, 6, 4, 6, "Bo-Katan's Gauntlet Starfighter", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("May add 2 pilots and 4 passengers. Permanent pilot provides ability of 2. While Bo-Katan piloting, power +3 and cancels Imperial Barrier. Once per game, may [download] a Mandalorian aboard. Immune to attrition < 4.");
         addIcons(Icon.SCOMP_LINK, Icon.INDEPENDENT, Icon.PILOT, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_24);
-        addModelType(ModelType.TRANSPORT);
+        addModelType(ModelType.KOMRK_CLASS_FIGHTER_TRANSPORT);
         setPilotCapacity(2);
         setPassengerCapacity(4);
         setMatchingPilotFilter(Filters.Bo_Katan);
@@ -80,7 +80,7 @@ public class Card501_221 extends AbstractStarfighter {
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActionsEvenIfUnpiloted(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.BO_KATANS_GAUNTLET_STARFIGHTER__DOWNLOAD_MANDALORIAN;
 
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
