@@ -66,7 +66,9 @@ public class Card501_201 extends AbstractRebel {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        if (TriggerConditions.justHitBy(game, effectResult, Filters.character, self)) {
+        if (TriggerConditions.justHitBy(game, effectResult, Filters.character, self)
+                && GameConditions.isDuringBattleWithParticipant(game, self)) {
+
             final PhysicalCard card = ((HitResult) effectResult).getCardHit();
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
