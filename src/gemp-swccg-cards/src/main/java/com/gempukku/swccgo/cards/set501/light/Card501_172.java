@@ -64,6 +64,7 @@ public class Card501_172 extends AbstractRebel {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         if (GameConditions.isPiloting(game, self, Filters.Falcon)
+                && GameConditions.isOncePerBattle(game, self, gameTextSourceCardId)
                 && GameConditions.isDuringBattleWithParticipant(game, self)
                 && GameConditions.hasUsedPile(game, playerId)) {
             
