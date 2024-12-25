@@ -75,7 +75,8 @@ public class Card501_211 extends AbstractDroid {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         if (GameConditions.isAtScompLink(game, self)
-                && GameConditions.isDuringBattleAt(game, sameOrRelatedInteriorSite)
+                && GameConditions.isDuringBattleAt(game, sameOrRelatedInteriorSite) //battle at same or related interior site to R2-D2
+                && GameConditions.isAtLocation(game, self, Filters.site) //R2-D2 at any site (not at a system or sector)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canUseForce(game, playerId, 1)
                 && TriggerConditions.isDestinyJustDrawn(game, effectResult)) {
