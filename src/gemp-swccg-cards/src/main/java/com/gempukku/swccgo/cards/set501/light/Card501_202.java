@@ -85,11 +85,10 @@ public class Card501_202 extends AbstractNormalEffect {
         }
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        final String opponentId = game.getOpponent(playerId);
 
         // Check condition(s)
         if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.Skywalker, Filters.warrior))
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.Jedi, Filters.Skywalker))
                 && GameConditions.canActivateForce(game, playerId)) {
             
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
