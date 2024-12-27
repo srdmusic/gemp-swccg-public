@@ -44,7 +44,6 @@ public class Card224_003 extends AbstractDroid {
         addIcon(Icon.WARRIOR, 2);
         addModelTypes(ModelType.ASTROMECH, ModelType.PROTOCOL);
         addKeywords(Keyword.ASSASSIN, Keyword.INFORMATION_BROKER);
-        setTestingText("BT-1 & Triple Zero");
     }
 
     @Override

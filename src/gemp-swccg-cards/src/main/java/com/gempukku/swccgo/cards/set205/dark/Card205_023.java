@@ -56,7 +56,6 @@ public class Card205_023 extends AbstractAlien {
         addKeywords(Keyword.BOUNTY_HUNTER, Keyword.ASSASSIN);
         setSpecies(Species.CORELLIAN);
         setMatchingStarshipFilter(Filters.Punishing_One);
-        setTestingText("Dengar (V) (ERRATA)");
     }
 
     @Override

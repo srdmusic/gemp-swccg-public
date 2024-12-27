@@ -50,7 +50,6 @@ public class Card215_011 extends AbstractRebel {
         setSpecies(Species.CORELLIAN);
         addIcons(Icon.WARRIOR, Icon.PILOT, Icon.ENDOR, Icon.VIRTUAL_SET_15);
         addKeywords(Keyword.LEADER, Keyword.SCOUT, Keyword.GENERAL);
-        setTestingText("Han Solo, Optimistic General (ERRATA)");
     }
 
     @Override

@@ -42,7 +42,6 @@ public class Card201_009 extends AbstractNormalEffect {
         setGameText("If Han is frozen, deploy on table. Your personal Force generation = 2. Once per turn, may [download] C-3PO, R2-D2, [Jabba's Palace] Lando, or [Jabba's Palace] Leia to a Jabba's Palace site. Once per game, may retrieve R2-D2. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_1);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Seeking An Audience (V) (ERRATA)");
     }
 
     @Override

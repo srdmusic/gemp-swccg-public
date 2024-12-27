@@ -42,7 +42,6 @@ public class Card219_013 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 0);
         addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_19);
-        setTestingText("Lothal: Imperial Complex (ERRATA)");
     }
 
     @Override

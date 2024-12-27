@@ -48,7 +48,6 @@ public class Card220_007 extends AbstractStarfighter {
         setPilotCapacity(2);
         setPassengerCapacity(2);
         setMatchingPilotFilter(Filters.or(Filters.Han, Filters.Chewie));
-        setTestingText("Millennium Falcon (V) (ERRATA)");
     }
 
     @Override

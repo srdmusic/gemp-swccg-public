@@ -46,7 +46,6 @@ public class Card207_017 extends AbstractStarfighter {
         setPassengerCapacity(3);
         setStarfighterCapacity(1, Filters.Phantom);
         setMatchingPilotFilter(Filters.Hera);
-        setTestingText("Ghost (ERRATA)");
     }
 
     @Override

@@ -42,7 +42,6 @@ public class Card201_010 extends AbstractNormalEffect {
         setGameText("If We Have A Plan on table, deploy on table. Wokling is canceled. While you occupy Theed Palace Throne Room, you may ignore your Objective's location deployment restrictions. Once per game, may [upload] an [Episode I] system and/or a [Theed Palace] leader. [Immune to Alter]");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_1);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("We'll Take The Long Way (ERRATA)");
     }
 
     @Override

@@ -53,7 +53,6 @@ public class Card200_084 extends AbstractAlien {
         addPersona(Persona.JABBA);
         setSpecies(Species.HUTT);
         addKeywords(Keyword.GANGSTER, Keyword.LEADER);
-        setTestingText("Jabba The Hutt (V) (ERRATA)");
     }
 
     @Override

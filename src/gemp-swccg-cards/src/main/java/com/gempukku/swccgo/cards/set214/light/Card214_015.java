@@ -38,7 +38,6 @@ public class Card214_015 extends AbstractCharacterWeapon {
         addKeyword(Keyword.LIGHTSABER);
         addPersona(Persona.AHSOKAS_SHOTO_LIGHTSABER);
         setMatchingCharacterFilter(Filters.Ahsoka);
-        setTestingText("Ahsoka's Shoto Lightsaber (ERRATA)");
     }
 
     @Override

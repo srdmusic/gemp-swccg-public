@@ -39,7 +39,6 @@ public class Card207_015 extends AbstractUsedOrLostInterrupt {
         super(Side.LIGHT, 4, Title.This_Is_My_Ship, Uniqueness.UNIQUE, ExpansionSet.SET_7, Rarity.V);
         setGameText("USED: If Hera is piloting Ghost in battle, draw one destiny and subtract it from opponent's attrition against you. LOST: If Chopper, Ezra, Hera, Kanan, Sabine, or Zeb in a battle, they each add 1 to your total battle destiny.");
         addIcons(Icon.VIRTUAL_SET_7);
-        setTestingText("This Is MY Ship! (ERRATA)");
     }
 
     @Override

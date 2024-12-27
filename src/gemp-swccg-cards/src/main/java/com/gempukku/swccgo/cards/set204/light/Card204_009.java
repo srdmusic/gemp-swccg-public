@@ -48,7 +48,6 @@ public class Card204_009 extends AbstractResistance {
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_4);
         addKeywords(Keyword.FEMALE, Keyword.SCAVENGER);
         addPersona(Persona.REY);
-        setTestingText("Rey (ERRATA)");
     }
 
     @Override

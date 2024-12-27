@@ -36,7 +36,6 @@ public class Card209_040 extends AbstractImperial {
         setGameText("Deploys -2 to Holotheatre, Meditation Chamber, or a Vader's Castle site. Once during your turn, may activate 1 Force. Once per game, may [upload] a card with 'Vader' in title.");
         addPersona(Persona.VANEE);
         addIcons(Icon.VIRTUAL_SET_9);
-        setTestingText("Vanee (ERRATA)");
     }
 
     @Override

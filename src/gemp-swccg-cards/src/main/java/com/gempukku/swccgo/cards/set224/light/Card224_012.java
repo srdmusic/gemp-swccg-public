@@ -46,7 +46,6 @@ public class Card224_012 extends AbstractStarfighter {
         setPilotCapacity(2);
         setPassengerCapacity(4);
         setMatchingPilotFilter(Filters.Bo_Katan);
-        setTestingText("Bo-Katan's Gauntlet Starfighter");
     }
 
     @Override

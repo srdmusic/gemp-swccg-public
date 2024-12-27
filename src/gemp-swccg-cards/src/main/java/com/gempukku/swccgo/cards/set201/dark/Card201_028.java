@@ -36,7 +36,6 @@ public class Card201_028 extends AbstractNormalEffect {
         setGameText("Deploy on table. My Favorite Decoration may not be placed out of play. Your Force drains are +1 at same battleground as a frozen captive. While a frozen captive with Scum And Villainy, your total power in all battles is +3. [Immune to Alter.]");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_1);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Despair (V) (ERRATA)");
     }
 
     @Override

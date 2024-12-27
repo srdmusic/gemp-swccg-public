@@ -44,7 +44,6 @@ public class Card210_006 extends AbstractAlien {
         setGameText("[Pilot] 3. If you have completed a Kessel Run, your total power here is +2. Once during battle, may use 1 Force to choose: Subtract 1 from an opponent's just drawn destiny or cancel an attempt to cancel and redraw a destiny. Immune to attrition < 3.");
         addIcons(Icon.PILOT, Icon.VIRTUAL_SET_10);
         addKeywords(Keyword.SMUGGLER);
-        setTestingText("BoShek, Gritty Smuggler");
     }
 
     @Override

@@ -46,7 +46,6 @@ public class Card216_029 extends AbstractAlien {
                 "Immune to attrition < 3.");
         addPersona(Persona.GROGU);
         addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("Grogu (ERRATA)");
     }
 
     @Override

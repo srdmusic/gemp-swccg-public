@@ -41,7 +41,6 @@ public class Card200_033 extends AbstractCharacterDevice {
         setLore("Uses state-of-the-art digital processors. Although Luke had lost his hand, the Alliance could rebuild it. They had the technology. They could make it better, stronger, faster.");
         setGameText("Deploy on Luke. Luke's power and immunity to attrition are +2. Once per game, during battle, may exchange a card in hand with an Interrupt in Lost Pile. This device lost if Luke Disarmed.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_0);
-        setTestingText("Luke's Bionic Hand (ERRATA)");
     }
 
     @Override

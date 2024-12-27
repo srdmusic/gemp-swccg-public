@@ -39,7 +39,6 @@ public class Card200_047 extends AbstractNormalEffect {
         setGameText("Unless Massassi Throne Room on table, deploy on table. Your personal Force generation = 2. Once per game, may use 3 Force to [upload] an Effect that has no deploy cost and deploys on another card. May place this Effect out of play to retrieve 1 Force. [Immune to Alter.]");
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_0);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Wokling (V) (ERRATA)");
     }
 
     @Override

@@ -38,7 +38,6 @@ public class Card209_030 extends AbstractCapitalStarship {
         addIcons(Icon.VIRTUAL_SET_9, Icon.PILOT, Icon.NAV_COMPUTER, Icon.SCOMP_LINK);
         addKeywords(Keyword.PHOENIX_SQUADRON);
         addModelType(ModelType.HAMMERHEAD_CORVETTE);
-        setTestingText("Lightmaker (ERRATA)");
     }
 
     @Override

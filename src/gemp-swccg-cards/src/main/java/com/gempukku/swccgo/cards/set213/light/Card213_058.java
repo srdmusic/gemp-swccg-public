@@ -38,7 +38,6 @@ public class Card213_058 extends AbstractCapitalStarship {
         setPassengerCapacity(5);
         addIcons(Icon.RESISTANCE, Icon.NAV_COMPUTER, Icon.PILOT, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_13, Icon.EPISODE_VII);
         addModelType(ModelType.RESISTANCE_TRANSPORT);
-        setTestingText("Leia's Resistance Transport (ERRATA)");
     }
 
     @Override

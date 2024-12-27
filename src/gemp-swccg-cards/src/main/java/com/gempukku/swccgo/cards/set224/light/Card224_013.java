@@ -39,7 +39,6 @@ public class Card224_013 extends AbstractSite {
         addIcons(Icon.CLOUD_CITY, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.CLOUD_CITY_LOCATION);
         setVirtualSuffix(true);
-        setTestingText("Cloud City: Lower Corridor (V)");
     }
 
     @Override

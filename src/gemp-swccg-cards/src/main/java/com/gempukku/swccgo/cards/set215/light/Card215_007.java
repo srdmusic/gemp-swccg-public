@@ -40,7 +40,6 @@ public class Card215_007 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.SPECIAL_EDITION, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
         addKeywords(Keyword.PRISON);
-        setTestingText("Death Star: Detention Block Corridor (V) (ERRATA)");
     }
 
     @Override

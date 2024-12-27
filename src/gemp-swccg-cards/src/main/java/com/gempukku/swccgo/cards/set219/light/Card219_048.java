@@ -49,7 +49,6 @@ public class Card219_048 extends AbstractObjective {
                 "Chopper, Ezra, Hera, Kanan, Sabine, and Zeb gain Phoenix Squadron. Once per turn, may [download] a Lothal site." +
                 "Flip this card if Rebels control three Lothal locations (or you occupy three Lothal locations with Phoenix Squadron characters) and opponent controls no Lothal locations.");
         addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("Zero Hour (ERRATA)");
     }
 
     @Override

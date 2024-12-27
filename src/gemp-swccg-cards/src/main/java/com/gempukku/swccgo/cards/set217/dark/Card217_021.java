@@ -38,7 +38,6 @@ public class Card217_021 extends AbstractLostOrStartingInterrupt {
         setGameText("LOST: Raise your converted location to the top. " +
                 "STARTING: If your starting location was a non-Palace battleground, deploy Revenge Of The Sith and up to three Effects that deploy for free and are always immune to Alter. Place Interrupt in hand.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_17);
-        setTestingText("Rise Of The Sith (ERRATA)");
     }
 
     @Override

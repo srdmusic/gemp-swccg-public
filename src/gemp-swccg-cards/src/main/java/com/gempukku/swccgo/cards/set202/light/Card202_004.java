@@ -49,7 +49,6 @@ public class Card202_004 extends AbstractJediMaster {
         addPersona(Persona.YODA);
         addKeywords(Keyword.JEDI_COUNCIL_MEMBER);
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_2);
-        setTestingText("Yoda, Keeper Of The Peace (ERRATA)");
     }
 
     @Override

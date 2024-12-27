@@ -48,7 +48,6 @@ public class Card219_001 extends AbstractObjective {
                     "While this side up, Imperial Star Destroyers deploy -1 (-3 if Chimaera deploying to Lothal). " +
                     "Flip this card during any deploy phase if Thrawn at a battleground and two or more artwork cards on table.");
         addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("A Great Tactician Creates Plans (ERRATA)");
     }
 
     @Override

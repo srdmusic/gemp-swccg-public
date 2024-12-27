@@ -51,7 +51,6 @@ public class Card215_002 extends AbstractEpicEventDeployable {
                 "Allow The Ship To Leave: If you just won a battle at a Death Star site (or initiated a Force drain here), place a card stacked here in owner’s Lost Pile. " +
                 "That Old Man Did It!: If you occupy this site and another Death Star site while no cards stacked here, for remainder of game, power 'shut down.'");
         addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_15);
-        setTestingText("A Power Loss (ERRATA)");
     }
 
     @Override

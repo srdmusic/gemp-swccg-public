@@ -53,7 +53,6 @@ public class Card224_020 extends AbstractRebel {
         addIcons(Icon.CLOUD_CITY, Icon.DAGOBAH, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
         addPersona(Persona.LUKE);
         setVirtualSuffix(true);
-        setTestingText("Son Of Skywalker (V)");
     }
 
     @Override

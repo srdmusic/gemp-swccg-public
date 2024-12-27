@@ -49,7 +49,6 @@ public class Card213_004 extends AbstractAlien {
         addKeywords(Keyword.CRIMSON_DAWN, Keyword.LEADER, Keyword.GANGSTER);
         setArmor(5);
         addPersona(Persona.VOS);
-        setTestingText("Dryden Vos (ERRATA)");
     }
 
     @Override

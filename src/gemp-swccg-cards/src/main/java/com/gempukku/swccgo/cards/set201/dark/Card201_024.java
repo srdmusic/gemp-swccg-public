@@ -38,7 +38,6 @@ public class Card201_024 extends AbstractAlien {
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_1);
         addKeywords(Keyword.BOUNTY_HUNTER, Keyword.ASSASSIN);
         setSpecies(Species.SAKIYAN);
-        setTestingText("Djas Puhr (V) (ERRATA)");
     }
 
     @Override

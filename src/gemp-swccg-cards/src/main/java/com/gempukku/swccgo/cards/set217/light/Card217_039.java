@@ -32,7 +32,6 @@ public class Card217_039 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.EPISODE_VII, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_17);
-        setTestingText("Kef Bif: Oceanic Wreckage (ERRATA)");
     }
 
     @Override

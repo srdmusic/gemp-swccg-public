@@ -46,7 +46,6 @@ public class Card213_040 extends AbstractJediMaster {
         setGameText("Once per game, may deploy Meditation on Qui-Gon from Lost Pile. During battle, while alone, opponent may not cancel your destiny draws and your total battle destiny is +1 for each weapon destiny that was drawn while alone. Immune to attrition.");
         addPersona(Persona.QUIGON);
         addIcons(Icon.EPISODE_I, Icon.WARRIOR, Icon.VIRTUAL_SET_13);
-        setTestingText("Qui-Gon Jinn, Serene Jedi (ERRATA)");
     }
 
     @Override

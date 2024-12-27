@@ -50,7 +50,6 @@ public class Card219_035 extends AbstractAlienRebel {
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
         addKeywords(Keyword.SCOUT);
         setSpecies(Species.MANDALORIAN);
-        setTestingText("Fenn Rau (ERRATA)");
     }
 
     @Override

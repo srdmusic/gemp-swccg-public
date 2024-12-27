@@ -41,7 +41,6 @@ public class Card224_015 extends AbstractRebel {
         addKeywords(Keyword.GENERAL, Keyword.LEADER, Keyword.SCOUT);
         setSpecies(Species.CORELLIAN);
         setVirtualSuffix(true);
-        setTestingText("General Crix Madine (V)");
     }
 
     @Override

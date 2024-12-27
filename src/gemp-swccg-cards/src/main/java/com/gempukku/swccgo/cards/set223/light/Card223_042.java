@@ -49,7 +49,6 @@ public class Card223_042 extends AbstractNormalEffect {
         setGameText("Deploy on table if Stolen Data Tapes on table. Twice per game may [upload] a general or Senator. May simultaneously deploy [ANH] Falcon (-1 Force) with [ANH] Han from hand and/or Reserve Deck; reshuffle. Falcon is immune to Gravity Shadow. [Immune to Alter.]");
         addIcon(Icon.VIRTUAL_SET_23);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Passage To The Alderaan System (ERRATA)");
     }
 
     @Override

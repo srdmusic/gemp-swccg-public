@@ -45,7 +45,6 @@ public class Card201_003 extends AbstractAlien {
         addIcons(Icon.SPECIAL_EDITION, Icon.PILOT, Icon.VIRTUAL_SET_1);
         setSpecies(Species.SARKAN);
         addKeywords(Keyword.SMUGGLER);
-        setTestingText("Melas (V) (ERRATA)");
     }
 
     @Override

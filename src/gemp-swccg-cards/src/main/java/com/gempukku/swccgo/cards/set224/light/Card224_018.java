@@ -37,7 +37,6 @@ public class Card224_018 extends AbstractJediMaster {
         setGameText("Adds 2 to power of anything she pilots (3 if piloting a capital starship). While piloting a capital starship, it is immune to attrition < 5. Once per game, may retrieve a musician (or take one into hand from Reserve Deck; reshuffle). Immune to attrition < 5.");
         addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.FEMALE, Keyword.MUSICIAN);
-        setTestingText("Jedi Marshal Avar Kriss");
     }
 
     @Override

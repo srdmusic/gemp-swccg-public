@@ -35,7 +35,6 @@ public class Card210_007 extends AbstractNormalEffect {
         setGameText("Deploy on table. Your Rep is immune to attrition. While you have alien characters of five different species on table, at locations where you have an alien: Your total battle destiny is +1, your aliens are forfeit +1 and, if location is a battleground, your Force drains are +1. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_10, Icon.EPISODE_VII);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Ancient Watering Hole (ERRATA)");
     }
 
     @Override

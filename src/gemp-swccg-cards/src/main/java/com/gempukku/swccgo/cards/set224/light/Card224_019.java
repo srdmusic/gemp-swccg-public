@@ -44,7 +44,6 @@ public class Card224_019 extends AbstractCapitalStarship {
         addModelType(ModelType.CORELLIAN_CORVETTE);
         setPilotCapacity(3);
         setPassengerCapacity(4);
-        setTestingText("Liberator");
     }
 
     @Override

@@ -40,7 +40,6 @@ public class Card224_008 extends AbstractNormalEffect {
         setGameText("If your [Skywalker] Epic Event on table, deploy on table. Where you have a Skywalker, you initiate battles for free. Once per turn, may ▼ Anakin's Lightsaber or a [Cloud City] corridor. During battle involving a Skywalker warrior, you may activate 1 Force. [Immune to Alter.]");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_24);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("A Cunning Warrior");
     }
 
     @Override

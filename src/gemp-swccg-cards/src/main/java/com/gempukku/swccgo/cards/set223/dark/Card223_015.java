@@ -39,7 +39,6 @@ public class Card223_015 extends AbstractImperial {
         setGameText("Adds 2 to power of anything he pilots. Once per game, may take Gideon into hand from Reserve Deck; reshuffle. While piloting a speeder bike, Grogu is forfeit -2 here and opponent's weapon destinies targeting your speeder bikes are -1 here.");
         addKeywords(Keyword.BIKER_SCOUT, Keyword.IMPERIAL_REMNANT);
         addIcons(Icon.ENDOR, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_23);
-        setTestingText("JS-1975 (ERRATA)");
     }
 
     @Override

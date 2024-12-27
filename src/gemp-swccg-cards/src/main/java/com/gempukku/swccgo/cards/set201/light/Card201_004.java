@@ -44,7 +44,6 @@ public class Card201_004 extends AbstractRebel {
         addPersona(Persona.OBIWAN);
         addKeywords(Keyword.GENERAL);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_1);
-        setTestingText("Obi-Wan Kenobi (V) (ERRATA)");
     }
 
     @Override

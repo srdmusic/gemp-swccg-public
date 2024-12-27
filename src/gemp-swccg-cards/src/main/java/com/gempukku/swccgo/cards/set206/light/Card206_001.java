@@ -46,7 +46,6 @@ public class Card206_001 extends AbstractRebel {
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_6);
         addKeywords(Keyword.GAMBLER, Keyword.SPY, Keyword.ROGUE_SQUADRON);
         setMatchingStarshipFilter(Filters.Rogue_One);
-        setTestingText("Bodhi Rook (ERRATA)");
     }
 
     @Override

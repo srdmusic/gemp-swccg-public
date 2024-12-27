@@ -52,7 +52,6 @@ public class Card213_022 extends AbstractNormalEffect {
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_13);
         addKeyword(Keyword.HOLOGRAM);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Working Much More Closely (ERRATA)");
     }
 
     @Override

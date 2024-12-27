@@ -48,7 +48,6 @@ public class Card224_004 extends AbstractDarkJediMaster {
         setSpecies(Species.MUUN);
         addKeywords(Keyword.LEADER);
         addIcons(Icon.EPISODE_I, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
-        setTestingText("Darth Plagueis");
     }
 
     @Override

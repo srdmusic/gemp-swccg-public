@@ -50,7 +50,6 @@ public class Card211_010 extends AbstractNormalEffect {
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_11);
         setVirtualSuffix(true);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Quietly Observing (V) (ERRATA)");
     }
 
     @Override

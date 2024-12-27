@@ -50,7 +50,6 @@ public class Card224_010 extends AbstractAlien {
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.MINER);
         setSpecies(Species.CHORINIAN);
-        setTestingText(Title.Beilert_Valance);
     }
 
     @Override

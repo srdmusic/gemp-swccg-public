@@ -47,7 +47,6 @@ public class Card224_016 extends AbstractRebel {
         setSpecies(Species.CORELLIAN);
         setMatchingStarshipFilter(Filters.Falcon);
         setVirtualSuffix(true);
-        setTestingText("Han Solo (V)");
     }
 
     @Override

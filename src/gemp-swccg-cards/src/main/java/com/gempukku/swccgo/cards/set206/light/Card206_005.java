@@ -47,7 +47,6 @@ public class Card206_005 extends AbstractDroid {
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.PRESENCE, Icon.VIRTUAL_SET_6);
         addKeywords(Keyword.SPY);
         addModelType(ModelType.SECURITY);
-        setTestingText("K-2SO (ERRATA)");
     }
 
     @Override

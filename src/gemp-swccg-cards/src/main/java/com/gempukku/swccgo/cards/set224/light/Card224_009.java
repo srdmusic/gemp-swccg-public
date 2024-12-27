@@ -46,7 +46,6 @@ public class Card224_009 extends AbstractUsedOrLostInterrupt {
                 "LOST: During battle at a system or sector, if you are about to draw a card for battle destiny, target your participating starship to instead use the ability number of its highest-ability pilot. " +
                 "OR Once per game, if Alderaan 'blown away' (or if opponent has deployed two battleground systems and no battleground sites), deploy a non-unique Corellian Corvette from outside your deck.");
         addIcon(Icon.VIRTUAL_SET_24);
-        setTestingText("Balanced Attack & Darklighter Spin");
     }
 
     @Override

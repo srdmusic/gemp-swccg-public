@@ -42,7 +42,6 @@ public class Card203_028 extends AbstractAlien {
         addIcons(Icon.JABBAS_PALACE, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_3);
         setSpecies(Species.GAMORREAN);
         addKeywords(Keyword.GUARD);
-        setTestingText("Ortugg (V) (ERRATA)");
     }
 
     @Override

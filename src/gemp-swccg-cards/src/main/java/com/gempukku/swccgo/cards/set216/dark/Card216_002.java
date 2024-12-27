@@ -42,7 +42,6 @@ public class Card216_002 extends AbstractAlien {
                 "Once per turn, If this card has your Rep's species and you just retrieved Force, may place top card of Used Pile on Force Pile.");
         addIcons(Icon.VIRTUAL_SET_16);
         addIcon(Icon.WARRIOR, 3);
-        setTestingText("Alien Mob (ERRATA)");
     }
 
     @Override

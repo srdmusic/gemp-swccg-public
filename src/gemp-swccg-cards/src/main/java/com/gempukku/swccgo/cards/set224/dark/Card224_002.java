@@ -37,7 +37,6 @@ public class Card224_002 extends AbstractImperial {
         addKeywords(Keyword.LEADER);
         setSpecies(Species.CORELLIAN);
         setVirtualSuffix(true);
-        setTestingText("Baron Soontir Fel (V)");
     }
 
     

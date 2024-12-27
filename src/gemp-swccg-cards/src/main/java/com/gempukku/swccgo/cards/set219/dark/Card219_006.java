@@ -50,7 +50,6 @@ public class Card219_006 extends AbstractAlien {
         addPersona(Persona.FENNEC_SHAND);
         addIcons(Icon.WARRIOR, Icon.VIRTUAL_SET_19);
         addKeywords(Keyword.FEMALE, Keyword.ASSASSIN, Keyword.BOUNTY_HUNTER, Keyword.MERCENARY);
-        setTestingText("Fennec Shand (ERRATA)");
     }
 
     @Override

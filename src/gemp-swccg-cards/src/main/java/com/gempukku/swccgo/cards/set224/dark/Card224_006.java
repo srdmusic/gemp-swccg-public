@@ -46,7 +46,6 @@ public class Card224_006 extends AbstractImperial {
                 "Immune to attrition < 4 while Vader not here.");
         addKeywords(Keyword.INQUISITOR, Keyword.FEMALE);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
-        setTestingText("Second Sister");
     }
 
     @Override

@@ -38,7 +38,6 @@ public class Card200_081 extends AbstractImperial {
         addPersona(Persona.VEERS);
         addIcons(Icon.HOTH, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_0);
         addKeywords(Keyword.GENERAL, Keyword.LEADER);
-        setTestingText("General Veers (V) (ERRATA)");
     }
 
     @Override

@@ -41,7 +41,6 @@ public class Card201_020 extends AbstractCombatVehicle {
         addIcons(Icon.PILOT, Icon.VIRTUAL_SET_1);
         addKeywords(Keyword.ENCLOSED, Keyword.SNOWSPEEDER, Keyword.ROGUE_SQUADRON);
         setPilotCapacity(1);
-        setTestingText("Dash In Rogue 12 (ERRATA)");
     }
 
     @Override

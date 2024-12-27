@@ -51,7 +51,6 @@ public class Card219_028 extends AbstractDroid {
         addKeywords(Keyword.SPY);
         addModelType(ModelType.ASTROMECH);
         addIcons(Icon.VIRTUAL_SET_19, Icon.NAV_COMPUTER, Icon.JABBAS_PALACE);
-        setTestingText("Artoo (V) (ERRATA)");
     }
 
     @Override

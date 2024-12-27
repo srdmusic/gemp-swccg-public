@@ -46,7 +46,6 @@ public class Card210_035 extends AbstractStarfighter {
         addModelType(ModelType.TIE_VN);
         setPilotCapacity(1);
         setMatchingPilotFilter(Filters.Kylo);
-        setTestingText("Kylo Ren's TIE Silencer (ERRATA)");
     }
 
     @Override

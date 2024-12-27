@@ -45,7 +45,6 @@ public class Card222_028 extends AbstractNormalEffect {
                 "Your total power everywhere is +1 for each [Endor] or [Death Star II] battleground you occupy (limit +2). [Immune to Alter.]");
         addIcons(Icon.DEATH_STAR_II);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Twilight Is Upon Me (V) (ERRATA)");
     }
 
     @Override

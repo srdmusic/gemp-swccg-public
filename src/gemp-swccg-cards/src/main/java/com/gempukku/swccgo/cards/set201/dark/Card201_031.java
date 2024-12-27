@@ -47,7 +47,6 @@ public class Card201_031 extends AbstractNormalEffect {
         setGameText("If you have deployed a [Jabba's Place] site, deploy on table. May deploy Nal Hutta from Reserve Deck; reshuffle. You may not deploy systems except Nal Hutta and Tatooine. Cancels The Camp. During battle, may lose 1 Force; your battle destiny modifiers affect your total battle destiny instead. Once per game, may retrieve a non-[Maintenance] alien or [Independent] starship into hand. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_1);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Jabba's Haven (ERRATA)");
     }
 
     @Override

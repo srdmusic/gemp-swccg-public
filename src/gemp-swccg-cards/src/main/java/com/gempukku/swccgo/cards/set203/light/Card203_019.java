@@ -46,7 +46,6 @@ public class Card203_019 extends AbstractObjective {
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Tatooine (with Tantive IV, non-[Reflections II] R2-D2, and Stolen Data Tapes there) and Dune Sea. For remainder of game, you may not deploy Sandwhirl, Strike Planning, Admiral's Orders or [Episode I] Jedi. While this side up, you Force drains at Tatooine system are -2. Once per turn, may [download] Alderaan or a Tatooine battleground site. Until the start of your first turn, Tantive IV may be forfeited to satisfy to satisfy all battle damage against you. Flip this card if Stolen Data Tapes 'delivered' and Rebels control two battlegrounds (a site and a system).");
         addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_3);
-        setTestingText("Diplomatic Mission To Alderaan (ERRATA)");
     }
 
     @Override

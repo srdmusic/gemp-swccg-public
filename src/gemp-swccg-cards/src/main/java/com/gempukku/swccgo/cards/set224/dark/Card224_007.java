@@ -46,7 +46,6 @@ public class Card224_007 extends AbstractStarfighter {
         addKeywords(Keyword.SHIP_DOCKING_CAPABILITY);
         addModelType(ModelType.TRANSPORT);
         setPassengerCapacity(6);
-        setTestingText("StarSpeeder 1000");
     }
 
     @Override

@@ -50,7 +50,6 @@ public class Card219_038 extends AbstractSystem {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.PLANET, Icon.VIRTUAL_SET_19);
-        setTestingText("Lothal (LS) (Errata)");
     }
 
     @Override

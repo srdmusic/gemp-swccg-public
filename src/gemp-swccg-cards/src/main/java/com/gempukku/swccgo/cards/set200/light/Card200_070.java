@@ -45,7 +45,6 @@ public class Card200_070 extends AbstractCharacterWeapon {
         setGameText("Deploy on Han or a smuggler. Greedo's gametext is canceled here. May target a character. Draw destiny. Target hit if destiny +2 > defense value. If hit by Han or Beckett, target's forfeit = 0. If on Han (unless Undercover), may fire once during your control phase.");
         addKeywords(Keyword.BLASTER);
         setMatchingCharacterFilter(Filters.or(Filters.Beckett, Filters.Han, Filters.Greedo));
-        setTestingText("Han's Heavy Blaster Pistol (V) (ERRATA)");
     }
 
 

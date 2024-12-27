@@ -34,7 +34,6 @@ public class Card224_022 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.PLANET, Icon.EXTERIOR_SITE, Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_24);
         setVirtualSuffix(true);
-        setTestingText("Tatooine: Dune Sea (V)");
     }
 
     @Override

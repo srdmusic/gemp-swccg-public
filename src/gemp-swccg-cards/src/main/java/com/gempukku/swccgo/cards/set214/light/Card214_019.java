@@ -32,7 +32,6 @@ public class Card214_019 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.ENDOR, Icon.INTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_14);
         setVirtualSuffix(true);
-        setTestingText("Endor: Chief Chirpa's Hut (V) (ERRATA)");
     }
 
     @Override

@@ -54,7 +54,6 @@ public class Card219_001_BACK extends AbstractObjective {
                     "Place artwork card in owner's Lost Pile. " +
                     "Flip this card if Thrawn not on table or (except during battle) if no artwork cards on table. ");
         addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("The Result Is Often Resentment (ERRATA)");
     }
 
     @Override

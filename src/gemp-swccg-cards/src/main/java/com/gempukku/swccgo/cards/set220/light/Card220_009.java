@@ -44,7 +44,6 @@ public class Card220_009 extends AbstractRebel {
         addKeywords(Keyword.SENATOR, Keyword.FEMALE);
         setSpecies(Species.ALDERAANIAN);
         setVirtualSuffix(true);
-        setTestingText("Prisoner 2187 (V) (ERRATA)");
     }
 
     @Override

@@ -44,7 +44,6 @@ public class Card224_014 extends AbstractRepublic {
         addIcons(Icon.THEED_PALACE, Icon.EPISODE_I, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.ROYAL_NABOO_SECURITY);
         setVirtualSuffix(true);
-        setTestingText("Corporal Rushing (V)");
     }
 
     @Override

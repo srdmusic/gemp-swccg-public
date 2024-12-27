@@ -49,7 +49,6 @@ public class Card224_001 extends AbstractNormalEffect {
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_24);
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
-        setTestingText("All Wrapped Up (V)");
     }
 
     @Override

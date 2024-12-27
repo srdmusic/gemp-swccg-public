@@ -38,7 +38,6 @@ public class Card200_063 extends AbstractStarfighter {
         addModelType(ModelType.CORELLIAN_REPUBLIC_CRUISER);
         setPilotCapacity(1);
         setPassengerCapacity(2);
-        setTestingText("Madakor In Radiant VII");
     }
 
     @Override

@@ -52,7 +52,6 @@ public class Card224_017 extends AbstractAlien {
         addIcons(Icon.PILOT, Icon.VIRTUAL_SET_24);
         addIcon(Icon.WARRIOR, 2);
         addPersona(Persona.JAXXON);
-        setTestingText("Jaxxon T. Tumperakki");
     }
 
     @Override

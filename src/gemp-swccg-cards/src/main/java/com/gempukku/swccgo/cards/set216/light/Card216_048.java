@@ -45,7 +45,6 @@ public class Card216_048 extends AbstractAlien {
         setGameText("Power +1 at a Kashyyyk site. While present at a Kashyyyk site, opponent may not  may not cancel or modify Force drains here. Unless 'hit', may forfeit in place of any other character hit by a weapon at same site, restoring that character to normal.");
         setSpecies(Species.WOOKIEE);
         addIcons(Icon.WARRIOR, Icon.EPISODE_I, Icon.VIRTUAL_SET_16);
-        setTestingText("Wookiee Warrior (ERRATA)");
     }
 
     @Override

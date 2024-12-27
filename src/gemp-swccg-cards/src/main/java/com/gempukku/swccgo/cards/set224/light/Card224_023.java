@@ -40,7 +40,6 @@ public class Card224_023 extends AbstractCombatVehicle {
         addIcons(Icon.PILOT, Icon.HOTH, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.ENCLOSED, Keyword.SNOWSPEEDER, Keyword.ROGUE_SQUADRON);
         setPilotCapacity(1);
-        setTestingText("Zev In Rogue 2");
     }
 
     @Override

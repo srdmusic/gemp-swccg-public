@@ -42,7 +42,6 @@ public class Card215_005 extends AbstractNormalEffect {
         addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_15);
         addImmuneToCardTitle(Title.Alter);
         addImmuneToCardTitle(Title.This_Is_Some_Rescue);
-        setTestingText("Cell 2187 (V) (ERRATA)");
     }
 
     @Override

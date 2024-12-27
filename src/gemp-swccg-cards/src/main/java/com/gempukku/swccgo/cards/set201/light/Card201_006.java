@@ -49,7 +49,6 @@ public class Card201_006 extends AbstractDroid {
         addModelType(ModelType.ASTROMECH);
         addIcons(Icon.A_NEW_HOPE, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_1);
         addKeywords(Keyword.SPY);
-        setTestingText("R2-D2 (Artoo-Detoo) (V) (ERRATA)");
     }
 
     @Override

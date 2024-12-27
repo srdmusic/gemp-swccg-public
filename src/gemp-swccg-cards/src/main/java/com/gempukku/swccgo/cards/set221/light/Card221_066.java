@@ -56,7 +56,6 @@ public class Card221_066 extends AbstractEpicEventDeployable {
                 "I Have To Face Him: Once per game, during your move phase, may relocate Luke to same battleground as Prophecy Of The Force. " +
                 "Father, Please!: Non-[Set 13] Anakin Skywalker does not cause Force loss and, once per game, you may lose 1 Force to play it from outside your deck as if from hand.");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
-        setTestingText("His Destiny (ERRATA)");
     }
 
     @Override
