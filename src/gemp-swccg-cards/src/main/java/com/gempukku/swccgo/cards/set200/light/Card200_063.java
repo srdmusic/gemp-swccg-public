@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.light;
+package com.gempukku.swccgo.cards.set200.light;
 
 import com.gempukku.swccgo.cards.AbstractPermanentAboard;
 import com.gempukku.swccgo.cards.AbstractPermanentPilot;
@@ -24,14 +24,14 @@ import java.util.List;
 
 
 /**
- * Set: Playtesting
+ * Set: 0
  * Type: Starship
  * Subtype: Starfighter
  * Title: Madakor In Radiant VII
  */
-public class Card501_181 extends AbstractStarfighter {
-    public Card501_181() {
-        super(Side.LIGHT, 2, 5, 6, 5, null, 4, 7, "Madakor In Radiant VII", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+public class Card200_063 extends AbstractStarfighter {
+    public Card200_063() {
+        super(Side.LIGHT, 2, 5, 6, 5, null, 4, 7, "Madakor In Radiant VII", Uniqueness.UNIQUE, ExpansionSet.SET_0, Rarity.V);
         setLore("Optimized for diplomatic missions with sensor-proof pods that have ejection capabilities. Easily identified by its red coloration.");
         setGameText("May add 1 pilot and 2 passengers. Permanent pilot is •Madakor, who provides ability of 2. Opponent's starships may not 'cloak' (or reset your total battle destiny) here. Immune to attrition < 4.");
         addPersona(Persona.RADIANT_VII);
