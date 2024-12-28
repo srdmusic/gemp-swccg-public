@@ -37,7 +37,6 @@ public class Card217_014 extends AbstractNormalEffect {
         setGameText("Deploy on table. Cancels Blast The Door, Kid!, Narrow Escape, and Rebel Barrier. If opponent just canceled a battle (or just moved a character, starship, or vehicle away from a battle), opponent loses 1 Force.");
         addIcons(Icon.VIRTUAL_SET_24);
         setVirtualSuffix(true);
-        setTestingText("Blast Door Controls (V)");
     }
 
     @Override

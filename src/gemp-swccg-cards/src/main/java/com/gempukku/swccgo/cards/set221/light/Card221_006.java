@@ -40,7 +40,6 @@ public class Card221_006 extends AbstractNormalEffect {
         setGameText("If Rebel Strike Team on table, deploy on table. Unless opponent's [Endor] objective on table, opponent generates no Force at your Endor system. Twice per game, may [upload] an [Endor] or [Death Star II] leader. May [download] [Death Star II] Falcon to Endor system. [Immune to Alter.]");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Strike Planning (V) (ERRATA)");
     }
 
     @Override

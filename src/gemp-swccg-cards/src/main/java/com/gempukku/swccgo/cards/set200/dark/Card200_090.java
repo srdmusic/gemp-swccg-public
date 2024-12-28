@@ -44,7 +44,6 @@ public class Card200_090 extends AbstractDroid {
         setGameText("Nabrun Leids may not transport to or from here. During your move phase, may use 2 Force to relocate a Dark Jedi (with any captives they are escorting), your Mara, or an Inquisitor from here to same site as a Dark Jedi or Jedi; place this droid in Used Pile.");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_0);
         addModelTypes(ModelType.PROBE, ModelType.RECON);
-        setTestingText("DRK-1 (Dark Eye Probe Droid)");
     }
 
     @Override
