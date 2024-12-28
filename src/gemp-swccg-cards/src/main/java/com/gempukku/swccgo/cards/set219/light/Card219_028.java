@@ -46,7 +46,7 @@ public class Card219_028 extends AbstractDroid {
         setAlternateDestiny(6);
         setVirtualSuffix(true);
         setLore("Counterpart to C-3PO. Spy. Obstinate, headstrong and always full of surprises. R2-D2 was an integral part of Luke Skywalker's rescue plans.");
-        setGameText("When deployed, may play a Defensive Shield from under your Starting Effect (as if from hand). Once per game, may use 1 Force to place opponent's just-played Interrupt out of play. While with Anakin, C-3PO, or Luke, opponent's total attrition here is -2.");
+        setGameText("When deployed, may play a Defensive Shield from under your Starting Effect (as if from hand). Once per game, may use 1 Force to place opponent's just-played Interrupt out of play. While with Anakin, C-3PO, or Luke, attrition against you here is -2.");
         addPersona(Persona.R2D2);
         addKeywords(Keyword.SPY);
         addModelType(ModelType.ASTROMECH);

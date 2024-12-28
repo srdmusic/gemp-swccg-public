@@ -41,7 +41,7 @@ public class Card210_035 extends AbstractStarfighter {
     public Card210_035() {
         super(Side.DARK, 2, 2, 3, null, 4, 3, 4, "Kylo Ren's TIE Silencer", Uniqueness.UNIQUE, ExpansionSet.SET_10, Rarity.V);
         setLore("");
-        setGameText("May add 1 pilot. Kylo deploys -2 aboard. May reveal from hand to ▲ Kylo and deploy both simultaneously. While Kylo piloting, Kylo and Silencer are immune to It Can Wait, Rebel Barrier and attrition < 5.");
+        setGameText("May add 1 pilot. Kylo deploys -2 aboard. May reveal from hand to [upload] Kylo and deploy both simultaneously. While Kylo piloting, Kylo and this TIE are immune to It Can Wait, Rebel Barrier, and attrition < 5.");
         addIcons(Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_10, Icon.EPISODE_VII, Icon.FIRST_ORDER);
         addModelType(ModelType.TIE_VN);
         setPilotCapacity(1);

@@ -38,7 +38,7 @@ public class Card220_009 extends AbstractRebel {
         super(Side.LIGHT, 1, 4, 4, 3, 6, Title.Prisoner_2187, Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
         setLore("Princess Leia Organa. Alderaanian senator. Targeted by Vader for capture and interrogation. The Dark Lord of the Sith wanted her alive.");
-        setGameText("While on Death Star (even if imprisoned): Leia may not be transferred and her gametext may not be canceled. Draws one battle destiny if unable to otherwise. While present at a Death Star site, Force drain +1 where you have a Rebel stormtrooper.");
+        setGameText("Draws one battle destiny if unable to otherwise. While present at a Death Star site, Force drain +1 where you have a Rebel stormtrooper. While on Death Star (even if imprisoned), Leia may not be transferred and her gametext may not be canceled.");
         addPersona(Persona.LEIA);
         addIcons(Icon.PREMIUM, Icon.WARRIOR, Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.SENATOR, Keyword.FEMALE);

@@ -46,7 +46,7 @@ public class Card224_010 extends AbstractAlien {
         super(Side.LIGHT, 2, 5, 6, 2, 6, Title.Beilert_Valance, Uniqueness.UNIQUE, ExpansionSet.SET_24, Rarity.V);
         setArmor(5);
         setLore("Chorinian. Cyborg. Former miner.");
-        setGameText("Adds 2 to the power of anything he pilots. Draws one battle destiny if not able to otherwise. Unless a Jedi here, may cause any character Valance just ‘hit’ to be lost. Once per game, may deploy Cyborg Construct on Valance from Reserve Deck, reshuffle.");
+        setGameText("[Pilot] 2. Draws one battle destiny if unable to otherwise. Unless a Jedi here, may cause a character just 'hit' by Valance to be lost. Once per game, may [download] Cyborg Construct on Valance.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.MINER);
         setSpecies(Species.CHORINIAN);

@@ -43,7 +43,7 @@ public class Card224_006 extends AbstractImperial {
                 "Once per game, may place a 'Hatred' card here in owner’s Lost Pile to choose: " +
                 "Take any card into hand from Used Pile; reshuffle. " +
                 "OR Deploy a lightsaber on this character from Lost Pile. " +
-                "Immune to attrition < 4 while Vader not here.");
+                "Unless Vader here, immune to attrition < 4.");
         addKeywords(Keyword.INQUISITOR, Keyword.FEMALE);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
     }

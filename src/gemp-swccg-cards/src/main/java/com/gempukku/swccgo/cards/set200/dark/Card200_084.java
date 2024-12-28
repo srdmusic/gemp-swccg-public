@@ -48,7 +48,7 @@ public class Card200_084 extends AbstractAlien {
         super(Side.DARK, 1, 4, 3, 4, 7, "Jabba The Hutt", Uniqueness.UNIQUE, ExpansionSet.SET_0, Rarity.V);
         setVirtualSuffix(true);
         setLore("Jabba Desilijic Tiure. Male heir to Zorba the Hutt. Gangster. Leader of one of the largest criminal organizations in the galaxy. Over six hundred years old.");
-        setGameText("While at Audience Chamber, immune to attrition < 4 and may [download] Scum And Villainy. During battle, may use 1 Force to double the power of a non-[Maintenance] alien present with Jabba. Once per game, may retrieve Salacious Crumb. (OH-HO-HO!)");
+        setGameText("During battle, may use 1 Force to double the power of a non-[Maintenance] alien present with Jabba. While at Audience Chamber, may [download] Scum And Villainy and immune to attrition < 4. Once per game, may retrieve Salacious Crumb. (OH-HO-HO!)");
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_0);
         addPersona(Persona.JABBA);
         setSpecies(Species.HUTT);

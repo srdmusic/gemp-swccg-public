@@ -28,7 +28,7 @@ public class Card214_019 extends AbstractSite {
     public Card214_019() {
         super(Side.LIGHT, Title.Chief_Chirpas_Hut, Title.Endor, Uniqueness.UNIQUE, ExpansionSet.SET_14, Rarity.V);
         setLocationDarkSideGameText("");
-        setLocationLightSideGameText("Deploys only if a [Death Star II] objective on table. If an Imperial at Landing Platform during opponent's turn, may relocate Luke from here to there.");
+        setLocationLightSideGameText("Deploys only if a [Death Star II] objective on table. During opponent's turn, if an Imperial at Landing Platform, Luke may move from here to there for free.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.ENDOR, Icon.INTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_14);
         setVirtualSuffix(true);

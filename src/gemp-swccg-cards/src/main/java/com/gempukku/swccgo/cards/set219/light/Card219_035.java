@@ -45,7 +45,7 @@ public class Card219_035 extends AbstractAlienRebel {
         super(Side.LIGHT, 2, 4, 4, 3, 5, "Fenn Rau", Uniqueness.UNIQUE, ExpansionSet.SET_19, Rarity.V);
         setArmor(5);
         setLore("Mandalorian scout.");
-        setGameText("[Pilot] 3. During battle, if another Mandalorian here, opponent's total power is -2. Once per game, " +
+        setGameText("[Pilot] 3. During battle, if another Mandalorian here, opponent's total power is -2. Once per game, at the end of a battle here, " +
                 "may return Fenn Rau to hand to activate 2 Force (if Fenn Rau won a battle this turn, may also retrieve 1 Force).");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_19);
         addKeywords(Keyword.SCOUT);

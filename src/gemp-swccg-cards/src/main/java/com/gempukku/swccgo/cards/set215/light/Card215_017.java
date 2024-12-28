@@ -52,7 +52,7 @@ public class Card215_017 extends AbstractObjective {
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Central Core, A Power Loss, Detention Block Corridor (with [A New Hope] Leia imprisoned there), and Trash Compactor. " +
                 "For remainder of game, your Death Star sites generate +1 Force for you. You may not deploy Luke of ability > 4 or [Episode I] (or [Episode VII]) Jedi. If Leia is about to leave table (for any reason, even if inactive), imprison her in Detention Block Corridor (cards on her are placed in owner's Used Pile). Once per turn, may ▼ a Death Star site. " +
-                "Flip this card if Leia occupies a Death Star site and A Power Loss has been 'shut down' this game.");
+                "Flip this card if Leia occupies a Death Star site and A Power Loss is 'shut down.'");
         addIcons(Icon.A_NEW_HOPE, Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_15);
     }
 

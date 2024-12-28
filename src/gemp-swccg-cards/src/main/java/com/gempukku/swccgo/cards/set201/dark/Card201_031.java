@@ -44,7 +44,7 @@ public class Card201_031 extends AbstractNormalEffect {
     public Card201_031() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Jabba's Haven", Uniqueness.UNIQUE, ExpansionSet.SET_1, Rarity.V);
         setLore("Jabba has won the service of many of his guards and other henchbeings through games of chance.");
-        setGameText("If you have deployed a [Jabba's Place] site, deploy on table. May deploy Nal Hutta from Reserve Deck; reshuffle. You may not deploy systems except Nal Hutta and Tatooine. Cancels The Camp. During battle, may lose 1 Force; your battle destiny modifiers affect your total battle destiny instead. Once per game, may retrieve a non-[Maintenance] alien or [Independent] starship into hand. [Immune to Alter.]");
+        setGameText("If you have deployed a [Jabba's Place] site, deploy on table. May [download] Nal Hutta. You may not deploy systems except Nal Hutta and Tatooine. Cancels The Camp. During battle, may lose 1 Force; your battle destiny modifiers affect your total battle destiny instead. Once per game, may retrieve a non-[Maintenance] alien or [Independent] starship into hand. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_1);
         addImmuneToCardTitle(Title.Alter);
     }

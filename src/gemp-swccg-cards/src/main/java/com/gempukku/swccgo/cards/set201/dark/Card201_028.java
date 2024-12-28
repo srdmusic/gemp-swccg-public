@@ -33,7 +33,7 @@ public class Card201_028 extends AbstractNormalEffect {
         super(Side.DARK, 6, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Despair, Uniqueness.UNIQUE, ExpansionSet.SET_1, Rarity.V);
         setVirtualSuffix(true);
         setLore("The carbonite froze more than just Han's body.");
-        setGameText("Deploy on table. My Favorite Decoration may not be placed out of play. Your Force drains are +1 at same battleground as a frozen captive. While a frozen captive with Scum And Villainy, your total power in all battles is +3. [Immune to Alter.]");
+        setGameText("Deploy on table. My Favorite Decoration may not be placed out of play. At battlegrounds where you have a frozen captive, your Force drains are +1. While a frozen captive with Scum And Villainy, your total power in all battles is +3. [Immune to Alter.]");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_1);
         addImmuneToCardTitle(Title.Alter);
     }

@@ -41,7 +41,7 @@ public class Card220_007 extends AbstractStarfighter {
         super(Side.LIGHT, 2, 3, 3, null, 4, 6, 7, "Millennium Falcon", Uniqueness.UNIQUE, ExpansionSet.SET_20, Rarity.V);
         setVirtualSuffix(true);
         setLore("Modified YT-1300 freighter. Owned by Lando Calrissian until won by Han in a sabacc game. 26.7 meters long. 'She may not look like much, but she's got it where it counts.'");
-        setGameText("May add 2 pilots and 2 passengers. Once per game, may [download] Han or Chewie aboard. While Han or Chewie piloting, immune to attrition < 5 (< 7 if both). Force drain +1 here if [ANH] Han piloting.");
+        setGameText("May add 2 pilots and 2 passengers. Once per game, may [download] Han or Chewie aboard. While [A New Hope] Han piloting, Force drain +1 here. While Han or Chewie piloting, immune to attrition < 5 (< 7 if both).");
         addPersona(Persona.FALCON);
         addIcons(Icon.A_NEW_HOPE, Icon.NAV_COMPUTER, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_20);
         addModelType(ModelType.MODIFIED_LIGHT_FREIGHTER);

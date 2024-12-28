@@ -45,7 +45,7 @@ import java.util.List;
 public class Card219_038 extends AbstractSystem {
     public Card219_038() {
         super(Side.LIGHT, Title.Lothal, 6, ExpansionSet.SET_19, Rarity.V);
-        setLocationLightSideGameText("Once per game, may simultaneously deploy Ghost and Hera here from hand (or Reserve Deck; reshuffle).");
+        setLocationLightSideGameText("Once per game, may simultaneously deploy Ghost and Hera here from hand and/or Reserve Deck; reshuffle.");
         setLocationDarkSideGameText("Thrawn and Pryce deploy -1 (and move for free) to here. While Lothal converted, gains one [Dark Side] icon.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);

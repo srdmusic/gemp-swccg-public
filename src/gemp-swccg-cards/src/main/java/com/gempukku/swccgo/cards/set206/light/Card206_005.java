@@ -43,7 +43,7 @@ public class Card206_005 extends AbstractDroid {
         super(Side.LIGHT, 3, 4, 4, 5, Title.K2SO, Uniqueness.UNIQUE, ExpansionSet.SET_6, Rarity.V);
         setArmor(4);
         setLore("Spy.");
-        setGameText("Adds 2 to the power of anything he pilots. Draws one battle destiny if unable to otherwise. Deploys -1 to Data Vault. While with Cassian or at Data Vault, your total battle destiny is +1. If lost from a site, may take Jyn into hand from Reserve deck; reshuffle.");
+        setGameText("[Pilot] 2. Deploys -1 to Data Vault. Draws one battle destiny if unable to otherwise. While with Cassian or at Data Vault, your total battle destiny here is +1. If just lost from a site, may [upload] Jyn.");
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.PRESENCE, Icon.VIRTUAL_SET_6);
         addKeywords(Keyword.SPY);
         addModelType(ModelType.SECURITY);

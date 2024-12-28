@@ -46,7 +46,7 @@ public class Card223_042 extends AbstractNormalEffect {
     public Card223_042() {
         super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Passage To The Alderaan System", Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
         setLore("Han's smuggling adventures in Corporate Sector and Hutt Space put him in many tight scrapes.  He's about to be in another.");
-        setGameText("Deploy on table if Stolen Data Tapes on table. Twice per game may [upload] a general or Senator. May simultaneously deploy [ANH] Falcon (-1 Force) with [ANH] Han from hand and/or Reserve Deck; reshuffle. Falcon is immune to Gravity Shadow. [Immune to Alter.]");
+        setGameText("If Stolen Data Tapes on table, deploy on table. Twice per game, may [upload] a general or a senator. Once per game, may simultaneously deploy [A New Hope] Falcon (deploy -1) and [A New Hope] Han from hand and/or Reserve Deck; reshuffle. Falcon is immune to Gravity Shadow. [Immune to Alter.]");
         addIcon(Icon.VIRTUAL_SET_23);
         addImmuneToCardTitle(Title.Alter);
     }

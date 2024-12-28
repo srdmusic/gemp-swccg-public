@@ -38,7 +38,7 @@ public class Card201_020 extends AbstractCombatVehicle {
         setLore("Enclosed.");
         setGameText("May add 1 pilot. Permanent pilot is •Dash, who provides ability of 3. Unless 'hit', your other vehicles here may not be targeted by weapons, High-Speed Tactics, or Crash Landing. Immune to attrition < 4.");
         addModelType(ModelType.T_47);
-        addIcons(Icon.PILOT, Icon.VIRTUAL_SET_1);
+        addIcons(Icon.HOTH, Icon.PILOT, Icon.VIRTUAL_SET_1);
         addKeywords(Keyword.ENCLOSED, Keyword.SNOWSPEEDER, Keyword.ROGUE_SQUADRON);
         setPilotCapacity(1);
     }

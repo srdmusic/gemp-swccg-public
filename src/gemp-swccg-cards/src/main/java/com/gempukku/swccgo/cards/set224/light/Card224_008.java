@@ -37,7 +37,7 @@ public class Card224_008 extends AbstractNormalEffect {
     public Card224_008() {
         super(Side.LIGHT, 3, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Cunning Warrior", Uniqueness.UNIQUE, ExpansionSet.SET_24, Rarity.V);
         setLore("Luke's experience on Dagobah gave him great skill in using the Force. Vader had to keep his focus on Luke at all times, or face the consequences.");
-        setGameText("If your [Skywalker] Epic Event on table, deploy on table. Where you have a Skywalker, you initiate battles for free. Once per turn, may ▼ Anakin's Lightsaber or a [Cloud City] corridor. During battle involving a Skywalker warrior, you may activate 1 Force. [Immune to Alter.]");
+        setGameText("If your [Skywalker] Epic Event on table, deploy on table. Where you have a Skywalker, you initiate battles for free. Once per turn, may [download] Anakin's Lightsaber or a [Cloud City] corridor. Once per battle involving a Jedi Skywalker, may activate 1 Force. [Immune to Alter.]");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_24);
         addImmuneToCardTitle(Title.Alter);
     }
