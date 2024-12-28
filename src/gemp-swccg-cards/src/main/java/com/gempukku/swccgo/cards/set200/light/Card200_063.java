@@ -24,7 +24,7 @@ import java.util.List;
 
 
 /**
- * Set: 0
+ * Set: Set 0
  * Type: Starship
  * Subtype: Starfighter
  * Title: Madakor In Radiant VII
