@@ -44,7 +44,7 @@ public class Card501_211 extends AbstractDroid {
         setVirtualSuffix(true);
         setLore("Fiesty. Loyal. Heroic. Insecure. Rebel spy. Excels at trouble. Incorrigible counterpart of a mindless philosopher. Has picked up a slight flutter. A bit eccentric.");
         setGameText("While aboard a starfighter, adds 2 to power, maneuver, and hyperspeed. " +
-                "While with a Scomp link, adds one [LS] icon here, and, once per turn during a battle at same or related interior site, may use 1 Force to subtract 1 from a just-drawn destiny.");
+                "While present with a Scomp link, adds one [Light Side] icon here and, during battles at same and related interior sites, once per turn may use 1 Force to subtract 1 from a just drawn destiny.");
         addPersona(Persona.R2D2);
         addModelType(ModelType.ASTROMECH);
         addIcons(Icon.A_NEW_HOPE, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_1);
