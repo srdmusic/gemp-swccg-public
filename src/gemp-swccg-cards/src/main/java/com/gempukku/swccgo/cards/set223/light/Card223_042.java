@@ -78,7 +78,7 @@ public class Card223_042 extends AbstractNormalEffect {
             if (!validStarfighters.isEmpty() || canDeployCardFromReserveDeck) {
 
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId1);
-                action.setText("Deploy a starfighter and pilot");
+                action.setText("Deploy Falcon and Han");
                 // Update usage limit(s)
                 action.appendUsage(
                         new OncePerGameEffect(action));
