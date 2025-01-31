@@ -93,7 +93,7 @@ var LeagueResultsUI = Class.extend({
                         that.displayBuyAction("Do you want to join the league by paying " + costString + "?",
                             function () {
                                 that.communication.joinLeague(leagueCode, function () {
-                                    that.loadResultsWithLeague(leagueCode);
+                                    that.loadResults();
                                 }, {
                                     "409":function () {
                                         alert("You don't have enough funds to join this league.");

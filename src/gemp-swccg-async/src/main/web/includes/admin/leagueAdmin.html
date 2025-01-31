@@ -309,8 +309,8 @@
 
 				$("#submitSoloDraft").button().click(
 						function () {
-							var data = gatherData($("#addSoloDraft"));
-							$("#sealed-league-result").html("Processing...");
+							var data = gatherData($("#addSoloDraftForm"));
+							$("#solo-draft-league-result").html("Processing...");
 
 							hall.comm.addSoloDraftLeague(
 								data.name[0],
@@ -448,7 +448,7 @@
 	<br><br><hr><br>
 
 	<div>
-		<h1>Add Sealed League</h1>
+		<h1>Add Solo Draft League</h1>
 
 		<div id="addSoloDraftForm">
 			Name: <input type="text" name="name"/><br/>

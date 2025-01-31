@@ -9,7 +9,8 @@ import com.gempukku.swccgo.draft2.builder.StartingPoolBuilder;
 import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.game.formats.SwccgoFormatLibrary;
 import com.gempukku.swccgo.cards.packs.SetDefinition;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -20,7 +21,7 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 public class SoloDraftDefinitions {
-    private static Logger _logger = Logger.getLogger(SoloDraftDefinitions.class);
+    private static Logger _logger = LogManager.getLogger(SoloDraftDefinitions.class);
     private Map<String, SoloDraft> draftTypes = new HashMap<String, SoloDraft>();
     private StartingPoolBuilder startingPoolBuilder = new StartingPoolBuilder();
     private DraftChoiceBuilder draftChoiceBuilder;

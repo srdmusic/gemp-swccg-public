@@ -4,7 +4,7 @@ import com.gempukku.swccgo.draft2.builder.CardCollectionProducer;
 import com.gempukku.swccgo.draft2.builder.DraftChoiceBuilder;
 import com.gempukku.swccgo.game.CardCollection;
 import com.gempukku.swccgo.packagedProduct.EnhancedPremierePack_DarthVader;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;

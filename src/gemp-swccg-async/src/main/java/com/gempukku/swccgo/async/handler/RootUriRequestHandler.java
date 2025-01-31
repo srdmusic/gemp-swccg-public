@@ -129,7 +129,7 @@ public class RootUriRequestHandler implements UriRequestHandler {
                 _tournamentRequestHandler.handleRequest(uri.substring(_serverContextPath.length() + 10), request,
                         context, responseWriter, remoteIp);
             } else if (uri.startsWith(_serverContextPath + "soloDraft")) {
-                _soloDraftRequestHandler.handleRequest(uri.substring(_serverContextPath.length() + 9), request, context);
+                _soloDraftRequestHandler.handleRequest(uri.substring(_serverContextPath.length() + 9), request, context, responseWriter, remoteIp);
             } else {
                 responseWriter.writeError(404);
             }

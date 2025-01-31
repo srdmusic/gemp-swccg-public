@@ -605,7 +605,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         String code = String.valueOf(System.currentTimeMillis());
 
         String parameters = format + "," + start + "," + serieDuration + "," + maxMatches + "," + code + "," + name;
-        LeagueData leagueData = new NewSealedLeagueData(_cardLibrary, parameters);
+        LeagueData leagueData = new NewSealedLeagueData(_cardLibrary, _soloDraftDefinitions, parameters);
         List<LeagueSeriesData> series = leagueData.getSeries();
         int leagueStart = series.get(0).getStart();
         int displayEnd = DateUtils.offsetDate(series.get(series.size() - 1).getEnd(), 2);
@@ -709,7 +709,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         String code = String.valueOf(System.currentTimeMillis());
 
         String parameters = format + "," + start + "," + serieDuration + "," + maxMatches + "," + code + "," + name;
-        LeagueData leagueData = new NewSoloDraftLeagueData(_cardLibrary, parameters);
+        LeagueData leagueData = new NewSoloDraftLeagueData(_cardLibrary, _soloDraftDefinitions, parameters);
         List<LeagueSeriesData> series = leagueData.getSeries();
         int leagueStart = series.get(0).getStart();
         int displayEnd = DateUtils.offsetDate(series.get(series.size() - 1).getEnd(), 2);
@@ -823,7 +823,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
         }
 
         String parameters = sb.toString();
-        LeagueData leagueData = new NewConstructedLeagueData(_cardLibrary, parameters);
+        LeagueData leagueData = new NewConstructedLeagueData(_cardLibrary, _soloDraftDefinitions, parameters);
         List<LeagueSeriesData> series = leagueData.getSeries();
         int leagueStart = series.get(0).getStart();
         int displayEnd = DateUtils.offsetDate(series.get(series.size() - 1).getEnd(), 2);

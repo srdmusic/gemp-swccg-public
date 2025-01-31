@@ -37,6 +37,7 @@ public class LeagueRequestHandler extends SwccgoServerRequestHandler implements 
 
         _leagueService = extractObject(context, LeagueService.class);
         _formatLibrary = extractObject(context, SwccgoFormatLibrary.class);
+        _soloDraftDefinitions = extractObject(context, SoloDraftDefinitions.class);
     }
 
     @Override
@@ -88,12 +89,15 @@ public class LeagueRequestHandler extends SwccgoServerRequestHandler implements 
         final List<LeagueSeriesData> series = leagueData.getSeries();
 
         int end = series.get(series.size() - 1).getEnd();
+        int start = series.get(0).getStart();
+        int currentDate = DateUtils.getCurrentDate();
 
         Element leagueElem = doc.createElement("league");
         boolean inLeague = _leagueService.isPlayerInLeague(league, resourceOwner);
 
         leagueElem.setAttribute("member", String.valueOf(inLeague));
         leagueElem.setAttribute("joinable", String.valueOf(!inLeague && end >= DateUtils.getCurrentDate()));
+        leagueElem.setAttribute("draftable", String.valueOf(inLeague && leagueData.isSoloDraftLeague() && start <= currentDate));
         leagueElem.setAttribute("type", league.getType());
         leagueElem.setAttribute("name", league.getName());
         leagueElem.setAttribute("cost", String.valueOf(league.getCost()));

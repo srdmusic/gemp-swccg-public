@@ -14,12 +14,11 @@ import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.league.LeagueData;
 import com.gempukku.swccgo.league.LeagueService;
 import com.gempukku.swccgo.league.NewSoloDraftLeagueData;
-import org.apache.log4j.Logger;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.handler.codec.http.HttpMethod;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.QueryStringDecoder;
-import org.jboss.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
+import org.apache.logging.log4j.Logger;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -43,7 +42,7 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
     }
 
     @Override
-    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, MessageEvent e) throws Exception {
+    public void handleRequest(String uri, HttpRequest request, Map<Type, Object> context, ResponseWriter responseWriter, String remoteIp) throws Exception {
         if (uri.startsWith("/") && request.getMethod() == HttpMethod.POST) {
             makePick(request, uri.substring(1), responseWriter);
         } else if (uri.startsWith("/") && request.getMethod() == HttpMethod.GET) {
@@ -68,7 +67,7 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
         if (!leagueData.isSoloDraftLeague() || DateUtils.getCurrentDate() < leagueStart)
             throw new HttpProcessingException(404);
 
-        SoloDraftLeagueData soloDraftLeagueData = (SoloDraftLeagueData) leagueData;
+        NewSoloDraftLeagueData soloDraftLeagueData = (NewSoloDraftLeagueData) leagueData;
         CollectionType collectionType = soloDraftLeagueData.getCollectionType();
 
         Player resourceOwner = getResourceOwnerSafely(request, participantId);
@@ -76,7 +75,7 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
         CardCollection collection = _collectionsManager.getPlayerCollection(resourceOwner, collectionType.getCode());
 
         Iterable<SoloDraft.DraftChoice> availableChoices;
-        ((SoloDraftLeagueData) leagueData).repairExtraInformation(collection, resourceOwner);
+        soloDraftLeagueData.repairExtraInformation(collection, resourceOwner);
 
         boolean finished = (Boolean) collection.getExtraInformation().get("finished");
         int stage = ((Number) collection.getExtraInformation().get("stage")).intValue();
@@ -132,13 +131,13 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
         if (!leagueData.isSoloDraftLeague() || DateUtils.getCurrentDate() < leagueStart)
             throw new HttpProcessingException(404);
 
-        SoloDraftLeagueData soloDraftLeagueData = (SoloDraftLeagueData) leagueData;
+        NewSoloDraftLeagueData soloDraftLeagueData = (NewSoloDraftLeagueData) leagueData;
         CollectionType collectionType = soloDraftLeagueData.getCollectionType();
 
         Player resourceOwner = getResourceOwnerSafely(request, participantId);
 
         CardCollection collection = _collectionsManager.getPlayerCollection(resourceOwner, collectionType.getCode());
-        ((SoloDraftLeagueData) leagueData).repairExtraInformation(collection, resourceOwner);
+        soloDraftLeagueData.repairExtraInformation(collection, resourceOwner);
         boolean finished = (Boolean) collection.getExtraInformation().get("finished");
         if (finished)
             throw new HttpProcessingException(404);

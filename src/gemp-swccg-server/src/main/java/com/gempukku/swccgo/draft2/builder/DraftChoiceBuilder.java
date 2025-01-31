@@ -12,10 +12,9 @@ import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.game.SortAndFilterCards;
 import com.gempukku.swccgo.game.formats.SwccgoFormatLibrary;
 import com.gempukku.swccgo.cards.packs.SetDefinition;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import sun.util.resources.cldr.lo.CurrencyNames_lo;
 
 import javax.smartcardio.Card;
 import java.util.*;
