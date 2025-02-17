@@ -18,10 +18,9 @@ public class Card501_016 extends AbstractFirstOrder {
     public Card501_016() {
         super(Side.DARK, 2, 4, 4, 4, 7, "Vicrul", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Knight of Ren.");
-        setGameText("Power +1 for each opponent character out of play. Opponent may not cancel your battle destiny draws where you have Kylo or a Knight of Ren. When you initiate a Force drain or win a battle here, may place bottom card of opponent's lost pile out of play.");
+        setGameText("Power +1 for each opponent's character out of play. Opponent may not cancel your battle destiny draws where you have Kylo or a Knight of Ren. If you just initiated a Force drain (or won a battle) here, may place bottom card of opponent's Lost Pile out of play.");
         addIcons(Icon.EPISODE_VII, Icon.WARRIOR, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.KNIGHT_OF_REN);
         setTestingText("Vicrul");
-        hideFromDeckBuilder();
     }
 }
