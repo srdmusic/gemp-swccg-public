@@ -4,8 +4,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractFirstOrder;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.evaluators.OutOfPlayEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
@@ -14,9 +16,13 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
@@ -44,4 +50,32 @@ public class Card501_016 extends AbstractFirstOrder {
         modifiers.add(new MayNotCancelBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.or(Filters.Kylo, Filters.Knight_of_Ren)), playerId, opponent));
         return modifiers;
     }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        String opponent = game.getOpponent(playerId);
+
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if ((TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerId, Filters.here(self))
+                || TriggerConditions.wonBattleAt(game, effectResult, playerId, Filters.here(self)))
+                && GameConditions.hasLostPile(game, opponent)) {
+            
+            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+
+            action.setText("Place opponent's card out of play.");
+            action.setActionMsg("Place bottom card of opponent's Lost Pile out of play");
+
+            //Perform result(s)
+            action.appendEffect(
+                new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, opponent, Filters.bottomOfLostPile(opponent), false)
+            );
+            actions.add(action);
+        }
+
+        return actions;
+    }
+
 }
