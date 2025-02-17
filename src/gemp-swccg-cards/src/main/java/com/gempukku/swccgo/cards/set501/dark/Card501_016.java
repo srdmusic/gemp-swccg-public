@@ -46,7 +46,7 @@ public class Card501_016 extends AbstractFirstOrder {
         String opponent = game.getOpponent(playerId);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new PowerModifier(self, new OutOfPlayEvaluator(self, Filters.and(Filters.opponents(self), Filters.character))));
+        modifiers.add(new PowerModifier(self, new OutOfPlayEvaluator(self, Filters.and(Filters.opponents(self), Filters.character), opponent)));
         modifiers.add(new MayNotCancelBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.or(Filters.Kylo, Filters.Knight_of_Ren)), playerId, opponent));
         return modifiers;
     }
