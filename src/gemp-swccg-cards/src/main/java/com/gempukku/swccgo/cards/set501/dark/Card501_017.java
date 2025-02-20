@@ -19,10 +19,9 @@ public class Card501_017 extends AbstractAlien {
     public Card501_017() {
         super(Side.DARK, 3, 2, 1, 1, 3, Title.Salacious_Crumb, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Male Kowakian. Prankster. Humiliates others for Jabba's amusement. His life depends on making Jabba laugh at least once per day.");
-        setGameText("When deployed, may draw top card of Reserve Deck or send a droid present to owner's Used Pile (“AH-hahahaha!”). Alien leaders here may not have their game text canceled. While at a converted Jabba's Palace site, may raise yours to the top.");
-        addIcons(Icon.JABBAS_PALACE);
+        setGameText("When deployed, may draw top card of Reserve Deck or place a droid present in owner's Used Pile ('AH-hahahaha!'). Game text of your alien leaders here may not be canceled. If at a converted Jabba's Palace site, may raise yours to the top.");
+        addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_25);
         setSpecies(Species.KOWAKIAN);
         setVirtualSuffix(true);
-        hideFromDeckBuilder();
     }    
 }
