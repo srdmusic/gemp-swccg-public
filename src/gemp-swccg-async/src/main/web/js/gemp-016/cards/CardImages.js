@@ -4233,5 +4233,6 @@ const fixedImages = {
 "214_21ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/plokoonsjedistarfighter_ai.png",
 "214_9ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Dark/hires/steadfast_ai.png",
 "224_9ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/large/balancedattackdarklighterspin_ai.gif",
+"210_12ai":"https://res.starwarsccg.org/cards/VirtualAlternateImage-Light/hires/dashrendar_ai.png",
 
 };
