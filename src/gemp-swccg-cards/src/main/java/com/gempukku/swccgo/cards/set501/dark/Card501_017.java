@@ -45,6 +45,7 @@ public class Card501_017 extends AbstractAlien {
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_25);
         setSpecies(Species.KOWAKIAN);
         setVirtualSuffix(true);
+        setTestingText("Salacious Crumb (V)");
     }
 
     @Override
