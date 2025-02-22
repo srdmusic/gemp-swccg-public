@@ -24,9 +24,9 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.PutCardFromHandOnForcePileEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedBySpecificWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
@@ -77,10 +77,9 @@ public class Card501_035 extends AbstractAlien {
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new PowerModifier(self, withJabba, 2));
-
         modifiers.add(new MayNotBeTargetedBySpecificWeaponsModifier(self, Filters.and(Filters.your(self), Filters.other(self), Filters.character, Filters.here(self)),
                 withJabbaAndUnlessHit, Filters.blaster));
-
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.sameSite(self), withJabbaAndUnlessHit, Filters.title(Title.I_Must_Be_Allowed_To_Speak)));
         return modifiers;
     }
 }
