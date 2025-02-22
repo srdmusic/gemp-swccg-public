@@ -1,10 +1,13 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.HitCondition;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -19,7 +22,14 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.OrCondition;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.PutCardFromHandOnForcePileEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedBySpecificWeaponsModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
@@ -57,5 +67,20 @@ public class Card501_035 extends AbstractAlien {
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        Condition withJabba = new WithCondition(self, Filters.Jabba);
+        Condition unlessHit = new UnlessCondition(new HitCondition(self));
+        Condition withJabbaAndUnlessHit = new AndCondition(withJabba, unlessHit);
+
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new PowerModifier(self, withJabba, 2));
+
+        modifiers.add(new MayNotBeTargetedBySpecificWeaponsModifier(self, Filters.and(Filters.your(self), Filters.other(self), Filters.character, Filters.here(self)),
+                withJabbaAndUnlessHit, Filters.blaster));
+
+        return modifiers;
     }
 }
