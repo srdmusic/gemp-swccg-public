@@ -1,6 +1,10 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -10,6 +14,13 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.PutCardFromHandOnForcePileEffect;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
@@ -28,5 +39,23 @@ public class Card501_035 extends AbstractAlien {
         addKeywords(Keyword.LEADER);
         setVirtualSuffix(true);
         setTestingText("Bib Fortuna (V)");
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if(TriggerConditions.justDeployedToLocation(game, effectResult, game.getOpponent(playerId), Filters.character, Filters.here(self))
+            && GameConditions.hasHand(game, playerId)){
+
+            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Place card from hand on Force Pile");
+            action.setActionMsg("Place a card from hand on Force Pile");
+
+            // Perform result(s)
+            action.appendEffect(new PutCardFromHandOnForcePileEffect(action, playerId));
+
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }
