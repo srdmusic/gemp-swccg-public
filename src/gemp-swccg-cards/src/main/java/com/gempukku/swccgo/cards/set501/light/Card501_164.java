@@ -1,12 +1,20 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.DeploymentRestrictionsOption;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.PlayCardOption;
+import com.gempukku.swccgo.game.ReactActionOption;
+import com.gempukku.swccgo.game.SwccgGame;
 
 /**
  * Set: Playtesting
@@ -24,4 +32,16 @@ public class Card501_164 extends AbstractSite {
         setVirtualSuffix(true);
         setTestingText("Coruscant: Jedi Council Chamber (V)");
     }
+
+    @Override
+    protected boolean checkPlayRequirements(String playerId, SwccgGame game, PhysicalCard self, DeploymentRestrictionsOption deploymentRestrictionsOption, PlayCardOption playCardOption, ReactActionOption reactActionOption) {
+        Filter yourBattleground = Filters.and(Filters.your(self), Filters.battleground);
+        Filter jediCommuning = Filters.and(Filters.Communing, Filters.hasStacked(Filters.Jedi));
+
+        return super.checkPlayRequirements(playerId, game, self, deploymentRestrictionsOption, playCardOption, reactActionOption)
+                && (GameConditions.canSpotLocation(game, yourBattleground)
+                || GameConditions.canSpotConvertedLocation(game, yourBattleground)
+                || GameConditions.canSpot(game, self, jediCommuning));
+    }
+
 }
