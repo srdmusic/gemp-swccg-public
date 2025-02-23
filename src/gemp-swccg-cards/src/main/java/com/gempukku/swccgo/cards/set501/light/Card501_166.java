@@ -11,15 +11,17 @@ import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
@@ -60,6 +62,34 @@ public class Card501_166 extends AbstractUsedOrLostInterrupt {
             );
             actions.add(action);
         }
+        return actions;
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+
+        // Check condition(s)
+        // NOTE: TEMPORARILY SKIPPING 'choke' DESTINY DRAWS, TO BE ADDRESSED LATER
+        if (TriggerConditions.isDestinyJustDrawnFor(game, effectResult, Filters.Force_Lightning)
+                || TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult, Filters.and(Icon.PERMANENT_WEAPON, Filters.blaster))) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action.setText("Subtract 1 from destiny");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new ModifyDestinyEffect(action, -1));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
         return actions;
     }
 }
