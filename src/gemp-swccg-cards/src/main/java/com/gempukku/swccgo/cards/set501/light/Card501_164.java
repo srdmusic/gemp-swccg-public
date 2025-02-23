@@ -13,10 +13,7 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
-import com.gempukku.swccgo.game.DeploymentRestrictionsOption;
 import com.gempukku.swccgo.game.PhysicalCard;
-import com.gempukku.swccgo.game.PlayCardOption;
-import com.gempukku.swccgo.game.ReactActionOption;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.IgnoresLocationDeploymentRestrictionsWhenDeployingToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -39,12 +36,11 @@ public class Card501_164 extends AbstractSite {
     }
 
     @Override
-    protected boolean checkPlayRequirements(String playerId, SwccgGame game, PhysicalCard self, DeploymentRestrictionsOption deploymentRestrictionsOption, PlayCardOption playCardOption, ReactActionOption reactActionOption) {
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self) {
         Filter yourBattleground = Filters.and(Filters.your(self), Filters.battleground);
         Filter jediCommuning = Filters.and(Filters.Communing, Filters.hasStacked(Filters.Jedi));
 
-        return super.checkPlayRequirements(playerId, game, self, deploymentRestrictionsOption, playCardOption, reactActionOption)
-                && (GameConditions.canSpotLocation(game, yourBattleground)
+        return (GameConditions.canSpotLocation(game, yourBattleground)
                 || GameConditions.canSpotConvertedLocation(game, yourBattleground)
                 || GameConditions.canSpot(game, self, jediCommuning));
     }
