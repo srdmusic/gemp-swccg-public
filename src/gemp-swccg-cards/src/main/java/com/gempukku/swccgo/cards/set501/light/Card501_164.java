@@ -1,5 +1,8 @@
 package com.gempukku.swccgo.cards.set501.light;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -15,6 +18,8 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.PlayCardOption;
 import com.gempukku.swccgo.game.ReactActionOption;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.modifiers.IgnoresLocationDeploymentRestrictionsWhenDeployingToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 /**
  * Set: Playtesting
@@ -44,4 +49,10 @@ public class Card501_164 extends AbstractSite {
                 || GameConditions.canSpot(game, self, jediCommuning));
     }
 
+    @Override
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new IgnoresLocationDeploymentRestrictionsWhenDeployingToLocationModifier(self, Filters.and(Icon.EPISODE_I, Filters.Vader), self));
+        return modifiers;
+    }
 }
