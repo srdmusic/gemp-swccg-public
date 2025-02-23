@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -15,8 +16,12 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.evaluators.ConstantEvaluator;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToDeployCardToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 /**
@@ -36,6 +41,16 @@ public class Card501_160 extends AbstractSite{
         addKeywords(Keyword.FOREST);
         setVirtualSuffix(true);
         setTestingText("Endor: Rebel Landing Site (Forest) (V)");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        Condition unlessYouOccupy = new UnlessCondition(new OccupiesCondition(playerOnDarkSideOfLocation, self));
+        Filter yourNonScoutCharacters = Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.not(Filters.scout), Filters.character);
+
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new ExtraForceCostToDeployCardToLocationModifier(self, yourNonScoutCharacters, unlessYouOccupy, new ConstantEvaluator(1), self));
+        return modifiers;
     }
 
     @Override
