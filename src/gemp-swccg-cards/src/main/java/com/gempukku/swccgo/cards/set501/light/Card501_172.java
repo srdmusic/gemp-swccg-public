@@ -30,7 +30,7 @@ import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
  */
 public class Card501_172 extends AbstractNormalEffect {
     public Card501_172() {
-        super(Side.LIGHT, 3, PlayCardZoneOption.ATTACHED, Title.Demotion, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 3, PlayCardZoneOption.ATTACHED, Title.Demotion, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Repercussions for failure are severe in the Imperial military. Many officers prefer demotion to 'alternative' punishment from Darth Vader.");
         setGameText("Deploy on an opponent's alien leader, Imperial, or senator (except Bib, Jabba, Sidious, Thrawn, Vader, or Xizor). Character's game text is canceled. Opponent's total battle destiny is -1 here (-2 if Kallus or Vader here).");
         addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
