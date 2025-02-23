@@ -17,12 +17,11 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_164 extends AbstractSite {
     public Card501_164() {
         super(Side.LIGHT, Title.Jedi_Council_Chamber, Title.Coruscant, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("[Episode I] Vader may deploy here regardless of presence of Force icons.");
-        setLocationLightSideGameText("Deploys only if you have deployed a battleground or a Jedi 'communing.'");
+        setLocationDarkSideGameText("[Episode I] Vader may deploy here regardless of presence or Force icons.");
+        setLocationLightSideGameText("Deploys only if you have deployed a battleground or if a Jedi 'communing.'");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.A_NEW_HOPE, Icon.INTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("Coruscant: Jedi Council Chamber (V)");
-        hideFromDeckBuilder();
     }
 }
