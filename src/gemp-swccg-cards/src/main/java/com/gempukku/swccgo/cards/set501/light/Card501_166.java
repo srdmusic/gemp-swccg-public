@@ -6,6 +6,7 @@ import java.util.List;
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.DestinyType;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -75,8 +76,8 @@ public class Card501_166 extends AbstractUsedOrLostInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
         // Check condition(s)
-        // NOTE: TEMPORARILY SKIPPING 'choke' DESTINY DRAWS, TO BE ADDRESSED LATER
         if (TriggerConditions.isDestinyJustDrawnFor(game, effectResult, Filters.Force_Lightning)
+                || TriggerConditions.isDestinyDrawType(game, effectResult, DestinyType.CHOKE_DESTINY)
                 || TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult, Filters.and(Icon.PERMANENT_WEAPON, Filters.blaster))) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
