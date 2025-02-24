@@ -41,17 +41,17 @@ public class Card501_172 extends AbstractNormalEffect {
 
     @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        Filter baseRequirements = Filters.or(Filters.and(Filters.alien, Filters.leader), Filters.Imperial, Filters.senator);
-        Filter specialRequirements = Filters.not(Filters.or(Filters.Bib, Filters.Jabba, Filters.Sidious, Filters.Thrawn, Filters.Vader, Filters.Xizor));
+        Filter baseFilter = Filters.or(Filters.and(Filters.alien, Filters.leader), Filters.Imperial, Filters.senator);
+        Filter specialFilter = Filters.not(Filters.or(Filters.Bib, Filters.Jabba, Filters.Sidious, Filters.Thrawn, Filters.Vader, Filters.Xizor));
         
-        return Filters.and(Filters.opponents(self), baseRequirements, specialRequirements);
+        return Filters.and(Filters.opponents(self), baseFilter, specialFilter);
     }
 
     @Override
     protected Filter getGameTextValidTargetFilterToRemainAttachedToAfterCrossingOver(final SwccgGame game, final PhysicalCard self, PlayCardOptionId playCardOptionId) {
-        Filter baseRequirements = Filters.or(Filters.and(Filters.alien, Filters.leader), Filters.Imperial, Filters.senator);
+        Filter baseFilter = Filters.or(Filters.and(Filters.alien, Filters.leader), Filters.Imperial, Filters.senator);
         
-        return baseRequirements;
+        return baseFilter;
     }
 
     @Override
