@@ -38,11 +38,10 @@ public class Card501_164 extends AbstractSite {
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self) {
         Filter yourBattleground = Filters.and(Filters.your(playerId), Filters.battleground);
-        Filter jediCommuning = Filters.and(Filters.Communing, Filters.hasStacked(Filters.Jedi));
 
         return (GameConditions.canSpotLocation(game, yourBattleground)
                 || GameConditions.canSpotConvertedLocation(game, yourBattleground)
-                || GameConditions.canSpot(game, self, jediCommuning));
+                || game.getModifiersQuerying().isCommuning(game.getGameState(), Filters.Jedi));
     }
 
     @Override
