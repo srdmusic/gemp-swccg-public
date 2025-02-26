@@ -49,18 +49,18 @@ public class Card501_004 extends AbstractSite {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextDarkSideTopLevelActions(final String playerOnDarkSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        Filter convertedJPSiteFilter = Filters.and(Filters.canBeConvertedByRaisingLocationToTop(playerOnDarkSideOfLocation), Icon.JABBAS_PALACE, Filters.site);
+        Filter yourJPSiteFilter = Filters.and(Filters.your(playerOnDarkSideOfLocation), Icon.JABBAS_PALACE, Filters.site);
 
         // Check condition(s)
         if ((GameConditions.occupies(game, playerOnDarkSideOfLocation, self)
                 || GameConditions.controls(game, playerOnDarkSideOfLocation, Filters.Audience_Chamber))
-                && GameConditions.canTarget(game, self, convertedJPSiteFilter)) {
+                && GameConditions.canSpotConvertedLocation(game, yourJPSiteFilter)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId);
             action.setText("Raise your converted Jabba's Palace site");
             // Choose target(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerOnDarkSideOfLocation, "Target site to convert", convertedJPSiteFilter) {
+                    new TargetCardOnTableEffect(action, playerOnDarkSideOfLocation, "Target site to convert", yourJPSiteFilter) {
                         @Override
                         protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
                             action.addAnimationGroup(targetedCard);
