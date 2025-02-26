@@ -17,13 +17,12 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_004 extends AbstractSite {
     public Card501_004() {
         super(Side.DARK, Title.Desert_Heart, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("If you occupy this site (or control Audience Chamber), may raise your converted [JP] site to the top.");
+        setLocationDarkSideGameText("If you occupy this site or control Audience Chamber, may raise your converted [Jabba's Palace] site to the top.");
         setLocationLightSideGameText("Unless you occupy, you must first use 1 Force to deploy a non-alien character here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.PLANET, Icon.EXTERIOR_SITE, Icon.PREMIUM, Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_25);
+        addIcons(Icon.PLANET, Icon.EXTERIOR_SITE, Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("Tatooine: Desert Heart (V)");
-        hideFromDeckBuilder();
     }
 }
