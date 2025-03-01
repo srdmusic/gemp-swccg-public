@@ -19,7 +19,7 @@ public class Card501_018 extends AbstractAlien {
     public Card501_018() {
         super(Side.DARK, 3, 2, 2, 2, 4, "Labria", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Information broker. Spy. Devaronian males instinctively have 'wanderlust.' Frustrated that he must be reclusive due to shady past. Suffers from prejudice due to devilish appearance.");
-        setGameText("During opponent’s draw phase, if at a battleground and opponent did not move a character to or from this location this turn, they* lose 1 Force. If opponent just searched their Reserve Deck, after replacing, you may peek at the top card of that deck.");
+        setGameText("During opponent's draw phase, if at a battleground and opponent did not move a character to or from this location this turn, they* lose 1 Force. If opponent just searched their Reserve Deck, after replacing, you may peek at the top card of that deck.");
         addIcon(Icon.VIRTUAL_SET_24);
         addKeywords(Keyword.INFORMATION_BROKER, Keyword.SPY);
         setSpecies(Species.DEVARONIAN);

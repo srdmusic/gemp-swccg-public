@@ -1,104 +1,85 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractNormalEffect;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.common.ExpansionSet;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.PlayCardZoneOption;
-import com.gempukku.swccgo.common.Rarity;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
-import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filter;
-import com.gempukku.swccgo.filters.Filters;
-import com.gempukku.swccgo.game.PhysicalCard;
-import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
-import com.gempukku.swccgo.logic.timing.Effect;
-import com.gempukku.swccgo.logic.timing.EffectResult;
-
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-/*
- * Set: Playtesting
- * Type: Effect
- * Title: Blast Door Controls (V)
- */
+import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.HitCondition;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.effects.PutCardFromHandOnForcePileEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedBySpecificWeaponsModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
-public class Card501_035 extends AbstractNormalEffect {
+/**
+ * Set: Playtesting
+ * Type: Character
+ * Subtype: Alien
+ * Title: Bib Fortuna (V)
+ */
+public class Card501_035 extends AbstractAlien {
     public Card501_035() {
-        super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Blast_Door_Controls, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("Panels control blast doors and key security lock-downs during alerts. Luke destroyed one, locking Imperial forces out of Hangar Bay 327.");
-        setGameText("Deploy on table. Cancels Blast The Door, Kid!, Narrow Escape, and Rebel Barrier. If opponent just canceled a battle (or just moved a character, starship, or vehicle away from a battle), opponent loses 1 Force.");
-        addIcons(Icon.VIRTUAL_SET_24);
+        super(Side.DARK, 1, 3, 3, 1, 4, Title.Bib, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Twi'lek leader and majordomo of Jabba's palace. Succeeded Jabba's last majordomo, Naroon Cuthus. Plotting to kill Jabba.");
+        setGameText("If opponent just deployed a character here, may place a card from hand on Force Pile. While with Jabba, Bib is power +2 and, unless 'hit,' opponent may not target your other characters here with blasters (or this site with I Must Be Allowed To Speak).");
+        addPersona(Persona.BIB);
+        addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_25);
+        setSpecies(Species.TWILEK);
+        addKeywords(Keyword.LEADER);
         setVirtualSuffix(true);
-        setTestingText("Blast Door Controls (V)");
+        setTestingText("Bib Fortuna (V)");
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
-        // (Copied from Blast Door Controls)
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Blast_The_Door_Kid, Filters.Narrow_Escape, Filters.Rebel_Barrier))
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
+        if(TriggerConditions.justDeployedToLocation(game, effectResult, game.getOpponent(playerId), Filters.character, Filters.here(self))
+            && GameConditions.hasHand(game, playerId)){
 
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Place card from hand on Force Pile");
+            action.setActionMsg("Place a card from hand on Force Pile");
+
+            // Perform result(s)
+            action.appendEffect(new PutCardFromHandOnForcePileEffect(action, playerId));
+
             return Collections.singletonList(action);
         }
         return null;
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        Condition withJabba = new WithCondition(self, Filters.Jabba);
+        Condition unlessHit = new UnlessCondition(new HitCondition(self));
+        Condition withJabbaAndUnlessHit = new AndCondition(withJabba, unlessHit);
 
-        // (Copied from Blast Door Controls)
-        // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)) {
-            if (GameConditions.canTargetToCancel(game, self, Filters.Blast_The_Door_Kid)) {
-
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                // Build action using common utility
-                CancelCardActionBuilder.buildCancelCardAction(action, Filters.Blast_The_Door_Kid, Title.Blast_The_Door_Kid);
-                actions.add(action);
-            }
-            if (GameConditions.canTargetToCancel(game, self, Filters.Narrow_Escape)) {
-
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                // Build action using common utility
-                CancelCardActionBuilder.buildCancelCardAction(action, Filters.Narrow_Escape, Title.Narrow_Escape);
-                actions.add(action);
-            }
-            if (GameConditions.canTargetToCancel(game, self, Filters.Rebel_Barrier)) {
-
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-                // Build action using common utility
-                CancelCardActionBuilder.buildCancelCardAction(action, Filters.Rebel_Barrier, Title.Rebel_Barrier);
-                actions.add(action);
-            }
-        }
-
-        // (Copied from Close The Blast Doors!)
-        Filter filter = Filters.and(Filters.canBeTargetedBy(self), Filters.or(Filters.character, Filters.starship, Filters.vehicle));
-        if (TriggerConditions.battleCanceledAt(game, effectResult, game.getOpponent(self.getOwner()), Filters.any)
-                || (GameConditions.isDuringBattle(game)
-                && TriggerConditions.moved(game, effectResult, game.getOpponent(self.getOwner()), filter)
-                && TriggerConditions.movedFromLocation(game, effectResult, filter, game.getGameState().getBattleLocation()))) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Opponent loses 1 Force");
-            action.appendEffect(new LoseForceEffect(action, game.getOpponent(self.getOwner()), 1));
-
-            actions.add(action);
-        }
-
-        return actions;
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new PowerModifier(self, withJabba, 2));
+        modifiers.add(new MayNotBeTargetedBySpecificWeaponsModifier(self, Filters.and(Filters.your(self), Filters.other(self), Filters.character, Filters.here(self)),
+                withJabbaAndUnlessHit, Filters.blaster));
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.sameSite(self), withJabbaAndUnlessHit, Filters.title(Title.I_Must_Be_Allowed_To_Speak)));
+        return modifiers;
     }
 }

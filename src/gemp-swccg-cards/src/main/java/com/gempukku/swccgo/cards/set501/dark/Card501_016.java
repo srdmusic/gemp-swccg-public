@@ -1,111 +1,81 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.gempukku.swccgo.cards.AbstractDroid;
+import com.gempukku.swccgo.cards.AbstractFirstOrder;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.evaluators.OutOfPlayEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.ModelType;
-import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
-import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.MayNotUseCardToTransportToOrFromLocationModifier;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
  * Type: Character
- * Subtype: Droid
- * Title: DRK-1 (Dark Eye Probe Droid)
+ * Subtype: First Order
+ * Title: Vicrul
  */
-public class Card501_016 extends AbstractDroid {
+public class Card501_016 extends AbstractFirstOrder {
     public Card501_016() {
-        super(Side.DARK, 3, 1, 1, 2, "DRK-1 (Dark Eye Probe Droid)", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setManeuver(3);
-        setGameText("Nabrun Leids may not transport to or from here. During your move phase, may use 2 Force to relocate a Dark Jedi (with any captives they are escorting), your Mara, or an Inquisitor from here to same site as a Dark Jedi or Jedi; place this droid in Used Pile.");
-        addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_0);
-        addModelTypes(ModelType.PROBE, ModelType.RECON);
-        setTestingText("DRK-1 (Dark Eye Probe Droid)");
+        super(Side.DARK, 2, 4, 4, 4, 7, "Vicrul", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Knight of Ren.");
+        setGameText("Power +1 for each opponent's character out of play. Opponent may not cancel your battle destiny draws where you have Kylo or a Knight of Ren. If you just initiated a Force drain (or won a battle) here, may place bottom card of opponent's Lost Pile out of play.");
+        addIcons(Icon.EPISODE_VII, Icon.WARRIOR, Icon.VIRTUAL_SET_25);
+        addKeywords(Keyword.KNIGHT_OF_REN);
+        setTestingText("Vicrul");
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotUseCardToTransportToOrFromLocationModifier(self, Filters.Nabrun_Leids, Filters.here(self)));
+        modifiers.add(new PowerModifier(self, new OutOfPlayEvaluator(self, Filters.and(Filters.opponents(self), Filters.character), opponent)));
+        modifiers.add(new MayNotCancelBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.or(Filters.Kylo, Filters.Knight_of_Ren)), playerId, opponent));
         return modifiers;
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        String opponent = game.getOpponent(playerId);
+
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)) {
-            final Filter sameSiteAsDarkJediOrJedi = Filters.sameSiteAs(self, Filters.or(Filters.Dark_Jedi, Filters.Jedi));
-            Filter darkJediFilter = Filters.and(Filters.Dark_Jedi, Filters.here(self), Filters.canBeRelocatedToLocation(sameSiteAsDarkJediOrJedi, false, true, false, 2, false));
-            Filter maraOrInquisitorFilter = Filters.and(Filters.or(Filters.and(Filters.your(playerId), Filters.Mara_Jade), Filters.inquisitor), Filters.here(self), Filters.canBeRelocatedToLocation(sameSiteAsDarkJediOrJedi, 2));
-            Filter characterFilter = Filters.or(darkJediFilter, maraOrInquisitorFilter);
-            if (GameConditions.canSpot(game, self, characterFilter)) {
+        if ((TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerId, Filters.here(self))
+                || TriggerConditions.wonBattleAt(game, effectResult, playerId, Filters.here(self)))
+                && GameConditions.hasLostPile(game, opponent)) {
+            
+            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
 
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Relocate character to another site");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerPhaseEffect(action));
-                // Choose target(s)
-                action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Choose character", characterFilter) {
-                            @Override
-                            protected void cardTargeted(int targetGroupId, final PhysicalCard characterTargeted) {
-                                Filter siteToRelocateTo = Filters.and(sameSiteAsDarkJediOrJedi, Filters.locationCanBeRelocatedTo(characterTargeted, false, true, false, 2, false));
-                                action.appendTargeting(
-                                        new ChooseCardOnTableEffect(action, playerId, "Choose site to relocate " + GameUtils.getCardLink(characterTargeted) + " to", siteToRelocateTo) {
-                                            @Override
-                                            protected void cardSelected(final PhysicalCard siteSelected) {
-                                                action.addAnimationGroup(characterTargeted);
-                                                action.addAnimationGroup(siteSelected);
-                                                // Pay cost(s)
-                                                action.appendCost(
-                                                        new PayRelocateBetweenLocationsCostEffect(action, playerId, characterTargeted, siteSelected, 2));
-                                                // Allow response(s)
-                                                action.allowResponses("Relocate " + GameUtils.getCardLink(characterTargeted) + " to " + GameUtils.getCardLink(siteSelected),
-                                                        new UnrespondableEffect(action) {
-                                                            @Override
-                                                            protected void performActionResults(Action targetingAction) {
-                                                                // Perform result(s)
-                                                                action.appendEffect(
-                                                                        new RelocateBetweenLocationsEffect(action, characterTargeted, siteSelected));
-                                                                action.appendEffect(
-                                                                        new PlaceCardInUsedPileFromTableEffect(action, self));
-                                                            }
-                                                        });
-                                            }
-                                        });
-                            }
-                        }
-                );
-                return Collections.singletonList(action);
-            }
+            action.setText("Place opponent's card out of play.");
+            action.setActionMsg("Place bottom card of opponent's Lost Pile out of play");
+
+            //Perform result(s)
+            action.appendEffect(
+                new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, opponent, Filters.bottomOfLostPile(opponent), false)
+            );
+            actions.add(action);
         }
-        return null;
+
+        return actions;
     }
+
 }

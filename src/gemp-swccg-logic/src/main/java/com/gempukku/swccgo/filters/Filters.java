@@ -17559,6 +17559,7 @@ public class Filters {
     public static final Filter At_Last_The_Jedi_Are_No_More = Filters.title(Title.At_Last_The_Jedi_Are_No_More);
     public static final Filter At_Last_We_Will_Have_Revenge = Filters.title(Title.At_Last_We_Will_Have_Revenge);
     public static final Filter At_Peace = Filters.title(Title.At_Peace);
+    public static final Filter AT_M6 = Filters.modelType(ModelType.AT_M6);
     public static final Filter AT_ST = Filters.modelType(ModelType.AT_ST);
     public static final Filter AT_ST_Dual_Cannon = Filters.title(Title.AT_ST_Dual_Cannon);
     public static final Filter At_Death_Star_Site = Filters.atSiteOfSystem(Title.Death_Star);
@@ -18039,7 +18040,7 @@ public class Filters {
     public static final Filter Fifth_Marker = Filters.keyword(Keyword.MARKER_5);
     public static final Filter Fighters_Coming_In = Filters.title(Title.Fighters_Coming_In);
     public static final Filter Finalizer = Filters.title(Title.Finalizer);
-    public static final Filter Finn = Filters.title(Title.Finn);
+    public static final Filter Finn = Filters.persona(Persona.FINN);
     public static final Filter First_Light = Filters.persona(Persona.FIRST_LIGHT);
     public static final Filter First_Light_site = Filters.siteOfStarshipOrVehicle(Persona.FIRST_LIGHT, false);
     public static final Filter First_Marker = Filters.keyword(Keyword.MARKER_1);
@@ -18108,7 +18109,6 @@ public class Filters {
     public static final Filter Gold_Squadron_Pilot = Filters.and(CardCategory.CHARACTER, Icon.PILOT, Filters.or(Keyword.GOLD_SQUADRON, Filters.aboard(Filters.keyword(Keyword.GOLD_SQUADRON))));
     public static final Filter Goo_Nee_Tay = Filters.title(Title.Goo_Nee_Tay);
     public static final Filter Graak = Filters.title(Title.Graak);
-    public static final Filter Grondorn  = Filters.persona(Persona.GRONDORN);
     public static final Filter grabber = Filters.icon(Icon.GRABBER);
     public static final Filter Graveyard_Of_Giants = Filters.title(Title.Graveyard_Of_Giants);
     public static final Filter Gravity_Shadow = Filters.title(Title.Gravity_Shadow);
@@ -18126,6 +18126,7 @@ public class Filters {
     public static final Filter Grimtaash = Filters.title(Title.Grimtaash);
     public static final Filter Grogu = Filters.persona(Persona.GROGU);
     public static final Filter Grond = Filters.title(Title.Grond);
+    public static final Filter Grondorn  = Filters.persona(Persona.GRONDORN);
     public static final Filter guard = Filters.or(Keyword.GUARD, Keyword.BODYGUARD, Keyword.MAGNAGUARD, Keyword.ROYAL_GUARD, Keyword.CORUSCANT_GUARD, Keyword.IMPERIAL_TROOPER_GUARD);
     public static final Filter Gungan = Filters.species(Species.GUNGAN);
     public static final Filter Gungan_Energy_Shield = Filters.title(Title.Gungan_Energy_Shield);
@@ -18253,6 +18254,7 @@ public class Filters {
     public static final Filter Information_Exchange = Filters.title(Title.Information_Exchange);
     public static final Filter Inner_Strength = Filters.title(Title.Inner_Strength);
     public static final Filter Innocent_Scoundrel = Filters.title(Title.Innocent_Scoundrel);
+    public static final Filter inquisitor = Filters.keyword(Keyword.INQUISITOR);
     public static final Filter Inquisitor_Lightsaber = Filters.title(Title.Inquisitor_Lightsaber);
     public static final Filter Insidious_Prisoner = Filters.title(Title.Insidious_Prisoner);
     public static final Filter Insurrection = Filters.title(Title.Insurrection);
@@ -18279,7 +18281,6 @@ public class Filters {
     public static final Filter Insignificant_Rebellion = Filters.title(Title.Insignificant_Rebellion);
     public static final Filter ion_cannon = Filters.keyword(Keyword.ION_CANNON);
     public static final Filter Ion_Cannon = Filters.title(Title.Ion_Cannon);
-    public static final Filter inquisitor = Filters.keyword(Keyword.INQUISITOR);
     public static final Filter Irol = Filters.title(Title.Irol);
     public static final Filter ISB_agent = Filters.keyword(Keyword.ISB_AGENT);
     public static final Filter ISB_Operations = Filters.title(Title.ISB_Operations);
@@ -18350,6 +18351,7 @@ public class Filters {
     public static final Filter Kabe = Filters.title(Title.Kabe);
     public static final Filter KalFalnl_Cndros = Filters.title(Title.KalFalnl_Cndros);
     public static final Filter Kalit = Filters.title(Title.Kalit);
+    public static final Filter Kallus = Filters.persona(Persona.KALLUS);
     public static final Filter Kamino_location = Filters.partOfSystem(Title.Kamino);
     public static final Filter Kamino_site = Filters.and(Filters.partOfSystem(Title.Kamino), CardSubtype.SITE);
     public static final Filter Kanan = Filters.persona(Persona.KANAN);
@@ -18525,7 +18527,7 @@ public class Filters {
     public static final Filter My_Lord_Is_That_Legal = Filters.title(Title.My_Lord_Is_That_Legal);
     public static final Filter mynock = Filters.title(Title.Mynock);
     public static final Filter Myo = Filters.title(Title.Myo);
-    public static final Filter N1_starfighter = Filters.modelType(ModelType.N_1_STARFIGHTER);
+    public static final Filter N1_starfighter = Filters.or(ModelType.N_1_STARFIGHTER, ModelType.MODIFIED_N_1_STARFIGHTER);
     public static final Filter Naboo_location = Filters.partOfSystem(Title.Naboo);
     public static final Filter Naboo_site = Filters.and(Filters.partOfSystem(Title.Naboo), CardSubtype.SITE);
     public static final Filter Naboo_Swamp = Filters.title(Title.Naboo_Swamp);

@@ -1,84 +1,72 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractRebel;
-import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.WithCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
-import com.gempukku.swccgo.common.ExpansionSet;
-import com.gempukku.swccgo.common.GameTextActionId;
-import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Keyword;
-import com.gempukku.swccgo.common.Persona;
-import com.gempukku.swccgo.common.Rarity;
-import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Species;
-import com.gempukku.swccgo.common.Title;
-import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filters;
-import com.gempukku.swccgo.game.PhysicalCard;
-import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.RecirculateEffect;
-import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
-import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
-import com.gempukku.swccgo.logic.modifiers.ManeuverModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
-
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-/*
- * Set: Playtesting
- * Type: Character
- * Subtype: Rebel
- * Title: Han Solo (V)
- */
+import com.gempukku.swccgo.cards.AbstractNormalEffect;
+import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.PlayCardOptionId;
+import com.gempukku.swccgo.common.PlayCardZoneOption;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.InBattleCondition;
+import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 
-public class Card501_172 extends AbstractRebel {
+/**
+ * Set: Playtesting
+ * Type: Effect
+ * Title: Demotion (V)
+ */
+public class Card501_172 extends AbstractNormalEffect {
     public Card501_172() {
-        super(Side.LIGHT, 1, 3, 3, 3, 6, Title.Han_Solo, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("Smuggler, gambler and 'freelance law-bender.' Crafty Corellian pirate. Rebel hero. Owns Millennium Falcon. Co-pilot Chewbacca promised him 'life-debt.' Has bounty on head.");
-        setGameText("[Pilot] 3. Draws one battle destiny if unable to otherwise. Adds one battle destiny with Chewie. While piloting Falcon, adds 2 to maneuver and, once during battle, may re-circulate.");
-        addIcons(Icon.A_NEW_HOPE, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_24);
-        addKeywords(Keyword.SMUGGLER, Keyword.GAMBLER, Keyword.PIRATE);
-        addPersona(Persona.HAN);
-        setSpecies(Species.CORELLIAN);
-        setMatchingStarshipFilter(Filters.Falcon);
+        super(Side.LIGHT, 3, PlayCardZoneOption.ATTACHED, Title.Demotion, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Repercussions for failure are severe in the Imperial military. Many officers prefer demotion to 'alternative' punishment from Darth Vader.");
+        setGameText("Deploy on an opponent's alien leader, Imperial, or senator (except Bib, Jabba, Sidious, Thrawn, Vader, or Xizor). Character's game text is canceled. Opponent's total battle destiny is -1 here (-2 if Kallus or Vader here).");
+        addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
+        addIcon(Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
-        setTestingText("Han Solo (V)");
+        setTestingText("Demotion (V)");
+    }
+
+    @Override
+    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        Filter baseFilter = Filters.or(Filters.and(Filters.alien, Filters.leader), Filters.Imperial, Filters.senator);
+        Filter specialFilter = Filters.not(Filters.or(Filters.Bib, Filters.Jabba, Filters.Sidious, Filters.Thrawn, Filters.Vader, Filters.Xizor));
+        
+        return Filters.and(Filters.opponents(self), baseFilter, specialFilter);
+    }
+
+    @Override
+    protected Filter getGameTextValidTargetFilterToRemainAttachedToAfterCrossingOver(final SwccgGame game, final PhysicalCard self, PlayCardOptionId playCardOptionId) {
+        Filter baseFilter = Filters.or(Filters.and(Filters.alien, Filters.leader), Filters.Imperial, Filters.senator);
+        
+        return baseFilter;
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        final String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+        Filter attachedTo = Filters.hasAttached(self);
+
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
-        modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, 1));
-        modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.Chewie), 1));
-        modifiers.add(new ManeuverModifier(self, Filters.and(Filters.Falcon, Filters.hasPiloting(self)), 2));
+        modifiers.add(new CancelsGameTextModifier(self, attachedTo));
+        modifiers.add(new TotalBattleDestinyModifier(self, 
+                new InBattleCondition(self, attachedTo),
+                new ConditionEvaluator(-1, -2, new InBattleCondition(self, Filters.or(Filters.Kallus, Filters.Vader))),
+                opponent
+        ));
         return modifiers;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        if (GameConditions.isPiloting(game, self, Filters.Falcon)
-                && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.isDuringBattleWithParticipant(game, self)
-                && GameConditions.hasUsedPile(game, playerId)) {
-            
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-
-            action.setText("Re-circulate");
-            action.setActionMsg("Re-circulate");
-            action.appendUsage(
-                new OncePerBattleEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                new RecirculateEffect(action, playerId));
-            return Collections.singletonList(action);
-        }
-        return null;
     }
 }
