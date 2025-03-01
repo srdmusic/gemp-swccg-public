@@ -1,6 +1,8 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractResistance;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
+import com.gempukku.swccgo.cards.conditions.OutOfPlayCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -8,6 +10,16 @@ import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.OrCondition;
+import com.gempukku.swccgo.logic.modifiers.AddsDestinyToPowerModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Playtesting
@@ -25,5 +37,14 @@ public class Card501_174 extends AbstractResistance {
         addKeywords(Keyword.LEADER);
         setTestingText("Finn, Resistance Leader");
         hideFromDeckBuilder();
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        Condition lukeOutOfPlay = new OutOfPlayCondition(self, Filters.Luke);
+        Condition roseOrJannahHere = new HereCondition(self, Filters.or(Filters.Rose, Filters.Jannah));
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new AddsDestinyToPowerModifier(self, new OrCondition(lukeOutOfPlay, roseOrJannahHere), 1));
+        return modifiers;
     }
 }
