@@ -8,6 +8,12 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 
+/**
+ * Set: Playtesting
+ * Type: Character
+ * Subtype: Sith
+ * Title: Baylan Skoll
+ */
 public class Card501_051 extends AbstractSith {
     public Card501_051() {
         super(Side.DARK, 1, 6, 6, 6, 7, "Baylan Skoll", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
