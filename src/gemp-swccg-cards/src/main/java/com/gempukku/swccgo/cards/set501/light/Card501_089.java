@@ -78,9 +78,10 @@ public class Card501_089 extends AbstractRebel {
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.ORRIMAARKO__CANCEL_FORCE_DRAIN;
+        Filter relatedBattleground = Filters.and(Filters.relatedLocationTo(self, Filters.sameLocationId(self)), Filters.battleground);
 
         // Check condition(s)
-        if (TriggerConditions.forceDrainInitiatedAt(game, effectResult, Filters.relatedLocationTo(self, Filters.sameLocationId(self)))
+        if (TriggerConditions.forceDrainInitiatedAt(game, effectResult, relatedBattleground)
                 && GameConditions.isOnSystem(game, self, Title.Endor)
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.canCancelForceDrain(game, self)){
