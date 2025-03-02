@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.HitCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -25,6 +26,7 @@ import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedBySpecificWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -74,14 +76,16 @@ public class Card501_035 extends AbstractAlien {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Condition withJabba = new WithCondition(self, Filters.Jabba);
+        Condition atAudienceChamber = new AtCondition(self, Filters.Audience_Chamber);
         Condition unlessHit = new UnlessCondition(new HitCondition(self));
-        Condition withJabbaAndUnlessHit = new AndCondition(withJabba, unlessHit);
+        Condition atACAndUnlessHit = new AndCondition(atAudienceChamber, unlessHit);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new PowerModifier(self, withJabba, 2));
-        modifiers.add(new MayNotBeTargetedBySpecificWeaponsModifier(self, Filters.and(Filters.your(self), Filters.other(self), Filters.character, Filters.here(self)),
-                withJabbaAndUnlessHit, Filters.blaster));
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.sameSite(self), withJabbaAndUnlessHit, Filters.title(Title.I_Must_Be_Allowed_To_Speak)));
+        modifiers.add(new ImmuneToAttritionModifier(self, Filters.Jabba, withJabba));
+
+        modifiers.add(new MayNotBeTargetedBySpecificWeaponsModifier(self, Filters.and(Filters.your(self), Filters.other(self), Filters.character, Filters.here(self)), atACAndUnlessHit, Filters.blaster));
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.sameSite(self), atACAndUnlessHit, Filters.title(Title.I_Must_Be_Allowed_To_Speak)));
         return modifiers;
     }
 }
