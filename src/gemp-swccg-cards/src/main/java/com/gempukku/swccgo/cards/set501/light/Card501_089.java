@@ -52,10 +52,9 @@ public class Card501_089 extends AbstractRebel {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        Filter yourScoutGeneral = Filters.and(Filters.your(self.getOwner()), Filters.scout, Filters.general);
         String playerId = self.getOwner();
-        if (TriggerConditions.wonBattleAt(game, effectResult, playerId, Filters.here(self))
-                || TriggerConditions.wonBattleAt(game, effectResult, playerId, Filters.sameSiteAs(self, yourScoutGeneral))) {
+        Filter locationFilter = Filters.or(Filters.here(self), Filters.sameSiteAs(self,Filters.and(Filters.your(playerId), Filters.scout, Filters.general)));
+        if (TriggerConditions.wonBattleAt(game, effectResult, playerId, locationFilter)) {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             String opponent = game.getOpponent(playerId);
             action.setText("Opponent loses 1 Force.");
