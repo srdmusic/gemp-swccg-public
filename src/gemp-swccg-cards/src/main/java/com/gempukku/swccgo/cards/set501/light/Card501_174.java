@@ -41,7 +41,7 @@ public class Card501_174 extends AbstractResistance {
         addPersona(Persona.FINN);
         addIcons(Icon.EPISODE_VII, Icon.WARRIOR, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.LEADER);
-        setTestingText("Finn, Resistance Leader");
+        setTestingText("Finn, Resistance Hero");
     }
 
     @Override
