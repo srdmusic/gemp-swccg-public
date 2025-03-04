@@ -7,7 +7,6 @@ import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -33,18 +32,17 @@ import java.util.List;
  * Set: Playtesting
  * Type: Character
  * Subtype: Republic
- * Title: Tey How (V)
+ * Title: Sil Unch (V)
  */
 public class Card501_049 extends AbstractRepublic {
     public Card501_049() {
-        super(Side.DARK, 2, 2, 2, 2, 4, "Tey How", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("Neimoidian Trade Federation communications officer to Nute Gunray. Had audio and visual mechanics surgically implanted to assist her in shipboard operations.");
-        setGameText("[Pilot] 2. Once per game, may [download] a [Hoth] or [Episode I] device on a capital starship she is piloting. While piloting a [Trade Federation] capital starship, opponent may not cancel your battle destiny draws where you have a character with 'Trade Federation' in lore.");
-        addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.PILOT, Icon.VIRTUAL_SET_25);
-        addKeywords(Keyword.FEMALE);
+        super(Side.DARK, 2, 2, 2, 2, 4, "Sil Unch", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Neimoidian Trade Federation Droid Control Ship officer. Specialized in battle droid control programming and interfaces. Does not enjoy being commanded by Daultay Dofine.");
+        setGameText("[Pilot] 2. Once per game, may [download] a [Hoth] or [Episode I] device on a capital starship he is piloting. While piloting a [Trade Federation] capital starship, opponent may not cancel your battle destiny draws where you have a character with 'Trade Federation' in lore.");
+        addIcons(Icon.THEED_PALACE, Icon.EPISODE_I, Icon.PILOT, Icon.VIRTUAL_SET_25);
         setSpecies(Species.NEIMOIDIAN);
         setVirtualSuffix(true);
-        setTestingText("Tey How (V)");
+        setTestingText("Sil Unch (V)");
     }
 
     @Override
@@ -65,15 +63,15 @@ public class Card501_049 extends AbstractRepublic {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.TEY_HOW__DOWNLOAD_DEVICE;
-        Filter CapitalStarshipTeyHowIsPiloting = Filters.and(Filters.capital_starship, Filters.hasPiloting(self));
+        GameTextActionId gameTextActionId = GameTextActionId.SIL_UNCH__DOWNLOAD_DEVICE;
+        Filter CapitalStarshipSilUnchIsPiloting = Filters.and(Filters.capital_starship, Filters.hasPiloting(self));
         Filter PullableDevice = Filters.and(Filters.device, Filters.or(Icon.HOTH, Icon.EPISODE_I));
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.isDuringYourPhase(game, self, Phase.DEPLOY)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
-                && GameConditions.canTarget(game, self, CapitalStarshipTeyHowIsPiloting)) {
+                && GameConditions.canTarget(game, self, CapitalStarshipSilUnchIsPiloting)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy device from Reserve Deck");
@@ -83,7 +81,7 @@ public class Card501_049 extends AbstractRepublic {
                     new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardToTargetFromReserveDeckEffect(action, PullableDevice, CapitalStarshipTeyHowIsPiloting, true));
+                    new DeployCardToTargetFromReserveDeckEffect(action, PullableDevice, CapitalStarshipSilUnchIsPiloting, true));
             actions.add(action);
         }
         return actions;
