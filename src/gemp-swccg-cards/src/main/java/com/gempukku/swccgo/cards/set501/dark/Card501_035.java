@@ -1,14 +1,15 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.HitCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
@@ -20,17 +21,16 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
-import com.gempukku.swccgo.logic.effects.PutCardFromHandOnForcePileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedBySpecificWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
@@ -42,7 +42,7 @@ public class Card501_035 extends AbstractAlien {
     public Card501_035() {
         super(Side.DARK, 1, 3, 3, 1, 4, Title.Bib, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Twi'lek leader and majordomo of Jabba's palace. Succeeded Jabba's last majordomo, Naroon Cuthus. Plotting to kill Jabba.");
-        setGameText("If opponent just deployed a character here, may place a card from hand on Force Pile. While with Jabba, Bib is power +2 and, unless 'hit,' opponent may not target your other characters here with blasters (or this site with I Must Be Allowed To Speak).");
+        setGameText("May [download] Salacious Crumb. While with Jabba, Bib is power +2 and Jabba is immune to attrition. While at Audience Chamber, unless Bib 'hit,' opponent may not target your other characters here with blasters (or this site with I Must Be Allowed To Speak).");
         addPersona(Persona.BIB);
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_25);
         setSpecies(Species.TWILEK);
@@ -52,34 +52,40 @@ public class Card501_035 extends AbstractAlien {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if(TriggerConditions.justDeployedToLocation(game, effectResult, game.getOpponent(playerId), Filters.character, Filters.here(self))
-            && GameConditions.hasHand(game, playerId)){
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Place card from hand on Force Pile");
-            action.setActionMsg("Place a card from hand on Force Pile");
+        GameTextActionId gameTextActionId = GameTextActionId.BIB_FORTUNA__DEPLOY_SALACIOUS_CRUMB;
+
+        // Check condition(s)
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Salacious_Crumb)) {
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Salacious Crumb from Reserve Deck");
+            action.setActionMsg("Deploy Salacious Crumb from Reserve Deck");
 
             // Perform result(s)
-            action.appendEffect(new PutCardFromHandOnForcePileEffect(action, playerId));
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.title(Title.Salacious_Crumb), true));
 
-            return Collections.singletonList(action);
+            actions.add(action);
         }
-        return null;
+
+        return actions;
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Condition withJabba = new WithCondition(self, Filters.Jabba);
+        Condition atAudienceChamber = new AtCondition(self, Filters.Audience_Chamber);
         Condition unlessHit = new UnlessCondition(new HitCondition(self));
-        Condition withJabbaAndUnlessHit = new AndCondition(withJabba, unlessHit);
+        Condition atACAndUnlessHit = new AndCondition(atAudienceChamber, unlessHit);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new PowerModifier(self, withJabba, 2));
-        modifiers.add(new MayNotBeTargetedBySpecificWeaponsModifier(self, Filters.and(Filters.your(self), Filters.other(self), Filters.character, Filters.here(self)),
-                withJabbaAndUnlessHit, Filters.blaster));
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.sameSite(self), withJabbaAndUnlessHit, Filters.title(Title.I_Must_Be_Allowed_To_Speak)));
+        modifiers.add(new ImmuneToAttritionModifier(self, Filters.Jabba, withJabba));
+
+        modifiers.add(new MayNotBeTargetedBySpecificWeaponsModifier(self, Filters.and(Filters.your(self), Filters.other(self), Filters.character, Filters.here(self)), atACAndUnlessHit, Filters.blaster));
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.sameSite(self), atACAndUnlessHit, Filters.title(Title.I_Must_Be_Allowed_To_Speak)));
         return modifiers;
     }
 }
