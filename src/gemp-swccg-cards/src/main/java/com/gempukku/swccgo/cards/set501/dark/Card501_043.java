@@ -43,7 +43,7 @@ public class Card501_043 extends AbstractNormalEffect {
     public Card501_043() {
         super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, "Stranded", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Imperial troopers use tactics to strand and cut off fugitives. Only daring and unpredictable actions gave Luke and Leia a chance to escape.");
-        setGameText("Deploy on a character. Nabrun Leids is canceled. Characters here may not fire weapons except during battle here. Opponent may not cancel battle destiny draws here. If on Luke or Leia, character may not move except during their owner's move phase. [Immune to Alter.]");
+        setGameText("Deploy on a character. Nabrun Leids is canceled. Characters here may not fire weapons except during battle here. Opponent may not cancel battle destiny draws here. If on Luke or Leia, character may not move except during opponent's move phase. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_25);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Stranded");
