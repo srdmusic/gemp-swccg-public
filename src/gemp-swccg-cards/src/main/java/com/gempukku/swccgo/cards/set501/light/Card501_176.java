@@ -54,9 +54,10 @@ public class Card501_176 extends AbstractUsedOrLostInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<>();
         
         Filter suspendFilter = Filters.or(Filters.Ominous_Rumors, Filters.There_Are_Many_Hunting_You_Now);
+        TargetingReason suspendedTargetingReason = TargetingReason.TO_BE_SUSPENDED;
 
         // Check condition(s)
-        if (GameConditions.canTarget(game, self, TargetingReason.TO_BE_SUSPENDED, suspendFilter)) {
+        if (GameConditions.canTarget(game, self, suspendedTargetingReason, suspendFilter)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
             
             action.setText("Suspend card for remainder of turn");
@@ -106,18 +107,18 @@ public class Card501_176 extends AbstractUsedOrLostInterrupt {
         }
 
         Filter passengerFilter = Filters.and(Filters.opponents(self), Filters.aboardAsPassenger(Filters.any), Filters.participatingInBattle);
-        TargetingReason targetingReason = TargetingReason.TO_BE_EXCLUDED_FROM_BATTLE;
+        TargetingReason excludedTargetingReason = TargetingReason.TO_BE_EXCLUDED_FROM_BATTLE;
 
         // Check condition(s)
         if (GameConditions.isDuringBattle(game)
-                && GameConditions.canTarget(game, self, targetingReason, passengerFilter)) {
+                && GameConditions.canTarget(game, self, excludedTargetingReason, passengerFilter)) {
            
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setText("Exclude passenger from battle");
             action.setActionMsg("Exclude opponent's passenger from battle");
             // Choose target(s)
             action.appendTargeting(
-                new TargetCardOnTableEffect(action, playerId, "Choose opponent's passenger", targetingReason, passengerFilter) {
+                new TargetCardOnTableEffect(action, playerId, "Choose opponent's passenger", excludedTargetingReason, passengerFilter) {
                     @Override
                     protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                         action.addAnimationGroup(targetedCard);
