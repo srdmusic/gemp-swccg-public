@@ -12,6 +12,7 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.AbstractActionProxy;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -65,9 +66,10 @@ public class Card501_162 extends AbstractRebel {
         final List<TopLevelGameTextAction> actions = new LinkedList<>();
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        Filter vStrikePlanning = Filters.and(Filters.icon(Icon.VIRTUAL_SET_21), Filters.Strike_Planning);
 
         // Check condition(s)
-        if (GameConditions.canSpot(game, self, Filters.Strike_Planning)
+        if (GameConditions.canSpot(game, self, vStrikePlanning)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.hasHand(game, playerId)) {
 
