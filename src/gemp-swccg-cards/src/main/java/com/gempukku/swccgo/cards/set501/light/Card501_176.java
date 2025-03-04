@@ -42,7 +42,7 @@ public class Card501_176 extends AbstractUsedOrLostInterrupt {
     public Card501_176() {
         super(Side.LIGHT, 4, Title.Critical_Error_Revealed, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Hologram technology allows efficient communication of complex intelligence during war room briefings.");
-        setGameText("USED: Suspend Ominous Rumors or There Are Many Hunting You Now for remainder of turn. OR [Upload] Lak Sivrak, Orrimaarko, Tala Durith, or [Endor] Chewie. LOST: Lose 1 Force to exclude a passenger from battle (then place this Interrupt out of play).");
+        setGameText("USED: Suspend Ominous Rumors or There Are Many Hunting You Now for remainder of turn. OR [Upload] Lak Sivrak, Orrimaarko, Tala Durith, or [Endor] Chewie. LOST: Lose 1 Force to exclude opponent's passenger from battle (then place this Interrupt out of play).");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_25);
         addKeyword(Keyword.HOLOGRAM);
         setVirtualSuffix(true);
@@ -52,7 +52,7 @@ public class Card501_176 extends AbstractUsedOrLostInterrupt {
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
-
+        
         Filter suspendFilter = Filters.or(Filters.Ominous_Rumors, Filters.There_Are_Many_Hunting_You_Now);
 
         // Check condition(s)
@@ -105,7 +105,7 @@ public class Card501_176 extends AbstractUsedOrLostInterrupt {
             actions.add(action);
         }
 
-        Filter passengerFilter = Filters.and(Filters.aboardAsPassenger(Filters.any), Filters.participatingInBattle);
+        Filter passengerFilter = Filters.and(Filters.opponents(self), Filters.aboardAsPassenger(Filters.any), Filters.participatingInBattle);
         TargetingReason targetingReason = TargetingReason.TO_BE_EXCLUDED_FROM_BATTLE;
 
         // Check condition(s)
@@ -114,9 +114,10 @@ public class Card501_176 extends AbstractUsedOrLostInterrupt {
            
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setText("Exclude passenger from battle");
+            action.setActionMsg("Exclude opponent's passenger from battle");
             // Choose target(s)
             action.appendTargeting(
-                new TargetCardOnTableEffect(action, playerId, "Choose a passenger", targetingReason, passengerFilter) {
+                new TargetCardOnTableEffect(action, playerId, "Choose opponent's passenger", targetingReason, passengerFilter) {
                     @Override
                     protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                         action.addAnimationGroup(targetedCard);
