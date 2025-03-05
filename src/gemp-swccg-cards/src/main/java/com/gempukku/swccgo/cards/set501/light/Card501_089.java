@@ -57,9 +57,9 @@ public class Card501_089 extends AbstractRebel {
         if (TriggerConditions.wonBattleAt(game, effectResult, playerId, locationFilter)) {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             String opponent = game.getOpponent(playerId);
-            action.setText("Opponent loses 1 Force.");
+            action.setText("Make opponent lose 1 Force.");
             action.appendEffect(
-                new LoseForceEffect(action, opponent, gameTextSourceCardId));
+                new LoseForceEffect(action, opponent, 1));
             return Collections.singletonList(action);
         }
         return null;
