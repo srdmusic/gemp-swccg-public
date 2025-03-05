@@ -7,6 +7,7 @@ import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.DestinyType;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -19,6 +20,7 @@ import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.NumberOfBattleDestinyDrawsMayNotBeLimitedForEitherPlayerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -59,6 +61,26 @@ public class Card501_177 extends AbstractUsedInterrupt {
                         }
                     });
             actions.add(action);
+        }
+
+        GameTextActionId gameTextActionId = GameTextActionId.MY_SISTER_HAS_IT__UPLOAD_SITE;
+        // Check condition(s)
+        if (GameConditions.canSpot(game, self, Filters.and(Icon.SKYWALKER, Filters.Effect))
+                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Take site into hand from Reserve Deck");
+            // Allow response(s)
+            action.allowResponses("Take Chief Chirpa's Hut or Guest Quarters into hand from Reserve Deck",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.Chief_Chirpas_Hut, Filters.title("Cloud City: Guest Quarters")), true));
+                        }
+                    }
+            );
         }
         return actions;
     }
