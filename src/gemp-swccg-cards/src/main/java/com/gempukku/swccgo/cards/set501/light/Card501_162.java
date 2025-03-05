@@ -75,7 +75,7 @@ public class Card501_162 extends AbstractRebel {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Place card from hand on Used Pile");
-            action.setActionMsg("Make the next scout you deploy this turn deploy -1");
+            action.setActionMsg("Make the next scout they deploy this turn deploy -1");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
