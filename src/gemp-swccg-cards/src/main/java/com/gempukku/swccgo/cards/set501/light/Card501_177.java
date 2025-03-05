@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.common.DestinyType;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -13,11 +14,14 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
+import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.modifiers.NumberOfBattleDestinyDrawsMayNotBeLimitedForEitherPlayerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
@@ -55,6 +59,33 @@ public class Card501_177 extends AbstractUsedInterrupt {
                         }
                     });
             actions.add(action);
+        }
+        return actions;
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+
+        // Check condition(s)
+        if ((TriggerConditions.isDestinyJustDrawnFor(game, effectResult, Filters.Force_Lightning)
+                || TriggerConditions.isDestinyDrawType(game, effectResult, DestinyType.CHOKE_DESTINY)) 
+                && TriggerConditions.isDestinyJustDrawnTargeting(game, effectResult, Filters.any, Filters.not(Filters.undercover_spy))) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Subtract 1 from destiny");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new ModifyDestinyEffect(action, -1));
+                        }
+                    }
+            );
+            actions.add(action);                    
         }
         return actions;
     }
