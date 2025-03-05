@@ -16,9 +16,8 @@ import com.gempukku.swccgo.common.Uniqueness;
 public class Card501_177 extends AbstractUsedInterrupt {
     public Card501_177() {
         super(Side.LIGHT, 5, "My Sister Has It", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("If a [Skywalker] Epic Event on table, [UPLOAD] Lars' Moisture Farm or Skywalker Hut. OR For remainder of turn, neither player may limit battle destiny draws at Leia's location. OR Subtract 1 from a Force Lightning or choke destiny draw (unless targeting an Undercover spy).");
+        setGameText("During a battle involving Leia, the number of battle destiny draws may not be limited. OR Subtract 1 from a just drawn Force Lightning or 'choke' destiny (unless targeting an Undercover spy). OR If a [Skywalker] Effect on table, [upload] Chief Chirpa's Hut or Guest Quarters.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_25);
         setTestingText("My Sister Has It");
-        hideFromDeckBuilder();
     }
 }
