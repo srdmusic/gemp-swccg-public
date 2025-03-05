@@ -81,6 +81,7 @@ public class Card501_177 extends AbstractUsedInterrupt {
                         }
                     }
             );
+            actions.add(action);
         }
         return actions;
     }
