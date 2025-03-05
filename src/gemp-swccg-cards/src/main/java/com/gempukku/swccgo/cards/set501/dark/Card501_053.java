@@ -1,11 +1,11 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -13,6 +13,7 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -24,6 +25,7 @@ import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.LookedAtCardsInCardPileResult;
 
 /**
  * Set: Playtesting
@@ -72,6 +74,9 @@ public class Card501_053 extends AbstractUsedInterrupt {
 
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
+        final String opponent = game.getOpponent(playerId);
+        
         // Check condition(s)
         if (TriggerConditions.wonBattle(game, effectResult, playerId)
                 && GameConditions.canTargetToCancel(game, self, Filters.Tatooine_Celebration)) {
@@ -79,8 +84,33 @@ public class Card501_053 extends AbstractUsedInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             // Build action using common utility
             CancelCardActionBuilder.buildCancelCardAction(action, Filters.Tatooine_Celebration, Title.Tatooine_Celebration);
-            return Collections.singletonList(action);
+            actions.add(action);
         }
-        return null;
+
+        // Check condition(s)
+        if ((TriggerConditions.justLookedAtCardsInCardPile(game, effectResult, opponent, Zone.USED_PILE)
+                || TriggerConditions.justLookedAtCardsInCardPile(game, effectResult, opponent, Zone.FORCE_PILE)) 
+                && GameConditions.hasReserveDeck(game, playerId)) {
+
+            PhysicalCard source = ((LookedAtCardsInCardPileResult)effectResult).getSource();
+            if (source.getOwner() == opponent)
+            {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                action.setText("Peek at top two cards of Reserve Deck");
+                // Allow response(s)
+                action.allowResponses("Peek at top two cards of Reserve Deck and take one into hand",
+                        new RespondablePlayCardEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                // Perform result(s)
+                                action.appendEffect(
+                                        new PeekAtTopCardsOfReserveDeckAndChooseCardsToTakeIntoHandEffect(action, playerId, 2, 1, 1));
+                            }
+                        }
+                );
+                actions.add(action);
+            }
+        }
+        return actions;
     }
 }
