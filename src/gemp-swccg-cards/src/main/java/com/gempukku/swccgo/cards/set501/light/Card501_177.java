@@ -1,11 +1,23 @@
 package com.gempukku.swccgo.cards.set501.light;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.modifiers.NumberOfBattleDestinyDrawsMayNotBeLimitedForEitherPlayerModifier;
+import com.gempukku.swccgo.logic.timing.Action;
 
 /**
  * Set: Playtesting
@@ -19,5 +31,31 @@ public class Card501_177 extends AbstractUsedInterrupt {
         setGameText("During a battle involving Leia, the number of battle destiny draws may not be limited. OR Subtract 1 from a just drawn Force Lightning or 'choke' destiny (unless targeting an Undercover spy). OR If a [Skywalker] Effect on table, [upload] Chief Chirpa's Hut or Guest Quarters.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_25);
         setTestingText("My Sister Has It");
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+
+        // Check condition(s)
+        if (GameConditions.isDuringBattleWithParticipant(game, Filters.Leia)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+
+            action.setText("Prevent number of draws being limited");
+            // Allow response(s)
+            action.allowResponses("Prevent the number of battle destiny draws from being limited",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new AddUntilEndOfBattleModifierEffect(action,
+                                            new NumberOfBattleDestinyDrawsMayNotBeLimitedForEitherPlayerModifier(self, Filters.battleLocation),
+                                            "Prevents the number of battle destiny draws from being limited"));
+                        }
+                    });
+            actions.add(action);
+        }
+        return actions;
     }
 }
