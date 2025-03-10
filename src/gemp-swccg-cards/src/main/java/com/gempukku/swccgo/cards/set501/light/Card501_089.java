@@ -57,7 +57,7 @@ public class Card501_089 extends AbstractRebel {
         if (TriggerConditions.wonBattleAt(game, effectResult, playerId, locationFilter)) {
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             String opponent = game.getOpponent(playerId);
-            action.setText("Make opponent lose 1 Force.");
+            action.setText("Make opponent lose 1 Force");
             action.appendEffect(
                 new LoseForceEffect(action, opponent, 1));
             return Collections.singletonList(action);
@@ -78,7 +78,7 @@ public class Card501_089 extends AbstractRebel {
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.ORRIMAARKO__CANCEL_FORCE_DRAIN;
-        Filter relatedBattleground = Filters.and(Filters.relatedLocationTo(self, Filters.sameLocationId(self)), Filters.battleground);
+        Filter relatedBattleground = Filters.and(Filters.relatedLocationTo(self, Filters.sameLocation(self)), Filters.battleground);
 
         // Check condition(s)
         if (TriggerConditions.forceDrainInitiatedAt(game, effectResult, relatedBattleground)
@@ -86,7 +86,7 @@ public class Card501_089 extends AbstractRebel {
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.canCancelForceDrain(game, self)){
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Cancel Force Drain");
+            action.setText("Cancel Force drain");
             // Update usage limit(s
             action.appendUsage(
                 new OncePerGameEffect(action));
