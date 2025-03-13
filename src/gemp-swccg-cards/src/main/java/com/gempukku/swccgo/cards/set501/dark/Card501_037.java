@@ -1,10 +1,15 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractImmediateEffect;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.RevealTopCardOfReserveDeckEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
@@ -17,7 +22,10 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.ChooseEffectOrderEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.StandardEffect;
 import com.gempukku.swccgo.logic.timing.results.PlayCardResult;
 
 /**
@@ -46,6 +54,39 @@ public class Card501_037 extends AbstractImmediateEffect {
             if (action != null) {
                 return Collections.singletonList(action);
             }
+        }
+        return null;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        String opponent = game.getOpponent(playerId);
+
+        // Check condition(s)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canTarget(game, self, Filters.and(Filters.bounty_hunter, Filters.here(self)))
+                && GameConditions.hasReserveDeck(game, playerId)
+                && GameConditions.hasReserveDeck(game, opponent)) {
+            
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Reveal top card of Reserve Decks");
+            action.setActionMsg("Reveal top card of each player's Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+
+            // Perform result(s)
+            List<StandardEffect> effects = new LinkedList<>();
+            effects.add(
+                    new RevealTopCardOfReserveDeckEffect(action, playerId, playerId));
+            effects.add(
+                    new RevealTopCardOfReserveDeckEffect(action, playerId, opponent));
+
+            action.appendEffect(
+                    new ChooseEffectOrderEffect(action, effects));
+
+            return Collections.singletonList(action);
         }
         return null;
     }
