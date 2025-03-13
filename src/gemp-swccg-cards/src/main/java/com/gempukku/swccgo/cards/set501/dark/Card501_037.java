@@ -17,13 +17,18 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayCardAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ChooseEffectOrderEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
+import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.StandardEffect;
 import com.gempukku.swccgo.logic.timing.results.PlayCardResult;
@@ -38,7 +43,7 @@ public class Card501_037 extends AbstractImmediateEffect {
     public Card501_037() {
         super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, "The Client's Bounty", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("One of the most profitable occupations in the galaxy is hunting down and capturing wanted beings. The more notable the quarry, the more profitable the venture.");
-        setGameText("Deploy on opponent's just deployed character. Once per turn, if a bounty hunter here, may reveal the top card of each player's Reserve Deck. If this character captured and seized, retrieve 2 Force (3 if The Client on table) and return this card to your hand. [Immune to Control.]");
+        setGameText("Deploy on opponent's just deployed character. Once per turn, if a bounty hunter here, may reveal the top card of each player's Reserve Deck. If this character is about to be captured, retrieve 2 Force (3 if The Client on table) and return this card to your hand. [Immune to Control.]");
         addIcons(Icon.VIRTUAL_SET_25);
         addImmuneToCardTitle(Title.Control);
         addKeywords(Keyword.BOUNTY);
@@ -85,6 +90,32 @@ public class Card501_037 extends AbstractImmediateEffect {
 
             action.appendEffect(
                     new ChooseEffectOrderEffect(action, effects));
+
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        String playerId = self.getOwner();
+        Filter characterFilter = Filters.hasAttached(self);
+
+        // Check condition(s)
+        if (TriggerConditions.isAboutToBeCaptured(game, effectResult, characterFilter)) {
+
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+
+            int numForceToRetrieve = GameConditions.canTarget(game, self, Filters.title("The Client")) ? 3 : 2;
+
+            action.setText("Retrieve Force");
+            action.setActionMsg("Retrieve " + numForceToRetrieve + " Force, and return " + GameUtils.getCardLink(self) + " to hand");
+
+            // Perform result(s)
+            action.appendEffect(
+                    new RetrieveForceEffect(action, playerId, numForceToRetrieve));
+            action.appendEffect(
+                    new ReturnCardToHandFromTableEffect(action, self));
 
             return Collections.singletonList(action);
         }
