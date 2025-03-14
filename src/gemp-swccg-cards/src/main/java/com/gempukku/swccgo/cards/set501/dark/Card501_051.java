@@ -29,6 +29,7 @@ import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDrawBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -92,6 +93,7 @@ public class Card501_051 extends AbstractSith {
         
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotDrawBattleDestinyModifier(self, Filters.here(self), masterCondition, opponent));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 5));
         return modifiers;
     }
 }
