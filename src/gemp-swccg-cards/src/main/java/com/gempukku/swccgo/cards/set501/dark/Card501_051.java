@@ -1,10 +1,14 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractSith;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.AloneCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -19,7 +23,14 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.InBattleCondition;
+import com.gempukku.swccgo.logic.conditions.OrCondition;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotDrawBattleDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 /**
  * Set: Playtesting
@@ -63,5 +74,24 @@ public class Card501_051 extends AbstractSith {
             return Collections.singletonList(action);
         }        
         return null;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+
+        Condition inBattle = new InBattleCondition(self);
+        Condition aloneOrWithShin = new OrCondition(new AloneCondition(self), new WithCondition(self, Filters.persona(Persona.SHIN)));
+        Condition unlessSidiousOnTable = new UnlessCondition(new OnTableCondition(self, Filters.Sidious));
+        Condition unlessTwoOpponentsCharacters = new UnlessCondition(new WithCondition(self, 2, Filters.and(Filters.opponents(self), Filters.character)));
+        Condition unlessAnakinOrYoda = new UnlessCondition(new WithCondition(self, Filters.or(Filters.Anakin, Filters.Yoda)));
+
+        // in battle AND aloneOrWithShin AND No Sidious AND Unless with 2 opponent characters AND Unless with Anakin or Yoda
+        Condition masterCondition = new AndCondition(inBattle, aloneOrWithShin, unlessSidiousOnTable, unlessTwoOpponentsCharacters, unlessAnakinOrYoda);
+        
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new MayNotDrawBattleDestinyModifier(self, Filters.here(self), masterCondition, opponent));
+        return modifiers;
     }
 }

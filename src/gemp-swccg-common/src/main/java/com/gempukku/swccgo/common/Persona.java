@@ -148,6 +148,7 @@ public enum Persona implements Filterable {
     SEFLA("Sefla"),
     SEVENTH_SISTER("Seventh Sister"),
     SHAWN("Shawn"),
+    SHIN("Shin"),
     SIDIOUS("Sidious"),
     SNAP("Snap Wexley"),
     SNOKE("Snoke"),
