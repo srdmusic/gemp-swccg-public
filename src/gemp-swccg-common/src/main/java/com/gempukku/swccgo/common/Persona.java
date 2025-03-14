@@ -13,6 +13,7 @@ public enum Persona implements Filterable {
     APHRA("Aphra"),
     ARMORER("Armorer"),
     AURRA("Aurra"),
+    BAYLAN("Baylan"),
     BAZE("Baze"),
     BB8("BB-8"),
     BEAUMONT("Beaumont"),
