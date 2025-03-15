@@ -1,13 +1,22 @@
 package com.gempukku.swccgo.cards.set501.light;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 /**
  * Set: Playtesting
@@ -22,5 +31,17 @@ public class Card501_167 extends AbstractNormalEffect {
         addIcons(Icon.A_NEW_HOPE, Icon.VIRTUAL_SET_25);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Medal Ceremony");
-    }    
+    }
+
+    @Override
+    protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.canSpot(game, self, Filters.Massassi_Throne_Room);
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DefenseValueModifier(self, Filters.and(Filters.not(Filters.Jedi), Filters.Rebel), 1));
+        return modifiers;
+    }
 }
