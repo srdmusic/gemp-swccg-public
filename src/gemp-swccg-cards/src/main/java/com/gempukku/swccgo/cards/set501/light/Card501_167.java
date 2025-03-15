@@ -19,6 +19,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -70,8 +71,20 @@ public class Card501_167 extends AbstractNormalEffect {
             actions.add(action);
         }
 
-        
+        gameTextActionId = GameTextActionId.MEDAL_CEREMONY__RETRIEVE_REBEL;
 
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)){
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Retrieve a Rebel");
+            action.setActionMsg("Retrieve a non-[Maintenance], non-[Permanent Weapon] Rebel of ability < 5");
+            // Update usage limit(s)
+            action.appendUsage(
+                new OncePerGameEffect(action));
+            action.appendEffect(
+                    new RetrieveCardEffect(action, playerId, Filters.and(Filters.not(Icon.MAINTENANCE), Filters.not(Icon.PERMANENT_WEAPON), Filters.Rebel, Filters.abilityLessThan(5))));
+            actions.add(action);
+        }
         return actions;
     }
 }
