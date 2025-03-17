@@ -70,7 +70,7 @@ public class Card501_050 extends AbstractDarkJediMaster {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.isPlayingCardTargeting(game, effect, Filters.Disarmed, Filters.here(self))
+        if (TriggerConditions.isPlayingCardTargeting(game, effect, Filters.title(Title.Disarmed), Filters.here(self))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
@@ -83,7 +83,7 @@ public class Card501_050 extends AbstractDarkJediMaster {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        Filter disarmedHere = Filters.and(Filters.Disarmed, Filters.here(self));
+        Filter disarmedHere = Filters.and(Filters.title(Title.Disarmed), Filters.here(self));
 
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
