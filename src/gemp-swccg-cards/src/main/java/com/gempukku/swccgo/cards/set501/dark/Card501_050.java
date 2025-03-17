@@ -1,13 +1,26 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractDarkJediMaster;
+import com.gempukku.swccgo.cards.conditions.AloneCondition;
+import com.gempukku.swccgo.cards.conditions.OnCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 /**
  * Set: Playtesting
@@ -24,5 +37,15 @@ public class Card501_050 extends AbstractDarkJediMaster {
         addKeywords(Keyword.LEADER);
         addPersona(Persona.SIDIOUS);
         setTestingText("Master Sidious");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        Condition aloneOnCoruscantCondition = new AndCondition(new AloneCondition(self), new OnCondition(self, Title.Coruscant));
+
+        List<Modifier> modifiers = new ArrayList<>();
+        modifiers.add(new ImmuneToAttritionModifier(self, Filters.Sith_Apprentice, aloneOnCoruscantCondition));
+        modifiers.add(new ImmuneToAttritionModifier(self));
+        return modifiers;
     }
 }
