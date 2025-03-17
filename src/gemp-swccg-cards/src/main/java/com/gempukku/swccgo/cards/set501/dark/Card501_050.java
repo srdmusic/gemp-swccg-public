@@ -112,7 +112,7 @@ public class Card501_050 extends AbstractDarkJediMaster {
             if (GameConditions.isWith(game, self, Filters.Sith_Apprentice)) {
                 siteToRelocateTo = Filters.Coruscant_site;
             } else if (GameConditions.isAtLocation(game, self, Filters.Coruscant_site)) {
-                siteToRelocateTo = Filters.sameLocationAs(self, Filters.Sith_Apprentice);
+                siteToRelocateTo = Filters.and(Filters.sameLocationAs(self, Filters.Sith_Apprentice), Filters.site);
             } else {
                 siteToRelocateTo = Filters.none;
             }
