@@ -31,6 +31,7 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.effects.RearmCharacterEffect;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
@@ -90,8 +91,14 @@ public class Card501_050 extends AbstractDarkJediMaster {
                 && GameConditions.canTargetToCancel(game, self, disarmedHere)) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, disarmedHere, Title.Disarmed);
+            final PhysicalCard disarmedCharacterHere = Filters.findFirstActive(game, self, Filters.and(Filters.character, Filters.hasAttached(disarmedHere)));
+
+            action.setPerformingPlayer(self.getOwner());
+            action.setText("Re-arm " + GameUtils.getFullName(disarmedCharacterHere));
+            action.setActionMsg("Re-arm " + GameUtils.getCardLink(disarmedCharacterHere));
+            action.appendEffect(
+                new RearmCharacterEffect(action, disarmedCharacterHere));
+
             return Collections.singletonList(action);
         }
         return null;
