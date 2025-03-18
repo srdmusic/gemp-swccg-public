@@ -120,13 +120,13 @@ public class Card501_050 extends AbstractDarkJediMaster {
 
             if (GameConditions.canSpotLocation(game, siteToRelocateTo)) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Relocate Sidious to site");
+                action.setText("Relocate " + GameUtils.getFullName(self) + " to a site");
                 // Update usage limit(s)
                 action.appendUsage(
                         new OncePerPhaseEffect(action));
                 // Choose target(s)
                 action.appendTargeting(
-                        new ChooseCardOnTableEffect(action, self.getOwner(), "Choose site to relocate Sidious to", siteToRelocateTo) {
+                        new ChooseCardOnTableEffect(action, self.getOwner(), "Choose site to relocate " + GameUtils.getFullName(self) + " to", siteToRelocateTo) {
                             @Override
                             protected void cardSelected(final PhysicalCard selectedCard) {
                                 action.addAnimationGroup(selectedCard);
@@ -134,7 +134,7 @@ public class Card501_050 extends AbstractDarkJediMaster {
                                 action.appendCost(
                                         new PayRelocateBetweenLocationsCostEffect(action, playerId, self, selectedCard, 1));
                                 // Allow response(s)
-                                action.allowResponses("Relocate Sidious to " + GameUtils.getCardLink(selectedCard),
+                                action.allowResponses("Relocate " + GameUtils.getFullName(self) + " to " + GameUtils.getCardLink(selectedCard),
                                         new UnrespondableEffect(action) {
                                             @Override
                                             protected void performActionResults(Action targetingAction) {
