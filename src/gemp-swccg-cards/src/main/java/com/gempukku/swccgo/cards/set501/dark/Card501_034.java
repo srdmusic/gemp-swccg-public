@@ -19,7 +19,7 @@ public class Card501_034 extends AbstractNormalEffect {
     public Card501_034() {
         super(Side.DARK, 3, PlayCardZoneOption.ATTACHED, Title.Jabbas_Influence, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Jabba makes offers one cannot refuse. Smugglers, thieves and competitors who do not acquiesce have been rumored to wake up with a bantha's head in their bed.");
-        setGameText("Deploy on Audience Chamber. Opponent may not target this site with I Must Be Allowed To Speak. May raise your converted Audience Chamber to the top. If opponent just deployed a character here, may place a card from hand on Force Pile. [Immune to Alter.]");
+        setGameText("Deploy on Audience Chamber. Opponent may not target this site with I Must Be Allowed To Speak. Once per turn, may raise your converted Audience Chamber to the top. If opponent just deployed a character here, may place a card from hand on Force Pile. [Immune to Alter.]");
         addKeywords(Keyword.DEPLOYS_ON_SITE);
         addIcons(Icon.SPECIAL_EDITION, Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_25);
         addImmuneToCardTitle(Title.Alter);
