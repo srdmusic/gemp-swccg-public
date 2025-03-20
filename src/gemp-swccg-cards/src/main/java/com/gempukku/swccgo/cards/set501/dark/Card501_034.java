@@ -22,9 +22,13 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.PutCardFromHandOnForcePileEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
@@ -63,7 +67,7 @@ public class Card501_034 extends AbstractNormalEffect {
         // Check condition(s)
         if (GameConditions.canTarget(game, self, raisableAudienceChamber)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
-                    
+
             final PhysicalCard audienceChamberCard = Filters.findFirstActive(game, self, raisableAudienceChamber);
             if (audienceChamberCard != null) {
 
@@ -79,6 +83,24 @@ public class Card501_034 extends AbstractNormalEffect {
                         new ConvertLocationByRaisingToTopEffect(action, audienceChamberCard, true));
                 return Collections.singletonList(action);
             }
+        }
+        return null;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+
+        // Check condition(s)
+        if(TriggerConditions.justDeployedToLocation(game, effectResult, game.getOpponent(playerId), Filters.character, Filters.hasAttached(self))
+            && GameConditions.hasHand(game, playerId)){
+
+            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Place card from hand on Force Pile");
+            action.setActionMsg("Place a card from hand on Force Pile");
+            // Perform result(s)
+            action.appendEffect(new PutCardFromHandOnForcePileEffect(action, playerId));
+
+            return Collections.singletonList(action);
         }
         return null;
     }
