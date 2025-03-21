@@ -7,6 +7,7 @@ import java.util.List;
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.ConvertLocationByRaisingToTopEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -41,7 +42,7 @@ public class Card501_017 extends AbstractAlien {
     public Card501_017() {
         super(Side.DARK, 3, 1, 1, 1, 3, Title.Salacious_Crumb, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Male Kowakian. Prankster. Humiliates others for Jabba's amusement. His life depends on making Jabba laugh at least once per day.");
-        setGameText("When deployed, may draw top card of Reserve Deck or place a droid present in owner's Used Pile ('AH-hahahaha!'). Game text of your alien leaders here may not be canceled. If at a converted Jabba's Palace site, may raise yours to the top.");
+        setGameText("When deployed, may draw top card of Reserve Deck or place a droid present in owner's Used Pile ('AH-hahahaha!'). Game text of your alien leaders here may not be canceled. Once per turn, if at a converted Jabba's Palace site, may raise yours to the top.");
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_25);
         setSpecies(Species.KOWAKIAN);
         setVirtualSuffix(true);
@@ -109,9 +110,11 @@ public class Card501_017 extends AbstractAlien {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
+        if (GameConditions.isAtLocation(game, self, Filters.and(Filters.canBeConvertedByRaisingYourLocationToTop(playerId), Filters.Jabbas_Palace_site))
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
-        if (GameConditions.isAtLocation(game, self, Filters.and(Filters.canBeConvertedByRaisingYourLocationToTop(playerId), Filters.Jabbas_Palace_site))) {
             final PhysicalCard location = game.getModifiersQuerying().getLocationThatCardIsAt(game.getGameState(), self);
             if (location != null) {
 
@@ -119,6 +122,9 @@ public class Card501_017 extends AbstractAlien {
                 action.setText("Raise converted site to the top");
                 action.setActionMsg("Raise converted site to the top to convert " + GameUtils.getCardLink(location));
                 action.addAnimationGroup(location);
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerTurnEffect(action));
                 // Perform result(s)
                 action.appendEffect(
                         new ConvertLocationByRaisingToTopEffect(action, location, true));
