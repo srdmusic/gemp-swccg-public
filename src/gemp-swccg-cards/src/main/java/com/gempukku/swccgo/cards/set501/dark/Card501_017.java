@@ -118,7 +118,7 @@ public class Card501_017 extends AbstractAlien {
             final PhysicalCard location = game.getModifiersQuerying().getLocationThatCardIsAt(game.getGameState(), self);
             if (location != null) {
 
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Raise converted site to the top");
                 action.setActionMsg("Raise converted site to the top to convert " + GameUtils.getCardLink(location));
                 action.addAnimationGroup(location);
