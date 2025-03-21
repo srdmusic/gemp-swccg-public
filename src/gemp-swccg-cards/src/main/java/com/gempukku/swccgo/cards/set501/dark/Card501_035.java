@@ -42,7 +42,7 @@ public class Card501_035 extends AbstractAlien {
     public Card501_035() {
         super(Side.DARK, 1, 3, 3, 1, 4, Title.Bib, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Twi'lek leader and majordomo of Jabba's palace. Succeeded Jabba's last majordomo, Naroon Cuthus. Plotting to kill Jabba.");
-        setGameText("May [download] Salacious Crumb. While with Jabba, Bib is power +2 and Jabba is immune to attrition. While at Audience Chamber, unless Bib 'hit,' opponent may not target your other characters here with blasters (or this site with I Must Be Allowed To Speak).");
+        setGameText("Deploys free to opponent's [Jabba's Palace] site. Once per turn, may [download] Salacious Crumb (or Jabba's Influence) here. While with Jabba, Bib is power +2 and Jabba is immune to attrition. Unless Bib 'hit,' opponent may not target your other characters here with blasters.");
         addPersona(Persona.BIB);
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_25);
         setSpecies(Species.TWILEK);
