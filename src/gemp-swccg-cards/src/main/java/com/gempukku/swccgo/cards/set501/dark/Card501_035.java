@@ -26,6 +26,7 @@ import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.DeploysFreeToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedBySpecificWeaponsModifier;
@@ -49,6 +50,13 @@ public class Card501_035 extends AbstractAlien {
         addKeywords(Keyword.LEADER);
         setVirtualSuffix(true);
         setTestingText("Bib Fortuna (V)");
+    }
+
+    @Override
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DeploysFreeToLocationModifier(self, Filters.and(Filters.opponents(self), Icon.JABBAS_PALACE, Filters.site)));
+        return modifiers;
     }
 
     @Override
