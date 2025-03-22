@@ -78,8 +78,8 @@ public class Card501_043 extends AbstractNormalEffect {
         Condition onLukeOrLeia = new AttachedCondition(self, Filters.or(Filters.Luke, Filters.Leia));
         Condition unlessOpponentsMovePhase = new UnlessCondition(new PhaseCondition(Phase.MOVE, opponent));
 
-        modifiers.add(new MayNotCancelBattleDestinyModifier(self, hereFilter, bothPlayers, opponent));
         modifiers.add(new MayNotMoveModifier(self, Filters.hasAttached(self), new AndCondition(onLukeOrLeia, unlessOpponentsMovePhase)));
+        modifiers.add(new MayNotCancelBattleDestinyModifier(self, hereFilter, bothPlayers, opponent));
 
         return modifiers;
     }
