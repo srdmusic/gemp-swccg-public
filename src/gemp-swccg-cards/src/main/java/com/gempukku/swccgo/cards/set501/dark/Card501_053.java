@@ -37,7 +37,7 @@ public class Card501_053 extends AbstractUsedInterrupt {
     public Card501_053() {
         super(Side.DARK, 5, "Blast Points", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Only Imperial stormtroopers are so precise.");
-        setGameText("[Upload] Ghhhk or Hyperwave Scan. OR If you just won a battle, cancel Tatooine Celebration. OR If opponent just looked at cards in their Force Pile or Used Pile, peek at the top 2 cards of your Reserve Deck; take one into hand.");
+        setGameText("[Upload] Ghhhk or Hyperwave Scan. OR If you just won a battle, cancel Cloud City Celebration or Tatooine Celebration. OR If opponent just looked at cards in their Force Pile or Used Pile, peek at the top 2 cards of your Reserve Deck; take one into hand.");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("Blast Points (V)");
@@ -78,13 +78,23 @@ public class Card501_053 extends AbstractUsedInterrupt {
         final String opponent = game.getOpponent(playerId);
         
         // Check condition(s)
-        if (TriggerConditions.wonBattle(game, effectResult, playerId)
-                && GameConditions.canTargetToCancel(game, self, Filters.Tatooine_Celebration)) {
+        if (TriggerConditions.wonBattle(game, effectResult, playerId)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Tatooine_Celebration, Title.Tatooine_Celebration);
-            actions.add(action);
+            // Check more condition(s)
+            if (GameConditions.canTargetToCancel(game, self, Filters.Cloud_City_Celebration)) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                // Build action using common utility
+                CancelCardActionBuilder.buildCancelCardAction(action, Filters.Cloud_City_Celebration, Title.Cloud_City_Celebration);
+                actions.add(action);
+            }
+
+            // Check more condition(s)
+            if (GameConditions.canTargetToCancel(game, self, Filters.Tatooine_Celebration)) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                // Build action using common utility
+                CancelCardActionBuilder.buildCancelCardAction(action, Filters.Tatooine_Celebration, Title.Tatooine_Celebration);
+                actions.add(action);
+            }
         }
 
         // Check condition(s)
