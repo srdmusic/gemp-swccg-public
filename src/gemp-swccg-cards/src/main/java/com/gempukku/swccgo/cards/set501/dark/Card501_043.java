@@ -7,7 +7,6 @@ import java.util.List;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AttachedCondition;
-import com.gempukku.swccgo.cards.conditions.DuringBattleAtCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
@@ -29,7 +28,6 @@ import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.PhaseCondition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotFireWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Effect;
@@ -77,11 +75,9 @@ public class Card501_043 extends AbstractNormalEffect {
         final String bothPlayers = null; //null represents "both players" for the MayNotCancelBattleDestinyModifier
         
         Filter hereFilter = Filters.here(self);
-        Condition unlessBattleHere = new UnlessCondition(new DuringBattleAtCondition(Filters.here(self)));
         Condition onLukeOrLeia = new AttachedCondition(self, Filters.or(Filters.Luke, Filters.Leia));
         Condition unlessOpponentsMovePhase = new UnlessCondition(new PhaseCondition(Phase.MOVE, opponent));
 
-        modifiers.add(new MayNotFireWeaponsModifier(self, Filters.and(Filters.character, hereFilter), unlessBattleHere));
         modifiers.add(new MayNotCancelBattleDestinyModifier(self, hereFilter, bothPlayers, opponent));
         modifiers.add(new MayNotMoveModifier(self, Filters.hasAttached(self), new AndCondition(onLukeOrLeia, unlessOpponentsMovePhase)));
 
