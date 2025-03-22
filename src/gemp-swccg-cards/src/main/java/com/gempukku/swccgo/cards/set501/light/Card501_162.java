@@ -39,18 +39,18 @@ import java.util.List;
  * Set: Playtesting
  * Type: Character
  * Subtype: Rebel
- * Title: Corporal Beezer (V)
+ * Title: Major Panno (V)
  */
 public class Card501_162 extends AbstractRebel {
     public Card501_162() {
-        super(Side.LIGHT, 3, 2, 2, 2, 4, "Corporal Beezer", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLore("Alderaanian slicer and technician. Trained by Brooks Carlson to serve as a Scout for Alliance commandos. She gets nervous when General Solo tries to hotwire something.");
-        setGameText("Prevents opponent's from 'reacting' to same site. Once per turn, if [V] Strike Planning on table, may place a card from hand on Used Pile; the next scout you deploy this turn is deploy -1. Your scouts here are immune to Trample.");
-        addIcons(Icon.ENDOR, Icon.WARRIOR, Icon.VIRTUAL_SET_25);
-        addKeywords(Keyword.SCOUT, Keyword.FEMALE);
-        setSpecies(Species.ALDERAANIAN);
+        super(Side.LIGHT, 2, 2, 2, 2, 4, Title.Major_Panno, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("Male Dresselian scout. Former commando. Tactician. Works with General Madine to plan logistics of strike operations.");
+        setGameText("Opponent may not 'react' to same site. Once per turn, if [Set 21] Strike Planning on table, may place a card from hand on Used Pile; the next scout you deploy this turn is deploy -1. Your scouts here are immune to Trample.");
+        addIcons(Icon.DEATH_STAR_II, Icon.WARRIOR, Icon.VIRTUAL_SET_25);
+        addKeywords(Keyword.SCOUT);
+        setSpecies(Species.DRESSELIAN);
         setVirtualSuffix(true);
-        setTestingText("Corporal Beezer (V)");
+        setTestingText("Major Panno (V)");
     }
 
     @Override
