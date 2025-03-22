@@ -27,6 +27,7 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.PhaseCondition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -74,11 +75,13 @@ public class Card501_043 extends AbstractNormalEffect {
         final String opponent = game.getOpponent(playerId);
         final String bothPlayers = null; //null represents "both players" for the MayNotCancelBattleDestinyModifier
         
+        Filter characterFilter = Filters.hasAttached(self);
         Filter hereFilter = Filters.here(self);
         Condition onLukeOrLeia = new AttachedCondition(self, Filters.or(Filters.Luke, Filters.Leia));
         Condition unlessOpponentsMovePhase = new UnlessCondition(new PhaseCondition(Phase.MOVE, opponent));
 
-        modifiers.add(new MayNotMoveModifier(self, Filters.hasAttached(self), new AndCondition(onLukeOrLeia, unlessOpponentsMovePhase)));
+        modifiers.add(new MayNotBeTargetedByModifier(self, characterFilter, Filters.Clash_Of_Sabers));
+        modifiers.add(new MayNotMoveModifier(self, characterFilter, new AndCondition(onLukeOrLeia, unlessOpponentsMovePhase)));
         modifiers.add(new MayNotCancelBattleDestinyModifier(self, hereFilter, bothPlayers, opponent));
 
         return modifiers;
