@@ -34,7 +34,7 @@ services:
          target: /logs
        - type: bind
          source: ../logs/nohup.out
-         target: /opt/gemp-swccg/src/nohup.out
+         target: /gemp-swccg/src/nohup.out
     networks:
       gemp_net_1:
         ipv4_address: ${APP_IP}
