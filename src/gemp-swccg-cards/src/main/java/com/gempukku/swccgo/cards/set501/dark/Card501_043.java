@@ -7,7 +7,6 @@ import java.util.List;
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AttachedCondition;
-import com.gempukku.swccgo.cards.conditions.DuringBattleAtCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
@@ -28,8 +27,8 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.PhaseCondition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotFireWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Effect;
@@ -43,7 +42,7 @@ public class Card501_043 extends AbstractNormalEffect {
     public Card501_043() {
         super(Side.DARK, 4, PlayCardZoneOption.ATTACHED, "Stranded", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Imperial troopers use tactics to strand and cut off fugitives. Only daring and unpredictable actions gave Luke and Leia a chance to escape.");
-        setGameText("Deploy on a character. Nabrun Leids is canceled. Characters here may not fire weapons except during battle here. Opponent may not cancel battle destiny draws here. If on Luke or Leia, character may not move except during opponent's move phase. [Immune to Alter.]");
+        setGameText("Deploy on a character. Character may not be targeted by Clash Of Sabers and, if character is Luke or Leia, may not move except during opponent's move phase. Opponent may not cancel battle destiny draws here. Nabrun Leids is canceled. [Immune to Alter.]");
         addIcons(Icon.VIRTUAL_SET_25);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Stranded");
@@ -76,14 +75,14 @@ public class Card501_043 extends AbstractNormalEffect {
         final String opponent = game.getOpponent(playerId);
         final String bothPlayers = null; //null represents "both players" for the MayNotCancelBattleDestinyModifier
         
+        Filter characterFilter = Filters.hasAttached(self);
         Filter hereFilter = Filters.here(self);
-        Condition unlessBattleHere = new UnlessCondition(new DuringBattleAtCondition(Filters.here(self)));
         Condition onLukeOrLeia = new AttachedCondition(self, Filters.or(Filters.Luke, Filters.Leia));
         Condition unlessOpponentsMovePhase = new UnlessCondition(new PhaseCondition(Phase.MOVE, opponent));
 
-        modifiers.add(new MayNotFireWeaponsModifier(self, Filters.and(Filters.character, hereFilter), unlessBattleHere));
+        modifiers.add(new MayNotBeTargetedByModifier(self, characterFilter, Filters.Clash_Of_Sabers));
+        modifiers.add(new MayNotMoveModifier(self, characterFilter, new AndCondition(onLukeOrLeia, unlessOpponentsMovePhase)));
         modifiers.add(new MayNotCancelBattleDestinyModifier(self, hereFilter, bothPlayers, opponent));
-        modifiers.add(new MayNotMoveModifier(self, Filters.hasAttached(self), new AndCondition(onLukeOrLeia, unlessOpponentsMovePhase)));
 
         return modifiers;
     }
