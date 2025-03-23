@@ -1,7 +1,9 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractDarkJediMaster;
@@ -84,24 +86,25 @@ public class Card501_050 extends AbstractDarkJediMaster {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
         Filter disarmedHere = Filters.and(Filters.title(Title.Disarmed), Filters.here(self));
 
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canTargetToCancel(game, self, disarmedHere)) {
 
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            final PhysicalCard disarmedCharacterHere = Filters.findFirstActive(game, self, Filters.and(Filters.character, Filters.hasAttached(disarmedHere)));
-
-            action.setPerformingPlayer(self.getOwner());
-            action.setText("Re-arm " + GameUtils.getFullName(disarmedCharacterHere));
-            action.setActionMsg("Re-arm " + GameUtils.getCardLink(disarmedCharacterHere));
-            action.appendEffect(
-                new RearmCharacterEffect(action, disarmedCharacterHere));
-
-            return Collections.singletonList(action);
+            Collection<PhysicalCard> cards = Filters.filterAllOnTable(game, Filters.and(Filters.character, Filters.hasAttached(disarmedHere)));
+            for(PhysicalCard disarmedCharacterHere:cards) {
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setPerformingPlayer(self.getOwner());
+                action.setText("Re-arm " + GameUtils.getFullName(disarmedCharacterHere));
+                action.setActionMsg("Re-arm " + GameUtils.getCardLink(disarmedCharacterHere));
+                action.appendEffect(
+                    new RearmCharacterEffect(action, disarmedCharacterHere));
+                actions.add(action);
+            }            
         }
-        return null;
+        return actions;
     }
 
     @Override
