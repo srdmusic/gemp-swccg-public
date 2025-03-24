@@ -96,6 +96,7 @@ public class Card501_050 extends AbstractDarkJediMaster {
             Collection<PhysicalCard> cards = Filters.filterAllOnTable(game, Filters.and(Filters.character, Filters.hasAttached(disarmedHere)));
             for(PhysicalCard disarmedCharacterHere:cards) {
                 final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setRepeatableTrigger(true);
                 action.setPerformingPlayer(self.getOwner());
                 action.setText("Re-arm " + GameUtils.getFullName(disarmedCharacterHere));
                 action.setActionMsg("Re-arm " + GameUtils.getCardLink(disarmedCharacterHere));
