@@ -1,13 +1,27 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractCharacterWeapon;
+import com.gempukku.swccgo.cards.conditions.PlayersTurnCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.FireWeaponAction;
+import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
+import com.gempukku.swccgo.logic.modifiers.MayNotMoveAwayFromLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Playtesting
@@ -19,11 +33,46 @@ public class Card501_042 extends AbstractCharacterWeapon {
     public Card501_042() {
         super(Side.DARK, 2, "The Grand Inquisitor's Lightsaber", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("Deploy on an Inquisitor. May target a character or creature for free. Draw two destiny. Target hit, and may not be used to satisfy attrition, if total destiny > defense value (forfeit = 0 if hit by Grand Inquisitor). Opponent's characters may not move from here during your turn.");
+        setGameText("Deploy on an Inquisitor. " +
+                "During your turn, opponent's characters may not move from here. " +
+                "May target a character. " +
+                "Draw two destiny. " +
+                "Target hit, and may not be used to satisfy attrition, if total destiny > defense value. " +
+                "If hit by Grand Inquisitor, target's forfeit = 0.");
         addIcons(Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.LIGHTSABER);
-        setMatchingCharacterFilter(Filters.inquisitor);
+        setMatchingCharacterFilter(Filters.The_Grand_Inquisitor);
         setTestingText("The Grand Inquisitor's Lightsaber");
-        hideFromDeckBuilder();
+    }
+
+    @Override
+    protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
+        return Filters.and(Filters.your(self), Filters.inquisitor);
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+
+        modifiers.add(new MayNotMoveAwayFromLocationModifier(self, Filters.and(Filters.opponents(self), Filters.here(self), Filters.character), new PlayersTurnCondition(self.getOwner()), Filters.here(self)));
+        return modifiers;
+    }
+
+    @Override
+    protected Filter getGameTextValidToUseWeaponFilter(final SwccgGame game, final PhysicalCard self) {
+        return Filters.and(Filters.your(self), Filters.inquisitor);
+    }
+
+    @Override
+    protected List<FireWeaponAction> getGameTextFireWeaponActions(String playerId, final SwccgGame game, final PhysicalCard self, boolean forFree, int extraForceRequired, PhysicalCard sourceCard, boolean repeatedFiring, Filter targetedAsCharacter, Float defenseValueAsCharacter, Filter fireAtTargetFilter, boolean ignorePerAttackOrBattleLimit) {
+        FireWeaponActionBuilder actionBuilder = FireWeaponActionBuilder.startBuildPrep(playerId, game, sourceCard, self, forFree, extraForceRequired, repeatedFiring, targetedAsCharacter, defenseValueAsCharacter, fireAtTargetFilter, ignorePerAttackOrBattleLimit)
+                .targetForFree(Filters.or(Filters.character, targetedAsCharacter), TargetingReason.TO_BE_HIT).finishBuildPrep();
+        if (actionBuilder != null) {
+            // Build action using common utility
+            FireWeaponAction action = actionBuilder.buildTheGrandInquisitorsLightsaber();
+            return Collections.singletonList(action);
+        }
+
+        return null;
     }
 }
