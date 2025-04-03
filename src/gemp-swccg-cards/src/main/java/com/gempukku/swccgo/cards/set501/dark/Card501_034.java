@@ -27,8 +27,6 @@ import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.PutCardFromHandOnForcePileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
@@ -51,13 +49,6 @@ public class Card501_034 extends AbstractNormalEffect {
     @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
         return Filters.Audience_Chamber;
-    }
-
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.hasAttached(self), Filters.title(Title.I_Must_Be_Allowed_To_Speak)));
-        return modifiers;
     }
 
     @Override
