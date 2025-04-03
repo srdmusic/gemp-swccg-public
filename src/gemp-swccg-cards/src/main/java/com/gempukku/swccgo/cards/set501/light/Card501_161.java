@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -73,6 +74,9 @@ public class Card501_161 extends AbstractAlien {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Take an Endor site into hand from Reserve Deck");
             action.setActionMsg("Take an Endor site into hand from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Endor_site, true));
