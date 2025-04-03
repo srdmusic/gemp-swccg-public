@@ -26,6 +26,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.PutCardFromHandOnForcePileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -61,9 +62,26 @@ public class Card501_034 extends AbstractNormalEffect {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+        
+        GameTextActionId gameTextActionId = GameTextActionId.NO_BARGAIN__DOWNLOAD_SALACIOUS_CRUMB;
+        // Check condition(s)
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Salacious_Crumb)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy card from Reserve Deck");
+            action.setActionMsg("Deploy Salacious Crumb here from Reserve Deck");
+
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.title(Title.Salacious_Crumb), Filters.here(self), true));
+
+            actions.add(action);
+        }
+        
         Filter raisableAudienceChamber = Filters.and(Filters.canBeConvertedByRaisingYourLocationToTop(playerId), Filters.Audience_Chamber);
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
         if (GameConditions.canTarget(game, self, raisableAudienceChamber)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
@@ -81,10 +99,10 @@ public class Card501_034 extends AbstractNormalEffect {
                 // Perform result(s)
                 action.appendEffect(
                         new ConvertLocationByRaisingToTopEffect(action, audienceChamberCard, true));
-                return Collections.singletonList(action);
+                actions.add(action);
             }
         }
-        return null;
+        return actions;
     }
 
     @Override
