@@ -28,6 +28,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.PutCardFromHandOnForcePileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.PlayCardResult;
 
 /**
  * Set: Playtesting
@@ -104,19 +105,24 @@ public class Card501_034 extends AbstractNormalEffect {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
         if(TriggerConditions.justDeployedToLocation(game, effectResult, game.getOpponent(playerId), Filters.character, Filters.hasAttached(self))
-            && GameConditions.hasHand(game, playerId)
-            && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+                && GameConditions.hasHand(game, playerId)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
-            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place card from hand on Force Pile");
-            action.setActionMsg("Place a card from hand on Force Pile");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            // Perform result(s)
-            action.appendEffect(new PutCardFromHandOnForcePileEffect(action, playerId));
+            PlayCardResult playCardResult = (PlayCardResult) effectResult;
+            PhysicalCard cardDeployed = playCardResult.getPlayedCard();
 
-            return Collections.singletonList(action);
+            if (GameConditions.canTarget(game, self, cardDeployed)) {
+                OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+                action.setText("Place card from hand on Force Pile");
+                action.setActionMsg("Place a card from hand on Force Pile");
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerTurnEffect(action));
+                // Perform result(s)
+                action.appendEffect(new PutCardFromHandOnForcePileEffect(action, playerId));
+
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }
