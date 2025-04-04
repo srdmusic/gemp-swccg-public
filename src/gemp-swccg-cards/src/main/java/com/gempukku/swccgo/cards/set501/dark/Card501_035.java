@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -25,6 +26,7 @@ import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeploysFreeToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
@@ -84,10 +86,13 @@ public class Card501_035 extends AbstractAlien {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Condition withJabba = new WithCondition(self, Filters.Jabba);
+        Condition atAudienceChamber = new AtCondition(self, Filters.Audience_Chamber);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new PowerModifier(self, withJabba, 2));
         modifiers.add(new ImmuneToAttritionModifier(self, Filters.Jabba, withJabba));
+
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.sameSite(self), atAudienceChamber, Filters.title(Title.I_Must_Be_Allowed_To_Speak)));
 
         return modifiers;
     }
