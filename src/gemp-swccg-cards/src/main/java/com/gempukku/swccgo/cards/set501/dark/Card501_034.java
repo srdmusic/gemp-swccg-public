@@ -72,6 +72,7 @@ public class Card501_034 extends AbstractNormalEffect {
         
         Filter raisableAudienceChamber = Filters.and(Filters.canBeConvertedByRaisingYourLocationToTop(playerId), Filters.Audience_Chamber);
 
+        // Intentionally shared gameTextActionId with the hand-to-Force-Pile action
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
         if (GameConditions.canTarget(game, self, raisableAudienceChamber)
@@ -99,13 +100,19 @@ public class Card501_034 extends AbstractNormalEffect {
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
 
+        // Intentionally shared gameTextActionId with the Raise-Audience-Chamber action
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
         if(TriggerConditions.justDeployedToLocation(game, effectResult, game.getOpponent(playerId), Filters.character, Filters.hasAttached(self))
-            && GameConditions.hasHand(game, playerId)){
+            && GameConditions.hasHand(game, playerId)
+            && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
-            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Place card from hand on Force Pile");
             action.setActionMsg("Place a card from hand on Force Pile");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(new PutCardFromHandOnForcePileEffect(action, playerId));
 
