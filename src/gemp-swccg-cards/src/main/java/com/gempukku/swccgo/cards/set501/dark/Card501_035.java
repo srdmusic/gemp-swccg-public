@@ -5,7 +5,6 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.HitCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -23,11 +22,9 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeploysFreeToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedBySpecificWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
@@ -87,13 +84,11 @@ public class Card501_035 extends AbstractAlien {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         Condition withJabba = new WithCondition(self, Filters.Jabba);
-        Condition unlessHit = new UnlessCondition(new HitCondition(self));
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new PowerModifier(self, withJabba, 2));
         modifiers.add(new ImmuneToAttritionModifier(self, Filters.Jabba, withJabba));
 
-        modifiers.add(new MayNotBeTargetedBySpecificWeaponsModifier(self, Filters.and(Filters.your(self), Filters.other(self), Filters.character, Filters.here(self)), unlessHit, Filters.blaster));
         return modifiers;
     }
 }
