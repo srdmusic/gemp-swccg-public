@@ -1,6 +1,5 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -42,7 +41,7 @@ public class Card501_035 extends AbstractAlien {
     public Card501_035() {
         super(Side.DARK, 1, 2, 3, 1, 3, Title.Bib, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Twi'lek leader and majordomo of Jabba's palace. Succeeded Jabba's last majordomo, Naroon Cuthus. Plotting to kill Jabba.");
-        setGameText("Deploys free to opponent's Audience Chamber. May ▼ [Jabba's Palace] No Bargain. While with Jabba, Bib is power +2 and Jabba is immune to attrition. While at Audience Chamber, I Must Be Allowed To Speak may not target this site.");
+        setGameText("Deploys free to opponent's Audience Chamber. May [download] [Jabba's Palace] No Bargain. While with Jabba, Bib is power +2 and Jabba is immune to attrition. While at Audience Chamber, I Must Be Allowed To Speak may not target this site.");
         addPersona(Persona.BIB);
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_25);
         setSpecies(Species.TWILEK);
@@ -65,19 +64,19 @@ public class Card501_035 extends AbstractAlien {
         GameTextActionId gameTextActionId = GameTextActionId.BIB_FORTUNA__DOWNLOAD_CARD;
 
         // Check condition(s)
-        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Arrays.asList(Title.Salacious_Crumb, Title.Jabbas_Influence))
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.No_Bargain)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy Salacious Crumb (or Jabba's Influence) here from Reserve Deck");
+            action.setActionMsg("Deploy [Jabba's Palace] No Bargain here from Reserve Deck");
 
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.or(Filters.title(Title.Salacious_Crumb), Filters.title(Title.Jabbas_Influence)), Filters.here(self), true));
+                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Icon.JABBAS_PALACE, Filters.No_Bargain), Filters.here(self), true));
 
             actions.add(action);
         }
