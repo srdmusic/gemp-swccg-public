@@ -7,7 +7,6 @@ import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -63,16 +62,12 @@ public class Card501_035 extends AbstractAlien {
         GameTextActionId gameTextActionId = GameTextActionId.BIB_FORTUNA__DOWNLOAD_CARD;
 
         // Check condition(s)
-        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.No_Bargain)
-                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.No_Bargain)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
             action.setActionMsg("Deploy [Jabba's Palace] No Bargain here from Reserve Deck");
 
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Icon.JABBAS_PALACE, Filters.No_Bargain), Filters.here(self), true));
