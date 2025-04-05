@@ -44,7 +44,7 @@ public class Card501_177 extends AbstractUsedInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
         // Check condition(s)
-        if (GameConditions.isDuringBattleWithParticipant(game, Filters.Leia)) {
+        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.Rebel, Filters.Leia))) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
 
             action.setText("Prevent number of draws being limited");
