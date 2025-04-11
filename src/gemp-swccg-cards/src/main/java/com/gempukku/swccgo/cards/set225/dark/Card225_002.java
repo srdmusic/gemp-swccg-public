@@ -37,7 +37,7 @@ public class Card225_002 extends AbstractUsedInterrupt {
     public Card225_002() {
         super(Side.DARK, 5, "Blast Points", Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLore("Only Imperial stormtroopers are so precise.");
-        setGameText("[Upload] Ghhhk or Hyperwave Scan. OR If you just won a battle, cancel Cloud City Celebration or Tatooine Celebration. OR If opponent just looked at cards in their Force Pile or Used Pile, peek at the top 2 cards of your Reserve Deck; take one into hand.");
+        setGameText("[Upload] Ghhhk or Hyperwave Scan. OR If you just won a battle, cancel Cloud City Celebration or Tatooine Celebration. OR If opponent just looked at one or more cards in their Force Pile or Used Pile, peek at the top 2 cards of your Reserve Deck; take one into hand.");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
     }
