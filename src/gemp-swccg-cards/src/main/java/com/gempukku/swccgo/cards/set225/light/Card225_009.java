@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.light;
+package com.gempukku.swccgo.cards.set225.light;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -26,18 +26,17 @@ import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
- * Set: Playtesting
+ * Set: Set 25
  * Type: Interrupt
  * Subtype: Used
  * Title: My Sister Has It
  */
-public class Card501_177 extends AbstractUsedInterrupt {
-    public Card501_177() {
-        super(Side.LIGHT, 5, "My Sister Has It", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+public class Card225_009 extends AbstractUsedInterrupt {
+    public Card225_009() {
+        super(Side.LIGHT, 5, "My Sister Has It", Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLore("'He's my brother.'");
         setGameText("During a battle involving Rebel Leia, the number of battle destiny draws may not be limited. OR Subtract 1 from a just drawn Force Lightning or 'choke' destiny (unless targeting an Undercover spy). OR If a [Skywalker] Effect on table, [upload] Chief Chirpa's Hut or Guest Quarters.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_25);
-        setTestingText("My Sister Has It");
     }
 
     @Override

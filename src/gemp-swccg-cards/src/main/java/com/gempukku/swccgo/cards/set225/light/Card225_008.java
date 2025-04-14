@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.light;
+package com.gempukku.swccgo.cards.set225.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
@@ -28,19 +28,18 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Playtesting
+ * Set: Set 25
  * Type: Interrupt
  * Subtype: Used Or Lost
  * Title: I Don't Need Their Scum, Either (V)
  */
-public class Card501_175 extends AbstractUsedOrLostInterrupt {
-    public Card501_175() {
-        super(Side.LIGHT, 5, Title.I_Dont_Need_Their_Scum_Either, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+public class Card225_008 extends AbstractUsedOrLostInterrupt {
+    public Card225_008() {
+        super(Side.LIGHT, 5, Title.I_Dont_Need_Their_Scum_Either, Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLore("Of all the scum and villainy Lando had dealt with (pirates, smugglers, con-artists, thieves, swindlers, politicians and Imperial lackeys), he hated bounty hunters the most.");
         setGameText("USED: [Upload] Houjix, Ounee Ta, or Scanner Techs. OR Cancel a Force drain initiated by a lone Slave I. LOST: If an Imperial and a bounty hunter are in a battle together, draw one destiny and subtract that amount from opponent's attrition and total power.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
-        setTestingText("I Don't Need Their Scum, Either (V)");
     }
 
     @Override
