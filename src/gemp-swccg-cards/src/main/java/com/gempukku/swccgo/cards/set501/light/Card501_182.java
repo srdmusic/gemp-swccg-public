@@ -22,10 +22,11 @@ import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.CaptureCharacterOnTableEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
+import com.gempukku.swccgo.logic.effects.RestoreCardToNormalEffect;
 import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToFireWeaponModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.results.AboutToLoseCardFromTableResult;
+import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -61,11 +62,12 @@ public class Card501_182 extends AbstractNormalEffect {
         final GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         Filter ccRebelExceptLuke = Filters.and(Filters.icon(Icon.CLOUD_CITY), Filters.Rebel, Filters.except(Filters.Luke), Filters.presentWith(self, Filters.and(Filters.opponents(self), Filters.warrior)));
         if (TriggerConditions.isAboutToBeLost(game, effectResult, ccRebelExceptLuke) 
+                || TriggerConditions.isAboutToBeForfeitedToLostPile(game, effectResult, ccRebelExceptLuke)
                 && GameConditions.isOnceDuringOpponentsTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
-            final AboutToLoseCardFromTableResult result = (AboutToLoseCardFromTableResult) effectResult;
-            final PhysicalCard cardToBeLost = result.getCardToBeLost();
+            final AboutToLeaveTableResult aboutToLeaveTableResult = (AboutToLeaveTableResult) effectResult;
+            final PhysicalCard cardToBeLost = aboutToLeaveTableResult.getCardAboutToLeaveTable();
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Make " + opponent + " make choice");
+            action.setText("Make " + opponent + " choose");
             action.appendUsage(
                     new OncePerTurnEffect(action));
             action.appendEffect(
@@ -75,6 +77,9 @@ public class Card501_182 extends AbstractNormalEffect {
                                 protected void validDecisionMade(int index, String result) {
                                     if (index == 0) {
                                         game.getGameState().sendMessage(opponent + " chooses to capture and seize " + GameUtils.getCardLink(cardToBeLost));
+                                        aboutToLeaveTableResult.getPreventableCardEffect().preventEffectOnCard(cardToBeLost);
+                                        action.appendEffect(
+                                                new RestoreCardToNormalEffect(action, cardToBeLost));
                                         action.appendEffect(
                                                 new CaptureCharacterOnTableEffect(action, cardToBeLost));
                                     }
