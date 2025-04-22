@@ -64,6 +64,6 @@ public class Card501_180 extends AbstractStartingInterrupt {
                     }
             );
         }
-        return action;
+        return null;
     }
 }
