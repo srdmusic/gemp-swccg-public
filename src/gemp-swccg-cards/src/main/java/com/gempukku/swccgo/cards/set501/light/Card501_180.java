@@ -31,7 +31,7 @@ public class Card501_180 extends AbstractStartingInterrupt {
     public Card501_180() {
         super(Side.LIGHT, 4, "You Will Go To The Dagobah System", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'There you will learn from Yoda, the Jedi Master who instructed me.'");
-        setGameText("If your [Dagobah] objective on table, take Yoda, [Dagobah] Luke, and two Effects that deploy for free and are always immune to Alter into hand from Reserve Deck. When you draw your starting hand, draw only five more cards. Place Interrupt in Lost Pile.");
+        setGameText("If your [Dagobah] objective on table, take [Dagobah] Yoda, [Dagobah] Luke, and two Effects that deploy for free and are always immune to Alter into hand from Reserve Deck. When you draw your starting hand, draw only five more cards. Place Interrupt in Lost Pile.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("You Will Go To The Dagobah System (V)");
@@ -43,16 +43,17 @@ public class Card501_180 extends AbstractStartingInterrupt {
         final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
         action.setText("Take cards into hand from Reserve Deck");
         final Filter dagobahLuke = Filters.and(Filters.icon(Icon.DAGOBAH), Filters.Luke);
+        final Filter dagobahYoda = Filters.and(Filters.icon(Icon.DAGOBAH), Filters.Yoda);
         final Filter effectFilter = Filters.and(Filters.Effect, Filters.deploysForFree, Filters.always_immune_to_Alter);
         // Allow response(s)
         if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.icon(Icon.DAGOBAH), Filters.Objective))) {
-            action.allowResponses("Take Yoda, [Dagobah] Luke, and two Effects that deploy for free and are always immune to Alter into hand from Reserve Deck",
+            action.allowResponses("Take [Dagobah] Yoda, [Dagobah] Luke, and two Effects that deploy for free and are always immune to Alter into hand from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new TakeCardAndCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Yoda, dagobahLuke, false));
+                                    new TakeCardAndCardIntoHandFromReserveDeckEffect(action, playerId, dagobahYoda, dagobahLuke, false));
                             action.appendEffect(
                                     new TakeCardsIntoHandFromReserveDeckEffect(action, playerId, 1, 2, effectFilter, false));
                             action.appendEffect(
