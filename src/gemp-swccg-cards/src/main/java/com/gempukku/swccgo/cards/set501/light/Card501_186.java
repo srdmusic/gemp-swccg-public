@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.ControlsCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -56,7 +55,7 @@ public class Card501_186 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ForceDrainModifier(self, new ControlsCondition(playerOnLightSideOfLocation, self), 1, playerOnLightSideOfLocation));
+        modifiers.add(new ForceDrainModifier(self, self, 1, self.getOwner()));
         return modifiers;
     }
 
@@ -69,7 +68,8 @@ public class Card501_186 extends AbstractSite {
                 && GameConditions.isDuringBattleAt(game, Filters.here(self))
                 && GameConditions.hasLostPile(game, playerOnLightSideOfLocation)) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId);
+            action.setText("Retrieve Smoke Screen.");
             // Update usage limit(s)
             action.appendUsage(
                 new OncePerGameEffect(action));
