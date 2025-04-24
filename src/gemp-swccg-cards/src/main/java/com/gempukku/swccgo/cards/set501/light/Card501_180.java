@@ -40,14 +40,15 @@ public class Card501_180 extends AbstractStartingInterrupt {
     @Override
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, SwccgGame game, final PhysicalCard self) {
 
-        final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
-        action.setText("Take cards into hand from Reserve Deck");
-        final Filter dagobahLuke = Filters.and(Filters.icon(Icon.DAGOBAH), Filters.Luke);
-        final Filter dagobahYoda = Filters.and(Filters.icon(Icon.DAGOBAH), Filters.Yoda);
-        final Filter effectFilter = Filters.and(Filters.Effect, Filters.deploysForFree, Filters.always_immune_to_Alter);
         // Allow response(s)
         if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.icon(Icon.DAGOBAH), Filters.Objective))) {
-            action.allowResponses("Take [Dagobah] Yoda, [Dagobah] Luke, and two Effects that deploy for free and are always immune to Alter into hand from Reserve Deck",
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
+            final Filter dagobahLuke = Filters.and(Filters.icon(Icon.DAGOBAH), Filters.Luke);
+            final Filter dagobahYoda = Filters.and(Filters.icon(Icon.DAGOBAH), Filters.Yoda);
+            final Filter effectFilter = Filters.and(Filters.Effect, Filters.deploysForFree, Filters.always_immune_to_Alter);
+            action.setText("Take [Dagobah] Yoda, [Dagobah] Luke, and two Effects that deploy for free and are always immune to Alter into hand from Reserve Deck");
+    
+            action.allowResponses(
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
@@ -63,6 +64,7 @@ public class Card501_180 extends AbstractStartingInterrupt {
                         }
                     }
             );
+            return action;
         }
         return null;
     }
