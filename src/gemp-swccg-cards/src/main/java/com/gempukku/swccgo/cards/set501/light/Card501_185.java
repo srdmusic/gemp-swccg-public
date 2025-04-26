@@ -93,6 +93,7 @@ public class Card501_185 extends AbstractAlien {
                 action.appendEffect(
                         new RetrieveForceEffect(action, playerId, 1));
             }
+            return Collections.singletonList(action);
         }
         return null;
     }
