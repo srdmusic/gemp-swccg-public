@@ -87,13 +87,16 @@ public class Card501_185 extends AbstractAlien {
             final float totalBattleDestiny = battleState.getTotalBattleDestiny(game, playerId);
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             if (totalBattleDestiny == 11) {
+                action.setText("Retrieve 2 Force");
                 action.appendEffect(
                         new RetrieveForceEffect(action, playerId, 2));
+                return Collections.singletonList(action);
             } else if (totalBattleDestiny % 2 == 1) {
+                action.setText("Retrieve 1 Force");
                 action.appendEffect(
                         new RetrieveForceEffect(action, playerId, 1));
+                return Collections.singletonList(action);
             }
-            return Collections.singletonList(action);
         }
         return null;
     }
