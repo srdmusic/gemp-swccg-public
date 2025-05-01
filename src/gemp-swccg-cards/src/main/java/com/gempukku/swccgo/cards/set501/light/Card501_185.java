@@ -48,7 +48,7 @@ public class Card501_185 extends AbstractAlien {
         addIcons(Icon.CLOUD_CITY, Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.SMUGGLER);
         setVirtualSuffix(true);
-        setTestingText("Lando With Lando's Blaster Rifle (V)");
+        setTestingText("Lando With Blaster Rifle (V)");
     }
 
     @Override
