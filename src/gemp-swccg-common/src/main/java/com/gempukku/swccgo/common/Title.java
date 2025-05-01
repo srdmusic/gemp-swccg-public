@@ -783,7 +783,7 @@ public interface Title {
     String Nightfall = "Nightfall";
     String Niima_Outpost_Shipyard = "Jakku: Niima Outpost Shipyard";
     String No_Bargain = "No Bargain";
-    String No_Disintegrations = "No_Disintegrations!";
+    String No_Disintegrations = "No Disintegrations!";
     String No_Escape = "No Escape";
     String No_Love_For_The_Empire = "No Love For The Empire";
     String No_Money_No_Parts_No_Deal = "No Money, No Parts, No Deal!";
