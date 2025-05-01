@@ -11,6 +11,7 @@ import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -27,7 +28,7 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
  */
 public class Card501_179 extends AbstractEpicEventDeployable {
     public Card501_179() {
-        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Patience!", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Patience, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("If your [Dagobah] objective on table, deploy on table and stack up to six Jedi Tests from your Reserve Deck face up here. Only Luke may attempt Jedi Tests. I Won't Fail You: You may deploy face up Jedi Tests from here as if from hand. I Saw A City In The Clouds: Once per turn, may [download] Bespin system or a Cloud City site. I've Got To Go To Them: Once per opponent's control phase, if you just lost Force and you do not occupy a battleground with a [Cloud City] Rebel, turn a Jedi Test here face down.");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setTestingText("Patience!");

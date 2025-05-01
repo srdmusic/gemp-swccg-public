@@ -845,7 +845,7 @@ public interface Title {
     String Part_of_the_Tribe = "Part Of The Tribe";
     String Passenger_Deck = "Jabba's Sail Barge: Passenger Deck";
     String Path_Of_Least_Resistance = "Path Of Least Resistance";
-    String Patience = "Patience";
+    String Patience = "Patience!";
     String Patrol_Craft = "Patrol Craft";
     String Perimeter_Patrol = "Perimeter Patrol";
     String Phantom = "Phantom";
