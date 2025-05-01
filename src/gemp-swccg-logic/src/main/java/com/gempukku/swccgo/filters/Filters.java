@@ -17599,6 +17599,7 @@ public class Filters {
     public static final Filter Beilert_Valance = Filters.title(Title.Beilert_Valance);
     public static final Filter Beggar = Filters.title(Title.Beggar);
     public static final Filter Beggars_Canyon = Filters.title(Title.Beggars_Canyon);
+    public static final Filter Beldons_Gallery = Filters.title(Title.Beldons_Gallery);
     public static final Filter Ben_Solo = Filters.persona(Persona.BEN_SOLO);
     public static final Filter Beru = Filters.title(Title.Beru_Lars);
     public static final Filter Beru_Stew = Filters.title(Title.Beru_Stew);
@@ -18634,6 +18635,7 @@ public class Filters {
     public static final Filter Part_of_the_Tribe = Filters.title(Title.Part_of_the_Tribe);
     public static final Filter Passenger_Deck = Filters.title(Title.Passenger_Deck);
     public static final Filter Path_Of_Least_Resistance = Filters.title(Title.Path_Of_Least_Resistance);
+    public static final Filter Patience = Filters.title(Title.Patience);
     public static final Filter Patrol_Craft = Filters.title(Title.Patrol_Craft);
     public static final Filter peace_agenda = Filters.agenda(Agenda.PEACE);
     public static final Filter Perimeter_Patrol = Filters.title(Title.Perimeter_Patrol);
@@ -19230,6 +19232,7 @@ public class Filters {
     public static final Filter Wild_Karrde = Filters.title(Title.Wild_Karrde);
     public static final Filter Williams = Filters.title(Title.Williams);
     public static final Filter Wioslea = Filters.title(Title.Wioslea);
+    public static final Filter Wise_Advice = Filters.title(Title.Wise_Advice);
     public static final Filter Wittin = Filters.title(Title.Wittin);
     public static final Filter womp_rat = Filters.title(Title.Womp_Rat);
     public static final Filter Wookiee = Filters.species(Species.WOOKIEE);

@@ -94,6 +94,7 @@ public interface Title {
     String Bazes_Cannon = "Baze's Cannon";
     String Beggar = "Beggar";
     String Beggars_Canyon = "Tatooine: Beggar's Canyon";
+    String Beldons_Gallery = "Cloud City: Beldon's Gallery";
     String Beru_Lars = "Beru Lars";
     String Beru_Stew = "Beru Stew";
     String Besieged = "Besieged";
@@ -844,6 +845,7 @@ public interface Title {
     String Part_of_the_Tribe = "Part Of The Tribe";
     String Passenger_Deck = "Jabba's Sail Barge: Passenger Deck";
     String Path_Of_Least_Resistance = "Path Of Least Resistance";
+    String Patience = "Patience";
     String Patrol_Craft = "Patrol Craft";
     String Perimeter_Patrol = "Perimeter Patrol";
     String Phantom = "Phantom";
