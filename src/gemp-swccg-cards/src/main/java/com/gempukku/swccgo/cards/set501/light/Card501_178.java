@@ -21,6 +21,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.conditions.TrueCondition;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameActionProxyEffect;
+import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseCardsFromTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
@@ -69,7 +70,7 @@ public class Card501_178 extends AbstractObjective {
                     }
                 });
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.No_Disintegrations, true, false) {
+                new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.No_Disintegrations, Filters.any), true, false) {
                     @Override
                     public String getChoiceText() {
                         return "Choose No Disintegrations! to deploy";
@@ -151,6 +152,21 @@ public class Card501_178 extends AbstractObjective {
             // Perform result(s)
             action.appendEffect(
                     new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Wise_Advice, Filters.Yodas_Hope), true));
+            actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        // Check condition(s)
+        if (GameConditions.canBeFlipped(game, self)
+                && GameConditions.canTarget(game, self, Filters.and(Filters.Luke, Filters.On_Dagobah))
+                && GameConditions.isDuringYourTurn(game, playerId)){
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Flip");
+            action.setActionMsg("Flip " + GameUtils.getCardLink(self));
+            // Perform result(s)
+            action.appendEffect(
+                    new FlipCardEffect(action, self));
             actions.add(action);
         }
 
