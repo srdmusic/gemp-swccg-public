@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
@@ -19,6 +20,8 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.choose.StackCardsFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.MayDeployAsIfFromHandModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
@@ -32,6 +35,10 @@ public class Card501_179 extends AbstractEpicEventDeployable {
         setGameText("If your [Dagobah] objective on table, deploy on table and stack up to six Jedi Tests from your Reserve Deck face up here. Only Luke may attempt Jedi Tests. I Won't Fail You: You may deploy face up Jedi Tests from here as if from hand. I Saw A City In The Clouds: Once per turn, may [download] Bespin system or a Cloud City site. I've Got To Go To Them: Once per opponent's control phase, if you just lost Force and you do not occupy a battleground with a [Cloud City] Rebel, turn a Jedi Test here face down.");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setTestingText("Patience!");
+
+        //TO DO #1: Only Luke may attempt Jedi Tests
+        //TO DO #2: Pull locations
+        //TO DO #3: Turn a test face down
     }
 
     @Override
@@ -56,5 +63,12 @@ public class Card501_179 extends AbstractEpicEventDeployable {
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new MayDeployAsIfFromHandModifier(self, Filters.and(Filters.not(Filters.face_down), Filters.Jedi_Test, Filters.stackedOn(self))));
+        return modifiers;
     }
 }
