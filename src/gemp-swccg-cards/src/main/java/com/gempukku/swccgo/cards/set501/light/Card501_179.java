@@ -51,7 +51,7 @@ public class Card501_179 extends AbstractEpicEventDeployable {
             action.setPerformingPlayer(playerId);
             // Perform result(s)
             action.appendEffect(
-                    new StackCardsFromReserveDeckEffect(action, playerId, 1, 6, self, Filters.Jedi_Test)
+                    new StackCardsFromReserveDeckEffect(action, playerId, 1, 6, self, false, Filters.Jedi_Test)
             );
             return Collections.singletonList(action);
         }
