@@ -3,12 +3,14 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.DuringForceDrainAtCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
@@ -19,7 +21,10 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.TrueCondition;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
@@ -98,10 +103,11 @@ public class Card501_178_BACK extends AbstractObjective {
         Filter filterCloudCityRebelBattlegroundSite = Filters.and(Filters.sameSiteAs(self, Filters.and(Icon.CLOUD_CITY, Filters.Rebel)), Filters.battleground);
 
         // TO DO #2: Create FORCE_DRAIN_LOST_FROM_BOTTOM_OF_RESERVE_DECK
-        // Temporary placeholder: Lost Force comes from top of Reserve Deck
-        // TO DO #3: Add "Unless captive on table" exception
-        modifiers.add(new SpecialFlagModifier(self, new DuringForceDrainAtCondition(filterCloudCityRebelBattlegroundSite),
-                ModifierFlag.FORCE_DRAIN_LOST_FROM_RESERVE_DECK, game.getOpponent(self.getOwner())));
+        // Temporary placeholder: Lost Force comes from top of Reserve Deck for now
+        Condition duringCCRebelForceDrainAtBattlegroundSite = new DuringForceDrainAtCondition(filterCloudCityRebelBattlegroundSite);
+        Condition unlessCaptiveOnTable = new UnlessCondition(new OnTableCondition(self, SpotOverride.INCLUDE_CAPTIVE, Filters.captive));
+        Condition conditionsForReserveDeckForceLoss = new AndCondition(duringCCRebelForceDrainAtBattlegroundSite, unlessCaptiveOnTable);
+        modifiers.add(new SpecialFlagModifier(self, conditionsForReserveDeckForceLoss, ModifierFlag.FORCE_DRAIN_LOST_FROM_RESERVE_DECK, game.getOpponent(self.getOwner())));
         
         return modifiers;
     }
