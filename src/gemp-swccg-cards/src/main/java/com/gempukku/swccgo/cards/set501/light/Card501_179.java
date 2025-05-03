@@ -43,8 +43,6 @@ public class Card501_179 extends AbstractEpicEventDeployable {
         setGameText("If your [Dagobah] objective on table, deploy on table and stack up to six Jedi Tests from your Reserve Deck face up here. Only Luke may attempt Jedi Tests. I Won't Fail You: You may deploy face up Jedi Tests from here as if from hand. I Saw A City In The Clouds: Once per turn, may [download] Bespin system or a Cloud City site. I've Got To Go To Them: Once per opponent's control phase, if you just lost Force and you do not occupy a battleground with a [Cloud City] Rebel, turn a Jedi Test here face down.");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setTestingText("Patience!");
-
-        //TO DO: Only Luke may attempt Jedi Tests
     }
 
     @Override
