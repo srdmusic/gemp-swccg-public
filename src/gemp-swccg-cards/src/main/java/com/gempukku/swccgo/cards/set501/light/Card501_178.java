@@ -152,7 +152,7 @@ public class Card501_178 extends AbstractObjective {
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Wise_Advice, Filters.Yodas_Hope), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.Dagobah_site, true));
             actions.add(action);
         }
 
