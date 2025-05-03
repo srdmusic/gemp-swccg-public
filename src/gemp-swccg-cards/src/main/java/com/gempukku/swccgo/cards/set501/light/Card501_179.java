@@ -1,24 +1,31 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
+import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.StackCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayDeployAsIfFromHandModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -36,9 +43,7 @@ public class Card501_179 extends AbstractEpicEventDeployable {
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setTestingText("Patience!");
 
-        //TO DO #1: Only Luke may attempt Jedi Tests
-        //TO DO #2: Pull locations
-        //TO DO #3: Turn a test face down
+        //TO DO: Only Luke may attempt Jedi Tests
     }
 
     @Override
@@ -48,6 +53,8 @@ public class Card501_179 extends AbstractEpicEventDeployable {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
+        
         String playerId = self.getOwner();
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
@@ -60,9 +67,39 @@ public class Card501_179 extends AbstractEpicEventDeployable {
             action.appendEffect(
                     new StackCardsFromReserveDeckEffect(action, playerId, 1, 6, self, false, Filters.Jedi_Test)
             );
-            return Collections.singletonList(action);
+            actions.add(action);
         }
-        return null;
+
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+        final Filter jediTestFaceUp = Filters.and(Filters.Jedi_Test, Filters.not(Filters.face_down));
+        final Filter patienceWithJediTestStackedFaceUp = Filters.and(Filters.Patience, Filters.hasStacked(jediTestFaceUp));
+        // Check condition(s)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.isDuringOpponentsPhase(game, playerId, Phase.CONTROL)
+                && TriggerConditions.justLostForce(game, effectResult, playerId)
+                && !GameConditions.occupiesWith(game, self, playerId, Filters.battleground, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
+                && GameConditions.canSpot(game, self, patienceWithJediTestStackedFaceUp)) {
+        
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+
+            action.setText("Turn Jedi Test face down");
+            action.setActionMsg("Turn a Jedi Test on Patience! face down");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            action.appendTargeting(
+                    new ChooseStackedCardEffect(action, playerId, patienceWithJediTestStackedFaceUp, jediTestFaceUp, false) {
+                        @Override
+                        protected void cardSelected(PhysicalCard selectedCard) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                new FlipSingleSidedStackedCard(action, selectedCard));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+        return actions;
     }
 
     @Override
@@ -70,5 +107,28 @@ public class Card501_179 extends AbstractEpicEventDeployable {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayDeployAsIfFromHandModifier(self, Filters.and(Filters.not(Filters.face_down), Filters.Jedi_Test, Filters.stackedOn(self))));
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+        
+        GameTextActionId gameTextActionId = GameTextActionId.PATIENCE__DOWNLOAD_LOCATION;
+
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+            
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy location from Reserve Deck");
+            action.setActionMsg("Deploy Bespin system or a Cloud City site from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Bespin_system, Filters.Cloud_City_site), true));
+            actions.add(action);
+        }
+        return actions;
     }
 }

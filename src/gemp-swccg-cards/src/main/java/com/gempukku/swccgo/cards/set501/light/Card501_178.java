@@ -131,7 +131,7 @@ public class Card501_178 extends AbstractObjective {
         // Check condition(s)
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Arrays.asList(Title.Wise_Advice, Title.Yodas_Hope))) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Wise Advice or Yoda's Hope from Reserve Deck");
+            action.setText("Deploy Effect from Reserve Deck");
             action.setActionMsg("Deploy Wise Advice or Yoda's Hope from Reserve Deck");
             // Perform result(s)
             action.appendEffect(
