@@ -1,6 +1,8 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -8,8 +10,14 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeFlippedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -36,14 +44,16 @@ public class Card501_187 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-
+        Filter filterYourTroopersHere = Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.trooper, Filters.here(self));
+        modifiers.add(new DefenseValueModifier(self, filterYourTroopersHere, 1));
+        modifiers.add(new ForceDrainModifier(self, self, new UnlessCondition(new OnTableCondition(self, Filters.Beldons_Eye)), -1, playerOnDarkSideOfLocation));
         return modifiers;
     }
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-
+        modifiers.add(new MayNotBeFlippedModifier(self, new HereCondition(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Icon.CLOUD_CITY, Filters.Rebel)), Filters.Hunt_Down_And_Destroy_The_Jedi));
         return modifiers;
     }
 }

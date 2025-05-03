@@ -94,6 +94,7 @@ public interface Title {
     String Bazes_Cannon = "Baze's Cannon";
     String Beggar = "Beggar";
     String Beggars_Canyon = "Tatooine: Beggar's Canyon";
+    String Beldons_Eye = "Beldon's Eye";
     String Beldons_Gallery = "Cloud City: Beldon's Gallery";
     String Beru_Lars = "Beru Lars";
     String Beru_Stew = "Beru Stew";

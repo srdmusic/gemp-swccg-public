@@ -178,10 +178,11 @@ public class Card501_178 extends AbstractObjective {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
+        // For remainder of game
         modifiers.add(new PlaceJediTestOnTableWhenCompletedModifier(self, Filters.any, new TrueCondition()));
         modifiers.add(new JediTestSuspendedInsteadOfLostModifier(self, Filters.any, new TrueCondition()));
         modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Icon.DAGOBAH, Filters.Yoda), -4, Filters.Dagobah_location));
-
+        // While this side up
         modifiers.add(new SpecialFlagModifier(self, ModifierFlag.DRAW_TWO_AND_CHOOSE_ONE_FOR_TRAINING_DESTINY, playerId));
         return modifiers;
     }
