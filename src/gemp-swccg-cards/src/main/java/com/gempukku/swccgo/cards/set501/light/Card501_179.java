@@ -28,6 +28,7 @@ import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.StackCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayDeployAsIfFromHandModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotAttemptJediTestsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -105,6 +106,7 @@ public class Card501_179 extends AbstractEpicEventDeployable {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new MayNotAttemptJediTestsModifier(self, Filters.and(Filters.apprentice, Filters.not(Filters.Luke))));
         modifiers.add(new MayDeployAsIfFromHandModifier(self, Filters.and(Filters.not(Filters.face_down), Filters.Jedi_Test, Filters.stackedOn(self))));
         return modifiers;
     }
