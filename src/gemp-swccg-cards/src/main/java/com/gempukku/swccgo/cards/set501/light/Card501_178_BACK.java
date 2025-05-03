@@ -25,6 +25,7 @@ import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.TrueCondition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
@@ -131,7 +132,7 @@ public class Card501_178_BACK extends AbstractObjective {
                         protected void cardSelected(PhysicalCard selectedCard) {
                             // Pay cost(s)
                             action.appendCost(
-                                    new PlaceCardOutOfPlayFromTableEffect(action, selectedCard));
+                                    new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
 
                             // Perform result(s)
                             action.appendEffect(
