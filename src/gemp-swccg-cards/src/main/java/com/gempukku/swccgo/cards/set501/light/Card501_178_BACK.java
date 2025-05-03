@@ -151,7 +151,7 @@ public class Card501_178_BACK extends AbstractObjective {
         GameTextActionId gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__UPLOAD_LUKE_FROM_LOST_PILE;
 
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canSpot(game, self, Filters.completed_Jedi_Test)
+                && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_SUSPENDED, Filters.completed_Jedi_Test)
                 && GameConditions.hasLostPile(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
@@ -164,7 +164,7 @@ public class Card501_178_BACK extends AbstractObjective {
                     new OncePerGameEffect(action));
             // Choose target(s)
             action.appendTargeting(
-                    new ChooseCardOnTableEffect(action, playerId, "Choose a completed Jedi Test", Filters.completed_Jedi_Test) {
+                    new ChooseCardOnTableEffect(action, playerId, "Choose a completed Jedi Test", SpotOverride.INCLUDE_SUSPENDED, Filters.completed_Jedi_Test) {
                         @Override
                         protected void cardSelected(PhysicalCard selectedCard) {
                             // Pay cost(s)
