@@ -41,8 +41,8 @@ public class Card501_182 extends AbstractNormalEffect {
     public Card501_182() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "No Disintegrations!", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'There will be a substantial reward for the one who finds the Millennium Falcon. You are free to use any methods necessary, but I want them alive.'");
-        setGameText("Deploy on table. Once during each opponent's turn, if a [Cloud City] Rebel (except Luke) about to be lost where opponent's warrior present, they must choose: capture and seize the Rebel or lose 2 Force. For a bounty hunter to fire a weapon, opponent must first use 1 Force. [Immune to Alter.]");
-        addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
+        setGameText("Deploy on table. Once per opponent's turn, if their warrior present where a [Cloud City] Rebel (except Luke) is about to be lost, opponent must choose: capture and seize that Rebel or lose 2 Force. For a bounty hunter to fire a weapon, opponent must first use 1 Force (2 if Vader there). [Immune to Alter.]");
+        addIcons(Icon.DAGOBAH, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("No Disintegrations! (V)");
@@ -51,7 +51,13 @@ public class Card501_182 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ExtraForceCostToFireWeaponModifier(self, Filters.and(Filters.opponents(self), Filters.bounty_hunter, Filters.atSameSite(self)), 1));
+        Filter weaponCardCarriedByBountyHunter = Filters.and(Filters.weapon, Filters.attachedTo(Filters.bounty_hunter));
+        Filter permanentWeaponBountyHunter = Filters.and(Filters.bounty_hunter, Filters.hasPermanentWeapon);
+        Filter weaponOnBountyHunter = Filters.or(weaponCardCarriedByBountyHunter, permanentWeaponBountyHunter);
+        Filter withVader = Filters.with(self, Filters.Vader);
+
+        modifiers.add(new ExtraForceCostToFireWeaponModifier(self, Filters.and(weaponOnBountyHunter, Filters.not(withVader)), 1));
+        modifiers.add(new ExtraForceCostToFireWeaponModifier(self, Filters.and(weaponOnBountyHunter, withVader), 2));
         return modifiers;
     }
 
