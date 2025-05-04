@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -73,8 +74,7 @@ public class Card501_179 extends AbstractEpicEventDeployable {
         final Filter jediTestFaceUp = Filters.and(Filters.Jedi_Test, Filters.not(Filters.face_down));
         final Filter patienceWithJediTestStackedFaceUp = Filters.and(Filters.Patience, Filters.hasStacked(jediTestFaceUp));
         // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.isDuringOpponentsPhase(game, playerId, Phase.CONTROL)
+        if (GameConditions.isOnceDuringOpponentsPhase(game, self, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
                 && TriggerConditions.justLostForce(game, effectResult, playerId)
                 && !GameConditions.occupiesWith(game, self, playerId, Filters.battleground, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
                 && GameConditions.canSpot(game, self, patienceWithJediTestStackedFaceUp)) {
@@ -85,7 +85,7 @@ public class Card501_179 extends AbstractEpicEventDeployable {
             action.setActionMsg("Turn a Jedi Test on Patience! face down");
             // Update usage limit(s)
             action.appendUsage(
-                    new OncePerTurnEffect(action));
+                    new OncePerPhaseEffect(action));
             action.appendTargeting(
                     new ChooseStackedCardEffect(action, playerId, patienceWithJediTestStackedFaceUp, jediTestFaceUp, false) {
                         @Override
