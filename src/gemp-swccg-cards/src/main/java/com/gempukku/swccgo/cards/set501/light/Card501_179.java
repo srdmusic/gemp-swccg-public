@@ -74,7 +74,7 @@ public class Card501_179 extends AbstractEpicEventDeployable {
         final Filter jediTestFaceUp = Filters.and(Filters.Jedi_Test, Filters.not(Filters.face_down));
         final Filter patienceWithJediTestStackedFaceUp = Filters.and(Filters.Patience, Filters.hasStacked(jediTestFaceUp));
         // Check condition(s)
-        if (GameConditions.isOnceDuringOpponentsPhase(game, self, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+        if (GameConditions.isOnceDuringOpponentsPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
                 && TriggerConditions.justLostForce(game, effectResult, playerId)
                 && !GameConditions.occupiesWith(game, self, playerId, Filters.battleground, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
                 && GameConditions.canSpot(game, self, patienceWithJediTestStackedFaceUp)) {
