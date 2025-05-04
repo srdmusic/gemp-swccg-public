@@ -44,7 +44,7 @@ public class Card501_184 extends AbstractRebel {
         setLore("Wookiee smuggler. 'Wraaaaaarw!'");
         setGameText("[Pilot] 2. While with C-3PO or a captive, adds one battle destiny. Permanent weapon is Blaster Rifle (may target a character for free; draw destiny; target hit, and its forfeit = 0, if destiny +1 > defense value).");
         addPersona(Persona.CHEWIE);
-        addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.PREMIUM, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.SMUGGLER);
         setSpecies(Species.WOOKIEE);
         setVirtualSuffix(true);
@@ -54,7 +54,7 @@ public class Card501_184 extends AbstractRebel {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        Filter captiveFilter = Filters.and(Filters.captive, Filters.presentAt(Filters.battleLocation));
+        Filter captiveFilter = Filters.and(Filters.captive, Filters.at(Filters.battleLocation));
         Condition withC3PO = new WithCondition(self, Filters.C3PO);
         Condition withCaptive = new WithCondition(self, SpotOverride.INCLUDE_CAPTIVE, captiveFilter);
         Condition modifierCondition = new OrCondition(withC3PO, withCaptive);
@@ -74,7 +74,7 @@ public class Card501_184 extends AbstractRebel {
                 if (actionBuilder != null) {
 
                     // Build action using common utility
-                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, Statistic.DEFENSE_VALUE, true, 0);
+                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 1, Statistic.DEFENSE_VALUE, true, 0);
                     return Collections.singletonList(action);
                 }
                 return null;
