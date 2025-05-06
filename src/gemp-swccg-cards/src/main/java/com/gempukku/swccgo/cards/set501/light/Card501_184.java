@@ -10,6 +10,7 @@ import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Statistic;
 import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -19,6 +20,8 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.FireWeaponAction;
 import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -37,23 +40,26 @@ import java.util.List;
 
 public class Card501_184 extends AbstractRebel {
     public Card501_184() {
-        super(Side.LIGHT, 1, 5, 6, 2, 5, "Chewie With Blaster Rifle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 1, 4, 6, 2, 6, "Chewie With Blaster Rifle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Wookiee smuggler. 'Wraaaaaarw!'");
-        setGameText("Adds 3 to power of any freighter he pilots. Adds one battle destiny if with C-3P0. Permanent weapon is blaster rifle (may target a character or creature for free; draw destiny; target hit, and its forfeit = 0, if destiny > defense value).");
+        setGameText("[Pilot] 2. While with C-3PO or a captive, adds one battle destiny. Permanent weapon is Blaster Rifle (may target a character for free; draw destiny; target hit, and its forfeit = 0, if destiny +1 > defense value).");
         addPersona(Persona.CHEWIE);
-        addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
+        addIcons(Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.PREMIUM, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.SMUGGLER);
         setSpecies(Species.WOOKIEE);
         setVirtualSuffix(true);
         setTestingText("Chewie With Blaster Rifle (V)");
-        hideFromDeckBuilder();
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3, Filters.freighter));
-        modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.C3PO), 1));
+        Filter captiveFilter = Filters.and(Filters.captive, Filters.at(Filters.battleLocation));
+        Condition withC3PO = new WithCondition(self, Filters.C3PO);
+        Condition withCaptive = new WithCondition(self, SpotOverride.INCLUDE_CAPTIVE, captiveFilter);
+        Condition modifierCondition = new OrCondition(withC3PO, withCaptive);
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
+        modifiers.add(new AddsBattleDestinyModifier(self, modifierCondition, 1));
         return modifiers;
     }
 
@@ -68,7 +74,7 @@ public class Card501_184 extends AbstractRebel {
                 if (actionBuilder != null) {
 
                     // Build action using common utility
-                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, Statistic.DEFENSE_VALUE, true, 0);
+                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 1, Statistic.DEFENSE_VALUE, true, 0);
                     return Collections.singletonList(action);
                 }
                 return null;
