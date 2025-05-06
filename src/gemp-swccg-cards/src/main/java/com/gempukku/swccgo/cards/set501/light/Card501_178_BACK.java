@@ -98,7 +98,9 @@ public class Card501_178_BACK extends AbstractObjective {
 
         // TO DO #1: Create "MayDeployWithWeaponAsReactModifier" by copying ideas from MayDeployWithPilotOrDriverAsReactModifier
         // Temporary placeholder: Only deploys Luke, without a weapon, as a react
-        modifiers.add(new MayDeployOtherCardsAsReactToLocationModifier(self, "Deploy Luke (deploy -3) as a 'react'", playerId, Filters.Luke, Filters.any));
+        // Temporary placeholder: Separate react deploys Anakin's Lightsaber as a react
+        modifiers.add(new MayDeployOtherCardsAsReactToLocationModifier(self, "Deploy Luke (deploy -3) as a 'react'", playerId, Filters.Luke, Filters.any, -3));
+        modifiers.add(new MayDeployOtherCardsAsReactToLocationModifier(self, "Deploy Anakin's Lightsaber as a 'react'", playerId, Filters.Anakins_Lightsaber, Filters.any));
 
         // Filter for a battleground site where there is a [Cloud City] Rebel
         Filter filterCloudCityRebelBattlegroundSite = Filters.and(Filters.sameSiteAs(self, Filters.and(Icon.CLOUD_CITY, Filters.Rebel)), Filters.battleground);

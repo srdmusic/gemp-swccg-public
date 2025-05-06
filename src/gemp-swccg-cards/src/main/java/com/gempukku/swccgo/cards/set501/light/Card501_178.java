@@ -71,7 +71,7 @@ public class Card501_178 extends AbstractObjective {
                 });
         //TO DO: Check for CC Icon on No Disintegrations once that card is ready
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.No_Disintegrations, Filters.any), true, false) {
+                new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.CLOUD_CITY, Filters.No_Disintegrations), true, false) {
                     @Override
                     public String getChoiceText() {
                         return "Choose No Disintegrations! to deploy";
