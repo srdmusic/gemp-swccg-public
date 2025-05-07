@@ -81,6 +81,7 @@ public class Card501_179 extends AbstractEpicEventDeployable {
         
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
 
+            action.setPerformingPlayer(playerId);
             action.setText("Turn Jedi Test face down");
             action.setActionMsg("Turn a Jedi Test on Patience! face down");
             // Update usage limit(s)
