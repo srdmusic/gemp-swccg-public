@@ -35,6 +35,7 @@ import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffe
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.JediTestSuspendedInsteadOfLostModifier;
 import com.gempukku.swccgo.logic.modifiers.MayDeployOtherCardsAsReactToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayDeployOtherCardsAsReactToTargetModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifierFlag;
 import com.gempukku.swccgo.logic.modifiers.PlaceJediTestOnTableWhenCompletedModifier;
@@ -95,18 +96,12 @@ public class Card501_178_BACK extends AbstractObjective {
         modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Icon.DAGOBAH, Filters.Yoda), -4, Filters.Dagobah_location));
 
         // While this side up
-
-        // TO DO #1: Create "MayDeployWithWeaponAsReactModifier" by copying ideas from MayDeployWithPilotOrDriverAsReactModifier
-        // Temporary placeholder: Only deploys Luke, without a weapon, as a react
-        // Temporary placeholder: Separate react deploys Anakin's Lightsaber as a react
         modifiers.add(new MayDeployOtherCardsAsReactToLocationModifier(self, "Deploy Luke (deploy -3) as a 'react'", playerId, Filters.Luke, Filters.any, -3));
-        modifiers.add(new MayDeployOtherCardsAsReactToLocationModifier(self, "Deploy Anakin's Lightsaber as a 'react'", playerId, Filters.Anakins_Lightsaber, Filters.any));
+        modifiers.add(new MayDeployOtherCardsAsReactToTargetModifier(self, "Deploy a weapon on Luke as a 'react'", playerId, Filters.weapon, Filters.Luke));
 
         // Filter for a battleground site where there is a [Cloud City] Rebel
         Filter filterCloudCityRebelBattlegroundSite = Filters.and(Filters.sameSiteAs(self, Filters.and(Icon.CLOUD_CITY, Filters.Rebel)), Filters.battleground);
 
-        // TO DO #2: Create FORCE_DRAIN_LOST_FROM_BOTTOM_OF_RESERVE_DECK
-        // Temporary placeholder: Lost Force comes from top of Reserve Deck for now
         Condition duringCCRebelForceDrainAtBattlegroundSite = new DuringForceDrainAtCondition(filterCloudCityRebelBattlegroundSite);
         Condition unlessCaptiveOnTable = new UnlessCondition(new OnTableCondition(self, SpotOverride.INCLUDE_CAPTIVE, Filters.captive));
         Condition conditionsForReserveDeckForceLoss = new AndCondition(duringCCRebelForceDrainAtBattlegroundSite, unlessCaptiveOnTable);

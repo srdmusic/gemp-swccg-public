@@ -69,7 +69,6 @@ public class Card501_178 extends AbstractObjective {
                         return "Choose Yoda's Hut to deploy";
                     }
                 });
-        //TO DO: Check for CC Icon on No Disintegrations once that card is ready
         action.appendRequiredEffect(
                 new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.CLOUD_CITY, Filters.No_Disintegrations), true, false) {
                     @Override
