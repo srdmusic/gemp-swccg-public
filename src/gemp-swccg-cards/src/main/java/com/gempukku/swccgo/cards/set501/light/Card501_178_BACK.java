@@ -55,7 +55,7 @@ import java.util.List;
 public class Card501_178_BACK extends AbstractObjective {
     public Card501_178_BACK() {
         super(Side.LIGHT, 7, Title.Save_You_It_Can, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Immediately return Luke and any cards on him to owner's hand. While this side up, Luke may deploy -3 with a weapon as a 'react.' If Luke just won a battle, may place a card on Patience! out of play to retrieve 1 Force. When your [Cloud City] Rebel Force drains at a battleground site, unless a captive on table, lost Force must come from bottom of Reserve Deck if possible. Once per game, may place a completed Jedi Test out of play to take Luke into hand from Lost Pile.");
+        setGameText("Immediately return Luke and any cards on him to owner's hand. While this side up, you may deploy Luke (deploy -3) and/or a weapon on him as a 'react.' If Luke just won a battle, may place a card on Patience! out of play to retrieve 1 Force. When your [Cloud City] Rebel Force drains at a battleground site, unless a captive on table, lost Force must come from top of Reserve Deck if possible. Once per game, may place a completed (even if suspended) Jedi Test out of play to take Luke into hand from Lost Pile.");
         addIcons(Icon.SPECIAL_EDITION, Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("Save You It Can (V)");
