@@ -31,7 +31,7 @@ public class Card501_181 extends AbstractNormalEffect {
     public Card501_181() {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Yodas_Hope, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'You must feel the Force around you. Here, between you, me, the tree, the rock, everywhere! Yes, even between the land and the ship.'");
-        setGameText("If your [Dagobah] objective on table, deploy on Yoda. Your training destiny draws are +1. At start of opponent's control phase, if Luke is present with his uncompleted Jedi Test, he may attempt it.");
+        setGameText("If your [Dagobah] objective on table, deploy on Yoda. Your training destiny draws are +1. Jedi Tests may be attempted at start of opponent's control phase.");
         addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
@@ -52,7 +52,7 @@ public class Card501_181 extends AbstractNormalEffect {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new EachTrainingDestinyModifier(self, Filters.any, 1));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test, ModifyGameTextType.JEDI_TESTS__LUKE_ATTEMPTS_DURING_OPPONENTS_CONTROL_PHASE));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test, ModifyGameTextType.JEDI_TESTS__MAY_ATTEMPT_IN_OPPONENTS_CONTROL_PHASE));
         return modifiers;
     }
 }
