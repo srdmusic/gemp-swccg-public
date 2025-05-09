@@ -32,6 +32,7 @@ public interface Title {
     String Agents_In_The_Court = "Agents In The Court";
     String Agents_Of_Black_Sun = "Agents Of Black Sun";
     String Ahch_To = "Ahch-To";
+    String AhchTo_Jedi_Village = "Ahch-To: Jedi Village";
     String Ahsokas_Lightsabers = "Ahsoka's Lightsabers";
     String Aiiii_Aaa_Agggggggggg = "Aiiii! Aaa! Agggggggggg!";
     String Aim_High = "Aim High";
@@ -93,6 +94,8 @@ public interface Title {
     String Bazes_Cannon = "Baze's Cannon";
     String Beggar = "Beggar";
     String Beggars_Canyon = "Tatooine: Beggar's Canyon";
+    String Beldons_Eye = "Beldon's Eye";
+    String Beldons_Gallery = "Cloud City: Beldon's Gallery";
     String Beru_Lars = "Beru Lars";
     String Beru_Stew = "Beru Stew";
     String Besieged = "Besieged";
@@ -100,6 +103,7 @@ public interface Title {
     String Beskar_Deflection = "Beskar Deflection";
     String Bespin = "Bespin";
     String Bespin_Cloud_City = "Bespin: Cloud City";
+    String Be_With_Me = "Be With Me";
     String Bib = "Bib Fortuna";
     String Beilert_Valance = "Beilert Valance";
     String Big_One = "Big One";
@@ -654,6 +658,7 @@ public interface Title {
     String Lana_Dobreed = "Lana Dobreed";
     String Landing_Claw = "Landing Claw";
     String Landing_Platform = "Endor: Landing Platform (Docking Bay)";
+    String Landos_Blaster_Rifle = "Lando's Blaster Rifle";
     String Lars_Moisture_Farm = "Tatooine: Lars' Moisture Farm";
     String Laser_Cannon_Battery = "Laser Cannon Battery";
     String Laser_Gate = "Laser Gate";
@@ -780,7 +785,7 @@ public interface Title {
     String Nightfall = "Nightfall";
     String Niima_Outpost_Shipyard = "Jakku: Niima Outpost Shipyard";
     String No_Bargain = "No Bargain";
-    String No_Disintegrations = "No_Disintegrations!";
+    String No_Disintegrations = "No Disintegrations!";
     String No_Escape = "No Escape";
     String No_Love_For_The_Empire = "No Love For The Empire";
     String No_Money_No_Parts_No_Deal = "No Money, No Parts, No Deal!";
@@ -842,6 +847,7 @@ public interface Title {
     String Part_of_the_Tribe = "Part Of The Tribe";
     String Passenger_Deck = "Jabba's Sail Barge: Passenger Deck";
     String Path_Of_Least_Resistance = "Path Of Least Resistance";
+    String Patience = "Patience!";
     String Patrol_Craft = "Patrol Craft";
     String Perimeter_Patrol = "Perimeter Patrol";
     String Phantom = "Phantom";

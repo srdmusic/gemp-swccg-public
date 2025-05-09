@@ -17497,6 +17497,7 @@ public class Filters {
     public static final Filter AAT_Laser_Cannon = Filters.title(Title.AAT_Laser_Cannon);
     public static final Filter accountant = Filters.keyword(Keyword.ACCOUNTANT);
     public static final Filter Ackbar = Filters.persona(Persona.ACKBAR);
+    public static final Filter AhchTo_Jedi_Village = Filters.title(Title.AhchTo_Jedi_Village);
     public static final Filter AhchTo_site = Filters.and(Filters.partOfSystem(Title.Ahch_To), CardSubtype.SITE);
     public static final Filter Ahch_To_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Ahch_To));
     public static final Filter Activate_The_Droids = Filters.title(Title.Activate_The_Droids);
@@ -17528,6 +17529,7 @@ public class Filters {
     public static final Filter An_Inkling_Of_Its_Destructive_Potential = Filters.title(Title.An_Inkling_Of_Its_Destructive_Potential);
     public static final Filter Anakin = Filters.persona(Persona.ANAKIN);
     public static final Filter Anakin_Skywalker = Filters.title(Title.Anakin_Skywalker);
+    public static final Filter Anakins_Lightsaber = Filters.persona(Persona.ANAKINS_LIGHTSABER);
     public static final Filter Anakins_Podracer = Filters.title(Title.Anakins_Podracer);
     public static final Filter Anchorhead = Filters.title(Title.Anchorhead);
     public static final Filter And_Now_Youll_Give_It_To_Me = Filters.title(Title.And_Now_Youll_Give_It_To_Me);
@@ -17597,6 +17599,9 @@ public class Filters {
     public static final Filter Beilert_Valance = Filters.title(Title.Beilert_Valance);
     public static final Filter Beggar = Filters.title(Title.Beggar);
     public static final Filter Beggars_Canyon = Filters.title(Title.Beggars_Canyon);
+    public static final Filter Beldons_Eye = Filters.title(Title.Beldons_Eye);
+    public static final Filter Beldons_Gallery = Filters.title(Title.Beldons_Gallery);
+    public static final Filter Ben_Solo = Filters.persona(Persona.BEN_SOLO);
     public static final Filter Beru = Filters.title(Title.Beru_Lars);
     public static final Filter Beru_Stew = Filters.title(Title.Beru_Stew);
     public static final Filter Besieged = Filters.title(Title.Besieged);
@@ -17606,6 +17611,7 @@ public class Filters {
     public static final Filter Bespin_location = Filters.partOfSystem(Title.Bespin);
     public static final Filter Bespin_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Bespin));
     public static final Filter Bestoon_Legacy = Filters.persona(Persona.BESTOON_LEGACY);
+    public static final Filter Be_With_Me = Filters.title(Title.Be_With_Me);
     public static final Filter Bib = Filters.persona(Persona.BIB);
     public static final Filter biker_scout = Filters.keyword(Keyword.BIKER_SCOUT);
     public static final Filter Big_One = Filters.title(Title.Big_One);
@@ -17637,6 +17643,7 @@ public class Filters {
     public static final Filter Blockade_Flagship = Filters.persona(Persona.BLOCKADE_FLAGSHIP);
     public static final Filter BlockadeFlagshipBridge = Filters.title(Title.BlockadeFlagshipBridge);
     public static final Filter Blockade_Support_Ship = Filters.title(Title.Blockade_Support_Ship);
+    public static final Filter Blount = Filters.persona(Persona.BLOUNT);
     public static final Filter Blue_Milk = Filters.title(Title.Blue_Milk);
     public static final Filter Blue_Squadron_5 = Filters.title(Title.Blue_Squadron_5);
     public static final Filter Bluffs = Filters.title(Title.Bluffs);
@@ -18584,6 +18591,7 @@ public class Filters {
     public static final Filter Ominous_Rumors = Filters.title(Title.Ominous_Rumors);
     public static final Filter Ommni_Box = Filters.title(Title.Ommni_Box);
     public static final Filter on_Cloud_City = Filters.locationAndCardsAtLocation(Filters.Cloud_City_site);
+    public static final Filter On_Dagobah = Filters.on(Title.Dagobah);
     public static final Filter On_Endor = Filters.on(Title.Endor);
     public static final Filter On_Hoth = Filters.on(Title.Hoth);
     public static final Filter On_Target = Filters.title(Title.On_Target);
@@ -18629,6 +18637,7 @@ public class Filters {
     public static final Filter Part_of_the_Tribe = Filters.title(Title.Part_of_the_Tribe);
     public static final Filter Passenger_Deck = Filters.title(Title.Passenger_Deck);
     public static final Filter Path_Of_Least_Resistance = Filters.title(Title.Path_Of_Least_Resistance);
+    public static final Filter Patience = Filters.title(Title.Patience);
     public static final Filter Patrol_Craft = Filters.title(Title.Patrol_Craft);
     public static final Filter peace_agenda = Filters.agenda(Agenda.PEACE);
     public static final Filter Perimeter_Patrol = Filters.title(Title.Perimeter_Patrol);
@@ -19051,6 +19060,7 @@ public class Filters {
     public static final Filter The_Force_Is_Strong_In_My_Family = Filters.title(Title.The_Force_Is_Strong_In_My_Family);
     public static final Filter The_Force_Is_Strong_With_This_One = Filters.title(Title.The_Force_Is_Strong_With_This_One);
     public static final Filter The_Galaxy_May_Need_A_Legend = Filters.title(Title.The_Galaxy_May_Need_A_Legend);
+    public static final Filter The_Grand_Inquisitor = Filters.persona(Persona.THE_GRAND_INQUISITOR);
     public static final Filter The_Hyperdrive_Generators_Gone = Filters.title(Title.The_Hyperdrive_Generators_Gone);
     public static final Filter The_Phantom_Menace = Filters.title(Title.The_Phantom_Menace);
     public static final Filter The_Planet_That_Its_Farthest_From = Filters.title(Title.The_Planet_That_Its_Farthest_From);
@@ -19224,6 +19234,7 @@ public class Filters {
     public static final Filter Wild_Karrde = Filters.title(Title.Wild_Karrde);
     public static final Filter Williams = Filters.title(Title.Williams);
     public static final Filter Wioslea = Filters.title(Title.Wioslea);
+    public static final Filter Wise_Advice = Filters.title(Title.Wise_Advice);
     public static final Filter Wittin = Filters.title(Title.Wittin);
     public static final Filter womp_rat = Filters.title(Title.Womp_Rat);
     public static final Filter Wookiee = Filters.species(Species.WOOKIEE);

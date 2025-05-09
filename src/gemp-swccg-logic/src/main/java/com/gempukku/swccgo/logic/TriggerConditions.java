@@ -382,6 +382,7 @@ public class TriggerConditions {
                 || effectResult.getType() == EffectResult.Type.TRANSFERRED_CAPTIVE_TO_NEW_ESCORT
                 || effectResult.getType() == EffectResult.Type.ROTATE_CARD
                 || effectResult.getType() == EffectResult.Type.TRANSFERRED_DEVICE_OR_WEAPON
+                || effectResult.getType() == EffectResult.Type.RELOCATED_DEVICE_OR_WEAPON
                 || effectResult.getType() == EffectResult.Type.CONVERT_LOCATION
                 || effectResult.getType() == EffectResult.Type.BATTLE_CANCELED
                 || effectResult.getType() == EffectResult.Type.ATTACK_INITIATED
@@ -4810,6 +4811,23 @@ public class TriggerConditions {
             PhysicalCard programTrap = explodingProgramTrapResult.getProgramTrap();
 
             return Filters.and(Filters.in_play, programTrapFilter).accepts(game.getGameState(), game.getModifiersQuerying(), programTrap);
+        }
+        return false;
+    }
+
+    /**
+     * Determines if the specified player just lost Force (for any reason)
+     * @param game the game
+     * @param effectResult the effect result
+     * @param playerId the player
+     * @return true or false
+     */
+    public static boolean justLostForce(SwccgGame game, EffectResult effectResult, String playerId) {
+        if (effectResult.getType() == EffectResult.Type.FORCE_LOST) {
+            LostForceResult lostForceResult = (LostForceResult) effectResult;
+            if (playerId.equals(lostForceResult.getPerformingPlayerId())) {
+                return true;
+            }
         }
         return false;
     }

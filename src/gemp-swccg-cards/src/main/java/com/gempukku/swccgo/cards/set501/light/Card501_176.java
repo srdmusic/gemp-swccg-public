@@ -42,7 +42,7 @@ public class Card501_176 extends AbstractUsedOrLostInterrupt {
     public Card501_176() {
         super(Side.LIGHT, 4, Title.Critical_Error_Revealed, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Hologram technology allows efficient communication of complex intelligence during war room briefings.");
-        setGameText("USED: Suspend Ominous Rumors or There Are Many Hunting You Now for remainder of turn. OR [Upload] Lak Sivrak, Orrimaarko, Tala Durith, or [Endor] Chewie. LOST: Lose 1 Force to exclude opponent's passenger from battle (then place this Interrupt out of play).");
+        setGameText("USED: Suspend Ominous Rumors or There Are Many Hunting You Now for remainder of turn. OR [Upload] Blount, Orrimaarko, Tala Durith, or [Endor] Chewie. LOST: Lose 1 Force to exclude opponent's passenger from battle (then place this Interrupt out of play).");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_25);
         addKeyword(Keyword.HOLOGRAM);
         setVirtualSuffix(true);
@@ -84,7 +84,7 @@ public class Card501_176 extends AbstractUsedOrLostInterrupt {
             actions.add(action);
         }
 
-        Filter pullFilter = Filters.or(Filters.title("Lak Sivrak"), Filters.title("Orrimaarko"), Filters.persona(Persona.TALA_DURITH), Filters.and(Icon.ENDOR, Filters.Chewie));
+        Filter pullFilter = Filters.or(Filters.Blount, Filters.title("Orrimaarko"), Filters.persona(Persona.TALA_DURITH), Filters.and(Icon.ENDOR, Filters.Chewie));
         GameTextActionId gameTextActionId = GameTextActionId.CRITICAL_ERROR_REVEALED__UPLOAD_CARD;
 
         // Check condition(s)
@@ -93,7 +93,7 @@ public class Card501_176 extends AbstractUsedOrLostInterrupt {
 
             action.setText("Take card into hand from Reserve Deck");
 
-            action.allowResponses("Take Lak Sivrak, Orrimaarko, Tala Durith, or [Endor] Chewie into hand from Reserve Deck",
+            action.allowResponses("Take Blount, Orrimaarko, Tala Durith, or [Endor] Chewie into hand from Reserve Deck",
                 new RespondablePlayCardEffect(action) {
                     @Override
                     protected void performActionResults(Action targetingAction) {
