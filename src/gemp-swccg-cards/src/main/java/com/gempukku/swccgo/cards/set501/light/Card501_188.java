@@ -58,7 +58,7 @@ import java.util.List;
 public class Card501_188 extends AbstractJediTest {
     public Card501_188() {
         super(Side.LIGHT, 5, Title.It_Is_The_Future_You_See, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on a Dagobah site. Target a mentor on Dagobah and an apprentice who has completed Jedi Test #4. Attempt when apprentice is present at the beginning of your control phase. Turn apprentice upside down (cannot move and power = 0). At start of any move phase, turn apprentice right side up (restored). Place on apprentice. Immune to attrition < 4. Reveal the top two cards of your Reserve Deck and place one upside down on this Jedi Test. Once per turn (twice if [Special Edition] At Peace on table), whenever you are about to draw a card for destiny, you may instead use the upside-down card (which remains on Jedi Test).");
+        setGameText("Deploy on a Dagobah site. Target a mentor on Dagobah and an apprentice who has completed Jedi Test #4. Attempt when apprentice is present at the beginning of your control phase. Turn apprentice upside down (cannot move and power = 0). At start of any move phase, turn apprentice right side up (restored): Place on apprentice. Immune to attrition < 4. Reveal the top two cards of your Reserve Deck and place one upside down on this Jedi Test. Once per turn (twice if [Special Edition] At Peace on table), whenever you are about to draw a card for destiny, you may instead use the upside-down card (which remains on Jedi Test).");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         addKeyword(Keyword.JEDI_TEST_5);
         setVirtualSuffix(true);
