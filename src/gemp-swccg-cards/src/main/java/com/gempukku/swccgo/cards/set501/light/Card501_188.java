@@ -39,7 +39,6 @@ import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.modifiers.ResetPowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
@@ -193,34 +192,30 @@ public class Card501_188 extends AbstractJediTest {
         // Check condition(s)
         if (TriggerConditions.jediTestCompleted(game, effectResult, self)
                 && GameConditions.hasReserveDeck(game, playerId)) {
-            GameState gameState = game.getGameState();
-            final PhysicalCard cardToStackOn = GameConditions.hasGameTextModification(game, self, ModifyGameTextType.IT_IS_THE_FUTURE_YOU_SEE__STACK_DESTINY_CARD_ON_JEDI_TEST_5) ? self : self.getTargetedCard(gameState, TargetId.JEDI_TEST_APPRENTICE);
-            if (cardToStackOn != null && GameConditions.canSpot(game, self, cardToStackOn)) {
 
-                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Reveal top two cards of Reserve Deck");
-                // Perform result(s)
-                action.appendEffect(
-                        new RevealTopCardsOfReserveDeckEffect(action, playerId, 2) {
-                            @Override
-                            protected void cardsRevealed(List<PhysicalCard> cards) {
-                                action.appendEffect(
-                                        new ChooseArbitraryCardsEffect(action, playerId, "Choose destiny card to stack", cards, 1, 1) {
-                                            @Override
-                                            protected void cardsSelected(SwccgGame game, Collection<PhysicalCard> selectedCards) {
-                                                PhysicalCard cardToStack = selectedCards.iterator().next();
-                                                if (cardToStack != null) {
-                                                    action.appendEffect(
-                                                            new StackOneCardFromPileEffect(action, playerId, cardToStack, cardToStackOn, false, false, true));
-                                                }
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Reveal top two cards of Reserve Deck");
+            // Perform result(s)
+            action.appendEffect(
+                    new RevealTopCardsOfReserveDeckEffect(action, playerId, 2) {
+                        @Override
+                        protected void cardsRevealed(List<PhysicalCard> cards) {
+                            action.appendEffect(
+                                    new ChooseArbitraryCardsEffect(action, playerId, "Choose destiny card to stack", cards, 1, 1) {
+                                        @Override
+                                        protected void cardsSelected(SwccgGame game, Collection<PhysicalCard> selectedCards) {
+                                            PhysicalCard cardToStack = selectedCards.iterator().next();
+                                            if (cardToStack != null) {
+                                                action.appendEffect(
+                                                        new StackOneCardFromPileEffect(action, playerId, cardToStack, self, false, false, true));
                                             }
                                         }
-                                );
-                            }
+                                    }
+                            );
                         }
-                );
-                return Collections.singletonList(action);
-            }
+                    }
+            );
+            return Collections.singletonList(action);
         }
         return null;
     }
