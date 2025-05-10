@@ -27,8 +27,8 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TriggerAction;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfPlayersNextTurnActionProxyEffect;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfPlayersNextTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnActionProxyEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.ChooseArbitraryCardsEffect;
 import com.gempukku.swccgo.logic.effects.CompleteJediTestEffect;
 import com.gempukku.swccgo.logic.effects.RefreshPrintedDestinyValuesEffect;
@@ -58,7 +58,7 @@ import java.util.List;
 public class Card501_188 extends AbstractJediTest {
     public Card501_188() {
         super(Side.LIGHT, 5, Title.It_Is_The_Future_You_See, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on a Dagobah site. Target a mentor on Dagobah and an apprentice who has completed Jedi Test #4. Attempt when apprentice is present at the beginning of your control phase. Turn apprentice upside down (cannot move and power = 0). At start of any move phase, turn apprentice right side up (restored): Place on apprentice. Immune to attrition < 4. Reveal the top two cards of your Reserve Deck and place one upside down on this Jedi Test. Once per turn (twice if [Special Edition] At Peace on table), whenever you are about to draw a card for destiny, you may instead use the upside-down card (which remains on Jedi Test).");
+        setGameText("Deploy on a Dagobah site. Target a mentor on Dagobah and an apprentice who has completed Jedi Test #4. Attempt when apprentice is present at the beginning of your control phase. Turn apprentice upside down (cannot move and power = 0). At end of turn, turn apprentice right side up (restored): Place on apprentice. Immune to attrition < 4. Reveal the top two cards of your Reserve Deck and place one upside down on this Jedi Test. Once per turn (twice if [Special Edition] At Peace on table), whenever you are about to draw a card for destiny, you may instead use the upside-down card (which remains on Jedi Test).");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         addKeyword(Keyword.JEDI_TEST_5);
         setVirtualSuffix(true);
@@ -87,11 +87,9 @@ public class Card501_188 extends AbstractJediTest {
         // Check condition(s)
         if (TriggerConditions.isStartOfYourPhase(game, self, effectResult, Phase.CONTROL)) {
             if (!GameConditions.isJediTestBeingAttempted(game, self) && !GameConditions.isJediTestCompleted(game, self)) {
-                final GameState gameState = game.getGameState();
                 final ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
                 final PhysicalCard apprentice = Filters.findFirstActive(game, self, Filters.and(Filters.mayAttemptJediTest(self), Filters.present(self)));
                 if (apprentice != null) {
-                    final int nextTurnNumber = gameState.getPlayersLatestTurnNumber(playerId) + 1;
 
                     final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
                     action.setText("Attempt Jedi Test #5");
@@ -108,15 +106,15 @@ public class Card501_188 extends AbstractJediTest {
                     action.appendEffect(
                             new RotateCardEffect(action, apprentice, true));
                     action.appendEffect(
-                            new AddUntilEndOfPlayersNextTurnModifierEffect(action, playerId,
+                            new AddUntilEndOfTurnModifierEffect(action,
                                     new MayNotMoveModifier(self, Filters.and(apprentice, Filters.targetedByUncompletedJediTest(self))), null));
                     action.appendEffect(
-                            new AddUntilEndOfPlayersNextTurnModifierEffect(action, playerId,
+                            new AddUntilEndOfTurnModifierEffect(action,
                                     new ResetPowerModifier(self, Filters.and(apprentice, Filters.targetedByUncompletedJediTest(self)), 0), null));
                     final int cardId = self.getCardId();
                     final int permCardId = self.getPermanentCardId();
                     action.appendEffect(
-                            new AddUntilEndOfPlayersNextTurnActionProxyEffect(action,
+                            new AddUntilEndOfTurnActionProxyEffect(action,
                                     new AbstractActionProxy() {
                                         @Override
                                         public List<TriggerAction> getRequiredAfterTriggers(SwccgGame game, EffectResult effectResult) {
@@ -125,10 +123,9 @@ public class Card501_188 extends AbstractJediTest {
                                             final PhysicalCard self = game.findCardByPermanentId(permCardId);
 
                                             // Check condition(s)
-                                            if (TriggerConditions.isEndOfYourTurn(game, effectResult, playerId)
+                                            if (TriggerConditions.isEndOfEachTurn(game, effectResult)
                                                     && self.getCardId() == cardId
                                                     && GameConditions.isJediTestBeingAttempted(game, self)
-                                                    && GameConditions.isTurnNumber(game, nextTurnNumber)
                                                     && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_ALL, apprentice)) {
 
                                                 RequiredGameTextTriggerAction action1 = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
@@ -142,7 +139,7 @@ public class Card501_188 extends AbstractJediTest {
                                             }
                                             return actions;
                                         }
-                                    }, playerId));
+                                    }));
                     actions.add(action);
                 }
             }
