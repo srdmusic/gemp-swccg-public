@@ -75,10 +75,10 @@ public class Card4_076 extends AbstractJediTest {
 
         boolean normalTiming = TriggerConditions.isEndOfYourTurn(game, effectResult, self);
         boolean specialTiming = TriggerConditions.isStartOfOpponentsPhase(game, self, effectResult, Phase.CONTROL) && GameConditions.hasGameTextModification(game, self, ModifyGameTextType.JEDI_TESTS__MAY_ATTEMPT_IN_OPPONENTS_CONTROL_PHASE);
-        boolean timingSatified = normalTiming || specialTiming;
+        boolean timingSatisfied = normalTiming || specialTiming;
 
         // Check condition(s)
-        if (timingSatified
+        if (timingSatisfied
                 && !GameConditions.isJediTestCompleted(game, self)) {
             ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
             if (modifiersQuerying.getNumBattlesInitiatedThisTurn(playerId) == 0

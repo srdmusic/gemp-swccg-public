@@ -127,10 +127,10 @@ public class Card4_075 extends AbstractJediTest {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         boolean normalTiming = TriggerConditions.isStartOfYourPhase(game, self, effectResult, Phase.CONTROL);
         boolean specialTiming = TriggerConditions.isStartOfOpponentsPhase(game, self, effectResult, Phase.CONTROL) && GameConditions.hasGameTextModification(game, self, ModifyGameTextType.JEDI_TESTS__MAY_ATTEMPT_IN_OPPONENTS_CONTROL_PHASE);
-        boolean timingSatified = normalTiming || specialTiming;
+        boolean timingSatisfied = normalTiming || specialTiming;
         
         // Check condition(s)
-        if (timingSatified
+        if (timingSatisfied
                 && !GameConditions.isJediTestCompleted(game, self)) {
             final PhysicalCard apprentice = Filters.findFirstActive(game, self, Filters.and(Filters.mayAttemptJediTest(self), Filters.present(self)));
             if (apprentice != null) {
