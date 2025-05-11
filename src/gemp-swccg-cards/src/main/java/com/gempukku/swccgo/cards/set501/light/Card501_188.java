@@ -166,6 +166,7 @@ public class Card501_188 extends AbstractJediTest {
 
                     final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
                     action.setText("Substitute destiny");
+                    action.setPerformingPlayer(playerId);
                     // Update usage limit(s)
                     action.appendUsage(
                             new NumTimesPerTurnEffect(action, numTimes));
