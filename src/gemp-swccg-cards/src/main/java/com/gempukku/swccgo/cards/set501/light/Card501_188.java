@@ -150,14 +150,14 @@ public class Card501_188 extends AbstractJediTest {
             }
         }
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
         
         int numTimes = GameConditions.canSpot(game, self, Filters.and(Icon.SPECIAL_EDITION, Filters.At_Peace)) ? 2 : 1;
 
         // Check condition(s)
         if (TriggerConditions.isAboutToDrawDestiny(game, effectResult, playerId)
                 && GameConditions.canSubstituteDestiny(game)
-                && GameConditions.isNumTimesPerTurn(game, self, numTimes, gameTextSourceCardId)) {
+                && GameConditions.isNumTimesPerTurn(game, self, playerId, numTimes, gameTextSourceCardId, gameTextActionId)) {
             final GameState gameState = game.getGameState();
             if (GameConditions.isJediTestCompleted(game, self)) {
                 final PhysicalCard stackedDestinyCard = Filters.findFirstFromStacked(game, Filters.and(Filters.stackedViaJediTest5,
