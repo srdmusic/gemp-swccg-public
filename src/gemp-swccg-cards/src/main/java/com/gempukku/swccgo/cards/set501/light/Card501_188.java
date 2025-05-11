@@ -4,7 +4,7 @@ import com.gempukku.swccgo.cards.AbstractJediTest;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.JediTestCompletedCondition;
 import com.gempukku.swccgo.cards.effects.RevealTopCardsOfReserveDeckEffect;
-import com.gempukku.swccgo.cards.effects.usage.NumTimesPerBattleEffect;
+import com.gempukku.swccgo.cards.effects.usage.NumTimesPerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
