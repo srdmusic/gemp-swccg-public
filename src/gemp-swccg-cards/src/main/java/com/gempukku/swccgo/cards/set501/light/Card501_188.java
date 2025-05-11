@@ -157,7 +157,7 @@ public class Card501_188 extends AbstractJediTest {
         // Check condition(s)
         if (TriggerConditions.isAboutToDrawDestiny(game, effectResult, playerId)
                 && GameConditions.canSubstituteDestiny(game)
-                && GameConditions.isNumTimesPerTurn(game, self, playerId, numTimes, gameTextSourceCardId)) {
+                && GameConditions.isNumTimesPerTurn(game, self, numTimes, gameTextSourceCardId)) {
             final GameState gameState = game.getGameState();
             if (GameConditions.isJediTestCompleted(game, self)) {
                 final PhysicalCard stackedDestinyCard = Filters.findFirstFromStacked(game, Filters.and(Filters.stackedViaJediTest5,
@@ -166,7 +166,6 @@ public class Card501_188 extends AbstractJediTest {
 
                     final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
                     action.setText("Substitute destiny");
-                    action.setPerformingPlayer(playerId);
                     // Update usage limit(s)
                     action.appendUsage(
                             new NumTimesPerTurnEffect(action, numTimes));
