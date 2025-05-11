@@ -56,7 +56,7 @@ public class Card207_010 extends AbstractJediMaster {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotInitiateAttacksAtLocationModifier(self, Filters.and(Filters.Dagobah_site, Filters.sameSite(self))));
-        modifiers.add(new EachTrainingDestinyModifier(self, Filters.any, 1));
+        modifiers.add(new EachTrainingDestinyModifier(self, Filters.your(self), 1));
         modifiers.add(new ImmuneToAttritionModifier(self));
         return modifiers;
     }
