@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.AbstractAlienRebel;
 import com.gempukku.swccgo.cards.AbstractPermanentWeapon;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -35,11 +35,11 @@ import java.util.List;
 /**
  * Set: Playtesting
  * Type: Character
- * Subtype: Alien
- * Title: Lando With Lando's Blaster Rifle (V)
+ * Subtype: Alien/Rebel
+ * Title: Lando With Blaster Rifle
  */
 
-public class Card501_185 extends AbstractAlien {
+public class Card501_185 extends AbstractAlienRebel {
     public Card501_185() {
         super(Side.LIGHT, 1, 4, 3, 3, 5, "Lando With Blaster Rifle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Works every time. Smuggler.");
@@ -47,8 +47,7 @@ public class Card501_185 extends AbstractAlien {
         addPersona(Persona.LANDO);
         addIcons(Icon.CLOUD_CITY, Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.SMUGGLER);
-        setVirtualSuffix(true);
-        setTestingText("Lando With Blaster Rifle (V)");
+        setTestingText("Lando With Blaster Rifle");
     }
 
     @Override
@@ -82,6 +81,7 @@ public class Card501_185 extends AbstractAlien {
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         if (TriggerConditions.isBattleDestinyDrawingJustCompletedForPlayer(game, effectResult, playerId)
+                && GameConditions.isInBattle(game, self)
                 && GameConditions.hasLostPile(game, playerId)) {
             final BattleState battleState = game.getGameState().getBattleState();
             final float totalBattleDestiny = battleState.getTotalBattleDestiny(game, playerId);
