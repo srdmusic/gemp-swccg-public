@@ -129,10 +129,33 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ca
         }
     }
 
+    /**
+     * Returns a Dark Side card by its human-readable test alias.
+     * @param cardName The human-readable name assigned at the top of each test class.
+     * @return The physical card that was instantiated for the game.
+     */
     public PhysicalCardImpl GetDSCard(String cardName) { return Cards.get(DS).get(cardName); }
+    /**
+     * Returns a Light Side card by its human-readable test alias.
+     * @param cardName The human-readable name assigned at the top of each test class.
+     * @return The physical card that was instantiated for the game.
+     */
     public PhysicalCardImpl GetLSCard(String cardName) { return Cards.get(LS).get(cardName); }
+    /**
+     * Returns a given player's card by its human-readable test alias.
+     * @param player The player to look up a card for.
+     * @param cardName The human-readable name assigned at the top of each test class.
+     * @return The physical card that was instantiated for the game.
+     */
     public PhysicalCardImpl GetCard(String player, String cardName) { return Cards.get(player).get(cardName); }
 
+    /**
+     * Starts up a game of SWCCG with the given decks and format.  This is used internally but may have use in certain
+     * complicated test scenarios.  The vast majority of the time you do not need this.
+     * @param decks A map of decks for each player in the game; key is the player name.
+     * @param formatName Name of the format this table should be following.
+     * @throws DecisionResultInvalidException
+     */
     public void InitializeGameWithDecks(Map<String, SwccgDeck> decks, String formatName) throws DecisionResultInvalidException {
         _userFeedback = new DefaultUserFeedback();
 
@@ -150,10 +173,25 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ca
         _gameState = _game.getGameState();
     }
 
+    /**
+     * Passes through certain setup steps at the start of the game so our test may begin at the first player's (usually
+     * Dark Side) Activate phase.  Resets the hand so that the only cards in hand are those the tester defines manually
+     * before calling this function.
+     * @throws DecisionResultInvalidException
+     */
     public void StartGame() throws DecisionResultInvalidException {
         StartGame(true);
     }
 
+    /**
+     * Passes through certain setup steps at the start of the game so our test may begin at the first player's (usually
+     * Dark Side) Activate phase.
+     * @param resetHand If true, any cards drawn at the start of the game will be placed back on top of the Reserve Deck,
+     *                  ensuring that each player only has the cards in their hand that the tester manually places
+     *                  before calling StartGame.  This ensures that there are no confounding variables.
+     *                  If false, the default drawn hand will remain untouched.
+     * @throws DecisionResultInvalidException
+     */
     public void StartGame(boolean resetHand) throws DecisionResultInvalidException {
         if(DSDecisionAvailable("Select OK to start game")) {
             DSDecided("0");
@@ -174,6 +212,8 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ca
             LSChooseCard("starting-location");
         }
 
+        //TODO: Add support for starting interrupts/objectives here
+
         // As a convenience, we want the tester to be able to stack their hand and other piles before the game begins.
         // However, since a new hand will be drawn, this tramples over the careful stacking, so we will reset the
         // state of the deck + hand to what they were before the card draw.
@@ -192,6 +232,14 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ca
         }
     }
 
+    /**
+     * Low-level function used by the rest of the test rig to return a decision result back to the server.  This is the
+     * beating heart of what is essentially a headless client.  You do not need to call this manually during tests.
+     * @param player The player making the decision
+     * @param answer What decision is being returned to the server
+     * @throws DecisionResultInvalidException If there is any mismatch between what the server is expecting and your
+     * answer, this test will fail.
+     */
     public void PlayerDecided(String player, String answer) throws DecisionResultInvalidException {
         var decision = userFeedback().getAwaitingDecision(player);
         userFeedback().participantDecided(player);

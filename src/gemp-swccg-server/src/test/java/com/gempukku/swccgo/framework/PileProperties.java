@@ -8,21 +8,55 @@ import java.util.List;
  * These functions will help you determine pile counts or add/remove a card to a pile at a particular point.
  */
 public interface PileProperties extends TestBase{
+	/**
+	 * @return Gets the current number of cards in the Dark Side player's hand.
+	 */
 	default int GetDSHandCount() { return GetDSHand().size(); }
+	/**
+	 * @return Gets the current number of cards in the Light Side player's hand.
+	 */
 	default int GetLSHandCount() { return GetLSHand().size(); }
 
+	/**
+	 * @return Gets all the cards currently in the Dark Side player's hand.
+	 */
 	default List<? extends PhysicalCard> GetDSHand() { return GetHand(DS); }
+	/**
+	 * @return Gets all the cards currently in the Light Side player's hand.
+	 */
 	default List<? extends PhysicalCard> GetLSHand() { return GetHand(LS); }
+	/**
+	 *
+	 * @param player The player whose hand you are interested in.
+	 * @return Gets all the cards currently in the given player's hand.
+	 */
 	default List<? extends PhysicalCard> GetHand(String player)
 	{
 		return gameState().getHand(player);
 	}
 
+	/**
+	 * @return Gets the number of cards in the Dark Side player's Reserve Deck.
+	 */
 	default int GetDSReserveDeckCount() { return GetDSReserveDeck().size(); }
+	/**
+	 * @return Gets the number of cards in the Light Side player's Reserve Deck.
+	 */
 	default int GetLSReserveDeckCount() { return GetLSReserveDeck().size(); }
 
+	/**
+	 * @return Gets all the cards in the Dark Side player's Reserve Deck.
+	 */
 	default List<? extends PhysicalCard> GetDSReserveDeck() { return GetReserveDeck(DS); }
+	/**
+	 * @return Gets all the cards in the Light Side player's Reserve Deck.
+	 */
 	default List<? extends PhysicalCard> GetLSReserveDeck() { return GetReserveDeck(LS); }
+
+	/**
+	 * @param player The player whose reserve deck you are interested in.
+	 * @return Gets all the cards in the given player's Reserve Deck.
+	 */
 	default List<? extends PhysicalCard> GetReserveDeck(String player)
 	{
 		return gameState().getReserveDeck(player);

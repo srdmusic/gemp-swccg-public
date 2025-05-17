@@ -18,6 +18,12 @@ import static org.junit.Assert.assertTrue;
  */
 public interface GameProcedures extends Actions, GameProperties {
 
+	/**
+	 * Cases the Dark Side player activate the maximum amount of available force, causes Light Side to let the same
+	 * amount pass without a react, and then causes both players to pass Activate phase actions.
+	 * @return The total amount of force that was activated
+	 * @throws DecisionResultInvalidException
+	 */
 	default int DSActivateMaxForceAndPass() throws DecisionResultInvalidException {
 		if(DSDecisionAvailable("Choose Activate action or Pass") && DSActionAvailable("Activate Force")) {
 			DSChooseAction("Activate Force");
@@ -31,6 +37,12 @@ public interface GameProcedures extends Actions, GameProperties {
 		return -1;
 	}
 
+	/**
+	 * Cases the Light Side player activate the maximum amount of available force, causes Dark Side to let the same
+	 * amount pass without a react, and then causes both players to pass Activate phase actions.
+	 * @return The total amount of force that was activated
+	 * @throws DecisionResultInvalidException
+	 */
 	default int LSActivateMaxForceAndPass() throws DecisionResultInvalidException {
 		if(LSDecisionAvailable("Choose Activate action or Pass") && LSActionAvailable("Activate Force")) {
 			LSChooseAction("Activate Force");
@@ -96,13 +108,74 @@ public interface GameProcedures extends Actions, GameProperties {
 		}
 	}
 
+	/**
+	 * During the Deploy phase, causes Dark Side to deploy the given card to the given location and automatically pass
+	 * any force use optional responses and deployment responses for both players.
+	 * @param card The card to be deployed
+	 * @param location Which location the card should be deployed to (should be in play already)
+	 * @throws DecisionResultInvalidException
+	 */
+	default void DSDeployCardAndPassResponses(PhysicalCardImpl card, PhysicalCardImpl location) throws DecisionResultInvalidException {
+		DSDeployCard(card);
+		assertTrue(DSDecisionAvailable("Choose where to deploy"));
+		DSChooseCard(location);
+
+		BothPassInverted("Force - Optional responses");
+		BothPassInverted("Optional response");
+	}
+
+	/**
+	 * During the Deploy phase, causes Light Side to deploy the given card to the given location and automatically pass
+	 * any force use optional responses and deployment responses for both players.
+	 * @param card The card to be deployed
+	 * @param location Which location the card should be deployed to (should be in play already)
+	 * @throws DecisionResultInvalidException
+	 */
+	default void LSDeployCardAndPassResponses(PhysicalCardImpl card, PhysicalCardImpl location) throws DecisionResultInvalidException {
+		LSDeployCard(card);
+		assertTrue(LSDecisionAvailable("Choose where to deploy"));
+		LSChooseCard(location);
+
+		BothPassInverted("Force - Optional responses");
+		BothPassInverted("Optional response");
+	}
+
+	/**
+	 * Causes both players to pass during the Activate phase.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void PassActivateActions() throws DecisionResultInvalidException { BothPass(); }
+	/**
+	 * Causes both players to pass during the Control phase.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void PassControlActions() throws DecisionResultInvalidException { BothPass(); }
+	/**
+	 * Causes both players to pass during the Deploy phase.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void PassDeployActions() throws DecisionResultInvalidException { BothPass(); }
+	/**
+	 * Causes both players to pass during the Move phase.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void PassMoveActions() throws DecisionResultInvalidException { BothPass(); }
+	/**
+	 * Causes both players to pass during the Battle phase.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void PassBattleActions() throws DecisionResultInvalidException { BothPass(); }
+	/**
+	 * Causes both players to pass during the Draw phase.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void PassDrawActions() throws DecisionResultInvalidException { BothPass(); }
 
+	/**
+	 * Causes both players to pass, first by making the current player pass and then their opponent. Both will check
+	 * to ensure that they have a currently available decision to be passing first.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void BothPass() throws DecisionResultInvalidException {
 		var currentPlayer = GetCurrentPlayer();
 		var offPlayer = GetOffPlayer();
@@ -115,6 +188,11 @@ public interface GameProcedures extends Actions, GameProperties {
 		}
 	}
 
+	/**
+	 * Causes both players to pass any decisions that contain the provided text.
+	 * @param text
+	 * @throws DecisionResultInvalidException
+	 */
 	default void BothPass(String text) throws DecisionResultInvalidException {
 		var currentPlayer = GetCurrentPlayer();
 		var offPlayer = GetOffPlayer();
@@ -127,6 +205,11 @@ public interface GameProcedures extends Actions, GameProperties {
 		}
 	}
 
+	/**
+	 * Causes both players to pass, but makes the opponent pass before the current player. Both will check
+	 * to ensure that they have a currently available decision to be passing first.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void BothPassInverted() throws DecisionResultInvalidException {
 		var currentPlayer = GetCurrentPlayer();
 		var offPlayer = GetOffPlayer();
@@ -140,6 +223,12 @@ public interface GameProcedures extends Actions, GameProperties {
 		}
 	}
 
+	/**
+	 * Causes both players to pass any decisions that contain the provided text.  First the off-player will pass, and
+	 * then the current player.
+	 * @param text
+	 * @throws DecisionResultInvalidException
+	 */
 	default void BothPassInverted(String text) throws DecisionResultInvalidException {
 		var currentPlayer = GetCurrentPlayer();
 		var offPlayer = GetOffPlayer();
@@ -154,8 +243,19 @@ public interface GameProcedures extends Actions, GameProperties {
 	}
 
 
+	/**
+	 * Skips to the Battle phase.
+	 * @throws DecisionResultInvalidException
+	 */
     default void SkipToBattle() throws DecisionResultInvalidException { SkipToPhase(Phase.BATTLE); }
 
+	/**
+	 * Causes players to spam pass until the provided target phase is current.  This process attempts to choose the
+	 * first option of any required triggers, but may be brittle if there are any reacts that interrupt the pass-fest.
+	 * Only 20 rounds of passing will be attempted to avoid infinite loops.
+	 * @param target The phase the tester actually wants to be in
+	 * @throws DecisionResultInvalidException
+	 */
     default void SkipToPhase(Phase target) throws DecisionResultInvalidException {
         for(int attempts = 1; attempts <= 20; attempts++)
         {
@@ -192,17 +292,44 @@ public interface GameProcedures extends Actions, GameProperties {
         }
     }
 
+	/**
+	 * Regardless of the current player, skips to the Activate phase of the next player's turn.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void SkipToNextTurn() throws DecisionResultInvalidException {
 		SkipToNextTurn(game().getOpponent(gameState().getCurrentPlayerId()));
 	}
 
+	/**
+	 * Skips to the Light Side player's next turn.  If Light Side is the current player, this will skip over an entire
+	 * Dark Side turn.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void SkipToLSTurn() throws DecisionResultInvalidException { SkipToNextTurn(LS);	}
+	/**
+	 * Skips to the Dark Side player's next turn.  If Dark Side is the current player, this will skip over an entire
+	 * Light Side turn.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void SkipToDSTurn() throws DecisionResultInvalidException { SkipToNextTurn(DS);	}
 
+	/**
+	 * Skips to a given player's next turn.  If they are the current player, this will skip over their opponent's turn.
+	 * @param player The player whose turn it should be once we stop.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void SkipToNextTurn(String player) throws DecisionResultInvalidException {
 		SkipToTurn(player, gameState().getPlayersLatestTurnNumber(player) + 1);
 	}
 
+	/**
+	 * Skips forward in time by causing both players to pass until it is the given player's turn.  All the same
+	 * caveats that affect SkipToPhase apply here.  This will attempt to move at most 20 turns in the future to avoid
+	 * infinite loops.
+	 * @param player Who should be the current player once we stop.
+	 * @param targetTurn What number turn that player should be on.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void SkipToTurn(String player, int targetTurn) throws DecisionResultInvalidException {
 		for(int attempts = 1; attempts <= 20; attempts++)
 		{
@@ -224,23 +351,7 @@ public interface GameProcedures extends Actions, GameProperties {
 	}
 
 
-	default void DSDeployCardAndPassResponses(PhysicalCardImpl card, PhysicalCardImpl location) throws DecisionResultInvalidException {
-		DSDecided(GetCardActionId(DS, card, "Deploy"));
-		assertTrue(DSDecisionAvailable("Choose where to deploy"));
-		DSChooseCard(location);
 
-		BothPassInverted("Force - Optional responses");
-		BothPassInverted("Optional response");
-	}
-
-	default void LSDeployCardAndPassResponses(PhysicalCardImpl card, PhysicalCardImpl location) throws DecisionResultInvalidException {
-		LSDecided(GetCardActionId(LS, card, "Deploy"));
-		assertTrue(LSDecisionAvailable("Choose where to deploy"));
-		LSChooseCard(location);
-
-		BothPassInverted("Force - Optional responses");
-		BothPassInverted("Optional response");
-	}
 
 
 //

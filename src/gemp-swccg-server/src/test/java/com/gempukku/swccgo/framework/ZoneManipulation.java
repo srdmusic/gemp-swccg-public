@@ -23,7 +23,7 @@ public interface ZoneManipulation extends TestBase{
 	/**
 	 * Removes a physical card's current zone.  This is a prerequisite to a card actually properly moving to a new zone.
 	 * This shouldn't be necessary to call directly within tests.
-	 * @param card
+	 * @param card The card to make zoneless.
 	 */
 	default void RemoveCardZone(PhysicalCardImpl card) {
 		if(card.getZone() != null)
@@ -34,15 +34,67 @@ public interface ZoneManipulation extends TestBase{
 		}
 	}
 
+	/**
+	 * Manually moves a given card to a given player's zone.  This ignores any game costs, requirements, or rules and
+	 * effectively teleports the card to whatever zone you like.  Do be careful where you stick weird things.
+	 * @param player Which player's version of a zone to use (i.e. which side of a location, which deck, etc)
+	 * @param card The card to teleport
+	 * @param zone The zone to teleport into
+	 */
 	default void MoveCardToZone(String player, PhysicalCardImpl card, Zone zone) {
 		RemoveCardZone(card);
 		gameState().addCardToZone(card, zone, player);
 	}
 
 	/**
-	 * Reserve Deck top
+	 * Moves one or more cards to a given location, on their owner's side of that location.  This is equivalent to
+	 * deploying to a location, except that no costs, requirements, or other rules will be respected.
+	 * This is unrelated to transporting a card during the Move phase.
+	 * @param location The location to move to
+	 * @param cards The cards to move
 	 */
+	default void MoveCardsToLocation(PhysicalCardImpl location, PhysicalCardImpl...cards) {
+		Arrays.stream(cards).forEach(card -> gameState().moveCardToLocation(card, location, true));
+	}
+	/**
+	 * Moves one or more cards to a given location, on their owner's opponent's side of that location.  This is
+	 * equivalent to deploying to a location, except that no costs, requirements, or other rules will be respected.
+	 * This is unrelated to transporting a card during the Move phase.
+	 * @param location The location to move to
+	 * @param cards The cards to move
+	 */
+	default void MoveCardsToOpponentLocation(PhysicalCardImpl location, PhysicalCardImpl...cards) {
+		Arrays.stream(cards).forEach(card -> gameState().moveCardToLocation(card, location, false));
+	}
 
+	/**
+	 * Moves one or more cards to the Dark Side player's side of the table.  This is equivalent to playing to that
+	 * side of the table, except that no costs, requirements, or other rules will be respected.
+	 * @param cards The cards to move
+	 */
+	default void MoveCardsToDSSideOfTable(PhysicalCardImpl...cards) { MoveCardsToSideOfTable(DS, cards); }
+	/**
+	 * Moves one or more cards to the LIght Side player's side of the table.  This is equivalent to playing to that
+	 * side of the table, except that no costs, requirements, or other rules will be respected.
+	 * @param cards The cards to move
+	 */
+	default void MoveCardsToLSSideOfTable(PhysicalCardImpl...cards) { MoveCardsToSideOfTable(LS, cards); }
+
+	/**
+	 * Moves one or more cards to a given player's side of the table.  This is equivalent to playing to that side of the
+	 * table, except that no costs, requirements, or other rules will be respected.
+	 * @param player Which player's side of the table to use
+	 * @param cards The cards to move
+	 */
+	default void MoveCardsToSideOfTable(String player, PhysicalCardImpl...cards) {
+		Arrays.stream(cards).forEach(card -> gameState().relocateCardToSideOfTable(card, player));
+	}
+
+
+	/**
+	 * Moves one or more cards to the top of their owner's reserve deck.
+	 * @param cards The cards to move.
+	 */
 	default void MoveCardsToTopOfOwnReserveDeck(PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
 			RemoveCardZone(card);
@@ -50,10 +102,23 @@ public interface ZoneManipulation extends TestBase{
 		});
 	}
 
+	/**
+	 * Moves one or more cards to the top of the Dark Side player's reserve deck.
+	 * @param cards The cards to move.
+	 */
 	default void MoveCardsToTopOfDSReserveDeck(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(DS, cards);}
 
+	/**
+	 * Moves one or more cards to the top of the Light Side player's reserve deck.
+	 * @param cards The cards to move.
+	 */
 	default void MoveCardsToTopOfLSReserveDeck(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(LS, cards);}
 
+	/**
+	 * Moves one or more cards to the top of the given player's reserve deck.
+	 * @param player Which player's reserve deck to be using
+	 * @param cards The cards to move.
+	 */
 	default void MoveCardsToTopOfReserveDeck(String player, PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
 			RemoveCardZone(card);
@@ -61,11 +126,10 @@ public interface ZoneManipulation extends TestBase{
 		});
 	}
 
-
 	/**
-	 * Reserve Deck bottom
+	 * Moves one or more cards to the bottom of their owner's reserve deck.
+	 * @param cards The cards to move.
 	 */
-
 	default void MoveCardsToBottomOfOwnReserveDeck(PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
 			RemoveCardZone(card);
@@ -73,9 +137,22 @@ public interface ZoneManipulation extends TestBase{
 		});
 	}
 
+	/**
+	 * Moves one or more cards to the bottom of the Dark Side player's reserve deck.
+	 * @param cards The cards to move.
+	 */
 	default void MoveCardsToBottomOfDSReserveDeck(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(DS, cards);}
+	/**
+	 * Moves one or more cards to the bottom of the Light Side player's reserve deck.
+	 * @param cards The cards to move.
+	 */
 	default void MoveCardsToBottomOfLSReserveDeck(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(LS, cards);}
 
+	/**
+	 * Moves one or more cards to the bottom of the given player's reserve deck.
+	 * @param player Which player's reserve deck to be using
+	 * @param cards The cards to move.
+	 */
 	default void MoveCardsToBottomOfReserveDeck(String player, PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
 			RemoveCardZone(card);
@@ -166,6 +243,12 @@ public interface ZoneManipulation extends TestBase{
         }
     }
 
+	/**
+	 * Directly attaches one or more cards to a target card, regardless of legality or costs.  This is often used once
+	 * a card has already proven to deploy properly for expedience in follow-up tests.
+	 * @param bearer Which card should be bearing the given cards.
+	 * @param cards One or more cards to attach
+	 */
     default void AttachCardsTo(PhysicalCardImpl bearer, PhysicalCardImpl...cards) {
         Arrays.stream(cards).forEach(card -> {
             RemoveCardZone(card);
@@ -173,6 +256,12 @@ public interface ZoneManipulation extends TestBase{
         });
     }
 
+	/**
+	 * Directly stacks one or more cards on a target card, regardless of legality or costs.  This is often used once
+	 * a card has already proven to stack properly for expedience in follow-up tests.
+	 * @param on Which card the given cards should be stacked on.
+	 * @param cards One or more cards to stack
+	 */
     default void StackCardsOn(PhysicalCardImpl on, PhysicalCardImpl...cards) {
         Arrays.stream(cards).forEach(card -> {
             RemoveCardZone(card);
@@ -180,16 +269,17 @@ public interface ZoneManipulation extends TestBase{
         });
     }
 
-//	default void DrawCardsFromReserve(String player, int count) {
-//		for (int i = 0; i < count; ++i) {
-//			var reserveDeck = gameState().getReserveDeck(player, true);
-//			if (reserveDeck.size() < 2) {
-//				return;
-//			}
-//			var card = (PhysicalCardImpl) reserveDeck.getLast();
-//			MoveCardToZone(player, card, Zone.HAND);
-//		}
-//	}
+	// Unsure if this is ever really necessary or relevant, but here it is.
+	default void DrawCardsFromReserve(String player, int count) {
+		for (int i = 0; i < count; ++i) {
+			var reserveDeck = gameState().getReserveDeck(player, true);
+			if (reserveDeck.size() < 2) {
+				return;
+			}
+			var card = (PhysicalCardImpl) reserveDeck.getLast();
+			MoveCardToZone(player, card, Zone.HAND);
+		}
+	}
 
 
 	default void ShuffleCardsIntoDSReserveDeck(PhysicalCardImpl...cards) { ShuffleCardsIntoReserveDeck(DS, cards); }
@@ -205,24 +295,24 @@ public interface ZoneManipulation extends TestBase{
 	}
 
 
+	/**
+	 * Shuffles the Dark Side player's reserve deck.
+	 */
     default void ShuffleDSReserveDeck() { ShuffleReserveDeck(DS); }
+	/**
+	 * Shuffles the Light Side player's reserve deck.
+	 */
     default void ShuffleLSReserveDeck() { ShuffleReserveDeck(LS); }
+
+	/**
+	 * Shuffles the given player's reserve deck.
+	 * @param player The player's deck to shuffle
+	 */
     default void ShuffleReserveDeck(String player) {
         gameState().shuffleReserveDeck(player);
     }
 
-	default void MoveCardsToLocation(PhysicalCardImpl location, PhysicalCardImpl...cards) {
-		Arrays.stream(cards).forEach(card -> gameState().moveCardToLocation(card, location, true));
-	}
-	default void MoveCardsToOpponentLocation(PhysicalCardImpl location, PhysicalCardImpl...cards) {
-		Arrays.stream(cards).forEach(card -> gameState().moveCardToLocation(card, location, false));
-	}
 
-	default void MoveCardsToDSSideOfTable(PhysicalCardImpl...cards) { MoveCardsToSideOfTable(DS, cards); }
-	default void MoveCardsToLSSideOfTable(PhysicalCardImpl...cards) { MoveCardsToSideOfTable(LS, cards); }
 
-	default void MoveCardsToSideOfTable(String player, PhysicalCardImpl...cards) {
-		Arrays.stream(cards).forEach(card -> gameState().relocateCardToSideOfTable(card, player));
-	}
 
 }

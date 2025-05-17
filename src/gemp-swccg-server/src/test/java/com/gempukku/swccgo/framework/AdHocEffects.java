@@ -24,6 +24,68 @@ import static org.junit.Assert.assertTrue;
  * that moment to become aware of changes.
  */
 public interface AdHocEffects extends TestBase, Decisions {
+
+
+	/**
+	 * Staples a given modifier to the game state for the duration of the game.  This can be a good way to test elusive
+	 * game states that would otherwise require a lot of setup.
+	 * @param mod The modifier to permanently add to the game.
+	 */
+	default void ApplyAdHocModifier(Modifier mod)
+    {
+        game().getModifiersEnvironment().addAlwaysOnModifier(mod);
+    }
+
+	/**
+	 * Causes the given action to be stapled to the game state for the duration of the game.  The action will be
+	 * available to the appropriate player at the appropriate time as if an invisible card were on the board.  The
+	 * precise details (player, phase, effect) will need to be set in the action itself.
+	 * @param action The action to permanently add to the game.
+	 */
+	default void ApplyAdHocAction(ActionProxy action)
+    {
+        game().getActionsEnvironment().addUntilEndOfGameActionProxy(action);
+    }
+
+	/**
+	 * Causes the Dark Side player to execute an arbitrary effect.  Note that there are nuances to how and whether this
+	 * ever works; in particular it seems to only work if there are 0 legal actions to take on the current decision.
+	 * When it works, it can be useful for altering the game state in situations where you want e.g. the proper trigger
+	 * or other side-effects to be respected.  It is finicky tho.
+	 * To ensure test integrity, this also asserts that the effect does in fact get carried out.
+	 * @param effect The effect to execute.  Details are determined by the effect itself.
+	 * @throws DecisionResultInvalidException This error will be thrown if the effect cannot for whatever reason be
+	 * executed as part of the current player decision.
+	 */
+	default void DSExecuteAdHocEffect(StandardEffect effect) throws DecisionResultInvalidException { ExecuteAdHocEffect(DS, effect); }
+	/**
+	 * Causes the LIght Side player to execute an arbitrary effect.  Note that there are nuances to how and whether this
+	 * ever works; in particular it seems to only work if there are 0 legal actions to take on the current decision.
+	 * When it works, it can be useful for altering the game state in situations where you want e.g. the proper trigger
+	 * or other side-effects to be respected.  It is finicky tho.
+	 * To ensure test integrity, this also asserts that the effect does in fact get carried out.
+	 * @param effect The effect to execute.  Details are determined by the effect itself.
+	 * @throws DecisionResultInvalidException This error will be thrown if the effect cannot for whatever reason be
+	 * executed as part of the current player decision.
+	 */
+	default void LSExecuteAdHocEffect(StandardEffect effect) throws DecisionResultInvalidException { ExecuteAdHocEffect(LS, effect); }
+
+	/**
+	 * Causes the given player to execute an arbitrary effect.  Note that there are nuances to how and whether this
+	 * ever works; in particular it seems to only work if there are 0 legal actions to take on the current decision.
+	 * When it works, it can be useful for altering the game state in situations where you want e.g. the proper trigger
+	 * or other side-effects to be respected.  It is finicky tho.
+	 * To ensure test integrity, this also asserts that the effect does in fact get carried out.
+	 * @param playerId The player who will execute the effect.
+	 * @param effect The effect to execute.  Details are determined by the effect itself.
+	 * @throws DecisionResultInvalidException This error will be thrown if the effect cannot for whatever reason be
+	 * executed as part of the current player decision.
+	 */
+	default void ExecuteAdHocEffect(String playerId, StandardEffect effect) throws DecisionResultInvalidException {
+        carryOutEffectInPhaseActionByPlayer(playerId, effect);
+        assertTrue(effect.wasCarriedOut());
+    }
+
 	default void carryOutEffectInPhaseActionByPlayer(String playerId, StandardEffect effect) throws DecisionResultInvalidException {
 		var action = new SystemQueueAction();
 		action.appendEffect(effect);
@@ -36,23 +98,6 @@ public interface AdHocEffects extends TestBase, Decisions {
 
 		PlayerDecided(playerId, "0");
 	}
-
-	default void ApplyAdHocModifier(Modifier mod)
-    {
-        game().getModifiersEnvironment().addAlwaysOnModifier(mod);
-    }
-
-	default void ApplyAdHocAction(ActionProxy action)
-    {
-        game().getActionsEnvironment().addUntilEndOfGameActionProxy(action);
-    }
-
-	default void DSExecuteAdHocEffect(StandardEffect effect) throws DecisionResultInvalidException { ExecuteAdHocEffect(DS, effect); }
-	default void LSExecuteAdHocEffect(StandardEffect effect) throws DecisionResultInvalidException { ExecuteAdHocEffect(LS, effect); }
-	default void ExecuteAdHocEffect(String playerId, StandardEffect effect) throws DecisionResultInvalidException {
-        carryOutEffectInPhaseActionByPlayer(playerId, effect);
-        assertTrue(effect.wasCarriedOut());
-    }
 
 
 }

@@ -9,6 +9,12 @@ import static org.junit.Assert.assertEquals;
 
 public class Assertions {
 
+	/**
+	 * Asserts that one or more cards are all "at" the provided location.  If this is not the case, an AssertionError
+	 * will be thrown with no message.
+	 * @param location The location to check.
+	 * @param cards One more cards which must all be at that location.
+	 */
 	public static void assertAtLocation(PhysicalCardImpl location, PhysicalCardImpl...cards) {
 		for(var card : cards) {
 			assertEquals(Zone.AT_LOCATION, card.getZone());
@@ -16,11 +22,22 @@ public class Assertions {
 		}
 	}
 
+	/**
+	 * Asserts that one or more cards are all contained within the provided zone.  If any are not there, an AssertionError
+	 * will be thrown with no message.
+	 * @param zone The zone to check.
+	 * @param cards One or more cards which must all be in that zone.
+	 */
 	public static void assertInZone(Zone zone, PhysicalCardImpl...cards) {
 		for(var card : cards) {
 			assertEquals(zone, card.getZone());
 		}
 	}
 
+	/**
+	 * Asserts that one or more cards are all in either player's hand.  If any are in any other zone, an AssertionError
+	 * will be thrown with no message.
+	 * @param cards One or more cards which must all be in hand.
+	 */
 	public static void assertInHand(PhysicalCardImpl...cards) { assertInZone(Zone.HAND, cards); }
 }

@@ -109,7 +109,7 @@ public class Card_1_28_Tests {
 	}
 
 	@Test
-	public void RebelTrooperDeploysFor1ForceWithAbility2Imperial() throws DecisionResultInvalidException {
+	public void RebelTrooperDeploysFor1ForceWithAbility2Rebel() throws DecisionResultInvalidException {
 		var scn = GetScenario();
 
 		var trooper = scn.GetLSCard("trooper");
@@ -142,7 +142,7 @@ public class Card_1_28_Tests {
 	}
 
 	@Test
-	public void RebelTrooperDeploysFor0ForceWithAbility3Imperial() throws DecisionResultInvalidException {
+	public void RebelTrooperDeploysFor0ForceWithAbility3Rebel() throws DecisionResultInvalidException {
 		var scn = GetScenario();
 
 		var trooper = scn.GetLSCard("trooper");
