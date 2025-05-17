@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.framework;
 
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.game.PhysicalCardImpl;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 
@@ -23,7 +24,7 @@ public interface GameProcedures extends Actions, GameProperties {
 			int max = DSGetChoiceMax();
 			DSDecided(max);
 			LSDecided(max);
-			LSPass();
+			BothPassInverted();
 			return max;
 		}
 
@@ -36,7 +37,7 @@ public interface GameProcedures extends Actions, GameProperties {
 			int max = LSGetChoiceMax();
 			LSDecided(max);
 			DSDecided(max);
-			DSPass();
+			BothPassInverted();
 			return max;
 		}
 
@@ -95,57 +96,12 @@ public interface GameProcedures extends Actions, GameProperties {
 		}
 	}
 
-//
-//    default void SkipToAssignments() throws DecisionResultInvalidException {
-//        SkipToPhase(Phase.ASSIGNMENT);
-//        PassCurrentPhaseActions();
-//    }
-//
-//    default void SkipToPhase(Phase target) throws DecisionResultInvalidException {
-//        for(int attempts = 1; attempts <= 20; attempts++)
-//        {
-//            Phase current = _gameState.getCurrentPhase();
-//            if(current == target)
-//                break;
-//
-//            if(current == Phase.FELLOWSHIP) {
-//                DSPassCurrentPhaseAction();
-//                if(_game.getFormat().getSiteBlock() == SitesBlock.LSS) {
-//                    LSChooseAnyCard();
-//                }
-//            }
-//            else if(current == Phase.LS) {
-//                LSPassCurrentPhaseAction();
-//            }
-//            else {
-//                var DS = DSGetAwaitingDecision();
-//                var LS = LSGetAwaitingDecision();
-//                if(DS != null && DS.getText().toLowerCase().contains("required")) {
-//                    DSChooseAction("0");
-//                }
-//                else if(LS != null && LS.getText().toLowerCase().contains("required")){
-//                    LSChooseAction("0");
-//                }
-//                else {
-//                    PassCurrentPhaseActions();
-//                }
-//            }
-//
-//            if(attempts == 20)
-//            {
-//                throw new DecisionResultInvalidException("Could not arrive at target '" + target + "' after 20 attempts!");
-//            }
-//        }
-//    }
-//
-//
-    default void PassActivateActions() throws DecisionResultInvalidException { BothPass(); }
-    default void PassControlActions() throws DecisionResultInvalidException { BothPass(); }
-    default void PassAssignmentActions() throws DecisionResultInvalidException { BothPass(); }
-    default void PassFierceAssignmentActions() throws DecisionResultInvalidException { BothPass(); }
-    default void PassSkirmishActions() throws DecisionResultInvalidException { BothPass(); }
-    default void PassFierceSkirmishActions() throws DecisionResultInvalidException { BothPass(); }
-    default void PassRegroupActions() throws DecisionResultInvalidException { BothPass(); }
+	default void PassActivateActions() throws DecisionResultInvalidException { BothPass(); }
+	default void PassControlActions() throws DecisionResultInvalidException { BothPass(); }
+	default void PassDeployActions() throws DecisionResultInvalidException { BothPass(); }
+	default void PassMoveActions() throws DecisionResultInvalidException { BothPass(); }
+	default void PassBattleActions() throws DecisionResultInvalidException { BothPass(); }
+	default void PassDrawActions() throws DecisionResultInvalidException { BothPass(); }
 
 	default void BothPass() throws DecisionResultInvalidException {
 		var currentPlayer = GetCurrentPlayer();
@@ -197,10 +153,90 @@ public interface GameProcedures extends Actions, GameProperties {
 		}
 	}
 
+
+    default void SkipToBattle() throws DecisionResultInvalidException { SkipToPhase(Phase.BATTLE); }
+
+    default void SkipToPhase(Phase target) throws DecisionResultInvalidException {
+        for(int attempts = 1; attempts <= 20; attempts++)
+        {
+            Phase current = gameState().getCurrentPhase();
+            if(current == target)
+                break;
+
+            if(current == Phase.ACTIVATE) {
+				if(gameState().getCurrentPlayerId().equals(LS)) {
+					LSActivateMaxForceAndPass();
+				}
+				else {
+					DSActivateMaxForceAndPass();
+				}
+            }
+            else {
+                var dsDecision = DSGetDecision();
+                var lsDecision = LSGetDecision();
+                if(dsDecision != null && dsDecision.getText().toLowerCase().contains("required")) {
+                    DSChooseAction("0");
+                }
+                else if(lsDecision != null && lsDecision.getText().toLowerCase().contains("required")){
+                    LSChooseAction("0");
+                }
+                else {
+                    BothPass();
+                }
+            }
+
+            if(attempts == 20)
+            {
+                throw new DecisionResultInvalidException("Could not arrive at target '" + target + "' after 20 attempts!");
+            }
+        }
+    }
+
+	default void SkipToNextTurn() throws DecisionResultInvalidException {
+		SkipToNextTurn(game().getOpponent(gameState().getCurrentPlayerId()));
+	}
+
+	default void SkipToLSTurn() throws DecisionResultInvalidException { SkipToNextTurn(LS);	}
+	default void SkipToDSTurn() throws DecisionResultInvalidException { SkipToNextTurn(DS);	}
+
+	default void SkipToNextTurn(String player) throws DecisionResultInvalidException {
+		SkipToTurn(player, gameState().getPlayersLatestTurnNumber(player) + 1);
+	}
+
+	default void SkipToTurn(String player, int targetTurn) throws DecisionResultInvalidException {
+		for(int attempts = 1; attempts <= 20; attempts++)
+		{
+			String currentPlayer = gameState().getCurrentPlayerId();
+			int currentTurn = gameState().getPlayersLatestTurnNumber(currentPlayer);
+
+			if(player.equals(currentPlayer) && currentTurn == targetTurn)
+				break;
+
+			SkipToPhase(Phase.DRAW);
+			PassDrawActions();
+
+			if(attempts == 20)
+			{
+				throw new DecisionResultInvalidException("Could not arrive at target turn '" + targetTurn + "' for '"
+						+ player + "'after 20 attempts!");
+			}
+		}
+	}
+
+
 	default void DSDeployCardAndPassResponses(PhysicalCardImpl card, PhysicalCardImpl location) throws DecisionResultInvalidException {
 		DSDecided(GetCardActionId(DS, card, "Deploy"));
 		assertTrue(DSDecisionAvailable("Choose where to deploy"));
 		DSChooseCard(location);
+
+		BothPassInverted("Force - Optional responses");
+		BothPassInverted("Optional response");
+	}
+
+	default void LSDeployCardAndPassResponses(PhysicalCardImpl card, PhysicalCardImpl location) throws DecisionResultInvalidException {
+		LSDecided(GetCardActionId(LS, card, "Deploy"));
+		assertTrue(LSDecisionAvailable("Choose where to deploy"));
+		LSChooseCard(location);
 
 		BothPassInverted("Force - Optional responses");
 		BothPassInverted("Optional response");
@@ -216,59 +252,5 @@ public interface GameProcedures extends Actions, GameProperties {
 //    }
 //
 //
-//    default void SkipCurrentSite() throws DecisionResultInvalidException {
-//        SkipToPhase(Phase.REGROUP);
-//        PhysicalCardImpl site = GetCurrentSite();
-//        if(site.getSiteNumber() == 9)
-//            return; // Game finished
-//        PassCurrentPhaseActions();
-//        if(LSDecisionAvailable("reconcile"))
-//        {
-//            LSDeclineReconciliation();
-//        }
-//        while(LSDecisionAvailable("discard down"))
-//        {
-//            LSChooseCard((PhysicalCardImpl) GetLSHand().getFirst());
-//        }
-//        if(DSDecisionAvailable("another move"))
-//        {
-//            DSChooseToStay();
-//        }
-//        if(DSDecisionAvailable("reconcile"))
-//        {
-//            DSDeclineReconciliation();
-//        }
-//        if(DSDecisionAvailable("discard down"))
-//        {
-//            DSChooseCard((PhysicalCardImpl) GetDSHand().getFirst());
-//        }
-//
-//        //LS player
-//        SkipToPhaseInverted(Phase.REGROUP);
-//        LSPassCurrentPhaseAction(); // actually DS with the swap
-//        DSPassCurrentPhaseAction(); // actually LS with the swap
-//        if(DSDecisionAvailable("reconcile"))
-//        {
-//            DSDeclineReconciliation();
-//        }
-//        if(DSDecisionAvailable("discard down"))
-//        {
-//            DSChooseCard((PhysicalCardImpl) GetDSHand().getFirst());
-//        }
-//        if(LSDecisionAvailable("another move"))
-//        {
-//            LSChoose("1"); // Choose to stay
-//        }
-//        if(LSDecisionAvailable("reconcile"))
-//        {
-//            LSDeclineReconciliation();
-//        }
-//        if(LSDecisionAvailable("discard down"))
-//        {
-//            LSChooseCard((PhysicalCardImpl) GetLSHand().getFirst());
-//        }
-//
-//        Assert.assertTrue(GetCurrentPhase() == Phase.BETWEEN_TURNS
-//                || GetCurrentPhase() == Phase.FELLOWSHIP);
-//    }
+
 }

@@ -41,8 +41,8 @@ public class Card_1_194_Tests
 		 * Title: Stormtrooper
 		 * Uniqueness: Unrestricted
 		 * Side: Dark
-		 * Type: Imperial
-		 * Subtype: Character
+		 * Type: Character
+		 * Subtype: Imperial
 		 * Destiny: 1
 		 * Deploy: 1
 		 * Power: 1
@@ -86,7 +86,6 @@ public class Card_1_194_Tests
 
 		scn.StartGame();
 		scn.DSActivateMaxForceAndPass();
-		scn.PassActivateActions();
 		scn.PassControlActions();
 
 		assertEquals(Phase.DEPLOY, scn.GetCurrentPhase());
@@ -114,10 +113,7 @@ public class Card_1_194_Tests
 		scn.StartGame();
 
 		scn.MoveCardsToLocation(site, chiraneau);
-
-		scn.DSActivateMaxForceAndPass();
-		scn.PassActivateActions();
-		scn.PassControlActions();
+		scn.SkipToPhase(Phase.DEPLOY);
 
 		assertInHand(stormtrooper);
 		assertAtLocation(site, chiraneau);
@@ -143,10 +139,7 @@ public class Card_1_194_Tests
 		scn.StartGame();
 
 		scn.MoveCardsToLocation(site, motti);
-
-		scn.DSActivateMaxForceAndPass();
-		scn.PassActivateActions();
-		scn.PassControlActions();
+		scn.SkipToPhase(Phase.DEPLOY);
 
 		assertInHand(stormtrooper);
 		assertAtLocation(site, motti);
