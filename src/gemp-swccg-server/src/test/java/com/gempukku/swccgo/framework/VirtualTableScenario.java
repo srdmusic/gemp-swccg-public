@@ -175,7 +175,8 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ca
         }
 
         // As a convenience, we want the tester to be able to stack their hand and other piles before the game begins.
-        // However, since
+        // However, since a new hand will be drawn, this tramples over the careful stacking, so we will reset the
+        // state of the deck + hand to what they were before the card draw.
         if(resetHand) {
             for(var card : _gameState.getHand(LS).stream().toList().reversed()) {
                 if(!initialLSHand.contains(card)) {

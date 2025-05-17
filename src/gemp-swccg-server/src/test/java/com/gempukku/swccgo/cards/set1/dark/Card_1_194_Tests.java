@@ -63,8 +63,8 @@ public class Card_1_194_Tests
 		assertEquals("Stormtrooper", card.getTitle());
 		assertEquals(Uniqueness.UNRESTRICTED, card.getUniqueness());
 		assertEquals(Side.DARK, card.getSide());
-		//assertEquals(CardSubtype.CHARACTER, card.getCardSubtype());
 		assertTrue(card.isCardType(CardType.IMPERIAL));
+		//assertEquals(CardSubtype.CHARACTER, card.getCardSubtype());
 		assertEquals(1, card.getDestiny(), scn.epsilon);
 		assertEquals(1, card.getDeployCost(), scn.epsilon);
 		assertEquals(1, card.getPower(), scn.epsilon);

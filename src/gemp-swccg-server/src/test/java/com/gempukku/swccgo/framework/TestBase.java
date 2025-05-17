@@ -26,8 +26,6 @@ public interface TestBase {
 	 * The default location to be played by either player.  This will be included in the deck and automatically played
 	 * at the start of the game.
 	 *
-	 * Space locations (systems?) should also be added as an alternate set of default options here.
-	 *
 	 * When choosing default locations, be sure to pick ones that leave both sides with identical lightsaber icons,
 	 * whether that means that both are the same or that one is 1/2 and the other is 2/1.  This way testers do not need
 	 * to remember nuances around default activation amounts being different per-side.
@@ -40,6 +38,9 @@ public interface TestBase {
 
 	String DefaultGroundLSLocation = "5_079"; // Cloud City: Chasm Walkway
 	String DefaultGroundDSLocation = "12_176"; // Tatooine: Marketplace
+
+	String DefaultSpaceLSSystem = "6_087"; // Tibrin
+	String DefaultSpaceDSSystem = "1_282"; // Dantooine
 
 	/*
 	 * The default filler cards to use for Force in each deck.  These should essentially be ignored by tests except

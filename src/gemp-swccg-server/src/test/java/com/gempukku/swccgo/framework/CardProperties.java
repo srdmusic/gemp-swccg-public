@@ -46,6 +46,11 @@ public interface CardProperties extends TestBase {
 		return game().getModifiersQuerying().getAbility(gameState(), card);
 	}
 
+	default float GetBattleDestinyAbility(PhysicalCardImpl card)
+	{
+		return game().getModifiersQuerying().getAbilityForBattleDestiny(gameState(), card);
+	}
+
 	default float GetArmor(PhysicalCardImpl card)
 	{
 		return game().getModifiersQuerying().getArmor(gameState(), card);

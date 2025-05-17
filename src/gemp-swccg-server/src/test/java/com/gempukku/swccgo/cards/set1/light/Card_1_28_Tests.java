@@ -51,9 +51,11 @@ public class Card_1_28_Tests {
 		 * Ability: 1
 		 * Forfeit: 2
 		 * Icons: Warrior
-		 * Game Text: Deploys free to same site as one of your Imperials with ability > 2.
-		 * Lore: One of the countless elite shock troops totally loyal to the Emperor. Unquestioningly follows orders.
-		 * 		Willing to sacrifice their lives to accomplish a mission. First-strike force.
+		 * Keywords: Trooper
+		 * Species: Alderaanian
+		 * Game Text: Deploys free to same site as one of your Rebels with ability > 2.
+		 * Lore: Corellian Corvette trooper Ensign Chad Hilse, an Alderaanian, typifies the loyal Rebel volunteers
+		 * 		dedicated to defeating the Empire. Trained in starship and ground combat.
 		 * Set: Premiere
 		 * Rarity: C3
 		 */
@@ -65,8 +67,8 @@ public class Card_1_28_Tests {
 		assertEquals("Rebel Trooper", card.getTitle());
 		assertEquals(Uniqueness.UNRESTRICTED, card.getUniqueness());
 		assertEquals(Side.LIGHT, card.getSide());
-		//assertEquals(CardSubtype.CHARACTER, card.getCardSubtype());
 		assertTrue(card.isCardType(CardType.REBEL));
+		//assertEquals(CardSubtype.CHARACTER, card.getCardSubtype());
 		assertEquals(1, card.getDestiny(), scn.epsilon);
 		assertEquals(1, card.getDeployCost(), scn.epsilon);
 		assertEquals(1, card.getPower(), scn.epsilon);
@@ -107,7 +109,7 @@ public class Card_1_28_Tests {
 	}
 
 	@Test
-	public void StormtrooperDeploysFor1ForceWithAbility2Imperial() throws DecisionResultInvalidException {
+	public void RebelTrooperDeploysFor1ForceWithAbility2Imperial() throws DecisionResultInvalidException {
 		var scn = GetScenario();
 
 		var trooper = scn.GetLSCard("trooper");
@@ -140,7 +142,7 @@ public class Card_1_28_Tests {
 	}
 
 	@Test
-	public void StormtrooperDeploysFor0ForceWithAbility3Imperial() throws DecisionResultInvalidException {
+	public void RebelTrooperDeploysFor0ForceWithAbility3Imperial() throws DecisionResultInvalidException {
 		var scn = GetScenario();
 
 		var trooper = scn.GetLSCard("trooper");

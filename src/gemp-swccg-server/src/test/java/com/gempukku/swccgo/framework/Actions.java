@@ -12,6 +12,7 @@ import java.util.List;
 import static org.junit.Assert.assertTrue;
 
 /**
+ *
  * Actions are top-level decisions that involve legal game operations available to players.  For example, deploying
  * a card, playing an interrupt, and activating a card ability are all Actions.
  */
