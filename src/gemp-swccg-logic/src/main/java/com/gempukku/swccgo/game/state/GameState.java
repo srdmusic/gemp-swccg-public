@@ -426,7 +426,7 @@ public class GameState implements Snapshotable<GameState> {
      * @param blueprintId the blueprint ID
      * @return the physical card
      */
-    private PhysicalCard createPhysicalCard(String playerId, SwccgCardBlueprintLibrary library, String blueprintId) {
+    public PhysicalCard createPhysicalCard(String playerId, SwccgCardBlueprintLibrary library, String blueprintId) {
         SwccgCardBlueprint cardFront = library.getSwccgoCardBlueprint(blueprintId);
         String backBlueprintId = playerId.equals(_darkSidePlayer) ? "-1_2" : "-1_1";
         SwccgCardBlueprint cardBack = null;
