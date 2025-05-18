@@ -67,8 +67,8 @@ public class Card501_182 extends AbstractNormalEffect {
         final String opponent = game.getOpponent(self.getOwner());
         final GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         Filter ccRebelExceptLuke = Filters.and(Filters.icon(Icon.CLOUD_CITY), Filters.Rebel, Filters.except(Filters.Luke), Filters.presentWith(self, Filters.and(Filters.opponents(self), Filters.warrior)));
-        if (TriggerConditions.isAboutToBeLost(game, effectResult, ccRebelExceptLuke) 
-                || TriggerConditions.isAboutToBeForfeitedToLostPile(game, effectResult, ccRebelExceptLuke)
+        if ((TriggerConditions.isAboutToBeLost(game, effectResult, ccRebelExceptLuke) 
+                || TriggerConditions.isAboutToBeForfeitedToLostPile(game, effectResult, ccRebelExceptLuke))
                 && GameConditions.isOnceDuringOpponentsTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
             final AboutToLeaveTableResult aboutToLeaveTableResult = (AboutToLeaveTableResult) effectResult;
             final PhysicalCard cardToBeLost = aboutToLeaveTableResult.getCardAboutToLeaveTable();
