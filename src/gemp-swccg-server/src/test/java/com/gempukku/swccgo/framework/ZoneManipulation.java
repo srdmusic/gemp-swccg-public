@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.framework;
 
 import com.gempukku.swccgo.common.Zone;
+import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.PhysicalCardImpl;
 
 import java.util.ArrayList;
@@ -242,6 +243,11 @@ public interface ZoneManipulation extends TestBase{
             MoveCardToZone(LS, card, Zone.HAND);
         }
     }
+
+	default void CaptureCardWith(PhysicalCardImpl captor, PhysicalCardImpl captive) {
+		gameState().seizeCharacter(game(), captive, captor);
+	}
+
 
 	/**
 	 * Directly attaches one or more cards to a target card, regardless of legality or costs.  This is often used once

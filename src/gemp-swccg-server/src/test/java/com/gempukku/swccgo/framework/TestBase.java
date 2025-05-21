@@ -80,7 +80,7 @@ public interface TestBase {
 	 */
 	String DefaultSpaceDSSystem = "1_282"; // Dantooine
 	/**
-	 * The default space system used by Dark Side.  This will be played at the start of the game automatically.
+	 * The default space system used by Light Side.  This will be played at the start of the game automatically.
 	 */
 	String DefaultSpaceLSSystem = "6_087"; // Tibrin
 

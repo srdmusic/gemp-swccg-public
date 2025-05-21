@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.framework;
 
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.PhysicalCardImpl;
 
 public interface GameProperties extends TestBase {
@@ -13,6 +14,9 @@ public interface GameProperties extends TestBase {
 	 * @return Gets the current game phase
 	 */
 	default Phase GetCurrentPhase() { return gameState().getCurrentPhase(); }
+
+	default boolean IsActiveBattle() { return gameState().isDuringBattle(); }
+	default PhysicalCard GetBattleLocation() { return gameState().getBattleLocation(); }
 
 	/**
 	 * @return Gets the player who is currently playing their turn.

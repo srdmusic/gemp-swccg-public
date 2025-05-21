@@ -143,4 +143,8 @@ public interface CardProperties extends TestBase {
         return game().getModifiersQuerying().getCardTypes(gameState(), card).contains(type);
     }
 
+	default boolean IsParticipatingInBattle(PhysicalCardImpl card) {
+		return gameState().isParticipatingInBattle(card);
+	}
+
 }

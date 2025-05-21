@@ -66,7 +66,7 @@ public interface Actions extends Decisions, Choices {
 
 
 	//TODO: Clean these up to use the correct search text
-	default Boolean DSActionAvailable(PhysicalCardImpl card) { return ActionAvailable(DS, "Use " + GameUtils.getFullName(card)); }
+	default Boolean DSActionAvailable(PhysicalCardImpl card) { return ActionAvailable(DS, GetCardActionId(DS, card, "Transfer")); }
 	default Boolean LSActionAvailable(PhysicalCardImpl card) { return ActionAvailable(LS, "Use " + GameUtils.getFullName(card)); }
 
 	default Boolean DSPlayAvailable(PhysicalCardImpl card) { return ActionAvailable(DS, "Play " + GameUtils.getFullName(card)); }

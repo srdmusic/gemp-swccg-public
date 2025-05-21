@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 public interface GameProcedures extends Actions, GameProperties {
 
 	/**
-	 * Cases the Dark Side player activate the maximum amount of available force, causes Light Side to let the same
+	 * Causes the Dark Side player to activate the maximum amount of available force, causes Light Side to let the same
 	 * amount pass without a react, and then causes both players to pass Activate phase actions.
 	 * @return The total amount of force that was activated
 	 * @throws DecisionResultInvalidException
@@ -38,7 +38,7 @@ public interface GameProcedures extends Actions, GameProperties {
 	}
 
 	/**
-	 * Cases the Light Side player activate the maximum amount of available force, causes Dark Side to let the same
+	 * Causes the Light Side player to activate the maximum amount of available force, causes Dark Side to let the same
 	 * amount pass without a react, and then causes both players to pass Activate phase actions.
 	 * @return The total amount of force that was activated
 	 * @throws DecisionResultInvalidException
@@ -222,6 +222,12 @@ public interface GameProcedures extends Actions, GameProperties {
 			PlayerDecided(currentPlayer, "");
 		}
 	}
+
+	default void PassCardPlayResponses() throws DecisionResultInvalidException { BothPassInverted(); }
+	default void PassForceUseResponses() throws DecisionResultInvalidException { BothPassInverted(); }
+
+	default void DSPassForceUseResponse() throws DecisionResultInvalidException { DSPass(); }
+	default void LSPassForceUseResponse() throws DecisionResultInvalidException { LSPass();}
 
 	/**
 	 * Causes both players to pass any decisions that contain the provided text.  First the off-player will pass, and
