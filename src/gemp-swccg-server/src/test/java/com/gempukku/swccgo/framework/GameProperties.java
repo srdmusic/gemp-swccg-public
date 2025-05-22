@@ -26,7 +26,17 @@ public interface GameProperties extends TestBase {
 	/**
 	 * @return Gets the player whose turn it isn't.
 	 */
-	default String GetOffPlayer() { return gameState().getOpponent(GetCurrentPlayer()); }
+	default String GetOpponent() { return gameState().getOpponent(GetCurrentPlayer()); }
+
+	/**
+	 * @return Gets the player who is currently making a decision.
+	 */
+	default String GetDecidingPlayer() { return userFeedback().getUsersPendingDecision().stream().findFirst().get(); }
+
+	/**
+	 * @return Gets the player who is not currently making a decision.
+	 */
+	default String GetNextDecider() { return gameState().getOpponent(GetDecidingPlayer()); }
 
 	/**
 	 * @return Gets the number of turns that the Dark Side player has had, including the current one.
@@ -43,14 +53,9 @@ public interface GameProperties extends TestBase {
 	 */
 	default int GetPlayerTurnCount(String player) { return gameState().getPlayersLatestTurnNumber(player); }
 
-	/**
-	 * @return Gets the default starting location that was played automatically for Dark Side using the test rig setup.
-	 * If you manually played a starting location, this may not be coherent.
-	 */
-	default PhysicalCardImpl GetDSStartingLocation() { return GetDSCard("starting-location"); }
-	/**
-	 * @return Gets the default starting location that was played automatically for Light Side using the test rig setup.
-	 * If you manually played a starting location, this may not be coherent.
-	 */
-	default PhysicalCardImpl GetLSStartingLocation() { return GetLSCard("starting-location"); }
+	default int GetDSLifeForceRemaining() { return GetPlayerLifeForceRemaining(DS); }
+	default int GetLSLifeForceRemaining() { return GetPlayerLifeForceRemaining(LS); }
+	default int GetPlayerLifeForceRemaining(String player) { return gameState().getPlayerLifeForce(player); }
+
+
 }

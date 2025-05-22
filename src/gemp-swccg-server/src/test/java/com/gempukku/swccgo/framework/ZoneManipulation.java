@@ -48,6 +48,12 @@ public interface ZoneManipulation extends TestBase{
 	}
 
 	/**
+	 * Moves a card out of play, where it cannot affect anything.
+	 * @param card The card to remove from the game.
+	 */
+	default void MoveOutOfPlay(PhysicalCardImpl card) { MoveCardToZone(card.getOwner(), card, Zone.OUT_OF_PLAY); }
+
+	/**
 	 * Moves one or more cards to a given location, on their owner's side of that location.  This is equivalent to
 	 * deploying to a location, except that no costs, requirements, or other rules will be respected.
 	 * This is unrelated to transporting a card during the Move phase.
@@ -110,10 +116,25 @@ public interface ZoneManipulation extends TestBase{
 	default void MoveCardsToTopOfDSReserveDeck(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(DS, cards);}
 
 	/**
+	 * Stacks the Dark Side deck with a destiny card of the given amount.  This function will take that card from
+	 * out of play and place it on top of the Reserve deck, but be warned: it will then be in play ever after, so if
+	 * you have long complicated chains of actions you might want to handle the stacking yourself.
+	 * @param amount The destiny you would like to be shortly drawing.  Limited to values from 0-7.
+	 */
+	default void PrepareDSDestiny(int amount) { MoveCardsToTopOfDSReserveDeck(GetDSDestiny(amount)); }
+
+	/**
 	 * Moves one or more cards to the top of the Light Side player's reserve deck.
 	 * @param cards The cards to move.
 	 */
 	default void MoveCardsToTopOfLSReserveDeck(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(LS, cards);}
+	/**
+	 * Stacks the Light Side deck with a destiny card of the given amount.  This function will take that card from
+	 * out of play and place it on top of the Reserve deck, but be warned: it will then be in play ever after, so if
+	 * you have long complicated chains of actions you might want to handle the stacking yourself.
+	 * @param amount The destiny you would like to be shortly drawing.  Limited to values from 0-7.
+	 */
+	default void PrepareLSDestiny(int amount) { MoveCardsToTopOfLSReserveDeck(GetLSDestiny(amount)); }
 
 	/**
 	 * Moves one or more cards to the top of the given player's reserve deck.

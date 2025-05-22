@@ -144,82 +144,64 @@ public interface GameProcedures extends Actions, GameProperties {
 	 * Causes both players to pass during the Activate phase.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void PassActivateActions() throws DecisionResultInvalidException { BothPass(); }
+	default void PassActivateActions() throws DecisionResultInvalidException { BothPassResponses(); }
 	/**
 	 * Causes both players to pass during the Control phase.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void PassControlActions() throws DecisionResultInvalidException { BothPass(); }
+	default void PassControlActions() throws DecisionResultInvalidException { BothPassResponses(); }
 	/**
 	 * Causes both players to pass during the Deploy phase.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void PassDeployActions() throws DecisionResultInvalidException { BothPass(); }
+	default void PassDeployActions() throws DecisionResultInvalidException { BothPassResponses(); }
 	/**
 	 * Causes both players to pass during the Move phase.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void PassMoveActions() throws DecisionResultInvalidException { BothPass(); }
+	default void PassMoveActions() throws DecisionResultInvalidException { BothPassResponses(); }
 	/**
 	 * Causes both players to pass during the Battle phase.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void PassBattleActions() throws DecisionResultInvalidException { BothPass(); }
+	default void PassBattleActions() throws DecisionResultInvalidException { BothPassResponses(); }
 	/**
 	 * Causes both players to pass during the Draw phase.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void PassDrawActions() throws DecisionResultInvalidException { BothPass(); }
+	default void PassDrawActions() throws DecisionResultInvalidException { BothPassResponses(); }
 
 	/**
-	 * Causes both players to pass, first by making the current player pass and then their opponent. Both will check
-	 * to ensure that they have a currently available decision to be passing first.
-	 * @throws DecisionResultInvalidException
-	 */
-	default void BothPass() throws DecisionResultInvalidException {
-		var currentPlayer = GetCurrentPlayer();
-		var offPlayer = GetOffPlayer();
-		if(AnyDecisionsAvailable(currentPlayer)) {
-			PlayerDecided(currentPlayer, "");
-		}
-
-		if(AnyDecisionsAvailable(offPlayer)) {
-			PlayerDecided(offPlayer, "");
-		}
-	}
-
-	/**
-	 * Causes both players to pass any decisions that contain the provided text.
-	 * @param text
-	 * @throws DecisionResultInvalidException
-	 */
-	default void BothPass(String text) throws DecisionResultInvalidException {
-		var currentPlayer = GetCurrentPlayer();
-		var offPlayer = GetOffPlayer();
-		if(DecisionAvailable(currentPlayer, text)) {
-			PlayerDecided(currentPlayer, "");
-		}
-
-		if(DecisionAvailable(offPlayer, text)) {
-			PlayerDecided(offPlayer, "");
-		}
-	}
-
-	/**
-	 * Causes both players to pass, but makes the opponent pass before the current player. Both will check
-	 * to ensure that they have a currently available decision to be passing first.
-	 * @throws DecisionResultInvalidException
+	 * Causes both players to pass, first the player with a current decision and then the other.
+	 * @throws DecisionResultInvalidException Throws this error if the decision wasn't passable.
 	 */
 	default void BothPassResponses() throws DecisionResultInvalidException {
-		var currentPlayer = GetCurrentPlayer();
-		var offPlayer = GetOffPlayer();
+		var decider = GetDecidingPlayer();
+		var offPlayer = GetNextDecider();
+
+		PlayerPass(decider);
 
 		if(AnyDecisionsAvailable(offPlayer)) {
-			PlayerDecided(offPlayer, "");
+			PlayerPass(offPlayer);
 		}
+	}
 
-		if(AnyDecisionsAvailable(currentPlayer)) {
-			PlayerDecided(currentPlayer, "");
+	/**
+	 * Causes both players to pass any decisions that contain the provided text.  First the current decider will pass,
+	 * and then the other.
+	 * @param text
+	 * @throws DecisionResultInvalidException Throws this error if the decision can't be passed.
+	 */
+	default void BothPassResponses(String text) throws DecisionResultInvalidException {
+		var decider = GetDecidingPlayer();
+		var offPlayer = GetNextDecider();
+
+		if(DecisionAvailable(decider, text)) {
+			PlayerPass(decider);
+
+			if(DecisionAvailable(offPlayer, text)) {
+				PlayerPass(offPlayer);
+			}
 		}
 	}
 
@@ -232,25 +214,6 @@ public interface GameProcedures extends Actions, GameProperties {
 
 	default void DSPassForceUseResponse() throws DecisionResultInvalidException { DSPass(); }
 	default void LSPassForceUseResponse() throws DecisionResultInvalidException { LSPass();}
-
-	/**
-	 * Causes both players to pass any decisions that contain the provided text.  First the off-player will pass, and
-	 * then the current player.
-	 * @param text
-	 * @throws DecisionResultInvalidException
-	 */
-	default void BothPassResponses(String text) throws DecisionResultInvalidException {
-		var currentPlayer = GetCurrentPlayer();
-		var offPlayer = GetOffPlayer();
-
-		if(DecisionAvailable(offPlayer, text)) {
-			PlayerDecided(offPlayer, "");
-		}
-
-		if(DecisionAvailable(currentPlayer, text)) {
-			PlayerDecided(currentPlayer, "");
-		}
-	}
 
 
 	/**
@@ -291,7 +254,7 @@ public interface GameProcedures extends Actions, GameProperties {
                     LSChooseAction("0");
                 }
                 else {
-                    BothPass();
+                    BothPassResponses();
                 }
             }
 

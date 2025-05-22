@@ -93,6 +93,17 @@ public interface Decisions extends TestBase  {
 	}
 
 	/**
+	 * Wrapper for DSPass for the situations where an optional action is actually being offered which we want to decline.
+	 * @throws DecisionResultInvalidException
+	 */
+	default void DSDecline() throws DecisionResultInvalidException { DSPass(); }
+	/**
+	 * Wrapper for LSPass for the situations where an optional action is actually being offered which we want to decline.
+	 * @throws DecisionResultInvalidException
+	 */
+	default void LSDecline() throws DecisionResultInvalidException { LSPass(); }
+
+	/**
 	 * Causes the Dark Side player to pass the current decision.
 	 * @throws DecisionResultInvalidException This operation will fail if the current decision is not passable.
 	 */

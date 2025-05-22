@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.framework;
 
 import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.PhysicalCardImpl;
 
 import java.util.List;
 
@@ -54,6 +55,15 @@ public interface PileProperties extends TestBase{
 	default List<? extends PhysicalCard> GetLSReserveDeck() { return GetReserveDeck(LS); }
 
 	/**
+	 * @return Gets the top card of the Dark Side player's Reserve Deck.
+	 */
+	default PhysicalCardImpl GetTopOfDSReserveDeck() { return (PhysicalCardImpl) GetReserveDeck(DS).getFirst(); }
+	/**
+	 * @return Gets the top card of the Light Side player's Reserve Deck.
+	 */
+	default PhysicalCardImpl GetTopOfLSReserveDeck() { return (PhysicalCardImpl) GetReserveDeck(LS).getFirst(); }
+
+	/**
 	 * @param player The player whose reserve deck you are interested in.
 	 * @return Gets all the cards in the given player's Reserve Deck.
 	 */
@@ -72,6 +82,15 @@ public interface PileProperties extends TestBase{
 		return gameState().getForcePile(player);
 	}
 
+	/**
+	 * @return Gets the top card of the Dark Side player's Force Pile.
+	 */
+	default PhysicalCardImpl GetTopOfDSForcePile() { return (PhysicalCardImpl) GetForcePile(DS).getFirst(); }
+	/**
+	 * @return Gets the top card of the Light Side player's Force Pile.
+	 */
+	default PhysicalCardImpl GetTopOfLSForcePile() { return (PhysicalCardImpl) GetForcePile(LS).getFirst(); }
+
 	default int GetDSUsedPileCount() { return GetDSUsedPile().size(); }
 	default int GetLSUsedPileCount() { return GetLSUsedPile().size(); }
 
@@ -82,6 +101,15 @@ public interface PileProperties extends TestBase{
 		return gameState().getUsedPile(player);
 	}
 
+	/**
+	 * @return Gets the top card of the Dark Side player's Used Pile.
+	 */
+	default PhysicalCardImpl GetTopOfDSUsedPile() { return (PhysicalCardImpl) GetUsedPile(DS).getFirst(); }
+	/**
+	 * @return Gets the top card of the Light Side player's Used Pile.
+	 */
+	default PhysicalCardImpl GetTopOfLSUsedPile() { return (PhysicalCardImpl) GetUsedPile(LS).getFirst(); }
+
 	default int GetDSLostPileCount() { return GetDSLostPile().size(); }
 	default int GetLSLostPileount() { return GetLSLostPile().size(); }
 
@@ -91,6 +119,15 @@ public interface PileProperties extends TestBase{
 	{
 		return gameState().getLostPile(player);
 	}
+
+	/**
+	 * @return Gets the top card of the Dark Side player's Lost Pile.
+	 */
+	default PhysicalCardImpl GetTopOfDSLostPile() { return (PhysicalCardImpl) GetUsedPile(DS).getFirst(); }
+	/**
+	 * @return Gets the top card of the Light Side player's Lost Pile.
+	 */
+	default PhysicalCardImpl GetTopOfLSLostPile() { return (PhysicalCardImpl) GetUsedPile(LS).getFirst(); }
 
 //
 //    default PhysicalCardImpl GetDSBottomOfDeck() { return GetPlayerBottomOfDeck(DS); }
@@ -103,13 +140,7 @@ public interface PileProperties extends TestBase{
 //        var deck = gameState().getDeck(player);
 //        return (PhysicalCardImpl) deck.get(deck.size() - index);
 //    }
-//
-//    default PhysicalCardImpl GetDSTopOfDeck() { return GetPlayerTopOfDeck(DS); }
-//    default PhysicalCardImpl GetLSTopOfDeck() { return GetPlayerTopOfDeck(LS); }
-//    default PhysicalCardImpl GetFromTopOfDSDeck(int index) { return GetFromTopOfPlayerDeck(DS, index); }
-//    default PhysicalCardImpl GetFromTopOfLSDeck(int index) { return GetFromTopOfPlayerDeck(LS, index); }
-//    default PhysicalCardImpl GetPlayerTopOfDeck(String player) { return GetFromTopOfPlayerDeck(player, 1); }
-//
+
 //    /**
 //     * Index is 1-based (1 is first, 2 is second, etc)
 //     */
@@ -121,14 +152,5 @@ public interface PileProperties extends TestBase{
 //
 //        return (PhysicalCardImpl) deck.get(index - 1);
 //    }
-//    default int GetDSDiscardCount() { return GetPlayerDiscardCount(DS); }
-//    default int GetLSDiscardCount() { return GetPlayerDiscardCount(LS); }
-//    default int GetPlayerDiscardCount(String player) { return gameState().getDiscard(player).size(); }
-//
-//    default int GetDSDeadCount() { return gameState().getDeadPile(DS).size(); }
-//
-//
-//
-//
-//
+
 }

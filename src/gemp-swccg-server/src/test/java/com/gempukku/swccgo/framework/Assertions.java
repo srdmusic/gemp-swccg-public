@@ -30,7 +30,9 @@ public class Assertions {
 	 */
 	public static void assertInZone(Zone zone, PhysicalCardImpl...cards) {
 		for(var card : cards) {
-			assertEquals(zone, card.getZone());
+			//This makes it so that being in the "top of reserve pile" is treated as equivalent
+			// to "reserve pile", etc.
+			assertEquals(zone.getHumanReadable(), card.getZone().getHumanReadable());
 		}
 	}
 
