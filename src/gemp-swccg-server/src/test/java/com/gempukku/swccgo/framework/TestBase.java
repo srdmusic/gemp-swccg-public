@@ -15,11 +15,11 @@ public interface TestBase {
 	/**
 	 * The Dark Side player's name
 	 */
-	String DS = "DS Player";
+	String DS = "Dark Side Player";
 	/**
 	 * The Light Side player's name
 	 */
-	String LS = "LS Player";
+	String LS = "Light Side Player";
 
 	/**
 	 * A constant used for performing floating-point numeric comparisons in test assertions.  In effect, any decimal
@@ -85,6 +85,16 @@ public interface TestBase {
 	String DefaultSpaceLSSystem = "6_087"; // Tibrin
 
 
+	/**
+	 * @return Gets the default starting location that was played automatically for Dark Side using the test rig setup.
+	 * If you manually played a starting location, this may not be coherent.
+	 */
+	default PhysicalCardImpl GetDSStartingLocation() { return GetDSCard("starting-location"); }
+	/**
+	 * @return Gets the default starting location that was played automatically for Light Side using the test rig setup.
+	 * If you manually played a starting location, this may not be coherent.
+	 */
+	default PhysicalCardImpl GetLSStartingLocation() { return GetLSCard("starting-location"); }
 
 	/**
 	 * The default filler card to use for Force in the Dark Side deck.  These should essentially be ignored by tests
@@ -96,6 +106,53 @@ public interface TestBase {
 	 * except for activating and testing draw effects.
 	 */
 	String DefaultLSFiller = "1_28"; // Rebel Trooper
+
+
+	/**
+	 * A set of destiny cards that can be used to manipulate the exact outcome. By default these cards are included
+	 * in the DS deck, but are removed from the game during startup.  If you wish to use them, use the helper functions
+	 * below.
+	 */
+	HashMap<String, String> DSDestinyPack = new HashMap<>() {{
+		put("ds-destiny-0", "4_154"); // Anoat
+		put("ds-destiny-1", "1_194"); // Stormtrooper
+		put("ds-destiny-2", "216_1"); // A Sith Legend
+		put("ds-destiny-3", "1_208"); // A Disturbance in the Force
+		put("ds-destiny-4", "7_218"); // A Bright Center to the Universe
+		put("ds-destiny-5", "11_068"); // A Million Voices Crying Out
+		put("ds-destiny-6", "7_219"); // A Day Long Remembered
+		put("ds-destiny-7", "8_120"); // Closed Door
+	}};
+
+	/**
+	 * A set of destiny cards that can be used to manipulate the exact outcome. By default these cards are included
+	 * in the LS deck, but are removed from the game during startup.  If you wish to use them, use the helper functions
+	 * below.
+	 */
+	HashMap<String, String> LSDestinyPack = new HashMap<>() {{
+		put("ls-destiny-0", "211_48"); // Ahch-to
+		put("ls-destiny-1", "1_28"); // Rebel Trooper
+		put("ls-destiny-2", "202_7"); // Azure Angel
+		put("ls-destiny-3", "9_62"); // A-wing
+		put("ls-destiny-4", "6_52"); // A Gift
+		put("ls-destiny-5", "221_43"); // A Jedi's Fury
+		put("ls-destiny-6", "6_49"); // Arc Welder
+		put("ls-destiny-7", "5_12"); // Bionic Hand
+	}};
+
+	default PhysicalCardImpl GetDSDestiny(int amount) {
+		if(amount < 0 || amount > 7)
+			throw new IllegalArgumentException("Default destiny pack only supports amounts from 0-7.");
+
+		return GetDSCard("ds-destiny-" + amount);
+	}
+
+	default PhysicalCardImpl GetLSDestiny(int amount) {
+		if(amount < 0 || amount > 7)
+			throw new IllegalArgumentException("Default destiny pack only supports amounts from 0-7.");
+
+		return GetLSCard("ls-destiny-" + amount);
+	}
 
 
 	/*

@@ -66,6 +66,9 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
         LSCards.put("starting-location", LSStartingLocation);
         DSCards.put("starting-location", DSStartingLocation);
 
+        LSCards.putAll(LSDestinyPack);
+        DSCards.putAll(DSDestinyPack);
+
 		LSCards.putAll(LSStarters);
         DSCards.putAll(DSStarters);
 
@@ -126,6 +129,14 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
                     .findFirst().get();
 
             Cards.get(DS).put(name, (PhysicalCardImpl) card);
+        }
+
+        // We include the destiny packs for convenience, but we don't want them in the reserve deck by default or else
+        // they'll cause havoc with random destiny draws.  Instead we'll remove them all from the game and let testers
+        // retrieve them and stack the deck as necessary.
+        for(int i = 0; i <= 7; ++i) {
+            MoveOutOfPlay(GetLSDestiny(i));
+            MoveOutOfPlay(GetDSDestiny(i));
         }
     }
 

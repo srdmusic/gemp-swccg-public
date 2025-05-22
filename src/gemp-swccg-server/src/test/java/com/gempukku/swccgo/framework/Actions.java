@@ -1,7 +1,6 @@
 package com.gempukku.swccgo.framework;
 
 import com.gempukku.swccgo.game.PhysicalCardImpl;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 
@@ -63,10 +62,13 @@ public interface Actions extends Decisions, Choices {
 		return !actions.isEmpty();
 	}
 
-	default Boolean DSLostInterruptPlayAvailable(PhysicalCardImpl card) { return DSActionAvailable(card, "LOST: "); }
-	default Boolean LSLostInterruptPlayAvailable(PhysicalCardImpl card) { return LSActionAvailable(card, "LOST: "); }
-	default Boolean DSUsedInterruptPlayAvailable(PhysicalCardImpl card) { return DSActionAvailable(card, "USED: "); }
-	default Boolean LSUsedInterruptPlayAvailable(PhysicalCardImpl card) { return LSActionAvailable(card, "USED: "); }
+	default Boolean DSCardPlayAvailable(PhysicalCardImpl card) { return DSActionAvailable(card); }
+	default Boolean LSCardPlayAvailable(PhysicalCardImpl card) { return LSActionAvailable(card); }
+
+	default Boolean DSPlayLostInterruptAvailable(PhysicalCardImpl card) { return DSActionAvailable(card, "LOST: "); }
+	default Boolean LSPlayLostInterruptAvailable(PhysicalCardImpl card) { return LSActionAvailable(card, "LOST: "); }
+	default Boolean DSPlayUsedInterruptAvailable(PhysicalCardImpl card) { return DSActionAvailable(card, "USED: "); }
+	default Boolean LSPlayUsedInterruptAvailable(PhysicalCardImpl card) { return LSActionAvailable(card, "USED: "); }
 
 	default Boolean DSDeployAvailable(PhysicalCardImpl card) { return DSActionAvailable(card, "Deploy"); }
 	default Boolean LSDeployAvailable(PhysicalCardImpl card) { return LSActionAvailable(card, "Deploy"); }
@@ -130,6 +132,9 @@ public interface Actions extends Decisions, Choices {
 
 	//TODO: Identify whether all of these actions are valid SWCCG nomenclature and match how Gemp presents these actions.
 
+	default void DSPlayCard(PhysicalCardImpl card) throws DecisionResultInvalidException { DSDecided(GetCardActionId(DS, card)); }
+	default void LSPlayCard(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card)); }
+
 	default void DSPlayLostInterrupt(PhysicalCardImpl card) throws DecisionResultInvalidException { DSDecided(GetCardActionId(DS, card, "LOST: ")); }
 	default void LSPlayLostInterrupt(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card, "LOST: ")); }
 
@@ -150,6 +155,12 @@ public interface Actions extends Decisions, Choices {
 	 * legal to deploy (due to costs, requirements, or other rules).
 	 */
 	default void LSDeployCard(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card, "Deploy")); }
+	default void LSDeployLocation(PhysicalCardImpl site) throws DecisionResultInvalidException {
+		LSDecided(GetCardActionId(LS, site, "Deploy"));
+		if(LSDecisionAvailable("On which side")) {
+			LSChoose("Left");
+		}
+	}
 
 	default void DSTransferCard(PhysicalCardImpl card) throws DecisionResultInvalidException { DSDecided(GetCardActionId(DS, card, "Transfer")); }
 	default void LSTransferCard(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card, "Transfer ")); }
