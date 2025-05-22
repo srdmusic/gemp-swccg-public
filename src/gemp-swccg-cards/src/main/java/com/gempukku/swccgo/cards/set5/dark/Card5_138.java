@@ -16,7 +16,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.CancelGameTextEffect;
+import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfTurnEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
@@ -74,7 +74,7 @@ public class Card5_138 extends AbstractUsedInterrupt {
                                                             action.appendCost(new SendMessageEffect(action, GameUtils.getFullName(victimFinalTarget) + ": How rude!"));
 
                                                             // Perform result(s)
-                                                            action.appendEffect(new CancelGameTextEffect(action, victimFinalTarget));
+                                                            action.appendEffect(new CancelGameTextUntilEndOfTurnEffect(action, victimFinalTarget));
                                                         }
                                                     }
                                             );
