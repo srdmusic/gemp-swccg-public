@@ -13,7 +13,7 @@ import java.util.*;
 
 import static org.junit.Assert.assertTrue;
 
-public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, CardProperties, Choices, Decisions,
+public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Battles, CardProperties, Choices, Decisions,
         GameProcedures, GameProperties, PileProperties, ZoneManipulation {
 
     public static SwccgCardBlueprintLibrary _cardLibrary;
