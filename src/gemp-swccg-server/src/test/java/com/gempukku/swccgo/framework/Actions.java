@@ -63,52 +63,78 @@ public interface Actions extends Decisions, Choices {
 		return !actions.isEmpty();
 	}
 
+	default Boolean DSLostInterruptPlayAvailable(PhysicalCardImpl card) { return DSActionAvailable(card, "LOST: "); }
+	default Boolean LSLostInterruptPlayAvailable(PhysicalCardImpl card) { return LSActionAvailable(card, "LOST: "); }
+	default Boolean DSUsedInterruptPlayAvailable(PhysicalCardImpl card) { return DSActionAvailable(card, "USED: "); }
+	default Boolean LSUsedInterruptPlayAvailable(PhysicalCardImpl card) { return LSActionAvailable(card, "USED: "); }
+
+	default Boolean DSDeployAvailable(PhysicalCardImpl card) { return DSActionAvailable(card, "Deploy"); }
+	default Boolean LSDeployAvailable(PhysicalCardImpl card) { return LSActionAvailable(card, "Deploy"); }
+
+	default Boolean DSTransferAvailable(PhysicalCardImpl card) { return DSActionAvailable(card, "Transfer"); }
+	default Boolean LSTransferAvailable(PhysicalCardImpl card) { return LSActionAvailable(card, "Transfer"); }
+
+	default Boolean DSCardActionAvailable(PhysicalCardImpl card) { return DSActionAvailable(card); }
+	default Boolean LSCardActionAvailable(PhysicalCardImpl card) { return LSActionAvailable(card); }
 
 
-	//TODO: Clean these up to use the correct search text
-	default Boolean DSActionAvailable(PhysicalCardImpl card) { return ActionAvailable(DS, GetCardActionId(DS, card, "Transfer")); }
-	default Boolean LSActionAvailable(PhysicalCardImpl card) { return ActionAvailable(LS, "Use " + GameUtils.getFullName(card)); }
 
-	default Boolean DSPlayAvailable(PhysicalCardImpl card) { return ActionAvailable(DS, "Play " + GameUtils.getFullName(card)); }
-	default Boolean LSPlayAvailable(PhysicalCardImpl card) { return ActionAvailable(LS, "Play " + GameUtils.getFullName(card)); }
-
-	default Boolean DSTransferAvailable(PhysicalCardImpl card) { return ActionAvailable(DS, "Transfer " + GameUtils.getFullName(card)); }
-	default Boolean LSTransferAvailable(PhysicalCardImpl card) { return ActionAvailable(LS, "Transfer " + GameUtils.getFullName(card)); }
 	/**
 	 * Checks whether the Dark Side player has an action available containing the provided text.
-	 * @param action The text to search for.
+	 * @param text The text to search for.
 	 * @return True if an active decision has an action matching text, otherwise false.
 	 */
-	default Boolean DSActionAvailable(String action) { return ActionAvailable(DS, action); }
+	default Boolean DSActionAvailable(String text) { return ActionAvailable(DS, null, text); }
+	/**
+	 * Checks whether the Dark Side player has an action available containing the provided text.
+	 * @param card The card ID to search for.
+	 * @return True if an active decision has an action matching text, otherwise false.
+	 */
+	default Boolean DSActionAvailable(PhysicalCardImpl card) { return ActionAvailable(DS, card, null); }
+	/**
+	 * Checks whether the Dark Side player has an action available containing the provided text.
+	 * @param card The card ID to search for.
+	 *             @param text The text to search for.
+	 * @return True if an active decision has an action matching text, otherwise false.
+	 */
+	default Boolean DSActionAvailable(PhysicalCardImpl card, String text) { return ActionAvailable(DS, card, text); }
 	/**
 	 * Checks whether the Light Side player has an action available containing the provided text.
-	 * @param action The text to search for.
+	 * @param text The text to search for.
 	 * @return True if an active decision has an action matching text, otherwise false.
 	 */
-	default Boolean LSActionAvailable(String action) { return ActionAvailable(LS, action); }
+	default Boolean LSActionAvailable(String text) { return ActionAvailable(LS, null, text); }
+	/**
+	 * Checks whether the Light Side player has an action available containing the provided text.
+	 * @param card The card ID to search for.
+	 * @return True if an active decision has an action matching text, otherwise false.
+	 */
+	default Boolean LSActionAvailable(PhysicalCardImpl card) { return ActionAvailable(LS, card, null); }
+	/**
+	 * Checks whether the Light Side player has an action available containing the provided text.
+	 * @param card The card ID to search for.
+	 * @param text The text to search for.
+	 * @return True if an active decision has an action matching text, otherwise false.
+	 */
+	default Boolean LSActionAvailable(PhysicalCardImpl card, String text) { return ActionAvailable(LS, card, text); }
 	/**
 	 * Checks whether the given player has an action available containing the provided text.
-	 * @param player The player to check for.
-	 * @param action The text to search for.
-	 * @return True if an active decision has an action matching text, otherwise false.
+	 * @param playerId The player to check for.
+	 * @param card The card ID to search for.
+	 * @param text The text to search for.
+	 * @return True if an active decision has an action matching card and/or text, otherwise false.
 	 */
-	default Boolean ActionAvailable(String player, String action) {
-		List<String> actions = GetAvailableActions(player);
-		if(actions == null)
-			return false;
-		String lowerAction = action.toLowerCase();
-		return actions.stream().anyMatch(x -> x.toLowerCase().contains(lowerAction));
+	default Boolean ActionAvailable(String playerId, PhysicalCardImpl card, String text) {
+		return GetCardActionId(playerId, card, text) != null;
 	}
 
 	//TODO: Identify whether all of these actions are valid SWCCG nomenclature and match how Gemp presents these actions.
-	default void DSUseCardAction(PhysicalCardImpl card) throws DecisionResultInvalidException { DSDecided(GetCardActionId(DS, card)); }
-	default void LSUseCardAction(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card)); }
 
-	default void DSTransferCard(PhysicalCardImpl card) throws DecisionResultInvalidException { DSDecided(GetCardActionId(DS, card, "Transfer")); }
-	default void LSTransferCard(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card, "Transfer ")); }
+	default void DSPlayLostInterrupt(PhysicalCardImpl card) throws DecisionResultInvalidException { DSDecided(GetCardActionId(DS, card, "LOST: ")); }
+	default void LSPlayLostInterrupt(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card, "LOST: ")); }
 
-	default void DSPlayCard(PhysicalCardImpl card) throws DecisionResultInvalidException { DSDecided(GetCardActionId(DS, card, "Play")); }
-	default void LSPlayCard(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card, "Play")); }
+	default void DSPlayUsedInterrupt(PhysicalCardImpl card) throws DecisionResultInvalidException { DSDecided(GetCardActionId(DS, card, "USED: ")); }
+	default void LSPlayUsedInterrupt(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card, "USED: ")); }
 
 	/**
 	 * Causes the Dark Side player to perform  a legal deployment action of the given card (i.e. plays that card from hand).
@@ -124,6 +150,14 @@ public interface Actions extends Decisions, Choices {
 	 * legal to deploy (due to costs, requirements, or other rules).
 	 */
 	default void LSDeployCard(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card, "Deploy")); }
+
+	default void DSTransferCard(PhysicalCardImpl card) throws DecisionResultInvalidException { DSDecided(GetCardActionId(DS, card, "Transfer")); }
+	default void LSTransferCard(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card, "Transfer ")); }
+
+	default void DSUseCardAction(PhysicalCardImpl card) throws DecisionResultInvalidException { DSDecided(GetCardActionId(DS, card)); }
+	default void LSUseCardAction(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card)); }
+
+
 
 
 	/**

@@ -103,6 +103,12 @@ public interface Choices extends Decisions {
 	 */
 	default void LSChooseYes() throws DecisionResultInvalidException { ChooseOption(LS, "Yes"); }
 	/**
+	 * Causes the given player to return a canned "Yes" response to a Yes or No question.
+	 * @param player The player to make the decision for
+	 * @throws DecisionResultInvalidException This error will be thrown if the response is invalid for the current decision.
+	 */
+	default void PlayerChooseYes(String player) throws DecisionResultInvalidException { ChooseOption(player, "Yes"); }
+	/**
 	 * Causes the Dark Side player to return a canned "No" response to a Yes or No question.
 	 * @throws DecisionResultInvalidException This error will be thrown if the response is invalid for the current decision.
 	 */
@@ -112,6 +118,12 @@ public interface Choices extends Decisions {
 	 * @throws DecisionResultInvalidException This error will be thrown if the response is invalid for the current decision.
 	 */
 	default void LSChooseNo() throws DecisionResultInvalidException { ChooseOption(LS, "No"); }
+	/**
+	 * Causes the given player to return a canned "No" response to a Yes or No question.
+	 * @param player The player to make the decision for
+	 * @throws DecisionResultInvalidException This error will be thrown if the response is invalid for the current decision.
+	 */
+	default void PlayerChooseNo(String player) throws DecisionResultInvalidException { ChooseOption(player, "No"); }
 
 	default void DSChooseOption(String option) throws DecisionResultInvalidException { ChooseOption(DS, option); }
 	default void LSChooseOption(String option) throws DecisionResultInvalidException { ChooseOption(LS, option); }

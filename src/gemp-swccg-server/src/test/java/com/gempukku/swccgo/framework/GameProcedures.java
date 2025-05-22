@@ -30,7 +30,7 @@ public interface GameProcedures extends Actions, GameProperties {
 			int max = DSGetChoiceMax();
 			DSDecided(max);
 			LSDecided(max);
-			BothPassInverted();
+			BothPassResponses();
 			return max;
 		}
 
@@ -49,7 +49,7 @@ public interface GameProcedures extends Actions, GameProperties {
 			int max = LSGetChoiceMax();
 			LSDecided(max);
 			DSDecided(max);
-			BothPassInverted();
+			BothPassResponses();
 			return max;
 		}
 
@@ -120,8 +120,8 @@ public interface GameProcedures extends Actions, GameProperties {
 		assertTrue(DSDecisionAvailable("Choose where to deploy"));
 		DSChooseCard(location);
 
-		BothPassInverted("Force - Optional responses");
-		BothPassInverted("Optional response");
+		BothPassResponses("Force - Optional responses");
+		BothPassResponses("Optional response");
 	}
 
 	/**
@@ -136,8 +136,8 @@ public interface GameProcedures extends Actions, GameProperties {
 		assertTrue(LSDecisionAvailable("Choose where to deploy"));
 		LSChooseCard(location);
 
-		BothPassInverted("Force - Optional responses");
-		BothPassInverted("Optional response");
+		BothPassResponses("Force - Optional responses");
+		BothPassResponses("Optional response");
 	}
 
 	/**
@@ -210,7 +210,7 @@ public interface GameProcedures extends Actions, GameProperties {
 	 * to ensure that they have a currently available decision to be passing first.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void BothPassInverted() throws DecisionResultInvalidException {
+	default void BothPassResponses() throws DecisionResultInvalidException {
 		var currentPlayer = GetCurrentPlayer();
 		var offPlayer = GetOffPlayer();
 
@@ -223,8 +223,12 @@ public interface GameProcedures extends Actions, GameProperties {
 		}
 	}
 
-	default void PassCardPlayResponses() throws DecisionResultInvalidException { BothPassInverted(); }
-	default void PassForceUseResponses() throws DecisionResultInvalidException { BothPassInverted(); }
+	default void PassCardAndForceUseResponses() throws DecisionResultInvalidException {
+		BothPassResponses();
+		BothPassResponses();
+	}
+	default void PassCardPlayResponses() throws DecisionResultInvalidException { BothPassResponses(); }
+	default void PassForceUseResponses() throws DecisionResultInvalidException { BothPassResponses(); }
 
 	default void DSPassForceUseResponse() throws DecisionResultInvalidException { DSPass(); }
 	default void LSPassForceUseResponse() throws DecisionResultInvalidException { LSPass();}
@@ -235,7 +239,7 @@ public interface GameProcedures extends Actions, GameProperties {
 	 * @param text
 	 * @throws DecisionResultInvalidException
 	 */
-	default void BothPassInverted(String text) throws DecisionResultInvalidException {
+	default void BothPassResponses(String text) throws DecisionResultInvalidException {
 		var currentPlayer = GetCurrentPlayer();
 		var offPlayer = GetOffPlayer();
 
@@ -312,6 +316,27 @@ public interface GameProcedures extends Actions, GameProperties {
 	 * @throws DecisionResultInvalidException
 	 */
 	default void SkipToLSTurn() throws DecisionResultInvalidException { SkipToNextTurn(LS);	}
+
+	/**
+	 * Skips to the Light Side player's next turn.  If Light Side is the current player, this will skip over an entire
+	 * Dark Side turn.  After making it to the LS player, passes to the given phase.
+	 * @param phase The phase to skip to
+	 * @throws DecisionResultInvalidException
+	 */
+	default void SkipToLSTurn(Phase phase) throws DecisionResultInvalidException {
+		SkipToLSTurn();
+		SkipToPhase(phase);
+	}
+	/**
+	 * Skips to the Dark Side player's next turn.  If Dark Side is the current player, this will skip over an entire
+	 * Light Side turn.  After making it to the DS player, passes to the given phase.
+	 * @throws DecisionResultInvalidException
+	 */
+	default void SkipToDSTurn(Phase phase) throws DecisionResultInvalidException {
+		SkipToDSTurn();
+		SkipToPhase(phase);
+	}
+
 	/**
 	 * Skips to the Dark Side player's next turn.  If Dark Side is the current player, this will skip over an entire
 	 * Light Side turn.

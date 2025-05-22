@@ -6,6 +6,7 @@ import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCardImpl;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -41,13 +42,28 @@ public interface CardProperties extends TestBase {
 	 * @param bearer The card which supposedly bears the other card
 	 * @return True if card is in the ATTACHED zone and records bearer as its AttachedTo.
 	 */
-    default boolean IsAttachedTo(PhysicalCardImpl card, PhysicalCardImpl bearer) {
-        if(card.getZone() != Zone.ATTACHED) {
-            return false;
-        }
+	default boolean IsAttachedTo(PhysicalCardImpl bearer, PhysicalCardImpl card) {
+		if(card.getZone() != Zone.ATTACHED) {
+			return false;
+		}
 
-        return bearer == card.getAttachedTo();
-    }
+		return bearer == card.getAttachedTo();
+	}
+
+	/**
+	 * Determines if a given card is currently stacked on another.  Checks both that the current zone of the card is
+	 * correct, and also that it currently records the bearer as its attachment point.
+	 * @param card The card which may or may not be attached
+	 * @param on The card which is supposedly under the other card
+	 * @return True if card is in the ATTACHED zone and records bearer as its AttachedTo.
+	 */
+	default boolean IsStackedOn(PhysicalCardImpl on, PhysicalCardImpl card) {
+		if(card.getZone() != Zone.STACKED) {
+			return false;
+		}
+
+		return on == card.getStackedOn();
+	}
 
 
 	/**
@@ -143,8 +159,8 @@ public interface CardProperties extends TestBase {
         return game().getModifiersQuerying().getCardTypes(gameState(), card).contains(type);
     }
 
-	default boolean IsParticipatingInBattle(PhysicalCardImpl card) {
-		return gameState().isParticipatingInBattle(card);
+	default boolean IsParticipatingInBattle(PhysicalCardImpl...cards) {
+		return Arrays.stream(cards).allMatch(card -> gameState().isParticipatingInBattle(card));
 	}
 
 }

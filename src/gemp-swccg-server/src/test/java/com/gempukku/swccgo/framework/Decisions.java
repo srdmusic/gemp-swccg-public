@@ -2,6 +2,7 @@ package com.gempukku.swccgo.framework;
 
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
+import com.mysql.cj.conf.StringProperty;
 
 /**
  * A set of functions within the test rig that pertain to decisions.  Decisions in Gemp are a catch-all term referring
@@ -109,6 +110,12 @@ public interface Decisions extends TestBase  {
 	default void LSPass() throws DecisionResultInvalidException {
 		if(LSAnyDecisionsAvailable()) {
 			PlayerDecided(LS, "");
+		}
+	}
+
+	default void PlayerPass(String player) throws DecisionResultInvalidException {
+		if(AnyDecisionsAvailable(player)) {
+			PlayerDecided(player, "");
 		}
 	}
 
