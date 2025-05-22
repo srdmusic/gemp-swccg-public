@@ -170,6 +170,9 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ca
         _userFeedback.setGame(_game);
         _game.startGame();
 
+        //Enables additional information on optional responses; see TurnProcedure.getActionDecisionTextFromEffectResults
+        _game.setTestEnvironment(true);
+
         _gameState = _game.getGameState();
     }
 
