@@ -41,40 +41,40 @@ public class Card5_138 extends AbstractUsedInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
-        Filter opponentsCharacterPresent = Filters.and(Filters.opponents(self), Filters.character, Filters.presentAt(Filters.any));
-        Filter yourProtocolDroidWithOpponentsCharacterPresent = Filters.and(Filters.your(playerId), Filters.protocol_droid, Filters.with(self, opponentsCharacterPresent));
+        Filter characterPresent = Filters.and(Filters.character, Filters.presentAt(Filters.any));
+        Filter yourProtocolDroidWithCharacterPresent = Filters.and(Filters.your(playerId), Filters.protocol_droid, Filters.with(self, characterPresent));
 
         // Check condition(s)
-        if (GameConditions.canTarget(game, self, yourProtocolDroidWithOpponentsCharacterPresent)) {
+        if (GameConditions.canTarget(game, self, yourProtocolDroidWithCharacterPresent)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("'Insult' a character");
             // Choose target(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose your protocol droid", yourProtocolDroidWithOpponentsCharacterPresent) {
+                    new TargetCardOnTableEffect(action, playerId, "Choose your protocol droid", yourProtocolDroidWithCharacterPresent) {
                         @Override
                         protected void cardTargeted(final int targetGroupId1, final PhysicalCard yourProtocolDroid) {
                             action.appendTargeting(
-                                new TargetCardOnTableEffect(action, playerId, "Choose opponent's character", Filters.and(opponentsCharacterPresent, Filters.with(yourProtocolDroid))) {
+                                new TargetCardOnTableEffect(action, playerId, "Choose character to 'insult'", Filters.and(characterPresent, Filters.with(yourProtocolDroid))) {
                                         @Override
-                                        protected void cardTargeted(final int targetGroupId2, final PhysicalCard opponentsCharacter) {
-                                            action.addAnimationGroup(yourProtocolDroid, opponentsCharacter);
+                                        protected void cardTargeted(final int targetGroupId2, final PhysicalCard victimCharacter) {
+                                            action.addAnimationGroup(yourProtocolDroid, victimCharacter);
 
                                             // Allow response(s)
-                                            action.allowResponses("Target " + GameUtils.getCardLink(yourProtocolDroid) + " and " + GameUtils.getCardLink(opponentsCharacter),
+                                            action.allowResponses("Target " + GameUtils.getCardLink(yourProtocolDroid) + " and " + GameUtils.getCardLink(victimCharacter),
                                                     new RespondablePlayCardEffect(action) {
                                                         @Override
                                                         protected void performActionResults(Action targetingAction) {
                                                             // Get the targeted card(s) from the action using the targetGroupId.
                                                             // This needs to be done in case the target(s) were changed during the responses.
                                                             final PhysicalCard yourFinalTarget = targetingAction.getPrimaryTargetCard(targetGroupId1);
-                                                            final PhysicalCard opponentsFinalTarget = targetingAction.getPrimaryTargetCard(targetGroupId2);
+                                                            final PhysicalCard victimFinalTarget = targetingAction.getPrimaryTargetCard(targetGroupId2);
                                                             
                                                             // Send Easter egg
                                                             action.appendCost(new SendMessageEffect(action, GameUtils.getFullName(yourFinalTarget) + ": E chu ta."));
-                                                            action.appendCost(new SendMessageEffect(action, GameUtils.getFullName(opponentsFinalTarget) + ": How rude!"));
+                                                            action.appendCost(new SendMessageEffect(action, GameUtils.getFullName(victimFinalTarget) + ": How rude!"));
 
                                                             // Perform result(s)
-                                                            action.appendEffect(new CancelGameTextEffect(action, opponentsFinalTarget));
+                                                            action.appendEffect(new CancelGameTextEffect(action, victimFinalTarget));
                                                         }
                                                     }
                                             );
