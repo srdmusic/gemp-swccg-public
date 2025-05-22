@@ -58,6 +58,8 @@ public class DefaultSwccgGame implements SwccgGame {
     private List<GameSnapshot> _snapshots = new LinkedList<GameSnapshot>();
     private static final int NUM_PREV_TURN_SNAPSHOTS_TO_KEEPS = 1;
 
+    private boolean _testEnv = false;
+
     /**
      * Creates a game.
      * @param format the format of the game
@@ -575,4 +577,9 @@ public class DefaultSwccgGame implements SwccgGame {
 
         return defensiveShields;
     }
+
+    public void setTestEnvironment(boolean value) { _testEnv = value; }
+
+    @Override
+    public boolean isTestEnvironment() { return _testEnv; }
 }

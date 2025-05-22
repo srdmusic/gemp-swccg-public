@@ -25,6 +25,13 @@ import java.util.Set;
  */
 public interface SwccgGame {
     /**
+     * Flag that indicates whether the game is being ran in a unit test context.
+     * Controls certain behaviors such as labeling what turn procedure events are
+     * being responded to.
+     */
+    boolean isTestEnvironment();
+
+    /**
      * Gets the game state.
      * @return the game state
      */
