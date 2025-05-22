@@ -149,7 +149,7 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
 
                 modifiers.add(new MayNotUseWeaponsModifier(self, Filters.in(chosenCaptives)));
                 modifiers.add(new MayNotUseDevicesModifier(self, Filters.in(chosenCaptives)));
-                modifiers.add(new MayNotBeForfeitedInBattleModifier(self, Filters.in(chosenCaptives)));
+                modifiers.add(new MayNotBeForfeitedInBattleModifier(self, Filters.and(Filters.in(chosenCaptives),Filters.not(Filters.hit))));
                 modifiers.add(new MayNotMoveAwayFromLocationModifier(self, Filters.in(chosenCaptives), location));
 
                 return modifiers;

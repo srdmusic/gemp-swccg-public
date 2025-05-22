@@ -2,12 +2,14 @@ package com.gempukku.swccgo.cards.set5.light;
 
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
+import com.gempukku.swccgo.framework.ZoneManipulation;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import org.junit.Test;
 
 import java.util.HashMap;
 
 import static com.gempukku.swccgo.framework.Assertions.assertAtLocation;
+import static com.gempukku.swccgo.framework.Assertions.assertInZone;
 import static org.junit.Assert.*;
 
 public class Card_5_36_Tests {
@@ -19,10 +21,14 @@ public class Card_5_36_Tests {
 					put("chewie", "2_3");
 					put("bowcaster", "8_86"); //weapon
 					put("electrobinoculars", "1_35"); //device
+					put("path", "5_62");
+
+					put("core_tunnel", "7_112"); //cloud city inside location
 				}},
 				new HashMap<>()
 				{{
-					put("boba", "105_4");
+					put("boba", "5_91");
+					put("bobas_blaster", "5_179");
 					put("vader", "7_175");
 				}},
 				10,
@@ -86,7 +92,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -189,16 +195,25 @@ public class Card_5_36_Tests {
 		scn.PassCardAndForceUseResponses();
 		scn.SkipToAttritionOrBattleDamage(true);
 
-		//battle damage
-
 		assertTrue(scn.DSWonBattle());
+		//Vader drew destiny 1
 		assertEquals(1, scn.GetUnpaidLSAttrition());
+		// Vader 6 + destiny 1 > Chewbacca 6
+		assertEquals(1, scn.GetUnpaidLSBattleDamage());
 		assertTrue(scn.AwaitingLSAttritionPayment());
+		assertTrue(scn.AwaitingLSBattleDamagePayment());
+		assertFalse(chewie.isHit());
 		assertFalse(scn.LSHasCardChoiceAvailable(chewie));
+
+		assertEquals(14, scn.GetLSLifeForceRemaining());
+		scn.PayLSBattleDamageFromReserveDeck();
+		assertEquals(13, scn.GetLSLifeForceRemaining());
+
+		assertFalse(scn.IsActiveBattle());
 	}
 
 	@Test
-	public void CaptiveFuryCaptiveCanBeForcefullyForfeit() throws DecisionResultInvalidException {
+	public void CaptiveFuryCaptiveForfeitIfHit() throws DecisionResultInvalidException {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -208,20 +223,56 @@ public class Card_5_36_Tests {
 		var site = scn.GetLSStartingLocation();
 
 		var boba = scn.GetDSCard("boba");
+		var bobas_blaster = scn.GetDSCard("bobas_blaster");
+		var vader = scn.GetDSCard("vader");
 
 		scn.StartGame();
 
-		scn.MoveCardsToLocation(site, boba);
+		scn.MoveCardsToLocation(site, boba, vader);
+		scn.AttachCardsTo(boba, bobas_blaster);
 		scn.CaptureCardWith(boba, chewie);
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
+		scn.LSChooseCard(chewie);
+		scn.PassCardAndForceUseResponses();
+		scn.PassBattleStartResponses();
+		scn.LSPass();
 
-		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
+		assertTrue(scn.DSActionAvailable(bobas_blaster));
+		scn.DSUseCardAction(bobas_blaster);
 
-		assertTrue(false);
+		assertTrue(scn.DSDecisionAvailable("Choose target"));
+		scn.DSChooseCard(chewie);
+		scn.PassForceUseResponses();
+		scn.PrepareDSDestiny(7);
+		scn.PassWeaponFireWithDestinyDraw();
+
+		assertTrue(chewie.isHit());
+		//Boba's blaster can keep firing, we just want the once
+		scn.DSChooseNo();
+
+		scn.SkipToAttritionOrBattleDamage(true);
+
+		assertTrue(scn.DSWonBattle());
+		//DS drew destiny 1
+		assertEquals(1, scn.GetUnpaidLSAttrition());
+		// Vader 6 + Boba Fett 3 + destiny 1 + gun destiny 1 > Chewbacca 6
+		assertEquals(5, scn.GetUnpaidLSBattleDamage());
+
+		assertTrue(scn.AwaitingLSAttritionPayment());
+		assertTrue(scn.AwaitingLSBattleDamagePayment());
+		assertTrue(chewie.isHit());
+		assertTrue(scn.LSHasCardChoiceAvailable(chewie));
+
+		assertEquals(14, scn.GetLSLifeForceRemaining());
+		scn.PayLSBattleDamageFromCardInPlay(chewie);
+		assertEquals(14, scn.GetLSLifeForceRemaining());
+		assertInZone(Zone.LOST_PILE, chewie);
+
+		assertFalse(scn.IsActiveBattle());
 	}
 
 	@Test
@@ -230,7 +281,9 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		var path = scn.GetLSCard("path");
+		var core_tunnel = scn.GetLSCard("core_tunnel");
+		scn.MoveCardsToLSHand(fury, path, core_tunnel);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -241,14 +294,18 @@ public class Card_5_36_Tests {
 		scn.MoveCardsToLocation(site, boba);
 		scn.CaptureCardWith(boba, chewie);
 
-		scn.SkipToLSTurn(Phase.BATTLE);
+		scn.SkipToLSTurn(Phase.DEPLOY);
+		scn.LSDeployLocation(core_tunnel);
+		scn.PassCardPlayResponses();
+		scn.SkipToPhase(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
+		scn.LSChooseCard(chewie);
+		scn.PassCardAndForceUseResponses();
+		scn.PassBattleStartResponses();
 
-		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
-
-		assertTrue(false);
+		assertFalse(scn.LSCardPlayAvailable(path));
 	}
 
 	@Test
@@ -270,7 +327,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -297,7 +354,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -324,7 +381,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -351,7 +408,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -378,7 +435,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -405,7 +462,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -432,7 +489,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -459,7 +516,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -486,7 +543,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -513,7 +570,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -540,7 +597,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -567,7 +624,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -594,7 +651,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -621,7 +678,7 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
@@ -648,7 +705,61 @@ public class Card_5_36_Tests {
 
 		scn.SkipToLSTurn(Phase.BATTLE);
 
-		assertTrue(scn.LSLostInterruptPlayAvailable(fury));
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
+		scn.LSPlayLostInterrupt(fury);
+
+		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
+
+		assertTrue(false);
+	}
+
+	@Test
+	public void CaptiveFuryPermitsUsedHumanShieldToKillCaptive() throws DecisionResultInvalidException {
+		var scn = GetScenario();
+
+		var fury = scn.GetLSCard("fury");
+		var chewie = scn.GetLSCard("chewie");
+		scn.MoveCardsToLSHand(fury);
+
+		var site = scn.GetLSStartingLocation();
+
+		var boba = scn.GetDSCard("boba");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, boba);
+		scn.CaptureCardWith(boba, chewie);
+
+		scn.SkipToLSTurn(Phase.BATTLE);
+
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
+		scn.LSPlayLostInterrupt(fury);
+
+		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
+
+		assertTrue(false);
+	}
+
+	@Test
+	public void CaptiveFuryPermitsLostHumanShieldToForfeitCaptive() throws DecisionResultInvalidException {
+		var scn = GetScenario();
+
+		var fury = scn.GetLSCard("fury");
+		var chewie = scn.GetLSCard("chewie");
+		scn.MoveCardsToLSHand(fury);
+
+		var site = scn.GetLSStartingLocation();
+
+		var boba = scn.GetDSCard("boba");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, boba);
+		scn.CaptureCardWith(boba, chewie);
+
+		scn.SkipToLSTurn(Phase.BATTLE);
+
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
 		scn.LSPlayLostInterrupt(fury);
 
 		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to participate in battle"));
