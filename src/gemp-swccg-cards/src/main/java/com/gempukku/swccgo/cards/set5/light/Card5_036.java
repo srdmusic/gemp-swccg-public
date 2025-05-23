@@ -68,12 +68,35 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
                                             for(var captive : selectedCaptives) {
+                                                //Moving to a location causes the escort to be cleared, so we will
+                                                // restore the escort status; our furious captive is not *escaping*,
+                                                // just moonlighting on the other side of the location for a battle.
+                                                var escort = captive.getEscort();
                                                 game.getGameState().moveCardToLocation(captive, location);
+                                                captive.setCaptiveEscort(escort);
                                             }
                                         }
                                     }
                             );
+
                             initiateBattleWithCaptives(game, playerId, self, action, location, selectedCaptives);
+
+                            action.appendEffect(
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            for(var captive : selectedCaptives) {
+                                                if(!captive.isCaptive() || captive.getZone() != Zone.AT_LOCATION)
+                                                    continue;
+
+                                                //We now move everyone back to their escort
+                                                var escort = captive.getEscort();
+                                                game.getGameState().seizeCharacter(game, captive, escort);
+                                                captive.setCaptiveEscort(escort);
+                                            }
+                                        }
+                                    }
+                            );
                         }
                     }
             );
