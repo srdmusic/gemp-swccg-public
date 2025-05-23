@@ -59,7 +59,7 @@ public class ReleaseWithRallyEffect extends AbstractSuccessfulEffect {
             gameState.cardAffectsCard(_performingPlayer, source, _captive);
         }
 
-        _captive.setCaptive(false);
+        _captive.setCaptiveEscort(null);
         _captive.setImprisoned(false);
         _captive.setFrozen(false);
         game.getModifiersEnvironment().removeEndOfCaptivity(_captive);

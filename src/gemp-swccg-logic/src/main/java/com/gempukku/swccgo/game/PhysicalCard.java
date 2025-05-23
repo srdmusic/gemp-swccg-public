@@ -332,7 +332,10 @@ public interface PhysicalCard extends Filterable, Snapshotable<PhysicalCard> {
     void setCapturedStarship(boolean capturedStarship);
     boolean isCapturedStarship();
 
-    void setCaptive(boolean captive);
+    List<PhysicalCard> getCardsEscorting();
+
+    void setCaptiveEscort(PhysicalCard escort);
+    PhysicalCard getEscort();
     boolean isCaptive();
 
     void setImprisoned(boolean imprisoned);
