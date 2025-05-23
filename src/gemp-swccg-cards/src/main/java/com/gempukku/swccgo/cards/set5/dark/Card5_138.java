@@ -23,6 +23,7 @@ import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.effects.StackActionEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.MayBeBattledModifier;
 import com.gempukku.swccgo.logic.modifiers.MayInitiateBattleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -46,6 +47,8 @@ public class Card5_138 extends AbstractUsedInterrupt {
         @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+
+        String opponent = game.getOpponent(playerId);
 
         Filter characterPresent = Filters.and(Filters.character, Filters.presentAt(Filters.any));
         Filter yourProtocolDroidWithCharacterPresent = Filters.and(Filters.your(playerId), Filters.protocol_droid, Filters.with(self, characterPresent));
@@ -139,6 +142,9 @@ public class Card5_138 extends AbstractUsedInterrupt {
                                                         modifiers.add(new MayInitiateBattleModifier(self, droidsAtBattleLocation));
                                                         modifiers.add(new MayBeBattledModifier(self, droidsAtBattleLocation));
 
+                                                        modifiers.add(new AddsBattleDestinyModifier(self, 1, playerId, true));
+                                                        modifiers.add(new AddsBattleDestinyModifier(self, 1, opponent, true));
+
                                                         return modifiers;
                                                     }
                                                 }));
@@ -148,8 +154,6 @@ public class Card5_138 extends AbstractUsedInterrupt {
                 });
                 actions.add(action);
             }
-            //TO DO: Check if "unoccupied" should be changed to match AR definition (UC spy prevents unoccupied)
-            //TO DO: Add spot override for Undercover Spies if needed
         }
         return actions;
     }
