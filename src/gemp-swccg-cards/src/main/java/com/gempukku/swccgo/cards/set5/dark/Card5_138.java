@@ -110,8 +110,8 @@ public class Card5_138 extends AbstractUsedInterrupt {
 
             List<PhysicalCard> potentialBattleLocations = new LinkedList<>();
             for(PhysicalCard location:Filters.filterTopLocationsOnTable(game, locationFilter)) {
-                if (GameConditions.canInitiateBattleAtLocation(playerId, game, location, false, true)
-                        || GameConditions.canInitiateBattleAtLocation(playerId, game, location, true, true)) {
+                if (GameConditions.canInitiateBattleAtLocation(playerId, game, location, false, true, true)
+                        || GameConditions.canInitiateBattleAtLocation(playerId, game, location, true, true, true)) {
                     potentialBattleLocations.add(location);
                 }
             }
