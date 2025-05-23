@@ -124,7 +124,7 @@ public class Card5_138 extends AbstractUsedInterrupt {
                 final PlayInterruptAction action = new PlayInterruptAction(game, self);
                 action.setText("Initiate battle");
 
-                action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose a location", locationFilter) {
+                action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose a location", Filters.in(potentialBattleLocations)) {
                     @Override
                     protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                         action.allowResponses("Initiate battle at " + GameUtils.getCardLink(targetedCard), new RespondablePlayCardEffect(action) {
