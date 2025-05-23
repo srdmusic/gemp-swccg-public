@@ -54,12 +54,12 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
         // can lead to stochastic tests that randomly fail.
 
         for(int i = 1; i <= LSFillerCount; ++i) {
-            String name = "filler" + String.format("%02d", i);
+            String name = "filler-" + String.format("%02d", i);
             LSCards.put(name, DefaultLSFiller);
         }
 
         for(int i = 1; i <= DSFillerCount; ++i) {
-            String name = "filler" + String.format("%02d", i);
+            String name = "filler-" + String.format("%02d", i);
             DSCards.put(name, DefaultDSFiller);
         }
 

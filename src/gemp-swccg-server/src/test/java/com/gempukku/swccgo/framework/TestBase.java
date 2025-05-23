@@ -107,6 +107,14 @@ public interface TestBase {
 	 */
 	String DefaultLSFiller = "1_28"; // Rebel Trooper
 
+	default PhysicalCardImpl GetDSFiller(int num) {
+		return GetDSCard("filler-" + String.format("%02d", num));
+	}
+
+	default PhysicalCardImpl GetLSFiller(int num) {
+		return GetLSCard("filler-" + String.format("%02d", num));
+	}
+
 
 	/**
 	 * A set of destiny cards that can be used to manipulate the exact outcome. By default these cards are included

@@ -4,6 +4,9 @@ import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.PhysicalCardImpl;
 
+import java.util.Arrays;
+import java.util.List;
+
 public interface GameProperties extends TestBase {
 	/**
 	 * @return Whether the game has finished one way or another.
@@ -57,5 +60,8 @@ public interface GameProperties extends TestBase {
 	default int GetLSLifeForceRemaining() { return GetPlayerLifeForceRemaining(LS); }
 	default int GetPlayerLifeForceRemaining(String player) { return gameState().getPlayerLifeForce(player); }
 
-
+	default List<PhysicalCard> GetCardsAtLocation(PhysicalCardImpl site) { return gameState().getCardsAtLocation(site); }
+	default boolean CardsAtLocation(PhysicalCardImpl site, PhysicalCardImpl...cards) {
+		return GetCardsAtLocation(site).containsAll(Arrays.stream(cards).toList());
+	}
 }
