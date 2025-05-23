@@ -1,0 +1,99 @@
+package com.gempukku.swccgo.rules.state;
+
+import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.framework.VirtualTableScenario;
+import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
+import org.junit.Test;
+
+import java.util.HashMap;
+
+import static org.junit.Assert.*;
+
+public class CaptiveTests {
+	protected VirtualTableScenario GetScenario() throws DecisionResultInvalidException {
+		return new VirtualTableScenario(
+				new HashMap<>()
+				{{
+					put("chewie", "200_5");
+					put("protector", "10_3"); //Chewbacca persona
+				}},
+				new HashMap<>()
+				{{
+					put("boba", "5_91");
+				}},
+				10,
+				10,
+				VirtualTableScenario.DefaultGroundLSLocation,
+				VirtualTableScenario.DefaultGroundDSLocation,
+				VirtualTableScenario.NoLSStarters,
+				VirtualTableScenario.NoDSStarters,
+				VirtualTableScenario.NoLSShields,
+				VirtualTableScenario.NoDSShields,
+				VirtualTableScenario.Open
+		);
+	}
+
+	@Test
+	public void CaptivesAreNotActive() throws DecisionResultInvalidException {
+		var scn = GetScenario();
+
+		var chewie = scn.GetLSCard("chewie");
+		var site = scn.GetLSStartingLocation();
+
+		var boba = scn.GetDSCard("boba");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, boba, chewie);
+		scn.CaptureCardWith(boba, chewie);
+
+		assertTrue(chewie.isCaptive());
+		assertFalse(scn.IsCardActive(chewie));
+	}
+
+	@Test
+	public void CaptivesAreNotConsideredAtTheirLocation() throws DecisionResultInvalidException {
+		var scn = GetScenario();
+
+		var chewie = scn.GetLSCard("chewie");
+		var site = scn.GetLSStartingLocation();
+
+		var boba = scn.GetDSCard("boba");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, boba, chewie);
+		scn.CaptureCardWith(boba, chewie);
+
+		assertTrue(chewie.isCaptive());
+		assertFalse(scn.GetCardsAtLocation(site).contains(chewie));
+	}
+
+	@Test
+	public void CaptivesEnforceUniqueness() throws DecisionResultInvalidException {
+		var scn = GetScenario();
+
+		var chewie = scn.GetLSCard("chewie");
+		var protector = scn.GetLSCard("protector");
+		var site = scn.GetLSStartingLocation();
+		scn.MoveCardsToLSHand(protector);
+
+		var boba = scn.GetDSCard("boba");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, boba, chewie);
+		scn.CaptureCardWith(boba, chewie);
+
+		scn.LSActivateForceCheat(2);
+
+		scn.SkipToLSTurn(Phase.DEPLOY);
+
+		assertTrue(chewie.isCaptive());
+		assertTrue(scn.LSDecisionAvailable("Choose Deploy action or Pass"));
+		assertEquals(5, protector.getBlueprint().getDeployCost(), scn.epsilon);
+		assertEquals(5, scn.GetLSForcePileCount());
+		assertFalse(scn.LSDeployAvailable(protector));
+	}
+
+}
