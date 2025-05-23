@@ -17,6 +17,13 @@ import java.util.List;
  */
 public interface CardProperties extends TestBase {
 
+	/**
+	 * Checks whether a given card is considered active and in play for purposes of game text and usage.
+	 * @param card The card to check.
+	 * @return True if the card is in play and active, false otherwise.
+	 */
+	default boolean IsCardActive(PhysicalCardImpl card) { return gameState().isCardInPlayActive(card); }
+
 
 	/**
 	 * @param card The target card

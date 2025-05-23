@@ -2,12 +2,32 @@ package com.gempukku.swccgo.framework;
 
 import com.gempukku.swccgo.game.PhysicalCardImpl;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
-import net.bytebuddy.implementation.bytecode.constant.DefaultValue;
 
-public interface Battles extends GameProcedures, PileProperties {
+public interface Battles extends Decisions, GameProcedures, PileProperties {
 
-	default void SkipToAttritionOrBattleDamage() throws DecisionResultInvalidException { SkipToAttritionOrBattleDamage(false); }
-	default void SkipToAttritionOrBattleDamage(boolean drawDestiny) throws DecisionResultInvalidException {
+	default boolean DSCanInitiateBattle() { return DSActionAvailable("Initiate battle"); }
+	default boolean LSCanInitiateBattle() { return DSActionAvailable("Initiate battle"); }
+
+	default void DSInitiateBattle(PhysicalCardImpl location) throws DecisionResultInvalidException { InitiateBattle(DS, location); }
+	default void LSInitiateBattle(PhysicalCardImpl location) throws DecisionResultInvalidException { InitiateBattle(LS, location); }
+
+	default void InitiateBattle(String player, PhysicalCardImpl location) throws DecisionResultInvalidException {
+		ChooseAction(player, "Initiate battle");
+		PassForceUseResponses();
+		PassBattleStartResponses();
+		//TODO: Add handling for choosing the location, I am certain that this should be needed but it clearly auto-chose here
+		//ChooseCards(player, location);
+	}
+
+
+	default void SkipToPowerSegment() throws DecisionResultInvalidException {
+		PassBattleStartResponses();
+		PassWeaponsSegmentActions();
+		BothPassResponses("BEFORE_BATTLE_DESTINY_DRAWS");
+	}
+
+	default void SkipToDamageSegment() throws DecisionResultInvalidException { SkipToDamageSegment(false); }
+	default void SkipToDamageSegment(boolean drawDestiny) throws DecisionResultInvalidException {
 		var currentPlayer = GetCurrentPlayer();
 		var offPlayer = GetOpponent();
 

@@ -133,6 +133,7 @@ public interface Choices extends Decisions {
 	default void DSChooseAction(String option) throws DecisionResultInvalidException { ChooseAction(DS, "actionText", option); }
 	default void LSChooseAction(String paramName, String option) throws DecisionResultInvalidException { ChooseAction(LS, paramName, option); }
 	default void LSChooseAction(String option) throws DecisionResultInvalidException { ChooseAction(LS, "actionText", option); }
+	default void ChooseAction(String playerID, String option) throws DecisionResultInvalidException { ChooseAction(playerID, "actionText", option); }
 	default void ChooseAction(String playerID, String paramName, String option) throws DecisionResultInvalidException {
 		List<String> choices = GetADParamAsList(playerID, paramName);
 		for(String choice : choices){
