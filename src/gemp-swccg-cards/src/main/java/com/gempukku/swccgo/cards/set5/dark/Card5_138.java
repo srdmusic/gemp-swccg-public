@@ -7,6 +7,7 @@ import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -15,11 +16,16 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.actions.InitiateBattleAction;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfTurnEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.SendMessageEffect;
+import com.gempukku.swccgo.logic.effects.StackActionEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.MayBeBattledModifier;
+import com.gempukku.swccgo.logic.modifiers.MayInitiateBattleModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
 /**
@@ -89,7 +95,62 @@ public class Card5_138 extends AbstractUsedInterrupt {
             actions.add(action);
         }
         
-        
+         // Check condition(s)
+        if (GameConditions.isDuringYourPhase(game, self, Phase.BATTLE)) {
+
+            Filter yourDroids = Filters.and(Filters.your(self), Filters.droid);
+            Filter opponentDroids = Filters.and(Filters.opponents(self), Filters.droid);
+
+            Filter locationsWithYourDroid = Filters.sameLocationAs(self, yourDroids);
+            Filter locationsWithOpponentDroid = Filters.sameLocationAs(self, opponentDroids);
+            Filter locationsWithNoPresence = Filters.unoccupied;
+            Filter locationsWithNoSpies = Filters.not(Filters.sameLocationAs(self, Filters.spy));
+
+            Filter locationFilter = Filters.and(locationsWithYourDroid, locationsWithOpponentDroid, locationsWithNoPresence, locationsWithNoSpies);
+
+            List<PhysicalCard> potentialBattleLocations = new LinkedList<>();
+            for(PhysicalCard location:Filters.filterTopLocationsOnTable(game, locationFilter)) {
+                if (GameConditions.canInitiateBattleAtLocation(playerId, game, location, false, true)
+                        || GameConditions.canInitiateBattleAtLocation(playerId, game, location, true, true)) {
+                    potentialBattleLocations.add(location);
+                }
+            }
+
+            // Check more condition(s)
+            if (!potentialBattleLocations.isEmpty()) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                action.setText("Initiate battle");
+
+                action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose a location", locationFilter) {
+                    @Override
+                    protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                        action.allowResponses("Initiate battle at " + GameUtils.getCardLink(targetedCard), new RespondablePlayCardEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+                                action.appendEffect(
+                                        new StackActionEffect(action,
+                                                new InitiateBattleAction(playerId, finalTarget, false) {
+                                                    @Override
+                                                    public List<Modifier> getAddedModifiers() {
+                                                        List<Modifier> modifiers = new LinkedList<>();
+                                                        Filter droidsAtBattleLocation = Filters.and(Filters.droid, Filters.at(finalTarget));
+
+                                                        modifiers.add(new MayInitiateBattleModifier(self, droidsAtBattleLocation));
+                                                        modifiers.add(new MayBeBattledModifier(self, droidsAtBattleLocation));
+
+                                                        return modifiers;
+                                                    }
+                                                }));
+                            }
+                        });
+                    }
+                });
+                actions.add(action);
+            }
+            //TO DO: Check if "unoccupied" should be changed to match AR definition (UC spy prevents unoccupied)
+            //TO DO: Add spot override for Undercover Spies if needed
+        }
         return actions;
     }
 
