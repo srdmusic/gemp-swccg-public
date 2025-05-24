@@ -46,7 +46,7 @@ public class Card501_178 extends AbstractObjective {
     public Card501_178() {
         super(Side.LIGHT, 0, Title.Mind_What_You_Have_Learned, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Beldon's Gallery, Yoda's Hut, [Cloud City] No Disintegrations!, and Patience! For remainder of game, your non-[Dagobah] characters of ability > 4 (except Ahsoka) are lost. Place completed Jedi Tests on table; they are suspended (not lost) while Luke not on table. [Dagobah] Yoda deploys -4 to Dagobah. While this side up, may [download] Wise Advice or Yoda's Hope. Once per turn, may [download] a Dagobah site. When drawing training destiny, draw two and choose one. May flip this card if Luke on Dagobah during your turn.");
+        setGameText("Deploy Beldon's Corridor, Yoda's Hut, [Cloud City] No Disintegrations!, and Patience! For remainder of game, your non-[Dagobah] characters of ability > 4 (except Ahsoka) are lost. Place completed Jedi Tests on table; they are suspended (not lost) while Luke not on table. [Dagobah] Yoda deploys -4 to Dagobah. While this side up, may [download] Wise Advice or Yoda's Hope. Once per turn, may [download] a Dagobah site. When drawing training destiny, draw two and choose one. May flip this card if Luke on Dagobah during your turn.");
         addIcons(Icon.SPECIAL_EDITION, Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("Mind What You Have Learned (V)");
@@ -56,10 +56,10 @@ public class Card501_178 extends AbstractObjective {
     protected ObjectiveDeployedTriggerAction getGameTextWhenDeployedAction(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         ObjectiveDeployedTriggerAction action = new ObjectiveDeployedTriggerAction(self);
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.Beldons_Gallery, true, false) {
+                new DeployCardFromReserveDeckEffect(action, Filters.Beldons_Corridor, true, false) {
                     @Override
                     public String getChoiceText() {
-                        return "Choose Beldon's Gallery to deploy";
+                        return "Choose Beldon's Corridor to deploy";
                     }
                 });
         action.appendRequiredEffect(
