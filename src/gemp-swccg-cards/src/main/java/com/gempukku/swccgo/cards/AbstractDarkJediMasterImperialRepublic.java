@@ -8,12 +8,12 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 
 /**
- * The abstract class providing the common implementation for characters that are both Dark Jedi Master and Imperial.
+ * The abstract class providing the common implementation for characters that are Dark Jedi Master and Imperial and Republic.
  */
 public abstract class AbstractDarkJediMasterImperialRepublic extends AbstractCharacter {
 
     /**
-     * Creates a blueprint for a character that is both a Dark Jedi Master and an Imperial.
+     * Creates a blueprint for a character that is a Dark Jedi Master, an Imperial, and a Republic character.
      * @param side the side of the Force
      * @param destiny the destiny value
      * @param deployCost the deploy cost
