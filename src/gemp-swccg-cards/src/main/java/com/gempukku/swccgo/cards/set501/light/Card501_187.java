@@ -27,18 +27,18 @@ import java.util.List;
  * Set: Playtesting
  * Type: Location
  * Subtype: Site
- * Title: Cloud City: Beldon's Gallery
+ * Title: Cloud City: Beldon's Corridor
  */
 public class Card501_187 extends AbstractSite {
     public Card501_187() {
-        super(Side.LIGHT, Title.Beldons_Gallery, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, Title.Beldons_Corridor, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Your troopers are defense value +1 here. Unless Beldon's Eye on table, Force drain -1 here.");
         setLocationLightSideGameText("While your [Cloud City] Rebel here, Their Fire Has Gone Out Of The Universe flips and may not flip back.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.CLOUD_CITY, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.CLOUD_CITY_LOCATION);
-        setTestingText("Cloud City: Beldon's Gallery");
+        setTestingText("Cloud City: Beldon's Corridor");
     }
 
     @Override

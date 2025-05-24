@@ -17600,7 +17600,7 @@ public class Filters {
     public static final Filter Beggar = Filters.title(Title.Beggar);
     public static final Filter Beggars_Canyon = Filters.title(Title.Beggars_Canyon);
     public static final Filter Beldons_Eye = Filters.title(Title.Beldons_Eye);
-    public static final Filter Beldons_Gallery = Filters.title(Title.Beldons_Gallery);
+    public static final Filter Beldons_Corridor = Filters.title(Title.Beldons_Corridor);
     public static final Filter Ben_Solo = Filters.persona(Persona.BEN_SOLO);
     public static final Filter Beru = Filters.title(Title.Beru_Lars);
     public static final Filter Beru_Stew = Filters.title(Title.Beru_Stew);
