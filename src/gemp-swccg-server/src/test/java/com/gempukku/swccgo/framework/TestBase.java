@@ -5,7 +5,10 @@ import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.timing.DefaultSwccgGame;
 import com.gempukku.swccgo.logic.timing.DefaultUserFeedback;
 
+import java.sql.Array;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * This interface holds all the static definitions used throughout the test rig.  It is not a true interface, but
@@ -113,6 +116,24 @@ public interface TestBase {
 
 	default PhysicalCardImpl GetLSFiller(int num) {
 		return GetLSCard("filler-" + String.format("%02d", num));
+	}
+
+	default List<PhysicalCardImpl> GetDSFillerRange(int count) { return GetDSFillerRange(1, count); }
+	default List<PhysicalCardImpl> GetDSFillerRange(int first, int last) {
+		var fillers = new ArrayList<PhysicalCardImpl>();
+		for(int i = first; i <= last; ++i) {
+			fillers.add(GetDSCard("filler-" + String.format("%02d", i)));
+		}
+		return fillers;
+	}
+
+	default PhysicalCardImpl[] GetLSFillerRange(int count) { return GetLSFillerRange(1, count); }
+	default PhysicalCardImpl[] GetLSFillerRange(int first, int last) {
+		var fillers = new ArrayList<PhysicalCardImpl>();
+		for(int i = first; i <= last; ++i) {
+			fillers.add(GetLSCard("filler-" + String.format("%02d", i)));
+		}
+		return fillers.toArray(new PhysicalCardImpl[]{});
 	}
 
 

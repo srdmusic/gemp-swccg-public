@@ -5,6 +5,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCardImpl;
+import com.gempukku.swccgo.logic.timing.results.VehicleCrashedResult;
 
 import java.util.Arrays;
 import java.util.List;
@@ -72,6 +73,40 @@ public interface CardProperties extends TestBase {
 		return on == card.getStackedOn();
 	}
 
+	/**
+	 * Determines if given cards are currently riding another as a passenger or pilot.
+	 * @param cards The card which may or may not be riding
+	 * @param in The card which is supposedly holding the other cards
+	 * @return True if the list of cards are all passengers or pilots of the given card.
+	 */
+	default boolean IsAboard(PhysicalCardImpl in, PhysicalCardImpl...cards) {
+		return gameState().getAboardCards(in, false).containsAll(Arrays.stream(cards).toList());
+	}
+
+	/**
+	 * Determines if given cards are currently riding another as a passenger.
+	 * @param cards The card which may or may not be riding
+	 * @param in The card which is supposedly holding the other cards
+	 * @return True if the list of cards are all passengers of the given card.
+	 */
+	default boolean IsAboardAsPassenger(PhysicalCardImpl in, PhysicalCardImpl...cards) {
+		return gameState().getPassengerCardsAboard(in).containsAll(Arrays.stream(cards).toList());
+	}
+
+	/**
+	 * Determines if given cards are currently riding another as a pilot.
+	 * @param cards The card which may or may not be riding
+	 * @param in The card which is supposedly holding the other cards
+	 * @return True if the list of cards are all pilots of the given card.
+	 */
+	default boolean IsAboardAsPilot(PhysicalCardImpl in, PhysicalCardImpl...cards) {
+		return gameState().getPilotCardsAboard(game().getModifiersQuerying(), in, true).containsAll(Arrays.stream(cards).toList());
+	}
+
+	default int GetPassengerCapacity(PhysicalCardImpl vehicle) {
+		return gameState().getAvailablePassengerCapacity(game().getModifiersQuerying(), vehicle, null);
+	}
+
 
 	/**
 	 * @param card The card to inspect.
@@ -84,12 +119,27 @@ public interface CardProperties extends TestBase {
 
 	/**
 	 * @param card The card to inspect.
+	 * @return The modified current power of the card, as altered by all current in-game effects.
+	 */
+	default float GetPower(PhysicalCardImpl card)
+	{
+		return game().getModifiersQuerying().getPower(gameState(), card);
+	}
+
+	/**
+	 * @param card The card to inspect.
 	 * @return The modified current ability of the card, as altered by all current in-game effects.
 	 */
 	default float GetAbility(PhysicalCardImpl card)
 	{
 		return game().getModifiersQuerying().getAbility(gameState(), card);
 	}
+
+	/**
+	 * @param card The card to inspect.
+	 * @return The modified current defense of the card, as altered by all current in-game effects.
+	 */
+	default float GetDefense(PhysicalCardImpl card) { return game().getModifiersQuerying().getDefenseValue(gameState(), card); }
 
 	/**
 	 * @param card The card to inspect.
@@ -125,6 +175,15 @@ public interface CardProperties extends TestBase {
 	default float GetForfeit(PhysicalCardImpl card)
 	{
 		return game().getModifiersQuerying().getForfeit(gameState(), card);
+	}
+
+	/**
+	 * @param card The card to inspect.
+	 * @return The modified current landspeed of the card, as altered by all current in-game effects.
+	 */
+	default float GetLandspeed(PhysicalCardImpl card)
+	{
+		return game().getModifiersQuerying().getLandspeed(gameState(), card);
 	}
 
 	/**
@@ -166,6 +225,12 @@ public interface CardProperties extends TestBase {
         return game().getModifiersQuerying().getCardTypes(gameState(), card).contains(type);
     }
 
+	/**
+	 * Checks whether the given cards are participating in the current battle or not.
+	 * @param cards The cards to check.
+	 * @return True if all provided cards are participating in a battle, false if any are not (or if there is not any
+	 * currently running battle).
+	 */
 	default boolean IsParticipatingInBattle(PhysicalCardImpl...cards) {
 		return Arrays.stream(cards).allMatch(card -> gameState().isParticipatingInBattle(card));
 	}

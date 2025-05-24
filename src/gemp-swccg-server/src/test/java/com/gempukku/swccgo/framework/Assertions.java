@@ -6,6 +6,7 @@ import com.gempukku.swccgo.game.PhysicalCardImpl;
 import javax.xml.stream.Location;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class Assertions {
 
@@ -19,6 +20,18 @@ public class Assertions {
 		for(var card : cards) {
 			assertEquals(Zone.AT_LOCATION, card.getZone());
 			assertEquals(location, card.getAtLocation());
+		}
+	}
+
+	/**
+	 * Asserts that none of the provided cards are "at" the provided location.  If this is not the case, an AssertionError
+	 * will be thrown with no message.
+	 * @param location The location to check.
+	 * @param cards One more cards which must all not be at that location.
+	 */
+	public static void assertNotAtLocation(PhysicalCardImpl location, PhysicalCardImpl...cards) {
+		for(var card : cards) {
+			assertTrue(Zone.AT_LOCATION != card.getZone() || location != card.getAtLocation());
 		}
 	}
 

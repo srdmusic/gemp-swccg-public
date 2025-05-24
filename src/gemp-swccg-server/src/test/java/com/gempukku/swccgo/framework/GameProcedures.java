@@ -16,7 +16,7 @@ import static org.junit.Assert.assertTrue;
  * to do it manually.  If you actually do need such a pestering card on the table, it is advised that you only place
  * it at the last possible second rather than putting it down early and requiring you to do all the manual procedure.
  */
-public interface GameProcedures extends Actions, GameProperties {
+public interface GameProcedures extends Actions, Decisions, GameProperties {
 
 	/**
 	 * Causes the Dark Side player to activate the maximum amount of available force, causes Light Side to let the same
@@ -171,6 +171,22 @@ public interface GameProcedures extends Actions, GameProperties {
 	 */
 	default void PassDrawActions() throws DecisionResultInvalidException { BothPassResponses(); }
 
+	default boolean DSCaptureDecisionAvailable() { return DSDecisionAvailable("Choose option for capturing "); }
+
+	default void DSChooseEscape() throws DecisionResultInvalidException { DSChoose("Escape"); }
+	default void DSChooseSeize() throws DecisionResultInvalidException { DSChoose("Seize"); }
+
+
+	default boolean LSReleaseDecisionAvailable() { return LSDecisionAvailable("Choose release option for "); }
+
+	default void LSChooseEscape() throws DecisionResultInvalidException { LSChoose("Escape"); }
+	default void LSChooseRally() throws DecisionResultInvalidException { LSChoose("Rally"); }
+
+	default void PassCardLeavingTable() throws DecisionResultInvalidException {
+		BothPassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
+		BothPassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+	}
+
 	/**
 	 * Causes both players to pass, first the player with a current decision and then the other.
 	 * @throws DecisionResultInvalidException Throws this error if the decision wasn't passable.
@@ -206,11 +222,11 @@ public interface GameProcedures extends Actions, GameProperties {
 	}
 
 	default void PassCardAndForceUseResponses() throws DecisionResultInvalidException {
-		BothPassResponses();
-		BothPassResponses();
+		PassCardPlayResponses();
+		PassForceUseResponses();
 	}
-	default void PassCardPlayResponses() throws DecisionResultInvalidException { BothPassResponses(); }
-	default void PassForceUseResponses() throws DecisionResultInvalidException { BothPassResponses(); }
+	default void PassCardPlayResponses() throws DecisionResultInvalidException { BothPassResponses("Playing <div"); }
+	default void PassForceUseResponses() throws DecisionResultInvalidException { BothPassResponses(" Force - Optional responses"); }
 
 	default void DSPassForceUseResponse() throws DecisionResultInvalidException { DSPass(); }
 	default void LSPassForceUseResponse() throws DecisionResultInvalidException { LSPass();}

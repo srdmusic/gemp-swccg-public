@@ -111,7 +111,7 @@ public interface PileProperties extends TestBase{
 	default PhysicalCardImpl GetTopOfLSUsedPile() { return (PhysicalCardImpl) GetUsedPile(LS).getFirst(); }
 
 	default int GetDSLostPileCount() { return GetDSLostPile().size(); }
-	default int GetLSLostPileount() { return GetLSLostPile().size(); }
+	default int GetLSLostPileCount() { return GetLSLostPile().size(); }
 
 	default List<? extends PhysicalCard> GetDSLostPile() { return GetLostPile(DS); }
 	default List<? extends PhysicalCard> GetLSLostPile() { return GetLostPile(LS); }
