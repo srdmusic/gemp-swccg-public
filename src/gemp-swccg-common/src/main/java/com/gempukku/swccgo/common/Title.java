@@ -639,6 +639,7 @@ public interface Title {
     String Karie_Neth = "Karie Neth";
     String Kashyyyk = "Kashyyyk";
     String Keep_Your_Eyes_Open = "Keep Your Eyes Open";
+    String Keeping_The_Empire_Out_Forever = "Keeping The Empire Out Forever";
     String Kef_Bir = "Kef Bir";
     String Kessel = "Kessel";
     String Kessel_Run = "Kessel Run";
