@@ -68,21 +68,11 @@ public class Card501_050 extends AbstractDarkJediMasterImperialRepublic {
 
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
-                && GameConditions.isAtLocation(game, self, Filters.and(Filters.site, Filters.controls(playerId)))
-                && GameConditions.canTarget(game, self, Filters.and(Filters.Coruscant_site))
+                && GameConditions.isOnSystem(game, self, Title.Coruscant)
                 && GameConditions.canTarget(game, self, Filters.and(Filters.Sith_Apprentice))) {
             
-            Filter siteToRelocateTo;
+            Filter siteToRelocateTo = Filters.and(Filters.sameLocationAs(self, Filters.Sith_Apprentice), Filters.site, Filters.locationCanBeRelocatedTo(self, false, 1));
             
-            if (GameConditions.isWith(game, self, Filters.Sith_Apprentice)) {
-                siteToRelocateTo = Filters.Coruscant_site;
-            } else if (GameConditions.isAtLocation(game, self, Filters.Coruscant_site)) {
-                siteToRelocateTo = Filters.and(Filters.sameLocationAs(self, Filters.Sith_Apprentice), Filters.site);
-            } else {
-                siteToRelocateTo = Filters.none;
-            }
-            siteToRelocateTo = Filters.and(siteToRelocateTo, Filters.locationCanBeRelocatedTo(self, false, 1));
-
             if (GameConditions.canSpotLocation(game, siteToRelocateTo)) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Relocate " + GameUtils.getFullName(self) + " to a site");
