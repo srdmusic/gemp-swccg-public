@@ -2509,7 +2509,7 @@ public class GameState implements Snapshotable<GameState> {
 
             //Captive Fury requires that the targeted captives be treated as active for most purposes
             boolean treatCaptiveAsActive = false;
-            if(includeCaptives || (physicalCard.isCaptive() && physicalCard.getAttachedTo() == null)) {
+            if(includeCaptives || modifiersQuerying.captiveMayParticipateInBattle(_game.getGameState(), physicalCard)) {
                 treatCaptiveAsActive = true;
             }
 
@@ -3053,6 +3053,12 @@ public class GameState implements Snapshotable<GameState> {
         return card.getCardsEscorting();
     }
 
+    public List<PhysicalCard> getInactiveCaptivesOfEscort(SwccgGame game, PhysicalCard card) {
+        return card.getCardsEscorting().stream().filter(captive -> {
+			return !game.getModifiersQuerying().captiveMayParticipateInBattle(game.getGameState(), captive);
+		}).toList();
+    }
+
     public List<PhysicalCard> getCaptivesInPrison(PhysicalCard prison) {
         List<PhysicalCard> result = new LinkedList<PhysicalCard>();
         for (PhysicalCard physicalCard : getAttachedCards(prison, false)) {
@@ -3272,14 +3278,16 @@ public class GameState implements Snapshotable<GameState> {
 
         // Passenger slots are also filled by captives, so count any captives that are escorted by the card if not already aboard.
         if (!isCardAlreadyAboard && cardToCheckFor != null) {
-            passengerCapacity -= getCaptivesOfEscort(cardToCheckFor).size();
+            passengerCapacity -= getInactiveCaptivesOfEscort(_game, cardToCheckFor).size();
             passengerCapacity -= getNonCaptiveCharactersCarried(cardToCheckFor).size();
         }
 
         for (PhysicalCard pilot : pilots) {
+            if(cardToCheckFor == null)
+                continue;
             // Passenger slots are also filled by captives, so count any captives that are escorted by pilots or passengers.
             if (!isCardAlreadyAboard || cardToCheckFor.getCardId() != pilot.getCardId()) {
-                passengerCapacity -= getCaptivesOfEscort(pilot).size();
+                passengerCapacity -= getInactiveCaptivesOfEscort(_game, pilot).size();
                 passengerCapacity -= getNonCaptiveCharactersCarried(pilot).size();
             }
         }
@@ -3287,7 +3295,7 @@ public class GameState implements Snapshotable<GameState> {
         for (PhysicalCard passengerCard : passengers) {
             // Passenger slots are also filled by captives, so count any captives that are escorted by pilots or passengers.
             if (!isCardAlreadyAboard || cardToCheckFor.getCardId() != passengerCard.getCardId()) {
-                passengerCapacity -= getCaptivesOfEscort(passengerCard).size();
+                passengerCapacity -= getInactiveCaptivesOfEscort(_game, passengerCard).size();
                 passengerCapacity -= getNonCaptiveCharactersCarried(passengerCard).size();
             }
 

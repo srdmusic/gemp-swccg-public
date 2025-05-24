@@ -20,6 +20,7 @@ public class CaptiveTests {
 				new HashMap<>()
 				{{
 					put("boba", "5_91");
+					put("tube", "1_308");
 				}},
 				10,
 				10,
@@ -94,6 +95,31 @@ public class CaptiveTests {
 		assertEquals(5, protector.getBlueprint().getDeployCost(), scn.epsilon);
 		assertEquals(5, scn.GetLSForcePileCount());
 		assertFalse(scn.LSDeployAvailable(protector));
+	}
+
+	@Test
+	public void CaptivesTakeUpAPassengerSlotIfEscortIsInAVehicle() throws DecisionResultInvalidException {
+		var scn = GetScenario();
+
+		var chewie = scn.GetLSCard("chewie");
+		var site = scn.GetLSStartingLocation();
+
+		var boba = scn.GetDSCard("boba");
+		var tube = scn.GetDSCard("tube");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, boba, tube, chewie);
+		scn.CaptureCardWith(boba, chewie);
+
+		assertEquals(4, scn.GetPassengerCapacity(tube));
+
+		scn.BoardAsPassenger(tube, boba);
+		assertTrue(chewie.isCaptive());
+		assertTrue(scn.IsAboardAsPassenger(tube, boba));
+
+		//4 minus 1 for Boba and minus 1 for his captive
+		assertEquals(2, scn.GetPassengerCapacity(tube));
 	}
 
 }

@@ -11505,7 +11505,7 @@ public class Filters {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
                 PhysicalCard card = gameState.findCardByPermanentId(permCardId);
-                return Filters.sameCardId(physicalCard.getEscort()).accepts(gameState, modifiersQuerying, card);
+                return physicalCard.isCaptive() && Filters.sameCardId(physicalCard.getEscort()).accepts(gameState, modifiersQuerying, card);
             }
         };
     }

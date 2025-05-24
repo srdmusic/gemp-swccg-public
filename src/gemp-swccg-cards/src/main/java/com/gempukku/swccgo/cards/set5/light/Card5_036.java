@@ -39,7 +39,8 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
         // Check condition(s)
 
         if (GameConditions.isDuringYourPhase(game, self, Phase.BATTLE)) {
-            final var yourEscortedCaptive = Filters.and(Filters.escortedCaptive, Filters.your(playerId));
+            var gameState = game.getGameState();
+            final var yourEscortedCaptive = Filters.and(Filters.escortedCaptive, Filters.your(playerId), Filters.not(Filters.frozenCaptive));
             var validCaptives = getBattleEligibleEscortedCaptives(game, self, yourEscortedCaptive);
             if(validCaptives == null || validCaptives.isEmpty())
                 return null;
@@ -51,8 +52,7 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
 
             var selectedCaptives = new ArrayList<PhysicalCard>();
 
-            var chooseCaptives = chooseCaptives(game, playerId, self, action, validCaptives, null, selectedCaptives);
-            action.appendTargeting(chooseCaptives);
+            chooseCaptives(action, playerId, validCaptives, selectedCaptives);
 
             action.allowResponses(
                     new RespondablePlayCardEffect(action) {
@@ -61,7 +61,13 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
                             // Update usage limit(s)
                             action.addAnimationGroup(selectedCaptives);
                             var firstCaptive = selectedCaptives.getFirst();
-                            var location = firstCaptive.getAttachedTo().getAtLocation();
+                            var escort = firstCaptive.getEscort();
+                            var location = escort.getAtLocation();
+                            if(location == null && (escort.isPassengerOf() || escort.isPilotOf())) {
+                                location = escort.getAttachedTo().getAtLocation();
+                            }
+                            //stupid final requirements.
+                            var location2 = location;
                             action.setActionMsg("Have " + GameUtils.getCardLink(firstCaptive) + " initiate a battle");
                             action.appendEffect(
                                     new UnrespondableEffect(action) {
@@ -72,7 +78,7 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
                                                 // restore the escort status; our furious captive is not *escaping*,
                                                 // just moonlighting on the other side of the location for a battle.
                                                 var escort = captive.getEscort();
-                                                game.getGameState().moveCardToLocation(captive, location);
+                                                game.getGameState().moveCardToLocation(captive, location2);
                                                 captive.setCaptiveEscort(escort);
                                             }
                                         }
@@ -81,22 +87,7 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
 
                             initiateBattleWithCaptives(game, playerId, self, action, location, selectedCaptives);
 
-                            action.appendEffect(
-                                    new UnrespondableEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            for(var captive : selectedCaptives) {
-                                                if(!captive.isCaptive() || captive.getZone() != Zone.AT_LOCATION)
-                                                    continue;
-
-                                                //We now move everyone back to their escort
-                                                var escort = captive.getEscort();
-                                                game.getGameState().seizeCharacter(game, captive, escort);
-                                                captive.setCaptiveEscort(escort);
-                                            }
-                                        }
-                                    }
-                            );
+                            releaseOrReattachCaptives(game, action, selectedCaptives);
                         }
                     }
             );
@@ -112,53 +103,16 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
         return captives.stream().filter(card -> !GameConditions.hasParticipatedInBattleThisTurn(game, card)).toList();
     }
 
-    /**
-     * We want to have the player choose 1 of the available captives, and then after that choose 0 or more other
-     * escorted captives at the same site.
-     */
-    private static ChooseCardOnTableEffect chooseCaptives(final SwccgGame game, final String playerId, final PhysicalCard self,
-            final PlayInterruptAction action,  final List<PhysicalCard> initialTargets, PhysicalCard location, final List<PhysicalCard> selectedCaptives) {
+    private static void chooseCaptives(PlayInterruptAction action, String playerId, List<PhysicalCard> initialTargets, List<PhysicalCard> selectedCaptives) {
 
-        var unselectedSameLocationCaptives = Filters.and(Filters.in(initialTargets),
-                Filters.not(Filters.in(selectedCaptives)));
-        int minChoices = 0; // optional
-        if(selectedCaptives.isEmpty()) { //first time through
-            minChoices = 1;
-        }
-        else {
-            // We only permit captives at the same site as our initial choice which have not already been selected.
-            unselectedSameLocationCaptives = Filters.and(Filters.in(initialTargets),
-                    Filters.attachedTo(Filters.atSameLocation(location)),
-                    Filters.not(Filters.in(selectedCaptives)));
-            var otherCaptives = Filters.filterActive(game, self, SpotOverride.INCLUDE_CAPTIVE, unselectedSameLocationCaptives);
-            if (otherCaptives.isEmpty())
-                return null;
-        }
-
-        var chooseInitialCaptive = new ChooseCardOnTableEffect(action, playerId, "Choose escorted captives to participate in battle",
-                SpotOverride.INCLUDE_CAPTIVE, unselectedSameLocationCaptives, minChoices) {
-            @Override
-            protected void cardSelected(PhysicalCard captive) {
-                selectedCaptives.add(captive);
-                var captiveLocation = captive.getCardAttachedToAtLocation();
-
-                action.appendEffect(
-                        new PassthruEffect(action) {
-                            @Override
-                            protected void doPlayEffect(SwccgGame game) {
-                                var selectedCaptives = Collections.singletonList(captive);
-
-                                // Optionally, add on another "choose card" instance
-                                var bonusEffect = chooseCaptives(game, playerId, self, action, initialTargets, captiveLocation, selectedCaptives);
-                                if (bonusEffect != null) {
-                                    action.appendEffect(bonusEffect);
-                                }
-                            }
-                        }
-                );
-            }
-        };
-        return chooseInitialCaptive;
+        action.appendTargeting(
+                new TargetCardsAtSameLocationEffect(action, playerId, "Choose escorted captives to battle", 1,
+                        Integer.MAX_VALUE, SpotOverride.INCLUDE_CAPTIVE, Filters.in(initialTargets)) {
+                    @Override
+                    protected void cardsTargeted(int targetGroupId, Collection<PhysicalCard> targetedCards) {
+                        selectedCaptives.addAll(targetedCards);
+                    }
+                });
     }
 
 
@@ -170,6 +124,7 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
             public List<Modifier> getAddedModifiers() {
                 List<Modifier> modifiers = new LinkedList<>();
 
+                modifiers.add(new CaptiveMayParticipateInBattleModifier(self, Filters.in(chosenCaptives)));
                 modifiers.add(new MayNotUseWeaponsModifier(self, Filters.in(chosenCaptives)));
                 modifiers.add(new MayNotUseDevicesModifier(self, Filters.in(chosenCaptives)));
                 modifiers.add(new MayNotBeForfeitedInBattleModifier(self, Filters.and(Filters.in(chosenCaptives),Filters.not(Filters.hit))));
@@ -180,5 +135,57 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
         };
 
         action.appendEffect(new StackActionEffect(action, battleAction));
+    }
+
+    private static void releaseOrReattachCaptives(SwccgGame game, PlayInterruptAction action, List<PhysicalCard> selectedCaptives) {
+        var gameState = game.getGameState();
+        var effect = new UnrespondableEffect(action) {
+            @Override
+            protected void performActionResults(Action targetingAction) {
+                for(var captive : selectedCaptives) {
+                    if(!captive.isCaptive() || captive.getZone() != Zone.AT_LOCATION)
+                        continue;
+
+                    //We now move everyone still at the site back to their escort, unless that escort was lost during the fight
+                    var escort = captive.getEscort();
+
+                    if(escort.getZone().isInPlay()) {
+
+                        boolean reattach = true;
+
+                        //If the escort is in a vehicle that is at capacity, they must disembark before escorting
+                        var attachedTo = escort.getAttachedTo();
+                        if (attachedTo != null && (escort.isPilotOf() || escort.isPassengerOf())
+                                && (attachedTo.getBlueprint().getCardCategory() == CardCategory.STARSHIP || attachedTo.getBlueprint().getCardCategory() == CardCategory.VEHICLE)) {
+                            if (Filters.or(Filters.piloting(attachedTo), Filters.aboardAsPassenger(attachedTo)).accepts(gameState, game.getModifiersQuerying(), escort)
+                                    && gameState.getAvailablePassengerCapacity(game.getModifiersQuerying(), attachedTo, captive) < 1) {
+                                action.appendEffect(
+                                        new DisembarkEffect(action, escort,game.getModifiersQuerying().getLocationThatCardIsAt(game.getGameState(), escort), false,false));
+                                //We will be reattaching after the disembark, so don't handle it outside this function
+                                reattach = false;
+                                action.appendEffect(new PassthruEffect(action) {
+                                    @Override
+                                    protected void doPlayEffect(SwccgGame game) {
+                                        game.getGameState().seizeCharacter(game, captive, escort);
+                                        captive.setCaptiveEscort(escort);
+                                    }
+                                });
+                            }
+                        }
+
+                        //If the above vehicle edge case was not a problem
+                        if (reattach) {
+                            game.getGameState().seizeCharacter(game, captive, escort);
+                            captive.setCaptiveEscort(escort);
+                        }
+                    }
+                    else {
+                        //Escort was lost, missing, etc, so we release the captive
+                        action.appendEffect(new ReleaseCaptiveEffect(action, captive));
+                    }
+                }
+            }
+        };
+        action.appendEffect(effect);
     }
 }
