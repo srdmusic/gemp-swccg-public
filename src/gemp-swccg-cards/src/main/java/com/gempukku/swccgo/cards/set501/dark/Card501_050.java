@@ -1,7 +1,7 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractDarkJediMasterImperialRepublic;
@@ -9,6 +9,7 @@ import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AloneCondition;
 import com.gempukku.swccgo.cards.conditions.OnCondition;
 import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -31,6 +32,7 @@ import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -45,7 +47,7 @@ public class Card501_050 extends AbstractDarkJediMasterImperialRepublic {
     public Card501_050() {
         super(Side.DARK, 1, 6, 5, 7, 8, "Master Sidious", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Leader. Trade Federation.");
-        setGameText("While alone on Coruscant, your apprentice is immune to attrition. Once per game, may [upload] Unlimited Power or Young Fool. During your move phase, if on Coruscant, may use 1 Force to relocate to your apprentice's site. Immune to attrition.");
+        setGameText("While alone on Coruscant, your apprentice is immune to attrition. Once per game, may [upload] Unlimited Power! or Young Fool. During your move phase, if on Coruscant, may use 1 Force to relocate to your apprentice's site. Immune to attrition.");
         addIcons(Icon.EPISODE_I, Icon.WARRIOR, Icon.SEPARATIST, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.LEADER);
         addPersona(Persona.SIDIOUS);
@@ -64,6 +66,8 @@ public class Card501_050 extends AbstractDarkJediMasterImperialRepublic {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+        
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
@@ -73,6 +77,7 @@ public class Card501_050 extends AbstractDarkJediMasterImperialRepublic {
             
             Filter siteToRelocateTo = Filters.and(Filters.sameLocationAs(self, Filters.Sith_Apprentice), Filters.site, Filters.locationCanBeRelocatedTo(self, false, 1));
             
+            // Check more condition(s)
             if (GameConditions.canSpotLocation(game, siteToRelocateTo)) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setText("Relocate " + GameUtils.getFullName(self) + " to a site");
@@ -102,9 +107,27 @@ public class Card501_050 extends AbstractDarkJediMasterImperialRepublic {
                             }
                         }
                 );            
-                return Collections.singletonList(action);
+                actions.add(action);
             }
         }
-        return null;
+
+        gameTextActionId = GameTextActionId.MASTER_SIDIOUS__UPLOAD_CARD;
+        // Check condition(s)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take card into hand from Reserve Deck");
+            action.setActionMsg("Take Unlimited Power! or Young Fool into hand from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.Unlimited_Power, Filters.Young_Fool), true));
+
+            actions.add(action);
+        }
+        return actions;
     }
 }
