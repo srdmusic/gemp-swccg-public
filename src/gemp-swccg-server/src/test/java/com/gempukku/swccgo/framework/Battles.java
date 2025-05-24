@@ -26,13 +26,10 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 		BothPassResponses("BEFORE_BATTLE_DESTINY_DRAWS");
 	}
 
-	default void SkipToDamageSegment() throws DecisionResultInvalidException { SkipToDamageSegment(false); }
-	default void SkipToDamageSegment(boolean drawDestiny) throws DecisionResultInvalidException {
+	default void SkipBattleDestinyDraws(boolean drawDestiny) throws DecisionResultInvalidException {
 		var currentPlayer = GetCurrentPlayer();
 		var offPlayer = GetOpponent();
 
-		PassBattleStartResponses();
-		PassWeaponsSegmentActions();
 		BothPassResponses("BEFORE_BATTLE_DESTINY_DRAWS");
 		// current player destiny
 		if(DecisionAvailable(currentPlayer, "battle destiny?")) {
@@ -58,6 +55,16 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 		}
 		BothPassResponses("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_PLAYER");
 		BothPassResponses("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_BOTH_PLAYERS");
+	}
+
+	default void SkipToEndOfPowerSegment(boolean drawDestiny) throws DecisionResultInvalidException {
+		SkipToPowerSegment();
+		SkipBattleDestinyDraws(drawDestiny);
+	}
+
+	default void SkipToDamageSegment() throws DecisionResultInvalidException { SkipToDamageSegment(false); }
+	default void SkipToDamageSegment(boolean drawDestiny) throws DecisionResultInvalidException {
+		SkipToEndOfPowerSegment(drawDestiny);
 		BothPassResponses("INITIAL_ATTRITION_CALCULATED");
 	}
 
@@ -103,9 +110,9 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 	 * @param card The DS card in play to sacrifice for attrition.
 	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying attrition.
 	 */
-	default void PayDSAttritionFromCardInPlay(PhysicalCardImpl card) throws DecisionResultInvalidException {
+	default void DSPayAttritionFromCardInPlay(PhysicalCardImpl card) throws DecisionResultInvalidException {
 		DSChooseCard(card);
-		BothPassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+		PassCardLeavingTable();
 	}
 
 	/**
@@ -113,9 +120,9 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 	 * @param card The LS card in play to sacrifice for attrition.
 	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying attrition.
 	 */
-	default void PayLSAttritionFromCardInPlay(PhysicalCardImpl card) throws DecisionResultInvalidException {
+	default void LSPayAttritionFromCardInPlay(PhysicalCardImpl card) throws DecisionResultInvalidException {
 		LSChooseCard(card);
-		BothPassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+		PassCardLeavingTable();
 	}
 
 
@@ -131,73 +138,105 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 	default int GetUnpaidLSBattleDamage() { return (int) gameState().getBattleState().getBattleDamageRemaining(game(), LS); }
 
 	/**
+	 * Pays for the remaining Dark Side battle damage using cards on the top of the DS Reserve deck.
+	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
+	 */
+	default void DSPayRemainingBattleDamageFromReserveDeck() throws DecisionResultInvalidException {
+		DSPayBattleDamageFromReserveDeck(GetUnpaidDSBattleDamage());
+	}
+	/**
+	 * Pays for the given amount of Force worth of Dark Side battle damage using cards on the top of the DS Reserve deck.
+	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
+	 */
+	default void DSPayBattleDamageFromReserveDeck(int amount) throws DecisionResultInvalidException {
+		for(int i = 0; i < amount; ++i) {
+			DSPayBattleDamageFromReserveDeck();
+		}
+	}
+	/**
 	 * Pays for 1 Force worth of Dark Side battle damage using the card on the top of the DS Reserve deck.
 	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
 	 */
-	default void PayDSBattleDamageFromReserveDeck() throws DecisionResultInvalidException {
+	default void DSPayBattleDamageFromReserveDeck() throws DecisionResultInvalidException {
 		DSChooseCard(GetTopOfDSReserveDeck());
-		BothPassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+		PassCardLeavingTable();
 	}
 	/**
 	 * Pays for 1 Force worth of Dark Side battle damage using the card on the top of the DS Force Pile.
 	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
 	 */
-	default void PayDSBattleDamageFromForcePile() throws DecisionResultInvalidException {
+	default void DSPayBattleDamageFromForcePile() throws DecisionResultInvalidException {
 		DSChooseCard(GetTopOfDSForcePile());
-		BothPassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+		PassCardLeavingTable();
 	}
 	/**
 	 * Pays for 1 Force worth of Dark Side battle damage using the card on the top of the DS Used Pile.
 	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
 	 */
-	default void PayDSBattleDamageFromUsedPile() throws DecisionResultInvalidException {
+	default void DSPayBattleDamageFromUsedPile() throws DecisionResultInvalidException {
 		DSChooseCard(GetTopOfDSUsedPile());
-		BothPassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+		PassCardLeavingTable();
 	}
 	/**
 	 * Pays for 1 or more Force worth of Dark Side battle damage by sacrificing the provided card in play.
 	 * @param card The DS card in play to sacrifice for battle damage.
 	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
 	 */
-	default void PayDSBattleDamageFromCardInPlay(PhysicalCardImpl card) throws DecisionResultInvalidException {
+	default void DSPayBattleDamageFromCardInPlay(PhysicalCardImpl card) throws DecisionResultInvalidException {
 		DSChooseCard(card);
 		BothPassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
-		BothPassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+		PassCardLeavingTable();
 	}
 
+	/**
+	 * Pays for the remaining Light Side battle damage using cards on the top of the DS Reserve deck.
+	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
+	 */
+	default void LSPayRemainingBattleDamageFromReserveDeck() throws DecisionResultInvalidException {
+		LSPayBattleDamageFromReserveDeck(GetUnpaidLSBattleDamage());
+	}
+	/**
+	 * Pays for the given amount of Force worth of Light Side battle damage using cards on the top of the DS Reserve deck.
+	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
+	 */
+	default void LSPayBattleDamageFromReserveDeck(int amount) throws DecisionResultInvalidException {
+		for(int i = 0; i < amount; ++i) {
+			DSPayBattleDamageFromReserveDeck();
+		}
+	}
 	/**
 	 * Pays for 1 Force worth of Light Side battle damage using the card on the top of the LS Reserve deck.
 	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
 	 */
-	default void PayLSBattleDamageFromReserveDeck() throws DecisionResultInvalidException {
+	default void LSPayBattleDamageFromReserveDeck() throws DecisionResultInvalidException {
 		LSChooseCard(GetTopOfLSReserveDeck());
-		BothPassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+		PassCardLeavingTable();
 	}
 	/**
 	 * Pays for 1 Force worth of Light Side battle damage using the card on the top of the LS Force Pile.
 	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
 	 */
-	default void PayLSBattleDamageFromForcePile() throws DecisionResultInvalidException {
+	default void LSPayBattleDamageFromForcePile() throws DecisionResultInvalidException {
 		LSChooseCard(GetTopOfLSForcePile());
-		BothPassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+		PassCardLeavingTable();
 	}
 	/**
 	 * Pays for 1 Force worth of Light Side battle damage using the card on the top of the LS Force Pile.
 	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
 	 */
-	default void PayLSBattleDamageFromUsedPile() throws DecisionResultInvalidException {
+	default void LSPayBattleDamageFromUsedPile() throws DecisionResultInvalidException {
 		LSChooseCard(GetTopOfLSUsedPile());
-		BothPassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+		PassCardLeavingTable();
 	}
 	/**
 	 * Pays for 1 or more Force worth of Light Side battle damage by sacrificing the provided card in play.
 	 * @param card The LS card in play to sacrifice for battle damage.
 	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
 	 */
-	default void PayLSBattleDamageFromCardInPlay(PhysicalCardImpl card) throws DecisionResultInvalidException {
+	default void LSPayBattleDamageFromCardInPlay(PhysicalCardImpl card) throws DecisionResultInvalidException {
 		LSChooseCard(card);
 		BothPassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
-		BothPassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+		PassCardLeavingTable();
 	}
 
 

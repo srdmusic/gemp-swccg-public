@@ -1,7 +1,10 @@
 package com.gempukku.swccgo.framework;
 
 import com.gempukku.swccgo.game.ActionProxy;
+import com.gempukku.swccgo.game.PhysicalCardImpl;
+import com.gempukku.swccgo.logic.actions.CardPileAction;
 import com.gempukku.swccgo.logic.actions.SystemQueueAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.decisions.CardActionSelectionDecision;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -57,7 +60,7 @@ public interface AdHocEffects extends TestBase, Decisions {
 	 * @throws DecisionResultInvalidException This error will be thrown if the effect cannot for whatever reason be
 	 * executed as part of the current player decision.
 	 */
-	default void DSExecuteAdHocEffect(StandardEffect effect) throws DecisionResultInvalidException { ExecuteAdHocEffect(DS, effect); }
+	default void DSExecuteAdHocEffect(PhysicalCardImpl source, StandardEffect effect) throws DecisionResultInvalidException { ExecuteAdHocEffect(DS, source, effect); }
 	/**
 	 * Causes the LIght Side player to execute an arbitrary effect.  Note that there are nuances to how and whether this
 	 * ever works; in particular it seems to only work if there are 0 legal actions to take on the current decision.
@@ -68,7 +71,7 @@ public interface AdHocEffects extends TestBase, Decisions {
 	 * @throws DecisionResultInvalidException This error will be thrown if the effect cannot for whatever reason be
 	 * executed as part of the current player decision.
 	 */
-	default void LSExecuteAdHocEffect(StandardEffect effect) throws DecisionResultInvalidException { ExecuteAdHocEffect(LS, effect); }
+	default void LSExecuteAdHocEffect(PhysicalCardImpl source, StandardEffect effect) throws DecisionResultInvalidException { ExecuteAdHocEffect(LS, source, effect); }
 
 	/**
 	 * Causes the given player to execute an arbitrary effect.  Note that there are nuances to how and whether this
@@ -81,13 +84,12 @@ public interface AdHocEffects extends TestBase, Decisions {
 	 * @throws DecisionResultInvalidException This error will be thrown if the effect cannot for whatever reason be
 	 * executed as part of the current player decision.
 	 */
-	default void ExecuteAdHocEffect(String playerId, StandardEffect effect) throws DecisionResultInvalidException {
-        carryOutEffectInPhaseActionByPlayer(playerId, effect);
-        assertTrue(effect.wasCarriedOut());
+	default void ExecuteAdHocEffect(String playerId, PhysicalCardImpl source, StandardEffect effect) throws DecisionResultInvalidException {
+        carryOutEffectInPhaseActionByPlayer(playerId, source, effect);
     }
 
-	default void carryOutEffectInPhaseActionByPlayer(String playerId, StandardEffect effect) throws DecisionResultInvalidException {
-		var action = new SystemQueueAction();
+	default void carryOutEffectInPhaseActionByPlayer(String playerId, PhysicalCardImpl source, StandardEffect effect) throws DecisionResultInvalidException {
+		var action = new TopLevelGameTextAction(source, playerId, source.getCardId());
 		action.appendEffect(effect);
 		carryOutEffectInPhaseActionByPlayer(playerId, action);
 	}

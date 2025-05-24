@@ -1,7 +1,6 @@
 package com.gempukku.swccgo.framework;
 
 import com.gempukku.swccgo.common.Zone;
-import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.PhysicalCardImpl;
 
 import java.util.ArrayList;
@@ -61,7 +60,14 @@ public interface ZoneManipulation extends TestBase{
 	 * @param cards The cards to move
 	 */
 	default void MoveCardsToLocation(PhysicalCardImpl location, PhysicalCardImpl...cards) {
-		Arrays.stream(cards).forEach(card -> gameState().moveCardToLocation(card, location, true));
+		Arrays.stream(cards).forEach(card -> {
+			//If it's not in play, we'll temporarily stick it on the side of the table so that it goes through
+			// all the correct "entering play" startup
+			if(!card.getZone().isInPlay()) {
+				MoveCardsToSideOfTable(card);
+			}
+			gameState().moveCardToLocation(card, location, true);
+		});
 	}
 	/**
 	 * Moves one or more cards to a given location, on their owner's opponent's side of that location.  This is
@@ -88,13 +94,36 @@ public interface ZoneManipulation extends TestBase{
 	default void MoveCardsToLSSideOfTable(PhysicalCardImpl...cards) { MoveCardsToSideOfTable(LS, cards); }
 
 	/**
+	 * Moves one or more cards to their owner's side of the table.  This is equivalent to playing to that side of the
+	 * table, except that no costs, requirements, or other rules will be respected.
+	 * @param cards The cards to move
+	 */
+	default void MoveCardsToSideOfTable(PhysicalCardImpl...cards) {
+		Arrays.stream(cards).forEach(card -> {
+			if(!card.getZone().isInPlay()) {
+				MoveCardToZone(card.getOwner(), card, Zone.SIDE_OF_TABLE);
+			}
+			else {
+				gameState().relocateCardToSideOfTable(card, card.getOwner());
+			}
+		});
+	}
+
+	/**
 	 * Moves one or more cards to a given player's side of the table.  This is equivalent to playing to that side of the
 	 * table, except that no costs, requirements, or other rules will be respected.
 	 * @param player Which player's side of the table to use
 	 * @param cards The cards to move
 	 */
 	default void MoveCardsToSideOfTable(String player, PhysicalCardImpl...cards) {
-		Arrays.stream(cards).forEach(card -> gameState().relocateCardToSideOfTable(card, player));
+		Arrays.stream(cards).forEach(card -> {
+			if(!card.getZone().isInPlay()) {
+				MoveCardToZone(player, card, Zone.SIDE_OF_TABLE);
+			}
+			else {
+				gameState().relocateCardToSideOfTable(card, player);
+			}
+		});
 	}
 
 
@@ -163,12 +192,12 @@ public interface ZoneManipulation extends TestBase{
 	 * Moves one or more cards to the bottom of the Dark Side player's reserve deck.
 	 * @param cards The cards to move.
 	 */
-	default void MoveCardsToBottomOfDSReserveDeck(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(DS, cards);}
+	default void MoveCardsToBottomOfDSReserveDeck(PhysicalCardImpl...cards) { MoveCardsToBottomOfReserveDeck(DS, cards);}
 	/**
 	 * Moves one or more cards to the bottom of the Light Side player's reserve deck.
 	 * @param cards The cards to move.
 	 */
-	default void MoveCardsToBottomOfLSReserveDeck(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(LS, cards);}
+	default void MoveCardsToBottomOfLSReserveDeck(PhysicalCardImpl...cards) { MoveCardsToBottomOfReserveDeck(LS, cards);}
 
 	/**
 	 * Moves one or more cards to the bottom of the given player's reserve deck.
@@ -194,8 +223,8 @@ public interface ZoneManipulation extends TestBase{
 		});
 	}
 
-	default void MoveCardsToTopOfDSForcePile(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(DS, cards);}
-	default void MoveCardsToTopOfLSForcePile(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(LS, cards);}
+	default void MoveCardsToTopOfDSForcePile(PhysicalCardImpl...cards) { MoveCardsToTopOfForcePile(DS, cards);}
+	default void MoveCardsToTopOfLSForcePile(PhysicalCardImpl...cards) { MoveCardsToTopOfForcePile(LS, cards);}
 
 	default void MoveCardsToTopOfForcePile(String player, PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
@@ -215,8 +244,8 @@ public interface ZoneManipulation extends TestBase{
 		});
 	}
 
-	default void MoveCardsToTopOfDSUsedPile(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(DS, cards);}
-	default void MoveCardsToTopOfLSUsedPile(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(LS, cards);}
+	default void MoveCardsToTopOfDSUsedPile(PhysicalCardImpl...cards) { MoveCardsToTopOfUsedPile(DS, cards);}
+	default void MoveCardsToTopOfLSUsedPile(PhysicalCardImpl...cards) { MoveCardsToTopOfUsedPile(LS, cards);}
 
 	default void MoveCardsToTopOfUsedPile(String player, PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
@@ -236,9 +265,9 @@ public interface ZoneManipulation extends TestBase{
 		});
 	}
 
-	default void MoveCardsToTopOfDSLostPile(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(DS, cards);}
+	default void MoveCardsToTopOfDSLostPile(PhysicalCardImpl...cards) { MoveCardsToTopOfLostPile(DS, cards);}
 
-	default void MoveCardsToTopOfLSLostPile(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(LS, cards);}
+	default void MoveCardsToTopOfLSLostPile(PhysicalCardImpl...cards) { MoveCardsToTopOfLostPile(LS, cards);}
 
 	default void MoveCardsToTopOfLostPile(String player, PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
@@ -265,8 +294,47 @@ public interface ZoneManipulation extends TestBase{
         }
     }
 
-	default void CaptureCardWith(PhysicalCardImpl captor, PhysicalCardImpl captive) {
-		gameState().seizeCharacter(game(), captive, captor);
+	/**
+	 * Seizes a card, making it a captive and assigning it to be escorted by a given captor.
+	 * @param escort The card to attach to.
+	 * @param captive The card to seize.
+	 */
+	default void CaptureCardWith(PhysicalCardImpl escort, PhysicalCardImpl captive) {
+		gameState().seizeCharacter(game(), captive, escort);
+	}
+
+	/**
+	 * Freezes a given card in carbonite, rending it immobile, insensate, and inactive for most purposes.
+	 * @param captive The card to freeze.
+	 */
+	default void FreezeCard(PhysicalCardImpl captive) {
+		gameState().freezeCharacter(captive);
+	}
+
+	default void BoardAsPassenger(PhysicalCardImpl vehicle, PhysicalCardImpl...passengers) {
+		Arrays.stream(passengers).forEach(passenger -> {
+			var originalZone = passenger.getZone();
+			RemoveCardZone(passenger);
+			if(originalZone.isInPlay()) {
+				gameState().moveCardToAttachedInPassengerCapacitySlot(passenger, vehicle);
+			}
+			else {
+				gameState().attachCardInPassengerCapacitySlot(passenger, vehicle);
+			}
+		});
+	}
+
+	default void BoardAsPilot(PhysicalCardImpl vehicle, PhysicalCardImpl...pilots) {
+		Arrays.stream(pilots).forEach(pilot -> {
+			var originalZone = pilot.getZone();
+			RemoveCardZone(pilot);
+			if(originalZone.isInPlay()) {
+				gameState().moveCardToAttachedInPilotCapacitySlot(pilot, vehicle);
+			}
+			else {
+				gameState().attachCardInPilotCapacitySlot(pilot, vehicle);
+			}
+		});
 	}
 
 

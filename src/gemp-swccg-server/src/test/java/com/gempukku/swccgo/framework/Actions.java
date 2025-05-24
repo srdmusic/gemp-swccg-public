@@ -20,12 +20,12 @@ public interface Actions extends Decisions, Choices {
 	 * @return Gets the text descriptions of all current actions available to the Dark Side player. Will return an empty
 	 * list if that player does not have a currently pending decision.
 	 */
-	default List<String> DSGetAvailableActions() { return GetAvailableActions(DS); }
+	default List<String> GetDSAvailableActions() { return GetAvailableActions(DS); }
 	/**
 	 * @return Gets the text descriptions of all current actions available to the Light Side player. Will return an empty
 	 * list if that player does not have a currently pending decision.
 	 */
-	default List<String> LSGetAvailableActions() { return GetAvailableActions(LS); }
+	default List<String> GetLSAvailableActions() { return GetAvailableActions(LS); }
 	/**
 	 * @param playerID The player with a current decision
 	 * @return Gets the text descriptions of all current actions available to the given player.  Will return an empty
