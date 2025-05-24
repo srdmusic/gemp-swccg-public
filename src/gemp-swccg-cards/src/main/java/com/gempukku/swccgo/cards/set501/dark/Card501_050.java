@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.gempukku.swccgo.cards.AbstractDarkJediMaster;
+import com.gempukku.swccgo.cards.AbstractDarkJediMasterImperialRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AloneCondition;
 import com.gempukku.swccgo.cards.conditions.OnCondition;
@@ -49,12 +49,12 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
  * Subtype: Dark Jedi Master
  * Title: Master Sidious
  */
-public class Card501_050 extends AbstractDarkJediMaster {
+public class Card501_050 extends AbstractDarkJediMasterImperialRepublic {
     public Card501_050() {
         super(Side.DARK, 1, 6, 5, 7, 8, "Master Sidious", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Leader. Trade Federation.");
-        setGameText("While alone on Coruscant, your apprentice is immune to attrition. Disarmed is canceled here. During your move phase, if at a site you control, may use 1 Force to relocate between a Coruscant site and your apprentice's site. Immune to attrition.");
-        addIcons(Icon.EPISODE_I, Icon.WARRIOR, Icon.VIRTUAL_SET_25);
+        setGameText("While alone on Coruscant, your apprentice is immune to attrition. Once per game, may [upload] Unlimited Power or Young Fool. During your move phase, if on Coruscant, may use 1 Force to relocate to your apprentice's site. Immune to attrition.");
+        addIcons(Icon.EPISODE_I, Icon.WARRIOR, Icon.SEPARATIST, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.LEADER);
         addPersona(Persona.SIDIOUS);
         setTestingText("Master Sidious");
