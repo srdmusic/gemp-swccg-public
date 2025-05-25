@@ -920,6 +920,52 @@ public class Card_5_36_Tests {
 	}
 
 	@Test
+	public void CaptiveFuryDoesNotNeedToChooseAllCaptivesAtSameSite() throws DecisionResultInvalidException {
+		var scn = GetScenario();
+
+		var fury = scn.GetLSCard("fury");
+		var chewie = scn.GetLSCard("chewie");
+		var leia = scn.GetLSCard("slave_leia");
+		var threepio = scn.GetLSCard("threepio");
+		scn.MoveCardsToLSHand(fury);
+
+		var site = scn.GetLSStartingLocation();
+		var emptysite = scn.GetDSStartingLocation();
+
+		var boba = scn.GetDSCard("boba");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, boba);
+		scn.CaptureCardWith(boba, chewie);
+		scn.CaptureCardWith(boba, threepio);
+		scn.CaptureCardWith(boba, leia);
+
+		scn.SkipToLSTurn(Phase.BATTLE);
+
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
+		scn.LSPlayLostInterrupt(fury);
+		assertTrue(scn.LSDecisionAvailable("Choose location"));
+		assertTrue(scn.LSHasCardChoiceAvailable(site));
+		assertFalse(scn.LSHasCardChoiceAvailable(emptysite));
+		scn.LSChooseCard(site);
+
+		assertTrue(scn.LSDecisionAvailable("Choose escorted captives to battle,"));
+		assertEquals(3, scn.LSGetChoiceMax());
+
+		assertTrue(scn.LSHasCardChoiceAvailable(chewie));
+		assertTrue(scn.LSHasCardChoiceAvailable(threepio));
+		assertTrue(scn.LSHasCardChoiceAvailable(leia));
+
+		scn.LSChooseCards(chewie, threepio);
+
+		scn.PassCardAndForceUseResponses();
+		assertTrue(scn.IsActiveBattle());
+		assertTrue(scn.IsParticipatingInBattle(chewie, threepio));
+		assertFalse(scn.IsParticipatingInBattle(leia));
+	}
+
+	@Test
 	public void CaptiveFuryStillPermitsCaptiveSpottingEffectsToWorkDuringBattle() throws DecisionResultInvalidException {
 		var scn = GetScenario();
 
