@@ -33,10 +33,34 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
     public GameState gameState() { return _gameState; }
     public DefaultUserFeedback userFeedback() { return _userFeedback; }
 
+    /**
+     * Constructs a basic Virtual Table for testing with the provided Dark Side and Light Side decks, each populated
+     * with 10 filler cards apiece, no shields or starting interrupts, and using a default pair of ground locations.
+     * @param LSCards The Light Side cards to include besides the filler.
+     * @param DSCards The Dight Side cards to include besides the filler.
+     * @throws DecisionResultInvalidException
+     */
     public VirtualTableScenario(HashMap<String, String> LSCards, HashMap<String, String> DSCards) throws DecisionResultInvalidException {
         this(LSCards, DSCards, 10, 10, DefaultGroundLSLocation, DefaultGroundDSLocation, NoLSStarters, NoDSStarters, NoLSShields, NoDSShields, Open);
     }
 
+    /**
+     * Constructs a Virtual Table with decks that are populated with the provided parameters.
+     * @param LSCards The important Light-side cards to include in your testing deck.
+     * @param DSCards The important Dark-side cards to include in your testing deck.
+     * @param LSFillerCount How many filler cards will be inserted into the Light Side deck (for Force purposes).
+     * @param DSFillerCount How many filler cards will be inserted into the Dark Side deck (for Force purposes).
+     * @param LSStartingLocation Which starting location to insert into the Light Side deck and automatically play
+     *                           during startup.
+     * @param DSStartingLocation Which starting location to insert into the Light Side deck and automatically play
+     *                           during startup
+     * @param LSStarters Objectives or starting interrupts to include in the LS deck and automatically play during startup.
+     * @param DSStarters Objectives or starting interrupts to include in the DS deck and automatically play during startup.
+     * @param LSShields Shields or other out-of-play cards to include as a side deck for the Light Side.
+     * @param DSShields Shields or other out-of-play cards to include as a side deck for the Dark Side.
+     * @param format Which format to instantiate the table using.
+     * @throws DecisionResultInvalidException
+     */
     public VirtualTableScenario(HashMap<String, String> LSCards, HashMap<String, String> DSCards,
             int LSFillerCount, int DSFillerCount,
             String LSStartingLocation, String DSStartingLocation,
@@ -145,29 +169,31 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
      * @param cardName The human-readable name assigned at the top of each test class.
      * @return The physical card that was instantiated for the game.
      */
-    public PhysicalCardImpl GetDSCard(String cardName) { return Cards.get(DS).get(cardName); }
+    public PhysicalCardImpl GetDSCard(String cardName) {
+        var card = Cards.get(DS).get(cardName);
+        if(card == null)
+            throw new IllegalArgumentException("Card '" + cardName + "' not found in the Dark Side deck.");
+        return card;
+    }
     /**
      * Returns a Light Side card by its human-readable test alias.
      * @param cardName The human-readable name assigned at the top of each test class.
      * @return The physical card that was instantiated for the game.
      */
-    public PhysicalCardImpl GetLSCard(String cardName) { return Cards.get(LS).get(cardName); }
-    /**
-     * Returns a given player's card by its human-readable test alias.
-     * @param player The player to look up a card for.
-     * @param cardName The human-readable name assigned at the top of each test class.
-     * @return The physical card that was instantiated for the game.
-     */
-    public PhysicalCardImpl GetCard(String player, String cardName) { return Cards.get(player).get(cardName); }
+    public PhysicalCardImpl GetLSCard(String cardName) {
+        var card = Cards.get(LS).get(cardName);
+        if(card == null)
+            throw new IllegalArgumentException("Card '" + cardName + "' not found in the Light Side deck.");
+        return card;
+    }
 
     /**
      * Starts up a game of SWCCG with the given decks and format.  This is used internally but may have use in certain
      * complicated test scenarios.  The vast majority of the time you do not need this.
      * @param decks A map of decks for each player in the game; key is the player name.
      * @param formatName Name of the format this table should be following.
-     * @throws DecisionResultInvalidException
      */
-    public void InitializeGameWithDecks(Map<String, SwccgDeck> decks, String formatName) throws DecisionResultInvalidException {
+    public void InitializeGameWithDecks(Map<String, SwccgDeck> decks, String formatName) {
         _userFeedback = new DefaultUserFeedback();
 
         var format = _formatLibrary.getFormat(formatName);

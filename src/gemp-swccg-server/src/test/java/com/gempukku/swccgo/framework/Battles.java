@@ -23,14 +23,14 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 	default void SkipToPowerSegment() throws DecisionResultInvalidException {
 		PassBattleStartResponses();
 		PassWeaponsSegmentActions();
-		BothPassResponses("BEFORE_BATTLE_DESTINY_DRAWS");
+		PassResponses("BEFORE_BATTLE_DESTINY_DRAWS");
 	}
 
 	default void SkipBattleDestinyDraws(boolean drawDestiny) throws DecisionResultInvalidException {
 		var currentPlayer = GetCurrentPlayer();
 		var offPlayer = GetOpponent();
 
-		BothPassResponses("BEFORE_BATTLE_DESTINY_DRAWS");
+		PassResponses("BEFORE_BATTLE_DESTINY_DRAWS");
 		// current player destiny
 		if(DecisionAvailable(currentPlayer, "battle destiny?")) {
 			if(drawDestiny) {
@@ -41,7 +41,7 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 			}
 			PassDestinyDrawResponses();
 		}
-		BothPassResponses("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_PLAYER");
+		PassResponses("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_PLAYER");
 
 		// opponent destiny
 		if(DecisionAvailable(offPlayer, "battle destiny?")) {
@@ -53,8 +53,8 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 			}
 			PassDestinyDrawResponses();
 		}
-		BothPassResponses("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_PLAYER");
-		BothPassResponses("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_BOTH_PLAYERS");
+		PassResponses("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_PLAYER");
+		PassResponses("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_BOTH_PLAYERS");
 	}
 
 	default void SkipToEndOfPowerSegment(boolean drawDestiny) throws DecisionResultInvalidException {
@@ -65,30 +65,40 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 	default void SkipToDamageSegment() throws DecisionResultInvalidException { SkipToDamageSegment(false); }
 	default void SkipToDamageSegment(boolean drawDestiny) throws DecisionResultInvalidException {
 		SkipToEndOfPowerSegment(drawDestiny);
-		BothPassResponses("INITIAL_ATTRITION_CALCULATED");
+		PassResponses("INITIAL_ATTRITION_CALCULATED");
 	}
 
 	default void PassWeaponFireWithDestinyDraw() throws DecisionResultInvalidException {
 		// weapon firing
-		BothPassResponses("Fire ");
+		PassResponses("Fire ");
 		PassDestinyDrawResponses();
-		BothPassResponses("ABOUT_TO_BE_HIT");
-		BothPassResponses("HIT -");
-		BothPassResponses("FIRED_WEAPON");
+		PassResponses("ABOUT_TO_BE_HIT");
+		PassResponses("HIT -");
+		PassResponses("FIRED_WEAPON");
 	}
 
 	default void PassDestinyDrawResponses() throws DecisionResultInvalidException {
-		BothPassResponses("COST_TO_DRAW_DESTINY_CARD");
-		BothPassResponses("ABOUT_TO_DRAW_DESTINY_CARD");
-		BothPassResponses("DESTINY_DRAWN");
-		BothPassResponses("COMPLETE_DESTINY_DRAW");
-		BothPassResponses("DRAWING_DESTINY_COMPLETE");
+		PassResponses("COST_TO_DRAW_DESTINY_CARD");
+		PassResponses("ABOUT_TO_DRAW_DESTINY_CARD");
+		PassResponses("DESTINY_DRAWN");
+		PassResponses("COMPLETE_DESTINY_DRAW");
+		PassResponses("DRAWING_DESTINY_COMPLETE");
 	}
 
-	default void PassBattleStartResponses() throws DecisionResultInvalidException { BothPassResponses("BATTLE_INITIATED"); }
-	default void PassWeaponsSegmentActions() throws DecisionResultInvalidException { BothPassResponses("Choose weapons segment action"); }
-	default void PassPowerSegmentActions() throws DecisionResultInvalidException { BothPassResponses(); }
-	default void PassDamageSegmentActions() throws DecisionResultInvalidException { BothPassResponses(); }
+	default void PassBattleStartResponses() throws DecisionResultInvalidException { PassResponses("BATTLE_INITIATED"); }
+
+	default boolean AwaitingDSWeaponsSegmentActions() { return DSDecisionAvailable("Choose weapons segment action to play or Pass"); }
+	default boolean AwaitingLSWeaponsSegmentActions() { return LSDecisionAvailable("Choose weapons segment action to play or Pass"); }
+
+	default boolean AwaitingDSPowerSegmentActions() { return DSDecisionAvailable("Choose power segment action to play or Pass"); }
+	default boolean AwaitingLSPowerSegmentActions() { return LSDecisionAvailable("Choose power segment action to play or Pass"); }
+
+	default boolean AwaitingDSDamageSegmentActions() { return DSDecisionAvailable("Choose damage segment action to play or Pass"); }
+	default boolean AwaitingLSDamageSegmentActions() { return LSDecisionAvailable("Choose damage segment action to play or Pass"); }
+
+	default void PassWeaponsSegmentActions() throws DecisionResultInvalidException { PassResponses("Choose weapons segment action to play or Pass"); }
+	default void PassPowerSegmentActions() throws DecisionResultInvalidException { PassResponses("Choose power segment action to play or Pass"); }
+	default void PassDamageSegmentActions() throws DecisionResultInvalidException { PassResponses("Choose damage segment action to play or Pass"); }
 
 
 	default boolean AwaitingDSAttritionPayment() {
@@ -184,7 +194,7 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 	 */
 	default void DSPayBattleDamageFromCardInPlay(PhysicalCardImpl card) throws DecisionResultInvalidException {
 		DSChooseCard(card);
-		BothPassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
+		PassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
 		PassCardLeavingTable();
 	}
 
@@ -235,7 +245,7 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 	 */
 	default void LSPayBattleDamageFromCardInPlay(PhysicalCardImpl card) throws DecisionResultInvalidException {
 		LSChooseCard(card);
-		BothPassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
+		PassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
 		PassCardLeavingTable();
 	}
 

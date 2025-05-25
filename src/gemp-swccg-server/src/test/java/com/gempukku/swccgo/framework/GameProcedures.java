@@ -25,12 +25,12 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 	 * @throws DecisionResultInvalidException
 	 */
 	default int DSActivateMaxForceAndPass() throws DecisionResultInvalidException {
-		if(DSDecisionAvailable("Choose Activate action or Pass") && DSActionAvailable("Activate Force")) {
+		if(AwaitingDSActivatePhaseActions() && DSActionAvailable("Activate Force")) {
 			DSChooseAction("Activate Force");
 			int max = DSGetChoiceMax();
 			DSDecided(max);
 			LSDecided(max);
-			BothPassResponses();
+			PassResponses();
 			return max;
 		}
 
@@ -44,12 +44,12 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 	 * @throws DecisionResultInvalidException
 	 */
 	default int LSActivateMaxForceAndPass() throws DecisionResultInvalidException {
-		if(LSDecisionAvailable("Choose Activate action or Pass") && LSActionAvailable("Activate Force")) {
+		if(AwaitingLSActivatePhaseActions() && LSActionAvailable("Activate Force")) {
 			LSChooseAction("Activate Force");
 			int max = LSGetChoiceMax();
 			LSDecided(max);
 			DSDecided(max);
-			BothPassResponses();
+			PassResponses();
 			return max;
 		}
 
@@ -108,6 +108,8 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 		}
 	}
 
+
+
 	/**
 	 * During the Deploy phase, causes Dark Side to deploy the given card to the given location and automatically pass
 	 * any force use optional responses and deployment responses for both players.
@@ -120,8 +122,8 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 		assertTrue(DSDecisionAvailable("Choose where to deploy"));
 		DSChooseCard(location);
 
-		BothPassResponses("Force - Optional responses");
-		BothPassResponses("Optional response");
+		PassResponses("Force - Optional responses");
+		PassResponses("Optional response");
 	}
 
 	/**
@@ -136,40 +138,40 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 		assertTrue(LSDecisionAvailable("Choose where to deploy"));
 		LSChooseCard(location);
 
-		BothPassResponses("Force - Optional responses");
-		BothPassResponses("Optional response");
+		PassResponses("Force - Optional responses");
+		PassResponses("Optional response");
 	}
 
 	/**
 	 * Causes both players to pass during the Activate phase.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void PassActivateActions() throws DecisionResultInvalidException { BothPassResponses(); }
+	default void PassActivateActions() throws DecisionResultInvalidException { PassResponses(); }
 	/**
 	 * Causes both players to pass during the Control phase.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void PassControlActions() throws DecisionResultInvalidException { BothPassResponses(); }
+	default void PassControlActions() throws DecisionResultInvalidException { PassResponses(); }
 	/**
 	 * Causes both players to pass during the Deploy phase.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void PassDeployActions() throws DecisionResultInvalidException { BothPassResponses(); }
+	default void PassDeployActions() throws DecisionResultInvalidException { PassResponses(); }
 	/**
 	 * Causes both players to pass during the Move phase.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void PassMoveActions() throws DecisionResultInvalidException { BothPassResponses(); }
+	default void PassMoveActions() throws DecisionResultInvalidException { PassResponses(); }
 	/**
 	 * Causes both players to pass during the Battle phase.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void PassBattleActions() throws DecisionResultInvalidException { BothPassResponses(); }
+	default void PassBattleActions() throws DecisionResultInvalidException { PassResponses(); }
 	/**
 	 * Causes both players to pass during the Draw phase.
 	 * @throws DecisionResultInvalidException
 	 */
-	default void PassDrawActions() throws DecisionResultInvalidException { BothPassResponses(); }
+	default void PassDrawActions() throws DecisionResultInvalidException { PassResponses(); }
 
 	default boolean DSCaptureDecisionAvailable() { return DSDecisionAvailable("Choose option for capturing "); }
 
@@ -183,15 +185,38 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 	default void LSChooseRally() throws DecisionResultInvalidException { LSChoose("Rally"); }
 
 	default void PassCardLeavingTable() throws DecisionResultInvalidException {
-		BothPassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
-		BothPassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+		PassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
+		PassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
+	}
+
+	default void PassForceDrainStartResponses() throws DecisionResultInvalidException {
+		PassResponses("FORCE_DRAIN_INITIATED");
+		PassResponses("FORCE_LOSS_INITIATED");
+		PassForceDrainPendingResponses();
+	}
+
+	default void PassForceDrainPendingResponses() throws DecisionResultInvalidException {
+		PassResponses("ABOUT_TO_LOSE_FORCE_NOT_FROM_BATTLE_DAMAGE");
+	}
+
+	default void PassForceDrainEndResponses() throws DecisionResultInvalidException {
+		PassResponses("FORCE_DRAIN_COMPLETED");
+	}
+
+	default void PassAllResponses() throws DecisionResultInvalidException {
+		for(int i = 0; i < 20; ++i) {
+			if(!GetCurrentDecision().getText().toLowerCase().contains("optional response"))
+				return;
+
+			PassResponses("optional");
+		}
 	}
 
 	/**
 	 * Causes both players to pass, first the player with a current decision and then the other.
 	 * @throws DecisionResultInvalidException Throws this error if the decision wasn't passable.
 	 */
-	default void BothPassResponses() throws DecisionResultInvalidException {
+	default void PassResponses() throws DecisionResultInvalidException {
 		var decider = GetDecidingPlayer();
 		var offPlayer = GetNextDecider();
 
@@ -208,7 +233,7 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 	 * @param text
 	 * @throws DecisionResultInvalidException Throws this error if the decision can't be passed.
 	 */
-	default void BothPassResponses(String text) throws DecisionResultInvalidException {
+	default void PassResponses(String text) throws DecisionResultInvalidException {
 		var decider = GetDecidingPlayer();
 		var offPlayer = GetNextDecider();
 
@@ -225,8 +250,8 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 		PassCardPlayResponses();
 		PassForceUseResponses();
 	}
-	default void PassCardPlayResponses() throws DecisionResultInvalidException { BothPassResponses("Playing <div"); }
-	default void PassForceUseResponses() throws DecisionResultInvalidException { BothPassResponses(" Force - Optional responses"); }
+	default void PassCardPlayResponses() throws DecisionResultInvalidException { PassResponses("Playing <div"); }
+	default void PassForceUseResponses() throws DecisionResultInvalidException { PassResponses(" Force - Optional responses"); }
 
 	default void DSPassForceUseResponse() throws DecisionResultInvalidException { DSPass(); }
 	default void LSPassForceUseResponse() throws DecisionResultInvalidException { LSPass();}
@@ -253,7 +278,10 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
                 break;
 
             if(current == Phase.ACTIVATE) {
-				if(gameState().getCurrentPlayerId().equals(LS)) {
+				if(GetCurrentDecision().getText().toLowerCase().contains("optional")) {
+					PassResponses("optional");
+				}
+				else if(gameState().getCurrentPlayerId().equals(LS)) {
 					LSActivateMaxForceAndPass();
 				}
 				else {
@@ -261,16 +289,17 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 				}
             }
             else {
-                var dsDecision = DSGetDecision();
-                var lsDecision = LSGetDecision();
-                if(dsDecision != null && dsDecision.getText().toLowerCase().contains("required")) {
-                    DSChooseAction("0");
-                }
-                else if(lsDecision != null && lsDecision.getText().toLowerCase().contains("required")){
-                    LSChooseAction("0");
-                }
+				if(GetCurrentDecision().getText().toLowerCase().contains("required")) {
+					PassResponses("required");
+				}
+				// If we have resulted in a situation where the off-player is waiting to perform
+				// a phase action, we do this once to ensure we fall back into a cadence of the
+				// current player passing first, then the off player.
+				else if(GetCurrentDecision().getText().toLowerCase().contains("action")) {
+					PassResponses("action");
+				}
                 else {
-                    BothPassResponses();
+                    PassResponses();
                 }
             }
 
@@ -351,6 +380,7 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 
 			SkipToPhase(Phase.DRAW);
 			PassDrawActions();
+			PassResponses("RECIRCULATED");
 
 			if(attempts == 20)
 			{

@@ -155,11 +155,34 @@ public interface Actions extends Decisions, Choices {
 	 * legal to deploy (due to costs, requirements, or other rules).
 	 */
 	default void LSDeployCard(PhysicalCardImpl card) throws DecisionResultInvalidException { LSDecided(GetCardActionId(LS, card, "Deploy")); }
+
+	default void DSDeployLocation(PhysicalCardImpl site) throws DecisionResultInvalidException {
+		DSDecided(GetCardActionId(DS, site, "Deploy"));
+		if(DSDecisionAvailable("On which side")) {
+			DSChoose("Left");
+		}
+	}
 	default void LSDeployLocation(PhysicalCardImpl site) throws DecisionResultInvalidException {
 		LSDecided(GetCardActionId(LS, site, "Deploy"));
 		if(LSDecisionAvailable("On which side")) {
 			LSChoose("Left");
 		}
+	}
+
+	default boolean DSForceDrainAvailable(PhysicalCardImpl site) throws DecisionResultInvalidException {
+		return DSActionAvailable(site, "Force drain");
+	}
+
+	default boolean LSForceDrainAvailable(PhysicalCardImpl site) throws DecisionResultInvalidException {
+		return LSActionAvailable(site, "Force drain");
+	}
+
+	default void DSForceDrainAt(PhysicalCardImpl site) throws DecisionResultInvalidException {
+		DSDecided(GetCardActionId(DS, site, "Force drain"));
+	}
+
+	default void LSForceDrainAt(PhysicalCardImpl site) throws DecisionResultInvalidException {
+		LSDecided(GetCardActionId(LS, site, "Force drain"));
 	}
 
 	default void DSTransferCard(PhysicalCardImpl card) throws DecisionResultInvalidException { DSDecided(GetCardActionId(DS, card, "Transfer")); }
