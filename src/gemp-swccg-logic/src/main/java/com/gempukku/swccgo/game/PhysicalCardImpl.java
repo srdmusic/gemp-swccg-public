@@ -602,21 +602,14 @@ public class PhysicalCardImpl implements PhysicalCard, Cloneable {
 
     @Override
     public PhysicalCard getCardAttachedToAtLocation() {
-        PhysicalCard curCard = this;
-        while (true) {
-            if (curCard == null) {
-                return null;
-            }
-            else if (curCard.getZone()==Zone.AT_LOCATION) {
-                return curCard;
-            }
-            else if (curCard.getZone()==Zone.ATTACHED) {
-                curCard = curCard.getAttachedTo();
-            }
-            else {
-                return null;
-            }
-        }
+
+        if(_zone == Zone.AT_LOCATION)
+            return this;
+
+        if(_zone == Zone.ATTACHED)
+            return getAttachedTo().getCardAttachedToAtLocation();
+
+       return null;
     }
 
     @Override

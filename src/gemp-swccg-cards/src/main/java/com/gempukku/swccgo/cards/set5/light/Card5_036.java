@@ -76,7 +76,6 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
         }
 
         if (GameConditions.isDuringYourPhase(game, self, Phase.BATTLE)) {
-            var gameState = game.getGameState();
             final var yourEscortedCaptive = Filters.and(Filters.escortedCaptive, Filters.your(playerId), Filters.not(Filters.frozenCaptive));
             var validCaptives = getBattleEligibleEscortedCaptives(game, self, yourEscortedCaptive);
             if(validCaptives == null || validCaptives.isEmpty())
@@ -99,12 +98,11 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
                             action.addAnimationGroup(selectedCaptives);
                             var firstCaptive = selectedCaptives.getFirst();
                             var escort = firstCaptive.getEscort();
-                            var location = escort.getAtLocation();
+                            var location = escort.getCardAttachedToAtLocation().getAtLocation();
                             if(location == null && (escort.isPassengerOf() || escort.isPilotOf())) {
                                 location = escort.getAttachedTo().getAtLocation();
                             }
-                            //stupid final requirements.
-                            var location2 = location;
+
                             action.setActionMsg("Have " + GameUtils.getCardLink(firstCaptive) + " initiate a battle");
                             action.appendEffect(
                                     new UnrespondableEffect(action) {
@@ -118,7 +116,7 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
                                                 //According to the AR entry, this is supposed to go on the LS side, but
                                                 // if you leave the defaults here then the captive ends up on the DS side,
                                                 // but separated from the others. It's actually a little more clear.
-                                                game.getGameState().moveCardToLocation(captive, location2);
+                                                game.getGameState().moveCardToLocation(captive, escort.getCardAttachedToAtLocation().getAtLocation());
                                                 captive.setCaptiveEscort(escort);
                                             }
                                         }
@@ -168,7 +166,7 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
                 modifiers.add(new MayNotUseWeaponsModifier(self, Filters.in(chosenCaptives)));
                 modifiers.add(new MayNotUseDevicesModifier(self, Filters.in(chosenCaptives)));
                 modifiers.add(new MayNotBeForfeitedInBattleModifier(self, Filters.and(Filters.in(chosenCaptives),Filters.not(Filters.hit))));
-                modifiers.add(new MayNotMoveAwayFromLocationModifier(self, Filters.in(chosenCaptives), location));
+                modifiers.add(new MayNotMoveAwayFromLocationModifier(self, Filters.in(chosenCaptives), Filters.samePermanentCardId(location)));
 
                 return modifiers;
             }
