@@ -9,6 +9,7 @@ import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -18,6 +19,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -36,10 +38,10 @@ public class Card501_111 extends AbstractObjective {
     public Card501_111() {
         super(Side.DARK, 0, "The First Order Reigns", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy D'Qar, Crait, Supremacy: Bridge, and Tracked Fleet.\n" +
-                "For remainder of game, you may not deploy non-[Episode VII] Dark Jedi, Imperials, Imperial starships, or Imperial vehicles.\n" +
-                "While this side up, once per turn may deploy an [Episode VII] battleground system (or Crait location) from Reserve Deck; reshuffle. Opponent loses no more than 1 Force to Force drains at your locations.\n" +
-                "Flip if Tracked Fleet is 'blown away.'");
+        setGameText("Deploy Crait and D'Qar systems, Supremacy: Bridge, and Tracked Fleet.\n" +
+                    "For remainder of game, you may not deploy cards with ability except [Episode VII] cards or [Independent] Starships. Your [Episode VII] characters are forfeit +1.\n" +
+                    "While this side up, once per turn, may deploy an [Episode VII] battleground system (or Crait location) from Reserve Deck; reshuffle. Opponent loses no more than 1 Force to Force drains at [Episode VII] systems.\n" +
+                    "Flip this card if Tracked Fleet is 'blown away.'");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText("The First Order Reigns");
     }
@@ -81,9 +83,15 @@ public class Card501_111 extends AbstractObjective {
     @Override
     protected RequiredGameTextTriggerAction getGameTextAfterDeploymentCompletedAction(String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+        Filter episodeVIICharacter = Filters.and(Filters.character, Icon.EPISODE_VII);
+        Filter independentStarship = Filters.and(Icon.INDEPENDENT, Filters.starship);
+        Filter mayNotDeployRestrictionFilter = Filters.and(Filters.your(self), Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Filters.or(Icon.EPISODE_VII, independentStarship)));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new MayNotDeployModifier(self, Filters.or(Filters.and(Filters.Dark_Jedi, Filters.not(Icon.EPISODE_VII)), Filters.Imperial, Filters.Imperial_starship, Filters.and(Filters.Imperial, Filters.vehicle)), playerId), null));
+                        new MayNotDeployModifier(self, mayNotDeployRestrictionFilter, playerId), null));
+        action.appendEffect(
+                new AddUntilEndOfGameModifierEffect(action,
+                        new ForfeitModifier(self, episodeVIICharacter, 1), playerId));
         return action;
     }
 
@@ -99,7 +107,7 @@ public class Card501_111 extends AbstractObjective {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy an [Episode VII] battledground system (or Plateau) from Reserve Deck");
+            action.setActionMsg("Deploy an [Episode VII] battledground system (or Crait location) from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
