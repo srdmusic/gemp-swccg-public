@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set1.light;
 
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
-import com.gempukku.swccgo.league.LeagueSeriesData;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import org.junit.Test;
 
@@ -13,7 +12,7 @@ import static com.gempukku.swccgo.framework.Assertions.assertInHand;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class Card_1_28_Tests {
+public class Card_1_028_Tests {
 	protected VirtualTableScenario GetScenario() throws DecisionResultInvalidException {
 		return new VirtualTableScenario(
 				new HashMap<>()
@@ -95,7 +94,7 @@ public class Card_1_28_Tests {
 
 		assertEquals(Phase.ACTIVATE, scn.GetCurrentPhase());
 		assertEquals(scn.LS, scn.GetCurrentPlayer());
-		assertTrue(scn.LSDecisionAvailable("Choose Activate action or Pass"));
+		assertTrue(scn.AwaitingLSActivatePhaseActions());
 
 		scn.SkipToPhase(Phase.DEPLOY);
 
@@ -126,7 +125,7 @@ public class Card_1_28_Tests {
 
 		assertEquals(Phase.ACTIVATE, scn.GetCurrentPhase());
 		assertEquals(scn.LS, scn.GetCurrentPlayer());
-		assertTrue(scn.LSDecisionAvailable("Choose Activate action or Pass"));
+		assertTrue(scn.AwaitingLSActivatePhaseActions());
 
 		scn.SkipToPhase(Phase.DEPLOY);
 
@@ -159,7 +158,7 @@ public class Card_1_28_Tests {
 
 		assertEquals(Phase.ACTIVATE, scn.GetCurrentPhase());
 		assertEquals(scn.LS, scn.GetCurrentPlayer());
-		assertTrue(scn.LSDecisionAvailable("Choose Activate action or Pass"));
+		assertTrue(scn.AwaitingLSActivatePhaseActions());
 
 		scn.SkipToPhase(Phase.DEPLOY);
 

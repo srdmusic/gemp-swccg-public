@@ -91,7 +91,7 @@ public class CaptiveTests {
 		scn.SkipToLSTurn(Phase.DEPLOY);
 
 		assertTrue(chewie.isCaptive());
-		assertTrue(scn.LSDecisionAvailable("Choose Deploy action or Pass"));
+		assertTrue(scn.AwaitingLSDeployPhaseActions());
 		assertEquals(5, protector.getBlueprint().getDeployCost(), scn.epsilon);
 		assertEquals(5, scn.GetLSForcePileCount());
 		assertFalse(scn.LSDeployAvailable(protector));

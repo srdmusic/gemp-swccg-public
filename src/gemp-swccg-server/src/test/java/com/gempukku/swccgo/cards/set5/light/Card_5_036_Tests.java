@@ -1,34 +1,18 @@
 package com.gempukku.swccgo.cards.set5.light;
 
 import com.gempukku.swccgo.common.*;
-import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
-import com.gempukku.swccgo.game.AbstractActionProxy;
-import com.gempukku.swccgo.game.ActionProxy;
-import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalRuleTriggerAction;
-import com.gempukku.swccgo.logic.actions.RequiredRuleTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.actions.TriggerAction;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import com.gempukku.swccgo.logic.effects.GoMissingEffect;
-import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
-import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.rules.JediTestAttemptRule;
-import com.gempukku.swccgo.logic.timing.rules.Rule;
 import org.junit.Test;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 
 import static com.gempukku.swccgo.framework.Assertions.*;
 import static org.junit.Assert.*;
 
-public class Card_5_36_Tests {
+public class Card_5_036_Tests {
 	protected VirtualTableScenario GetScenario() throws DecisionResultInvalidException {
 		return new VirtualTableScenario(
 				new HashMap<>()
@@ -54,6 +38,8 @@ public class Card_5_36_Tests {
 					put("dengar", "205_23"); //adds battle destiny while escorting captive
 					put("hidden_weapons", "6_154"); //captures mid-battle
 					put("human_shield", "5_145");
+					put("it-o", "2_93");
+					put("detention_block", "1_284"); //Detention Block Corridor
 
 					put("tube", "1_308"); //provides enclosure
 				}},
@@ -105,7 +91,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -133,7 +119,7 @@ public class Card_5_36_Tests {
 		assertTrue(scn.IsParticipatingInBattle(chewie));
 		assertTrue(scn.IsParticipatingInBattle(boba));
 
-		assertTrue(scn.LSDecisionAvailable("Choose weapons segment action to play or Pass"));
+		assertTrue(scn.AwaitingLSWeaponsSegmentActions());
 	}
 
 	@Test
@@ -143,7 +129,7 @@ public class Card_5_36_Tests {
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
 		var bowcaster = scn.GetLSCard("bowcaster");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -163,7 +149,7 @@ public class Card_5_36_Tests {
 		scn.PassCardAndForceUseResponses();
 		scn.PassBattleStartResponses();
 
-		assertTrue(scn.LSDecisionAvailable("Choose weapons segment action to play or Pass"));
+		assertTrue(scn.AwaitingLSWeaponsSegmentActions());
 
 		assertFalse(scn.LSCardActionAvailable(bowcaster));
 	}
@@ -175,7 +161,7 @@ public class Card_5_36_Tests {
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
 		var eb = scn.GetLSCard("electrobinoculars");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -204,7 +190,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -221,7 +207,8 @@ public class Card_5_36_Tests {
 		scn.LSChooseCard(site);
 		scn.LSChooseCard(chewie);
 		scn.PassCardAndForceUseResponses();
-		scn.PrepareLSDestiny(0);
+		scn.PrepareLSDestiny(1);
+		scn.PrepareDSDestiny(1);
 		scn.SkipToDamageSegment(true);
 
 		assertTrue(scn.DSWonBattle());
@@ -247,7 +234,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -310,7 +297,7 @@ public class Card_5_36_Tests {
 		assertEquals(0, boba.getCardsEscorting().size());
 
 		//We are back in the regular action procedure and all ripples of Captive Fury have settled down
-		assertTrue(scn.DSDecisionAvailable("Choose Battle action or Pass"));
+		assertTrue(scn.AwaitingDSBattlePhaseActions());
 		assertInZone(Zone.LOST_PILE, fury);
 	}
 
@@ -322,7 +309,7 @@ public class Card_5_36_Tests {
 		var chewie = scn.GetLSCard("chewie");
 		var path = scn.GetLSCard("path");
 		var core_tunnel = scn.GetLSCard("core_tunnel");
-		scn.MoveCardsToLSHand(fury, path, core_tunnel);
+		scn.MoveCardsToHand(fury, path, core_tunnel);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -354,7 +341,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -392,7 +379,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -441,8 +428,8 @@ public class Card_5_36_Tests {
 		assertAtLocation(site, chewie);
 
 		// The tube was too crammed with passengers, so Boba was forced out so he could escort Chewie again
-		scn.BothPassResponses("DISEMBARKING");
-		scn.BothPassResponses("DISEMBARKED");
+		scn.PassResponses("DISEMBARKING");
+		scn.PassResponses("DISEMBARKED");
 		assertTrue(scn.IsAboardAsPassenger(tube, troopers.get(0), troopers.get(1), troopers.get(2)));
 		assertFalse(scn.IsAboardAsPassenger(tube, boba, chewie));
 		assertAtLocation(site, boba);
@@ -457,7 +444,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var leia = scn.GetLSCard("slave_leia");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -489,7 +476,7 @@ public class Card_5_36_Tests {
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
 		var trooper = scn.GetLSFiller(1);
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -526,7 +513,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var city = scn.GetLSStartingLocation();
 		var marketplace = scn.GetDSStartingLocation();
@@ -553,7 +540,7 @@ public class Card_5_36_Tests {
 
 		scn.DSPass();
 
-		assertTrue(scn.LSDecisionAvailable("Choose battle action or pass"));
+		assertTrue(scn.AwaitingLSBattlePhaseActions());
 
 		//As Chewie has already participated in battle, he is not an eligible target for Captive Fury.
 		assertInZone(Zone.HAND,  fury);
@@ -567,7 +554,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var threepio = scn.GetLSCard("threepio");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -598,7 +585,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -629,7 +616,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -669,7 +656,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -709,7 +696,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -742,9 +729,7 @@ public class Card_5_36_Tests {
 		scn.LSExecuteAdHocEffect(site, new GoMissingEffect(new TopLevelGameTextAction(site, scn.LS, site.getCardId()), boba));
 		assertTrue(scn.LSReleaseDecisionAvailable());
 		scn.LSChooseRally();
-		scn.BothPassResponses("RELEASED");
-		scn.BothPassResponses("GONE_MISSING");
-		scn.PassCardLeavingTable();
+		scn.PassAllResponses();
 
 		assertFalse(chewie.isCaptive());
 		assertNull(chewie.getEscort());
@@ -760,7 +745,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -789,8 +774,7 @@ public class Card_5_36_Tests {
 		scn.LSPass();
 		// Since all the "go missing" cards suck to execute, we're gonna make our own.
 		scn.DSExecuteAdHocEffect(boba, new GoMissingEffect(new TopLevelGameTextAction(boba, boba.getCardId()), chewie));
-		scn.BothPassResponses("GONE_MISSING");
-		scn.PassCardLeavingTable();
+		scn.PassAllResponses();
 
 		assertFalse(chewie.isCaptive());
 		assertNull(chewie.getEscort());
@@ -806,7 +790,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -846,13 +830,13 @@ public class Card_5_36_Tests {
 		scn.PassCardPlayResponses();
 		scn.PassDestinyDrawResponses();
 
-		scn.BothPassResponses("ABOUT_TO_BE_CAPTURED");
+		scn.PassResponses("ABOUT_TO_BE_CAPTURED");
 		assertTrue(scn.DSCaptureDecisionAvailable());
 		scn.DSChooseSeize();
 
 		assertTrue(scn.DSDecisionAvailable("Choose escort for"));
 		scn.DSChooseCard(boba);
-		scn.BothPassResponses("CAPTURED");
+		scn.PassResponses("CAPTURED");
 		scn.PassCardLeavingTable(); //Hidden Weapons discard
 
 		//Chewie was recaptured, meaning that the battle is both canceled and he does not revert to the
@@ -867,7 +851,7 @@ public class Card_5_36_Tests {
 		scn.PassCardLeavingTable(); //Captive Fury discard
 
 		//We are back in the regular action procedure and all ripples of Captive Fury have settled down
-		assertTrue(scn.DSDecisionAvailable("Choose Battle action or Pass"));
+		assertTrue(scn.AwaitingDSBattlePhaseActions());
 		assertInZone(Zone.LOST_PILE, fury);
 	}
 
@@ -879,7 +863,7 @@ public class Card_5_36_Tests {
 		var chewie = scn.GetLSCard("chewie");
 		var leia = scn.GetLSCard("slave_leia");
 		var threepio = scn.GetLSCard("threepio");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var city = scn.GetLSStartingLocation();
 		var marketplace = scn.GetDSStartingLocation();
@@ -927,7 +911,7 @@ public class Card_5_36_Tests {
 		var chewie = scn.GetLSCard("chewie");
 		var leia = scn.GetLSCard("slave_leia");
 		var threepio = scn.GetLSCard("threepio");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 		var emptysite = scn.GetDSStartingLocation();
@@ -971,7 +955,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -993,7 +977,7 @@ public class Card_5_36_Tests {
 
 		//No battle destiny for LS
 		assertTrue(scn.DSDecisionAvailable("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_PLAYER"));
-		scn.BothPassResponses("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_PLAYER");
+		scn.PassResponses();
 
 		// DS only has a battle destiny draw because Dengar is "escorting a captive"
 		assertEquals(3, scn.GetDSTotalPower());
@@ -1014,7 +998,7 @@ public class Card_5_36_Tests {
 		var chewie = scn.GetLSCard("chewie");
 		var trooper = scn.GetLSFiller(1);
 		var blaster = scn.GetLSCard("blaster");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -1044,17 +1028,15 @@ public class Card_5_36_Tests {
 		scn.LSChooseCard(vader);
 		scn.PassForceUseResponses();
 		scn.PrepareLSDestiny(7);
-		scn.BothPassResponses("Fire ");
+		scn.PassResponses("Fire ");
 		scn.PassDestinyDrawResponses();
 
-		scn.BothPassResponses("ABOUT_TO_BE_HIT");
+		scn.PassResponses("ABOUT_TO_BE_HIT");
 		assertTrue(scn.DSPlayUsedInterruptAvailable(human_shield));
 		scn.DSPlayUsedInterrupt(human_shield);
 		scn.DSChooseCard(chewie);
 		scn.PassCardPlayResponses();
-		scn.BothPassResponses("ABOUT_TO_BE_HIT");
-		scn.BothPassResponses("HIT -");
-		scn.BothPassResponses("FIRED_WEAPON");
+		scn.PassAllResponses();
 
 		assertFalse(vader.isHit());
 		assertTrue(chewie.isHit());
@@ -1066,7 +1048,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -1115,7 +1097,7 @@ public class Card_5_36_Tests {
 
 		var fury = scn.GetLSCard("fury");
 		var chewie = scn.GetLSCard("chewie");
-		scn.MoveCardsToLSHand(fury);
+		scn.MoveCardsToHand(fury);
 
 		var site = scn.GetLSStartingLocation();
 
@@ -1130,6 +1112,66 @@ public class Card_5_36_Tests {
 		scn.SkipToLSTurn(Phase.BATTLE);
 
 		assertFalse(scn.LSPlayLostInterruptAvailable(fury));
+	}
+
+	@Test
+	public void CaptiveFuryCancelsThePlus3BonusOfITOAtDetentionBlockCorridorWith3CaptivesUntilEndOfTurn() throws DecisionResultInvalidException {
+		var scn = GetScenario();
+
+		var fury = scn.GetLSCard("fury");
+		var chewie = scn.GetLSCard("chewie");
+		var leia = scn.GetLSCard("slave_leia");
+		var threepio = scn.GetLSCard("threepio");
+		scn.MoveCardsToHand(fury);
+
+		var ito = scn.GetDSCard("it-o");
+		var boba = scn.GetDSCard("boba");
+		var site = scn.GetDSCard("detention_block");
+
+		scn.StartGame();
+
+		scn.MoveLocationToTable(site);
+		scn.MoveCardsToLocation(site, ito, boba);
+		scn.CaptureCardWith(boba, chewie);
+		scn.CaptureCardWith(boba, leia);
+		scn.CaptureCardWith(boba, threepio);
+
+		scn.DSActivateMaxForceAndPass();
+		scn.DSPass();
+
+		assertTrue(scn.LSPlayUsedInterruptAvailable(fury));
+		scn.LSPlayUsedInterrupt(fury);
+		scn.LSChooseCard(ito);
+		scn.PassAllResponses();
+
+		scn.SkipToPhase(Phase.CONTROL);
+		assertTrue(scn.AwaitingDSControlPhaseActions());
+		assertTrue(scn.DSForceDrainAvailable(site));
+
+		assertEquals(0, scn.GetLSIconsOnLocation(site));
+		assertAtLocation(site, boba);
+		assertEquals(boba, chewie.getEscort());
+		assertEquals(boba, leia.getEscort());
+		assertEquals(boba, threepio.getEscort());
+
+		scn.DSForceDrainAt(site);
+
+		//Should be: 0 from the site, +1 for each of the captive Chewie, Leia, Threepio, for a total of +3
+		//Instead, Captive Fury eliminates the bonus and reduces it to 0.
+		assertEquals(0, scn.GetForceDrainTotal());
+		scn.PassForceDrainStartResponses();
+		scn.PassForceDrainEndResponses();
+
+		//Skip to the next turn to ensure it only lasted until the end of this turn
+		scn.SkipToLSTurn();
+		scn.SkipToDSTurn(Phase.CONTROL);
+
+		assertTrue(scn.AwaitingDSControlPhaseActions());
+		scn.DSForceDrainAt(site);
+		scn.PassForceDrainStartResponses();
+
+		//Should be: 0 from the site, +1 for each of the captive Chewie, Leia, Threepio, for a total of +3
+		assertEquals(3, scn.GetForceDrainTotal());
 	}
 
 }

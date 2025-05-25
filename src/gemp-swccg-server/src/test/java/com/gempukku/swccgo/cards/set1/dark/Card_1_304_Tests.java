@@ -94,7 +94,7 @@ public class Card_1_304_Tests {
 		scn.PassControlActions();
 
 		assertEquals(Phase.DEPLOY, scn.GetCurrentPhase());
-		assertTrue(scn.DSDecisionAvailable("Choose Deploy action or Pass"));
+		assertTrue(scn.AwaitingDSDeployPhaseActions());
 
 		assertInHand(tie);
 		assertEquals(3, scn.GetDSForcePileCount());
