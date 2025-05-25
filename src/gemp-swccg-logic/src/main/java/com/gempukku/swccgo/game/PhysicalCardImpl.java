@@ -194,7 +194,7 @@ public class PhysicalCardImpl implements PhysicalCard, Cloneable {
         snapshot._isConcealed = _isConcealed;
         snapshot._isUndercover = _isUndercover;
         snapshot._isMissing = _isMissing;
-        snapshot._escort = _escort;
+        snapshot._escort = snapshotData.getDataForSnapshot(_escort);
         snapshot._isCapturedStarship = _isCapturedStarship;
         snapshot._isImprisoned = _isImprisoned;
         snapshot._isFrozen = _isFrozen;

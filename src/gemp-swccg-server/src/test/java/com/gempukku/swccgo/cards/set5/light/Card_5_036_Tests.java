@@ -157,6 +157,36 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
+	public void CaptiveFuryCaptiveCannotUsePermanentWeapons() throws DecisionResultInvalidException {
+		var scn = GetScenario();
+
+		var fury = scn.GetLSCard("fury");
+		var han = scn.GetLSCard("han");
+		scn.MoveCardsToHand(fury);
+
+		var site = scn.GetLSStartingLocation();
+
+		var boba = scn.GetDSCard("boba");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, boba, han);
+		scn.CaptureCardWith(boba, han);
+
+		scn.SkipToLSTurn(Phase.BATTLE);
+
+		scn.LSPlayLostInterrupt(fury);
+		scn.LSChooseCard(site);
+		scn.LSChooseCard(han);
+		scn.PassCardAndForceUseResponses();
+		scn.PassBattleStartResponses();
+
+		assertTrue(scn.AwaitingLSWeaponsSegmentActions());
+
+		assertFalse(scn.LSCardActionAvailable(han));
+	}
+
+	@Test
 	public void CaptiveFuryCaptiveCannotUseDevices() throws DecisionResultInvalidException {
 		var scn = GetScenario();
 
@@ -1177,7 +1207,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryReleasesBattlingCaptiveIfCaptorIsForfeitEvenWithFriends() throws DecisionResultInvalidException {
+	public void CaptiveFuryReleasesBattlingCaptiveIfCaptorIsForfeitThroughRevert() throws DecisionResultInvalidException {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -1201,6 +1231,27 @@ public class Card_5_036_Tests {
 		scn.LSChooseCard(site);
 		scn.LSChooseCard(chewie);
 		scn.PassCardAndForceUseResponses();
+		scn.PassBattleStartResponses();
+
+		scn.IssueRevert("Start of Light Side Player's deploy phase #1");
+
+		// After performing a revert, all of our card references are now stale and referring
+		// to a game state which strictly speaking no longer exists.  We use those references
+		// to look up the equivalent card in the new alternate universe.
+		fury = scn.GetPostRevertCard(fury);
+		chewie = scn.GetPostRevertCard(chewie);
+		trooper = scn.GetPostRevertCard(trooper);
+		site = scn.GetPostRevertCard(site);
+		boba = scn.GetPostRevertCard(boba);
+
+		scn.SkipToPhase(Phase.BATTLE);
+
+		assertTrue(scn.LSPlayLostInterruptAvailable(fury));
+		scn.LSPlayLostInterrupt(fury);
+		scn.LSChooseCard(site);
+		scn.LSChooseCard(chewie);
+		scn.PassCardAndForceUseResponses();
+
 		scn.PrepareDSDestiny(1);
 		scn.PrepareLSDestiny(1);
 		scn.SkipToDamageSegment(true);
