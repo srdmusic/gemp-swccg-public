@@ -18,8 +18,28 @@ public interface GameProperties extends TestBase {
 	 */
 	default Phase GetCurrentPhase() { return gameState().getCurrentPhase(); }
 
+	/**
+	 * @return True if a battle is currently occuring at a site, otherwise false.
+	 */
 	default boolean IsActiveBattle() { return gameState().isDuringBattle(); }
+
+	/**
+	 * @return Retrieves the site that is host to the currently ongoing battle. Null if there is no current battle.
+	 */
 	default PhysicalCard GetBattleLocation() { return gameState().getBattleLocation(); }
+
+	/**
+	 * @return True if a player is currently executing a Force drain at a site, otherwise false.
+	 */
+	default boolean IsActiveForceDrain() { return gameState().isDuringForceDrain(); }
+
+	default int GetForceDrainTotal() { return gameState().getForceDrainState().getForceTotal(); }
+	default int GetForceDrainPaidSoFar() { return gameState().getForceDrainState().getForcePaid(); }
+	default int GetForceDrainRemaining() {
+		if(gameState().getForceDrainState() == null)
+			return 0;
+		return gameState().getForceDrainState().getForceRemaining();
+	}
 
 	/**
 	 * @return Gets the player who is currently playing their turn.

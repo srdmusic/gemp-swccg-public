@@ -40,9 +40,9 @@ public interface Decisions extends TestBase  {
 	 * revealed to both players).
 	 */
 	default AwaitingDecision GetCurrentDecision() {
-		var DS = DSGetDecision();
-		if(DS != null)
-			return DS;
+		var darkDecision = DSGetDecision();
+		if(darkDecision != null)
+			return darkDecision;
 		return LSGetDecision();
 	}
 
@@ -51,20 +51,20 @@ public interface Decisions extends TestBase  {
 	 * @param text The text snippet to search for.
 	 * @return False if Dark Side has no current decisions or if the current decision does not contain the given text.
 	 */
-	default Boolean DSDecisionAvailable(String text) { return DecisionAvailable(DS, text); }
+	default boolean DSDecisionAvailable(String text) { return DecisionAvailable(DS, text); }
 	/**
 	 * Determines if the Light Side player is currently presented with a decision which contains the given text.
 	 * @param text The text snippet to search for.
 	 * @return False if Light Side has no current decisions or if the current decision does not contain the given text.
 	 */
-	default Boolean LSDecisionAvailable(String text) { return DecisionAvailable(LS, text); }
+	default boolean LSDecisionAvailable(String text) { return DecisionAvailable(LS, text); }
 
 	/**
 	 * Determines if the given player is currently presented with a decision which contains the given text.
 	 * @param text The text snippet to search for.
 	 * @return False if the given player has no current decisions or if the current decision does not contain the given text.
 	 */
-	default Boolean DecisionAvailable(String playerID, String text)
+	default boolean DecisionAvailable(String playerID, String text)
 	{
 		AwaitingDecision ad = GetAwaitingDecision(playerID);
 		if(ad == null)
@@ -73,21 +73,34 @@ public interface Decisions extends TestBase  {
 		return ad.getText().toLowerCase().contains(lowerText);
 	}
 
+	default boolean AwaitingDSActivatePhaseActions() { return DSDecisionAvailable("Choose Activate action or Pass"); }
+	default boolean AwaitingLSActivatePhaseActions() { return LSDecisionAvailable("Choose Activate action or Pass"); }
+	default boolean AwaitingDSControlPhaseActions() { return DSDecisionAvailable("Choose Control action or Pass"); }
+	default boolean AwaitingLSControlPhaseActions() { return LSDecisionAvailable("Choose Control action or Pass"); }
+	default boolean AwaitingDSDeployPhaseActions() { return DSDecisionAvailable("Choose Deploy action or Pass"); }
+	default boolean AwaitingLSDeployPhaseActions() { return LSDecisionAvailable("Choose Deploy action or Pass"); }
+	default boolean AwaitingDSBattlePhaseActions() { return DSDecisionAvailable("Choose Battle action or Pass"); }
+	default boolean AwaitingLSBattlePhaseActions() { return LSDecisionAvailable("Choose Battle action or Pass"); }
+	default boolean AwaitingDSMovePhaseActions() { return DSDecisionAvailable("Choose Move action or Pass"); }
+	default boolean AwaitingLSMovePhaseActions() { return LSDecisionAvailable("Choose Move action or Pass"); }
+	default boolean AwaitingDSDrawPhaseActions() { return DSDecisionAvailable("Choose Draw action or Pass"); }
+	default boolean AwaitingLSDrawPhaseActions() { return LSDecisionAvailable("Choose Draw action or Pass"); }
+
 	/**
 	 * @return Returns true if Dark Side is currently presented with any decision at all.
 	 */
-	default Boolean DSAnyDecisionsAvailable() { return AnyDecisionsAvailable(DS); }
+	default boolean DSAnyDecisionsAvailable() { return AnyDecisionsAvailable(DS); }
 	/**
 	 * @return Returns true if Light Side is currently presented with any decision at all.
 	 */
-	default Boolean LSAnyDecisionsAvailable() { return AnyDecisionsAvailable(LS); }
+	default boolean LSAnyDecisionsAvailable() { return AnyDecisionsAvailable(LS); }
 
 	/**
 	 * Returns whether the given player is currently presented with any decision at all.
 	 * @param player The player to check for pending decisions
 	 * @return True if the given player has a pending decision, else false.
 	 */
-	default Boolean AnyDecisionsAvailable(String player) {
+	default boolean AnyDecisionsAvailable(String player) {
 		var ad = GetAwaitingDecision(player);
 		return ad != null;
 	}

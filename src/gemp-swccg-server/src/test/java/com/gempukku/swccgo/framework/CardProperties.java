@@ -235,4 +235,12 @@ public interface CardProperties extends TestBase {
 		return Arrays.stream(cards).allMatch(card -> gameState().isParticipatingInBattle(card));
 	}
 
+	default int GetLSIconsOnLocation(PhysicalCardImpl location) {
+		return location.getBlueprint().getIconCount(Icon.LIGHT_FORCE);
+	}
+
+	default int GetDSIconsOnLocation(PhysicalCardImpl location) {
+		return location.getBlueprint().getIconCount(Icon.DARK_FORCE);
+	}
+
 }

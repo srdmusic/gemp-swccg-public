@@ -2,6 +2,7 @@ package com.gempukku.swccgo.framework;
 
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.game.PhysicalCardImpl;
+import com.gempukku.swccgo.game.layout.LocationPlacement;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +52,12 @@ public interface ZoneManipulation extends TestBase{
 	 * @param card The card to remove from the game.
 	 */
 	default void MoveOutOfPlay(PhysicalCardImpl card) { MoveCardToZone(card.getOwner(), card, Zone.OUT_OF_PLAY); }
+
+	default void MoveLocationToTable(PhysicalCardImpl card) {
+		RemoveCardZone(card);
+		var placements = gameState().getLocationPlacement(game(), card, null, null);
+		gameState().addLocationToTable(game(), card, placements.getFirst());
+	}
 
 	/**
 	 * Moves one or more cards to a given location, on their owner's side of that location.  This is equivalent to
@@ -278,7 +285,8 @@ public interface ZoneManipulation extends TestBase{
 
 
 	/**
-	 * Hand manipulation
+	 * Moves the given cards to the Dark Side player's hand.
+	 * @param cards The cards to move.
 	 */
 	default void MoveCardsToDSHand(PhysicalCardImpl...cards) {
 		for(PhysicalCardImpl card : cards) {
@@ -287,12 +295,27 @@ public interface ZoneManipulation extends TestBase{
 		}
 	}
 
-    default void MoveCardsToLSHand(PhysicalCardImpl...cards) {
-        for(PhysicalCardImpl card : cards) {
-            RemoveCardZone(card);
-            MoveCardToZone(LS, card, Zone.HAND);
-        }
-    }
+	/**
+	 * Moves the given cards to the Light Side player's hand.
+	 * @param cards The cards to move.
+	 */
+	default void MoveCardsToLSHand(PhysicalCardImpl...cards) {
+		for(PhysicalCardImpl card : cards) {
+			RemoveCardZone(card);
+			MoveCardToZone(LS, card, Zone.HAND);
+		}
+	}
+
+	/**
+	 * Moves the given cards to their owner's hands.
+	 * @param cards The cards to move.
+	 */
+	default void MoveCardsToHand(PhysicalCardImpl...cards) {
+		for(PhysicalCardImpl card : cards) {
+			RemoveCardZone(card);
+			MoveCardToZone(card.getOwner(), card, Zone.HAND);
+		}
+	}
 
 	/**
 	 * Seizes a card, making it a captive and assigning it to be escorted by a given captor.

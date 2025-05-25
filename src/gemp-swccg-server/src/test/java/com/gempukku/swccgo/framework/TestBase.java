@@ -218,5 +218,4 @@ public interface TestBase {
 
 	PhysicalCardImpl GetDSCard(String cardName);
 	PhysicalCardImpl GetLSCard(String cardName);
-	PhysicalCardImpl GetCard(String player, String cardName);
 }
