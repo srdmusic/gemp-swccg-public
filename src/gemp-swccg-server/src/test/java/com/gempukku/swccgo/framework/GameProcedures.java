@@ -390,13 +390,8 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 		}
 	}
 
-
-
-
-
-//
-//    default void DSDismissRevealedCards() throws DecisionResultInvalidException { DSPassCurrentPhaseAction(); }
-//    default void LSDismissRevealedCards() throws DecisionResultInvalidException { LSPassCurrentPhaseAction(); }
+	default void DSDismissRevealedCards() throws DecisionResultInvalidException { DSPass(); }
+	default void LSDismissRevealedCards() throws DecisionResultInvalidException { LSPass(); }
 //    default void DismissRevealedCards() throws DecisionResultInvalidException {
 //        DSDismissRevealedCards();
 //        LSDismissRevealedCards();

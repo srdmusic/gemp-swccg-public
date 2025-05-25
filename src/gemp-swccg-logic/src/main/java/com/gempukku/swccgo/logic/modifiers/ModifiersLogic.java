@@ -8260,7 +8260,8 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
         if (!includeMissing && physicalCard.isMissing())
             return CardState.INACTIVE;
 
-        if (!includeCaptives && (physicalCard.isCaptive() || physicalCard.isCapturedStarship()))
+        if (!includeCaptives && (physicalCard.isCaptive() || physicalCard.isCapturedStarship()) &&
+                !captiveMayParticipateInBattle(gameState, physicalCard))
             return CardState.INACTIVE;
 
         if (!includeExcludedFromBattle && zone.isInPlay() && gameState.isDuringBattle() && isExcludedFromBattle(gameState, physicalCard))

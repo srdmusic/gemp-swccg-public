@@ -115,6 +115,9 @@ public class Card5_036 extends AbstractUsedOrLostInterrupt {
                                                 // restore the escort status; our furious captive is not *escaping*,
                                                 // just moonlighting on the other side of the location for a battle.
                                                 var escort = captive.getEscort();
+                                                //According to the AR entry, this is supposed to go on the LS side, but
+                                                // if you leave the defaults here then the captive ends up on the DS side,
+                                                // but separated from the others. It's actually a little more clear.
                                                 game.getGameState().moveCardToLocation(captive, location2);
                                                 captive.setCaptiveEscort(escort);
                                             }
