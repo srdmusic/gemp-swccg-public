@@ -27,7 +27,7 @@ import com.gempukku.swccgo.logic.conditions.TrueCondition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
@@ -126,7 +126,7 @@ public class Card501_178_BACK extends AbstractObjective {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
 
             action.setText("Place stacked card out of play");
-            action.setActionMsg("Place a card on Patience! out of play to retrieve 1 Force");
+            action.setActionMsg("Place a card on Patience! out of play to retrieve a weapon or [Cloud City] Rebel into hand");
 
             action.appendTargeting(
                     new ChooseStackedCardEffect(action, playerId, patienceWithCardStacked, Filters.any, false) {
@@ -138,7 +138,7 @@ public class Card501_178_BACK extends AbstractObjective {
 
                             // Perform result(s)
                             action.appendEffect(
-                                    new RetrieveForceEffect(action, playerId, 1));
+                                    new RetrieveCardIntoHandEffect(action, playerId, Filters.or(Filters.weapon, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))));
                         }
                     }
             );
