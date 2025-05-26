@@ -39,6 +39,8 @@ import com.gempukku.swccgo.logic.modifiers.MayDeployOtherCardsAsReactToTargetMod
 import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifierFlag;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.modifiers.PlaceJediTestOnTableWhenCompletedModifier;
 import com.gempukku.swccgo.logic.modifiers.SpecialFlagModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -92,6 +94,7 @@ public class Card501_178_BACK extends AbstractObjective {
         String playerId = self.getOwner();
 
         // For remainder of game
+        modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test, ModifyGameTextType.JEDI_TESTS__ONLY_LUKE_MAY_BE_APPRENTICE));
         modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.Dagobah_location, playerId));
         modifiers.add(new PlaceJediTestOnTableWhenCompletedModifier(self, Filters.any, new TrueCondition()));
         modifiers.add(new JediTestSuspendedInsteadOfLostModifier(self, Filters.completed_Jedi_Test, new TrueCondition()));
