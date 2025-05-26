@@ -38,7 +38,7 @@ import java.util.List;
  * Set: Playtesting
  * Type: Character
  * Subtype: Resistance
- * Title: Finn, Resistance Leader
+ * Title: Finn, Resistance Hero
  */
 public class Card501_174 extends AbstractResistance {
     public Card501_174() {
@@ -53,11 +53,11 @@ public class Card501_174 extends AbstractResistance {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        Condition lukeOrJannahOutOfPlay = new OutOfPlayCondition(self, Filters.or(Filters.Luke, Filters.Jannah));
+        Condition lukeOrPaigeOutOfPlay = new OutOfPlayCondition(self, Filters.or(Filters.Luke, Filters.Paige));
         Condition roseOrJannahHere = new HereCondition(self, Filters.or(Filters.Rose, Filters.Jannah));
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new AddsDestinyToPowerModifier(self, new OrCondition(lukeOrJannahOutOfPlay, roseOrJannahHere), 1));
+        modifiers.add(new AddsDestinyToPowerModifier(self, new OrCondition(lukeOrPaigeOutOfPlay, roseOrJannahHere), 1));
         modifiers.add(new MayDeployToTargetModifier(self, Filters.Jedi_Lightsaber, self));
         modifiers.add(new MayUseWeaponModifier(self, Filters.Jedi_Lightsaber));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 4));
