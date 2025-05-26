@@ -117,10 +117,13 @@ public class Card501_178_BACK extends AbstractObjective {
 
         final Filter patienceWithCardStacked = Filters.and(Filters.Patience, Filters.hasStacked(Filters.any));
 
-        if (TriggerConditions.wonBattle(game, effectResult, Filters.Luke)
-                && GameConditions.canSpot(game, self, patienceWithCardStacked)) {
+        GameTextActionId gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__RETRIEVE_REBEL_OR_WEAPON_INTO_HAND;
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+        if (TriggerConditions.wonBattle(game, effectResult, Filters.Luke)
+                && GameConditions.canSpot(game, self, patienceWithCardStacked)
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
 
             action.setText("Place stacked card out of play");
             action.setActionMsg("Place a card on Patience! out of play to retrieve a weapon or [Cloud City] Rebel into hand");
@@ -149,7 +152,7 @@ public class Card501_178_BACK extends AbstractObjective {
         GameTextActionId gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__UPLOAD_LUKE_FROM_LOST_PILE;
 
         if (GameConditions.canSpot(game, self, SpotOverride.INCLUDE_SUSPENDED, Filters.completed_Jedi_Test)
-                && GameConditions.hasLostPile(game, playerId)) {
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
 
