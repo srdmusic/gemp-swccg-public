@@ -4,7 +4,6 @@ import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.DuringForceDrainAtCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -135,7 +134,6 @@ public class Card501_178_BACK extends AbstractObjective {
                             // Pay cost(s)
                             action.appendCost(
                                     new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
-
                             // Perform result(s)
                             action.appendEffect(
                                     new RetrieveCardIntoHandEffect(action, playerId, Filters.or(Filters.weapon, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))));
@@ -152,8 +150,7 @@ public class Card501_178_BACK extends AbstractObjective {
 
         GameTextActionId gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__UPLOAD_LUKE_FROM_LOST_PILE;
 
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_SUSPENDED, Filters.completed_Jedi_Test)
+        if (GameConditions.canSpot(game, self, SpotOverride.INCLUDE_SUSPENDED, Filters.completed_Jedi_Test)
                 && GameConditions.hasLostPile(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
@@ -161,9 +158,6 @@ public class Card501_178_BACK extends AbstractObjective {
             action.setText("Place completed Jedi Test out of play");
             action.setActionMsg("Place a completed Jedi Test out of play to take Luke into hand from Lost Pile");
 
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
             // Choose target(s)
             action.appendTargeting(
                     new ChooseCardOnTableEffect(action, playerId, "Choose a completed Jedi Test", SpotOverride.INCLUDE_SUSPENDED, Filters.completed_Jedi_Test) {
