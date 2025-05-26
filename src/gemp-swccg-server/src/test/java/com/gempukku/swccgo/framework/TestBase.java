@@ -169,6 +169,11 @@ public interface TestBase {
 		put("ls-destiny-7", "5_12"); // Bionic Hand
 	}};
 
+	/**
+	 * Gets a card with a particular destiny number to be placed on the Dark Side player's Reserve Deck.
+	 * @param amount An amount from 0-7 to retrieve.
+	 * @return A reference to a card with the appropriate destiny number.
+	 */
 	default PhysicalCardImpl GetDSDestiny(int amount) {
 		if(amount < 0 || amount > 7)
 			throw new IllegalArgumentException("Default destiny pack only supports amounts from 0-7.");
@@ -176,6 +181,11 @@ public interface TestBase {
 		return GetDSCard("ds-destiny-" + amount);
 	}
 
+	/**
+	 * Gets a card with a particular destiny number to be placed on the Light Side player's Reserve Deck.
+	 * @param amount An amount from 0-7 to retrieve.
+	 * @return A reference to a card with the appropriate destiny number.
+	 */
 	default PhysicalCardImpl GetLSDestiny(int amount) {
 		if(amount < 0 || amount > 7)
 			throw new IllegalArgumentException("Default destiny pack only supports amounts from 0-7.");
@@ -196,7 +206,6 @@ public interface TestBase {
 	/*
 	 * These three functions are used in the base interfaces but are unnecessary in the actual implementation, where the
 	 * underlying fields can be used instead.
-	 *
 	 */
 
 	/**
@@ -216,7 +225,19 @@ public interface TestBase {
 	DefaultUserFeedback userFeedback();
 
 
+	/**
+	 * Retrieves a Dark Side card from the game state.
+	 * @param cardName The human-readable shorthand name that was assigned to the card in the GetScenario call.
+	 * @return The physical card representation of this card.
+	 * @throws IllegalArgumentException Thrown if the name provided cannot be found.
+	 */
 	PhysicalCardImpl GetDSCard(String cardName);
+	/**
+	 * Retrieves a Light Side card from the game state.
+	 * @param cardName The human-readable shorthand name that was assigned to the card in the GetScenario call.
+	 * @return The physical card representation of this card.
+	 * @throws IllegalArgumentException Thrown if the name provided cannot be found.
+	 */
 	PhysicalCardImpl GetLSCard(String cardName);
 
 	/**

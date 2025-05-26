@@ -238,6 +238,13 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
         }
     }
 
+    /**
+     * After a revert has occured, any references to cards may be referencing an old one from a timeline that no longer
+     * exists.  To ensure continuity, this function can be used to "sanitize" an old card reference, returning a new
+     * one that is guaranteed to be the "same" card in the new revert timeline.
+     * @param card A card to look up
+     * @return The new timeline post-revert version of the card.
+     */
     public PhysicalCardImpl GetPostRevertCard(PhysicalCardImpl card) {
         return (PhysicalCardImpl) _gameState.findCardByPermanentId(card.getPermanentCardId());
     }
@@ -276,11 +283,11 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
         var initialDSHand = _gameState.getHand(DS).stream().toList();
 
         if(DSDecisionAvailable("Choose starting location")) {
-            DSChooseCard("starting-location");
+            DSChooseCard(GetDSCard("starting-location"));
         }
 
         if(LSDecisionAvailable("Choose starting location")) {
-            LSChooseCard("starting-location");
+            LSChooseCard(GetLSCard("starting-location"));
         }
 
         //TODO: Add support for starting interrupts/objectives here
@@ -305,7 +312,8 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
 
     /**
      * Low-level function used by the rest of the test rig to return a decision result back to the server.  This is the
-     * beating heart of what is essentially a headless client.  You do not need to call this manually during tests.
+     * beating heart of what is essentially a headless client.  You do not need to call this manually during tests. If
+     * you find a reason to call this, you have actually found a reason to add a new helper function to the test rig.
      * @param player The player making the decision
      * @param answer What decision is being returned to the server
      * @throws DecisionResultInvalidException If there is any mismatch between what the server is expecting and your

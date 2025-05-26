@@ -173,36 +173,76 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 	 */
 	default void PassDrawActions() throws DecisionResultInvalidException { PassResponses(); }
 
+	/**
+	 * @return True if the Dark Side player is currently deciding what to do with a captured character.
+	 */
 	default boolean DSCaptureDecisionAvailable() { return DSDecisionAvailable("Choose option for capturing "); }
 
+	/**
+	 * Causes the Dark Side player to choose to let the recently-captured captive "escape" (go to the used pile).
+	 * @throws DecisionResultInvalidException Thrown if the Dark Side player is not actually deciding a captive's fate.
+	 */
 	default void DSChooseEscape() throws DecisionResultInvalidException { DSChoose("Escape"); }
+	/**
+	 * Causes the Dark Side player to choose to "seize" the recently-captured captive (attaching it to the captor).
+	 * @throws DecisionResultInvalidException Thrown if the Dark Side player is not actually deciding a captive's fate.
+	 */
 	default void DSChooseSeize() throws DecisionResultInvalidException { DSChoose("Seize"); }
 
-
+	/**
+	 * @return True if the Light Side player is currently deciding what to do with a released captive.
+	 */
 	default boolean LSReleaseDecisionAvailable() { return LSDecisionAvailable("Choose release option for "); }
 
+	/**
+	 * Causes the Light Side player to choose to let the recently-released captive "escape" (go to the used pile).
+	 * @throws DecisionResultInvalidException Thrown if the Light Side player is not actually deciding a captive's fate.
+	 */
 	default void LSChooseEscape() throws DecisionResultInvalidException { LSChoose("Escape"); }
+	/**
+	 * Causes the Light Side player to choose to let the recently-released captive "rally" (move to the current location).
+	 * @throws DecisionResultInvalidException Thrown if the Light Side player is not actually deciding a captive's fate.
+	 */
 	default void LSChooseRally() throws DecisionResultInvalidException { LSChoose("Rally"); }
 
+	/**
+	 * When a card leaves the table, there are various responses.  This causes all players to pass all of them.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void PassCardLeavingTable() throws DecisionResultInvalidException {
 		PassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
 		PassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
 	}
 
+	/**
+	 * When a Force Drain begins, there are various responses.  This causes all players to pass all of them.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void PassForceDrainStartResponses() throws DecisionResultInvalidException {
 		PassResponses("FORCE_DRAIN_INITIATED");
 		PassResponses("FORCE_LOSS_INITIATED");
 		PassForceDrainPendingResponses();
 	}
 
+	/**
+	 * During a Force Drain, this response occurs between each paid Force.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void PassForceDrainPendingResponses() throws DecisionResultInvalidException {
 		PassResponses("ABOUT_TO_LOSE_FORCE_NOT_FROM_BATTLE_DAMAGE");
 	}
-
+	/**
+	 * After a Force Drain, one last response occurs once the targeted player has paid all Force costs.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void PassForceDrainEndResponses() throws DecisionResultInvalidException {
 		PassResponses("FORCE_DRAIN_COMPLETED");
 	}
 
+	/**
+	 * When we don't care about the responses being presented and we just want to skip forward to the next actual action.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void PassAllResponses() throws DecisionResultInvalidException {
 		for(int i = 0; i < 20; ++i) {
 			if(!GetCurrentDecision().getText().toLowerCase().contains("optional response"))
@@ -246,15 +286,26 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 		}
 	}
 
+	/**
+	 * When a card is played, there are various responses.  This causes both players to pass all of them.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void PassCardAndForceUseResponses() throws DecisionResultInvalidException {
 		PassCardPlayResponses();
 		PassForceUseResponses();
 	}
-	default void PassCardPlayResponses() throws DecisionResultInvalidException { PassResponses("Playing <div"); }
-	default void PassForceUseResponses() throws DecisionResultInvalidException { PassResponses(" Force - Optional responses"); }
 
-	default void DSPassForceUseResponse() throws DecisionResultInvalidException { DSPass(); }
-	default void LSPassForceUseResponse() throws DecisionResultInvalidException { LSPass();}
+	/**
+	 * When a card is played, there are various responses.  This passes just the responses to the card being played.
+	 * @throws DecisionResultInvalidException
+	 */
+	default void PassCardPlayResponses() throws DecisionResultInvalidException { PassResponses("Playing <div"); }
+	/**
+	 * When a card is played, there are various responses.  This passes just the responses to the Force paid during that
+	 * card's deployment.
+	 * @throws DecisionResultInvalidException
+	 */
+	default void PassForceUseResponses() throws DecisionResultInvalidException { PassResponses(" Force - Optional responses"); }
 
 
 	/**
@@ -390,13 +441,16 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 		}
 	}
 
-
-
-
-
-//
-//    default void DSDismissRevealedCards() throws DecisionResultInvalidException { DSPassCurrentPhaseAction(); }
-//    default void LSDismissRevealedCards() throws DecisionResultInvalidException { LSPassCurrentPhaseAction(); }
+	/**
+	 * After the Dark Side player has peeked at a set of cards from a normally-hidden pile, they then dismiss those cards.
+	 * @throws DecisionResultInvalidException
+	 */
+	default void DSDismissRevealedCards() throws DecisionResultInvalidException { DSPass(); }
+	/**
+	 * After the Light Side player has peeked at a set of cards from a normally-hidden pile, they then dismiss those cards.
+	 * @throws DecisionResultInvalidException
+	 */
+	default void LSDismissRevealedCards() throws DecisionResultInvalidException { LSPass(); }
 //    default void DismissRevealedCards() throws DecisionResultInvalidException {
 //        DSDismissRevealedCards();
 //        LSDismissRevealedCards();
