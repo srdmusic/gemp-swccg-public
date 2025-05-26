@@ -22,8 +22,8 @@ import com.gempukku.swccgo.logic.effects.TakeCardFromVoidIntoHandEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.timing.Action;
-
 
 /**
  * Set: Playtesting
@@ -67,6 +67,26 @@ public class Card501_180 extends AbstractLostOrStartingInterrupt {
             actions.add(action);
         }
 
+        gameTextActionId = GameTextActionId.YOU_WILL_GO_TO_THE_DAGOBAH_SYSTEM__RETRIEVE_ANAKINS_LIGHTSABER;
+        // Check condition(s)
+        if (GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
+            
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+            action.setText("Retrieve Anakin's Lightsaber into hand");
+            // Allow response(s)
+            action.allowResponses("Retrieve Anakin's Lightsaber into hand",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new RetrieveCardIntoHandEffect(action, playerId, Filters.Anakins_Lightsaber));
+                        }
+                    }
+            );
+            action.setImmuneTo(Title.Sense);
+            actions.add(action);
+        }
         return actions;
     }
 
