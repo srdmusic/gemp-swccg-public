@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractStartingInterrupt;
+import com.gempukku.swccgo.cards.AbstractLostOrStartingInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -24,14 +24,14 @@ import com.gempukku.swccgo.logic.timing.Action;
 /**
  * Set: Playtesting
  * Type: Interrupt
- * Subtype: Starting
+ * Subtype: Lost or Starting
  * Title: You Will Go To The Dagobah System (V)
  */
-public class Card501_180 extends AbstractStartingInterrupt {
+public class Card501_180 extends AbstractLostOrStartingInterrupt {
     public Card501_180() {
         super(Side.LIGHT, 4, "You Will Go To The Dagobah System", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'There you will learn from Yoda, the Jedi Master who instructed me.'");
-        setGameText("If your [Dagobah] objective on table, take [Dagobah] Luke, [Dagobah] Yoda, and two Effects that deploy for free and are always immune to Alter into hand from Reserve Deck. When you draw your starting hand, draw only five more cards. Place Interrupt in Lost Pile.");
+        setGameText("LOST: [Upload] [Dagobah] Luke or retrieve Anakin's Lightsaber into hand. [Immune to Sense.] STARTING: If your [Dagobah] objective on table, deploy two Effects (except Wokling) that deploy for free and are always immune to Alter. Place Interrupt in hand.");
         addIcons(Icon.HOTH, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("You Will Go To The Dagobah System (V)");
