@@ -97,7 +97,7 @@ public class Card501_180 extends AbstractLostOrStartingInterrupt {
         if (GameConditions.canSpot(game, self, Filters.and(Filters.your(self), Filters.icon(Icon.DAGOBAH), Filters.Objective))) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
             final Filter effectFilter = Filters.and(Filters.Effect, Filters.not(Filters.Wokling), Filters.deploysForFree, Filters.always_immune_to_Alter);
-            action.setText("Deploy two Effects that deploy for free and are always immune to Alter");
+            action.setText("Deploy two Effects (except Wokling) that deploy for free and are always immune to Alter");
     
             action.allowResponses(
                     new RespondablePlayCardEffect(action) {
