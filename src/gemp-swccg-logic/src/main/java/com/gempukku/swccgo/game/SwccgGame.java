@@ -240,6 +240,26 @@ public interface SwccgGame {
     Collection<GameStateListener> getAllGameStateListeners();
 
     /**
+     * A player has requested a revert, which will then go through the snapshot selection process and offer the
+     * revert to their opponent, who may reject it.
+     * @param playerId The player requesting a revert.
+     * @param onAbort Callback to be executed if the revert is aborted for any reason (including no snapshots,
+     *                player changed their mind, or opponent rejected).
+     */
+    void requestRevert(final String playerId, Runnable onAbort);
+
+    /**
+     * A player has requested a revert, which will then go through the snapshot selection process and offer the
+     * revert to their opponent, who may reject it.
+     * @param playerId The player requesting a revert
+     * @param onInvalid If the revert is found to be invalid due to no snapshots existing, this will be called.
+     * @param onRejected If the player changes their mind after seeing the snapshot list, or if their opponent
+     *                   rejects the revert, this will be called.
+     */
+    void requestRevert(final String playerId, Runnable onInvalid, Runnable onRejected);
+
+
+    /**
      * Gets the game snapshots.
      * @return the game snapshots
      */
