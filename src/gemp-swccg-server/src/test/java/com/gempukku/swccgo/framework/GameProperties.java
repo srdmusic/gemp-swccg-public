@@ -33,8 +33,17 @@ public interface GameProperties extends TestBase {
 	 */
 	default boolean IsActiveForceDrain() { return gameState().isDuringForceDrain(); }
 
+	/**
+	 * @return Returns the total amount being drained in the current Force Drain.
+	 */
 	default int GetForceDrainTotal() { return gameState().getForceDrainState().getForceTotal(); }
+	/**
+	 * @return Returns the total amount of Force the targeted player has already paid during this Force Drain.
+	 */
 	default int GetForceDrainPaidSoFar() { return gameState().getForceDrainState().getForcePaid(); }
+	/**
+	 * @return Returns the total amount of Force that has not yet been paid in the current Force Drain.
+	 */
 	default int GetForceDrainRemaining() {
 		if(gameState().getForceDrainState() == null)
 			return 0;
@@ -76,11 +85,33 @@ public interface GameProperties extends TestBase {
 	 */
 	default int GetPlayerTurnCount(String player) { return gameState().getPlayersLatestTurnNumber(player); }
 
+	/**
+	 * @return The total Life Force for the Dark Side player across all relevant piles.
+	 */
 	default int GetDSLifeForceRemaining() { return GetPlayerLifeForceRemaining(DS); }
+	/**
+	 * @return The total Life Force for the Light Side player across all relevant piles.
+	 */
 	default int GetLSLifeForceRemaining() { return GetPlayerLifeForceRemaining(LS); }
+	/**
+	 * @param player The player to check.
+	 * @return The total Life Force for the given player across all relevant piles.
+	 */
 	default int GetPlayerLifeForceRemaining(String player) { return gameState().getPlayerLifeForce(player); }
 
+	/**
+	 * @param site The location to check.
+	 * @return All cards "at" the current location, but not their attached cards, pilots, passengers, or other esoteria.
+	 */
 	default List<PhysicalCard> GetCardsAtLocation(PhysicalCardImpl site) { return gameState().getCardsAtLocation(site); }
+
+	/**
+	 * Checks that all the provided cards are "at" the given location.  A card is not "at" that site if they are riding
+	 * or piloting a vehicle or ship, or are otherwise attached or stacked on a card "at" that site.
+	 * @param site The location to check.
+	 * @param cards The cards to search for.
+	 * @return True if all cards are "at" the given location, false if any are not.
+	 */
 	default boolean CardsAtLocation(PhysicalCardImpl site, PhysicalCardImpl...cards) {
 		return GetCardsAtLocation(site).containsAll(Arrays.stream(cards).toList());
 	}

@@ -125,14 +125,21 @@ public interface Choices extends Decisions {
 	 */
 	default void PlayerChooseNo(String player) throws DecisionResultInvalidException { ChooseOption(player, "No"); }
 
+	/**
+	 * Causes the Dark Side player to choose an option containing the given text.
+	 * @param option The text to search for.
+	 * @throws DecisionResultInvalidException Thrown if this option cannot be found for the current decision.
+	 */
 	default void DSChooseOption(String option) throws DecisionResultInvalidException { ChooseOption(DS, option); }
+	/**
+	 * Causes the Light Side player to choose an option containing the given text.
+	 * @param option The text to search for.
+	 * @throws DecisionResultInvalidException Thrown if this option cannot be found for the current decision.
+	 */
 	default void LSChooseOption(String option) throws DecisionResultInvalidException { ChooseOption(LS, option); }
 
-	default void DSChooseAction(String paramName, String option) throws DecisionResultInvalidException { ChooseAction(DS, paramName, option); }
-	default void DSChooseAction(String option) throws DecisionResultInvalidException { ChooseAction(DS, "actionText", option); }
-	default void LSChooseAction(String paramName, String option) throws DecisionResultInvalidException { ChooseAction(LS, paramName, option); }
-	default void LSChooseAction(String option) throws DecisionResultInvalidException { ChooseAction(LS, "actionText", option); }
-	default void ChooseAction(String playerID, String option) throws DecisionResultInvalidException { ChooseAction(playerID, "actionText", option); }
+
+
 
 
 
@@ -190,53 +197,97 @@ public interface Choices extends Decisions {
 		return GetADParamEqualsCount(LS, "selectable", "true");
 	}
 
-	default boolean DSHasBPChoice(PhysicalCardImpl card) { return DSGetBPChoices().contains(card.getBlueprintId(true)); }
-	default boolean LSHasBPChoice(PhysicalCardImpl card) { return LSGetBPChoices().contains(card.getBlueprintId(true)); }
+	/**
+	 * @return The blueprint choices offered to the Dark Side player (which happens in cases where you are choosing cards
+	 * from the reserve deck or other cases that don't involve physical cards).
+	 */
 	default List<String> DSGetBPChoices() { return GetADParamAsList(DS, "blueprintId"); }
+	/**
+	 * @return The blueprint choices offered to the Light Side player (which happens in cases where you are choosing cards
+	 * from the reserve deck or other cases that don't involve physical cards).
+	 */
 	default List<String> LSGetBPChoices() { return GetADParamAsList(LS, "blueprintId"); }
+
+	/**
+	 * @return The list of action IDs presented to the Dark Side player.
+	 */
 	default List<String> DSGetActionChoices() { return GetADParamAsList(DS, "actionId"); }
+	/**
+	 * @return The list of action IDs presented to the Light Side player.
+	 */
 	default List<String> LSGetActionChoices() { return GetADParamAsList(LS, "actionId"); }
+	/**
+	 * @return The list of options presented to the Dark Side player in a multiple-choice scenario.
+	 */
 	default List<String> DSGetMultipleChoices() { return GetADParamAsList(DS, "results"); }
+	/**
+	 * @return The list of options presented to the Light Side player in a multiple-choice scenario.
+	 */
 	default List<String> LSGetMultipleChoices() { return GetADParamAsList(LS, "results"); }
+	/**
+	 * @return The list of in-play cards presented to the Dark Side player in the current decision.
+	 */
 	default List<String> DSGetCardChoices() { return GetADParamAsList(DS, "cardId"); }
+	/**
+	 * @return The list of in-play cards presented to the Light Side player in the current decision.
+	 */
 	default List<String> LSGetCardChoices() { return GetADParamAsList(LS, "cardId"); }
+
+	/**
+	 * @return The number of choices available to the Dark Side player.
+	 */
 	default int DSGetChoiceCount() { return GetChoiceCount(DSGetMultipleChoices()); }
+	/**
+	 * @return The number of choices available to the Light Side player.
+	 */
 	default int LSGetChoiceCount() { return GetChoiceCount(LSGetMultipleChoices()); }
 
+	/**
+	 * Helper function used by the test rig, you don't need this in your tests.
+	 * @param list List of options as provided by a call to GetADParamAsList
+	 * @return The number of items in the list, 0 if it is null.
+	 */
 	default int GetChoiceCount(List<String> list) {
 		if(list == null)
 			return 0;
 		return list.size();
 	}
 
-	default List<String> DSGetADParamAsList(String paramName) { return GetADParamAsList(DS, paramName); }
-	default List<String> LSGetADParamAsList(String paramName) { return GetADParamAsList(LS, paramName); }
 
-
-	default int GetADParamEqualsCount(String playerID, String paramName, String value) {
-		return (int) Arrays.stream(GetAwaitingDecisionParam(playerID, paramName)).filter(s -> s.equals(value)).count();
-	}
-	default String[] DSGetADParam(String paramName) { return GetAwaitingDecisionParam(DS, paramName); }
-	default String[] LSGetADParam(String paramName) { return GetAwaitingDecisionParam(LS, paramName); }
-	default String DSGetFirstADParam(String paramName) { return GetAwaitingDecisionParam(DS, paramName)[0]; }
-	default String LSGetFirstADParam(String paramName) { return GetAwaitingDecisionParam(LS, paramName)[0]; }
-
-
-	default Map<String, String[]> GetAwaitingDecisionParams(String playerID) {
-		var decision = userFeedback().getAwaitingDecision(playerID);
-		return decision.getDecisionParameters();
-	}
-
-
-
-	default void DSChooseCard(String name) throws DecisionResultInvalidException { DSChooseCards(GetDSCard(name)); }
+	/**
+	 * Causes the Dark Side player to choose a card matching the provided physical card.
+	 * @param card The card to pick.
+	 * @throws DecisionResultInvalidException Thrown if the provided card isn't one of the options, or if the current
+	 * decision isn't about cards, or if this player isn't making a decision right now.
+	 */
 	default void DSChooseCard(PhysicalCardImpl card) throws DecisionResultInvalidException { DSChooseCards(card); }
-	default void LSChooseCard(String name) throws DecisionResultInvalidException { LSChooseCards(GetLSCard(name)); }
+	/**
+	 * Causes the Light Side player to choose a card matching the provided physical card.
+	 * @param card The card to pick.
+	 * @throws DecisionResultInvalidException Thrown if the provided card isn't one of the options, or if the current
+	 * decision isn't about cards, or if this player isn't making a decision right now.
+	 */
 	default void LSChooseCard(PhysicalCardImpl card) throws DecisionResultInvalidException { LSChooseCards(card); }
 
+	/**
+	 * Causes the Dark Side player to choose the first available card option.  Used in cases where the choice doesn't
+	 * matter for the purposes of the test.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void DSChooseAnyCard() throws DecisionResultInvalidException { DSChoose(DSGetCardChoices().getFirst()); }
+	/**
+	 * Causes the Light Side player to choose the first available card option.  Used in cases where the choice doesn't
+	 * matter for the purposes of the test.
+	 * @throws DecisionResultInvalidException
+	 */
 	default void LSChooseAnyCard() throws DecisionResultInvalidException { LSChoose(LSGetCardChoices().getFirst()); }
 
+	/**
+	 * Causes the Dark Side player to choose the given cards out of the options they have been presented with.
+	 * @param cards Which cards to select
+	 * @throws DecisionResultInvalidException Thrown if too many or too fews cards are provided, or if the current
+	 * decision doesn't involve cards or this player at all.
+	 */
 	default void DSChooseCards(PhysicalCardImpl...cards) throws DecisionResultInvalidException {
 		if(GetChoiceCount(DSGetBPChoices()) > 0) {
 			ChooseCardBPFromSelection(DS, cards);
@@ -245,6 +296,12 @@ public interface Choices extends Decisions {
 			ChooseCards(DS, cards);
 		}
 	}
+	/**
+	 * Causes the Light Side player to choose the given cards out of the options they have been presented with.
+	 * @param cards Which cards to select
+	 * @throws DecisionResultInvalidException Thrown if too many or too fews cards are provided, or if the current
+	 * decision doesn't involve cards or this player at all.
+	 */
 	default void LSChooseCards(PhysicalCardImpl...cards) throws DecisionResultInvalidException {
 		if(GetChoiceCount(LSGetBPChoices()) > 0) {
 			ChooseCardBPFromSelection(LS, cards);
@@ -264,11 +321,14 @@ public interface Choices extends Decisions {
 		PlayerDecided(player, String.join(",", ids));
 	}
 
+	/**
+	 * @return The number of cards being presented to the Dark Side player to choose from.
+	 */
 	default int DSGetCardChoiceCount() { return DSGetCardChoices().size(); }
+	/**
+	 * @return The number of cards being presented to the light Side player to choose from.
+	 */
 	default int LSGetCardChoiceCount() { return LSGetCardChoices().size(); }
-
-	default void DSChooseCardBPFromSelection(PhysicalCardImpl...cards) throws DecisionResultInvalidException { ChooseCardBPFromSelection(DS, cards);}
-	default void LSChooseCardBPFromSelection(PhysicalCardImpl...cards) throws DecisionResultInvalidException { ChooseCardBPFromSelection(LS, cards);}
 
 	/**
 	 * Causes the given player to issue a decision response composed of a comma-separated list of the provided card
@@ -281,7 +341,7 @@ public interface Choices extends Decisions {
 	 * IDs.
 	 */
 	default void ChooseCardBPFromSelection(String player, PhysicalCardImpl...cards) throws DecisionResultInvalidException {
-		String[] choices = GetAwaitingDecisionParam(player,"blueprintId");
+		String[] choices = GetADParam(player,"blueprintId");
 		ArrayList<String> bps = new ArrayList<>();
 		ArrayList<PhysicalCardImpl> found = new ArrayList<>();
 
@@ -308,50 +368,46 @@ public interface Choices extends Decisions {
 
 
 	/**
-	 * Causes the given player to issue a decision response composed of a comma-separated list of the provided card
-	 * blueprint IDs. This will only succeed if being used to target currently out-of-play cards such as when selecting
-	 * cards from the reserve deck; it will not work if being presented with a choice of in-play cards to target (such
-	 * as when choosing active cards to target for a card effect).
-	 * @param player The player to issue a decision for.
-	 * @param bpids The card blueprint IDs to include in the decision response.
-	 * @throws DecisionResultInvalidException This error will be thrown if the current decision does not accept blueprint
-	 * IDs.
+	 * Checks whether the given card is one of the options being presented to the Dark Side player.  Will work as
+	 * either a blueprint choice (for e.g. selecting from the reserve deck) or as a physical id choice (for selecting
+	 * among cards on the table).
+	 * @param card The card to search for.
+	 * @return True if the given card is one of the options presented to the player, false otherwise.
+	 * @throws DecisionResultInvalidException
 	 */
-	default void ChooseCardBPFromSelection(String player, String...bpids) throws DecisionResultInvalidException {
-		String[] choices = GetAwaitingDecisionParam(player,"blueprintId");
-		ArrayList<String> bps = new ArrayList<>();
-		ArrayList<String> found = new ArrayList<>();
+	default boolean DSHasCardChoiceAvailable(PhysicalCardImpl card) { return HasCardChoiceAvailable(DS, card);}
+	/**
+	 * Checks whether the given card is one of the options being presented to the Light Side player.  Will work as
+	 * either a blueprint choice (for e.g. selecting from the reserve deck) or as a physical id choice (for selecting
+	 * among cards on the table).
+	 * @param card The card to search for.
+	 * @return True if the given card is one of the options presented to the player, false otherwise.
+	 * @throws DecisionResultInvalidException
+	 */
+	default boolean LSHasCardChoiceAvailable(PhysicalCardImpl card) { return HasCardChoiceAvailable(LS, card);}
 
-		for(int i = 0; i < choices.length; i++)
-		{
-			for(String card : bpids)
-			{
-				if(found.contains(card))
-					continue;
-				if(card.equals(choices[i]))
-				{
-					// I have no idea why the spacing is required, but the BP parser skips to the fourth position
-					bps.add("    " + i);
-					found.add(card);
-					break;
-				}
-			}
-		}
-
-		PlayerDecided(player, String.join(",", bps));
-	}
-
-	default boolean DSHasCardChoiceAvailable(PhysicalCardImpl card) throws DecisionResultInvalidException { return HasCardChoiceAvailable(DS, card);}
-	default boolean LSHasCardChoiceAvailable(PhysicalCardImpl card) throws DecisionResultInvalidException { return HasCardChoiceAvailable(LS, card);}
-
-	default boolean DSHasCardChoicesAvailable(PhysicalCardImpl...cards) throws DecisionResultInvalidException {
+	/**
+	 * Checks whether all the given cards are included in the options being presented to the Dark Side player.
+	 * Will work as either a blueprint choice (for e.g. selecting from the reserve deck) or as a physical id
+	 * choice (for selecting among cards on the table).
+	 * @param cards One or more cards to search for.
+	 * @return True if all the given cards are included as an option presented to the player, false if even 1 is not.
+	 */
+	default boolean DSHasCardChoicesAvailable(PhysicalCardImpl...cards) {
 		for(var card : cards) {
 			if(!HasCardChoiceAvailable(DS, card))
 				return false;
 		}
 		return true;
 	}
-	default boolean LSHasCardChoicesAvailable(PhysicalCardImpl...cards) throws DecisionResultInvalidException {
+	/**
+	 * Checks whether all the given cards are included in the options being presented to the Light Side player.
+	 * Will work as either a blueprint choice (for e.g. selecting from the reserve deck) or as a physical id
+	 * choice (for selecting among cards on the table).
+	 * @param cards One or more cards to search for.
+	 * @return True if all the given cards are included as an option presented to the player, false if even 1 is not.
+	 */
+	default boolean LSHasCardChoicesAvailable(PhysicalCardImpl...cards) {
 		for(var card : cards) {
 			if(!HasCardChoiceAvailable(LS, card))
 				return false;
@@ -359,17 +415,46 @@ public interface Choices extends Decisions {
 		return true;
 	}
 
-	default boolean DSHasCardChoiceNotAvailable(PhysicalCardImpl card) throws DecisionResultInvalidException { return !HasCardChoiceAvailable(DS, card);}
-	default boolean LSHasCardChoiceNotAvailable(PhysicalCardImpl card) throws DecisionResultInvalidException { return !HasCardChoiceAvailable(LS, card);}
+	/**
+	 * Checks whether the given card is NOT one of the options being presented to the Dark Side player.  Will work as
+	 * either a blueprint choice (for e.g. selecting from the reserve deck) or as a physical id choice (for selecting
+	 * among cards on the table).
+	 * @param card The card to search for.
+	 * @return True if the given card is absent from the options presented to the player, false otherwise.
+	 */
+	default boolean DSHasCardChoiceNotAvailable(PhysicalCardImpl card) { return !HasCardChoiceAvailable(DS, card);}
 
-	default boolean DSHasCardChoicesNotAvailable(PhysicalCardImpl...cards) throws DecisionResultInvalidException {
+	/**
+	 * Checks whether the given card is NOT one of the options being presented to the Light Side player.  Will work as
+	 * either a blueprint choice (for e.g. selecting from the reserve deck) or as a physical id choice (for selecting
+	 * among cards on the table).
+	 * @param card The card to search for.
+	 * @return True if the given card is absent from the options presented to the player, false otherwise.
+	 */
+	default boolean LSHasCardChoiceNotAvailable(PhysicalCardImpl card) { return !HasCardChoiceAvailable(LS, card);}
+
+	/**
+	 * Checks whether all the given cards are NOT included in the options being presented to the Dark Side player.
+	 * Will work as either a blueprint choice (for e.g. selecting from the reserve deck) or as a physical id
+	 * choice (for selecting among cards on the table).
+	 * @param cards One or more cards to search for.
+	 * @return True if all the given cards are absent from the options presented to the player, false if even 1 isn't.
+	 */
+	default boolean DSHasCardChoicesNotAvailable(PhysicalCardImpl...cards) {
 		for(var card : cards) {
 			if(HasCardChoiceAvailable(DS, card))
 				return false;
 		}
 		return true;
 	}
-	default boolean LSHasCardChoicesNotAvailable(PhysicalCardImpl...cards) throws DecisionResultInvalidException {
+	/**
+	 * Checks whether all the given cards are NOT included in the options being presented to the Light Side player.
+	 * Will work as either a blueprint choice (for e.g. selecting from the reserve deck) or as a physical id
+	 * choice (for selecting among cards on the table).
+	 * @param cards One or more cards to search for.
+	 * @return True if all the given cards are absent from the options presented to the player, false if even 1 isn't.
+	 */
+	default boolean LSHasCardChoicesNotAvailable(PhysicalCardImpl...cards) {
 		for(var card : cards) {
 			if(HasCardChoiceAvailable(LS, card))
 				return false;
@@ -377,8 +462,16 @@ public interface Choices extends Decisions {
 		return true;
 	}
 
-	default boolean HasCardChoiceAvailable(String player, PhysicalCardImpl card) throws DecisionResultInvalidException {
-		String[] choices = GetAwaitingDecisionParam(player,"blueprintId");
+	/**
+	 * Checks whether the given card is one of the options being presented to the player.  Will work as either a blueprint
+	 * choice (for e.g. selecting from the reserve deck) or as a physical id choice (for selecting among cards on the
+	 * table).
+	 * @param player The player currently presented with a decision
+	 * @param card The card to search for
+	 * @return True if the given card is one of the options presented to the player, false otherwise.
+	 */
+	default boolean HasCardChoiceAvailable(String player, PhysicalCardImpl card) {
+		String[] choices = GetADParam(player,"blueprintId");
 		if(choices != null) {
 			for (String choice : choices) {
 				if (card.getBlueprintId(true).equals(choice))
@@ -387,7 +480,7 @@ public interface Choices extends Decisions {
 			return false;
 		}
 
-		choices = GetAwaitingDecisionParam(player,"cardId");
+		choices = GetADParam(player,"cardId");
 		if(choices != null) {
 			for (String choice : choices) {
 				if (card.getCardId() == Integer.parseInt(choice))
@@ -431,7 +524,7 @@ public interface Choices extends Decisions {
 		AwaitingDecision decision = userFeedback().getAwaitingDecision(player);
 		//PlayerDecided(player, "" + card.getCardId());
 
-		String[] choices = GetAwaitingDecisionParam(player,"cardId");
+		String[] choices = GetADParam(player,"cardId");
 		ArrayList<String> ids = new ArrayList<>();
 		ArrayList<PhysicalCardImpl> found = new ArrayList<>();
 
