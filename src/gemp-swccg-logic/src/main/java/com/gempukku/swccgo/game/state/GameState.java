@@ -2780,6 +2780,10 @@ public class GameState implements Snapshotable<GameState> {
         return null;
     }
 
+    public List<PhysicalCard> getAllPermanentCards() {
+        return _allCardsByPermanentCardId.values().stream().toList();
+    }
+
     public List<PhysicalCard> getHand(String playerId) {
         return Collections.unmodifiableList(_hands.get(playerId));
     }

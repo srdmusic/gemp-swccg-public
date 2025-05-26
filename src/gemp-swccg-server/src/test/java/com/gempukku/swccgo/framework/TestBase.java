@@ -218,4 +218,9 @@ public interface TestBase {
 
 	PhysicalCardImpl GetDSCard(String cardName);
 	PhysicalCardImpl GetLSCard(String cardName);
+
+	/**
+	 * Used after a revert to avoid stale references.
+	 */
+	void ResetGameState();
 }

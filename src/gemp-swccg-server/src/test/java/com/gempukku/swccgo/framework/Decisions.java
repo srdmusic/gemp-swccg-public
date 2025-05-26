@@ -1,8 +1,12 @@
 package com.gempukku.swccgo.framework;
 
+import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import com.mysql.cj.conf.StringProperty;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A set of functions within the test rig that pertain to decisions.  Decisions in Gemp are a catch-all term referring
@@ -13,7 +17,7 @@ import com.mysql.cj.conf.StringProperty;
  * the tools to make a decision properly.  See Choices for selecting among multiple options, and see Actions for
  * top-level card actions.
  */
-public interface Decisions extends TestBase  {
+public interface Decisions extends GameProperties, TestBase  {
 
 	/**
 	 * @return Gets the Dark Side decision that Gemp is currently waiting on.  Will be null if DS is not currently
@@ -141,6 +145,59 @@ public interface Decisions extends TestBase  {
 		if(AnyDecisionsAvailable(player)) {
 			PlayerDecided(player, "");
 		}
+	}
+
+	default void ChooseOption(String playerID, String option) throws DecisionResultInvalidException { ChooseAction(playerID, "results", option); }
+
+	default void ChooseAction(String playerID, String paramName, String option) throws DecisionResultInvalidException {
+		List<String> choices = GetADParamAsList(playerID, paramName);
+		for(String choice : choices){
+			if(option == null && choice == null // This only happens when a rule is the source of an action
+					|| choice.toLowerCase().contains(option.toLowerCase())) {
+				PlayerDecided(playerID, String.valueOf(choices.indexOf(choice)));
+				return;
+			}
+		}
+		//couldn't find an exact match, so maybe it's a direct index:
+		PlayerDecided(playerID, option);
+	}
+
+	default List<String> GetADParamAsList(String playerID, String paramName) {
+		var paramList = GetAwaitingDecisionParam(playerID, paramName);
+		if(paramList == null)
+			return null;
+
+		return Arrays.asList(paramList);
+	}
+
+	default String[] GetAwaitingDecisionParam(String playerID, String paramName) {
+		var decision = userFeedback().getAwaitingDecision(playerID);
+		return decision.getDecisionParameters().get(paramName);
+	}
+
+	/**
+	 * Issues a request by the Dark Side player to revert.  This should only be used during any top-level phase
+	 * action decision or it will fail.  You should also only use this to inspect the list of options and choose
+	 * one, then pass it into the IssueRevert function.
+	 * @throws DecisionResultInvalidException The DS player is not currently awaiting a top-level phase or battle action.
+	 */
+	default void DSRequestRevert() throws DecisionResultInvalidException { DSDecided("revert"); }
+	/**
+	 * Issues a request by the Light Side player to revert.  This should only be used during any top-level phase
+	 * action decision or it will fail.  You should also only use this to inspect the list of options and choose
+	 * one, then pass it into the IssueRevert function.
+	 * @throws DecisionResultInvalidException The LS player is not currently awaiting a top-level phase or battle action.
+	 */
+	default void LSRequestRevert() throws DecisionResultInvalidException { LSDecided("revert"); }
+
+	default void IssueRevert(String target) throws DecisionResultInvalidException {
+		var decider = GetDecidingPlayer();
+		var offPlayer = GetNextDecider();
+
+		PlayerDecided(decider, "revert");
+		ChooseOption(decider, target);
+		ChooseOption(offPlayer, "Yes");
+		ResetGameState();
 	}
 
 	/**

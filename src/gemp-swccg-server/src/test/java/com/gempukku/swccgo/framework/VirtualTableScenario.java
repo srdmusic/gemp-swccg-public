@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.framework;
 
+import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.*;
 import com.gempukku.swccgo.game.formats.SwccgoFormatLibrary;
 import com.gempukku.swccgo.game.state.GameState;
@@ -8,8 +9,10 @@ import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import com.gempukku.swccgo.logic.timing.DefaultSwccgGame;
 import com.gempukku.swccgo.logic.timing.DefaultUserFeedback;
 import com.gempukku.swccgo.logic.vo.SwccgDeck;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertTrue;
 
@@ -120,39 +123,15 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
 
         InitializeGameWithDecks(decks, format);
 
+        ResetGameState(LSCards, DSCards);
 
-        Cards.put(DS, new HashMap<>());
-        Cards.put(LS, new HashMap<>());
 
         // Now that the game has been initialized, we reset any automatic drawing that was performed as part of startup
         for(var card : _gameState.getHand(LS).stream().toList()) {
             MoveCardsToTopOfOwnReserveDeck((PhysicalCardImpl)card);
         }
-
-        // Next we associate all the physically-instantiated cards with the human-readable names they were given by the
-        // tester.  This will now permit us to nab the exact card from anywhere without searching or collisions.
-        for (var card : _gameState.getReserveDeck(LS)) {
-            String name = LSCards.entrySet()
-                    .stream()
-                    .filter(x -> x.getValue().equals(card.getBlueprintId(true)) && !Cards.get(LS).containsKey(x.getKey()))
-                    .map(Map.Entry::getKey)
-                    .findFirst().get();
-
-            Cards.get(LS).put(name, (PhysicalCardImpl) card);
-        }
-
         for(var card : _gameState.getHand(DS).stream().toList()) {
             MoveCardsToTopOfOwnReserveDeck((PhysicalCardImpl)card);
-        }
-
-        for (var card : _gameState.getReserveDeck(DS)) {
-            String name = DSCards.entrySet()
-                    .stream()
-                    .filter(x -> x.getValue().equals(card.getBlueprintId(true)) && !Cards.get(DS).containsKey(x.getKey()))
-                    .map(Map.Entry::getKey)
-                    .findFirst().get();
-
-            Cards.get(DS).put(name, (PhysicalCardImpl) card);
         }
 
         // We include the destiny packs for convenience, but we don't want them in the reserve deck by default or else
@@ -209,9 +188,61 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
 
         //Enables additional information on optional responses; see TurnProcedure.getActionDecisionTextFromEffectResults
         _game.setTestEnvironment(true);
-
-        _gameState = _game.getGameState();
     }
+
+    /**
+     * After a revert, the old game state is now stale and needs to be reset.
+     */
+    public void ResetGameState() {
+        var LSCards = new HashMap<String, String>();
+        for(var pair : Cards.get(LS).entrySet()) {
+            LSCards.put(pair.getKey(), pair.getValue().getBlueprintId(true));
+        }
+
+        var DSCards = new HashMap<String, String>();
+        for(var pair : Cards.get(DS).entrySet()) {
+            DSCards.put(pair.getKey(), pair.getValue().getBlueprintId(true));
+        }
+        ResetGameState(LSCards, DSCards);
+    }
+    public void ResetGameState(HashMap<String, String> LSCards, HashMap<String, String> DSCards) {
+        _gameState = _game.getGameState();
+
+        var allCards = _gameState.getAllPermanentCards();
+        var allDSCards = allCards.stream().filter(x -> x.getBlueprint().getSide() == Side.DARK).toList();
+        var allLSCards = allCards.stream().filter(x -> x.getBlueprint().getSide() == Side.LIGHT).toList();
+
+        Cards.put(DS, new HashMap<>());
+        Cards.put(LS, new HashMap<>());
+
+        // Next we associate all the physically-instantiated cards with the human-readable names they were given by the
+        // tester.  This will now permit us to nab the exact card from anywhere without searching or collisions.
+        for (var card : allLSCards) {
+            String name = LSCards.entrySet()
+                    .stream()
+                    .filter(x -> x.getValue().equals(card.getBlueprintId(true)) && !Cards.get(LS).containsKey(x.getKey()))
+                    .map(Map.Entry::getKey)
+                    .findFirst().get();
+
+            Cards.get(LS).put(name, (PhysicalCardImpl) card);
+        }
+
+        for (var card : allDSCards) {
+            String name = DSCards.entrySet()
+                    .stream()
+                    .filter(x -> x.getValue().equals(card.getBlueprintId(true)) && !Cards.get(DS).containsKey(x.getKey()))
+                    .map(Map.Entry::getKey)
+                    .findFirst().get();
+
+            Cards.get(DS).put(name, (PhysicalCardImpl) card);
+        }
+    }
+
+    public PhysicalCardImpl GetPostRevertCard(PhysicalCardImpl card) {
+        return (PhysicalCardImpl) _gameState.findCardByPermanentId(card.getPermanentCardId());
+    }
+
+
 
     /**
      * Passes through certain setup steps at the start of the game so our test may begin at the first player's (usually

@@ -127,25 +127,12 @@ public interface Choices extends Decisions {
 
 	default void DSChooseOption(String option) throws DecisionResultInvalidException { ChooseOption(DS, option); }
 	default void LSChooseOption(String option) throws DecisionResultInvalidException { ChooseOption(LS, option); }
-	default void ChooseOption(String playerID, String option) throws DecisionResultInvalidException { ChooseAction(playerID, "results", option); }
 
 	default void DSChooseAction(String paramName, String option) throws DecisionResultInvalidException { ChooseAction(DS, paramName, option); }
 	default void DSChooseAction(String option) throws DecisionResultInvalidException { ChooseAction(DS, "actionText", option); }
 	default void LSChooseAction(String paramName, String option) throws DecisionResultInvalidException { ChooseAction(LS, paramName, option); }
 	default void LSChooseAction(String option) throws DecisionResultInvalidException { ChooseAction(LS, "actionText", option); }
 	default void ChooseAction(String playerID, String option) throws DecisionResultInvalidException { ChooseAction(playerID, "actionText", option); }
-	default void ChooseAction(String playerID, String paramName, String option) throws DecisionResultInvalidException {
-		List<String> choices = GetADParamAsList(playerID, paramName);
-		for(String choice : choices){
-			if(option == null && choice == null // This only happens when a rule is the source of an action
-					|| choice.toLowerCase().contains(option.toLowerCase())) {
-				PlayerDecided(playerID, String.valueOf(choices.indexOf(choice)));
-				return;
-			}
-		}
-		//couldn't find an exact match, so maybe it's a direct index:
-		PlayerDecided(playerID, option);
-	}
 
 
 
@@ -224,13 +211,7 @@ public interface Choices extends Decisions {
 
 	default List<String> DSGetADParamAsList(String paramName) { return GetADParamAsList(DS, paramName); }
 	default List<String> LSGetADParamAsList(String paramName) { return GetADParamAsList(LS, paramName); }
-	default List<String> GetADParamAsList(String playerID, String paramName) {
-		var paramList = GetAwaitingDecisionParam(playerID, paramName);
-		if(paramList == null)
-			return null;
 
-		return Arrays.asList(paramList);
-	}
 
 	default int GetADParamEqualsCount(String playerID, String paramName, String value) {
 		return (int) Arrays.stream(GetAwaitingDecisionParam(playerID, paramName)).filter(s -> s.equals(value)).count();
@@ -239,10 +220,7 @@ public interface Choices extends Decisions {
 	default String[] LSGetADParam(String paramName) { return GetAwaitingDecisionParam(LS, paramName); }
 	default String DSGetFirstADParam(String paramName) { return GetAwaitingDecisionParam(DS, paramName)[0]; }
 	default String LSGetFirstADParam(String paramName) { return GetAwaitingDecisionParam(LS, paramName)[0]; }
-	default String[] GetAwaitingDecisionParam(String playerID, String paramName) {
-		var decision = userFeedback().getAwaitingDecision(playerID);
-		return decision.getDecisionParameters().get(paramName);
-	}
+
 
 	default Map<String, String[]> GetAwaitingDecisionParams(String playerID) {
 		var decision = userFeedback().getAwaitingDecision(playerID);
