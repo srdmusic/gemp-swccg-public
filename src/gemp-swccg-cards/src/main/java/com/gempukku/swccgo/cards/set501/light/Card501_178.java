@@ -150,19 +150,19 @@ public class Card501_178 extends AbstractObjective {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.MIND_WHAT_YOUR_HAVE_LEARNED_V__DOWNLOAD_SITE;
+        gameTextActionId = GameTextActionId.MIND_WHAT_YOUR_HAVE_LEARNED_V__DOWNLOAD_LOCATION;
         // Check condition(s)
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Dagobah site from Reserve Deck");
-            action.setActionMsg("Deploy Dagobah site from Reserve Deck");
+            action.setText("Deploy Dagobah location from Reserve Deck");
+            action.setActionMsg("Deploy Dagobah location from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Dagobah_site, true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.Dagobah_location, true));
             actions.add(action);
         }
 
