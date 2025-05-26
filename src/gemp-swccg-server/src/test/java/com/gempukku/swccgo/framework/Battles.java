@@ -68,10 +68,13 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 		PassResponses("INITIAL_ATTRITION_CALCULATED");
 	}
 
-	default void PassWeaponFireWithDestinyDraw() throws DecisionResultInvalidException {
+	default void PassWeaponFireWithDestinyDraw() throws DecisionResultInvalidException { PassWeaponFireWithDestinyDraw(1); }
+	default void PassWeaponFireWithDestinyDraw(int draws) throws DecisionResultInvalidException {
 		// weapon firing
 		PassResponses("Fire ");
-		PassDestinyDrawResponses();
+		for(int i = 0; i < draws; ++i) {
+			PassDestinyDrawResponses();
+		}
 		PassResponses("ABOUT_TO_BE_HIT");
 		PassResponses("HIT -");
 		PassResponses("FIRED_WEAPON");
@@ -194,8 +197,16 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 	 */
 	default void DSPayBattleDamageFromCardInPlay(PhysicalCardImpl card) throws DecisionResultInvalidException {
 		DSChooseCard(card);
-		PassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
-		PassCardLeavingTable();
+		PassAllResponses();
+	}
+	/**
+	 * Pays for 1 or more Force worth of Dark Side battle damage by sacrificing the provided card in hand.
+	 * @param card The DS card in hand to sacrifice for battle damage.
+	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
+	 */
+	default void DSPayBattleDamageFromCardInHand(PhysicalCardImpl card) throws DecisionResultInvalidException {
+		DSChooseCard(card);
+		PassAllResponses();
 	}
 
 	/**
@@ -245,7 +256,17 @@ public interface Battles extends Decisions, GameProcedures, PileProperties {
 	 */
 	default void LSPayBattleDamageFromCardInPlay(PhysicalCardImpl card) throws DecisionResultInvalidException {
 		LSChooseCard(card);
-		PassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
+		PassAllResponses();
+	}
+
+	/**
+	 * Pays for 1 or more Force worth of Light Side battle damage by sacrificing the provided card in hand.
+	 * @param card The LS card in hand to sacrifice for battle damage.
+	 * @throws DecisionResultInvalidException Throws this error if the player is not currently paying battle damage.
+	 */
+	default void LSPayBattleDamageFromCardInHand(PhysicalCardImpl card) throws DecisionResultInvalidException {
+		DSChooseCard(card);
+		PassResponses("FORFEITED_TO_LOST_PILE_FROM_HAND");
 		PassCardLeavingTable();
 	}
 
