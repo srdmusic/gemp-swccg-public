@@ -13,6 +13,8 @@ import com.gempukku.swccgo.game.layout.LocationsLayout;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.game.state.actions.DefaultActionsEnvironment;
 import com.gempukku.swccgo.logic.PlayerOrder;
+import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
+import com.gempukku.swccgo.logic.decisions.YesNoDecision;
 import com.gempukku.swccgo.logic.modifiers.ModifiersEnvironment;
 import com.gempukku.swccgo.logic.modifiers.ModifiersLogic;
 import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
@@ -404,6 +406,70 @@ public class DefaultSwccgGame implements SwccgGame {
     @Override
     public Collection<GameStateListener> getAllGameStateListeners() {
         return Collections.unmodifiableSet(_gameStateListeners);
+    }
+
+    @Override
+    public void requestRevert(final String playerId, Runnable onAbort) {
+        this.requestRevert(playerId, onAbort, onAbort);
+    }
+
+    @Override
+    public void requestRevert(final String playerId, Runnable onInvalid, Runnable onRejected) {
+        final List<Integer> snapshotIds = new ArrayList<Integer>();
+        final List<String> snapshotDescriptions = new ArrayList<String>();
+        for (GameSnapshot gameSnapshot : getSnapshots()) {
+            snapshotIds.add(gameSnapshot.getId());
+            snapshotDescriptions.add(gameSnapshot.getDescription());
+        }
+        int numSnapshots = snapshotDescriptions.size();
+        if (numSnapshots == 0) {
+            onInvalid.run();
+            return;
+        }
+        snapshotIds.add(-1);
+        snapshotDescriptions.add("Do not revert");
+
+        // Ask player to choose snapshot to revert back to
+        getUserFeedback().sendAwaitingDecision(playerId,
+                new MultipleChoiceAwaitingDecision("Choose game state to revert prior to", snapshotDescriptions.toArray(new String[0]), snapshotDescriptions.size() - 1) {
+                    @Override
+                    public void validDecisionMade(int index, String result) {
+                        final int snapshotIdChosen = snapshotIds.get(index);
+                        if (snapshotIdChosen == -1) {
+                            onRejected.run();
+                            return;
+                        }
+
+                        getGameState().sendMessage(playerId + " attempts to revert game to a previous state");
+
+                        // Confirm with the other player if it is acceptable to revert to the game state
+                        final String opponent = getOpponent(playerId);
+                        StringBuilder snapshotDescMsg = new StringBuilder("</br>");
+                        for (int i=0; i<snapshotDescriptions.size() - 1; ++i) {
+                            if (i == index) {
+                                snapshotDescMsg.append("</br>").append(">>> Revert to here <<<");
+                            }
+                            if ((index - i) < 3) {
+                                snapshotDescMsg.append("</br>").append(snapshotDescriptions.get(i));
+                            }
+                        }
+                        snapshotDescMsg.append("</br>");
+
+                        getUserFeedback().sendAwaitingDecision(opponent,
+                                new YesNoDecision("Do you want to allow game to be reverted to the following game state?" + snapshotDescMsg) {
+                                    @Override
+                                    protected void yes() {
+                                        getGameState().sendMessage(opponent + " allows game to revert to a previous state");
+                                        requestRestoreSnapshot(snapshotIdChosen);
+                                    }
+                                    @Override
+                                    protected void no() {
+                                        getGameState().sendMessage(opponent + " denies attempt to revert game to a previous state");
+                                        onRejected.run();
+                                    }
+                                });
+                    }
+                });
     }
 
     /**
