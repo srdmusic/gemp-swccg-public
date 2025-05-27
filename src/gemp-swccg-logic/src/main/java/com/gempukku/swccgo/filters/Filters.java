@@ -17942,6 +17942,7 @@ public class Filters {
     public static final Filter Double_Agent = Filters.title(Title.Double_Agent);
     public static final Filter Double_Back = Filters.title(Title.Double_Back);
     public static final Filter Downtown_Plaza = Filters.title(Title.Downtown_Plaza);
+    public static final Filter DQar_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Dqar));
     public static final Filter Dqar_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Dqar));
     public static final Filter Dr_Evazan = Filters.title(Title.Dr_Evazan);
     public static final Filter Dreadnaught = Filters.or(Filters.modelType(ModelType.DREADNAUGHT_CLASS_HEAVY_CRUISER), Filters.modelType(ModelType.MANDATOR_IV_CLASS_DREADNAUGHT), Filters.modelType(ModelType.MEGA_CLASS_DREADNAUGHT));
@@ -19239,6 +19240,7 @@ public class Filters {
     public static final Filter Wioslea = Filters.title(Title.Wioslea);
     public static final Filter Wise_Advice = Filters.title(Title.Wise_Advice);
     public static final Filter Wittin = Filters.title(Title.Wittin);
+    public static final Filter Wokling = Filters.title(Title.Wokling);
     public static final Filter womp_rat = Filters.title(Title.Womp_Rat);
     public static final Filter Wookiee = Filters.species(Species.WOOKIEE);
     public static final Filter Wookiee_Homestead = Filters.title(Title.Wookiee_Homestead);
