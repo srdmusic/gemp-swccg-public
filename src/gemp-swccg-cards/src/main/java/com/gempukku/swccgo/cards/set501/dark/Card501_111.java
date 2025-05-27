@@ -123,7 +123,7 @@ public class Card501_111 extends AbstractObjective {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         String opponent = game.getOpponent(self.getOwner());
-        modifiers.add(new LimitForceLossFromForceDrainModifier(self, Filters.and(Filters.your(self), Filters.location), 1, opponent));
+        modifiers.add(new LimitForceLossFromForceDrainModifier(self, Filters.and(Icon.EPISODE_VII, Filters.system), 1, opponent));
         return modifiers;
     }
 
