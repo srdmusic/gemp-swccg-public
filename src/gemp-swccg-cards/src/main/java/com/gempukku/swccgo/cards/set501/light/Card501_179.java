@@ -27,7 +27,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.StackCardsFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.StackCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayDeployAsIfFromHandModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotAttemptJediTestsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -65,8 +65,15 @@ public class Card501_179 extends AbstractEpicEventDeployable {
             action.setPerformingPlayer(playerId);
             // Perform result(s)
             action.appendEffect(
-                    new StackCardsFromReserveDeckEffect(action, playerId, 1, 6, self, false, Filters.Jedi_Test)
-            );
+                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_1, false, false));
+            action.appendEffect(
+                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_2, false, false));
+            action.appendEffect(
+                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_3, false, false));
+            action.appendEffect(
+                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_4, false, false));
+            action.appendEffect(
+                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_5, false, false));
             actions.add(action);
         }
 
