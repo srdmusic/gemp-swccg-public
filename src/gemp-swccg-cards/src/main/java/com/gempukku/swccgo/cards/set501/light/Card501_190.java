@@ -56,15 +56,24 @@ public class Card501_190 extends AbstractLostInterrupt {
             action.setPerformingPlayer(playerId);
             action.setText("Turn Jedi Test face up");
             action.setActionMsg("Turn a Jedi Test on Patience! face up");
-            action.appendTargeting(
-                    new ChooseStackedCardEffect(action, playerId, patienceWithJediTestStackedFaceDown, jediTestFaceDown, false) {
-                        @Override
-                        protected void cardSelected(PhysicalCard selectedCard) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                new FlipSingleSidedStackedCard(action, selectedCard));
-                        }
+
+            action.allowResponses("Turn a Jedi Test on Patience! face up",
+                new RespondablePlayCardEffect(action) {
+                    @Override
+                    protected void performActionResults(Action targetingAction) {
+                        // Perform result(s)
+                        action.appendEffect(
+                            new ChooseStackedCardEffect(action, playerId, patienceWithJediTestStackedFaceDown, jediTestFaceDown, false) {
+                                @Override
+                                protected void cardSelected(PhysicalCard selectedCard) {
+                                    // Perform result(s)
+                                    action.appendEffect(
+                                        new FlipSingleSidedStackedCard(action, selectedCard));
+                                }
+                            }
+                        );
                     }
+                }
             );
             actions.add(action);
         }
