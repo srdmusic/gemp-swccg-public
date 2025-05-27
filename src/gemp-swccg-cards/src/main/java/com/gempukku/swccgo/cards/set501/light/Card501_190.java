@@ -1,11 +1,13 @@
 package com.gempukku.swccgo.cards.set501.light;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
+import com.gempukku.swccgo.cards.effects.SatisfyAllBattleDamageEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -16,9 +18,12 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
+import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -77,6 +82,42 @@ public class Card501_190 extends AbstractLostInterrupt {
             );
             actions.add(action);
         }
+
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+        // Check condition(s)
+        if (TriggerConditions.isResolvingBattleDamageAndAttrition(game, effectResult, playerId)
+                && GameConditions.isBattleDamageRemaining(game, playerId)) {
+            final Collection<PhysicalCard> mayBePlacedOutOfPlay = Filters.filter(game.getGameState().getHand(playerId), game, Filters.and(Icon.CLOUD_CITY, Filters.Rebel, Filters.not(Filters.Luke)));
+            if (!mayBePlacedOutOfPlay.isEmpty()) {
+
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+                action.setText("Place card from hand out of play");
+                action.setActionMsg("Place a [Cloud City] Rebel (except Luke) from hand out of play to cancel remaining battle damage");
+
+                action.allowResponses("Place card out of play to cancel battle damage",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                new ChooseCardFromHandEffect(action, playerId, Filters.in(mayBePlacedOutOfPlay)) {
+                                    @Override
+                                    protected void cardSelected(SwccgGame game, PhysicalCard selectedCard) {
+                                        action.setActionMsg("Place " + GameUtils.getFullName(selectedCard) + " out of play to cancel battle damage");
+                                        // Pay cost(s)
+                                        action.appendCost(
+                                                new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
+                                        // Perform result(s)
+                                        action.appendEffect(
+                                                new SatisfyAllBattleDamageEffect(action, playerId));
+                                    }
+                                });
+                        }
+                    }
+                );
+                actions.add(action);
+            }
+        }
         return actions;
     }
 
@@ -84,11 +125,12 @@ public class Card501_190 extends AbstractLostInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
         // Check condition(s)
         if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
                 && GameConditions.canAddBattleDestinyDraws(game, self)) {
 
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
                 action.setText("Add one battle destiny");
                 // Allow response(s)
                 action.allowResponses(
