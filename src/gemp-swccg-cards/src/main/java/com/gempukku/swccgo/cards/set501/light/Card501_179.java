@@ -5,12 +5,10 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
@@ -27,9 +25,8 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.StackCardsFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.StackCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayDeployAsIfFromHandModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotAttemptJediTestsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -41,7 +38,7 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 public class Card501_179 extends AbstractEpicEventDeployable {
     public Card501_179() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Patience, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("If your [Dagobah] objective on table, deploy on table and stack up to six Jedi Tests from your Reserve Deck face up here. Only Luke may attempt Jedi Tests. I Won't Fail You: You may deploy face up Jedi Tests from here as if from hand. I Saw A City In The Clouds: Once per turn, may [download] Bespin system or a Cloud City site. I've Got To Go To Them: Once per opponent's control phase, if you just lost Force and you do not occupy a battleground with a [Cloud City] Rebel, turn a Jedi Test here face down.");
+        setGameText("If your [Dagobah] objective on table, deploy on table and stack Jedi Tests 1 - 5 from your Reserve Deck face up here. I Won't Fail You: You may deploy face up Jedi Tests from here as if from hand. I Saw A City In The Clouds: Once per turn, may [download] Bespin system or a Cloud City site. I've Got To Go To Them: Once per turn, if you just lost Force from a Force drain and you do not occupy a battleground, turn a Jedi Test here face down.");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setTestingText("Patience!");
     }
@@ -65,8 +62,15 @@ public class Card501_179 extends AbstractEpicEventDeployable {
             action.setPerformingPlayer(playerId);
             // Perform result(s)
             action.appendEffect(
-                    new StackCardsFromReserveDeckEffect(action, playerId, 1, 6, self, false, Filters.Jedi_Test)
-            );
+                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_1, false, false));
+            action.appendEffect(
+                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_2, false, false));
+            action.appendEffect(
+                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_3, false, false));
+            action.appendEffect(
+                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_4, false, false));
+            action.appendEffect(
+                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_5, false, false));
             actions.add(action);
         }
 
@@ -74,9 +78,9 @@ public class Card501_179 extends AbstractEpicEventDeployable {
         final Filter jediTestFaceUp = Filters.and(Filters.Jedi_Test, Filters.not(Filters.face_down));
         final Filter patienceWithJediTestStackedFaceUp = Filters.and(Filters.Patience, Filters.hasStacked(jediTestFaceUp));
         // Check condition(s)
-        if (GameConditions.isOnceDuringOpponentsPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && TriggerConditions.justLostForce(game, effectResult, playerId)
-                && !GameConditions.occupiesWith(game, self, playerId, Filters.battleground, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && TriggerConditions.justLostForceFromForceDrainAt(game, effectResult, playerId, Filters.any, false)
+                && !GameConditions.occupies(game, playerId, Filters.battleground)
                 && GameConditions.canSpot(game, self, patienceWithJediTestStackedFaceUp)) {
         
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
@@ -86,7 +90,7 @@ public class Card501_179 extends AbstractEpicEventDeployable {
             action.setActionMsg("Turn a Jedi Test on Patience! face down");
             // Update usage limit(s)
             action.appendUsage(
-                    new OncePerPhaseEffect(action));
+                    new OncePerTurnEffect(action));
             action.appendTargeting(
                     new ChooseStackedCardEffect(action, playerId, patienceWithJediTestStackedFaceUp, jediTestFaceUp, false) {
                         @Override
@@ -105,7 +109,6 @@ public class Card501_179 extends AbstractEpicEventDeployable {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotAttemptJediTestsModifier(self, Filters.and(Filters.apprentice, Filters.not(Filters.Luke))));
         modifiers.add(new MayDeployAsIfFromHandModifier(self, Filters.and(Filters.not(Filters.face_down), Filters.Jedi_Test, Filters.stackedOn(self))));
         return modifiers;
     }
