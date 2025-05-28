@@ -85,33 +85,32 @@ public class Card501_190 extends AbstractLostInterrupt {
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
         // Check condition(s)
-        if (TriggerConditions.isResolvingBattleDamageAndAttrition(game, effectResult, playerId)
-                && GameConditions.isBattleDamageRemaining(game, playerId)) {
+        if (GameConditions.isBattleDamageRemaining(game, playerId)) {
             final Collection<PhysicalCard> mayBePlacedOutOfPlay = Filters.filter(game.getGameState().getHand(playerId), game, Filters.and(Icon.CLOUD_CITY, Filters.Rebel, Filters.not(Filters.Luke)));
             if (!mayBePlacedOutOfPlay.isEmpty()) {
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-                action.setText("Place card from hand out of play");
-                action.setActionMsg("Place a [Cloud City] Rebel (except Luke) from hand out of play to cancel remaining battle damage");
-
-                action.allowResponses("Place card out of play to cancel battle damage",
-                    new RespondablePlayCardEffect(action) {
+                action.setText("Cancel remaining battle damage");
+                // Choose target(s)
+                action.appendTargeting(
+                    new ChooseCardFromHandEffect(action, playerId, Filters.in(mayBePlacedOutOfPlay)) {
                         @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                new ChooseCardFromHandEffect(action, playerId, Filters.in(mayBePlacedOutOfPlay)) {
+                        protected void cardSelected(SwccgGame game, PhysicalCard selectedCard) {
+                            action.setActionMsg("Place " + GameUtils.getFullName(selectedCard) + " out of play to cancel battle damage");
+                            // Pay cost(s)
+                            action.appendCost(
+                                new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
+                            // Allow response(s)
+                            action.allowResponses(
+                                new RespondablePlayCardEffect(action) {
                                     @Override
-                                    protected void cardSelected(SwccgGame game, PhysicalCard selectedCard) {
-                                        action.setActionMsg("Place " + GameUtils.getFullName(selectedCard) + " out of play to cancel battle damage");
-                                        // Pay cost(s)
-                                        action.appendCost(
-                                                new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
+                                    protected void performActionResults(Action targetingAction) {
                                         // Perform result(s)
                                         action.appendEffect(
                                                 new SatisfyAllBattleDamageEffect(action, playerId));
                                     }
-                                });
+                                }
+                            );
                         }
                     }
                 );
