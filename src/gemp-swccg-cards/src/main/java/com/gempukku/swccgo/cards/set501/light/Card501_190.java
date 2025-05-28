@@ -85,7 +85,8 @@ public class Card501_190 extends AbstractLostInterrupt {
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
         // Check condition(s)
-        if (GameConditions.isBattleDamageRemaining(game, playerId)) {
+        if (TriggerConditions.isResolvingBattleDamageAndAttrition(game, effectResult, playerId)
+                && GameConditions.isBattleDamageRemaining(game, playerId)) {
             final Collection<PhysicalCard> mayBePlacedOutOfPlay = Filters.filter(game.getGameState().getHand(playerId), game, Filters.and(Icon.CLOUD_CITY, Filters.Rebel, Filters.not(Filters.Luke)));
             if (!mayBePlacedOutOfPlay.isEmpty()) {
 
