@@ -4,7 +4,6 @@ import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.DuringForceDrainAtCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -27,17 +26,19 @@ import com.gempukku.swccgo.logic.conditions.TrueCondition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.JediTestSuspendedInsteadOfLostModifier;
 import com.gempukku.swccgo.logic.modifiers.MayDeployOtherCardsAsReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.MayDeployOtherCardsAsReactToTargetModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifierFlag;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.modifiers.PlaceJediTestOnTableWhenCompletedModifier;
 import com.gempukku.swccgo.logic.modifiers.SpecialFlagModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -50,12 +51,12 @@ import java.util.List;
 /**
  * Set: Playtesting
  * Type: Objective
- * Title: Mind What You Have Learned / Save You It Can
+ * Title: Mind What You Have Learned / Save You It Can (V)
  */
 public class Card501_178_BACK extends AbstractObjective {
     public Card501_178_BACK() {
         super(Side.LIGHT, 7, Title.Save_You_It_Can, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Immediately return Luke and any cards on him to owner's hand. While this side up, you may deploy Luke (deploy -3) and/or a weapon on him as a 'react.' If Luke just won a battle, may place a card on Patience! out of play to retrieve 1 Force. When your [Cloud City] Rebel Force drains at a battleground site, unless a captive on table, lost Force must come from top of Reserve Deck if possible. Once per game, may place a completed (even if suspended) Jedi Test out of play to take Luke into hand from Lost Pile.");
+        setGameText("Immediately return Luke and any cards on him to owner's hand. While this side up, may deploy Luke (deploy -3) and/or a weapon on him as a 'react.' If Luke just won a battle, may place a card on Patience! out of play to retrieve a weapon or [Cloud City] Rebel into hand. When your [Cloud City] Rebel Force drains at a battleground site, unless a captive on table, lost Force must come from top of Reserve Deck if possible. May place a completed (even if suspended) Jedi Test out of play to take Luke into hand from Lost Pile.");
         addIcons(Icon.SPECIAL_EDITION, Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("Save You It Can (V)");
@@ -91,9 +92,10 @@ public class Card501_178_BACK extends AbstractObjective {
         String playerId = self.getOwner();
 
         // For remainder of game
+        modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test, ModifyGameTextType.JEDI_TESTS__ONLY_LUKE_MAY_BE_APPRENTICE));
+        modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.Dagobah_location, playerId));
         modifiers.add(new PlaceJediTestOnTableWhenCompletedModifier(self, Filters.any, new TrueCondition()));
         modifiers.add(new JediTestSuspendedInsteadOfLostModifier(self, Filters.completed_Jedi_Test, new TrueCondition()));
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Icon.DAGOBAH, Filters.Yoda), -4, Filters.Dagobah_location));
 
         // While this side up
         modifiers.add(new MayDeployOtherCardsAsReactToLocationModifier(self, "Deploy Luke (deploy -3) as a 'react'", playerId, Filters.Luke, Filters.any, -3));
@@ -115,13 +117,16 @@ public class Card501_178_BACK extends AbstractObjective {
 
         final Filter patienceWithCardStacked = Filters.and(Filters.Patience, Filters.hasStacked(Filters.any));
 
-        if (TriggerConditions.wonBattle(game, effectResult, Filters.Luke)
-                && GameConditions.canSpot(game, self, patienceWithCardStacked)) {
+        GameTextActionId gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__RETRIEVE_REBEL_OR_WEAPON_INTO_HAND;
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+        if (TriggerConditions.wonBattle(game, effectResult, Filters.Luke)
+                && GameConditions.canSpot(game, self, patienceWithCardStacked)
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
 
             action.setText("Place stacked card out of play");
-            action.setActionMsg("Place a card on Patience! out of play to retrieve 1 Force");
+            action.setActionMsg("Place a card on Patience! out of play to retrieve a weapon or [Cloud City] Rebel into hand");
 
             action.appendTargeting(
                     new ChooseStackedCardEffect(action, playerId, patienceWithCardStacked, Filters.any, false) {
@@ -130,10 +135,9 @@ public class Card501_178_BACK extends AbstractObjective {
                             // Pay cost(s)
                             action.appendCost(
                                     new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
-
                             // Perform result(s)
                             action.appendEffect(
-                                    new RetrieveForceEffect(action, playerId, 1));
+                                    new RetrieveCardIntoHandEffect(action, playerId, Filters.or(Filters.weapon, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))));
                         }
                     }
             );
@@ -147,18 +151,14 @@ public class Card501_178_BACK extends AbstractObjective {
 
         GameTextActionId gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__UPLOAD_LUKE_FROM_LOST_PILE;
 
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_SUSPENDED, Filters.completed_Jedi_Test)
-                && GameConditions.hasLostPile(game, playerId)) {
+        if (GameConditions.canSpot(game, self, SpotOverride.INCLUDE_SUSPENDED, Filters.completed_Jedi_Test)
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
 
             action.setText("Place completed Jedi Test out of play");
             action.setActionMsg("Place a completed Jedi Test out of play to take Luke into hand from Lost Pile");
 
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
             // Choose target(s)
             action.appendTargeting(
                     new ChooseCardOnTableEffect(action, playerId, "Choose a completed Jedi Test", SpotOverride.INCLUDE_SUSPENDED, Filters.completed_Jedi_Test) {
