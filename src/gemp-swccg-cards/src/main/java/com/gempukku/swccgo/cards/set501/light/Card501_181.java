@@ -31,9 +31,10 @@ public class Card501_181 extends AbstractNormalEffect {
     public Card501_181() {
         super(Side.LIGHT, 4, PlayCardZoneOption.ATTACHED, Title.Yodas_Hope, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'You must feel the Force around you. Here, between you, me, the tree, the rock, everywhere! Yes, even between the land and the ship.'");
-        setGameText("If your [Dagobah] objective on table, deploy on Yoda. Your training destiny draws are +1. Jedi Tests may be attempted at start of opponent's control phase.");
+        setGameText("If your [Dagobah] objective on table, deploy on Yoda. Your training destiny draws are +1. Jedi Tests may be attempted at start of opponent's deploy phase (draw two training destiny and choose one). [Immune to Alter.]");
         addKeywords(Keyword.DEPLOYS_ON_CHARACTERS);
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
+        addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
         setTestingText("Yoda's Hope (V)");
     }
