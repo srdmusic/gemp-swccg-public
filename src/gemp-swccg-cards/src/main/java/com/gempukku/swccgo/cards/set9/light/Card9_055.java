@@ -67,7 +67,14 @@ public class Card9_055 extends AbstractJediTest {
 
     @Override
     protected Filter getGameTextValidApprenticeFilter(String playerId, SwccgGame game, PhysicalCard self, PhysicalCard deployTarget, PhysicalCard mentor, boolean isDeployFromHand) {
-        return Filters.and(Filters.Skywalker, Filters.apprenticeTargetedByJediTest(Filters.and(Filters.completed_Jedi_Test, Filters.Jedi_Test_5)));
+        Filter apprenticeFilter = Filters.and(Filters.Skywalker, Filters.apprenticeTargetedByJediTest(Filters.and(Filters.completed_Jedi_Test, Filters.Jedi_Test_5)));
+
+        if (GameConditions.hasGameTextModification(game, self, ModifyGameTextType.JEDI_TESTS__ONLY_LUKE_MAY_BE_APPRENTICE))
+        {
+            apprenticeFilter = Filters.and(apprenticeFilter, Filters.Luke);
+        }
+
+        return apprenticeFilter;
     }
 
     @Override
@@ -232,7 +239,7 @@ public class Card9_055 extends AbstractJediTest {
             return null;
         }
 
-        boolean specialTiming = TriggerConditions.isStartOfOpponentsPhase(game, self, effectResult, Phase.CONTROL) && GameConditions.hasGameTextModification(game, self, ModifyGameTextType.JEDI_TESTS__MAY_ATTEMPT_IN_OPPONENTS_CONTROL_PHASE);
+        boolean specialTiming = TriggerConditions.isStartOfOpponentsPhase(game, self, effectResult, Phase.DEPLOY) && GameConditions.hasGameTextModification(game, self, ModifyGameTextType.JEDI_TESTS__MAY_ATTEMPT_IN_OPPONENTS_DEPLOY_PHASE);
 
         // Check condition(s)
         if (specialTiming) {
