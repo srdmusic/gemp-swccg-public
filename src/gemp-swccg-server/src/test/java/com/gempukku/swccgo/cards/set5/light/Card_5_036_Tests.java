@@ -403,6 +403,7 @@ public class Card_5_036_Tests {
 		assertFalse(scn.IsAboardAsPassenger(tube, chewie));
 		assertAtLocation(site, chewie);
 		assertFalse(scn.IsAttachedTo(chewie, boba));
+		assertEquals(3, scn.GetPassengerCapacity(tube));
 	}
 
 	@Test
@@ -809,6 +810,7 @@ public class Card_5_036_Tests {
 		scn.PassAllResponses();
 
 		assertFalse(chewie.isCaptive());
+		assertTrue(chewie.isMissing());
 		assertNull(chewie.getEscort());
 		assertFalse(boba.getCardsEscorting().contains(chewie));
 		assertNull(chewie.getAttachedTo());
@@ -1012,7 +1014,7 @@ public class Card_5_036_Tests {
 		scn.PassResponses();
 
 		// DS only has a battle destiny draw because Dengar is "escorting a captive"
-		assertEquals(3, scn.GetDSTotalPower());
+		assertEquals(2, scn.GetAbility(dengar), scn.epsilon);
 		scn.PrepareDSDestiny(3);
 		assertEquals(0, scn.GetDSTotalDestiny());
 		assertTrue(scn.DSDecisionAvailable("Do you want to draw 1 battle destiny?"));
