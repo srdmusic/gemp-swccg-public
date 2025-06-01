@@ -24,12 +24,13 @@ import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameActionProxyEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseCardsFromTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.JediTestSuspendedInsteadOfLostModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ModifierFlag;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.modifiers.PlaceJediTestOnTableWhenCompletedModifier;
-import com.gempukku.swccgo.logic.modifiers.SpecialFlagModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Arrays;
@@ -46,7 +47,7 @@ public class Card501_178 extends AbstractObjective {
     public Card501_178() {
         super(Side.LIGHT, 0, Title.Mind_What_You_Have_Learned, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Beldon's Gallery, Yoda's Hut, [Cloud City] No Disintegrations!, and Patience! For remainder of game, your non-[Dagobah] characters of ability > 4 (except Ahsoka) are lost. Place completed Jedi Tests on table; they are suspended (not lost) while Luke not on table. [Dagobah] Yoda deploys -4 to Dagobah. While this side up, may [download] Wise Advice or Yoda's Hope. Once per turn, may [download] a Dagobah site. When drawing training destiny, draw two and choose one. May flip this card if Luke on Dagobah during your turn.");
+        setGameText("Deploy Beldon's Corridor, Yoda's Hut (with [Dagobah] Yoda there), [Cloud City] No Disintegrations!, and Patience! For remainder of game, only Luke may be your apprentice. You may not Force drain on Dagobah. Your non-[Dagobah] characters of ability > 4 (except Ahsoka) are lost. Place completed Jedi Tests on table; they are suspended (not lost) while Luke not on table. While this side up, may [download] Wise Advice or Yoda's Hope. Once per turn, may [download] a Dagobah location. May flip this card if Luke on Dagobah during your turn.");
         addIcons(Icon.SPECIAL_EDITION, Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("Mind What You Have Learned (V)");
@@ -56,10 +57,10 @@ public class Card501_178 extends AbstractObjective {
     protected ObjectiveDeployedTriggerAction getGameTextWhenDeployedAction(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         ObjectiveDeployedTriggerAction action = new ObjectiveDeployedTriggerAction(self);
         action.appendRequiredEffect(
-                new DeployCardFromReserveDeckEffect(action, Filters.Beldons_Gallery, true, false) {
+                new DeployCardFromReserveDeckEffect(action, Filters.Beldons_Corridor, true, false) {
                     @Override
                     public String getChoiceText() {
-                        return "Choose Beldon's Gallery to deploy";
+                        return "Choose Beldon's Corridor to deploy";
                     }
                 });
         action.appendRequiredEffect(
@@ -67,6 +68,13 @@ public class Card501_178 extends AbstractObjective {
                     @Override
                     public String getChoiceText() {
                         return "Choose Yoda's Hut to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
+                new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Icon.DAGOBAH, Filters.Yoda), Filters.Yodas_Hut, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Yoda to deploy";
                     }
                 });
         action.appendRequiredEffect(
@@ -139,19 +147,19 @@ public class Card501_178 extends AbstractObjective {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.MIND_WHAT_YOUR_HAVE_LEARNED_V__DOWNLOAD_SITE;
+        gameTextActionId = GameTextActionId.MIND_WHAT_YOUR_HAVE_LEARNED_V__DOWNLOAD_LOCATION;
         // Check condition(s)
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Dagobah site from Reserve Deck");
-            action.setActionMsg("Deploy Dagobah site from Reserve Deck");
+            action.setText("Deploy Dagobah location from Reserve Deck");
+            action.setActionMsg("Deploy Dagobah location from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.Dagobah_site, true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.Dagobah_location, true));
             actions.add(action);
         }
 
@@ -179,11 +187,10 @@ public class Card501_178 extends AbstractObjective {
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         // For remainder of game
+        modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test, ModifyGameTextType.JEDI_TESTS__ONLY_LUKE_MAY_BE_APPRENTICE));
+        modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.Dagobah_location, playerId));
         modifiers.add(new PlaceJediTestOnTableWhenCompletedModifier(self, Filters.any, new TrueCondition()));
         modifiers.add(new JediTestSuspendedInsteadOfLostModifier(self, Filters.completed_Jedi_Test, new TrueCondition()));
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Icon.DAGOBAH, Filters.Yoda), -4, Filters.Dagobah_location));
-        // While this side up
-        modifiers.add(new SpecialFlagModifier(self, ModifierFlag.DRAW_TWO_AND_CHOOSE_ONE_FOR_TRAINING_DESTINY, playerId));
         return modifiers;
     }
 

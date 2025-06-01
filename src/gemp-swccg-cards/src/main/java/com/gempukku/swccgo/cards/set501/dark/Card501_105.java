@@ -21,8 +21,11 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ShowCardOnScreenEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckSimultaneouslyWithCardEffect;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -33,11 +36,21 @@ import java.util.List;
 public class Card501_105 extends AbstractNormalEffect {
     public Card501_105() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Navy Of The First Order", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on table. During your deploy phase, you may reveal one [First Order] Starship from hand to [upload] its matching pilot character (or vice versa) and deploy both simultaneously (for -1 Force each). [Immune to Alter]");
+        setGameText("Deploy on table. During your deploy phase, may reveal a [First Order] starship from hand to take its matching pilot character from Reserve Deck (or vice versa) and deploy both simultaneously. [First Order] starships are deploy -1 (-2 to D'qar) and hyperspeed +1. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Navy Of The First Order");
     }
+
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.First_Order_starship, -1, Filters.not(Filters.DQar_location)));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.First_Order_starship, -2, Filters.DQar_location));
+        return modifiers;
+    }
+
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         final Filter firstOrderStarship = Filters.and(Filters.First_Order_starship);
@@ -73,7 +86,7 @@ public class Card501_105 extends AbstractNormalEffect {
                             action.appendEffect(
                                     new ShowCardOnScreenEffect(action, selectedCard));
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckSimultaneouslyWithCardEffect(action, selectedCard, searchFilter, -1, true));
+                                    new DeployCardFromReserveDeckSimultaneouslyWithCardEffect(action, selectedCard, searchFilter, 0, true));
                         }
                     });
             return Collections.singletonList(action);

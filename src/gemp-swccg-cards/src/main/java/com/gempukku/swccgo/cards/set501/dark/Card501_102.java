@@ -2,13 +2,15 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractFirstOrder;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.AllAbilityAtLocationProvidedByCondition;
+import com.gempukku.swccgo.cards.conditions.PilotingCondition;
+import com.gempukku.swccgo.cards.evaluators.CardMatchesEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -16,9 +18,11 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.evaluators.Evaluator;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.ArmorModifier;
-import com.gempukku.swccgo.logic.modifiers.CancelImmunityToAttritionModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmunityToAttritionChangeModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotReactFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -38,8 +42,7 @@ public class Card501_102 extends AbstractFirstOrder {
     public Card501_102() {
         super(Side.DARK, 2, 3, 2, 2, 5, "Captain Moden Canady", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Leader.");
-        setGameText("Adds 2 power to anything he pilots and 2 to armor of Fulminatrix. While all your ability here is provided by Fulminatrix and First Order TIE pilots: opponent’s immunity to attrition (and reacts), Hit And Run and Alternatives To Fighting are canceled here.\n" + //
-                "");
+        setGameText("Adds 2 power to anything he pilots. While piloting a [FO] starship, it is armor and immunity to attrition +1 (if Fulminatrix, it is immune to attrition < 6 and armor +2 instead). Alternatives To Fighting, Hit And Run, and opponent's reacts are canceled here.");
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.LEADER);
         setMatchingStarshipFilter(Filters.Fulminatrix);
@@ -50,23 +53,25 @@ public class Card501_102 extends AbstractFirstOrder {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
+        Evaluator evaluator = new CardMatchesEvaluator(1, 2, Filters.Fulminatrix);
+        Condition pilotingFOStarshipCond = new PilotingCondition(self, Filters.First_Order_starship);
+        Filter pilotingFOStarshipNotFulminatrix = Filters.and(Filters.hasPiloting(self), Filters.First_Order_starship, Filters.not(Filters.Fulminatrix));
+        Filter pilotingFulminatrix = Filters.and(Filters.hasPiloting(self), Filters.Fulminatrix);
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        Condition allAbilityCondition = new AllAbilityAtLocationProvidedByCondition(self, playerId, Filters.here(self), Filters.or(Filters.Fulminatrix, Filters.piloting(Filters.Fulminatrix), Filters.First_Order_TIE, Filters.piloting(Filters.First_Order_TIE)));
-        modifiers.add(new CancelImmunityToAttritionModifier(self, Filters.and(Filters.opponents(self), Filters.atSameLocation(self)), allAbilityCondition));
-        modifiers.add(new MayNotReactToLocationModifier(self, Filters.here(self), allAbilityCondition, opponent));
-        modifiers.add(new MayNotReactFromLocationModifier(self, Filters.here(self), allAbilityCondition, opponent));    
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
-        modifiers.add(new ArmorModifier(self, Filters.and(Filters.Fulminatrix, Filters.hasPiloting(self)), 2));
+        modifiers.add(new ArmorModifier(self, Filters.First_Order_starship, pilotingFOStarshipCond, evaluator));
+        modifiers.add(new ImmunityToAttritionChangeModifier(self, pilotingFOStarshipNotFulminatrix, 1));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, pilotingFulminatrix, 6));
+        modifiers.add(new MayNotReactToLocationModifier(self, Filters.here(self), opponent));
+        modifiers.add(new MayNotReactFromLocationModifier(self, Filters.here(self), opponent));    
         return modifiers;
     }
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
-        String playerId = self.getOwner();
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Hit_And_Run, Filters.Alternatives_To_Fighting))
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Alternatives_To_Fighting, Filters.Hit_And_Run))
                 && GameConditions.isDuringBattleAt(game, Filters.here(self))
-                && GameConditions.isAllAbilityAtLocationProvidedBy(game, self, playerId, Filters.here(self), Filters.or(Filters.Fulminatrix, Filters.piloting(Filters.Fulminatrix)))
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);

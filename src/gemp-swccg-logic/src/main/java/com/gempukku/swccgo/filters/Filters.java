@@ -17600,7 +17600,7 @@ public class Filters {
     public static final Filter Beggar = Filters.title(Title.Beggar);
     public static final Filter Beggars_Canyon = Filters.title(Title.Beggars_Canyon);
     public static final Filter Beldons_Eye = Filters.title(Title.Beldons_Eye);
-    public static final Filter Beldons_Gallery = Filters.title(Title.Beldons_Gallery);
+    public static final Filter Beldons_Corridor = Filters.title(Title.Beldons_Corridor);
     public static final Filter Ben_Solo = Filters.persona(Persona.BEN_SOLO);
     public static final Filter Beru = Filters.title(Title.Beru_Lars);
     public static final Filter Beru_Stew = Filters.title(Title.Beru_Stew);
@@ -17925,6 +17925,7 @@ public class Filters {
     public static final Filter disarming_card = Filters.keyword(Keyword.DISARMING_CARD);
     public static final Filter DJ = Filters.persona(Persona.DJ);
     public static final Filter Do_Or_Do_Not = Filters.title(Title.Do_Or_Do_Not);
+    public static final Filter Do_They_Have_A_Code_Clearance = Filters.title(Title.Do_They_Have_A_Code_Clearance);
     public static final Filter Doallyn = Filters.title(Title.Doallyn);
     public static final Filter Docking_And_Repair_Facilities = Filters.title(Title.Docking_And_Repair_Facilities);
     public static final Filter docking_bay = Filters.keyword(Keyword.DOCKING_BAY);
@@ -17941,6 +17942,7 @@ public class Filters {
     public static final Filter Double_Agent = Filters.title(Title.Double_Agent);
     public static final Filter Double_Back = Filters.title(Title.Double_Back);
     public static final Filter Downtown_Plaza = Filters.title(Title.Downtown_Plaza);
+    public static final Filter DQar_location = Filters.and(CardCategory.LOCATION, Filters.partOfSystem(Title.Dqar));
     public static final Filter Dqar_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Dqar));
     public static final Filter Dr_Evazan = Filters.title(Title.Dr_Evazan);
     public static final Filter Dreadnaught = Filters.or(Filters.modelType(ModelType.DREADNAUGHT_CLASS_HEAVY_CRUISER), Filters.modelType(ModelType.MANDATOR_IV_CLASS_DREADNAUGHT), Filters.modelType(ModelType.MEGA_CLASS_DREADNAUGHT));
@@ -18370,6 +18372,7 @@ public class Filters {
     public static final Filter Kazuda = Filters.persona(Persona.KAZUDA);
     public static final Filter Kowakian = Filters.species(Species.KOWAKIAN);
     public static final Filter Keep_Your_Eyes_Open = Filters.title(Title.Keep_Your_Eyes_Open);
+    public static final Filter Keeping_The_Empire_Out_Forever = Filters.title(Title.Keeping_The_Empire_Out_Forever);
     public static final Filter Kef_Bir_site = Filters.and(Filters.partOfSystem(Title.Kef_Bir), CardSubtype.SITE);
     public static final Filter Kessel_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Kessel));
     public static final Filter Kessel_Run = Filters.title(Title.Kessel_Run);
@@ -19159,6 +19162,7 @@ public class Filters {
     public static final Filter underwater_site = Filters.and(Icon.UNDERWATER, CardSubtype.SITE);
     public static final Filter Underworld_Contacts = Filters.title(Title.Underworld_Contacts);
     public static final Filter Unkar_Plutt = Filters.title(Title.Unkar_Plutt);
+    public static final Filter Unlimited_Power = Filters.title(Title.Unlimited_Power);
     public static final Filter Until_We_Win_Or_The_Chances_Are_Spent = Filters.title(Title.Until_We_Win_Or_The_Chances_Are_Spent);
     public static final Filter Uplink_Station = Filters.title(Title.Uplink_Station);
     public static final Filter Upper_Plaza_Corridor = Filters.title(Title.Upper_Plaza_Corridor);
@@ -19236,6 +19240,7 @@ public class Filters {
     public static final Filter Wioslea = Filters.title(Title.Wioslea);
     public static final Filter Wise_Advice = Filters.title(Title.Wise_Advice);
     public static final Filter Wittin = Filters.title(Title.Wittin);
+    public static final Filter Wokling = Filters.title(Title.Wokling);
     public static final Filter womp_rat = Filters.title(Title.Womp_Rat);
     public static final Filter Wookiee = Filters.species(Species.WOOKIEE);
     public static final Filter Wookiee_Homestead = Filters.title(Title.Wookiee_Homestead);
@@ -19276,6 +19281,7 @@ public class Filters {
     public static final Filter You_Rebel_Scum = Filters.title(Title.You_Rebel_Scum);
     public static final Filter You_Truly_Belong_Here_With_Us = Filters.title(Title.You_Truly_Belong_Here_With_Us);
     public static final Filter You_Overestimate_Their_Chances = Filters.title(Title.You_Overestimate_Their_Chances);
+    public static final Filter Young_Fool = Filters.title(Title.Young_Fool);
     public static final Filter Your_Destiny = Filters.title(Title.Your_Destiny);
     public static final Filter Youll_Be_Dead = Filters.title(Title.Youll_Be_Dead);
     public static final Filter Youre_A_Slave = Filters.title(Title.Youre_A_Slave);
