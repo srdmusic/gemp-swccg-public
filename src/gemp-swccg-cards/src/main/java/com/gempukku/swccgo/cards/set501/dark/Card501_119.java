@@ -6,20 +6,23 @@ import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfBattleEffect;
-import com.gempukku.swccgo.logic.effects.CancelImmunityToAttritionUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
+import com.gempukku.swccgo.logic.effects.HitCardEffect;
 import com.gempukku.swccgo.logic.effects.ModifyTotalBattleDestinyEffect;
+import com.gempukku.swccgo.logic.effects.ModifyTotalPowerUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -31,43 +34,57 @@ import java.util.List;
 public class Card501_119 extends AbstractLostInterrupt {
     public Card501_119() {
         super(Side.DARK, 4, "Orbital Bombardment", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("During battle at a site, if your [FO] capital ship controls the related system draw destiny (2 if on Fulminatrix): (0-2) add that to your total battle destiny; (3-5) opponent's total power is cumulatively-2; (6+) opponent's character is 'hit' (your choice).");
+        setGameText("During battle at a site, if your [First Order] capital starship controls the related system draw destiny (if Fulminatrix, draw two and choose one): (0-2) your total battle destiny is +1; (3-5) opponent's total power is -2; (6+) opponent's character is 'hit' (your choice).");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText("Orbital Bombardment");
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
+        TargetingReason targetingReason = TargetingReason.TO_BE_HIT;
+        Filter opponentsCharacterInBattleFilter = Filters.and(Filters.opponents(self), Filters.character, Filters.participatingInBattle);
+
         if (GameConditions.isDuringBattleAt(game, Filters.site)
-                && GameConditions.controlsWith(game, self, playerId, Filters.relatedSystemTo(self, Filters.battleLocation), Filters.and(Icon.FIRST_ORDER, Filters.capital_starship))) {
+                && GameConditions.controlsWith(game, self, playerId, Filters.relatedSystemTo(self, Filters.battleLocation), Filters.and(Icon.FIRST_ORDER, Filters.capital_starship))
+                && GameConditions.canTarget(game, self, targetingReason, opponentsCharacterInBattleFilter)) {
+
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
+
+            String opponent = game.getOpponent(playerId);
+
+             final int drawX; //number of destiny to draw (as in "draw X choose Y")
+             if (GameConditions.controlsWith(game, self, playerId, Filters.relatedSystemTo(self, Filters.battleLocation), Filters.Fulminatrix)) {
+                drawX = 2;
+             } else {
+                drawX = 1;
+             }
+
             action.allowResponses("Draw destiny",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
-                            action.appendEffect(new DrawDestinyEffect(action, playerId) {
+                            action.appendEffect(new DrawDestinyEffect(action, playerId, drawX, 1) {
                                 @Override
                                 protected void destinyDraws(final SwccgGame game, List<PhysicalCard> destinyCardDraws, List<Float> destinyDrawValues, final Float totalDestiny) {
                                     if (totalDestiny >= 0 && totalDestiny <= 2) {
-                                        //(1-2) subtract destiny draw from opponent's total battle destiny
+                                        // (0-2) your total battle destiny is +1
                                         action.appendEffect(
-                                                new ModifyTotalBattleDestinyEffect(action, game.getOpponent(playerId), 1));
+                                                new ModifyTotalBattleDestinyEffect(action, playerId, 1));
                                     } else if (totalDestiny >= 3 && totalDestiny <= 5) {
-                                        //(3-4) cancel a character's game text
+                                        // (3-5) opponent's total power is -2;
                                         action.appendEffect(
-                                                new ChooseCardOnTableEffect(action, playerId, "Choose character", Filters.and(Filters.character, Filters.participatingInBattle)) {
-                                                    @Override
-                                                    protected void cardSelected(final PhysicalCard selectedCard) {
-                                                        action.addAnimationGroup(selectedCard);
-                                                        // Perform result(s)
-                                                        action.appendEffect(
-                                                                new CancelGameTextUntilEndOfBattleEffect(action, selectedCard));
-                                                    }
-                                                });
-                                    } else if (totalDestiny >= 6) {
-                                        //(5+) cancel all opponent's immunity to attrition this battle
+                                                new ModifyTotalPowerUntilEndOfBattleEffect(action, -2, opponent, "Subtracts 2 from total power"));
+                                    } else if (totalDestiny >= 5) {
+                                        // (6+) opponent's character is 'hit' (your choice)
+                                        final List<PhysicalCard> cardsToHitOptions = new LinkedList<PhysicalCard>();
+                                        cardsToHitOptions.addAll(Filters.filterActive(game, self, opponentsCharacterInBattleFilter));
                                         action.appendEffect(
-                                                new CancelImmunityToAttritionUntilEndOfBattleEffect(action, Filters.opponents(playerId), "cancels immunity to attrition")
+                                            new ChooseCardEffect(action, playerId, "Choose character to hit", cardsToHitOptions) {
+                                                @Override
+                                                protected void cardSelected(PhysicalCard selectedCard) {
+                                                    action.appendEffect(new HitCardEffect(action, selectedCard, self));
+                                                }
+                                            }
                                         );
                                     } else {
                                         game.getGameState().sendMessage("Result: No effect");
