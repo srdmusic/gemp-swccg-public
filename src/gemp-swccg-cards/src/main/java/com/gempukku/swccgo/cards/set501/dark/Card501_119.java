@@ -78,14 +78,16 @@ public class Card501_119 extends AbstractLostInterrupt {
                                         // (6+) opponent's character is 'hit' (your choice)
                                         final List<PhysicalCard> cardsToHitOptions = new LinkedList<PhysicalCard>();
                                         cardsToHitOptions.addAll(Filters.filterActive(game, self, opponentsCharacterInBattleFilter));
-                                        action.appendEffect(
-                                            new ChooseCardEffect(action, playerId, "Choose character to hit", cardsToHitOptions) {
-                                                @Override
-                                                protected void cardSelected(PhysicalCard selectedCard) {
-                                                    action.appendEffect(new HitCardEffect(action, selectedCard, self));
+                                        if (!cardsToHitOptions.isEmpty()) {
+                                            action.appendEffect(
+                                                new ChooseCardEffect(action, playerId, "Choose character to hit", cardsToHitOptions) {
+                                                    @Override
+                                                    protected void cardSelected(PhysicalCard selectedCard) {
+                                                        action.appendEffect(new HitCardEffect(action, selectedCard, self));
+                                                    }
                                                 }
-                                            }
-                                        );
+                                            );
+                                        }
                                     } else {
                                         game.getGameState().sendMessage("Result: No effect");
                                     }
