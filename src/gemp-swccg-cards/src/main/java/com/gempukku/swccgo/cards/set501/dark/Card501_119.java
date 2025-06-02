@@ -39,9 +39,9 @@ public class Card501_119 extends AbstractLostInterrupt {
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
         if (GameConditions.isDuringBattleAt(game, Filters.site)
-                && GameConditions.controlsWith(game, self, playerId, Filters.relatedSystem(self), Filters.and(Filters.icon(Icon.FIRST_ORDER), Filters.capital_starship))) {
+                && GameConditions.controlsWith(game, self, playerId, Filters.relatedSystemTo(self, Filters.battleLocation), Filters.and(Icon.FIRST_ORDER, Filters.capital_starship))) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.allowResponses("Draw Destiny",
+            action.allowResponses("Draw destiny",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
