@@ -34,7 +34,7 @@ import java.util.List;
 public class Card501_119 extends AbstractLostInterrupt {
     public Card501_119() {
         super(Side.DARK, 4, "Orbital Bombardment", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("During battle at a site, if your [First Order] capital starship controls the related system draw destiny (if Fulminatrix, draw two and choose one): (0-2) your total battle destiny is +1; (3-5) opponent's total power is -2; (6+) opponent's character is 'hit' (your choice).");
+        setGameText("During battle at a site, if your [First Order] capital starship controls the related system draw destiny (if Fulminatrix there, draw two and choose one): (0-2) your total battle destiny is +1; (3-5) opponent's total power is -2; (6+) opponent's character is 'hit' (your choice).");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText("Orbital Bombardment");
     }
