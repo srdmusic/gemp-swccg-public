@@ -51,15 +51,20 @@ public class Card501_119 extends AbstractLostInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
 
             String opponent = game.getOpponent(playerId);
+            String actionMessage;
 
-             final int drawX; //number of destiny to draw (as in "draw X choose Y")
-             if (GameConditions.controlsWith(game, self, playerId, Filters.relatedSystemTo(self, Filters.battleLocation), Filters.Fulminatrix)) {
+            final int drawX; //number of destiny to draw (as in "draw X choose Y")
+            if (GameConditions.controlsWith(game, self, playerId, Filters.relatedSystemTo(self, Filters.battleLocation), Filters.Fulminatrix)) {
                 drawX = 2;
-             } else {
+                actionMessage = "Draw two destiny and choose one";
+            } else {
                 drawX = 1;
-             }
+                actionMessage = "Draw destiny";
+            }
 
-            action.allowResponses("Draw destiny",
+            action.setText(actionMessage);
+            action.setActionMsg(actionMessage);
+            action.allowResponses(actionMessage,
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
