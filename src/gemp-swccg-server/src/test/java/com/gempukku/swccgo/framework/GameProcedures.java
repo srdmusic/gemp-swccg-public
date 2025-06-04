@@ -119,8 +119,7 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 		assertTrue(DSDecisionAvailable("Choose where to deploy"));
 		DSChooseCard(location);
 
-		PassResponses("Force - Optional responses");
-		PassResponses("Optional response");
+		PassAllResponses();
 	}
 
 	/**
@@ -134,8 +133,45 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 		assertTrue(LSDecisionAvailable("Choose where to deploy"));
 		LSChooseCard(location);
 
-		PassResponses("Force - Optional responses");
-		PassResponses("Optional response");
+		PassAllResponses();
+	}
+
+	/**
+	 * Causes Dark Side to play the given card and automatically pass optional responses and deployment responses for both players.
+	 * @param card The card to be played
+	 */
+	default void DSPlayCardAndPassResponses(PhysicalCardImpl card) { DSPlayCardAndPassResponses(card, null); }
+
+	/**
+	 * Causes Dark Side to play the given card and automatically pass optional responses and deployment responses for both players.
+	 * @param card The card to be played
+	 * @param target The card this card will target
+	 */
+	default void DSPlayCardAndPassResponses(PhysicalCardImpl card, PhysicalCardImpl target) {
+		DSPlayCard(card);
+		if(target != null) {
+			DSChooseCard(target);
+		}
+		PassAllResponses();
+	}
+
+	/**
+	 * Causes Light Side to play the given card and automatically pass optional responses and deployment responses for both players.
+	 * @param card The card to be played
+	 */
+	default void LSPlayCardAndPassResponses(PhysicalCardImpl card ) { LSPlayCardAndPassResponses(card, null); }
+
+	/**
+	 * Causes Light Side to play the given card and automatically pass optional responses and deployment responses for both players.
+	 * @param card The card to be played
+	 * @param target The card this card will target
+	 */
+	default void LSPlayCardAndPassResponses(PhysicalCardImpl card, PhysicalCardImpl target) {
+		LSPlayCard(card);
+		if(target != null) {
+			LSChooseCard(target);
+		}
+		PassAllResponses();
 	}
 
 	/**

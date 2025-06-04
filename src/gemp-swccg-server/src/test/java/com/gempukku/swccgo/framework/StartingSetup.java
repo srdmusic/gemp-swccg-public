@@ -164,5 +164,40 @@ public interface StartingSetup {
 			}
 		}
 	};
+
+	/**
+	 * The Light Side Rescue The Princess (V) / Sometimes I Amaze Even Myself (V) and associated cards.
+	 */
+	StartingSetup RescueThePrincessVObjective = new StartingSetup() {
+		@Override
+		public HashMap<String, String> Cards() {
+			return new HashMap<>() {{
+				put("rescue", "215_17"); // Objective
+				put("core", "215_6"); // Death Star: Central Core (Light)
+				put("corridor", "215_7"); // Detention Block Corridor (V)
+				put("compactor", "215_9"); // Trash Compactor (V)
+				put("power", "215_2"); // A Power Loss
+				put("prisoner", "220_9"); // Prisoner 2187 (V)
+			}};
+		}
+
+		@Override
+		public void Setup(VirtualTableScenario scn) {
+			//Central Core goes down first
+			//Then Detention Block Corridor goes to the right of Core
+			if(scn.LSDecisionAvailable("On which side")) {
+				scn.LSChoose("Right");
+			}
+
+			//Then we place Trash Compactor to the left of Core
+			if(scn.LSDecisionAvailable("Choose a location")) {
+				scn.LSChooseCard(scn.GetLSCard("core"));
+			}
+
+			if(scn.LSDecisionAvailable("On which side")) {
+				scn.LSChoose("Left");
+			}
+		}
+	};
 }
 
