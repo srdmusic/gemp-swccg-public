@@ -16,7 +16,7 @@ public class Card_215_007_Tests {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
-					// The card itself is included in the Rescue the Princes objective pack
+					// The card itself is included in the Rescue the Princess objective pack
 					put("bothan", "7_5"); //spy
 				}},
 				new HashMap<>()

@@ -15,8 +15,7 @@ public class FrozenTests {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
-					put("chewie", "200_5");
-					put("protector", "10_3"); //Chewbacca persona
+					put("han", "1_11");
 				}},
 				new HashMap<>()
 				{{
@@ -39,144 +38,144 @@ public class FrozenTests {
 	public void FrozenCaptivesAreNotActive() {
 		var scn = GetScenario();
 
-		var chewie = scn.GetLSCard("chewie");
+		var han = scn.GetLSCard("han");
 		var site = scn.GetLSStartingLocation();
 
 		var boba = scn.GetDSCard("boba");
 
 		scn.StartGame();
 
-		scn.MoveCardsToLocation(site, boba, chewie);
-		scn.FreezeCard(chewie);
+		scn.MoveCardsToLocation(site, boba, han);
+		scn.FreezeCard(han);
 
-		assertTrue(chewie.isCaptive());
-		assertFalse(scn.IsCardActive(chewie));
+		assertTrue(han.isCaptive());
+		assertFalse(scn.IsCardActive(han));
 	}
 
 	@Test
 	public void FrozenCaptivesHaveZeroedStats() {
 		var scn = GetScenario();
 
-		var chewie = scn.GetLSCard("chewie");
+		var han = scn.GetLSCard("han");
 		var site = scn.GetLSStartingLocation();
 
 		var boba = scn.GetDSCard("boba");
 
 		scn.StartGame();
 
-		scn.MoveCardsToLocation(site, boba, chewie);
-		scn.FreezeCard(chewie);
+		scn.MoveCardsToLocation(site, boba, han);
+		scn.FreezeCard(han);
 
-		assertEquals(0, scn.GetPower(chewie), scn.epsilon);
-		assertEquals(0, scn.GetAbility(chewie), scn.epsilon);
-		assertEquals(0, scn.GetLandspeed(chewie), scn.epsilon);
+		assertEquals(0, scn.GetPower(han), scn.epsilon);
+		assertEquals(0, scn.GetAbility(han), scn.epsilon);
+		assertEquals(0, scn.GetLandspeed(han), scn.epsilon);
 	}
 
 	@Test
 	public void FrozenCaptivesCanBeTakenIntoCustodyByWarriorAtSameSiteDuringMovePhase() {
 		var scn = GetScenario();
 
-		var chewie = scn.GetLSCard("chewie");
+		var han = scn.GetLSCard("han");
 		var site = scn.GetLSStartingLocation();
 
 		var stormtrooper = scn.GetDSFiller(1);
 
 		scn.StartGame();
 
-		scn.MoveCardsToLocation(site, stormtrooper, chewie);
-		scn.FreezeCard(chewie);
+		scn.MoveCardsToLocation(site, stormtrooper, han);
+		scn.FreezeCard(han);
 
 		scn.SkipToPhase(Phase.MOVE);
 
-		assertTrue(chewie.isCaptive());
-		assertTrue(chewie.isFrozen());
-		assertNull(chewie.getEscort());
+		assertTrue(han.isCaptive());
+		assertTrue(han.isFrozen());
+		assertNull(han.getEscort());
 		assertEquals(0, stormtrooper.getCardsEscorting().size());
 
 		assertTrue(scn.DSActionAvailable("Take unattended frozen captive into custody"));
 		scn.DSChooseAction("Take unattended frozen captive into custody");
 		scn.PassAllResponses();
 
-		assertEquals(stormtrooper, chewie.getEscort());
-		assertEquals(stormtrooper, chewie.getAttachedTo());
+		assertEquals(stormtrooper, han.getEscort());
+		assertEquals(stormtrooper, han.getAttachedTo());
 		assertEquals(1, stormtrooper.getCardsEscorting().size());
-		assertTrue(stormtrooper.getCardsEscorting().contains(chewie));
+		assertTrue(stormtrooper.getCardsEscorting().contains(han));
 		assertEquals(1, stormtrooper.getCardsAttached().size());
-		assertTrue(stormtrooper.getCardsAttached().contains(chewie));
+		assertTrue(stormtrooper.getCardsAttached().contains(han));
 	}
 
 	@Test
 	public void FrozenCaptivesCanBeTakenIntoCustodyByBountyHunterAtSameSiteDuringMovePhase() {
 		var scn = GetScenario();
 
-		var chewie = scn.GetLSCard("chewie");
+		var han = scn.GetLSCard("han");
 		var site = scn.GetLSStartingLocation();
 
 		var boba = scn.GetDSCard("boba");
 
 		scn.StartGame();
 
-		scn.MoveCardsToLocation(site, boba, chewie);
-		scn.FreezeCard(chewie);
+		scn.MoveCardsToLocation(site, boba, han);
+		scn.FreezeCard(han);
 
 		scn.SkipToPhase(Phase.MOVE);
 
-		assertTrue(chewie.isCaptive());
-		assertTrue(chewie.isFrozen());
-		assertNull(chewie.getEscort());
+		assertTrue(han.isCaptive());
+		assertTrue(han.isFrozen());
+		assertNull(han.getEscort());
 		assertEquals(0, boba.getCardsEscorting().size());
-		assertNull(chewie.getAttachedTo());
+		assertNull(han.getAttachedTo());
 		assertEquals(0, boba.getCardsAttached().size());
 
 		assertTrue(scn.DSActionAvailable("Take unattended frozen captive into custody"));
 		scn.DSChooseAction("Take unattended frozen captive into custody");
 		scn.PassAllResponses();
 
-		assertEquals(boba, chewie.getEscort());
-		assertEquals(boba, chewie.getAttachedTo());
+		assertEquals(boba, han.getEscort());
+		assertEquals(boba, han.getAttachedTo());
 		assertEquals(1, boba.getCardsEscorting().size());
-		assertTrue(boba.getCardsEscorting().contains(chewie));
+		assertTrue(boba.getCardsEscorting().contains(han));
 		assertEquals(1, boba.getCardsAttached().size());
-		assertTrue(boba.getCardsAttached().contains(chewie));
+		assertTrue(boba.getCardsAttached().contains(han));
 	}
 
 	@Test
 	public void FrozenCaptivesCanBeLeftUnattendedByEscortAtSameSiteDuringMovePhase() {
 		var scn = GetScenario();
 
-		var chewie = scn.GetLSCard("chewie");
+		var han = scn.GetLSCard("han");
 		var site = scn.GetLSStartingLocation();
 
 		var boba = scn.GetDSCard("boba");
 
 		scn.StartGame();
 
-		scn.MoveCardsToLocation(site, boba, chewie);
-		scn.FreezeCard(chewie);
-		scn.CaptureCardWith(boba, chewie);
+		scn.MoveCardsToLocation(site, boba, han);
+		scn.FreezeCard(han);
+		scn.CaptureCardWith(boba, han);
 
 		scn.SkipToPhase(Phase.MOVE);
 
-		assertTrue(chewie.isCaptive());
-		assertTrue(chewie.isFrozen());
-		assertEquals(boba, chewie.getEscort());
-		assertEquals(boba, chewie.getAttachedTo());
+		assertTrue(han.isCaptive());
+		assertTrue(han.isFrozen());
+		assertEquals(boba, han.getEscort());
+		assertEquals(boba, han.getAttachedTo());
 		assertEquals(1, boba.getCardsEscorting().size());
-		assertTrue(boba.getCardsEscorting().contains(chewie));
+		assertTrue(boba.getCardsEscorting().contains(han));
 		assertEquals(1, boba.getCardsAttached().size());
-		assertTrue(boba.getCardsAttached().contains(chewie));
-		assertTrue(chewie.getTargetedCards(scn.gameState()).containsValue(boba));
+		assertTrue(boba.getCardsAttached().contains(han));
+		assertTrue(han.getTargetedCards(scn.gameState()).containsValue(boba));
 
 		assertTrue(scn.DSActionAvailable("Leave frozen captive unattended"));
 		scn.DSChooseAction("Leave frozen captive unattended");
 		scn.PassAllResponses();
 
-		assertNull(chewie.getEscort());
-		assertNull(chewie.getAttachedTo());
-		assertFalse(chewie.getTargetedCards(scn.gameState()).containsValue(boba));
-		assertAtLocation(site, chewie);
-		assertTrue(chewie.isCaptive());
-		assertTrue(chewie.isFrozen());
+		assertNull(han.getEscort());
+		assertNull(han.getAttachedTo());
+		assertFalse(han.getTargetedCards(scn.gameState()).containsValue(boba));
+		assertAtLocation(site, han);
+		assertTrue(han.isCaptive());
+		assertTrue(han.isFrozen());
 
 		assertEquals(0, boba.getCardsEscorting().size());
 		assertEquals(0, boba.getCardsAttached().size());
@@ -190,39 +189,39 @@ public class FrozenTests {
 		var scn = GetScenario();
 
 		var rebel = scn.GetLSFiller(1);
-		var chewie = scn.GetLSCard("chewie");
+		var han = scn.GetLSCard("han");
 		var site = scn.GetLSStartingLocation();
 
 		var boba = scn.GetDSCard("boba");
 
 		scn.StartGame();
 
-		scn.MoveCardsToLocation(site, boba, chewie, rebel);
-		scn.FreezeCard(chewie);
-		scn.CaptureCardWith(boba, chewie);
+		scn.MoveCardsToLocation(site, boba, han, rebel);
+		scn.FreezeCard(han);
+		scn.CaptureCardWith(boba, han);
 
 		scn.SkipToPhase(Phase.MOVE);
 
-		assertTrue(chewie.isCaptive());
-		assertTrue(chewie.isFrozen());
-		assertEquals(boba, chewie.getEscort());
-		assertEquals(boba, chewie.getAttachedTo());
+		assertTrue(han.isCaptive());
+		assertTrue(han.isFrozen());
+		assertEquals(boba, han.getEscort());
+		assertEquals(boba, han.getAttachedTo());
 		assertEquals(1, boba.getCardsEscorting().size());
-		assertTrue(boba.getCardsEscorting().contains(chewie));
+		assertTrue(boba.getCardsEscorting().contains(han));
 		assertEquals(1, boba.getCardsAttached().size());
-		assertTrue(boba.getCardsAttached().contains(chewie));
-		assertTrue(chewie.getTargetedCards(scn.gameState()).containsValue(boba));
+		assertTrue(boba.getCardsAttached().contains(han));
+		assertTrue(han.getTargetedCards(scn.gameState()).containsValue(boba));
 
 		assertTrue(scn.DSActionAvailable("Leave frozen captive unattended"));
 		scn.DSChooseAction("Leave frozen captive unattended");
 		scn.PassAllResponses();
 
-		assertNull(chewie.getEscort());
-		assertNull(chewie.getAttachedTo());
-		assertFalse(chewie.getTargetedCards(scn.gameState()).containsValue(boba));
-		assertAtLocation(site, chewie);
-		assertTrue(chewie.isCaptive());
-		assertTrue(chewie.isFrozen());
+		assertNull(han.getEscort());
+		assertNull(han.getAttachedTo());
+		assertFalse(han.getTargetedCards(scn.gameState()).containsValue(boba));
+		assertAtLocation(site, han);
+		assertTrue(han.isCaptive());
+		assertTrue(han.isFrozen());
 
 		assertEquals(0, boba.getCardsEscorting().size());
 		assertEquals(0, boba.getCardsAttached().size());
@@ -235,13 +234,13 @@ public class FrozenTests {
 
 		assertTrue(scn.LSActionAvailable("Release an unattended frozen captive"));
 		scn.LSChooseAction("Release an unattended frozen captive");
-		scn.LSChooseCard(chewie);
+		scn.LSChooseCard(han);
 
-		assertFalse(chewie.isCaptive());
-		assertFalse(chewie.isFrozen());
-		assertNull(chewie.getEscort());
-		assertNull(chewie.getAttachedTo());
-		assertFalse(chewie.getTargetedCards(scn.gameState()).containsValue(boba));
-		assertAtLocation(site, chewie);
+		assertFalse(han.isCaptive());
+		assertFalse(han.isFrozen());
+		assertNull(han.getEscort());
+		assertNull(han.getAttachedTo());
+		assertFalse(han.getTargetedCards(scn.gameState()).containsValue(boba));
+		assertAtLocation(site, han);
 	}
 }
