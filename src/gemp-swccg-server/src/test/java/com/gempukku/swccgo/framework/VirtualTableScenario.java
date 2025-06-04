@@ -255,9 +255,8 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
      * Passes through certain setup steps at the start of the game so our test may begin at the first player's (usually
      * Dark Side) Activate phase.  Resets the hand so that the only cards in hand are those the tester defines manually
      * before calling this function.
-     * @throws DecisionResultInvalidException
      */
-    public void StartGame() throws DecisionResultInvalidException {
+    public void StartGame() {
         StartGame(true);
     }
 
@@ -268,9 +267,8 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
      *                  ensuring that each player only has the cards in their hand that the tester manually places
      *                  before calling StartGame.  This ensures that there are no confounding variables.
      *                  If false, the default drawn hand will remain untouched.
-     * @throws DecisionResultInvalidException
      */
-    public void StartGame(boolean resetHand) throws DecisionResultInvalidException {
+    public void StartGame(boolean resetHand) {
         if(DSDecisionAvailable("Select OK to start game")) {
             DSDecided("0");
         }
@@ -316,17 +314,15 @@ public class VirtualTableScenario implements TestBase, Actions, AdHocEffects, Ba
      * you find a reason to call this, you have actually found a reason to add a new helper function to the test rig.
      * @param player The player making the decision
      * @param answer What decision is being returned to the server
-     * @throws DecisionResultInvalidException If there is any mismatch between what the server is expecting and your
-     * answer, this test will fail.
      */
-    public void PlayerDecided(String player, String answer) throws DecisionResultInvalidException {
+    public void PlayerDecided(String player, String answer) {
         var decision = userFeedback().getAwaitingDecision(player);
         userFeedback().participantDecided(player);
         try {
             decision.decisionMade(answer);
         } catch (DecisionResultInvalidException exp) {
             userFeedback().sendAwaitingDecision(player, decision);
-            throw exp;
+            throw new RuntimeException(exp);
         }
         game().carryOutPendingActionsUntilDecisionNeeded();
     }
