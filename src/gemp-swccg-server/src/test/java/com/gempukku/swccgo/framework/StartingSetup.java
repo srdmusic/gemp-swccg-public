@@ -104,6 +104,10 @@ public interface StartingSetup {
 	};
 
 
+	/**
+	 * Testers can use this to choose an alternate one-off starting location. If using this frequently for the same
+	 * location, consider adding it above as a static location setup reference.
+	 */
 	class StartingLocation implements StartingSetup {
 		HashMap<String, String> _cards = new HashMap<>();
 		public StartingLocation(String id) {
@@ -166,7 +170,7 @@ public interface StartingSetup {
 	};
 
 	/**
-	 * The Light Side Rescue The Princess (V) / Sometimes I Amaze Even Myself (V) and associated cards.
+	 * The Light Side objective Rescue The Princess (V) / Sometimes I Amaze Even Myself (V) and associated cards.
 	 */
 	StartingSetup RescueThePrincessVObjective = new StartingSetup() {
 		@Override

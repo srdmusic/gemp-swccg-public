@@ -69,7 +69,7 @@ public class Card_5_123_Tests
 	}
 
 	@Test
-	public void ITOAdds3ToForceDrainsAtDetentionBlockCorridorWhenPresentWith3Captives() {
+	public void SpecialDeliveryRewardsCaptiveTransferWithACardFromLostPile() {
 		var scn = GetScenario();
 
 		var rebel = scn.GetLSFiller(1);
