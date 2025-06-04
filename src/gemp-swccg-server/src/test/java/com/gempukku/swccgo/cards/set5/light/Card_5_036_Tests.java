@@ -47,12 +47,12 @@ public class Card_5_036_Tests {
 				}},
 				10,
 				10,
-				VirtualTableScenario.DefaultGroundLSLocation,
-				VirtualTableScenario.DefaultGroundDSLocation,
-				StartingSetup.NoLSStarters,
-				StartingSetup.NoDSStarters,
-				VirtualTableScenario.NoLSShields,
-				VirtualTableScenario.NoDSShields,
+				StartingSetup.DefaultLSGroundLocation,
+				StartingSetup.DefaultDSGroundLocation,
+				StartingSetup.NoLSStartingInterrupts,
+				StartingSetup.NoDSStartingInterrupts,
+				StartingSetup.NoLSShields,
+				StartingSetup.NoDSShields,
 				VirtualTableScenario.Open
 		);
 	}

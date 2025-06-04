@@ -31,50 +31,6 @@ public interface TestBase {
 	 */
 	double epsilon = 0.001;
 
-	/**
-	 * An empty outside-of-deck pile communicating that the Dark Side will have no shields or other out-of-game cards
-	 * for a particular test scenario.
-	 */
-	HashMap<String, String> NoDSShields = new HashMap<>();
-	/**
-	 * An empty outside-of-deck pile communicating that the Light Side will have no shields or other out-of-game cards
-	 * for a particular test scenario.
-	 */
-	HashMap<String, String> NoLSShields = new HashMap<>();
-
-	/*
-	 * The default locations to be played by either player.  This will be included in the deck and automatically played
-	 * at the start of the game.
-	 *
-	 * When choosing default locations, be sure to pick ones that leave both sides with identical lightsaber icons,
-	 * whether that means that both are the same or that one is 1/2 and the other is 2/1.  This way testers do not need
-	 * to remember nuances around default activation amounts being different per-side.
-	 *
-	 * Also ensure that any defaults that are chosen avoid altering the game state; ideally the sites would be blank,
-	 * but if that cannot be arranged do not choose cards that grant modifiers (granting +/- X to any stat), as these
-	 * inevitably are rakes that future tests will step on. Instead, fall back on locations that have optional actions
-	 * that can be ignored.
-	 */
-
-	/**
-	 * The default ground location used by Dark Side.  This will be played at the start of the game automatically.
-	 */
-	String DefaultGroundDSLocation = "12_176"; // Tatooine: Marketplace
-	/**
-	 * The default ground location used by Light Side.  This will be played at the start of the game automatically.
-	 */
-	String DefaultGroundLSLocation = "5_079"; // Cloud City: Chasm Walkway
-
-
-	/**
-	 * The default space system used by Dark Side.  This will be played at the start of the game automatically.
-	 */
-	String DefaultSpaceDSSystem = "1_282"; // Dantooine
-	/**
-	 * The default space system used by Light Side.  This will be played at the start of the game automatically.
-	 */
-	String DefaultSpaceLSSystem = "6_087"; // Tibrin
-
 
 	/**
 	 * @return Gets the default starting location that was played automatically for Dark Side using the test rig setup.

@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set2.dark;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
 import com.gempukku.swccgo.framework.StartingSetup;
-import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -29,12 +28,12 @@ public class Card_2_093_Tests
 				}},
 				10,
 				10,
-				VirtualTableScenario.DefaultGroundLSLocation,
-				"1_284", //Detention Block Corridor
-				StartingSetup.NoLSStarters,
-				StartingSetup.NoDSStarters,
-				VirtualTableScenario.NoLSShields,
-				VirtualTableScenario.NoDSShields,
+				StartingSetup.DefaultLSGroundLocation,
+				new StartingSetup.StartingLocation("1_284"), //Detention Block Corridor
+				StartingSetup.NoLSStartingInterrupts,
+				StartingSetup.NoDSStartingInterrupts,
+				StartingSetup.NoLSShields,
+				StartingSetup.NoDSShields,
 				VirtualTableScenario.Open
 		);
 	}
