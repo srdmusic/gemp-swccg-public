@@ -5,10 +5,10 @@ import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.timing.DefaultSwccgGame;
 import com.gempukku.swccgo.logic.timing.DefaultUserFeedback;
 
-import java.sql.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * This interface holds all the static definitions used throughout the test rig.  It is not a true interface, but
@@ -41,18 +41,6 @@ public interface TestBase {
 	 * for a particular test scenario.
 	 */
 	HashMap<String, String> NoLSShields = new HashMap<>();
-
-	/**
-	 * An empty collection communicating that the Dark Side will have no objectives or starting interrupts played at
-	 * the start of a particular test scenario.
-	 */
-	HashMap<String, String> NoDSStarters = new HashMap<>();
-	/**
-	 * An empty collection communicating that the Light Side will have no objectives or starting interrupts played at
-	 * the start of a particular test scenario.
-	 */
-	HashMap<String, String> NoLSStarters = new HashMap<>();
-
 
 	/*
 	 * The default locations to be played by either player.  This will be included in the deck and automatically played

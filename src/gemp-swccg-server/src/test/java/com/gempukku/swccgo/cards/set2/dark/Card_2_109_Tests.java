@@ -2,17 +2,16 @@ package com.gempukku.swccgo.cards.set2.dark;
 
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
-import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
+import com.gempukku.swccgo.framework.StartingSetup;
 import org.junit.Test;
 
 import java.util.HashMap;
 
-import static com.gempukku.swccgo.framework.Assertions.assertAtLocation;
-import static com.gempukku.swccgo.framework.Assertions.assertInHand;
+import static com.gempukku.swccgo.framework.Assertions.*;
 import static org.junit.Assert.*;
 
 public class Card_2_109_Tests {
-	protected VirtualTableScenario GetScenario() throws DecisionResultInvalidException {
+	protected VirtualTableScenario GetScenario() {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
@@ -28,8 +27,8 @@ public class Card_2_109_Tests {
 				10,
 				VirtualTableScenario.DefaultGroundLSLocation,
 				VirtualTableScenario.DefaultGroundDSLocation,
-				VirtualTableScenario.NoLSStarters,
-				VirtualTableScenario.NoDSStarters,
+				StartingSetup.NoLSStarters,
+				StartingSetup.NoDSStarters,
 				VirtualTableScenario.NoLSShields,
 				VirtualTableScenario.NoDSShields,
 				VirtualTableScenario.Open
@@ -37,7 +36,7 @@ public class Card_2_109_Tests {
 	}
 
 	@Test
-	public void SeptoidStatsAndKeywordsAreCorrect() throws DecisionResultInvalidException {
+	public void SeptoidStatsAndKeywordsAreCorrect() {
 		/**
 		 * Title: WED15-l7 'Septoid' Droid
 		 * Uniqueness: UNIQUE
@@ -76,7 +75,7 @@ public class Card_2_109_Tests {
 	}
 
 	@Test
-	public void SeptoidDefaultsTo7Forfeit() throws DecisionResultInvalidException {
+	public void SeptoidDefaultsTo7Forfeit() {
 		var scn = GetScenario();
 
 		var luke = scn.GetLSCard("luke");
@@ -113,7 +112,7 @@ public class Card_2_109_Tests {
 	}
 
 	@Test
-	public void SeptoidIsWorth7ForfeitWhenForcedServitudeIsInPlay() throws DecisionResultInvalidException {
+	public void SeptoidIsWorth7ForfeitWhenForcedServitudeIsInPlay() {
 		var scn = GetScenario();
 
 		var luke = scn.GetLSCard("luke");

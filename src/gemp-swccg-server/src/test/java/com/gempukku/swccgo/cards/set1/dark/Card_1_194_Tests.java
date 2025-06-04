@@ -1,7 +1,9 @@
 package com.gempukku.swccgo.cards.set1.dark;
 
 import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
+import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import org.junit.Test;
 
@@ -12,7 +14,7 @@ import static com.gempukku.swccgo.framework.Assertions.*;
 
 public class Card_1_194_Tests
 {
-	protected VirtualTableScenario GetScenario() throws DecisionResultInvalidException {
+	protected VirtualTableScenario GetScenario() {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
@@ -27,8 +29,8 @@ public class Card_1_194_Tests
 				10,
 				VirtualTableScenario.DefaultGroundLSLocation,
 				VirtualTableScenario.DefaultGroundDSLocation,
-				VirtualTableScenario.NoLSStarters,
-				VirtualTableScenario.NoDSStarters,
+				StartingSetup.NoLSStarters,
+				StartingSetup.NoDSStarters,
 				VirtualTableScenario.NoLSShields,
 				VirtualTableScenario.NoDSShields,
 				VirtualTableScenario.Open
@@ -36,7 +38,7 @@ public class Card_1_194_Tests
 	}
 
 	@Test
-	public void StormtrooperStatsAndKeywordsAreCorrect() throws DecisionResultInvalidException {
+	public void StormtrooperStatsAndKeywordsAreCorrect() {
 		/**
 		 * Title: Stormtrooper
 		 * Uniqueness: Unrestricted
@@ -76,7 +78,7 @@ public class Card_1_194_Tests
 	}
 
 	@Test
-	public void StormtrooperDeploysFor1ForceNormally() throws DecisionResultInvalidException {
+	public void StormtrooperDeploysFor1ForceNormally() {
 		var scn = GetScenario();
 
 		var stormtrooper = scn.GetDSCard("stormtrooper");
@@ -101,7 +103,7 @@ public class Card_1_194_Tests
 	}
 
 	@Test
-	public void StormtrooperDeploysFor1ForceWithAbility2Imperial() throws DecisionResultInvalidException {
+	public void StormtrooperDeploysFor1ForceWithAbility2Imperial() {
 		var scn = GetScenario();
 
 		var stormtrooper = scn.GetDSCard("stormtrooper");
@@ -127,7 +129,7 @@ public class Card_1_194_Tests
 	}
 
 	@Test
-	public void StormtrooperDeploysFor0ForceWithAbility3Imperial() throws DecisionResultInvalidException {
+	public void StormtrooperDeploysFor0ForceWithAbility3Imperial() {
 		var scn = GetScenario();
 
 		var stormtrooper = scn.GetDSCard("stormtrooper");

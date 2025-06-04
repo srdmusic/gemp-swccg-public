@@ -3,6 +3,7 @@ package com.gempukku.swccgo.rules.state;
 import com.gempukku.swccgo.common.MovementDirection;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
+import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import org.junit.Test;
 
@@ -12,7 +13,7 @@ import static com.gempukku.swccgo.framework.Assertions.assertAtLocation;
 import static org.junit.Assert.*;
 
 public class FrozenTests {
-	protected VirtualTableScenario GetScenario() throws DecisionResultInvalidException {
+	protected VirtualTableScenario GetScenario() {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
@@ -28,8 +29,8 @@ public class FrozenTests {
 				10,
 				VirtualTableScenario.DefaultGroundLSLocation,
 				VirtualTableScenario.DefaultGroundDSLocation,
-				VirtualTableScenario.NoLSStarters,
-				VirtualTableScenario.NoDSStarters,
+				StartingSetup.NoLSStarters,
+				StartingSetup.NoDSStarters,
 				VirtualTableScenario.NoLSShields,
 				VirtualTableScenario.NoDSShields,
 				VirtualTableScenario.Open
@@ -37,7 +38,7 @@ public class FrozenTests {
 	}
 
 	@Test
-	public void FrozenCaptivesAreNotActive() throws DecisionResultInvalidException {
+	public void FrozenCaptivesAreNotActive() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");
@@ -55,7 +56,7 @@ public class FrozenTests {
 	}
 
 	@Test
-	public void FrozenCaptivesHaveZeroedStats() throws DecisionResultInvalidException {
+	public void FrozenCaptivesHaveZeroedStats() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");
@@ -74,7 +75,7 @@ public class FrozenTests {
 	}
 
 	@Test
-	public void FrozenCaptivesCanBeTakenIntoCustodyByWarriorAtSameSiteDuringMovePhase() throws DecisionResultInvalidException {
+	public void FrozenCaptivesCanBeTakenIntoCustodyByWarriorAtSameSiteDuringMovePhase() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");
@@ -107,7 +108,7 @@ public class FrozenTests {
 	}
 
 	@Test
-	public void FrozenCaptivesCanBeTakenIntoCustodyByBountyHunterAtSameSiteDuringMovePhase() throws DecisionResultInvalidException {
+	public void FrozenCaptivesCanBeTakenIntoCustodyByBountyHunterAtSameSiteDuringMovePhase() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");
@@ -142,7 +143,7 @@ public class FrozenTests {
 	}
 
 	@Test
-	public void FrozenCaptivesCanBeLeftUnattendedByEscortAtSameSiteDuringMovePhase() throws DecisionResultInvalidException {
+	public void FrozenCaptivesCanBeLeftUnattendedByEscortAtSameSiteDuringMovePhase() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");

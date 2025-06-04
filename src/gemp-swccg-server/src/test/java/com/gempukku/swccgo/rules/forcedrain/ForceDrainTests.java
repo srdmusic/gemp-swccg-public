@@ -2,6 +2,7 @@ package com.gempukku.swccgo.rules.forcedrain;
 
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
+import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import org.junit.Test;
 
@@ -10,7 +11,7 @@ import java.util.HashMap;
 import static org.junit.Assert.*;
 
 public class ForceDrainTests {
-	protected VirtualTableScenario GetScenario() throws DecisionResultInvalidException {
+	protected VirtualTableScenario GetScenario() {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
@@ -26,8 +27,8 @@ public class ForceDrainTests {
 				10,
 				VirtualTableScenario.DefaultGroundLSLocation,
 				VirtualTableScenario.DefaultGroundDSLocation,
-				VirtualTableScenario.NoLSStarters,
-				VirtualTableScenario.NoDSStarters,
+				StartingSetup.NoLSStarters,
+				StartingSetup.NoDSStarters,
 				VirtualTableScenario.NoLSShields,
 				VirtualTableScenario.NoDSShields,
 				VirtualTableScenario.Open
@@ -35,7 +36,7 @@ public class ForceDrainTests {
 	}
 
 	@Test
-	public void DSCanForceDrainFor0AtControlledSiteWith0LSIcons() throws DecisionResultInvalidException {
+	public void DSCanForceDrainFor0AtControlledSiteWith0LSIcons() {
 		var scn = GetScenario();
 
 		var bluffs = scn.GetDSCard("bluffs");
@@ -66,7 +67,7 @@ public class ForceDrainTests {
 	}
 
 	@Test
-	public void DSCanForceDrainFor1AtControlledSiteWith1LSIcon() throws DecisionResultInvalidException {
+	public void DSCanForceDrainFor1AtControlledSiteWith1LSIcon() {
 		var scn = GetScenario();
 
 		var site = scn.GetLSStartingLocation();
@@ -105,7 +106,7 @@ public class ForceDrainTests {
 	}
 
 	@Test
-	public void DSCanForceDrainFor2AtControlledSiteWith2LSIcons() throws DecisionResultInvalidException {
+	public void DSCanForceDrainFor2AtControlledSiteWith2LSIcons() {
 		var scn = GetScenario();
 
 		var plaza = scn.GetDSCard("plaza");
@@ -154,7 +155,7 @@ public class ForceDrainTests {
 	}
 
 	@Test
-	public void LSCanForceDrainFor0AtControlledSiteWith0DSIcons() throws DecisionResultInvalidException {
+	public void LSCanForceDrainFor0AtControlledSiteWith0DSIcons() {
 		var scn = GetScenario();
 
 		var trooper = scn.GetLSFiller(1);
@@ -187,7 +188,7 @@ public class ForceDrainTests {
 	}
 
 	@Test
-	public void LSCanForceDrainFor1AtControlledSiteWith1DSIcon() throws DecisionResultInvalidException {
+	public void LSCanForceDrainFor1AtControlledSiteWith1DSIcon() {
 		var scn = GetScenario();
 
 		var site = scn.GetLSStartingLocation();
@@ -226,7 +227,7 @@ public class ForceDrainTests {
 	}
 
 	@Test
-	public void LSCanForceDrainFor2AtControlledSiteWith2DSIcons() throws DecisionResultInvalidException {
+	public void LSCanForceDrainFor2AtControlledSiteWith2DSIcons() {
 		var scn = GetScenario();
 
 		var trooper = scn.GetLSFiller(1);
@@ -275,7 +276,7 @@ public class ForceDrainTests {
 	}
 
 	@Test
-	public void DSCannotInitiateForceDrainAtSiteLSOccupies() throws DecisionResultInvalidException {
+	public void DSCannotInitiateForceDrainAtSiteLSOccupies() {
 		var scn = GetScenario();
 
 		var trooper = scn.GetLSFiller(1);
@@ -296,7 +297,7 @@ public class ForceDrainTests {
 	}
 
 	@Test
-	public void LSCannotInitiateForceDrainAtSiteDSOccupies() throws DecisionResultInvalidException {
+	public void LSCannotInitiateForceDrainAtSiteDSOccupies() {
 		var scn = GetScenario();
 
 		var trooper = scn.GetLSFiller(1);
@@ -317,7 +318,7 @@ public class ForceDrainTests {
 	}
 
 	@Test
-	public void DSCannotInitiateForceDrainAtSiteWithCharacterWhoDrainedThatTurn() throws DecisionResultInvalidException {
+	public void DSCannotInitiateForceDrainAtSiteWithCharacterWhoDrainedThatTurn() {
 		var scn = GetScenario();
 
 		var site1 = scn.GetLSStartingLocation();
@@ -363,7 +364,7 @@ public class ForceDrainTests {
 	}
 
 	@Test
-	public void LSCannotInitiateForceDrainAtSiteWithCharacterWhoDrainedThatTurn() throws DecisionResultInvalidException {
+	public void LSCannotInitiateForceDrainAtSiteWithCharacterWhoDrainedThatTurn() {
 		var scn = GetScenario();
 
 		var site1 = scn.GetLSStartingLocation();

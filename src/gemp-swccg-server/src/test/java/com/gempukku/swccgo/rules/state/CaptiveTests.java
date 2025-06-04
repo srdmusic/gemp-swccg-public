@@ -2,6 +2,7 @@ package com.gempukku.swccgo.rules.state;
 
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
+import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import org.junit.Test;
 
@@ -10,7 +11,7 @@ import java.util.HashMap;
 import static org.junit.Assert.*;
 
 public class CaptiveTests {
-	protected VirtualTableScenario GetScenario() throws DecisionResultInvalidException {
+	protected VirtualTableScenario GetScenario() {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
@@ -26,8 +27,8 @@ public class CaptiveTests {
 				10,
 				VirtualTableScenario.DefaultGroundLSLocation,
 				VirtualTableScenario.DefaultGroundDSLocation,
-				VirtualTableScenario.NoLSStarters,
-				VirtualTableScenario.NoDSStarters,
+				StartingSetup.NoLSStarters,
+				StartingSetup.NoDSStarters,
 				VirtualTableScenario.NoLSShields,
 				VirtualTableScenario.NoDSShields,
 				VirtualTableScenario.Open
@@ -35,7 +36,7 @@ public class CaptiveTests {
 	}
 
 	@Test
-	public void CaptivesAreNotActive() throws DecisionResultInvalidException {
+	public void CaptivesAreNotActive() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");
@@ -53,7 +54,7 @@ public class CaptiveTests {
 	}
 
 	@Test
-	public void CaptivesAreNotConsideredAtTheirLocation() throws DecisionResultInvalidException {
+	public void CaptivesAreNotConsideredAtTheirLocation() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");
@@ -71,7 +72,7 @@ public class CaptiveTests {
 	}
 
 	@Test
-	public void CaptivesEnforceUniqueness() throws DecisionResultInvalidException {
+	public void CaptivesEnforceUniqueness() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");
@@ -98,7 +99,7 @@ public class CaptiveTests {
 	}
 
 	@Test
-	public void CaptivesTakeUpAPassengerSlotIfEscortIsInAVehicle() throws DecisionResultInvalidException {
+	public void CaptivesTakeUpAPassengerSlotIfEscortIsInAVehicle() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");
