@@ -8,17 +8,22 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.PlayCardAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.ModifyPowerUntilEndOfPlayersNextTurnEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
+import com.gempukku.swccgo.logic.effects.*;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.CancelForceDrainBonusesFromCardModifier;
 import com.gempukku.swccgo.logic.modifiers.MayEscortAnyNumberOfCaptivesModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalCarbonFreezingDestinyModifier;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.TransferredDeviceOrWeaponResult;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,23 +56,50 @@ public class Card5_106 extends AbstractDevice {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextLeavesTableRequiredTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
-        if (TriggerConditions.justLost(game, effectResult, self)) {
-            return Collections.singletonList(releaseExtraCaptives(game, self, gameTextSourceCardId));
+        if (TriggerConditions.isAboutToLeaveTable(game, effectResult, self)) {
+            return Collections.singletonList(releaseExtraCaptives(game, self, self.getAttachedTo(), gameTextSourceCardId));
+        }
+        else if (TriggerConditions.justTransferredDeviceOrWeaponToTarget(game, effectResult, self, Filters.any)) {
+            var transferResult = (TransferredDeviceOrWeaponResult)effectResult;
+            return Collections.singletonList(releaseExtraCaptives(game, self, transferResult.getTransferredFrom(), gameTextSourceCardId));
         }
         return null;
     }
 
-    //TODO: Add a trigger here for when this card is transferred that also calls the below
 
-    private RequiredGameTextTriggerAction releaseExtraCaptives(SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
+    private RequiredGameTextTriggerAction releaseExtraCaptives(SwccgGame game, PhysicalCard self, PhysicalCard escort, int gameTextSourceCardId) {
         RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-        action.setText("Make Luke power +3");
-        // Perform result(s)
-        action.appendEffect(
-                new ModifyPowerUntilEndOfPlayersNextTurnEffect(action, self.getOwner(), Filters.Luke, 3, "Makes Luke power +3"));
+        action.setText("Unbound captives break free.");
+
+        var validCaptives = new ArrayList<>(getAllCaptivesOnEscort(game, self, escort));
+        action.appendTargeting(
+                new TargetCardOnTableEffect(action, self.getOwner(), "Select one captive to remain (all others on this escort will be released)",
+                        SpotOverride.INCLUDE_CAPTIVE, Filters.in(validCaptives)) {
+                    @Override
+                    protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                        validCaptives.remove(targetedCard);
+
+                        action.allowResponses(
+                                new UnrespondableEffect(action) {
+                                    @Override
+                                    protected void performActionResults(Action targetingAction) {
+                                        action.addAnimationGroup(validCaptives);
+                                        action.appendEffect(new ReleaseCaptivesEffect(action, validCaptives));
+                                    }
+                                }
+                        );
+                    }
+                }
+        );
 
         return action;
+    }
+
+    private List<PhysicalCard> getAllCaptivesOnEscort(SwccgGame game, PhysicalCard self, PhysicalCard escort) {
+        final var escortedCaptivesOnBinderBearer = Filters.and(Filters.escortedCaptive, Filters.escortedBy(escort));
+        var captives = Filters.filterActive(game, self, SpotOverride.INCLUDE_CAPTIVE, escortedCaptivesOnBinderBearer);
+        return captives.stream().toList();
     }
 }

@@ -2,7 +2,6 @@ package com.gempukku.swccgo.framework;
 
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.game.PhysicalCardImpl;
-import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 
 import static org.junit.Assert.assertTrue;
 
@@ -211,7 +210,7 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 	/**
 	 * Causes the Dark Side player to choose to "seize" the recently-captured captive (attaching it to the captor).
 	 */
-	default void DSChooseSeize() { DSChoose("Seize"); }
+	default void DSChooseSeizeCaptive() { DSChoose("Seize"); }
 
 	/**
 	 * @return True if the Light Side player is currently deciding what to do with a released captive.
