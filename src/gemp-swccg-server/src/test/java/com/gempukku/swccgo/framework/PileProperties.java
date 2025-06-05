@@ -72,11 +72,27 @@ public interface PileProperties extends TestBase{
 		return gameState().getReserveDeck(player);
 	}
 
+	/**
+	 * @return The total amount of cards in the Dark Side Force Pile.
+	 */
 	default int GetDSForcePileCount() { return GetDSForcePile().size(); }
+	/**
+	 * @return The total amount of cards in the Light Side Force Pile.
+	 */
 	default int GetLSForcePileCount() { return GetLSForcePile().size(); }
 
+	/**
+	 * @return Gets a list of all cards currently in the Dark Side Force Pile.
+	 */
 	default List<? extends PhysicalCard> GetDSForcePile() { return GetForcePile(DS); }
+	/**
+	 * @return Gets a list of all cards currently in the Light Side Force Pile.
+	 */
 	default List<? extends PhysicalCard> GetLSForcePile() { return GetForcePile(LS); }
+	/**
+	 * @param player The player to check for.
+	 * @return Gets a list of all cards currently in the given player's Force Pile.
+	 */
 	default List<? extends PhysicalCard> GetForcePile(String player)
 	{
 		return gameState().getForcePile(player);
@@ -91,11 +107,27 @@ public interface PileProperties extends TestBase{
 	 */
 	default PhysicalCardImpl GetTopOfLSForcePile() { return (PhysicalCardImpl) GetForcePile(LS).getFirst(); }
 
+	/**
+	 * @return The total amount of cards in the Dark Side Used Pile.
+	 */
 	default int GetDSUsedPileCount() { return GetDSUsedPile().size(); }
+	/**
+	 * @return The total amount of cards in the Light Side Used Pile.
+	 */
 	default int GetLSUsedPileCount() { return GetLSUsedPile().size(); }
 
+	/**
+	 * @return Gets a list of all cards currently in the Dark Side Used Pile.
+	 */
 	default List<? extends PhysicalCard> GetDSUsedPile() { return GetUsedPile(DS); }
+	/**
+	 * @return Gets a list of all cards currently in the Light Side Used Pile.
+	 */
 	default List<? extends PhysicalCard> GetLSUsedPile() { return GetUsedPile(LS); }
+	/**
+	 * @param player The player to check for.
+	 * @return Gets a list of all cards currently in the given player's Used Pile.
+	 */
 	default List<? extends PhysicalCard> GetUsedPile(String player)
 	{
 		return gameState().getUsedPile(player);
@@ -110,11 +142,27 @@ public interface PileProperties extends TestBase{
 	 */
 	default PhysicalCardImpl GetTopOfLSUsedPile() { return (PhysicalCardImpl) GetUsedPile(LS).getFirst(); }
 
+	/**
+	 * @return The total amount of cards in the Dark Side Lost Pile.
+	 */
 	default int GetDSLostPileCount() { return GetDSLostPile().size(); }
+	/**
+	 * @return The total amount of cards in the Light Side Lost Pile.
+	 */
 	default int GetLSLostPileCount() { return GetLSLostPile().size(); }
 
+	/**
+	 * @return Gets a list of all cards currently in the Dark Side Lost Pile.
+	 */
 	default List<? extends PhysicalCard> GetDSLostPile() { return GetLostPile(DS); }
+	/**
+	 * @return Gets a list of all cards currently in the Light Side Lost Pile.
+	 */
 	default List<? extends PhysicalCard> GetLSLostPile() { return GetLostPile(LS); }
+	/**
+	 * @param player The player to check for.
+	 * @return Gets a list of all cards currently in the given player's Lost Pile.
+	 */
 	default List<? extends PhysicalCard> GetLostPile(String player)
 	{
 		return gameState().getLostPile(player);

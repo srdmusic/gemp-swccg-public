@@ -2,7 +2,7 @@ package com.gempukku.swccgo.rules.battle;
 
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
-import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
+import com.gempukku.swccgo.framework.StartingSetup;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -10,7 +10,7 @@ import java.util.HashMap;
 import static org.junit.Assert.*;
 
 public class CaptiveBattleTests {
-	protected VirtualTableScenario GetScenario() throws DecisionResultInvalidException {
+	protected VirtualTableScenario GetScenario() {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
@@ -24,18 +24,18 @@ public class CaptiveBattleTests {
 				}},
 				10,
 				10,
-				VirtualTableScenario.DefaultGroundLSLocation,
-				VirtualTableScenario.DefaultGroundDSLocation,
-				VirtualTableScenario.NoLSStarters,
-				VirtualTableScenario.NoDSStarters,
-				VirtualTableScenario.NoLSShields,
-				VirtualTableScenario.NoDSShields,
+				StartingSetup.DefaultLSGroundLocation,
+				StartingSetup.DefaultDSGroundLocation,
+				StartingSetup.NoLSStartingInterrupts,
+				StartingSetup.NoDSStartingInterrupts,
+				StartingSetup.NoLSShields,
+				StartingSetup.NoDSShields,
 				VirtualTableScenario.Open
 		);
 	}
 
 	@Test
-	public void CaptivesAreNotPresentForDSToInitiateBattle() throws DecisionResultInvalidException {
+	public void CaptivesAreNotPresentForDSToInitiateBattle() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");
@@ -57,7 +57,7 @@ public class CaptiveBattleTests {
 	}
 
 	@Test
-	public void CaptivesAreNotPresentForLSToInitiateBattle() throws DecisionResultInvalidException {
+	public void CaptivesAreNotPresentForLSToInitiateBattle() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");
@@ -79,7 +79,7 @@ public class CaptiveBattleTests {
 	}
 
 	@Test
-	public void CaptivesDoNotContributePowerToBattle() throws DecisionResultInvalidException {
+	public void CaptivesDoNotContributePowerToBattle() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");
@@ -108,7 +108,7 @@ public class CaptiveBattleTests {
 	}
 
 	@Test
-	public void CaptivesCannotBeForfeitByLS() throws DecisionResultInvalidException {
+	public void CaptivesCannotBeForfeitByLS() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");

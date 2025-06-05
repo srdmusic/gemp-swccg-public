@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Functions for checking aspects of a card, such as numeric states and other state-based properties.
+ * Functions for checking aspects of a card, such as numeric stats and other state-based properties.
  *
  * If you are just checking the printed stats, then you can retrieve the blueprint of a card and check those values
  * directly.  These helper functions are more for live cards which may be affected by modifiers sourced from other cards.
@@ -103,6 +103,12 @@ public interface CardProperties extends TestBase {
 		return gameState().getPilotCardsAboard(game().getModifiersQuerying(), in, true).containsAll(Arrays.stream(cards).toList());
 	}
 
+	/**
+	 * Retrieves the total unused passenger capacity for a ship or vehicle which could be used to accommodate additional
+	 * passengers.
+	 * @param vehicle The vehicle (or ship) to check
+	 * @return The total unused passenger capacity of the given card.  0 if this card cannot hold any more passengers.
+	 */
 	default int GetPassengerCapacity(PhysicalCardImpl vehicle) {
 		return gameState().getAvailablePassengerCapacity(game().getModifiersQuerying(), vehicle, null);
 	}
@@ -235,12 +241,21 @@ public interface CardProperties extends TestBase {
 		return Arrays.stream(cards).allMatch(card -> gameState().isParticipatingInBattle(card));
 	}
 
-	default int GetLSIconsOnLocation(PhysicalCardImpl location) {
-		return location.getBlueprint().getIconCount(Icon.LIGHT_FORCE);
-	}
 
+	/**
+	 * @param location The location to inspect for Dark Side saber icons printed on the card.
+	 * @return The total number of Dark Side saber icons printed on the card (does not take modifiers into account).
+	 */
 	default int GetDSIconsOnLocation(PhysicalCardImpl location) {
 		return location.getBlueprint().getIconCount(Icon.DARK_FORCE);
+	}
+
+	/**
+	 * @param location The location to inspect for Light Side saber icons printed on the card.
+	 * @return The total number of Light Side saber icons printed on the card (does not take modifiers into account).
+	 */
+	default int GetLSIconsOnLocation(PhysicalCardImpl location) {
+		return location.getBlueprint().getIconCount(Icon.LIGHT_FORCE);
 	}
 
 }

@@ -2,19 +2,17 @@ package com.gempukku.swccgo.cards.set2.dark;
 
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
-import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
+import com.gempukku.swccgo.framework.StartingSetup;
 import org.junit.Test;
 
 import java.util.HashMap;
 
-import static com.gempukku.swccgo.framework.Assertions.assertAtLocation;
-import static com.gempukku.swccgo.framework.Assertions.assertInHand;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static com.gempukku.swccgo.framework.Assertions.*;
+import static org.junit.Assert.*;
 
 public class Card_2_093_Tests
 {
-	protected VirtualTableScenario GetScenario() throws DecisionResultInvalidException {
+	protected VirtualTableScenario GetScenario() {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
@@ -30,18 +28,18 @@ public class Card_2_093_Tests
 				}},
 				10,
 				10,
-				VirtualTableScenario.DefaultGroundLSLocation,
-				"1_284", //Detention Block Corridor
-				VirtualTableScenario.NoLSStarters,
-				VirtualTableScenario.NoDSStarters,
-				VirtualTableScenario.NoLSShields,
-				VirtualTableScenario.NoDSShields,
+				StartingSetup.DefaultLSGroundLocation,
+				new StartingSetup.StartingLocation("1_284"), //Detention Block Corridor
+				StartingSetup.NoLSStartingInterrupts,
+				StartingSetup.NoDSStartingInterrupts,
+				StartingSetup.NoLSShields,
+				StartingSetup.NoDSShields,
 				VirtualTableScenario.Open
 		);
 	}
 
 	@Test
-	public void ITOStatsAndKeywordsAreCorrect() throws DecisionResultInvalidException {
+	public void ITOStatsAndKeywordsAreCorrect() {
 		/**
 		 * Title: IT-O (Eyetee-Oh)
 		 * Uniqueness: UNIQUE
@@ -80,7 +78,7 @@ public class Card_2_093_Tests
 	}
 
 	@Test
-	public void ITOAdds3ToForceDrainsAtDetentionBlockCorridorWhenPresentWith3Captives() throws DecisionResultInvalidException {
+	public void ITOAdds3ToForceDrainsAtDetentionBlockCorridorWhenPresentWith3Captives() {
 		var scn = GetScenario();
 
 		var chewie = scn.GetLSCard("chewie");

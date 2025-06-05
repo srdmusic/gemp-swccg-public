@@ -66,7 +66,14 @@ public class Card4_076 extends AbstractJediTest {
 
     @Override
     protected Filter getGameTextValidApprenticeFilter(String playerId, SwccgGame game, PhysicalCard self, PhysicalCard deployTarget, PhysicalCard mentor, boolean isDeployFromHand) {
-        return Filters.apprenticeTargetedByJediTest(Filters.and(Filters.completed_Jedi_Test, Filters.Jedi_Test_2));
+        Filter apprenticeFilter = Filters.apprenticeTargetedByJediTest(Filters.and(Filters.completed_Jedi_Test, Filters.Jedi_Test_2));
+
+        if (GameConditions.hasGameTextModification(game, self, ModifyGameTextType.JEDI_TESTS__ONLY_LUKE_MAY_BE_APPRENTICE))
+        {
+            apprenticeFilter = Filters.and(apprenticeFilter, Filters.Luke);
+        }
+
+        return apprenticeFilter;
     }
 
     @Override
@@ -74,7 +81,7 @@ public class Card4_076 extends AbstractJediTest {
         String opponent = game.getOpponent(playerId);
 
         boolean normalTiming = TriggerConditions.isEndOfYourTurn(game, effectResult, self);
-        boolean specialTiming = TriggerConditions.isStartOfOpponentsPhase(game, self, effectResult, Phase.CONTROL) && GameConditions.hasGameTextModification(game, self, ModifyGameTextType.JEDI_TESTS__MAY_ATTEMPT_IN_OPPONENTS_CONTROL_PHASE);
+        boolean specialTiming = TriggerConditions.isStartOfOpponentsPhase(game, self, effectResult, Phase.DEPLOY) && GameConditions.hasGameTextModification(game, self, ModifyGameTextType.JEDI_TESTS__MAY_ATTEMPT_IN_OPPONENTS_DEPLOY_PHASE);
         boolean timingSatisfied = normalTiming || specialTiming;
 
         // Check condition(s)
@@ -82,7 +89,7 @@ public class Card4_076 extends AbstractJediTest {
                 && !GameConditions.isJediTestCompleted(game, self)) {
             ModifiersQuerying modifiersQuerying = game.getModifiersQuerying();
             if (modifiersQuerying.getNumBattlesInitiatedThisTurn(playerId) == 0
-                    && modifiersQuerying.getNumForceDrainsInitiatedThisTurn() == 0
+                    && (modifiersQuerying.getNumForceDrainsInitiatedThisTurn() == 0 || GameConditions.isOpponentsTurn(game, playerId))
                     && !modifiersQuerying.hasAttemptedJediTests()) {
                 final PhysicalCard apprentice = Filters.findFirstActive(game, self, Filters.and(Filters.mayAttemptJediTest(self), Filters.present(self)));
                 if (apprentice != null) {

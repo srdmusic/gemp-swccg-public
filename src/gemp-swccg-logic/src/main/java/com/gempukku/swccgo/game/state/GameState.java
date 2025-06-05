@@ -834,9 +834,7 @@ public class GameState implements Snapshotable<GameState> {
         card.atLocation(moveTo);
         card.attachTo(null, false, false, false, false, false);
         card.stackOn(null, false, false);
-        if (!card.isFrozen()) {
-            card.setCaptiveEscort(null);
-        }
+        card.setCaptiveEscort(null);
         card.setImprisoned(false);
         card.setZone(Zone.AT_LOCATION);
         card.setZoneOwner(newZoneOwner);

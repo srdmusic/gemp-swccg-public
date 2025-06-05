@@ -2,8 +2,8 @@ package com.gempukku.swccgo.cards.set5.light;
 
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
+import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 import com.gempukku.swccgo.logic.effects.GoMissingEffect;
 import org.junit.Test;
 
@@ -13,7 +13,7 @@ import static com.gempukku.swccgo.framework.Assertions.*;
 import static org.junit.Assert.*;
 
 public class Card_5_036_Tests {
-	protected VirtualTableScenario GetScenario() throws DecisionResultInvalidException {
+	protected VirtualTableScenario GetScenario() {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
@@ -47,18 +47,18 @@ public class Card_5_036_Tests {
 				}},
 				10,
 				10,
-				VirtualTableScenario.DefaultGroundLSLocation,
-				VirtualTableScenario.DefaultGroundDSLocation,
-				VirtualTableScenario.NoLSStarters,
-				VirtualTableScenario.NoDSStarters,
-				VirtualTableScenario.NoLSShields,
-				VirtualTableScenario.NoDSShields,
+				StartingSetup.DefaultLSGroundLocation,
+				StartingSetup.DefaultDSGroundLocation,
+				StartingSetup.NoLSStartingInterrupts,
+				StartingSetup.NoDSStartingInterrupts,
+				StartingSetup.NoLSShields,
+				StartingSetup.NoDSShields,
 				VirtualTableScenario.Open
 		);
 	}
 
 	@Test
-	public void CaptiveFuryStatsAndKeywordsAreCorrect() throws DecisionResultInvalidException {
+	public void CaptiveFuryStatsAndKeywordsAreCorrect() {
 		/**
 		 * Title: Captive Fury
 		 * Uniqueness: Unique
@@ -88,7 +88,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryInitializesBattleAndRelocatesCaptiveToLSSideOfSite() throws DecisionResultInvalidException {
+	public void CaptiveFuryInitializesBattleAndRelocatesCaptiveToLSSideOfSite() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -125,7 +125,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryCaptiveCannotUseWeapons() throws DecisionResultInvalidException {
+	public void CaptiveFuryCaptiveCannotUseWeapons() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -157,7 +157,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryCaptiveCannotUsePermanentWeapons() throws DecisionResultInvalidException {
+	public void CaptiveFuryCaptiveCannotUsePermanentWeapons() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -187,7 +187,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryCaptiveCannotUseDevices() throws DecisionResultInvalidException {
+	public void CaptiveFuryCaptiveCannotUseDevices() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -217,7 +217,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryCaptiveCannotBeVoluntarilyForfeit() throws DecisionResultInvalidException {
+	public void CaptiveFuryCaptiveCannotBeVoluntarilyForfeit() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -261,7 +261,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryCaptiveCanBeForfeitIfHitAndIsNotReturnedToEscort() throws DecisionResultInvalidException {
+	public void CaptiveFuryCaptiveCanBeForfeitIfHitAndIsNotReturnedToEscort() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -334,7 +334,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryCaptiveCannotBeRelocated() throws DecisionResultInvalidException {
+	public void CaptiveFuryCaptiveCannotBeRelocated() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -368,7 +368,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryRelocatesCaptiveEvenIfEnclosedInVehicle() throws DecisionResultInvalidException {
+	public void CaptiveFuryRelocatesCaptiveEvenIfEnclosedInVehicle() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -403,10 +403,11 @@ public class Card_5_036_Tests {
 		assertFalse(scn.IsAboardAsPassenger(tube, chewie));
 		assertAtLocation(site, chewie);
 		assertFalse(scn.IsAttachedTo(chewie, boba));
+		assertEquals(3, scn.GetPassengerCapacity(tube));
 	}
 
 	@Test
-	public void CaptiveFuryEjectsEscortWhenRelocatingCaptiveIfNoRoomInVehicle() throws DecisionResultInvalidException {
+	public void CaptiveFuryEjectsEscortWhenRelocatingCaptiveIfNoRoomInVehicle() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -471,7 +472,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryDoesNotTriggerRelease() throws DecisionResultInvalidException {
+	public void CaptiveFuryDoesNotTriggerRelease() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -502,7 +503,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryIncludesNonCaptivesInBattleIfEligible() throws DecisionResultInvalidException {
+	public void CaptiveFuryIncludesNonCaptivesInBattleIfEligible() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -540,7 +541,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryCannotBeUsedOnCaptiveThatBattledEarlierThisTurn() throws DecisionResultInvalidException {
+	public void CaptiveFuryCannotBeUsedOnCaptiveThatBattledEarlierThisTurn() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -581,7 +582,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryCancelsBattleIfCaptiveHasNoPresence() throws DecisionResultInvalidException {
+	public void CaptiveFuryCancelsBattleIfCaptiveHasNoPresence() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -612,7 +613,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryCancelsBattleIfCaptorHasNoPresence() throws DecisionResultInvalidException {
+	public void CaptiveFuryCancelsBattleIfCaptorHasNoPresence() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -643,7 +644,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryReturnsCaptiveToCaptorAfterBattleIfBothAlive() throws DecisionResultInvalidException {
+	public void CaptiveFuryReturnsCaptiveToCaptorAfterBattleIfBothAlive() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -683,7 +684,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryReleasesBattlingCaptiveIfCaptorIsForfeit() throws DecisionResultInvalidException {
+	public void CaptiveFuryReleasesBattlingCaptiveIfCaptorIsForfeit() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -723,7 +724,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryReleasesBattlingCaptiveIfCaptorIsMissing() throws DecisionResultInvalidException {
+	public void CaptiveFuryReleasesBattlingCaptiveIfCaptorIsMissing() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -772,7 +773,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryDoesNotReturnCaptiveAfterBattleIfMissing() throws DecisionResultInvalidException {
+	public void CaptiveFuryDoesNotReturnCaptiveAfterBattleIfMissing() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -809,6 +810,7 @@ public class Card_5_036_Tests {
 		scn.PassAllResponses();
 
 		assertFalse(chewie.isCaptive());
+		assertTrue(chewie.isMissing());
 		assertNull(chewie.getEscort());
 		assertFalse(boba.getCardsEscorting().contains(chewie));
 		assertNull(chewie.getAttachedTo());
@@ -817,7 +819,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryDoesNotReturnCaptiveIfCapturedByAnotherCaptor() throws DecisionResultInvalidException {
+	public void CaptiveFuryDoesNotReturnCaptiveIfCapturedByAnotherCaptor() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -888,7 +890,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryCanChooseMultipleCaptivesAtSameSiteToBattle() throws DecisionResultInvalidException {
+	public void CaptiveFuryCanChooseMultipleCaptivesAtSameSiteToBattle() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -936,7 +938,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryDoesNotNeedToChooseAllCaptivesAtSameSite() throws DecisionResultInvalidException {
+	public void CaptiveFuryDoesNotNeedToChooseAllCaptivesAtSameSite() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -982,7 +984,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryStillPermitsCaptiveSpottingEffectsToWorkDuringBattle() throws DecisionResultInvalidException {
+	public void CaptiveFuryStillPermitsCaptiveSpottingEffectsToWorkDuringBattle() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -1012,7 +1014,7 @@ public class Card_5_036_Tests {
 		scn.PassResponses();
 
 		// DS only has a battle destiny draw because Dengar is "escorting a captive"
-		assertEquals(3, scn.GetDSTotalPower());
+		assertEquals(2, scn.GetAbility(dengar), scn.epsilon);
 		scn.PrepareDSDestiny(3);
 		assertEquals(0, scn.GetDSTotalDestiny());
 		assertTrue(scn.DSDecisionAvailable("Do you want to draw 1 battle destiny?"));
@@ -1023,7 +1025,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryPermitsUsedHumanShieldToKillCaptive() throws DecisionResultInvalidException {
+	public void CaptiveFuryPermitsUsedHumanShieldToKillCaptive() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -1075,7 +1077,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryPermitsLostHumanShieldToForfeitCaptive() throws DecisionResultInvalidException {
+	public void CaptiveFuryPermitsLostHumanShieldToForfeitCaptive() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -1124,7 +1126,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryCannotTargetFrozenCaptive() throws DecisionResultInvalidException {
+	public void CaptiveFuryCannotTargetFrozenCaptive() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -1147,7 +1149,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryCancelsThePlus3BonusOfITOAtDetentionBlockCorridorWith3CaptivesUntilEndOfTurn() throws DecisionResultInvalidException {
+	public void CaptiveFuryCancelsThePlus3BonusOfITOAtDetentionBlockCorridorWith3CaptivesUntilEndOfTurn() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -1207,7 +1209,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryReleasesBattlingCaptiveIfCaptorIsForfeitThroughRevert() throws DecisionResultInvalidException {
+	public void CaptiveFuryReleasesBattlingCaptiveIfCaptorIsForfeitThroughRevert() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -1269,7 +1271,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryModifiersOnCaptiveAreActiveDuringBattle() throws DecisionResultInvalidException {
+	public void CaptiveFuryModifiersOnCaptiveAreActiveDuringBattle() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");
@@ -1306,7 +1308,7 @@ public class Card_5_036_Tests {
 	}
 
 	@Test
-	public void CaptiveFuryAbilitiesOnCaptiveAreActiveDuringBattle() throws DecisionResultInvalidException {
+	public void CaptiveFuryAbilitiesOnCaptiveAreActiveDuringBattle() {
 		var scn = GetScenario();
 
 		var fury = scn.GetLSCard("fury");

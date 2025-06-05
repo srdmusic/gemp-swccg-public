@@ -2,18 +2,16 @@ package com.gempukku.swccgo.cards.set1.light;
 
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
-import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
+import com.gempukku.swccgo.framework.StartingSetup;
 import org.junit.Test;
 
 import java.util.HashMap;
 
-import static com.gempukku.swccgo.framework.Assertions.assertAtLocation;
-import static com.gempukku.swccgo.framework.Assertions.assertInHand;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static com.gempukku.swccgo.framework.Assertions.*;
+import static org.junit.Assert.*;
 
 public class Card_1_028_Tests {
-	protected VirtualTableScenario GetScenario() throws DecisionResultInvalidException {
+	protected VirtualTableScenario GetScenario() {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
@@ -26,18 +24,18 @@ public class Card_1_028_Tests {
 				}},
 				10,
 				10,
-				VirtualTableScenario.DefaultGroundLSLocation,
-				VirtualTableScenario.DefaultGroundDSLocation,
-				VirtualTableScenario.NoLSStarters,
-				VirtualTableScenario.NoDSStarters,
-				VirtualTableScenario.NoLSShields,
-				VirtualTableScenario.NoDSShields,
+				StartingSetup.DefaultLSGroundLocation,
+				StartingSetup.DefaultDSGroundLocation,
+				StartingSetup.NoLSStartingInterrupts,
+				StartingSetup.NoDSStartingInterrupts,
+				StartingSetup.NoLSShields,
+				StartingSetup.NoDSShields,
 				VirtualTableScenario.Open
 		);
 	}
 
 	@Test
-	public void RebelTrooperStatsAndKeywordsAreCorrect() throws DecisionResultInvalidException {
+	public void RebelTrooperStatsAndKeywordsAreCorrect() {
 		/**
 		 * Title: Rebel Trooper
 		 * Uniqueness: Unrestricted
@@ -80,7 +78,7 @@ public class Card_1_028_Tests {
 	}
 
 	@Test
-	public void RebelTrooperDeploysFor1ForceNormally() throws DecisionResultInvalidException {
+	public void RebelTrooperDeploysFor1ForceNormally() {
 		var scn = GetScenario();
 
 		var trooper = scn.GetLSCard("trooper");
@@ -108,7 +106,7 @@ public class Card_1_028_Tests {
 	}
 
 	@Test
-	public void RebelTrooperDeploysFor1ForceWithAbility2Rebel() throws DecisionResultInvalidException {
+	public void RebelTrooperDeploysFor1ForceWithAbility2Rebel() {
 		var scn = GetScenario();
 
 		var trooper = scn.GetLSCard("trooper");
@@ -141,7 +139,7 @@ public class Card_1_028_Tests {
 	}
 
 	@Test
-	public void RebelTrooperDeploysFor0ForceWithAbility3Rebel() throws DecisionResultInvalidException {
+	public void RebelTrooperDeploysFor0ForceWithAbility3Rebel() {
 		var scn = GetScenario();
 
 		var trooper = scn.GetLSCard("trooper");

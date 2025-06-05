@@ -53,6 +53,11 @@ public interface ZoneManipulation extends TestBase{
 	 */
 	default void MoveOutOfPlay(PhysicalCardImpl card) { MoveCardToZone(card.getOwner(), card, Zone.OUT_OF_PLAY); }
 
+	/**
+	 * Takes a location and physically adds it to the location layout, automatically placing it in the first available
+	 * position.
+	 * @param card The location to place on the table.
+	 */
 	default void MoveLocationToTable(PhysicalCardImpl card) {
 		RemoveCardZone(card);
 		var placements = gameState().getLocationPlacement(game(), card, null, null);
@@ -154,9 +159,9 @@ public interface ZoneManipulation extends TestBase{
 	default void MoveCardsToTopOfDSReserveDeck(PhysicalCardImpl...cards) { MoveCardsToTopOfReserveDeck(DS, cards);}
 
 	/**
-	 * Stacks the Dark Side deck with a destiny card of the given amount.  This function will take that card from
-	 * out of play and place it on top of the Reserve deck, but be warned: it will then be in play ever after, so if
-	 * you have long complicated chains of actions you might want to handle the stacking yourself.
+	 * Stacks the Dark Side deck with a destiny card of the given amount.  This function will take a card with that
+	 * destiny and place it on top of the Reserve deck, but be warned: it will then be in play ever after, so if
+	 * you have long complicated multi-turn chains of actions you might want to handle the stacking yourself.
 	 * @param amount The destiny you would like to be shortly drawing.  Limited to values from 0-7.
 	 */
 	default void PrepareDSDestiny(int amount) { MoveCardsToTopOfDSReserveDeck(GetDSDestiny(amount)); }
@@ -222,9 +227,9 @@ public interface ZoneManipulation extends TestBase{
 
 
 	/**
-	 * Force Pile top
+	 * Moves one or more cards to the top of its owner's Force Pile.
+	 * @param cards The card to reposition.
 	 */
-
 	default void MoveCardsToTopOfOwnForcePile(PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
 			RemoveCardZone(card);
@@ -232,9 +237,22 @@ public interface ZoneManipulation extends TestBase{
 		});
 	}
 
+	/**
+	 * Moves one or more cards to the top of the Dark Side player's Force Pile.
+	 * @param cards The cards to reposition.
+	 */
 	default void MoveCardsToTopOfDSForcePile(PhysicalCardImpl...cards) { MoveCardsToTopOfForcePile(DS, cards);}
+	/**
+	 * Moves one or more cards to the top of the Light Side player's Force Pile.
+	 * @param cards The cards to reposition.
+	 */
 	default void MoveCardsToTopOfLSForcePile(PhysicalCardImpl...cards) { MoveCardsToTopOfForcePile(LS, cards);}
 
+	/**
+	 * Moves one or more cards to the top of the given player's Force Pile.
+	 * @param player The owner of the Force Pile to move to.
+	 * @param cards The cards to reposition.
+	 */
 	default void MoveCardsToTopOfForcePile(String player, PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
 			RemoveCardZone(card);
@@ -243,19 +261,31 @@ public interface ZoneManipulation extends TestBase{
 	}
 
 	/**
-	 * Used Pile top
+	 * Moves one or more cards to the top of its owner's Used Pile.
+	 * @param cards The card to reposition.
 	 */
-
 	default void MoveCardsToTopOfOwnUsedPile(PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
 			RemoveCardZone(card);
 			gameState().addCardToTopOfZone(card, Zone.USED_PILE, card.getOwner());
 		});
 	}
-
+	/**
+	 * Moves one or more cards to the top of the Dark Side player's Used Pile.
+	 * @param cards The cards to reposition.
+	 */
 	default void MoveCardsToTopOfDSUsedPile(PhysicalCardImpl...cards) { MoveCardsToTopOfUsedPile(DS, cards);}
+	/**
+	 * Moves one or more cards to the top of the Light Side player's Used Pile.
+	 * @param cards The cards to reposition.
+	 */
 	default void MoveCardsToTopOfLSUsedPile(PhysicalCardImpl...cards) { MoveCardsToTopOfUsedPile(LS, cards);}
 
+	/**
+	 * Moves one or more cards to the top of the given player's Used Pile.
+	 * @param player The owner of the Force Pile to move to.
+	 * @param cards The cards to reposition.
+	 */
 	default void MoveCardsToTopOfUsedPile(String player, PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
 			RemoveCardZone(card);
@@ -264,20 +294,30 @@ public interface ZoneManipulation extends TestBase{
 	}
 
 	/**
-	 * Lost Pile top
+	 * Moves one or more cards to the top of its owner's Lost Pile.
+	 * @param cards The card to reposition.
 	 */
-
 	default void MoveCardsToTopOfOwnLostPile(PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
 			RemoveCardZone(card);
 			gameState().addCardToTopOfZone(card, Zone.LOST_PILE, card.getOwner());
 		});
 	}
-
+	/**
+	 * Moves one or more cards to the top of the Dark Side player's Lost Pile.
+	 * @param cards The cards to reposition.
+	 */
 	default void MoveCardsToTopOfDSLostPile(PhysicalCardImpl...cards) { MoveCardsToTopOfLostPile(DS, cards);}
-
+	/**
+	 * Moves one or more cards to the top of the Light Side player's Lost Pile.
+	 * @param cards The cards to reposition.
+	 */
 	default void MoveCardsToTopOfLSLostPile(PhysicalCardImpl...cards) { MoveCardsToTopOfLostPile(LS, cards);}
-
+	/**
+	 * Moves one or more cards to the top of the given player's Lost Pile.
+	 * @param player The owner of the Force Pile to move to.
+	 * @param cards The cards to reposition.
+	 */
 	default void MoveCardsToTopOfLostPile(String player, PhysicalCardImpl...cards) {
 		Arrays.stream(cards).forEach(card -> {
 			RemoveCardZone(card);
@@ -336,6 +376,12 @@ public interface ZoneManipulation extends TestBase{
 		gameState().freezeCharacter(captive);
 	}
 
+	/**
+	 * Causes a card to be attached to the given vehicle or ship as a passenger, and updates all the appropriate state
+	 * on each card.  This does not follow the game procedure and is cheating the card into place.
+	 * @param vehicle The vehicle (or ship) that will hold the passenger(s).
+	 * @param passengers One or more passengers to board.
+	 */
 	default void BoardAsPassenger(PhysicalCardImpl vehicle, PhysicalCardImpl...passengers) {
 		Arrays.stream(passengers).forEach(passenger -> {
 			var originalZone = passenger.getZone();
@@ -349,6 +395,12 @@ public interface ZoneManipulation extends TestBase{
 		});
 	}
 
+	/**
+	 * Causes a card to be attached to the given vehicle or ship as a pilot, and updates all the appropriate state
+	 * on each card.  This does not follow the game procedure and is cheating the card into place.
+	 * @param vehicle The vehicle (or ship) that will hold the pilot(s).
+	 * @param pilots One or more pilots to board.
+	 */
 	default void BoardAsPilot(PhysicalCardImpl vehicle, PhysicalCardImpl...pilots) {
 		Arrays.stream(pilots).forEach(pilot -> {
 			var originalZone = pilot.getZone();
@@ -389,7 +441,12 @@ public interface ZoneManipulation extends TestBase{
         });
     }
 
-	// Unsure if this is ever really necessary or relevant, but here it is.
+	/**
+	 * Takes the card from the top of a player's Reserve Deck and puts it in their hand.  This is for cheating and maybe
+	 * isn't a relevant SWCCG concept...?
+	 * @param player The player to draw
+	 * @param count The number of cards to draw from the top of the Reserve Deck.
+	 */
 	default void DrawCardsFromReserve(String player, int count) {
 		for (int i = 0; i < count; ++i) {
 			var reserveDeck = gameState().getReserveDeck(player, true);
@@ -402,14 +459,40 @@ public interface ZoneManipulation extends TestBase{
 	}
 
 
+	/**
+	 * Shuffles one or more cards into the Dark Side player's Reserve Deck.
+	 * @param cards The cards to shuffle in.
+	 */
 	default void ShuffleCardsIntoDSReserveDeck(PhysicalCardImpl...cards) { ShuffleCardsIntoReserveDeck(DS, cards); }
+	/**
+	 * Shuffles one or more cards into the Light Side player's Reserve Deck.
+	 * @param cards The cards to shuffle in.
+	 */
 	default void ShuffleCardsIntoLSReserveDeck(PhysicalCardImpl...cards) { ShuffleCardsIntoReserveDeck(LS, cards); }
+	/**
+	 * Shuffles one or more cards into the given player's Reserve Deck.
+	 * @param player The owner of the deck to target.
+	 * @param cards The cards to shuffle in.
+	 */
 	default void ShuffleCardsIntoReserveDeck(String player, PhysicalCardImpl...cards) {
 		gameState().shuffleCardsIntoPile(Arrays.stream(cards).toList(), player, Zone.RESERVE_DECK);
 	}
 
+	/**
+	 * Shuffles one or more cards into the Dark Side player's Force Pile.
+	 * @param cards The cards to shuffle in.
+	 */
 	default void ShuffleCardsIntoDSForcePile(PhysicalCardImpl...cards) { ShuffleCardsIntoForcePile(DS, cards); }
+	/**
+	 * Shuffles one or more cards into the Light Side player's Force Pile.
+	 * @param cards The cards to shuffle in.
+	 */
 	default void ShuffleCardsIntoLSForcePile(PhysicalCardImpl...cards) { ShuffleCardsIntoForcePile(LS, cards); }
+	/**
+	 * Shuffles one or more cards into the given player's Force Pile.
+	 * @param player The owner of the deck to target.
+	 * @param cards The cards to shuffle in.
+	 */
 	default void ShuffleCardsIntoForcePile(String player, PhysicalCardImpl...cards) {
 		gameState().shuffleCardsIntoPile(Arrays.stream(cards).toList(), player, Zone.FORCE_PILE);
 	}

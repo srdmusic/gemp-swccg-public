@@ -55,46 +55,52 @@ public interface AdHocEffects extends TestBase, Decisions {
 	 * ever works; in particular it seems to only work if there are 0 legal actions to take on the current decision.
 	 * When it works, it can be useful for altering the game state in situations where you want e.g. the proper trigger
 	 * or other side-effects to be respected.  It is finicky tho.
-	 * To ensure test integrity, this also asserts that the effect does in fact get carried out.
 	 * @param effect The effect to execute.  Details are determined by the effect itself.
-	 * @throws DecisionResultInvalidException This error will be thrown if the effect cannot for whatever reason be
-	 * executed as part of the current player decision.
 	 */
-	default void DSExecuteAdHocEffect(PhysicalCardImpl source, StandardEffect effect) throws DecisionResultInvalidException { ExecuteAdHocEffect(DS, source, effect); }
+	default void DSExecuteAdHocEffect(PhysicalCardImpl source, StandardEffect effect) {
+		ExecuteAdHocEffect(DS, source, effect);
+	}
 	/**
 	 * Causes the LIght Side player to execute an arbitrary effect.  Note that there are nuances to how and whether this
 	 * ever works; in particular it seems to only work if there are 0 legal actions to take on the current decision.
 	 * When it works, it can be useful for altering the game state in situations where you want e.g. the proper trigger
 	 * or other side-effects to be respected.  It is finicky tho.
-	 * To ensure test integrity, this also asserts that the effect does in fact get carried out.
 	 * @param effect The effect to execute.  Details are determined by the effect itself.
-	 * @throws DecisionResultInvalidException This error will be thrown if the effect cannot for whatever reason be
-	 * executed as part of the current player decision.
 	 */
-	default void LSExecuteAdHocEffect(PhysicalCardImpl source, StandardEffect effect) throws DecisionResultInvalidException { ExecuteAdHocEffect(LS, source, effect); }
+	default void LSExecuteAdHocEffect(PhysicalCardImpl source, StandardEffect effect) {
+		ExecuteAdHocEffect(LS, source, effect);
+	}
 
 	/**
 	 * Causes the given player to execute an arbitrary effect.  Note that there are nuances to how and whether this
 	 * ever works; in particular it seems to only work if there are 0 legal actions to take on the current decision.
 	 * When it works, it can be useful for altering the game state in situations where you want e.g. the proper trigger
 	 * or other side-effects to be respected.  It is finicky tho.
-	 * To ensure test integrity, this also asserts that the effect does in fact get carried out.
 	 * @param playerId The player who will execute the effect.
 	 * @param effect The effect to execute.  Details are determined by the effect itself.
-	 * @throws DecisionResultInvalidException This error will be thrown if the effect cannot for whatever reason be
-	 * executed as part of the current player decision.
 	 */
-	default void ExecuteAdHocEffect(String playerId, PhysicalCardImpl source, StandardEffect effect) throws DecisionResultInvalidException {
+	default void ExecuteAdHocEffect(String playerId, PhysicalCardImpl source, StandardEffect effect) {
         carryOutEffectInPhaseActionByPlayer(playerId, source, effect);
     }
 
-	default void carryOutEffectInPhaseActionByPlayer(String playerId, PhysicalCardImpl source, StandardEffect effect) throws DecisionResultInvalidException {
+	/**
+	 * Low-level function used by other ad-hoc functions in the test rig.  Use one of the other helper functions instead.
+	 * @param playerId Player to make the action available to.
+	 * @param source Card which theoretically has this text "printed" on it.
+	 * @param effect The effect the tester would like to execute.
+	 */
+	default void carryOutEffectInPhaseActionByPlayer(String playerId, PhysicalCardImpl source, StandardEffect effect) {
 		var action = new TopLevelGameTextAction(source, playerId, source.getCardId());
 		action.appendEffect(effect);
 		carryOutEffectInPhaseActionByPlayer(playerId, action);
 	}
 
-	default void carryOutEffectInPhaseActionByPlayer(String playerId, Action action) throws DecisionResultInvalidException {
+	/**
+	 * Low-level function used by other ad-hoc functions in the test rig.  Use one of the other helper functions instead.
+	 * @param playerId Player to make the action available to.
+	 * @param action Action to add and execute.
+	 */
+	default void carryOutEffectInPhaseActionByPlayer(String playerId, Action action) {
 		var awaitingDecision = (CardActionSelectionDecision) userFeedback().getAwaitingDecision(playerId);
 		awaitingDecision.addAction(action);
 
