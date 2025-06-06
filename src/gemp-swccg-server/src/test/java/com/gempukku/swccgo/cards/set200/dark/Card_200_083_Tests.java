@@ -7,8 +7,6 @@ import org.junit.Test;
 
 import java.util.HashMap;
 
-import static com.gempukku.swccgo.framework.Assertions.assertAtLocation;
-import static com.gempukku.swccgo.framework.Assertions.assertInHand;
 import static org.junit.Assert.*;
 import static org.junit.Assert.assertFalse;
 

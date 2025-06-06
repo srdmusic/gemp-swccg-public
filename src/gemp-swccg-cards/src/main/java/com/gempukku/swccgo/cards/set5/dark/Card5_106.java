@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.cards.set5.dark;
 
+import com.gempukku.swccgo.cards.AbstractCharacterDevice;
 import com.gempukku.swccgo.cards.AbstractDevice;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
@@ -21,6 +22,7 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalCarbonFreezingDestinyModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.StolenResult;
 import com.gempukku.swccgo.logic.timing.results.TransferredDeviceOrWeaponResult;
 
 import java.util.ArrayList;
@@ -33,9 +35,9 @@ import java.util.List;
  * Type: Device
  * Title: Binders
  */
-public class Card5_106 extends AbstractDevice {
+public class Card5_106 extends AbstractCharacterDevice {
     public Card5_106() {
-        super(Side.DARK, 6, PlayCardZoneOption.ATTACHED, Title.Binders, Uniqueness.UNRESTRICTED, ExpansionSet.CLOUD_CITY, Rarity.C);
+        super(Side.DARK, 6, Title.Binders, Uniqueness.UNRESTRICTED, ExpansionSet.CLOUD_CITY, Rarity.C);
         setLore("Because standard binders are durable but not easily adaptable, bounty hunters often carry special binders which automatically tighten around a captive's appendages.");
         setGameText("Deploy on one of your warriors or bounty hunters. May now escort any number of captives. If device removed from your character, select one captive escorted by that character to remain and release all others.");
         addIcons(Icon.CLOUD_CITY);
@@ -62,8 +64,12 @@ public class Card5_106 extends AbstractDevice {
             return Collections.singletonList(releaseExtraCaptives(game, self, self.getAttachedTo(), gameTextSourceCardId));
         }
         else if (TriggerConditions.justTransferredDeviceOrWeaponToTarget(game, effectResult, self, Filters.any)) {
-            var transferResult = (TransferredDeviceOrWeaponResult)effectResult;
-            return Collections.singletonList(releaseExtraCaptives(game, self, transferResult.getTransferredFrom(), gameTextSourceCardId));
+            var result = (TransferredDeviceOrWeaponResult)effectResult;
+            return Collections.singletonList(releaseExtraCaptives(game, self, result.getTransferredFrom(), gameTextSourceCardId));
+        }
+        else if (TriggerConditions.justStolen(game, effectResult, self)) {
+            var result = (StolenResult)effectResult;
+            return Collections.singletonList(releaseExtraCaptives(game, self, result.getStolenFrom(), gameTextSourceCardId));
         }
         return null;
     }
@@ -75,7 +81,7 @@ public class Card5_106 extends AbstractDevice {
 
         var validCaptives = new ArrayList<>(getAllCaptivesOnEscort(game, self, escort));
         action.appendTargeting(
-                new TargetCardOnTableEffect(action, self.getOwner(), "Select one captive to remain (all others on this escort will be released)",
+                new TargetCardOnTableEffect(action, escort.getOwner(), "Select one captive to remain (all others on this escort will be released)",
                         SpotOverride.INCLUDE_CAPTIVE, Filters.in(validCaptives)) {
                     @Override
                     protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
@@ -98,6 +104,8 @@ public class Card5_106 extends AbstractDevice {
     }
 
     private List<PhysicalCard> getAllCaptivesOnEscort(SwccgGame game, PhysicalCard self, PhysicalCard escort) {
+        if(escort == null)
+            return new ArrayList<>();
         final var escortedCaptivesOnBinderBearer = Filters.and(Filters.escortedCaptive, Filters.escortedBy(escort));
         var captives = Filters.filterActive(game, self, SpotOverride.INCLUDE_CAPTIVE, escortedCaptivesOnBinderBearer);
         return captives.stream().toList();

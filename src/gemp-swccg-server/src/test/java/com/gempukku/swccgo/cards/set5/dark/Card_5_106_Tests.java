@@ -3,7 +3,10 @@ package com.gempukku.swccgo.cards.set5.dark;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
+import com.gempukku.swccgo.logic.effects.GoMissingEffect;
+import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -19,6 +22,8 @@ public class Card_5_106_Tests {
 					put("chewie", "2_3");
 					put("han", "108_1");
 					put("leia", "6_32");
+					put("kabe", "1_14");
+					put("arm", "4_15");
 				}},
 				new HashMap<>()
 				{{
@@ -241,6 +246,142 @@ public class Card_5_106_Tests {
 		assertTrue(scn.DSDecisionAvailable("Choose character to release"));
 		assertFalse(scn.DSHasCardChoicesAvailable(chewie));
 		scn.DSChooseCard(han);
+
+		scn.LSChooseRally();
+		scn.PassAllResponses();
+
+		scn.LSChooseRally();
+		scn.PassAllResponses();
+
+		assertTrue(chewie.isCaptive());
+		assertEquals(ig88, chewie.getEscort());
+		assertEquals(ig88, chewie.getAttachedTo());
+
+		assertFalse(han.isCaptive());
+		assertNull(han.getAttachedTo());
+		assertNull(han.getEscort());
+		assertAtLocation(site, han);
+
+		assertFalse(leia.isCaptive());
+		assertNull(leia.getAttachedTo());
+		assertNull(leia.getEscort());
+		assertAtLocation(site, leia);
+	}
+
+	@Test
+	public void BindersWhenLostCauseAllBut1CaptiveToBeReleasedFromBearer() throws DecisionResultInvalidException {
+		var scn = GetScenario();
+
+		var chewie = scn.GetLSCard("chewie");
+		var han = scn.GetLSCard("han");
+		var leia = scn.GetLSCard("leia");
+
+		var site = scn.GetLSStartingLocation();
+
+		var ig88 = scn.GetDSCard("ig88");
+		var binders = scn.GetDSCard("binders");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, han, chewie, leia, ig88);
+		scn.AttachCardsTo(ig88, binders);
+		scn.CaptureCardWith(ig88, chewie);
+		scn.CaptureCardWith(ig88, han);
+		scn.CaptureCardWith(ig88, leia);
+
+		scn.SkipToPhase(Phase.CONTROL);
+
+		assertTrue(chewie.isCaptive());
+		assertEquals(ig88, chewie.getEscort());
+		assertEquals(ig88, chewie.getAttachedTo());
+		assertTrue(han.isCaptive());
+		assertEquals(ig88, han.getEscort());
+		assertEquals(ig88, han.getAttachedTo());
+		assertTrue(leia.isCaptive());
+		assertEquals(ig88, leia.getEscort());
+		assertEquals(ig88, leia.getAttachedTo());
+
+		//Since Sabotage isn't coded, we will cheat an ability on IG-88 that causes Binders
+		// to be immediately lost.
+		scn.DSExecuteAdHocEffect(ig88, new LoseCardFromTableEffect(new TopLevelGameTextAction(ig88, ig88.getCardId()), binders));
+		scn.PassAllResponses();
+
+		assertTrue(scn.DSDecisionAvailable("Select one captive to remain (all others on this escort will be released)"));
+		assertTrue(scn.DSHasCardChoicesAvailable(han, chewie, leia));
+
+		scn.DSChooseCard(chewie);
+		assertTrue(scn.DSDecisionAvailable("Choose character to release"));
+		assertFalse(scn.DSHasCardChoicesAvailable(chewie));
+		scn.DSChooseCard(han);
+
+		scn.LSChooseRally();
+		scn.PassAllResponses();
+
+		scn.LSChooseRally();
+		scn.PassAllResponses();
+
+		assertTrue(chewie.isCaptive());
+		assertEquals(ig88, chewie.getEscort());
+		assertEquals(ig88, chewie.getAttachedTo());
+
+		assertFalse(han.isCaptive());
+		assertNull(han.getAttachedTo());
+		assertNull(han.getEscort());
+		assertAtLocation(site, han);
+
+		assertFalse(leia.isCaptive());
+		assertNull(leia.getAttachedTo());
+		assertNull(leia.getEscort());
+		assertAtLocation(site, leia);
+	}
+
+	@Test
+	public void BindersWhenStolenCauseAllBut1CaptiveToBeReleasedFromBearer() throws DecisionResultInvalidException {
+		var scn = GetScenario();
+
+		var chewie = scn.GetLSCard("chewie");
+		var han = scn.GetLSCard("han");
+		var leia = scn.GetLSCard("leia");
+		var kabe = scn.GetLSCard("kabe");
+
+		var site = scn.GetLSStartingLocation();
+
+		var ig88 = scn.GetDSCard("ig88");
+		var binders = scn.GetDSCard("binders");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, han, chewie, leia, kabe, ig88);
+		scn.AttachCardsTo(ig88, binders);
+		scn.CaptureCardWith(ig88, chewie);
+		scn.CaptureCardWith(ig88, han);
+		scn.CaptureCardWith(ig88, leia);
+
+		scn.SkipToLSTurn(Phase.CONTROL);
+
+		assertTrue(chewie.isCaptive());
+		assertEquals(ig88, chewie.getEscort());
+		assertEquals(ig88, chewie.getAttachedTo());
+		assertTrue(han.isCaptive());
+		assertEquals(ig88, han.getEscort());
+		assertEquals(ig88, han.getAttachedTo());
+		assertTrue(leia.isCaptive());
+		assertEquals(ig88, leia.getEscort());
+		assertEquals(ig88, leia.getAttachedTo());
+
+		assertTrue(scn.LSCardActionAvailable(kabe, "Steal weapon or device"));
+		scn.PrepareLSDestiny(0);
+		scn.LSUseCardAction(kabe);
+		scn.LSChooseCard(binders);
+		scn.PassAllResponses();
+
+		assertTrue(scn.DSDecisionAvailable("Select one captive to remain (all others on this escort will be released)"));
+		assertTrue(scn.DSHasCardChoicesAvailable(han, chewie, leia));
+
+		scn.DSChooseCard(chewie);
+		assertTrue(scn.LSDecisionAvailable("Choose character to release"));
+		assertFalse(scn.LSHasCardChoicesAvailable(chewie));
+		scn.LSChooseCard(han);
 
 		scn.LSChooseRally();
 		scn.PassAllResponses();
