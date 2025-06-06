@@ -230,6 +230,7 @@ public interface GameProcedures extends Actions, Decisions, GameProperties {
 	 * When a card leaves the table, there are various responses.  This causes all players to pass all of them.
 	 */
 	default void PassCardLeavingTable() {
+		PassResponses("ABOUT_TO_LOSE_FORCE_NOT_FROM_BATTLE_DAMAGE");
 		PassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
 		PassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
 	}

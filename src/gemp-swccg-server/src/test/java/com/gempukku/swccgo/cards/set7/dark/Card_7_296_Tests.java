@@ -15,12 +15,9 @@ public class Card_7_296_Tests {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
-					put("blaster", "7_161");
 				}},
 				new HashMap<>()
 				{{
-					put("vader", "1_168");
-					put("lightsaber", "1_324");
 				}},
 				10,
 				10,
@@ -73,20 +70,5 @@ public class Card_7_296_Tests {
 		assertEquals(1, back.getIconCount(Icon.SPECIAL_EDITION));
 	}
 
-	@Test
-	public void CarbonChamberTestingImprisonsLeiaAndStripsCardsWhenSheIsLost() {
-		var scn = GetScenario();
 
-//		var prisoner = scn.GetLSCard("prisoner");
-//		var blaster = scn.GetLSCard("blaster");
-//		var core = scn.GetLSCard("core");
-//		var corridor = scn.GetLSCard("corridor");
-//
-//		var vader = scn.GetDSCard("vader");
-//		var lightsaber = scn.GetDSCard("lightsaber");
-
-		scn.StartGame();
-
-
-	}
 }

@@ -144,6 +144,33 @@ public interface StartingSetup {
 
 
 	/**
+	 * The Dark Side objective Bring Him Before Me / Take Your Father's Place and associated cards.
+	 */
+	StartingSetup BHBMObjective = new StartingSetup() {
+		@Override
+		public HashMap<String, String> Cards() {
+			return new HashMap<>() {{
+				put("bhbm", "9_151"); // Objective
+				put("throne", "9_147"); // Death Star II: Throne Room
+				put("rebellion", "9_127"); // Insignificant Rebellion
+				put("destiny", "9_134"); // Your Destiny
+			}};
+		}
+
+		@Override
+		public void Setup(VirtualTableScenario scn) {
+//			if(scn.DSDecisionAvailable("On which side")) {
+//				scn.DSChoose("Left");
+//			}
+//
+//			if(scn.DSDecisionAvailable("Choose a location to deploy ")) {
+//				scn.DSChooseCard(scn.GetDSCard("chamber"));
+//				scn.DSChoose("Left");
+//			}
+		}
+	};
+
+	/**
 	 * The Dark Side objective Carbon Chamber Testing / My Favorite Decoration and associated cards.
 	 */
 	StartingSetup CarbonChamberObjective = new StartingSetup() {
@@ -160,12 +187,13 @@ public interface StartingSetup {
 
 		@Override
 		public void Setup(VirtualTableScenario scn) {
-			if(scn.LSDecisionAvailable("On which side")) {
-				scn.LSChoose("Left");
+			if(scn.DSDecisionAvailable("On which side")) {
+				scn.DSChoose("Left");
 			}
 
-			if(scn.DSDecisionAvailable("Choose alien(s) to deploy to Audience Chamber")) {
-				scn.DSPass();
+			if(scn.DSDecisionAvailable("Choose a location to deploy ")) {
+				scn.DSChooseCard(scn.GetDSCard("chamber"));
+				scn.DSChoose("Left");
 			}
 		}
 	};
