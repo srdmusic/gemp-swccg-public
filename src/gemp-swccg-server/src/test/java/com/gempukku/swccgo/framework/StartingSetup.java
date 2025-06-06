@@ -144,6 +144,33 @@ public interface StartingSetup {
 
 
 	/**
+	 * The Dark Side objective Carbon Chamber Testing / My Favorite Decoration and associated cards.
+	 */
+	StartingSetup CarbonChamberObjective = new StartingSetup() {
+		@Override
+		public HashMap<String, String> Cards() {
+			return new HashMap<>() {{
+				put("testing", "7_296"); // Objective
+				put("chamber", "5_166"); // Cloud City: Carbonite Chamber
+				put("tower", "5_172"); // Cloud City: Security Tower
+				put("console", "5_107"); // Carbonite Chamber Console
+				put("prize", "10_42"); // Jabba's Prize
+			}};
+		}
+
+		@Override
+		public void Setup(VirtualTableScenario scn) {
+			if(scn.LSDecisionAvailable("On which side")) {
+				scn.LSChoose("Left");
+			}
+
+			if(scn.DSDecisionAvailable("Choose alien(s) to deploy to Audience Chamber")) {
+				scn.DSPass();
+			}
+		}
+	};
+
+	/**
 	 * The Light Side objective You Can Either Profit By This... / Or Be Destroyed and associated cards.
 	 */
 	StartingSetup ProfitObjective = new StartingSetup() {
