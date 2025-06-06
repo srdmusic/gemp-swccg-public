@@ -266,7 +266,6 @@ public class FrozenTests {
 
 		scn.StartGame();
 
-		//Han is already there due to Profit's starting text
 		scn.MoveCardsToLocation(site, leia, han, stormtrooper);
 		scn.FreezeCard(han);
 

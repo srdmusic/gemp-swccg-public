@@ -142,7 +142,6 @@ public class CaptiveTests {
 
 		scn.StartGame();
 
-		//Han is already there due to Profit's starting text
 		scn.MoveCardsToLocation(site, leia, han, stormtrooper);
 		scn.CaptureCardWith(stormtrooper, han);
 
