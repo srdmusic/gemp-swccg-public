@@ -264,12 +264,24 @@ public interface Actions extends Decisions, Choices {
 	 * Causes the Dark Side player to perform  a legal deployment action of the given card (i.e. plays that card from hand).
 	 * @param card The card to deploy.
 	 */
-	default void DSDeployCard(PhysicalCardImpl card) { DSDecided(GetCardActionId(DS, card, "Deploy")); }
+	default void DSDeployCard(PhysicalCardImpl card) {
+		String id = GetCardActionId(DS, card, "Deploy");
+		if(id == null)
+			throw new RuntimeException("Card '" + card.getBlueprint().getTitle() + "' is not an available deploy action.");
+
+		DSDecided(id);
+	}
 	/**
 	 * Causes the Light Side player to perform  a legal deployment action of the given card (i.e. plays that card from hand).
 	 * @param card The card to deploy.
 	 */
-	default void LSDeployCard(PhysicalCardImpl card) { LSDecided(GetCardActionId(LS, card, "Deploy")); }
+	default void LSDeployCard(PhysicalCardImpl card) {
+		String id = GetCardActionId(LS, card, "Deploy");
+		if(id == null)
+			throw new RuntimeException("Card '" + card.getBlueprint().getTitle() + "' is not an available deploy action.");
+
+		LSDecided(id);
+	}
 
 	/**
 	 * Causes the Dark Side player to perform  a legal deployment action of the given location (i.e. plays that card
@@ -277,7 +289,7 @@ public interface Actions extends Decisions, Choices {
 	 * @param site The site to deploy.
 	 */
 	default void DSDeployLocation(PhysicalCardImpl site) {
-		DSDecided(GetCardActionId(DS, site, "Deploy"));
+		DSDeployCard(site);
 		if(DSDecisionAvailable("On which side")) {
 			DSChoose("Left");
 		}
@@ -288,7 +300,7 @@ public interface Actions extends Decisions, Choices {
 	 * @param site The site to deploy.
 	 */
 	default void LSDeployLocation(PhysicalCardImpl site) {
-		LSDecided(GetCardActionId(LS, site, "Deploy"));
+		LSDeployCard(site);
 		if(LSDecisionAvailable("On which side")) {
 			LSChoose("Left");
 		}
