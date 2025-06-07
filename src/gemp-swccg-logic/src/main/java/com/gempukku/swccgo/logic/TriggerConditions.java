@@ -2718,7 +2718,7 @@ public class TriggerConditions {
      * @param game the game
      * @param effectResult the effect result
      * @param cardFilter the card being stolen
-     * @return true if an acceptable card was just stolen by an acceptable thief, false otherwise
+     * @return true if an acceptable card was just stolen, false otherwise
      */
     public static boolean justStolen(SwccgGame game, EffectResult effectResult, Filterable cardFilter) {
         if (effectResult.getType() == EffectResult.Type.STOLEN) {
