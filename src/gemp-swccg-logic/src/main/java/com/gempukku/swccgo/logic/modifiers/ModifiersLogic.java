@@ -13720,14 +13720,17 @@ public class ModifiersLogic implements ModifiersEnvironment, ModifiersQuerying, 
 
         if(site1.getBlueprint().hasIcon(Icon.VEHICLE_SITE) || site1.getBlueprint().hasIcon(Icon.STARSHIP_SITE)) {
             var site1VehicleOrStarship = Filters.findFirstActive(gameState.getGame(), null, Filters.relatedStarshipOrVehicle(site1));
-            if(site1VehicleOrStarship != null)
-                return site1VehicleOrStarship.getAtLocation().getCardId() == site2.getCardId();
+            if(site1VehicleOrStarship != null && Filters.site.accepts(gameState.getGame(), site2)
+                    && site1VehicleOrStarship.getAtLocation() != null && site1VehicleOrStarship.getAtLocation().getCardId() == site2.getCardId()
+                )
+                return true;
         }
 
         if(site2.getBlueprint().hasIcon(Icon.VEHICLE_SITE) || site2.getBlueprint().hasIcon(Icon.STARSHIP_SITE)) {
             var site2VehicleOrStarship = Filters.findFirstActive(gameState.getGame(), null, Filters.relatedStarshipOrVehicle(site2));
-            if(site2VehicleOrStarship != null)
-                return site2VehicleOrStarship.getAtLocation().getCardId() == site1.getCardId();
+            if(site2VehicleOrStarship != null && Filters.site.accepts(gameState.getGame(), site1)
+                    && site2VehicleOrStarship.getAtLocation() != null && site2VehicleOrStarship.getAtLocation().getCardId() == site1.getCardId())
+                return true;
         }
 
         return false;

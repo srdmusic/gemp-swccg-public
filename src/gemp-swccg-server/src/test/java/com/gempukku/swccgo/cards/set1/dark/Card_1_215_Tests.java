@@ -24,6 +24,9 @@ public class Card_1_215_Tests
 					put("barge", "6_172"); // Jabba's Sail Barge
 					put("deck", "6_167"); // Jabba's Sail Barge: Passenger Deck
 
+					put("sandcrawler", "1_309");
+					put("junkheap", "2_149"); // Sandcrawler: Droid Junkheap
+
 					put("desert1", "6_169");
 					put("desert2", "6_169");
 				}},
@@ -116,7 +119,9 @@ public class Card_1_215_Tests
 		scn.SkipToDSTurn(Phase.CONTROL);
 
 		assertTrue(scn.IsAdjacentTo(marketplace, desert1));
+		assertTrue(scn.IsAdjacentTo(desert1, marketplace));
 		assertTrue(scn.IsAdjacentTo(marketplace, desert2));
+		assertTrue(scn.IsAdjacentTo(desert2, marketplace));
 		assertFalse(scn.IsAdjacentTo(desert1, desert2));
 
 		assertTrue(scn.DSActionAvailable(marketplace, "Retrieve 1 Force"));
@@ -125,7 +130,7 @@ public class Card_1_215_Tests
 	}
 
 	@Test
-	public void ExpandTheEmpireDuplicatesTextToVehicleSites() {
+	public void ExpandTheEmpireDuplicatesTextToVehicleSiteWhenVehiclePresent() {
 		var scn = GetScenario();
 
 		var troopers = scn.GetDSFillerRange(3);
@@ -168,9 +173,93 @@ public class Card_1_215_Tests
 		scn.SkipToDSTurn(Phase.CONTROL);
 
 		assertTrue(scn.IsAdjacentTo(marketplace, deck));
+		assertTrue(scn.IsAdjacentTo(deck, marketplace));
 
 		assertTrue(scn.DSActionAvailable(marketplace, "Retrieve 1 Force"));
 		assertTrue(scn.DSActionAvailable(deck, "Retrieve 1 Force"));
+	}
+
+	@Test
+	public void ExpandTheEmpireDoesNotDuplicateTextToVehicleSitesWhenVehicleNotPresent() {
+		var scn = GetScenario();
+
+		var troopers = scn.GetDSFillerRange(3);
+
+		var marketplace = scn.GetDSStartingLocation();
+		var deck = scn.GetDSCard("deck");
+		var expand = scn.GetDSCard("expand");
+		scn.MoveCardsToHand(deck, expand);
+
+		scn.StartGame();
+
+		scn.DSActivateForceCheat(2);
+
+		scn.SkipToPhase(Phase.DEPLOY);
+
+		scn.LSPass();
+
+		scn.DSDeployCard(deck);
+		scn.PassAllResponses();
+		scn.LSPass();
+
+		scn.MoveCardsToLocation(marketplace, troopers.get(0));
+		scn.MoveCardsToLocation(deck, troopers.get(1));
+
+		scn.SkipToDSTurn(Phase.CONTROL);
+
+		//The original Marketplace has an ability that lets you retrieve 1 Force
+		// if you occupy it.  The Passenger Deck normally have no such ability
+		assertTrue(scn.DSActionAvailable(marketplace, "Retrieve 1 Force"));
+		assertFalse(scn.DSActionAvailable(deck, "Retrieve 1 Force"));
+
+		scn.SkipToDSTurn(Phase.DEPLOY);
+		assertTrue(scn.DSDeployAvailable(expand));
+		scn.DSDeployCardAndPassResponses(expand, marketplace);
+		scn.LSPass();
+
+		scn.SkipToLSTurn();
+		scn.SkipToDSTurn(Phase.CONTROL);
+
+		assertFalse(scn.IsAdjacentTo(marketplace, deck));
+		assertFalse(scn.IsAdjacentTo(deck, marketplace));
+
+		assertTrue(scn.DSActionAvailable(marketplace, "Retrieve 1 Force"));
+		assertFalse(scn.DSActionAvailable(deck, "Retrieve 1 Force"));
+	}
+
+	@Test
+	public void ExpandTheEmpireDuplicatesVehicleSiteTextToAdjacentSiteWhenVehiclePresent() {
+		var scn = GetScenario();
+
+		var troopers = scn.GetDSFillerRange(3);
+
+		var marketplace = scn.GetDSStartingLocation();
+		var sandcrawler = scn.GetDSCard("sandcrawler");
+		var junkheap = scn.GetDSCard("junkheap");
+		var expand = scn.GetDSCard("expand");
+		scn.MoveCardsToHand(sandcrawler, junkheap, expand);
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(marketplace, sandcrawler);
+
+		scn.SkipToPhase(Phase.DEPLOY);
+
+		scn.DSDeployCard(junkheap);
+		scn.PassAllResponses();
+		scn.LSPass();
+
+		assertTrue(scn.IsNighttimeAt(junkheap));
+		assertFalse(scn.IsNighttimeAt(marketplace));
+
+		assertTrue(scn.DSDeployAvailable(expand));
+		scn.DSDeployCardAndPassResponses(expand, junkheap);
+
+		assertTrue(scn.IsAdjacentTo(marketplace, junkheap));
+		assertTrue(scn.IsAdjacentTo(junkheap, marketplace));
+
+		assertTrue(scn.IsNighttimeAt(junkheap));
+		assertTrue(scn.IsNighttimeAt(marketplace));
 	}
 
 }
