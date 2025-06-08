@@ -35,9 +35,12 @@ import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnActionProxyEffect;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.CancelCardsOnTableEffect;
 import com.gempukku.swccgo.logic.effects.CancelReactEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromHandOnLostPileEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromHandOnUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.ShuffleLostPileEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -234,9 +237,52 @@ public class Card501_120 extends AbstractEpicEventDeployable {
 
                         }
                     });
-
             actions.add(action);
         }
+
+        Filter tradeAgendaFilter = Filters.and(Filters.your(playerId), Filters.trade_agenda, Filters.here(self));
+        // Check condition(s)
+        if (GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canTarget(game, self, tradeAgendaFilter)
+                && GameConditions.isDuringYourTurn(game, playerId)
+                && GameConditions.hasHand(game, playerId)
+                && GameConditions.hasLostPile(game, playerId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Place card from hand in Lost Pile");
+            action.setActionMsg("Place a card from hand in Lost Pile, shuffle that pile, and take top card into hand");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new NumTimesPerTurnEffect(action, 2));
+            // Pay cost(s)
+            action.appendCost(
+                    new PutCardFromHandOnLostPileEffect(action, playerId));
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Target trade agenda", tradeAgendaFilter) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, final PhysicalCard cardTargeted) {
+                            action.addAnimationGroup(cardTargeted);
+
+                            // Allow response(s)
+                            action.allowResponses("Target trade agenda on " + GameUtils.getCardLink(cardTargeted) + " to place card in Lost Pile",
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {                                            
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new ShuffleLostPileEffect(action, self));
+                                            action.appendEffect(
+                                                    new DrawCardIntoHandFromLostPileEffect(action, playerId));
+                                        }
+                                    }
+                            );
+
+                        }
+                    });
+            actions.add(action);
+        }
+
         return actions;
     }
 
