@@ -116,6 +116,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Cancel 'react'");
+            action.setActionMsg("Target a blockade agenda to cancel 'react'");
             // Update usage limit(s)
             action.appendUsage(
                     new NumTimesPerTurnEffect(action, 2));
