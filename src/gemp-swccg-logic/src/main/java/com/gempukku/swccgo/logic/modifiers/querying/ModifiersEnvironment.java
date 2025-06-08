@@ -1,14 +1,17 @@
-package com.gempukku.swccgo.logic.modifiers;
+package com.gempukku.swccgo.logic.modifiers.querying;
 
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.GameTextAction;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifierHook;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-// This interface provides methods that allow
-// modifiers to automatically be removed after
-// a specified period.
-//
+/**
+ * This interface defines functions related to the nuts-and-bolts management of modifiers, which is to say adding
+ * them to the game state, removing them in response to game actions such as their source card leaving play, and
+ * removing them due to their expiration being reached.
+ */
 public interface ModifiersEnvironment {
 
     ModifierHook addAlwaysOnModifier(Modifier modifier);
