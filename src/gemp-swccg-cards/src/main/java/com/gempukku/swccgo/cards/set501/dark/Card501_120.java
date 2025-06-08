@@ -22,6 +22,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.AbstractActionProxy;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.BattleState;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
@@ -37,6 +38,7 @@ import com.gempukku.swccgo.logic.effects.CancelCardsOnTableEffect;
 import com.gempukku.swccgo.logic.effects.CancelReactEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromHandOnLostPileEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromHandOnUsedPileEffect;
+import com.gempukku.swccgo.logic.effects.ReduceAttritionEffect;
 import com.gempukku.swccgo.logic.effects.ShuffleLostPileEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
@@ -283,6 +285,54 @@ public class Card501_120 extends AbstractEpicEventDeployable {
             actions.add(action);
         }
 
+        return actions;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        final List<OptionalGameTextTriggerAction> actions = new LinkedList<>();   
+
+        GameTextActionId gameTextActionId = GameTextActionId.WITH_THUNDEROUS_APPLAUSE__TARGET_AGENDA;
+        Filter wealthAgendaFilter = Filters.and(Filters.your(playerId), Filters.wealth_agenda, Filters.here(self));
+
+        // Check condition(s)
+        if (TriggerConditions.isInitialAttritionJustCalculated(game, effectResult)
+                && GameConditions.isDuringBattle(game)
+                && GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canTarget(game, self, wealthAgendaFilter)) {
+
+            final BattleState battleState = game.getGameState().getBattleState();
+            if (battleState.hasAttritionTotal(game.getOpponent(playerId))) {
+
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Reduce attrition");
+                // Update usage limit(s)
+                action.appendUsage(
+                        new NumTimesPerTurnEffect(action, 2));
+                // Choose target(s)
+                action.appendTargeting(
+                        new TargetCardOnTableEffect(action, playerId, "Target wealth agenda", wealthAgendaFilter) {
+                            @Override
+                            protected void cardTargeted(final int targetGroupId, final PhysicalCard cardTargeted) {
+                                action.addAnimationGroup(cardTargeted);
+
+                                // Allow response(s)
+                                action.allowResponses("Target wealth agenda on " + GameUtils.getCardLink(cardTargeted) + " to subtract 1 from attrition",
+                                        new UnrespondableEffect(action) {
+                                            @Override
+                                            protected void performActionResults(Action targetingAction) {                                            
+                                                // Perform result(s)
+                                                action.appendEffect(
+                                                        new ReduceAttritionEffect(action, playerId, 2));
+                                            }
+                                        }
+                                );
+
+                            }
+                        });
+                actions.add(action);
+            }
+        }
         return actions;
     }
 
