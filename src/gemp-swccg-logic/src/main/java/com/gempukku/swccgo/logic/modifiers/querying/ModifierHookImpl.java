@@ -1,5 +1,7 @@
-package com.gempukku.swccgo.logic.modifiers;
+package com.gempukku.swccgo.logic.modifiers.querying;
 
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifierHook;
 import com.gempukku.swccgo.logic.timing.SnapshotData;
 
 /**
