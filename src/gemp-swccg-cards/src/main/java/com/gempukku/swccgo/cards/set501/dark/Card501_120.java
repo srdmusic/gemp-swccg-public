@@ -26,6 +26,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.CancelCardsOnTableEffect;
 import com.gempukku.swccgo.logic.effects.CancelReactEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
@@ -107,14 +108,14 @@ public class Card501_120 extends AbstractEpicEventDeployable {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalBeforeTriggers(String playerId, SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.WITH_THUNDEROUS_APPLAUSE__TARGET_AGENDA;
 
-        Filter blockadeAgendaFilter = Filters.and(Filters.blockade_agenda, Filters.here(self));
+        Filter blockadeAgendaFilter = Filters.and(Filters.your(playerId), Filters.blockade_agenda, Filters.here(self));
 
         // Check condition(s)
         if (TriggerConditions.isReact(game, effect)
                 && GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canTarget(game, self, blockadeAgendaFilter)) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Cancel 'react'");
             action.setActionMsg("Target a blockade agenda to cancel 'react'");
             // Update usage limit(s)
@@ -146,6 +147,32 @@ public class Card501_120 extends AbstractEpicEventDeployable {
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, final int gameTextSourceCardId) {
+        final List<TopLevelGameTextAction> actions = new LinkedList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.WITH_THUNDEROUS_APPLAUSE__TARGET_AGENDA;
+        Filter taxationAgendaFilter = Filters.and(Filters.your(playerId), Filters.taxation_agenda, Filters.here(self));
+
+        // Check condition(s)
+        if (GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canTarget(game, self, taxationAgendaFilter)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Place card from hand on Used Pile");
+            action.setActionMsg("Make the next [Episode I] character they deploy this turn deploy -1");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new NumTimesPerTurnEffect(action, 2));
+
+            // Choose target(s)
+
+
+            actions.add(action);
+        }
+        return actions;
     }
 
 }
