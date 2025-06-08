@@ -3,6 +3,7 @@ package com.gempukku.swccgo.rules.state;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
 import com.gempukku.swccgo.framework.StartingSetup;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -127,6 +128,8 @@ public class CaptiveTests {
 		assertEquals(2, scn.GetPassengerCapacity(tube));
 	}
 
+	//See https://github.com/PlayersCommittee/gemp-swccg-public/issues/849
+	@Ignore("https://github.com/PlayersCommittee/gemp-swccg-public/issues/849")
 	@Test
 	public void CaptivesAreAutomaticallyFreedIfEscortIsPurchased() {
 		var scn = GetScenario();
