@@ -181,16 +181,15 @@ public class Card501_120 extends AbstractEpicEventDeployable {
             // Update usage limit(s)
             action.appendUsage(
                     new NumTimesPerTurnEffect(action, 2));
-            // Pay cost(s)
-            action.appendCost(
-                    new PutCardFromHandOnUsedPileEffect(action, playerId));
             // Choose target(s)
             action.appendTargeting(
                     new TargetCardOnTableEffect(action, playerId, "Target taxation agenda", taxationAgendaFilter) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, final PhysicalCard cardTargeted) {
                             action.addAnimationGroup(cardTargeted);
-
+                            // Pay cost(s)
+                            action.appendCost(
+                                    new PutCardFromHandOnUsedPileEffect(action, playerId));
                             // Allow response(s)
                             action.allowResponses("Target taxation agenda on " + GameUtils.getCardLink(cardTargeted) + " to make their next [Episode I] character deploy -1",
                                     new UnrespondableEffect(action) {
@@ -256,16 +255,15 @@ public class Card501_120 extends AbstractEpicEventDeployable {
             // Update usage limit(s)
             action.appendUsage(
                     new NumTimesPerTurnEffect(action, 2));
-            // Pay cost(s)
-            action.appendCost(
-                    new PutCardFromHandOnLostPileEffect(action, playerId));
             // Choose target(s)
             action.appendTargeting(
                     new TargetCardOnTableEffect(action, playerId, "Target trade agenda", tradeAgendaFilter) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, final PhysicalCard cardTargeted) {
                             action.addAnimationGroup(cardTargeted);
-
+                            // Pay cost(s)
+                            action.appendCost(
+                                    new PutCardFromHandOnLostPileEffect(action, playerId));
                             // Allow response(s)
                             action.allowResponses("Target trade agenda on " + GameUtils.getCardLink(cardTargeted) + " to place card in Lost Pile",
                                     new UnrespondableEffect(action) {
