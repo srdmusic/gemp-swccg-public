@@ -2,7 +2,6 @@ package com.gempukku.swccgo.framework;
 
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.game.PhysicalCardImpl;
-import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
 
 import static org.junit.Assert.assertTrue;
 
@@ -229,7 +228,7 @@ public interface GameProcedures extends Actions, Decisions, GameProperties, Pile
 	/**
 	 * Causes the Dark Side player to choose to "seize" the recently-captured captive (attaching it to the captor).
 	 */
-	default void DSChooseSeize() { DSChoose("Seize"); }
+	default void DSChooseSeizeCaptive() { DSChoose("Seize"); }
 
 	/**
 	 * @return True if the Light Side player is currently deciding what to do with a released captive.
@@ -249,6 +248,7 @@ public interface GameProcedures extends Actions, Decisions, GameProperties, Pile
 	 * When a card leaves the table, there are various responses.  This causes all players to pass all of them.
 	 */
 	default void PassCardLeavingTable() {
+		PassResponses("ABOUT_TO_LOSE_FORCE_NOT_FROM_BATTLE_DAMAGE");
 		PassResponses("FORFEITED_TO_LOST_PILE_FROM_TABLE");
 		PassResponses("PUT_IN_CARD_PILE_FROM_OFF_TABLE");
 	}

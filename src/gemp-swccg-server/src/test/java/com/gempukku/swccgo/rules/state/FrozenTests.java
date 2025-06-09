@@ -5,11 +5,11 @@ import com.gempukku.swccgo.framework.VirtualTableScenario;
 import com.gempukku.swccgo.framework.StartingSetup;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.jupiter.api.Disabled;
 
 import java.util.HashMap;
 
 import static com.gempukku.swccgo.framework.Assertions.assertAtLocation;
+import static com.gempukku.swccgo.framework.Assertions.assertInHand;
 import static org.junit.Assert.*;
 
 public class FrozenTests {
@@ -18,6 +18,8 @@ public class FrozenTests {
 				new HashMap<>()
 				{{
 					put("han", "1_11");
+					put("leia", "1_17");
+					put("loves_you", "6_75");
 				}},
 				new HashMap<>()
 				{{
@@ -246,5 +248,46 @@ public class FrozenTests {
 		assertNull(han.getAttachedTo());
 		assertFalse(han.getTargetedCards(scn.gameState()).containsValue(boba));
 		assertAtLocation(site, han);
+	}
+
+	@Test
+	public void FrozenCaptiveJoinsBattleWhenReleasedMidBattle() {
+		var scn = GetScenario();
+
+		var han = scn.GetLSCard("han");
+		var leia = scn.GetLSCard("leia");
+		var loves_you = scn.GetLSCard("loves_you");
+		scn.MoveCardsToHand(loves_you);
+
+		var site = scn.GetLSStartingLocation();
+
+		var stormtrooper = scn.GetDSFiller(1);
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, leia, han, stormtrooper);
+		scn.FreezeCard(han);
+
+		scn.SkipToLSTurn(Phase.BATTLE);
+
+		assertTrue(han.isFrozen());
+		assertTrue(han.isCaptive());
+		assertNull(han.getAttachedTo());
+		assertNull(han.getEscort());
+		assertAtLocation(site, han, leia);
+		assertInHand(loves_you);
+
+		scn.LSInitiateBattle(site);
+		scn.PassBattleStartResponses();
+
+		assertTrue(scn.IsParticipatingInBattle(leia, stormtrooper));
+		assertFalse(scn.IsParticipatingInBattle(han));
+		assertTrue(scn.LSCardPlayAvailable(loves_you));
+		scn.LSPlayCardAndPassResponses(loves_you, han);
+
+		assertFalse(han.isFrozen());
+		assertFalse(han.isCaptive());
+		assertAtLocation(site, han);
+		assertTrue(scn.IsParticipatingInBattle(han));
 	}
 }
