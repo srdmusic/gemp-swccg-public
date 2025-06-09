@@ -189,7 +189,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
                             action.addAnimationGroup(cardTargeted);
                             // Pay cost(s)
                             action.appendCost(
-                                    new PutCardFromHandOnUsedPileEffect(action, playerId));
+                                    new PutCardFromHandOnUsedPileEffect(action, playerId, Filters.and(Icon.EPISODE_I, Filters.character), false));
                             // Allow response(s)
                             action.allowResponses("Target taxation agenda on " + GameUtils.getCardLink(cardTargeted) + " to make their next [Episode I] character deploy -1",
                                     new UnrespondableEffect(action) {
