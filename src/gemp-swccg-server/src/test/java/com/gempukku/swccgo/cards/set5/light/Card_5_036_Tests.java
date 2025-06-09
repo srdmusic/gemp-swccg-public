@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set5.light;
 import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
 import com.gempukku.swccgo.framework.StartingSetup;
+import com.gempukku.swccgo.game.PhysicalCardImpl;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.GoMissingEffect;
 import org.junit.Test;
@@ -122,6 +123,34 @@ public class Card_5_036_Tests {
 		assertTrue(scn.IsParticipatingInBattle(boba));
 
 		assertTrue(scn.AwaitingLSWeaponsSegmentActions());
+	}
+
+	@Test
+	public void CaptiveFuryRequiresSufficientForceToPayForBattle() {
+		var scn = GetScenario();
+
+		var fury = scn.GetLSCard("fury");
+		var chewie = scn.GetLSCard("chewie");
+		scn.MoveCardsToHand(fury);
+
+		var site = scn.GetLSStartingLocation();
+
+		var boba = scn.GetDSCard("boba");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, boba);
+		scn.CaptureCardWith(boba, chewie);
+
+		scn.SkipToLSTurn(Phase.CONTROL);
+
+		//Clear out the force pile so that there is nothing to pay for battle with
+		for(var card : scn.GetLSForcePile().stream().toList()) {
+			scn.MoveCardsToTopOfOwnReserveDeck((PhysicalCardImpl)card);
+		}
+
+		scn.SkipToPhase(Phase.BATTLE);
+		assertFalse(scn.LSPlayLostInterruptAvailable(fury));
 	}
 
 	@Test
@@ -290,7 +319,7 @@ public class Card_5_036_Tests {
 		scn.PassBattleStartResponses();
 		scn.LSPass();
 
-		assertTrue(scn.DSActionAvailable(bobas_blaster));
+		assertTrue(scn.DSCardActionAvailable(bobas_blaster));
 		scn.DSUseCardAction(bobas_blaster);
 
 		assertTrue(scn.DSDecisionAvailable("Choose target"));
@@ -866,7 +895,7 @@ public class Card_5_036_Tests {
 
 		scn.PassResponses("ABOUT_TO_BE_CAPTURED");
 		assertTrue(scn.DSCaptureDecisionAvailable());
-		scn.DSChooseSeize();
+		scn.DSChooseSeizeCaptive();
 
 		assertTrue(scn.DSDecisionAvailable("Choose escort for"));
 		scn.DSChooseCard(boba);
@@ -1055,7 +1084,7 @@ public class Card_5_036_Tests {
 		scn.PassCardAndForceUseResponses();
 		scn.PassBattleStartResponses();
 
-		assertTrue(scn.LSActionAvailable(blaster));
+		assertTrue(scn.LSCardActionAvailable(blaster));
 		scn.LSUseCardAction(blaster);
 
 		assertTrue(scn.LSDecisionAvailable("Choose target"));

@@ -29,6 +29,7 @@ public interface Title {
     String Activate_The_Droids = "Activate The Droids";
     String Advance_Preparation = "Advance Preparation";
     String Advosze = "Advosze";
+    String A_Few_Maneuvers = "A Few Maneuvers";
     String Agents_In_The_Court = "Agents In The Court";
     String Agents_Of_Black_Sun = "Agents Of Black Sun";
     String Ahch_To = "Ahch-To";
@@ -346,7 +347,7 @@ public interface Title {
     String Droid_Starfighter_Laser_Cannons = "Droid Starfighter Laser Cannons";
     String Droid_Workshop = "Jabba's Palace: Droid Workshop";
     String Drop = "Drop!";
-    String Dyden_Vos_s_Kyuzo_Petars = "Dryden Vos’s Kyuzo Petars";
+    String Dyden_Vos_s_Kyuzo_Petars = "Dryden Vos's Kyuzo Petars";
     String DS_181_3 = "DS-181-3";
     String DS_181_4 = "DS-181-4";
     String DS_61_5 = "DS-61-5";
@@ -847,6 +848,7 @@ public interface Title {
     String Palace_Raider = "Palace Raider";
     String Paploo = "Paploo";
     String Part_of_the_Tribe = "Part Of The Tribe";
+    String Passel_Argente = "Passel Argente";
     String Passenger_Deck = "Jabba's Sail Barge: Passenger Deck";
     String Path_Of_Least_Resistance = "Path Of Least Resistance";
     String Patience = "Patience!";
