@@ -59,11 +59,7 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 public class Card501_120 extends AbstractEpicEventDeployable {
     public Card501_120() {
         super(Side.DARK, PlayCardZoneOption.ATTACHED, "With Thunderous Applause", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on Galactic Senate. [V17] Passel Argente's game text and your Political Effects are canceled. Twice per turn, may target your agenda here:\n" +
-                    "Blockade: cancel a 'react';\n" +
-                    "Taxation: place an [Episode I] character from hand on Used Pile; the next [Episode I] character you deploy this turn is deploy -1;\n" +
-                    "Trade: during your turn, place a card from hand in Lost Pile, shuffle that pile, and take top card into hand;\n" +
-                    "Wealth: subtract 1 from attrition against you.");
+        setGameText("Deploy on Galactic Senate. [V17] Passel Argente's game text and your Political Effects are canceled. Twice per turn, may target your agenda here: Blockade: Cancel a 'react.' Taxation: Place an [Episode I] character from hand on Used Pile; the next [Episode I] character you deploy this turn is cumulatively deploy -1. Trade: During your turn, place a card from hand in Lost Pile, shuffle that pile, and take top card into hand. Wealth: Subtract 1 from attrition against you.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
         setTestingText("With Thunderous Applause");
     }
