@@ -40,7 +40,7 @@ public class Card501_173 extends AbstractNormalEffect {
         setLore("");
         setGameText("If your [Skywalker] Epic Event on table, deploy on table. " +
                 "May [download] Be With Me or Jedi Village. " +
-                "Once per turn, you may relocate Anakin’s Lightsaber between Ben Solo and Rey. " +
+                "Once per turn, you may relocate Anakin's Lightsaber between Ben Solo and Rey. " +
                 "Ben Solo is immune to attrition < 4. " +
                 "Chewie and Finn may move as a 'react.' [Immune to Alter.]");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_25);
