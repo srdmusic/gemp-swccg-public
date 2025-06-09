@@ -39,7 +39,7 @@ public class Card501_111_BACK extends AbstractObjective {
     public Card501_111_BACK() {
         super(Side.DARK, 7, Title.The_Resistance_Is_Doomed, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Immediately retrieve up to 3 Force.\n" +
-                    "While this side up, your Force drains are +1 at each battleground system. Once per turn, may deploy a [FO] vehicle or trooper from Lost Pile. Your total power is +2 at Kylo’s location. While you control Salt Plateau with Kylo present, opponent’s Force retrieval is canceled and opponent must have two cards with ability to initiate a Force drain.\n" +
+                    "While this side up, your Force drains are +1 at each battleground system. Once per turn, may deploy a [FO] vehicle or trooper from Lost Pile. Your total power is +2 at Kylo's location. While you control Salt Plateau with Kylo present, opponent's Force retrieval is canceled and opponent must have two cards with ability to initiate a Force drain.\n" +
                     "Place out of play if Kylo lost a battle involving Luke, Leia or Han.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText(Title.The_Resistance_Is_Doomed);
