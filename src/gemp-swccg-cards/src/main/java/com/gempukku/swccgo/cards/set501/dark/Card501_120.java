@@ -303,7 +303,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
             if (battleState.hasAttritionTotal(game.getOpponent(playerId))) {
 
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action.setText("Reduce attrition");
+                action.setText("Reduce attrition by 1");
                 // Update usage limit(s)
                 action.appendUsage(
                         new NumTimesPerTurnEffect(action, 2));
@@ -321,7 +321,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
                                             protected void performActionResults(Action targetingAction) {                                            
                                                 // Perform result(s)
                                                 action.appendEffect(
-                                                        new ReduceAttritionEffect(action, playerId, 2));
+                                                        new ReduceAttritionEffect(action, playerId, 1));
                                             }
                                         }
                                 );
