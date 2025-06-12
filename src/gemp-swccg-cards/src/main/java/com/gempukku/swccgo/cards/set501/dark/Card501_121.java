@@ -1,16 +1,24 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractLostOrStartingInterrupt;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.timing.Action;
 
 /**
  * Set: Playtesting
@@ -29,7 +37,27 @@ public class Card501_121 extends AbstractLostOrStartingInterrupt {
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self) {
-        return null;
+        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.NO_CIVILITY_ONLY_POLITICS__UPLOAD_CORUSCANT_GUARD;
+
+        // Check condition(s)
+        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+            action.setText("Take Coruscant Guard into hand from Reserve Deck");
+            // Allow response(s)
+            action.allowResponses("Take a Coruscant Guard into hand from Reserve Deck",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Coruscant_Guard, true));
+                        }
+                    }
+            );
+        }        
+        return actions;
     }
 
     @Override
