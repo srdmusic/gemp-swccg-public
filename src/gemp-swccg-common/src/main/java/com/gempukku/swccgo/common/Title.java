@@ -1251,6 +1251,7 @@ public interface Title {
     String Williams = "Lieutenant Williams";
     String Wioslea = "Wioslea";
     String Wise_Advice = "Wise Advice";
+    String With_Thunderous_Applause = "With Thunderous Applause";
     String Wittin = "Wittin";
     String Wokling = "Wokling";
     String Womp_Rat = "Womp Rat";

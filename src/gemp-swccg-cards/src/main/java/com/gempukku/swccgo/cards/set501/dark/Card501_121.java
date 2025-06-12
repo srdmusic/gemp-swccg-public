@@ -17,6 +17,9 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TakeCardFromVoidIntoHandEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
@@ -62,6 +65,29 @@ public class Card501_121 extends AbstractLostOrStartingInterrupt {
 
     @Override
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        
+        // Check condition(s)
+        if (GameConditions.canSpot(game, self, Filters.My_Lord_Is_That_Legal)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
+            action.setText("Deploy With Thunderous Applause and Effects from Reserve Deck");
+            // Allow response(s)
+            action.allowResponses("Deploy With Thunderous Applause and two Effects from Reserve Deck",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new DeployCardFromReserveDeckEffect(action, Filters.With_Thunderous_Applause, true, false));
+                            action.appendEffect(
+                                    new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.immune_to_Alter, Filters.deploysForFree,
+                                            Filters.or(Filters.gameTextContains("deploy on table"), Filters.gameTextContains("deploy on your side of table"))), 2, 2, true, false));
+                            action.appendEffect(
+                                    new TakeCardFromVoidIntoHandEffect(action, playerId, self));
+                        }
+                    }
+            );
+            return action;
+        }        
         return null;
     }
 
