@@ -266,10 +266,10 @@ public interface StartingSetup {
 		@Override
 		public HashMap<String, String> Cards() {
 			return new HashMap<>() {{
-				put("good", "9_61"); // Objective
+				put("tigih", "9_61"); // Objective
 				put("hut", "8_71"); // Endor: Chief Chirpa's Hut
 				put("platform", "8_76"); // Endor: Landing Platform (Docking Bay)
-				put("luke", "9_24"); // Luke Skywalker, Jedi Knight
+				put("lsjk", "9_24"); // Luke Skywalker, Jedi Knight
 				put("lightsaber", "9_90"); //Luke's Lightsaber
 				put("conflict", "9_34"); //I Feel The Conflict
 			}};

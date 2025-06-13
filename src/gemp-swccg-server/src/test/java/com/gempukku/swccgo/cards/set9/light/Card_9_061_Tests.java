@@ -59,14 +59,14 @@ public class Card_9_061_Tests {
 
 		var scn = GetScenario();
 
-		var card = scn.GetLSCard("good").getBlueprint();
+		var card = scn.GetLSCard("tigih").getBlueprint();
 
 		assertEquals(Title.There_Is_Good_In_Him, card.getTitle());
 		assertEquals(Side.LIGHT, card.getSide());
 		assertEquals(0, card.getDestiny(), scn.epsilon);
 		assertEquals(1, card.getIconCount(Icon.DEATH_STAR_II));
 
-		var back = scn.GetLSCard("good").getOtherSideBlueprint();
+		var back = scn.GetLSCard("tigih").getOtherSideBlueprint();
 
 		assertEquals(Title.I_Can_Save_Him, back.getTitle());
 		assertEquals(Side.LIGHT, back.getSide());
@@ -78,8 +78,8 @@ public class Card_9_061_Tests {
 	public void ICanSaveHimMakesDSLose2ForceAtEndOfTurnIfVaderNotEscortingLuke() {
 		var scn = GetScenario();
 
-		var luke = scn.GetLSCard("luke");
-		var good = scn.GetLSCard("good");
+		var lsjk = scn.GetLSCard("lsjk");
+		var tigih = scn.GetLSCard("tigih");
 
 		var hut = scn.GetLSCard("hut");
 		var platform = scn.GetLSCard("platform");
@@ -89,17 +89,17 @@ public class Card_9_061_Tests {
 
 		scn.StartGame();
 
-		assertFalse(good.isFlipped());
+		assertFalse(tigih.isFlipped());
 		scn.MoveCardsToLocation(hut, trooper);
 		scn.MoveCardsToLocation(platform, vader);
 
 		scn.SkipToPhase(Phase.CONTROL);
 
-		assertTrue(luke.isCaptive());
-		assertEquals(trooper, luke.getEscort());
-		assertEquals(trooper, luke.getAttachedTo());
-		assertTrue(trooper.getCardsEscorting().contains(luke));
-		assertTrue(good.isFlipped());
+		assertTrue(lsjk.isCaptive());
+		assertEquals(trooper, lsjk.getEscort());
+		assertEquals(trooper, lsjk.getAttachedTo());
+		assertTrue(trooper.getCardsEscorting().contains(lsjk));
+		assertTrue(tigih.isFlipped());
 
 		scn.SkipToPhase(Phase.DRAW);
 		scn.DSPass();
@@ -112,8 +112,8 @@ public class Card_9_061_Tests {
 	public void ICanSaveHimOffersTransferToVaderAndStopsAutoForceLoss() {
 		var scn = GetScenario();
 
-		var luke = scn.GetLSCard("luke");
-		var good = scn.GetLSCard("good");
+		var lsjk = scn.GetLSCard("lsjk");
+		var tigih = scn.GetLSCard("tigih");
 
 		var hut = scn.GetLSCard("hut");
 		var platform = scn.GetLSCard("platform");
@@ -123,17 +123,17 @@ public class Card_9_061_Tests {
 
 		scn.StartGame();
 
-		assertFalse(good.isFlipped());
+		assertFalse(tigih.isFlipped());
 		scn.MoveCardsToLocation(hut, trooper);
 		scn.MoveCardsToLocation(platform, vader);
 
 		scn.SkipToPhase(Phase.MOVE);
 
-		assertTrue(luke.isCaptive());
-		assertEquals(trooper, luke.getEscort());
-		assertEquals(trooper, luke.getAttachedTo());
-		assertTrue(trooper.getCardsEscorting().contains(luke));
-		assertTrue(good.isFlipped());
+		assertTrue(lsjk.isCaptive());
+		assertEquals(trooper, lsjk.getEscort());
+		assertEquals(trooper, lsjk.getAttachedTo());
+		assertTrue(trooper.getCardsEscorting().contains(lsjk));
+		assertTrue(tigih.isFlipped());
 
 		assertTrue(scn.DSMoveAvailable(trooper));
 		scn.DSMoveCard(trooper, platform);
@@ -144,11 +144,11 @@ public class Card_9_061_Tests {
 		scn.DSChooseAction("Transfer Luke to Vader");
 		scn.PassAllResponses();
 
-		assertTrue(luke.isCaptive());
-		assertEquals(vader, luke.getEscort());
-		assertEquals(vader, luke.getAttachedTo());
-		assertTrue(vader.getCardsEscorting().contains(luke));
-		assertTrue(good.isFlipped());
+		assertTrue(lsjk.isCaptive());
+		assertEquals(vader, lsjk.getEscort());
+		assertEquals(vader, lsjk.getAttachedTo());
+		assertTrue(vader.getCardsEscorting().contains(lsjk));
+		assertTrue(tigih.isFlipped());
 		assertTrue(trooper.getCardsEscorting().isEmpty());
 
 		scn.SkipToPhase(Phase.DRAW);
