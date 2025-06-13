@@ -31,9 +31,8 @@ public class ManeuverLimitFromPilotModifier extends AbstractModifier {
     }
 
     /**
-     * Creates a power increase limit modifier.
-     *
-     * @param source       the source of the modifier
+     * Creates a modifier that caps the overall increase that can be made to a ship's maneuver from its pilots.
+     * @param source       the card source of the modifier
      * @param pilotFilter  describes the pilots which have their maneuver bonus restricted
      * @param condition    the condition that must be fulfilled for the modifier to be in effect
      * @param evaluator    the cap to the pilot's maneuver bonus

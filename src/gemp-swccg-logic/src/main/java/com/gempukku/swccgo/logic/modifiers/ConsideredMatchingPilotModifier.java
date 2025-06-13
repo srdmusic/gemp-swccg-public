@@ -8,15 +8,15 @@ import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 
 /**
- * A modifier that causes specified cards to land for free.
+ * A modifier that causes affected cards to be treated as if they are the matching pilot for the ship they are piloting.
  */
 public class ConsideredMatchingPilotModifier extends AbstractModifier {
 
     /**
      * Creates a modifier that causes affected cards to be treated as if they are the matching pilot for the ship
      * or vehicle they are currently piloting.  See Rebel Flight Suit (non-V).
-     * @param source the source of the modifier
-     * @param affectFilter cards which are omni-matching-pilots
+     * @param source the card source of the modifier
+     * @param affectFilter describes characters which should always match the ship they are piloting
      * @param condition the condition that must be fulfilled for the modifier to be in effect
      */
     public ConsideredMatchingPilotModifier(PhysicalCard source, Filterable affectFilter, Condition condition) {
