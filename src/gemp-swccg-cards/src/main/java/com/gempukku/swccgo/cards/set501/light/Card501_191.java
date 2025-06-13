@@ -226,9 +226,18 @@ public class Card501_191 extends AbstractEpicEventDeployable {
                                         @Override
                                         protected void pileChosen(SwccgGame game, final String cardPileOwner, Zone cardPile) {
                                             action.setActionMsg("Target order agenda on " + GameUtils.getCardLink(cardTargeted) + " to peek at top 2 cards of " + cardPileOwner + "'s " + cardPile.getHumanReadable() + " and replace in any order");
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new PeekAtAndReorderTopCardsOfReserveDeckEffect(action, cardPileOwner, 2));
+
+                                            // Allow response(s)
+                                            action.allowResponses("Target order agenda on " + GameUtils.getCardLink(cardTargeted) + " to peek at top 2 cards of " + cardPileOwner + "'s " + cardPile.getHumanReadable() + " and replace in any order",
+                                                    new UnrespondableEffect(action) {
+                                                        @Override
+                                                        protected void performActionResults(Action targetingAction) {                                            
+                                                            // Perform result(s)
+                                                            action.appendEffect(
+                                                                    new PeekAtAndReorderTopCardsOfReserveDeckEffect(action, cardPileOwner, 2));
+                                                        }
+                                                    }
+                                            );
                                         }
                                     }
                             );
