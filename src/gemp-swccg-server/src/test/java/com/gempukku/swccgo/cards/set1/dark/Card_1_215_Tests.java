@@ -106,9 +106,9 @@ public class Card_1_215_Tests
 
 		//The original Marketplace has an ability that lets you retrieve 1 Force
 		// if you occupy it.  The two deserts normally have no such ability
-		assertTrue(scn.DSActionAvailable(marketplace, "Retrieve 1 Force"));
-		assertFalse(scn.DSActionAvailable(desert1, "Retrieve 1 Force"));
-		assertFalse(scn.DSActionAvailable(desert2, "Retrieve 1 Force"));
+		assertTrue(scn.DSCardActionAvailable(marketplace, "Retrieve 1 Force"));
+		assertFalse(scn.DSCardActionAvailable(desert1, "Retrieve 1 Force"));
+		assertFalse(scn.DSCardActionAvailable(desert2, "Retrieve 1 Force"));
 
 		scn.SkipToDSTurn(Phase.DEPLOY);
 		assertTrue(scn.DSDeployAvailable(expand));
@@ -124,9 +124,9 @@ public class Card_1_215_Tests
 		assertTrue(scn.IsAdjacentTo(desert2, marketplace));
 		assertFalse(scn.IsAdjacentTo(desert1, desert2));
 
-		assertTrue(scn.DSActionAvailable(marketplace, "Retrieve 1 Force"));
-		assertTrue(scn.DSActionAvailable(desert1, "Retrieve 1 Force"));
-		assertTrue(scn.DSActionAvailable(desert2, "Retrieve 1 Force"));
+		assertTrue(scn.DSCardActionAvailable(marketplace, "Retrieve 1 Force"));
+		assertTrue(scn.DSCardActionAvailable(desert1, "Retrieve 1 Force"));
+		assertTrue(scn.DSCardActionAvailable(desert2, "Retrieve 1 Force"));
 	}
 
 	@Test
@@ -161,8 +161,8 @@ public class Card_1_215_Tests
 
 		//The original Marketplace has an ability that lets you retrieve 1 Force
 		// if you occupy it.  The Passenger Deck normally have no such ability
-		assertTrue(scn.DSActionAvailable(marketplace, "Retrieve 1 Force"));
-		assertFalse(scn.DSActionAvailable(deck, "Retrieve 1 Force"));
+		assertTrue(scn.DSCardActionAvailable(marketplace, "Retrieve 1 Force"));
+		assertFalse(scn.DSCardActionAvailable(deck, "Retrieve 1 Force"));
 
 		scn.SkipToDSTurn(Phase.DEPLOY);
 		assertTrue(scn.DSDeployAvailable(expand));
@@ -175,8 +175,8 @@ public class Card_1_215_Tests
 		assertTrue(scn.IsAdjacentTo(marketplace, deck));
 		assertTrue(scn.IsAdjacentTo(deck, marketplace));
 
-		assertTrue(scn.DSActionAvailable(marketplace, "Retrieve 1 Force"));
-		assertTrue(scn.DSActionAvailable(deck, "Retrieve 1 Force"));
+		assertTrue(scn.DSCardActionAvailable(marketplace, "Retrieve 1 Force"));
+		assertTrue(scn.DSCardActionAvailable(deck, "Retrieve 1 Force"));
 	}
 
 	@Test
@@ -209,8 +209,8 @@ public class Card_1_215_Tests
 
 		//The original Marketplace has an ability that lets you retrieve 1 Force
 		// if you occupy it.  The Passenger Deck normally have no such ability
-		assertTrue(scn.DSActionAvailable(marketplace, "Retrieve 1 Force"));
-		assertFalse(scn.DSActionAvailable(deck, "Retrieve 1 Force"));
+		assertTrue(scn.DSCardActionAvailable(marketplace, "Retrieve 1 Force"));
+		assertFalse(scn.DSCardActionAvailable(deck, "Retrieve 1 Force"));
 
 		scn.SkipToDSTurn(Phase.DEPLOY);
 		assertTrue(scn.DSDeployAvailable(expand));
@@ -223,8 +223,8 @@ public class Card_1_215_Tests
 		assertFalse(scn.IsAdjacentTo(marketplace, deck));
 		assertFalse(scn.IsAdjacentTo(deck, marketplace));
 
-		assertTrue(scn.DSActionAvailable(marketplace, "Retrieve 1 Force"));
-		assertFalse(scn.DSActionAvailable(deck, "Retrieve 1 Force"));
+		assertTrue(scn.DSCardActionAvailable(marketplace, "Retrieve 1 Force"));
+		assertFalse(scn.DSCardActionAvailable(deck, "Retrieve 1 Force"));
 	}
 
 	@Test
