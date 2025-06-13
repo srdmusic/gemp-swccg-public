@@ -8,10 +8,13 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.PeekAtAndReorderTopCardsOfReserveDeckEffect;
+import com.gempukku.swccgo.cards.effects.complete.ChooseExistingCardPileEffect;
 import com.gempukku.swccgo.cards.effects.usage.NumTimesPerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
@@ -19,6 +22,7 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -28,6 +32,7 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.CancelCardsOnTableEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
@@ -130,6 +135,52 @@ public class Card501_191 extends AbstractEpicEventDeployable {
                                     }
                             );
 
+                        }
+                    });
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, final int gameTextSourceCardId) {
+        final List<TopLevelGameTextAction> actions = new LinkedList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.HOW_LIBERTY_DIES__TARGET_AGENDA;
+        Filter orderAgendaFilter = Filters.and(Filters.your(playerId), Filters.order_agenda, Filters.here(self));
+        String opponent = game.getOpponent(playerId);
+
+        // Check condition(s)
+        if (GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canTarget(game, self, orderAgendaFilter)
+                && GameConditions.isDuringYourPhase(game, playerId, Phase.MOVE)
+                && (GameConditions.hasReserveDeck(game, playerId) || GameConditions.hasReserveDeck(game, opponent))) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Peek at top 2 cards of a Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new NumTimesPerTurnEffect(action, 2));
+
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Target order agenda", orderAgendaFilter) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, final PhysicalCard cardTargeted) {
+                            action.addAnimationGroup(cardTargeted);
+
+                            // Choose more target(s)
+                            action.appendTargeting(
+                                    new ChooseExistingCardPileEffect(action, playerId, Zone.RESERVE_DECK) {
+                                        @Override
+                                        protected void pileChosen(SwccgGame game, final String cardPileOwner, Zone cardPile) {
+                                            action.setActionMsg("Target order agenda on " + GameUtils.getCardLink(cardTargeted) + " to peek at top 2 cards of " + cardPileOwner + "'s " + cardPile.getHumanReadable() + " and replace in any order");
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new PeekAtAndReorderTopCardsOfReserveDeckEffect(action, cardPileOwner, 2));
+                                        }
+                                    }
+                            );
                         }
                     });
             actions.add(action);
