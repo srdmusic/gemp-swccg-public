@@ -33,6 +33,7 @@ import com.gempukku.swccgo.logic.timing.Action;
 public class Card501_121 extends AbstractLostOrStartingInterrupt {
     public Card501_121(){
         super(Side.DARK, 4, Title.No_Civility_Only_Politics, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLore("It's not rare to see a senator using the system to forward his own personal agenda. Much goes on behind closed doors that the Senate never sees.");
         setGameText("LOST: [upload] a Coruscant Guard. STARTING: If My Lord, Is That Legal? on table, deploy With Thunderous Applause and two Effects that deploy on your side of the table, deploy for free, and are always immune to Alter. Place Interrupt in hand.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
