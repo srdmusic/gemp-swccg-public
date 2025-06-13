@@ -1,0 +1,365 @@
+package com.gempukku.swccgo.cards.set4.light;
+
+import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.framework.StartingSetup;
+import com.gempukku.swccgo.framework.VirtualTableScenario;
+import com.gempukku.swccgo.logic.modifiers.querying.Battle;
+import org.junit.Test;
+
+import java.util.HashMap;
+
+import static org.junit.Assert.*;
+
+public class Card_4_014_Tests {
+	protected VirtualTableScenario GetScenario() {
+		return new VirtualTableScenario(
+				new HashMap<>()
+				{{
+					put("suit", "4_014");
+
+					put("biggs", "1_3"); //Pilot, ability 2
+					put("luke", "1_19"); //Pilot, ability 4
+					put("zev", "3_27"); //Zev Senesca; adds maneuver 3 and draws 1 battle destiny when piloting Rogue 2
+					put("leia", "1_017"); //non-pilot
+
+					put("ywing", "1_147"); //starfighter
+					put("rogue2", "3_67"); //Zev's snowspeeder; combat vehicle
+					put("shuttle", "8_79"); //shuttle Tydirium
+					put("landspeeder", "1_149"); //non-combat vehicle
+					put("corvette", "1_140"); //Corellian Corvette; non-starfighter starship
+
+					put("red10", "7_145"); //Immune to attrition <4 when matching pilot aboard
+					put("garrison", "111_3"); //Echo Base Garrison; Rogue snowspeeders immune to attrition < 4 (or <6 if matching)
+
+					put("allclearkid", "2_059"); //adds 1 to attack run if lead starfighter has matching pilot
+//					put("attack run?", "X_XX");
+//					put("deathstar", "X_XX");
+				}},
+				new HashMap<>()
+				{{
+					put("tie", "1_304");
+					put("vader", "7_175");
+				}},
+				10,
+				10,
+				StartingSetup.DefaultLSSpaceSystem,
+				StartingSetup.DefaultDSSpaceSystem,
+				StartingSetup.NoLSStartingInterrupts,
+				StartingSetup.NoDSStartingInterrupts,
+				StartingSetup.NoLSShields,
+				StartingSetup.NoDSShields,
+				VirtualTableScenario.Open
+		);
+	}
+
+	@Test
+	public void RebelFlightSuitStatsAndKeywordsAreCorrect() {
+		/**
+		 * Title: Rebel Flight Suit
+		 * Uniqueness: Unrestricted
+		 * Side: Light
+		 * Type: Device
+		 * Destiny: 5
+		 * Game Text: Deploy on your pilot character.  While piloting any starfighter, combat vehicle, or shuttle
+		 * 			vehicle, that character is considered to be the "matching pilot" (pilot adds 2 to maneuver (limit +2)
+		 * 			and draws one battle destiny if not able to otherwise).
+		 * Lore: Pilot fatigues feature digital technology which can be customized for particular starfighters.
+		 * 			Increases interface efficiency with a newly assigned craft.
+		 * Set: Dagobah
+		 * Rarity: C
+		 */
+
+		var scn = GetScenario();
+
+		var card = scn.GetLSCard("suit").getBlueprint();
+
+		assertEquals("Rebel Flight Suit", card.getTitle());
+		assertEquals(Uniqueness.UNRESTRICTED, card.getUniqueness());
+		assertEquals(Side.LIGHT, card.getSide());
+		assertTrue(card.isCardType(CardType.DEVICE));
+		assertEquals(5, card.getDestiny(), scn.epsilon);
+		assertEquals(1, card.getIconCount(Icon.DAGOBAH));
+	}
+
+
+	@Test
+	public void RebelFlightSuitDeploysOnCharacterWithPilot() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var biggs = scn.GetLSCard("biggs");
+		var luke = scn.GetLSCard("luke");
+		var leia = scn.GetLSCard("leia");
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToHand(suit);
+		scn.MoveCardsToLocation(site, biggs, luke, leia);
+
+		scn.SkipToLSTurn(Phase.DEPLOY);
+
+		assertTrue(scn.LSDeployAvailable(suit));
+		scn.LSDeployCard(suit);
+
+		assertTrue(scn.LSHasCardChoicesAvailable(biggs, luke));
+		assertFalse(scn.LSHasCardChoicesAvailable(leia));
+	}
+
+	@Test
+	public void RebelFlightSuitGrantsMatchingStatusToBearerWhilePilotingStarfighter() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var biggs = scn.GetLSCard("biggs");
+		var ywing = scn.GetLSCard("ywing");
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, ywing);
+		scn.BoardAsPilot(ywing, biggs);
+
+		assertFalse(scn.IsMatchingPilot(ywing, biggs));
+
+		scn.AttachCardsTo(biggs, suit);
+
+		assertTrue(scn.IsMatchingPilot(ywing, biggs));
+	}
+
+	@Test
+	public void RebelFlightSuitGrantsMatchingStatusToBearerWhilePilotingCombatVehicle() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var biggs = scn.GetLSCard("biggs");
+		var snowspeeder = scn.GetLSCard("rogue2");
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, snowspeeder);
+		scn.BoardAsPilot(snowspeeder, biggs);
+
+		assertFalse(scn.IsMatchingPilot(snowspeeder, biggs));
+
+		scn.AttachCardsTo(biggs, suit);
+
+		assertTrue(scn.IsMatchingPilot(snowspeeder, biggs));
+	}
+
+	@Test
+	public void RebelFlightSuitGrantsMatchingStatusToBearerWhilePilotingShuttleVehicle() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var biggs = scn.GetLSCard("biggs");
+		var shuttle = scn.GetLSCard("shuttle");
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, shuttle);
+		scn.BoardAsPilot(shuttle, biggs);
+
+		assertFalse(scn.IsMatchingPilot(shuttle, biggs));
+
+		scn.AttachCardsTo(biggs, suit);
+
+		assertTrue(scn.IsMatchingPilot(shuttle, biggs));
+	}
+
+	@Test
+	public void RebelFlightSuitDoesNotGrantMatchingStatusToBearerWhilePilotingNonCombatVehicle() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var biggs = scn.GetLSCard("biggs");
+		var landspeeder = scn.GetLSCard("landspeeder");
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, landspeeder);
+		scn.BoardAsPilot(landspeeder, biggs);
+
+		assertFalse(scn.IsMatchingPilot(landspeeder, biggs));
+
+		scn.AttachCardsTo(biggs, suit);
+
+		assertFalse(scn.IsMatchingPilot(landspeeder, biggs));
+	}
+
+	@Test
+	public void RebelFlightSuitDoesNotGrantMatchingStatusToBearerWhilePilotingStarship() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var biggs = scn.GetLSCard("biggs");
+		var corvette = scn.GetLSCard("corvette");
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, corvette);
+		scn.BoardAsPilot(corvette, biggs);
+
+		assertFalse(scn.IsMatchingPilot(corvette, biggs));
+
+		scn.AttachCardsTo(biggs, suit);
+
+		assertFalse(scn.IsMatchingPilot(corvette, biggs));
+	}
+
+	@Test
+	public void RebelFlightSuitGrantsPlus2ManeuverWhenFlyingMatchingVehicle() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var biggs = scn.GetLSCard("biggs");
+		var ywing = scn.GetLSCard("ywing");
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, ywing);
+		scn.BoardAsPilot(ywing, biggs);
+
+		assertEquals(3, scn.GetManeuver(ywing));
+
+		scn.AttachCardsTo(biggs, suit);
+
+		assertEquals(5, scn.GetManeuver(ywing));
+	}
+
+	@Test
+	public void RebelFlightSuitLimitedTo2BonusManeuverWhenFlyingMatchingVehicle() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var zev = scn.GetLSCard("zev");
+		var rogue2 = scn.GetLSCard("rogue2");
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, rogue2);
+
+		//Ships are maneuverless when unpiloted
+		assertEquals(0, scn.GetManeuver(rogue2));
+
+		scn.BoardAsPilot(rogue2, zev);
+		//Zev adds 3 maneuver to the base 4 maneuver while piloting Rogue 2
+		assertEquals(7, scn.GetManeuver(rogue2));
+
+		scn.AttachCardsTo(zev, suit);
+		//Flight Suit adds 2 maneuver...and caps the pilot's total maneuver bonus to 2, resulting
+		// in a net loss
+		assertEquals(6, scn.GetManeuver(rogue2));
+	}
+
+	@Test
+	public void RebelFlightSuitGrantsBattleDestinyWhenFlyingMatchingVehicle() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var biggs = scn.GetLSCard("biggs");
+		var ywing = scn.GetLSCard("ywing");
+
+		var site = scn.GetLSStartingLocation();
+
+		var tie = scn.GetDSCard("tie");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, ywing, tie);
+		scn.BoardAsPilot(ywing, biggs);
+		scn.AttachCardsTo(biggs, suit);
+
+		scn.SkipToPhase(Phase.BATTLE);
+		scn.DSInitiateBattle(site);
+		scn.SkipToPowerSegment();
+
+		//DS destiny
+		scn.PassResponses("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_PLAYER");
+
+		//Not eligible for battle destiny normally
+		assertEquals(2, scn.GetAbility(biggs), scn.epsilon);
+		assertTrue(scn.LSDecisionAvailable("Do you want to draw 1 battle destiny?"));
+	}
+
+	@Test
+	public void RebelFlightSuitDoesNotGrantsBattleDestinyWhenOtherSourceOfBattleDestinyUsed() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var luke = scn.GetLSCard("luke");
+		var ywing = scn.GetLSCard("ywing");
+
+		var site = scn.GetLSStartingLocation();
+
+		var tie = scn.GetDSCard("tie");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, ywing, tie);
+		scn.BoardAsPilot(ywing, luke);
+		scn.AttachCardsTo(luke, suit);
+
+		scn.SkipToPhase(Phase.BATTLE);
+		scn.DSInitiateBattle(site);
+		scn.SkipToPowerSegment();
+
+		//DS destiny
+		scn.PassResponses("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_PLAYER");
+
+		//Eligible for battle destiny normally
+		assertEquals(4, scn.GetAbility(luke), scn.epsilon);
+		//Only 1 battle destiny and not 2
+		assertTrue(scn.LSDecisionAvailable("Do you want to draw 1 battle destiny?"));
+	}
+
+	@Test
+	public void RebelFlightSuitGrantsImmunityToAttritionBelow4OnRed10() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var biggs = scn.GetLSCard("biggs");
+		var red10 = scn.GetLSCard("red10");
+
+		var site = scn.GetLSStartingLocation();
+
+		var tie = scn.GetDSCard("tie");
+		var vader = scn.GetDSCard("vader");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, red10, tie);
+		scn.BoardAsPilot(red10, biggs);
+		scn.AttachCardsTo(biggs, suit);
+		scn.BoardAsPilot(tie, vader);
+
+		scn.SkipToPhase(Phase.BATTLE);
+		scn.DSInitiateBattle(site);
+		scn.PrepareDSDestiny(3);
+		scn.PrepareLSDestiny(7);
+		scn.SkipToDamageSegment(true);
+
+		assertEquals(5, scn.GetUnpaidDSBattleDamage());
+		scn.DSChooseCard(vader);
+		scn.PassResponses();
+
+		assertEquals(3, scn.GetUnpaidLSAttrition());
+		assertEquals(0, scn.GetUnpaidLSBattleDamage());
+		assertTrue(scn.LSDecisionAvailable("Choose a card from battle to forfeit (if desired)"));
+		scn.LSPass();
+	}
+}
