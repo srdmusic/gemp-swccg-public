@@ -49,7 +49,7 @@ public class Card501_192 extends AbstractLostOrStartingInterrupt {
         // Check condition(s)
         if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
-            action.setText("Take Coruscant Guard into hand from Reserve Deck");
+            action.setText("Take Coruscant Guard into hand");
             // Allow response(s)
             action.allowResponses("Take a Coruscant Guard into hand from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
@@ -61,6 +61,7 @@ public class Card501_192 extends AbstractLostOrStartingInterrupt {
                         }
                     }
             );
+            actions.add(action);
         }        
         return actions;
     }
