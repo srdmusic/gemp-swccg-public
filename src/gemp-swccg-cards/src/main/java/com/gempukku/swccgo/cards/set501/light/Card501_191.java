@@ -25,20 +25,29 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.AbstractActionProxy;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.BattleState;
+import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.actions.TriggerAction;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnActionProxyEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.CancelCardsOnTableEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromHandOnUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.ReduceAttritionEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -223,6 +232,79 @@ public class Card501_191 extends AbstractEpicEventDeployable {
                                         }
                                     }
                             );
+                        }
+                    });
+            actions.add(action);
+        }
+
+        Filter taxationAgendaFilter = Filters.and(Filters.your(playerId), Filters.taxation_agenda, Filters.here(self));
+        Filter yourEp1CharacterFilter = Filters.and(Filters.your(playerId), Icon.EPISODE_I, Filters.character);
+
+        // Check condition(s)
+        if (GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canTarget(game, self, taxationAgendaFilter)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Place card from hand on Used Pile");
+            action.setActionMsg("Make the next [Episode I] character they deploy this turn deploy -1");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new NumTimesPerTurnEffect(action, 2));
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Target taxation agenda", taxationAgendaFilter) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, final PhysicalCard cardTargeted) {
+                            action.addAnimationGroup(cardTargeted);
+                            // Pay cost(s)
+                            action.appendCost(
+                                    new PutCardFromHandOnUsedPileEffect(action, playerId, Filters.and(Icon.EPISODE_I, Filters.character), false));
+                            // Allow response(s)
+                            action.allowResponses("Target taxation agenda on " + GameUtils.getCardLink(cardTargeted) + " to make their next [Episode I] character deploy -1",
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            final int permanentCardId = self.getPermanentCardId();
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new AddUntilEndOfTurnActionProxyEffect(action,
+                                                            new AbstractActionProxy() {
+                                                                @Override
+                                                                public List<TriggerAction> getRequiredAfterTriggers(SwccgGame game, EffectResult effectResult) {
+                                                                    List<TriggerAction> actions = new LinkedList<>();
+
+                                                                    // don't actually need to return an action
+                                                                    // only need to track that an Episode I character was deployed to increment the limit counter so the modifier is turned off
+                                                                    if (TriggerConditions.justDeployed(game, effectResult, playerId, yourEp1CharacterFilter)) {
+                                                                        PhysicalCard card = game.findCardByPermanentId(permanentCardId);
+                                                                        for (String title : card.getTitles()) {
+                                                                            game.getModifiersQuerying().getUntilEndOfTurnForCardTitleLimitCounter(title, GameTextActionId.OTHER_CARD_ACTION_DEFAULT).incrementToLimit(1, 1);
+                                                                        }
+                                                                    }
+                                                                    return actions;
+                                                                }
+                                                            }
+                                                    ));
+
+                                            // this can't use EndOfTurnLimitCounterNotReachedCondition just in case it leaves the table because that resets the cardId that it uses to find the limit
+                                            Condition turnLimitCounterNotReachedCondition = new Condition() {
+                                                @Override
+                                                public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
+                                                    PhysicalCard card = gameState.findCardByPermanentId(permanentCardId);
+                                                    for (String title : card.getTitles()) {
+                                                        if (modifiersQuerying.getUntilEndOfTurnForCardTitleLimitCounter(title, GameTextActionId.OTHER_CARD_ACTION_DEFAULT).getUsedLimit() >= 1)
+                                                            return false;
+                                                    }
+                                                    return true;
+                                                }
+                                            };
+                                            action.appendEffect(
+                                                    new AddUntilEndOfTurnModifierEffect(action, new DeployCostModifier(self, Filters.and(yourEp1CharacterFilter, Filters.not(Filters.onTable)),
+                                                            turnLimitCounterNotReachedCondition,-1), "Reduces the cost of the next [Episode I] character you deploy this turn by 1"));
+                                        }
+                                    }
+                            );
+
                         }
                     });
             actions.add(action);
