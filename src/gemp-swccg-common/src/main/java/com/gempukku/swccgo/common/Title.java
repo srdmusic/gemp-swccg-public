@@ -784,6 +784,7 @@ public interface Title {
     String Nevar_Yalnal = "Nevar Yalnal";
     String Nevarro = "Nevarro";
     String Never_Tell_Me_The_Odds = "Never Tell Me The Odds";
+    String New_Leadership_Is_Needed = "New Leadership Is Needed";
     String Nien_Nunb = "Nien Nunb";
     String Nightclub = "Coruscant: Night Club";
     String Nightfall = "Nightfall";
