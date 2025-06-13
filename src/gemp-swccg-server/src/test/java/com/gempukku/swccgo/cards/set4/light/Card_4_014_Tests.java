@@ -29,11 +29,6 @@ public class Card_4_014_Tests {
 					put("corvette", "1_140"); //Corellian Corvette; non-starfighter starship
 
 					put("red10", "7_145"); //Immune to attrition <4 when matching pilot aboard
-					put("garrison", "111_3"); //Echo Base Garrison; Rogue snowspeeders immune to attrition < 4 (or <6 if matching)
-
-					put("allclearkid", "2_059"); //adds 1 to attack run if lead starfighter has matching pilot
-//					put("attack run?", "X_XX");
-//					put("deathstar", "X_XX");
 				}},
 				new HashMap<>()
 				{{
