@@ -26,12 +26,12 @@ public class Card4_014 extends AbstractCharacterDevice {
     private static final Filter AttachedPilotMatchesShip(PhysicalCard self) {
         return Filters.and(
                 Filters.hasMatchingPilotAboard(self),
-                Filters.hasPiloting(self.getAttachedTo())
+                Filters.hasPiloting(self.getAttachedTo()),
+                StarfighterCombatOrShuttleVehicle
         );
     }
     public Card4_014() {
         super(Side.LIGHT, 5, "Rebel Flight Suit", Uniqueness.UNRESTRICTED, ExpansionSet.DAGOBAH, Rarity.C);
-        setVirtualSuffix(true);
         setLore("Pilot fatigues feature digital technology which can be customized for particular starfighters. Increases interface efficiency with a newly assigned craft.");
         setGameText("Deploy on your pilot character.  While piloting any starfighter, combat vehicle, or shuttle vehicle, that character is considered to be the \"matching pilot\" (pilot adds 2 to maneuver (limit +2) and draws one battle destiny if not able to otherwise).");
         addIcons(Icon.DAGOBAH);
@@ -66,11 +66,15 @@ public class Card4_014 extends AbstractCharacterDevice {
         modifiers.add(
                 new ManeuverModifier(
                         //The pilot is marked as the source of the +2 maneuver so that it gets limited alongside any
-                        // other maneuver bonus that they provide.
+                        // other maneuver bonus that they provide due to the "limit +2" clause.
                         self.getAttachedTo(),
                         Filters.hasPiloting(self, Filters.hasAttached(self)),
                         new OnTableCondition(self, AttachedPilotMatchesShip(self)),
-                        2
+                        2,
+                        //Although this is not a true cumulative modifier, because we are pretending that this is
+                        // "from" the pilot and not the flight suit, we do not want to run awry of the cumulative
+                        // rule stomping out one of the maneuver bonuses due to being "from" the same source.
+                        true
                 )
         );
 

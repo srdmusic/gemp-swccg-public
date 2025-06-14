@@ -19,7 +19,7 @@ public class Card_4_014_Tests {
 
 					put("biggs", "1_3"); //Pilot, ability 2
 					put("luke", "1_19"); //Pilot, ability 4
-					put("zev", "3_27"); //Zev Senesca; adds maneuver 3 and draws 1 battle destiny when piloting Rogue 2
+					put("zev", "3_27"); //Zev Senesca; maneuver +3 and draws 1 battle destiny when piloting Rogue 2
 					put("leia", "1_017"); //non-pilot
 
 					put("ywing", "1_147"); //starfighter
@@ -29,11 +29,16 @@ public class Card_4_014_Tests {
 					put("corvette", "1_140"); //Corellian Corvette; non-starfighter starship
 
 					put("red10", "7_145"); //Immune to attrition <4 when matching pilot aboard
+
+					put("captain", "7_038"); //Ralltiir Freighter Captain; nonunique and maneuver +1 when piloting
 				}},
 				new HashMap<>()
 				{{
 					put("tie", "1_304");
 					put("vader", "7_175");
+
+					put("lennox", "3_84"); //Captain Lennox, matches with the Star Destroyer Tyrant
+					put("tyrant", "3_153");
 				}},
 				10,
 				10,
@@ -235,6 +240,30 @@ public class Card_4_014_Tests {
 	}
 
 	@Test
+	public void RebelFlightSuitGrantsPlus2ManeuverEvenWhenNonuniquePilotAdds1() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var captain = scn.GetLSCard("captain");
+		var ywing = scn.GetLSCard("ywing");
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, ywing);
+		scn.BoardAsPilot(ywing, captain);
+
+		assertFalse(scn.IsMatchingPilot(ywing, captain));
+		assertEquals(4, scn.GetManeuver(ywing));
+
+		scn.AttachCardsTo(captain, suit);
+
+		assertTrue(scn.IsMatchingPilot(ywing, captain));
+		assertEquals(5, scn.GetManeuver(ywing));
+	}
+
+	@Test
 	public void RebelFlightSuitLimitedTo2BonusManeuverWhenFlyingMatchingVehicle() {
 		var scn = GetScenario();
 
@@ -289,6 +318,41 @@ public class Card_4_014_Tests {
 		//Not eligible for battle destiny normally
 		assertEquals(2, scn.GetAbility(biggs), scn.epsilon);
 		assertTrue(scn.LSDecisionAvailable("Do you want to draw 1 battle destiny?"));
+	}
+
+	@Test
+	public void RebelFlightSuitDoesNotGrantBattleDestinyWhenBearerNativelyMatchesOtherTypeOfShip() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var ywing = scn.GetLSCard("ywing");
+
+		var site = scn.GetLSStartingLocation();
+
+		var lennox = scn.GetDSCard("lennox");
+		var tyrant = scn.GetDSCard("tyrant");
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, tyrant, ywing);
+		//Doing something a little different and cheating the flight suit onto an imperial
+		// since almost all Light Side matching pilots either provide battle destiny or
+		// are on a starfighter, combat vehicle, or shuttle, and we need to ensure that
+		// no bonuses are applied from the flight suit if the matching pair are *not*
+		// on one of those three things.
+		scn.BoardAsPilot(tyrant, lennox);
+		scn.AttachCardsTo(lennox, suit);
+
+		scn.SkipToPhase(Phase.BATTLE);
+		scn.DSInitiateBattle(site);
+		scn.SkipToPowerSegment();
+
+		//Not eligible for battle destiny normally
+		assertEquals(3, scn.GetDSAbilityAtLocation(site));
+		//Flight Suit does not add a battle destiny, because the match is from the
+		// Lennox/Tyrant relationship and not Flight Suit's starfighter/combat vehicle/shuttle
+		assertFalse(scn.DSDecisionAvailable("Do you want to draw 1 battle destiny?"));
+		scn.PassResponses("BATTLE_DESTINY_DRAWS_COMPLETE_FOR_PLAYER");
 	}
 
 	@Test
