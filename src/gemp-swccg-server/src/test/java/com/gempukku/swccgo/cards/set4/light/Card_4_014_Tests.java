@@ -296,7 +296,7 @@ public class Card_4_014_Tests {
 	}
 
 	@Test
-	public void RebelFlightSuitGrantsAndCapsManeuverBonusAt2WithMultipleSuitPilots() {
+	public void RebelFlightSuitGrantsAndCapsManeuverBonusAt2EachWithMultipleSuitPilots() {
 		var scn = GetScenario();
 
 		var suit = scn.GetLSCard("suit");
