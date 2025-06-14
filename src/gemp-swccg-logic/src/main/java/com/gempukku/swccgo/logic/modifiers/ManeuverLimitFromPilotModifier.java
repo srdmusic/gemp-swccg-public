@@ -27,7 +27,7 @@ public class ManeuverLimitFromPilotModifier extends AbstractModifier {
      * @param modifierAmount the cap to the pilot's maneuver bonus
      */
     public ManeuverLimitFromPilotModifier(PhysicalCard source, Filterable pilotFilter, Condition condition, float modifierAmount) {
-        this(source, pilotFilter, condition, new ConstantEvaluator(modifierAmount), false);
+        this(source, pilotFilter, condition, new ConstantEvaluator(modifierAmount), true);
     }
 
     /**

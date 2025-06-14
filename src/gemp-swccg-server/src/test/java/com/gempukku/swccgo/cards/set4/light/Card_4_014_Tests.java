@@ -16,6 +16,7 @@ public class Card_4_014_Tests {
 				new HashMap<>()
 				{{
 					put("suit", "4_014");
+					put("suit2", "4_014");
 
 					put("biggs", "1_3"); //Pilot, ability 2
 					put("luke", "1_19"); //Pilot, ability 4
@@ -31,6 +32,10 @@ public class Card_4_014_Tests {
 					put("red10", "7_145"); //Immune to attrition <4 when matching pilot aboard
 
 					put("captain", "7_038"); //Ralltiir Freighter Captain; nonunique and maneuver +1 when piloting
+
+					put("falcon", "1_143"); //Millenium Falcon
+					put("han", "1_11"); //When piloting Falcon, also adds 2 to maneuver and may draw one battle destiny if not able to otherwise.
+					put("chewie", "2_3"); //When piloting Falcon, also adds 1 to maneuver.
 				}},
 				new HashMap<>()
 				{{
@@ -288,6 +293,40 @@ public class Card_4_014_Tests {
 		//Flight Suit adds 2 maneuver...and caps the pilot's total maneuver bonus to 2, resulting
 		// in a net loss
 		assertEquals(6, scn.GetManeuver(rogue2));
+	}
+
+	@Test
+	public void RebelFlightSuitGrantsAndCapsManeuverBonusAt2WithMultipleSuitPilots() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var suit2 = scn.GetLSCard("suit2");
+		var han = scn.GetLSCard("han");
+		var chewie = scn.GetLSCard("chewie");
+		var falcon = scn.GetLSCard("falcon");
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, falcon);
+		scn.BoardAsPilot(falcon, han, chewie);
+
+		assertTrue(scn.IsMatchingPilot(falcon, han));
+		assertTrue(scn.IsMatchingPilot(falcon, chewie));
+
+		//4 base, +2 from Han's text, +1 from chewie's text
+		assertEquals(7, scn.GetManeuver(falcon));
+
+		scn.AttachCardsTo(han, suit);
+
+		//4 base, +2 from han/suit capped, +1 from chewie's text
+		assertEquals(7, scn.GetManeuver(falcon));
+
+		scn.AttachCardsTo(chewie, suit2);
+
+		//4 base, +2 from han/suit capped, +2 from chewie/suit capped
+		assertEquals(8, scn.GetManeuver(falcon));
 	}
 
 	@Test
