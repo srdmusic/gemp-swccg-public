@@ -4,6 +4,7 @@ import com.gempukku.swccgo.common.*;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
 import com.gempukku.swccgo.logic.modifiers.querying.Battle;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -32,6 +33,7 @@ public class Card_4_014_Tests {
 					put("red10", "7_145"); //Immune to attrition <4 when matching pilot aboard
 
 					put("captain", "7_038"); //Ralltiir Freighter Captain; nonunique and maneuver +1 when piloting
+					put("captain2", "7_038");
 
 					put("falcon", "1_143"); //Millenium Falcon
 					put("han", "1_11"); //When piloting Falcon, also adds 2 to maneuver and may draw one battle destiny if not able to otherwise.
@@ -327,6 +329,43 @@ public class Card_4_014_Tests {
 
 		//4 base, +2 from han/suit capped, +2 from chewie/suit capped
 		assertEquals(8, scn.GetManeuver(falcon));
+	}
+
+	@Ignore("RFS cumulative violation; see the block comment in ModifiersLogic.foundCumulativeConflict()")
+	@Test
+	public void RebelFlightSuitManeuverBonusDoesNotStackCumulativelyFromMultiplePilotsWithSameTitle() {
+		var scn = GetScenario();
+
+		var suit = scn.GetLSCard("suit");
+		var suit2 = scn.GetLSCard("suit2");
+		var captain = scn.GetLSCard("captain");
+		var captain2 = scn.GetLSCard("captain2");
+		var falcon = scn.GetLSCard("falcon");
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.StartGame();
+
+		scn.MoveCardsToLocation(site, falcon);
+		scn.BoardAsPilot(falcon, captain, captain2);
+
+		assertFalse(scn.IsMatchingPilot(falcon, captain));
+		assertFalse(scn.IsMatchingPilot(falcon, captain2));
+
+		//4 base, +1 from captain1's text, +0 from captain2's text due to cumulative
+		assertEquals(5, scn.GetManeuver(falcon));
+
+		scn.AttachCardsTo(captain, suit);
+
+		assertTrue(scn.IsMatchingPilot(falcon, captain));
+		//4 base, +2 from captain1/suit capped, +0 from captain2's text due to cumulative
+		assertEquals(6, scn.GetManeuver(falcon));
+
+		scn.AttachCardsTo(captain2, suit2);
+
+		assertTrue(scn.IsMatchingPilot(falcon, captain2));
+		//4 base, +2 from captain/suit capped, +0 from captain2/suit capped due to cumulative
+		assertEquals(6, scn.GetManeuver(falcon));
 	}
 
 	@Test
