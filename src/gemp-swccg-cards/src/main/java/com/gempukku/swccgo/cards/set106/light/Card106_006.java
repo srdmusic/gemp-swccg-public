@@ -55,8 +55,9 @@ public class Card106_006 extends AbstractRebel {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
+        Filter rebelVeteranFilter = Filters.and(Icon.REBEL, Filters.or(Keyword.LEADER, Filters.and(Filters.trooper, Filters.not(Filters.recruit))));
         modifiers.add(new PowerModifier(self, Filters.isInCardInPlayData(self), new InPlayDataSetCondition(self), 1));
-        modifiers.add(new SatisfiesAllAttritionWhenForfeitedModifier(self, new AtSameSiteAsCondition(self, Filters.Rebel_veteran)));
+        modifiers.add(new SatisfiesAllAttritionWhenForfeitedModifier(self, new AtSameSiteAsCondition(self, rebelVeteranFilter)));
         return modifiers;
     }
 
