@@ -40,7 +40,7 @@ public class Card106_016 extends AbstractImperial {
     public Card106_016() {
         super(Side.DARK, 3, 1, 1, 1, 1, "Stormtrooper Cadet", Uniqueness.UNRESTRICTED, ExpansionSet.OTSD, Rarity.PM);
         setLore("After months of intense training, a trooper is paired with a veteran soldier. While providing support during field operations, the new trooper masters Imperial military tactics.");
-        setGameText("Deploys free to same site as an Imperial leader. Adds 1 to power of one non-unique Imperial warrior present. When forfeited at same site as an Imperial 'veteran' (a leader or non-cadet trooper), also satisfies all remaining attrition against you.");
+        setGameText("Deploys free to same site as an Imperial leader. Once per turn, may target a non-unique Imperial warrior present; target is power +1 for remainder of turn. When forfeited at same site as an Imperial leader (or non-cadet trooper), also satisfies all remaining attrition against you.");
         addIcons(Icon.PREMIUM);
         addKeywords(Keyword.STORMTROOPER, Keyword.CADET);
     }
