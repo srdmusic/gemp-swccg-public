@@ -37,6 +37,10 @@ public class FiredWeaponResult extends EffectResult {
         _targets = targets;
     }
 
+    public FiredWeaponResult(SwccgGame game, PhysicalCard weaponCard, SwccgBuiltInCardBlueprint permanentWeapon, PhysicalCard cardFiringWeapon, boolean thrown, Collection<PhysicalCard> targets) {
+        this(game, weaponCard, permanentWeapon, cardFiringWeapon, thrown, false, targets);
+    }
+
     /**
      * Gets the weapon card fired.
      * @return the weapon card, or null
