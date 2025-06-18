@@ -4378,6 +4378,27 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a weapon accepted by the weapon filter was just fired repeatedly.
+     *
+     * @param game         the game
+     * @param effectResult the effect result
+     * @param weaponFilter the weapon filter
+     * @return true or false
+     */
+    public static boolean weaponJustFiredRepeatedly(SwccgGame game, EffectResult effectResult, Filterable weaponFilter) {
+        if (effectResult.getType() == EffectResult.Type.FIRED_WEAPON) {
+            FiredWeaponResult weaponFiredResult = (FiredWeaponResult) effectResult;
+            PhysicalCard weaponCardFired = weaponFiredResult.getWeaponCardFired();
+            SwccgBuiltInCardBlueprint permanentWeaponFired = weaponFiredResult.getPermanentWeaponFired();
+
+            return (weaponCardFired != null && Filters.and(weaponFilter).accepts(game.getGameState(), game.getModifiersQuerying(), weaponCardFired))
+                    || (permanentWeaponFired != null && Filters.and(weaponFilter).accepts(game.getGameState(), game.getModifiersQuerying(), permanentWeaponFired))
+                    && weaponFiredResult.wasRepeatedFiring();
+        }
+        return false;
+    }
+
+    /**
      * Determines if a weapon accepted by the weapon filter was just fired.
      * @param game the game
      * @param effectResult the effect result
