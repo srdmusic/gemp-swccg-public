@@ -4512,6 +4512,36 @@ public class TriggerConditions {
     }
 
     /**
+     * Determines if a card accepted by cardHitFilter was just 'hit' by repeated firing of a card (including permanent weapon)
+     * accepted by hitByCardFilter that was fired by a card accepted by cardFiringWeaponFilter.
+     * @param game the game
+     * @param effectResult the effect result
+     * @param cardHitFilter the card hit filter
+     * @param hitByCardFilter the hit by card filter
+     * @param cardFiringWeaponFilter the card firing weapon filter
+     * @return true or false
+     */
+    public static boolean justHitByRepeatedFiring(SwccgGame game, EffectResult effectResult, Filterable cardHitFilter, Filterable hitByCardFilter, Filterable cardFiringWeaponFilter) {
+        if (effectResult.getType() == EffectResult.Type.HIT) {
+            HitResult hitResult = (HitResult) effectResult;
+            PhysicalCard hitCard = hitResult.getCardHit();
+
+            if (hitCard.isHit() && Filters.and(cardHitFilter).accepts(game.getGameState(), game.getModifiersQuerying(), hitCard)) {
+                PhysicalCard hitByCard = hitResult.getHitByCard();
+                SwccgBuiltInCardBlueprint hitByPermanentWeapon = hitResult.getHitByPermanentWeapon();
+                PhysicalCard weaponFiredBy = hitResult.getCardFiringWeapon();
+                boolean hitByRepeatedFiring = hitResult.getHitByRepeatedFiring();
+
+                return (hitByRepeatedFiring
+                        && ((hitByCard != null && Filters.and(hitByCardFilter).accepts(game.getGameState(), game.getModifiersQuerying(), hitByCard))
+                        || (hitByPermanentWeapon != null && Filters.and(hitByCardFilter).accepts(game.getGameState(), game.getModifiersQuerying(), hitByPermanentWeapon)))
+                        && (weaponFiredBy != null && Filters.and(cardFiringWeaponFilter).accepts(game.getGameState(), game.getModifiersQuerying(), weaponFiredBy)));
+            }
+        }
+        return false;
+    }
+
+    /**
      * Determines if a card accepted by cardHitFilter was just Disarmed.
      * @param game the game
      * @param effectResult the effect result

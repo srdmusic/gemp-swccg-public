@@ -92,7 +92,7 @@ public class Card209_011 extends AbstractResistance {
                 action.appendUsage(
                         new OncePerBattleEffect(action));
                 action.appendCost(
-                        new HitCardAndResetForfeitEffect(action, self, 0, self, null, null));
+                        new HitCardAndResetForfeitEffect(action, self, 0, self, null, null, false));
 
                 action.appendEffect(
                         new PreventEffectOnCardEffect(action, preventableEffect, cardToBeHit, "Makes "+GameUtils.getCardLink(rose) + " hit instead of "+GameUtils.getCardLink(cardToBeHit)));

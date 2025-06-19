@@ -81,8 +81,7 @@ public class Card501_131 extends AbstractCharacterWeapon {
         final List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
         // Check condition(s)
-        if (TriggerConditions.justHitBy(game, effectResult, Filters.any, self, Filters.IG88)
-                && TriggerConditions.weaponJustFiredRepeatedly(game, effectResult, self)
+        if (TriggerConditions.justHitByRepeatedFiring(game, effectResult, Filters.any, self, Filters.IG88)
                 && GameConditions.isDuringBattle(game)) {
 
             // Check more condition(s)
