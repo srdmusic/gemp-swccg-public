@@ -8,7 +8,9 @@ import com.gempukku.swccgo.cards.AbstractCharacterWeapon;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddDestinyToAttritionEffect;
 import com.gempukku.swccgo.cards.effects.AddDestinyToTotalPowerEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.Rarity;
@@ -80,23 +82,34 @@ public class Card501_131 extends AbstractCharacterWeapon {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         final List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
+        GameTextActionId gameTextActionIdPower = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionIdAttrition = GameTextActionId.OTHER_CARD_ACTION_2;
+
         // Check condition(s)
         if (TriggerConditions.justHitByRepeatedFiring(game, effectResult, Filters.any, self, Filters.IG88)
                 && GameConditions.isDuringBattle(game)) {
 
             // Check more condition(s)
-            if (GameConditions.canAddDestinyDrawsToPower(game, playerId)) {
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId);
+            if (GameConditions.canAddDestinyDrawsToPower(game, playerId)
+                    && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionIdPower)) {
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionIdPower);
                 action.setText("Add one destiny to total power");
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerBattleEffect(action));
                 // Perform result(s)
                 action.appendEffect(
                         new AddDestinyToTotalPowerEffect(action, 1));
                 actions.add(action);
             }
             // Check more condition(s)
-            if (GameConditions.canAddDestinyDrawsToAttrition(game, playerId)) {
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId);
+            if (GameConditions.canAddDestinyDrawsToAttrition(game, playerId)
+                    && GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionIdAttrition)) {
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionIdAttrition);
                 action.setText("Add one destiny to attrition");
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerBattleEffect(action));
                 // Perform result(s)
                 action.appendEffect(
                         new AddDestinyToAttritionEffect(action, 1));
