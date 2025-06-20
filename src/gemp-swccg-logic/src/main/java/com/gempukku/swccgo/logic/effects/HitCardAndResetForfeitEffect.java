@@ -57,6 +57,19 @@ public class HitCardAndResetForfeitEffect extends AbstractSubActionEffect implem
         _that = this;
     }
 
+    /**
+     * Creates an effect to 'hit' a card and resets its forfeit value.
+     * @param action the action performing this effect
+     * @param cardHitAndReset the card that is hit and whose forfeit value is reset
+     * @param resetValue the reset value
+     * @param hitByCard the card the card was hit by
+     * @param hitByPermanentWeapon the permanent weapon that hit the card
+     * @param cardFiringWeapon the card that fired the weapon
+     */
+    public HitCardAndResetForfeitEffect(Action action, PhysicalCard cardHitAndReset, float resetValue, PhysicalCard hitByCard, SwccgBuiltInCardBlueprint hitByPermanentWeapon, PhysicalCard cardFiringWeapon) {
+        this(action, cardHitAndReset, resetValue, hitByCard, hitByPermanentWeapon, cardFiringWeapon, false);
+    }
+
     @Override
     public String getText(SwccgGame game) {
         return "'Hit' " + GameUtils.getCardLink(_cardHitAndReset);
