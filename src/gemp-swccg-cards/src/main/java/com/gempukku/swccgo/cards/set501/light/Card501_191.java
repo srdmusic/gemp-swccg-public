@@ -251,7 +251,8 @@ public class Card501_191 extends AbstractEpicEventDeployable {
 
         // Check condition(s)
         if (GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canTarget(game, self, taxationAgendaFilter)) {
+                && GameConditions.canTarget(game, self, taxationAgendaFilter)
+                && GameConditions.hasInHand(game, playerId, yourEp1CharacterFilter)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Place card from hand on Used Pile");
