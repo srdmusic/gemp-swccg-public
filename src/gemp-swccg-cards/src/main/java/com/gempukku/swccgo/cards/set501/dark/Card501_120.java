@@ -204,7 +204,6 @@ public class Card501_120 extends AbstractEpicEventDeployable {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
                                             final int permanentCardId = self.getPermanentCardId();
-
                                             // Perform result(s)
                                             action.appendEffect(
                                                     new AddUntilEndOfTurnActionProxyEffect(action,
