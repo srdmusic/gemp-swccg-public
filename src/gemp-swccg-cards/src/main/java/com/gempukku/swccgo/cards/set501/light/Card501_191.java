@@ -122,7 +122,8 @@ public class Card501_191 extends AbstractEpicEventDeployable {
                 && GameConditions.canTarget(game, self, justiceAgendaFilter)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Subtract 1 from destiny");
+            action.setText("Justice: Subtract 1 from destiny");
+            action.setActionMsg("Subtract 1 from destiny");
             // Update usage limit(s)
             action.appendUsage(
                     new NumTimesPerTurnEffect(action, 2));
@@ -162,7 +163,8 @@ public class Card501_191 extends AbstractEpicEventDeployable {
             if (battleState.hasAttritionTotal(game.getOpponent(playerId))) {
 
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action.setText("Reduce attrition by 1");
+                action.setText("Peace: Reduce attrition by 1");
+                action.setActionMsg("Reduce attrition by 1");
                 // Update usage limit(s)
                 action.appendUsage(
                         new NumTimesPerTurnEffect(action, 2));
@@ -208,7 +210,8 @@ public class Card501_191 extends AbstractEpicEventDeployable {
                 && (GameConditions.hasReserveDeck(game, playerId) || GameConditions.hasReserveDeck(game, opponent))) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Peek at top 2 cards of a Reserve Deck");
+            action.setText("Order: Peek at top of a Reserve Deck");
+            action.setActionMsg("Peek at top 2 cards of a Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new NumTimesPerTurnEffect(action, 2));
@@ -255,7 +258,7 @@ public class Card501_191 extends AbstractEpicEventDeployable {
                 && GameConditions.hasInHand(game, playerId, yourEp1CharacterFilter)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place card from hand on Used Pile");
+            action.setText("Taxation: Place card in Used Pile");
             action.setActionMsg("Make the next [Episode I] character they deploy this turn deploy -1");
 
             // This is a special separate usage tracker for keeping the two one-time deployment -1 modifiers separate.

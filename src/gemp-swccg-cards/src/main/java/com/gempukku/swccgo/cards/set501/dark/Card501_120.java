@@ -127,7 +127,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
                 && GameConditions.canTarget(game, self, blockadeAgendaFilter)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Cancel 'react'");
+            action.setText("Blockade: Cancel 'react'");
             action.setActionMsg("Target a blockade agenda to cancel 'react'");
             // Update usage limit(s)
             action.appendUsage(
@@ -174,7 +174,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
                 && GameConditions.hasInHand(game, playerId, yourEp1CharacterFilter)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place card from hand on Used Pile");
+            action.setText("Taxation: Place card in Used Pile");
             action.setActionMsg("Make the next [Episode I] character they deploy this turn deploy -1");
 
             // This is a special separate usage tracker for keeping the two one-time deployment -1 modifiers separate.
@@ -259,7 +259,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
                 && GameConditions.hasLostPile(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place card from hand in Lost Pile");
+            action.setText("Trade: Place card in Lost Pile");
             action.setActionMsg("Place a card from hand in Lost Pile, shuffle that pile, and take top card into hand");
             // Update usage limit(s)
             action.appendUsage(
@@ -312,7 +312,8 @@ public class Card501_120 extends AbstractEpicEventDeployable {
             if (battleState.hasAttritionTotal(game.getOpponent(playerId))) {
 
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action.setText("Reduce attrition by 1");
+                action.setText("Wealth: Reduce attrition by 1");
+                action.setActionMsg("Reduce attrition by 1");
                 // Update usage limit(s)
                 action.appendUsage(
                         new NumTimesPerTurnEffect(action, 2));
