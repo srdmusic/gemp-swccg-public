@@ -59,7 +59,7 @@ public class Card223_014 extends AbstractUsedInterrupt {
         {
 
             final PlayInterruptAction forcePileAction = new PlayInterruptAction(game, self);
-            forcePileAction.setText("Shuffle this card into your Force Pile");
+            forcePileAction.setText("Shuffle this card into Force Pile");
             // Allow response(s)
             forcePileAction.allowResponses(
                     new RespondablePlayCardEffect(forcePileAction) {
