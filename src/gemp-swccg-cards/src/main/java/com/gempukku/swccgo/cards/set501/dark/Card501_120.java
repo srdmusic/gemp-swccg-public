@@ -127,7 +127,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
                 && GameConditions.canTarget(game, self, blockadeAgendaFilter)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Cancel 'react'");
+            action.setText("Blockade: Cancel 'react'");
             action.setActionMsg("Target a blockade agenda to cancel 'react'");
             // Update usage limit(s)
             action.appendUsage(
@@ -170,11 +170,23 @@ public class Card501_120 extends AbstractEpicEventDeployable {
 
         // Check condition(s)
         if (GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canTarget(game, self, taxationAgendaFilter)) {
+                && GameConditions.canTarget(game, self, taxationAgendaFilter)
+                && GameConditions.hasInHand(game, playerId, yourEp1CharacterFilter)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place card from hand on Used Pile");
+            action.setText("Taxation: Place card in Used Pile");
             action.setActionMsg("Make the next [Episode I] character they deploy this turn deploy -1");
+
+            // This is a special separate usage tracker for keeping the two one-time deployment -1 modifiers separate.
+            // Below they'll be set up such that each deployment -1 is allowed to be used once per turn.
+            GameTextActionId taxationUsageActionId;
+            if (game.getModifiersQuerying().getUntilEndOfTurnLimitCounter(self, playerId, gameTextSourceCardId, gameTextActionId).getUsedLimit() == 0) {
+                taxationUsageActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+            }
+            else {
+                taxationUsageActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+            }
+
             // Update usage limit(s)
             action.appendUsage(
                     new NumTimesPerTurnEffect(action, 2));
@@ -206,7 +218,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
                                                                     if (TriggerConditions.justDeployed(game, effectResult, playerId, yourEp1CharacterFilter)) {
                                                                         PhysicalCard card = game.findCardByPermanentId(permanentCardId);
                                                                         for (String title : card.getTitles()) {
-                                                                            game.getModifiersQuerying().getUntilEndOfTurnForCardTitleLimitCounter(title, GameTextActionId.OTHER_CARD_ACTION_DEFAULT).incrementToLimit(1, 1);
+                                                                            game.getModifiersQuerying().getUntilEndOfTurnForCardTitleLimitCounter(title, taxationUsageActionId).incrementToLimit(1, 1);
                                                                         }
                                                                     }
                                                                     return actions;
@@ -220,7 +232,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
                                                 public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
                                                     PhysicalCard card = gameState.findCardByPermanentId(permanentCardId);
                                                     for (String title : card.getTitles()) {
-                                                        if (modifiersQuerying.getUntilEndOfTurnForCardTitleLimitCounter(title, GameTextActionId.OTHER_CARD_ACTION_DEFAULT).getUsedLimit() >= 1)
+                                                        if (modifiersQuerying.getUntilEndOfTurnForCardTitleLimitCounter(title, taxationUsageActionId).getUsedLimit() >= 1)
                                                             return false;
                                                     }
                                                     return true;
@@ -247,7 +259,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
                 && GameConditions.hasLostPile(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Place card from hand in Lost Pile");
+            action.setText("Trade: Place card in Lost Pile");
             action.setActionMsg("Place a card from hand in Lost Pile, shuffle that pile, and take top card into hand");
             // Update usage limit(s)
             action.appendUsage(
@@ -300,7 +312,8 @@ public class Card501_120 extends AbstractEpicEventDeployable {
             if (battleState.hasAttritionTotal(game.getOpponent(playerId))) {
 
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action.setText("Reduce attrition by 1");
+                action.setText("Wealth: Reduce attrition by 1");
+                action.setActionMsg("Reduce attrition by 1");
                 // Update usage limit(s)
                 action.appendUsage(
                         new NumTimesPerTurnEffect(action, 2));
