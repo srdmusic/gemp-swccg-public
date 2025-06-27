@@ -80,8 +80,8 @@ public class Card219_018 extends AbstractUsedOrLostInterrupt {
         if (GameConditions.canSpot(game, self, set13Dooku)
                 && GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId, false, Persona.DOOKUS_LIGHTSABER)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-            action.setText("Deploy Dooku's Lightsaber from Lost Pile");
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+            action.setText("Deploy card from Lost Pile");
             action.setActionMsg("Deploy Dooku's Lightsaber from Lost Pile");
             // Allow response(s)
             action.allowResponses(
@@ -89,7 +89,7 @@ public class Card219_018 extends AbstractUsedOrLostInterrupt {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             action.appendEffect(
-                                    new DeployCardFromLostPileEffect(action, Filters.title("Dooku's Lightsaber"), false)
+                                    new DeployCardFromLostPileEffect(action, Filters.Dookus_Lightsaber, false)
                             );
                         }
                     }
