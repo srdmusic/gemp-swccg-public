@@ -1,0 +1,72 @@
+package com.gempukku.swccgo.cards.set501.dark;
+
+import com.gempukku.swccgo.cards.AbstractUniqueStarshipSite;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Rarity;
+import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+/**
+ * Set: Playtesting
+ * Type: Location
+ * Subtype: Site
+ * Title: Supremacy: Throne Room
+ */
+public class Card501_034 extends AbstractUniqueStarshipSite {
+    public Card501_034() {
+        super(Side.DARK, "Supremacy: Throne Room", Persona.SUPREMACY, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLocationDarkSideGameText("Once per game, may [download] Snoke here.");
+        setLocationLightSideGameText("While The Resistance Is Doomed on table, your characters (except Rey) deploy +1 here.");
+        addIcon(Icon.DARK_FORCE, 2);
+        addIcon(Icon.LIGHT_FORCE, 1);
+        addIcons(Icon.INTERIOR_SITE, Icon.STARSHIP_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
+        setTestingText("Supremacy: Throne Room");
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextDarkSideTopLevelActions(String playerOnDarkSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.SUPREMACY_THRONE_ROOM__DOWNLOAD_SNOKE;
+
+        // Check condition(s)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canDeployCardFromReserveDeck(game, playerOnDarkSideOfLocation, self, gameTextActionId, Title.Shmi)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Snoke from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.Snoke, Filters.here(self), true));
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        Filter charactersExceptRey = Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.not(Filters.Rey));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), charactersExceptRey), new OnTableCondition(self, Filters.title(Title.The_Resistance_Is_Doomed)), 1, Filters.here(self)));
+        return modifiers;
+    }
+}
