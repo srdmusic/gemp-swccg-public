@@ -26,7 +26,7 @@ import com.gempukku.swccgo.logic.conditions.TrueCondition;
 import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.StackCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.StackCardFromOutsideDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.JediTestSuspendedInsteadOfLostModifier;
 import com.gempukku.swccgo.logic.modifiers.MayDeployAsIfFromHandModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -67,15 +67,15 @@ public class Card501_179 extends AbstractEpicEventDeployable {
             action.setPerformingPlayer(playerId);
             // Perform result(s)
             action.appendEffect(
-                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_1, false, false));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, Filters.Jedi_Test_1));
             action.appendEffect(
-                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_2, false, false));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, Filters.Jedi_Test_2));
             action.appendEffect(
-                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_3, false, false));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, Filters.Jedi_Test_3));
             action.appendEffect(
-                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_4, false, false));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, Filters.Jedi_Test_4));
             action.appendEffect(
-                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_5, false, false));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, Filters.Jedi_Test_5));
             actions.add(action);
         }
 
