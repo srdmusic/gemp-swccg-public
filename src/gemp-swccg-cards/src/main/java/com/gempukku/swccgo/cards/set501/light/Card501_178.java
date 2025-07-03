@@ -129,7 +129,24 @@ public class Card501_178 extends AbstractObjective {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
         
-        GameTextActionId gameTextActionId = GameTextActionId.MIND_WHAT_YOUR_HAVE_LEARNED_V__DOWNLOAD_EFFECT;
+        GameTextActionId gameTextActionId = GameTextActionId.MIND_WHAT_YOUR_HAVE_LEARNED_V__DOWNLOAD_BESPIN_LOCATION;
+
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+            
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Bespin location from Reserve Deck");
+            action.setActionMsg("Deploy Bespin system or a Cloud City site from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Bespin_system, Filters.Cloud_City_site), true));
+            actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.MIND_WHAT_YOUR_HAVE_LEARNED_V__DOWNLOAD_EFFECT;
 
         // Check condition(s)
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Arrays.asList(Title.Wise_Advice, Title.Yodas_Hope))) {
@@ -142,7 +159,7 @@ public class Card501_178 extends AbstractObjective {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.MIND_WHAT_YOUR_HAVE_LEARNED_V__DOWNLOAD_LOCATION;
+        gameTextActionId = GameTextActionId.MIND_WHAT_YOUR_HAVE_LEARNED_V__DOWNLOAD_DAGOBAH_LOCATION;
         // Check condition(s)
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
