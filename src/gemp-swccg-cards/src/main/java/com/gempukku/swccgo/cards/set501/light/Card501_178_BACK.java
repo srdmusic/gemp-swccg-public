@@ -199,7 +199,7 @@ public class Card501_178_BACK extends AbstractObjective {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
 
             action.setText("Place completed Jedi Test out of play");
-            action.setActionMsg("Place a completed Jedi Test out of play to take Luke into hand from Lost Pile");
+            action.setActionMsg("Place a completed Jedi Test out of play to take [Cloud City] Luke into hand from Lost Pile");
 
             // Choose target(s)
             action.appendTargeting(
@@ -211,7 +211,7 @@ public class Card501_178_BACK extends AbstractObjective {
                                     new PlaceCardOutOfPlayFromTableEffect(action, selectedCard));
                             // Perform result(s)
                             action.appendEffect(
-                                    new TakeCardIntoHandFromLostPileEffect(action, playerId, Filters.Luke, false));
+                                    new TakeCardIntoHandFromLostPileEffect(action, playerId, Filters.and(Icon.CLOUD_CITY, Filters.Luke), false));
                         }
                     }
             );
