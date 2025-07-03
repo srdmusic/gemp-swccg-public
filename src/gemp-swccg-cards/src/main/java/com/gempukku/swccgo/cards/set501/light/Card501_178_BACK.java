@@ -162,6 +162,34 @@ public class Card501_178_BACK extends AbstractObjective {
                     new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Bespin_system, Filters.Cloud_City_site), true));
             actions.add(action);
         }
+
+        final Filter patienceWithCardStacked = Filters.and(Filters.Patience, Filters.hasStacked(Filters.any));
+
+        gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__RETRIEVE_REBEL_OR_WEAPON_INTO_HAND;
+
+        if (GameConditions.canSpot(game, self, patienceWithCardStacked)
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+
+            action.setText("Place stacked card out of play");
+            action.setActionMsg("Place a card on Patience! out of play to retrieve a character weapon or [Cloud City] Rebel into hand");
+
+            action.appendTargeting(
+                    new ChooseStackedCardEffect(action, playerId, patienceWithCardStacked, Filters.any, false) {
+                        @Override
+                        protected void cardSelected(PhysicalCard selectedCard) {
+                            // Pay cost(s)
+                            action.appendCost(
+                                    new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new RetrieveCardIntoHandEffect(action, playerId, Filters.or(Filters.character_weapon, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
         
         gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__UPLOAD_LUKE_FROM_LOST_PILE;
 
