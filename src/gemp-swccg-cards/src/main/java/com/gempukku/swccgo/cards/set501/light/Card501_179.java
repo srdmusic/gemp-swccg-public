@@ -65,15 +65,15 @@ public class Card501_179 extends AbstractEpicEventDeployable {
             action.setPerformingPlayer(playerId);
             // Perform result(s)
             action.appendEffect(
-                new StackCardFromOutsideDeckEffect(action, playerId, self, Filters.Jedi_Test_1));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, false, Filters.Jedi_Test_1));
             action.appendEffect(
-                new StackCardFromOutsideDeckEffect(action, playerId, self, Filters.Jedi_Test_2));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, false, Filters.Jedi_Test_2));
             action.appendEffect(
-                new StackCardFromOutsideDeckEffect(action, playerId, self, Filters.Jedi_Test_3));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, false, Filters.Jedi_Test_3));
             action.appendEffect(
-                new StackCardFromOutsideDeckEffect(action, playerId, self, Filters.Jedi_Test_4));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, false, Filters.Jedi_Test_4));
             action.appendEffect(
-                new StackCardFromOutsideDeckEffect(action, playerId, self, Filters.Jedi_Test_5));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, false, Filters.Jedi_Test_5));
             actions.add(action);
         }
 
