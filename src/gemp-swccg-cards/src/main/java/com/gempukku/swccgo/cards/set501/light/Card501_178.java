@@ -24,6 +24,7 @@ import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseCardsFromTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -199,6 +200,7 @@ public class Card501_178 extends AbstractObjective {
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         // For remainder of game
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.character, Filters.at(Filters.non_battleground_location)), Filters.Sense));
         modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.Dagobah_location, playerId));
         return modifiers;
     }
