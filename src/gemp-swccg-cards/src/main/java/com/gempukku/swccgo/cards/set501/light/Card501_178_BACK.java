@@ -18,7 +18,6 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
@@ -106,40 +105,6 @@ public class Card501_178_BACK extends AbstractObjective {
         modifiers.add(new SpecialFlagModifier(self, conditionsForReserveDeckForceLoss, ModifierFlag.FORCE_DRAIN_LOST_FROM_RESERVE_DECK, game.getOpponent(self.getOwner())));
         
         return modifiers;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-
-        final Filter patienceWithCardStacked = Filters.and(Filters.Patience, Filters.hasStacked(Filters.any));
-
-        GameTextActionId gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__RETRIEVE_REBEL_OR_WEAPON_INTO_HAND;
-
-        if (TriggerConditions.wonBattle(game, effectResult, Filters.Luke)
-                && GameConditions.canSpot(game, self, patienceWithCardStacked)
-                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
-
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-
-            action.setText("Place stacked card out of play");
-            action.setActionMsg("Place a card on Patience! out of play to retrieve a weapon or [Cloud City] Rebel into hand");
-
-            action.appendTargeting(
-                    new ChooseStackedCardEffect(action, playerId, patienceWithCardStacked, Filters.any, false) {
-                        @Override
-                        protected void cardSelected(PhysicalCard selectedCard) {
-                            // Pay cost(s)
-                            action.appendCost(
-                                    new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new RetrieveCardIntoHandEffect(action, playerId, Filters.or(Filters.weapon, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))));
-                        }
-                    }
-            );
-            return Collections.singletonList(action);
-        }
-        return null;
     }
 
     @Override
