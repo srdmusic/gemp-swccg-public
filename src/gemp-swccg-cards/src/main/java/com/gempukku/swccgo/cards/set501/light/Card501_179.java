@@ -38,7 +38,7 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 public class Card501_179 extends AbstractEpicEventDeployable {
     public Card501_179() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Patience, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("If your [Dagobah] objective on table, deploy on table and stack Jedi Tests 1 - 5 from your Reserve Deck face up here. I Won't Fail You: You may deploy face up Jedi Tests from here as if from hand. I Saw A City In The Clouds: Once per turn, may [download] Bespin system or a Cloud City site. I've Got To Go To Them: Once per turn, if you just lost Force from a Force drain and you do not occupy a battleground, turn a Jedi Test here face down.");
+        setGameText("If your [Dagobah] objective on table, deploy on table and stack five Jedi Tests from outside the game face up here. You may deploy face up Jedi Tests from here as if from hand. Place completed Jedi Tests on table. I Won't Fail You: Only Luke may be your apprentice. Jedi Tests are suspended (not lost) while Luke not on table. I've Got To Go To Them: Once per turn, if you just lost Force from a Force drain and you do not occupy a battleground, turn a Jedi Test here face down.");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setTestingText("Patience!");
     }
