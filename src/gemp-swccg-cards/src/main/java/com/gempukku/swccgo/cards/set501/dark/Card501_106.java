@@ -80,7 +80,7 @@ public class Card501_106 extends AbstractEpicEventDeployable {
             && GameConditions.controls(game, playerId, Filters.here(self))) {
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setPerformingPlayer(playerId);
-                action.setText("blow away Tracked Fleet");
+                action.setText("Annihilate Tracked Fleet");
                 action.appendEffect(
                     new BlowAwayEffect(action, self){
                         @Override
