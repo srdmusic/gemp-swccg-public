@@ -47,9 +47,7 @@ import java.util.List;
 public class Card501_106 extends AbstractEpicEventDeployable {
     public Card501_106() {
         super(Side.DARK, PlayCardZoneOption.ATTACHED, Title.Tracked_Fleet, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on D'Qar (only at start of game). You may not deploy starships here. Your movement to here is free and opponent's movement from here is free. " +
-                "Once during opponent's move phase, if less than three cards here, opponent may stack a card from hand here to move Tracked Fleet (for free) as if a capital " +
-                "starship (hyperspeed = 3).  If you control this system at the start of your turn, Tracked Fleet 'blown away' (place this card out of play).");
+        setGameText("Deploy on D'Qar system (only at start of game). Tied To The End Of A String: You may not deploy starships here. Hyperspeed movement to and from here is free. There Will Be No Surrender: Three times per game, at start of opponent's move phase, opponent may stack a card from hand face down on this card to relocate it to an [Episode VII] system within 3 parsecs. The Resistance Is Dead!: At the start of your turn, if you control this system, Tracked Fleet is 'annihilated' (placed out of play).");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText(Title.Tracked_Fleet);
     }
