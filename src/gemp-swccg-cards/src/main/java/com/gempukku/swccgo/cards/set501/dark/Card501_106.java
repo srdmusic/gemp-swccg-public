@@ -97,7 +97,7 @@ public class Card501_106 extends AbstractEpicEventDeployable {
     @Override
     protected List<TopLevelGameTextAction> getOpponentsCardGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        Filter systemToRelocateTo = Filters.and(Filters.system, Filters.withinParsecsOf(self, 3), Filters.not(Filters.here(self)));
+        Filter systemToRelocateTo = Filters.and(Icon.EPISODE_VII, Filters.system, Filters.withinParsecsOf(self, 3), Filters.not(Filters.here(self)));
 
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
