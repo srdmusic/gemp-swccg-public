@@ -19,6 +19,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
@@ -88,6 +89,9 @@ public class Card501_111 extends AbstractObjective {
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
                         new PowerModifier(self, yourEpisodeVIICharactersAndStarships, 1), null));
+        action.appendEffect(
+                new AddUntilEndOfGameModifierEffect(action,
+                        new DeployCostToLocationModifier(self, Filters.Supremacy, -9, Filters.and(Icon.EPISODE_VII, Filters.system)), null));
         return action;
     }
 
