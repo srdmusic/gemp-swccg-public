@@ -99,7 +99,7 @@ public class Card501_111 extends AbstractObjective {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.THE_FIRST_ORDER_REIGNS__DOWNLOAD_BATTLEGROUND_SYSTEM;
+        GameTextActionId gameTextActionId = GameTextActionId.THE_FIRST_ORDER_REIGNS__DOWNLOAD_EPISODE_7_BATTLEGROUND;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
@@ -107,13 +107,13 @@ public class Card501_111 extends AbstractObjective {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy an [Episode VII] battledground system (or Crait location) from Reserve Deck");
+            action.setActionMsg("Deploy an [Episode VII] battleground from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.and(Filters.battleground_system, Icon.EPISODE_VII), Filters.Crait_location), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.EPISODE_VII, Filters.battleground), true));
             actions.add(action);
         }
         return actions;
