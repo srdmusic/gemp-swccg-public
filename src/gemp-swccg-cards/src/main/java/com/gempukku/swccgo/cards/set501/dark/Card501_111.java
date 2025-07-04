@@ -19,7 +19,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -80,14 +80,14 @@ public class Card501_111 extends AbstractObjective {
     @Override
     protected RequiredGameTextTriggerAction getGameTextAfterDeploymentCompletedAction(String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-        Filter episodeVIICharacter = Filters.and(Filters.character, Icon.EPISODE_VII);
+        Filter yourEpisodeVIICharactersAndStarships = Filters.and(Filters.your(self), Icon.EPISODE_VII, Filters.or(Filters.character, Filters.starship));
         Filter mayNotDeployRestrictionFilter = Filters.and(Filters.your(self), Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Icon.EPISODE_VII));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
                         new MayNotDeployModifier(self, mayNotDeployRestrictionFilter, playerId), null));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new ForfeitModifier(self, episodeVIICharacter, 1), playerId));
+                        new PowerModifier(self, yourEpisodeVIICharactersAndStarships, 1), null));
         return action;
     }
 
