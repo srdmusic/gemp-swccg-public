@@ -30,7 +30,7 @@ public class Card501_109 extends AbstractUniqueStarshipSite {
     public Card501_109() {
         super(Side.DARK, Title.Supremacy_Bridge, Persona.SUPREMACY, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("While you control, Supremacy is power +3.");
-        setLocationLightSideGameText("Unless your [Resistance] starship at a system, force drain -1.");
+        setLocationLightSideGameText("Unless your piloted [Resistance] starship at a system, force drain -1.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcons(Icon.INTERIOR_SITE, Icon.STARSHIP_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText(Title.Supremacy_Bridge);
@@ -46,7 +46,7 @@ public class Card501_109 extends AbstractUniqueStarshipSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, self, new UnlessCondition(new AtCondition(self, Filters.and(Filters.starship, Filters.resistance), 
+        modifiers.add(new ForceDrainModifier(self, self, new UnlessCondition(new AtCondition(self, Filters.and(Filters.piloted, Filters.starship, Filters.resistance), 
                         Filters.system)), -1, playerOnLightSideOfLocation));
         return modifiers;
     }
