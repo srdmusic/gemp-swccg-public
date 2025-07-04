@@ -38,10 +38,7 @@ public class Card501_111 extends AbstractObjective {
     public Card501_111() {
         super(Side.DARK, 0, "The First Order Reigns", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Crait and D'Qar systems, Supremacy: Bridge, and Tracked Fleet.\n" +
-                    "For remainder of game, you may not deploy cards with ability except [Episode VII] cards or [Independent] Starships. Your [Episode VII] characters are forfeit +1.\n" +
-                    "While this side up, once per turn, may deploy an [Episode VII] battleground system (or Crait location) from Reserve Deck; reshuffle. Opponent loses no more than 1 Force to Force drains at [Episode VII] systems.\n" +
-                    "Flip this card if Tracked Fleet is 'blown away.'");
+        setGameText("Deploy Crait and D'Qar systems, Supremacy: Bridge, and Tracked Fleet. For remainder of game, you may not deploy cards with ability except [Episode VII] cards. Your [Episode VII] characters and starships are power +1. Supremacy is deploy -9 to [Episode VII] systems. Once per turn, may [download] an [Episode VII] battleground. While this side up, neither player loses more than 1 Force to Force drains at systems (unless Tracked Fleet there). Flip this card if Tracked Fleet is 'annihilated.'");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText("The First Order Reigns");
     }
