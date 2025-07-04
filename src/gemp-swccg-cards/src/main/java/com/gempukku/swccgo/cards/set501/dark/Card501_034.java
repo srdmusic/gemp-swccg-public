@@ -47,7 +47,7 @@ public class Card501_034 extends AbstractUniqueStarshipSite {
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canDeployCardFromReserveDeck(game, playerOnDarkSideOfLocation, self, gameTextActionId, Title.Shmi)) {
+                && GameConditions.canDeployCardFromReserveDeck(game, playerOnDarkSideOfLocation, self, gameTextActionId, Title.Snoke)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy Snoke from Reserve Deck");
@@ -65,8 +65,8 @@ public class Card501_034 extends AbstractUniqueStarshipSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        Filter charactersExceptRey = Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.not(Filters.Rey));
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), charactersExceptRey), new OnTableCondition(self, Filters.title(Title.The_Resistance_Is_Doomed)), 1, Filters.here(self)));
+        Filter charactersExceptRey = Filters.and(Filters.your(playerOnLightSideOfLocation),Filters.character, Filters.not(Filters.Rey));
+        modifiers.add(new DeployCostToLocationModifier(self, charactersExceptRey, new OnTableCondition(self, Filters.title(Title.The_Resistance_Is_Doomed)), 1, Filters.here(self)));
         return modifiers;
     }
 }
