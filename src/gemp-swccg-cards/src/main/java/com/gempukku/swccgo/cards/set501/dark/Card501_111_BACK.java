@@ -26,7 +26,6 @@ import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.TotalPowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -144,7 +143,6 @@ public class Card501_111_BACK extends AbstractObjective {
 
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new ForceDrainModifier(self, battlegroundsWithTwoFirstOrderCharacters, 1, playerId));
-        modifiers.add(new TotalPowerModifier(self, Filters.sameLocationAs(self, Filters.Kylo), 2, playerId));
         modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.sameLocationAs(self, locationHasOneCardsWithAbility), kyloControlsCondition, opponent));
         return modifiers;
     }
