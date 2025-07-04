@@ -19,7 +19,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.OrCondition;
-import com.gempukku.swccgo.logic.modifiers.AddsPowerToDrivenBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.DestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.DrawsBattleDestinyIfUnableToOtherwiseModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmunityToAttritionLimitedToModifier;
@@ -57,7 +57,7 @@ public class Card501_035 extends AbstractImperial {
         Filter yourBackInterrupts = Filters.and(Filters.your(self), Filters.not(Icon.CORUSCANT), Filters.titleContains("Back"));
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new AddsPowerToDrivenBySelfModifier(self, 3));
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
         modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, pilotingDreadnaughtOrStarfighter, 1));
         modifiers.add(new ImmunityToAttritionLimitedToModifier(self, Filters.and(Filters.opponents(self.getOwner()), Filters.here(self)), pilotingDreadnaughtOrStarfighter,
             new ConditionEvaluator(7, 5, pilotingBlack3OrWithVader)));
