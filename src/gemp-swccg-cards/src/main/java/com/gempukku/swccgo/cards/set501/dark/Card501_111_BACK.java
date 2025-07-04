@@ -106,9 +106,12 @@ public class Card501_111_BACK extends AbstractObjective {
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
-        Filter lukeLeiaHan = Filters.or(Filters.Luke, Filters.Leia, Filters.Han);
+        Filter hanLeiaLuke = Filters.or(Filters.Han, Filters.Leia, Filters.Luke);
+        Filter locationFilter = Filters.and(Filters.Crait_Salt_Plateau, Filters.wherePresent(self, hanLeiaLuke));
         // Check condition(s)
-        if (TriggerConditions.wonBattleAgainst(game, effectResult, lukeLeiaHan, Filters.Kylo)) {
+        if (TriggerConditions.justForfeitedToLostPileFromLocation(game, effectResult, Filters.Kylo, locationFilter)
+                && GameConditions.isDuringBattleLostBy(game, playerId)) {
+
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
 
             action.setText("Place objective out of play.");
