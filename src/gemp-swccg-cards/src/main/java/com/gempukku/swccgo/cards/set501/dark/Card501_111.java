@@ -81,8 +81,7 @@ public class Card501_111 extends AbstractObjective {
     protected RequiredGameTextTriggerAction getGameTextAfterDeploymentCompletedAction(String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
         Filter episodeVIICharacter = Filters.and(Filters.character, Icon.EPISODE_VII);
-        Filter independentStarship = Filters.and(Icon.INDEPENDENT, Filters.starship);
-        Filter mayNotDeployRestrictionFilter = Filters.and(Filters.your(self), Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Filters.or(Icon.EPISODE_VII, independentStarship)));
+        Filter mayNotDeployRestrictionFilter = Filters.and(Filters.your(self), Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Icon.EPISODE_VII));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
                         new MayNotDeployModifier(self, mayNotDeployRestrictionFilter, playerId), null));
