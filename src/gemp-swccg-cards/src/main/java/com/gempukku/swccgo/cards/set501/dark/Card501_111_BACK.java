@@ -140,9 +140,10 @@ public class Card501_111_BACK extends AbstractObjective {
         
         Condition kyloControlsCondition = new ControlsWithCondition(self, playerId, Filters.Crait_Salt_Plateau, Filters.Kylo);
         Filter locationHasOneCardsWithAbility = Filters.and(Filters.sameLocationAs(self, Filters.and(Filters.opponents(self), Filters.characterOrPermanentPilotAlone)));
+        Filter battlegroundsWithTwoFirstOrderCharacters = Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.and(Filters.First_Order_character, Filters.with(self, Filters.First_Order_character))));
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, Filters.battleground_system, 1, playerId));
+        modifiers.add(new ForceDrainModifier(self, battlegroundsWithTwoFirstOrderCharacters, 1, playerId));
         modifiers.add(new TotalPowerModifier(self, Filters.sameLocationAs(self, Filters.Kylo), 2, playerId));
         modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.sameLocationAs(self, locationHasOneCardsWithAbility), kyloControlsCondition, opponent));
         return modifiers;
