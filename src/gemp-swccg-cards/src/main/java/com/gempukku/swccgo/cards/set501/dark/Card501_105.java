@@ -36,7 +36,7 @@ import java.util.List;
 public class Card501_105 extends AbstractNormalEffect {
     public Card501_105() {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Navy Of The First Order", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on table. During your deploy phase, may reveal a [First Order] starship from hand to take its matching pilot character from Reserve Deck (or vice versa) and deploy both simultaneously. [First Order] starships are deploy -1 (-2 to D'qar) and hyperspeed +1. [Immune to Alter.]");
+        setGameText("Deploy on table. [First Order] starships are deploy -1 (-2 to D'Qar) and hyperspeed +1. During your deploy phase, may reveal one [First Order] starship from hand to ▲ a First Order pilot (or vice versa) and deploy both simultaneously. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Navy Of The First Order");
