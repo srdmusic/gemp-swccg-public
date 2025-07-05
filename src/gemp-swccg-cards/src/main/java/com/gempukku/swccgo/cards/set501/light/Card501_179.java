@@ -21,13 +21,16 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.TrueCondition;
 import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.StackCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.StackCardFromOutsideDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.JediTestSuspendedInsteadOfLostModifier;
 import com.gempukku.swccgo.logic.modifiers.MayDeployAsIfFromHandModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
+import com.gempukku.swccgo.logic.modifiers.PlaceJediTestOnTableWhenCompletedModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
@@ -38,7 +41,7 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 public class Card501_179 extends AbstractEpicEventDeployable {
     public Card501_179() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Patience, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("If your [Dagobah] objective on table, deploy on table and stack Jedi Tests 1 - 5 from your Reserve Deck face up here. I Won't Fail You: You may deploy face up Jedi Tests from here as if from hand. I Saw A City In The Clouds: Once per turn, may [download] Bespin system or a Cloud City site. I've Got To Go To Them: Once per turn, if you just lost Force from a Force drain and you do not occupy a battleground, turn a Jedi Test here face down.");
+        setGameText("If your [Dagobah] objective on table, deploy on table and stack five Jedi Tests from outside the game face up here. You may deploy face up Jedi Tests from here as if from hand. Place completed Jedi Tests on table. I Won't Fail You: Only Luke may be your apprentice. Jedi Tests are suspended (not lost) while Luke not on table. I've Got To Go To Them: Once per turn, if you just lost Force from a Force drain and you do not occupy a battleground, turn a Jedi Test here face down.");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setTestingText("Patience!");
     }
@@ -62,15 +65,15 @@ public class Card501_179 extends AbstractEpicEventDeployable {
             action.setPerformingPlayer(playerId);
             // Perform result(s)
             action.appendEffect(
-                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_1, false, false));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, false, Filters.Jedi_Test_1));
             action.appendEffect(
-                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_2, false, false));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, false, Filters.Jedi_Test_2));
             action.appendEffect(
-                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_3, false, false));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, false, Filters.Jedi_Test_3));
             action.appendEffect(
-                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_4, false, false));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, false, Filters.Jedi_Test_4));
             action.appendEffect(
-                new StackCardFromReserveDeckEffect(action, playerId, self, Filters.Jedi_Test_5, false, false));
+                new StackCardFromOutsideDeckEffect(action, playerId, self, false, Filters.Jedi_Test_5));
             actions.add(action);
         }
 
@@ -110,29 +113,9 @@ public class Card501_179 extends AbstractEpicEventDeployable {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayDeployAsIfFromHandModifier(self, Filters.and(Filters.not(Filters.face_down), Filters.Jedi_Test, Filters.stackedOn(self))));
+        modifiers.add(new PlaceJediTestOnTableWhenCompletedModifier(self, Filters.any, new TrueCondition()));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test, ModifyGameTextType.JEDI_TESTS__ONLY_LUKE_MAY_BE_APPRENTICE));
+        modifiers.add(new JediTestSuspendedInsteadOfLostModifier(self, Filters.completed_Jedi_Test, new TrueCondition()));
         return modifiers;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
-        
-        GameTextActionId gameTextActionId = GameTextActionId.PATIENCE__DOWNLOAD_LOCATION;
-
-        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
-                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
-            
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy Bespin system or a Cloud City site from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
-            // Perform result(s)
-            action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Bespin_system, Filters.Cloud_City_site), true));
-            actions.add(action);
-        }
-        return actions;
     }
 }
