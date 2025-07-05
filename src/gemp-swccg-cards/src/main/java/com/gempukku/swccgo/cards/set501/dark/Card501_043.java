@@ -60,7 +60,7 @@ public class Card501_043 extends AbstractFirstOrder {
                         .targetForFree(Filters.or(Filters.character, targetedAsCharacter), TargetingReason.TO_BE_HIT).finishBuildPrep();
                 if (actionBuilder != null) {
                     // Build action using common utility
-                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, Statistic.DEFENSE_VALUE, true, 0);
+                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 1, Statistic.DEFENSE_VALUE, true, 0);
                     return Collections.singletonList(action);
                 }
                 return null;
