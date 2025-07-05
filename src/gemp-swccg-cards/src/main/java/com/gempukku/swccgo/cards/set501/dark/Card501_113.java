@@ -4,7 +4,9 @@ import com.gempukku.swccgo.cards.AbstractCapitalStarship;
 import com.gempukku.swccgo.cards.AbstractPermanentAboard;
 import com.gempukku.swccgo.cards.AbstractPermanentPilot;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.ModelType;
 import com.gempukku.swccgo.common.Persona;
@@ -37,7 +39,7 @@ public class Card501_113 extends AbstractCapitalStarship {
     public Card501_113() {
         super(Side.DARK, 1, 16, 13, 9, null, 2, 16, Title.Supremacy, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setAsHorizontal(true);
-        setGameText("May add unlimited pilots, passengers, starfighters, and vehicles. Permanent pilot provides ability of 4. Once per game, during your move phase, may relocate Tracked Fleet here.");
+        setGameText("May add unlimited pilots, passengers, starfighters, and vehicles. Permanent pilot provides ability of 4. Once per game, during your move phase, may relocate Tracked Fleet here. Immune to attrition < 10.");
         addPersona(Persona.SUPREMACY);
         addIcons(Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.FIRST_ORDER, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_25);
         addIcon(Icon.PILOT, 1);
@@ -67,15 +69,20 @@ public class Card501_113 extends AbstractCapitalStarship {
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         Filter relocatableTrackedFleet = Filters.and(Filters.Tracked_Fleet, Filters.canBeRelocated(true), Filters.not(Filters.here(self)));
+        GameTextActionId gameTextActionId = GameTextActionId.SUPREMACY__RELOCATE_TRACKED_FLEET;
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, Phase.MOVE)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.isDuringYourPhase(game, self, Phase.MOVE)
                 && GameConditions.canSpot(game, self, relocatableTrackedFleet)) {
 
             PhysicalCard trackedFleet = Filters.findFirstActive(game, self, relocatableTrackedFleet);
             PhysicalCard thisSystem = Filters.findFirstActive(game, self, Filters.sameSystem(self));
             // Build action using common utility)
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Relocate Tracked Fleet here");
+            // Append usage limit(s)
+            action.appendUsage(
+                new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new AttachCardFromTableEffect(action, trackedFleet, thisSystem));
