@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.DuringForceDrainAtCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -17,12 +18,10 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.conditions.TrueCondition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
@@ -30,16 +29,14 @@ import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.effects.ReturnCardToHandFromTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
-import com.gempukku.swccgo.logic.modifiers.JediTestSuspendedInsteadOfLostModifier;
 import com.gempukku.swccgo.logic.modifiers.MayDeployOtherCardsAsReactToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.MayDeployOtherCardsAsReactToTargetModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifierFlag;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
-import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
-import com.gempukku.swccgo.logic.modifiers.PlaceJediTestOnTableWhenCompletedModifier;
 import com.gempukku.swccgo.logic.modifiers.SpecialFlagModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -56,7 +53,7 @@ import java.util.List;
 public class Card501_178_BACK extends AbstractObjective {
     public Card501_178_BACK() {
         super(Side.LIGHT, 7, Title.Save_You_It_Can, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Immediately return Luke and any cards on him to owner's hand. While this side up, may deploy Luke (deploy -3) and/or a weapon on him as a 'react.' If Luke just won a battle, may place a card on Patience! out of play to retrieve a weapon or [Cloud City] Rebel into hand. When your [Cloud City] Rebel Force drains at a battleground site, unless a captive on table, lost Force must come from top of Reserve Deck if possible. May place a completed (even if suspended) Jedi Test out of play to take Luke into hand from Lost Pile.");
+        setGameText("Immediately return Luke and any cards on him to owner's hand. While this side up, may deploy Luke (deploy -3) and/or a weapon on him as a 'react.' May place a card stacked on Patience! out of play to retrieve a character weapon or a [Cloud City] Rebel into hand. May place a completed Jedi Test (even if suspended) out of play to take [Cloud City] Luke into hand from Lost Pile. When your [Cloud City] Rebel Force drains at a battleground site, unless a captive on table, lost Force must come from top of Reserve Deck if possible.");
         addIcons(Icon.SPECIAL_EDITION, Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("Save You It Can (V)");
@@ -92,10 +89,8 @@ public class Card501_178_BACK extends AbstractObjective {
         String playerId = self.getOwner();
 
         // For remainder of game
-        modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test, ModifyGameTextType.JEDI_TESTS__ONLY_LUKE_MAY_BE_APPRENTICE));
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.character, Filters.at(Filters.non_battleground_location)), Filters.Sense));
         modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.Dagobah_location, playerId));
-        modifiers.add(new PlaceJediTestOnTableWhenCompletedModifier(self, Filters.any, new TrueCondition()));
-        modifiers.add(new JediTestSuspendedInsteadOfLostModifier(self, Filters.completed_Jedi_Test, new TrueCondition()));
 
         // While this side up
         modifiers.add(new MayDeployOtherCardsAsReactToLocationModifier(self, "Deploy Luke (deploy -3) as a 'react'", playerId, Filters.Luke, Filters.any, -3));
@@ -113,20 +108,37 @@ public class Card501_178_BACK extends AbstractObjective {
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.MIND_WHAT_YOUR_HAVE_LEARNED_V__DOWNLOAD_BESPIN_LOCATION;
+
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+            
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Bespin location from Reserve Deck");
+            action.setActionMsg("Deploy Bespin system or a Cloud City site from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Bespin_system, Filters.Cloud_City_site), true));
+            actions.add(action);
+        }
 
         final Filter patienceWithCardStacked = Filters.and(Filters.Patience, Filters.hasStacked(Filters.any));
 
-        GameTextActionId gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__RETRIEVE_REBEL_OR_WEAPON_INTO_HAND;
+        gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__RETRIEVE_REBEL_OR_WEAPON_INTO_HAND;
 
-        if (TriggerConditions.wonBattle(game, effectResult, Filters.Luke)
-                && GameConditions.canSpot(game, self, patienceWithCardStacked)
+        if (GameConditions.canSpot(game, self, patienceWithCardStacked)
                 && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
 
             action.setText("Place stacked card out of play");
-            action.setActionMsg("Place a card on Patience! out of play to retrieve a weapon or [Cloud City] Rebel into hand");
+            action.setActionMsg("Place a card on Patience! out of play to retrieve a character weapon or [Cloud City] Rebel into hand");
 
             action.appendTargeting(
                     new ChooseStackedCardEffect(action, playerId, patienceWithCardStacked, Filters.any, false) {
@@ -137,19 +149,14 @@ public class Card501_178_BACK extends AbstractObjective {
                                     new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
                             // Perform result(s)
                             action.appendEffect(
-                                    new RetrieveCardIntoHandEffect(action, playerId, Filters.or(Filters.weapon, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))));
+                                    new RetrieveCardIntoHandEffect(action, playerId, Filters.or(Filters.character_weapon, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))));
                         }
                     }
             );
-            return Collections.singletonList(action);
+            actions.add(action);
         }
-        return null;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-
-        GameTextActionId gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__UPLOAD_LUKE_FROM_LOST_PILE;
+        
+        gameTextActionId = GameTextActionId.SAVE_YOU_IT_CAN__UPLOAD_LUKE_FROM_LOST_PILE;
 
         if (GameConditions.canSpot(game, self, SpotOverride.INCLUDE_SUSPENDED, Filters.completed_Jedi_Test)
                 && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
@@ -157,7 +164,7 @@ public class Card501_178_BACK extends AbstractObjective {
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
 
             action.setText("Place completed Jedi Test out of play");
-            action.setActionMsg("Place a completed Jedi Test out of play to take Luke into hand from Lost Pile");
+            action.setActionMsg("Place a completed Jedi Test out of play to take [Cloud City] Luke into hand from Lost Pile");
 
             // Choose target(s)
             action.appendTargeting(
@@ -169,12 +176,12 @@ public class Card501_178_BACK extends AbstractObjective {
                                     new PlaceCardOutOfPlayFromTableEffect(action, selectedCard));
                             // Perform result(s)
                             action.appendEffect(
-                                    new TakeCardIntoHandFromLostPileEffect(action, playerId, Filters.Luke, false));
+                                    new TakeCardIntoHandFromLostPileEffect(action, playerId, Filters.and(Icon.CLOUD_CITY, Filters.Luke), false));
                         }
                     }
             );
-            return Collections.singletonList(action);
+            actions.add(action);
         }
-        return null;
+        return actions;
     }
 }
