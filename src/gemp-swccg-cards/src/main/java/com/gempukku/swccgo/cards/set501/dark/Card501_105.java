@@ -2,11 +2,10 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -18,13 +17,13 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.effects.ShowCardOnScreenEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckSimultaneouslyWithCardEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -42,7 +41,6 @@ public class Card501_105 extends AbstractNormalEffect {
         setTestingText("Navy Of The First Order");
     }
 
-
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
@@ -53,44 +51,49 @@ public class Card501_105 extends AbstractNormalEffect {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        final Filter firstOrderStarship = Filters.and(Filters.First_Order_starship);
-        Filter filter = Filters.and(Filters.or(Filters.pilot, firstOrderStarship), Filters.isUniquenessOnTableNotReached);
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.NAVY_OF_THE_FIRST_ORDER__DEPLOY_MATCHING_FIRST_ORDER_STARSHIP_OR_PILOT;
+        final Filter starship = Filters.and(Icon.FIRST_ORDER, Filters.starship);
+        final Filter pilot = Filters.and(Filters.First_Order_pilot);
+        Filter filter = Filters.and(Filters.or(pilot, starship), Filters.isUniquenessOnTableNotReached);
+
+        GameTextActionId gameTextActionId = GameTextActionId.NAVY_OF_THE_FIRST_ORDER__DEPLOY_FIRST_ORDER_STARSHIP_AND_PILOT;
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.hasInHand(game, playerId, filter)
-                && GameConditions.canSearchReserveDeck(game, playerId, self, gameTextActionId)) {
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Reveal pilot or [First Order] Starship from hand");
+            action.setText("Reveal starship or pilot from hand");
             // Update usage limit(s)
             action.appendUsage(
-                    new OncePerPhaseEffect(action));
+                    new OncePerTurnEffect(action));
             // Choose target(s)
             action.appendTargeting(
                     new ChooseCardFromHandEffect(action, playerId, filter) {
                         @Override
                         protected void cardSelected(SwccgGame game, final PhysicalCard selectedCard) {
                             final Filter searchFilter;
-                            if (Filters.character.accepts(game, selectedCard)) {
-                                action.setActionMsg("Take " + GameUtils.getCardLink(selectedCard) + "'s matching [First Order] Starship from Reserve Deck and deploy both simultaneously");
-                                searchFilter = Filters.and(firstOrderStarship, Filters.matchingStarship(selectedCard));
+                            if (pilot.accepts(game, selectedCard)) {
+                                action.setActionMsg("Take a [First Order] starship from Reserve Deck and deploy both simultaneously");
+                                searchFilter = starship;
                             }
                             else {
-                                action.setActionMsg("Take " + GameUtils.getCardLink(selectedCard) + "'s matching pilot from Reserve Deck and deploy both simultaneously");
-                                searchFilter = Filters.matchingPilot(selectedCard);
+                                action.setActionMsg("Take a First Order pilot from Reserve Deck and deploy both simultaneously");
+                                searchFilter = pilot;
                             }
                             // Perform result(s)
                             action.appendEffect(
+                                    new SendMessageEffect(action, playerId + " reveals " + GameUtils.getCardLink(selectedCard) + " with " + GameUtils.getCardLink(self)));
+                            action.appendEffect(
                                     new ShowCardOnScreenEffect(action, selectedCard));
                             action.appendEffect(
-                                    new DeployCardFromReserveDeckSimultaneouslyWithCardEffect(action, selectedCard, searchFilter, 0, true));
+                                    new DeployCardFromReserveDeckSimultaneouslyWithCardEffect(action, selectedCard, searchFilter, true));
                         }
                     });
-            return Collections.singletonList(action);
+            actions.add(action);
         }
-        return null;
+        return actions;
     }
 }
