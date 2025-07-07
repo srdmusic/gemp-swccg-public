@@ -42,7 +42,6 @@ public class Card501_119 extends AbstractUsedInterrupt {
 
         // Check condition(s)
         if (GameConditions.isDuringBattleAt(game, Filters.site)
-                && GameConditions.occupies(game, playerId, systemRelatedToBattle)
                 && GameConditions.occupiesWith(game, self, playerId, systemRelatedToBattle, Filters.or(Filters.Dreadnaught, Filters.Star_Destroyer))) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
