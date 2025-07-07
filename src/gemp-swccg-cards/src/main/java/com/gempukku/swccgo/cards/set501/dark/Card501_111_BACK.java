@@ -15,11 +15,16 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
+import com.gempukku.swccgo.logic.decisions.IntegerAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
@@ -28,7 +33,6 @@ import com.gempukku.swccgo.logic.modifiers.MayNotForceDrainAtLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -40,7 +44,7 @@ import java.util.List;
 public class Card501_111_BACK extends AbstractObjective {
     public Card501_111_BACK() {
         super(Side.DARK, 7, Title.The_Resistance_Is_Doomed, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Immediately retrieve up to 3 Force. While this side up, your Force drains at battlegrounds where you have two First Order characters are +1. Once per turn, may deploy a [First Order] vehicle (or trooper) from Lost Pile. While you control Salt Plateau (or opponent's site) with Kylo, opponent's Force retrieval is canceled and opponent may not Force drain where their character or permanent pilot is alone. Place out of play if Kylo just forfeited from a battle you lost at Salt Plateau where Han, Leia, or Luke present.");
+        setGameText("May immediately retrieve up to 3 Force. While this side up, your Force drains at battlegrounds where you have two First Order characters are +1. Once per turn, may deploy a [First Order] vehicle (or trooper) from Lost Pile. While you control Salt Plateau (or opponent's site) with Kylo, opponent's Force retrieval is canceled and opponent may not Force drain where their character or permanent pilot is alone. Place out of play if Kylo just forfeited from a battle you lost at Salt Plateau where Han, Leia, or Luke present.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText(Title.The_Resistance_Is_Doomed);
     }
@@ -86,23 +90,45 @@ public class Card501_111_BACK extends AbstractObjective {
     }
 
     @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+        // Check condition(s)
+        if (TriggerConditions.cardFlipped(game, effectResult, self)) {
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+
+            action.setText("Retrieve Force");
+            action.setActionMsg("Have " + playerId + " retrieve up to 3 Force");
+            // Perform result(s)
+            action.appendEffect(
+                    new PlayoutDecisionEffect(action, playerId,
+                            new IntegerAwaitingDecision("Choose amount of Force to retrieve", 0, 3, 3) {
+                                @Override
+                                public void decisionMade(final int amountToRetrieve) throws DecisionResultInvalidException {
+                                    GameState gameState = game.getGameState();
+                                    if (amountToRetrieve == 0) {
+                                        gameState.sendMessage(playerId + " chooses to not retrieve any Force");
+                                        return;
+                                    }
+                                    gameState.sendMessage(playerId + " chooses to retrieve " + amountToRetrieve + " Force");
+                                    action.appendEffect(
+                                            new RetrieveForceEffect(action, playerId, amountToRetrieve));
+                                }
+                            }
+                    )
+            );
+            actions.add(action);
+        }
+        return actions;
+    }
+
+    @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
-
-        // Check condition(s)
-        if (TriggerConditions.cardFlipped(game, effectResult, self)) {
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-
-            action.setText("Retrieve Force");
-            action.setActionMsg("Have " + playerId + " retrieve 3 Force");
-            // Perform result(s)
-            action.appendEffect(
-                    new RetrieveForceEffect(action, playerId, 3));
-            return Collections.singletonList(action);
-        }
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
