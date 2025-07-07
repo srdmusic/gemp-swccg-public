@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractLostInterrupt;
+import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -28,13 +28,13 @@ import java.util.List;
 /**
  * Set: Playtesting
  * Type: Interrupt
- * Subtype: Lost
+ * Subtype: Used
  * Title: Orbital Bombardment
  */
-public class Card501_119 extends AbstractLostInterrupt {
+public class Card501_119 extends AbstractUsedInterrupt {
     public Card501_119() {
-        super(Side.DARK, 4, "Orbital Bombardment", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("During battle at a site, if your [First Order] capital starship controls the related system draw destiny (if Fulminatrix there, draw two and choose one): (0-2) your total battle destiny is +1; (3-5) opponent's total power is -2; (6+) opponent's character is 'hit' (your choice).");
+        super(Side.DARK, 5, "Orbital Bombardment", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setGameText("During battle at a site, if your Dreadnaught or Star Destroyer occupies the related system, your total battle destiny is +1. If you control the system or Fulminatrix there, +2 instead and the number of battle destiny draws may not be limited.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText("Orbital Bombardment");
     }
