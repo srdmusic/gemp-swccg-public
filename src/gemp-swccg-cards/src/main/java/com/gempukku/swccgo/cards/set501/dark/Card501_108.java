@@ -11,8 +11,10 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
-import com.gempukku.swccgo.logic.modifiers.IconModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeCanceledModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeReducedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -28,8 +30,9 @@ public class Card501_108 extends AbstractSite {
     public Card501_108() {
         super(Side.DARK, Title.Crait_Salt_Plateau, Title.Crait, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Your combat vehicles are defense value +1 here.");
-        setLocationLightSideGameText("Gains [Light icon] while The Resistance Is Doomed on table.");
+        setLocationLightSideGameText("While The Resistance Is Doomed on table, Force drains here may not be canceled or reduced.");
         addIcon(Icon.DARK_FORCE, 2);
+        addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText(Title.Crait_Salt_Plateau);
     }
@@ -44,7 +47,9 @@ public class Card501_108 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new IconModifier(self, self, new OnTableCondition(self, Filters.The_Resistance_Is_Doomed), Icon.LIGHT_FORCE));
+        Condition theResistanceIsDoomedOnTable = new OnTableCondition(self, Filters.The_Resistance_Is_Doomed);
+        modifiers.add(new ForceDrainsMayNotBeCanceledModifier(self, Filters.here(self), theResistanceIsDoomedOnTable));
+        modifiers.add(new ForceDrainsMayNotBeReducedModifier(self, Filters.here(self), theResistanceIsDoomedOnTable));
         return modifiers;
     }
 }
