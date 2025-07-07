@@ -29,8 +29,8 @@ import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.MovesFreeFromLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MovesFreeFromLocationUsingHyperspeedModifier;
+import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationUsingHyperspeedModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.StandardEffect;
@@ -47,9 +47,7 @@ import java.util.List;
 public class Card501_106 extends AbstractEpicEventDeployable {
     public Card501_106() {
         super(Side.DARK, PlayCardZoneOption.ATTACHED, Title.Tracked_Fleet, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on D'Qar (only at start of game). You may not deploy starships here. Your movement to here is free and opponent's movement from here is free. " +
-                "Once during opponent's move phase, if less than three cards here, opponent may stack a card from hand here to move Tracked Fleet (for free) as if a capital " +
-                "starship (hyperspeed = 3).  If you control this system at the start of your turn, Tracked Fleet 'blown away' (place this card out of play).");
+        setGameText("Deploy on D'Qar system (only at start of game). Tied To The End Of A String: You may not deploy starships here. Hyperspeed movement to and from here is free. There Will Be No Surrender: Three times per game, at start of opponent's move phase, opponent may stack a card from hand face down on this card to relocate it to an [Episode VII] system within 3 parsecs. The Resistance Is Dead!: At the start of your turn, if you control this system, Tracked Fleet is 'annihilated' (placed out of play).");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText(Title.Tracked_Fleet);
     }
@@ -68,8 +66,8 @@ public class Card501_106 extends AbstractEpicEventDeployable {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotDeployToLocationModifier(self, Filters.and(Filters.your(self),Filters.starship), Filters.sameLocation(self)));
-        modifiers.add(new MovesFreeToLocationModifier(self, Filters.and(Filters.your(self), Filters.starship), Filters.here(self)));
-        modifiers.add(new MovesFreeFromLocationModifier(self, Filters.and(Filters.opponents(self), Filters.starship), Filters.here(self)));
+        modifiers.add(new MovesFreeToLocationUsingHyperspeedModifier(self, Filters.any, Filters.sameLocation(self)));
+        modifiers.add(new MovesFreeFromLocationUsingHyperspeedModifier(self, Filters.any, Filters.sameLocation(self)));
         return modifiers;
     }
 
@@ -82,7 +80,7 @@ public class Card501_106 extends AbstractEpicEventDeployable {
             && GameConditions.controls(game, playerId, Filters.here(self))) {
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
                 action.setPerformingPlayer(playerId);
-                action.setText("blow away Tracked Fleet");
+                action.setText("Annihilate Tracked Fleet");
                 action.appendEffect(
                     new BlowAwayEffect(action, self){
                         @Override
@@ -99,7 +97,7 @@ public class Card501_106 extends AbstractEpicEventDeployable {
     @Override
     protected List<TopLevelGameTextAction> getOpponentsCardGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        Filter systemToRelocateTo = Filters.and(Filters.system, Filters.withinParsecsOf(self, 3), Filters.not(Filters.here(self)));
+        Filter systemToRelocateTo = Filters.and(Icon.EPISODE_VII, Filters.system, Filters.withinParsecsOf(self, 3), Filters.not(Filters.here(self)));
 
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
