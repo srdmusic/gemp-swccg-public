@@ -47,7 +47,7 @@ public class Card501_050 extends AbstractDarkJediMasterImperialRepublic {
     public Card501_050() {
         super(Side.DARK, 1, 6, 5, 7, 8, "Master Sidious", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Leader. Trade Federation.");
-        setGameText("While alone on Coruscant, your apprentice is immune to attrition. Once per game, may [upload] Hyperwave Scane, Unlimited Power! or Young Fool. During your move phase, if on Coruscant, may use 1 Force to relocate to your apprentice's site. Immune to attrition.");
+        setGameText("While alone on Coruscant, your apprentice is immune to attrition. Once per game, may [upload] Hyperwave Scan, Unlimited Power! or Young Fool. During your move phase, if on Coruscant, may use 1 Force to relocate to your apprentice's site. Immune to attrition.");
         addIcons(Icon.EPISODE_I, Icon.WARRIOR, Icon.SEPARATIST, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.LEADER);
         addPersona(Persona.SIDIOUS);
