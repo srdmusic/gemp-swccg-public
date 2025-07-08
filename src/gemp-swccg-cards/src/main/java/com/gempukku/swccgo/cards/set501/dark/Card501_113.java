@@ -68,7 +68,7 @@ public class Card501_113 extends AbstractCapitalStarship {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        Filter relocatableTrackedFleet = Filters.and(Filters.Tracked_Fleet, Filters.canBeRelocated(true), Filters.not(Filters.here(self)));
+        Filter relocatableTrackedFleet = Filters.and(Filters.Tracked_Fleet, Filters.not(Filters.here(self)));
         GameTextActionId gameTextActionId = GameTextActionId.SUPREMACY__RELOCATE_TRACKED_FLEET;
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
