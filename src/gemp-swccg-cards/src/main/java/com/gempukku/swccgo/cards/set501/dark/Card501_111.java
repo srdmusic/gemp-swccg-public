@@ -19,7 +19,8 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -38,10 +39,7 @@ public class Card501_111 extends AbstractObjective {
     public Card501_111() {
         super(Side.DARK, 0, "The First Order Reigns", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Crait and D'Qar systems, Supremacy: Bridge, and Tracked Fleet.\n" +
-                    "For remainder of game, you may not deploy cards with ability except [Episode VII] cards or [Independent] Starships. Your [Episode VII] characters are forfeit +1.\n" +
-                    "While this side up, once per turn, may deploy an [Episode VII] battleground system (or Crait location) from Reserve Deck; reshuffle. Opponent loses no more than 1 Force to Force drains at [Episode VII] systems.\n" +
-                    "Flip this card if Tracked Fleet is 'blown away.'");
+        setGameText("Deploy Crait and D'Qar systems, Supremacy: Bridge, and Tracked Fleet. For remainder of game, you may not deploy cards with ability except [Episode VII] cards. Your [Episode VII] characters and starships are power +1. Supremacy is deploy -9 to [Episode VII] systems. Once per turn, may [download] an [Episode VII] battleground. While this side up, neither player loses more than 1 Force to Force drains at systems (unless Tracked Fleet there). Flip this card if Tracked Fleet is 'annihilated.'");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText("The First Order Reigns");
     }
@@ -83,15 +81,17 @@ public class Card501_111 extends AbstractObjective {
     @Override
     protected RequiredGameTextTriggerAction getGameTextAfterDeploymentCompletedAction(String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-        Filter episodeVIICharacter = Filters.and(Filters.character, Icon.EPISODE_VII);
-        Filter independentStarship = Filters.and(Icon.INDEPENDENT, Filters.starship);
-        Filter mayNotDeployRestrictionFilter = Filters.and(Filters.your(self), Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Filters.or(Icon.EPISODE_VII, independentStarship)));
+        Filter yourEpisodeVIICharactersAndStarships = Filters.and(Filters.your(self), Icon.EPISODE_VII, Filters.or(Filters.character, Filters.starship));
+        Filter mayNotDeployRestrictionFilter = Filters.and(Filters.your(self), Filters.hasAbilityOrHasPermanentPilotWithAbility, Filters.not(Icon.EPISODE_VII));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
                         new MayNotDeployModifier(self, mayNotDeployRestrictionFilter, playerId), null));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new ForfeitModifier(self, episodeVIICharacter, 1), playerId));
+                        new PowerModifier(self, yourEpisodeVIICharactersAndStarships, 1), null));
+        action.appendEffect(
+                new AddUntilEndOfGameModifierEffect(action,
+                        new DeployCostToLocationModifier(self, Filters.Supremacy, -9, Filters.and(Icon.EPISODE_VII, Filters.system)), null));
         return action;
     }
 
@@ -99,7 +99,7 @@ public class Card501_111 extends AbstractObjective {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.THE_FIRST_ORDER_REIGNS__DOWNLOAD_BATTLEGROUND_SYSTEM;
+        GameTextActionId gameTextActionId = GameTextActionId.THE_FIRST_ORDER_REIGNS__DOWNLOAD_EPISODE_7_BATTLEGROUND;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
@@ -107,13 +107,13 @@ public class Card501_111 extends AbstractObjective {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy an [Episode VII] battledground system (or Crait location) from Reserve Deck");
+            action.setActionMsg("Deploy an [Episode VII] battleground from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.and(Filters.battleground_system, Icon.EPISODE_VII), Filters.Crait_location), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.and(Icon.EPISODE_VII, Filters.battleground), true));
             actions.add(action);
         }
         return actions;
@@ -122,8 +122,10 @@ public class Card501_111 extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        String opponent = game.getOpponent(self.getOwner());
-        modifiers.add(new LimitForceLossFromForceDrainModifier(self, Filters.and(Icon.EPISODE_VII, Filters.system), 1, opponent));
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+        modifiers.add(new LimitForceLossFromForceDrainModifier(self, Filters.and(Filters.system, Filters.not(Filters.hasAttached(Filters.Tracked_Fleet))), 1, playerId));
+        modifiers.add(new LimitForceLossFromForceDrainModifier(self, Filters.and(Filters.system, Filters.not(Filters.hasAttached(Filters.Tracked_Fleet))), 1, opponent));
         return modifiers;
     }
 

@@ -22,6 +22,7 @@ import com.gempukku.swccgo.logic.effects.ShowCardOnScreenEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckSimultaneouslyWithCardEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.HyperspeedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -46,6 +47,7 @@ public class Card501_105 extends AbstractNormalEffect {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeployCostToLocationModifier(self, Filters.First_Order_starship, -1, Filters.not(Filters.DQar_location)));
         modifiers.add(new DeployCostToLocationModifier(self, Filters.First_Order_starship, -2, Filters.DQar_location));
+        modifiers.add(new HyperspeedModifier(self, Filters.First_Order_starship, 1));
         return modifiers;
     }
 
