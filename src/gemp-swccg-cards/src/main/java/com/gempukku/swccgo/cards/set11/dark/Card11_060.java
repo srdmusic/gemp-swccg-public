@@ -10,10 +10,18 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.*;
+import com.gempukku.swccgo.logic.effects.DrawRaceDestinyEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.PutStackedCardsInLostPileEffect;
+import com.gempukku.swccgo.logic.effects.RepairPodracerEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Tatooine
@@ -36,7 +44,7 @@ public class Card11_060 extends AbstractDroid {
 
         // Card action 1 (send top race destiny to lost pile)
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        final Filter yourPodracerWithRaceDestinyFilter = Filters.and(Filters.Podracer, Filters.canBeTargetedBy(self), Filters.hasStacked(Filters.topRaceDestiny));
+        final Filter yourPodracerWithRaceDestinyFilter = Filters.and(Filters.your(self), Filters.Podracer, Filters.canBeTargetedBy(self), Filters.hasStacked(Filters.topRaceDestiny));
 
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)

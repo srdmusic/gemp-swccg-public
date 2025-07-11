@@ -102,6 +102,8 @@ public class Card_11_060_Tests {
 		//pit droid at Podracer Bay can use action 1
 		//pit droid not at Podracer bay cannot use action 1
 		//eligible podracer must have a top race destiny
+		//cannot use action 1 during your non-control phase
+		//cannot use action 1 during opponent's control phase
 		//(each) pit droid can only use action 1 once during your control phase
 
 		var scn = GetScenario();
@@ -131,8 +133,7 @@ public class Card_11_060_Tests {
 		scn.PassAllResponses();
 		scn.LSPass();
 
-		scn.SkipToLSTurn();
-		scn.SkipToDSTurn(Phase.CONTROL);
+		scn.SkipToPhase(Phase.CONTROL);
 
 		assertFalse(scn.DSCardActionAvailable(pitdroid1, action1)); //unavailable, no podracer with destiny stacked
 
@@ -145,10 +146,18 @@ public class Card_11_060_Tests {
 		scn.PassAllResponses();
 		scn.LSPass();
 
-
 		assertTrue(scn.DSCardPlayAvailable(pitdroid1, action1)); //podracer now available with destiny stacked
 		assertTrue(scn.DSCardPlayAvailable(pitdroid2, action1)); //
 		assertFalse(scn.DSCardPlayAvailable(pitdroid3, action1)); //verifies cannot use when not at bay
+
+		scn.SkipToPhase(Phase.DEPLOY);
+		assertFalse(scn.DSCardPlayAvailable(pitdroid1, action1)); //podracer with destiny stacked, your turn, but not control phase
+
+		scn.SkipToLSTurn(Phase.CONTROL);
+		scn.LSPass();
+		assertFalse(scn.DSCardPlayAvailable(pitdroid1, action1)); //podracer with destiny stacked, control phase, but not yours
+
+		scn.SkipToDSTurn(Phase.CONTROL);
 
 		assertEquals(0,scn.GetDSLostPileCount()); //lost pile empty
 		scn.DSUseCardAction(pitdroid1);
@@ -175,6 +184,59 @@ public class Card_11_060_Tests {
 		assertFalse(scn.DSCardPlayAvailable(pitdroid1, action1)); //verifies once per turn action cannot be used again
 		assertTrue(scn.DSCardPlayAvailable(pitdroid2, action1)); //podracer available with destiny stacked
 		assertFalse(scn.DSCardPlayAvailable(pitdroid3, action1)); //not at bay
+	}
+
+	@Test
+	public void PitDroidAction1CannotTargetOpponentsPodracer() {
+		//tests action1: While at Podracer Bay, once during each of your control phases may lose 1 Force to target your Podracer. Place target's top race destiny in Lost Pile, and draw one race destiny.
+		//test coverage:
+		//pit droid at Podracer Bay cannot use action 1 to target opponent's Podracer with stacked race destiny
+
+		var scn = GetScenario();
+
+		var pitdroid1 = scn.GetDSCard("pitdroid1");
+		var podracer1 = scn.GetDSCard("podracer1");
+		var podracer2 = scn.GetDSCard("podracer2");
+		var arena = scn.GetDSCard("arena");
+		var boonta = scn.GetDSCard("boonta");
+
+		var ls_podracer = scn.GetLSCard("ls_podracer");
+		var bay = scn.GetLSCard("bay");
+
+		scn.StartGame();
+		scn.MoveLocationToTable(bay);
+		scn.MoveLocationToTable(arena);
+
+		scn.MoveCardsToLocation(bay,pitdroid1,ls_podracer);
+		scn.MoveCardsToLocation(arena,podracer1,podracer2,boonta);
+
+		scn.DSActivateMaxForceAndPass();
+
+		scn.DSUseCardAction(boonta); //start podrace
+		scn.PassAllResponses();
+		scn.LSPass();
+
+		scn.SkipToPhase(Phase.CONTROL);
+
+		scn.DSPlayCard(boonta); //draw race destiny
+		scn.DSChooseCard(podracer1);
+		scn.PassAllResponses();
+		scn.DSChooseYes(); //stack it
+		scn.PassAllResponses();
+
+		scn.LSPlayCard(boonta); //draw race destiny (2 on anakin's)
+		scn.PassAllResponses();
+		scn.LSChooseYes(); //stack first
+		scn.PassAllResponses();
+		scn.LSChooseYes(); //stack second
+		scn.PassAllResponses();
+
+		assertTrue(scn.DSCardPlayAvailable(pitdroid1, action1)); //podracer now available with destiny stacked
+
+		assertEquals(0,scn.GetDSLostPileCount()); //lost pile empty
+		scn.DSUseCardAction(pitdroid1);
+		assertTrue(scn.DSHasCardChoicesAvailable(podracer1)); //has a stacked race destiny
+		assertFalse(scn.DSHasCardChoicesAvailable(ls_podracer)); //opponent's with stacked race destiny
 	}
 
 	@Test
