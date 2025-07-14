@@ -42,7 +42,7 @@ public class Card501_184 extends AbstractRebel {
     public Card501_184() {
         super(Side.LIGHT, 1, 4, 6, 2, 6, "Chewie With Blaster Rifle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Wookiee smuggler. 'Wraaaaaarw!'");
-        setGameText("[Pilot] 2. While with a captive or a droid, adds one battle destiny. Permanent weapon is Blaster Rifle (may target a character for free; draw destiny; target hit, and its forfeit = 0, if destiny +2 > defense value).");
+        setGameText("[Pilot] 2. While with a droid, a captive, or opponent's [Maintenance] card, adds one battle destiny. Permanent weapon is Blaster Rifle (may target a character for free; draw destiny; target hit, and its forfeit = 0, if destiny +1 > defense value).");
         addPersona(Persona.CHEWIE);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.PERMANENT_WEAPON, Icon.PREMIUM, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.SMUGGLER);
@@ -54,10 +54,10 @@ public class Card501_184 extends AbstractRebel {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        Filter captiveFilter = Filters.and(Filters.captive, Filters.at(Filters.battleLocation));
-        Condition withC3PO = new WithCondition(self, Filters.droid);
-        Condition withCaptive = new WithCondition(self, SpotOverride.INCLUDE_CAPTIVE, captiveFilter);
-        Condition modifierCondition = new OrCondition(withC3PO, withCaptive);
+        Condition withDroid = new WithCondition(self, Filters.droid);
+        Condition withCaptive = new WithCondition(self, SpotOverride.INCLUDE_CAPTIVE, Filters.and(Filters.captive, Filters.at(Filters.battleLocation)));
+        Condition withOppoMaint = new WithCondition(self, Filters.and(Filters.opponents(self), Filters.icon(Icon.MAINTENANCE)));
+        Condition modifierCondition = new OrCondition(withDroid, withCaptive, withOppoMaint);
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new AddsBattleDestinyModifier(self, modifierCondition, 1));
         return modifiers;
@@ -74,7 +74,7 @@ public class Card501_184 extends AbstractRebel {
                 if (actionBuilder != null) {
 
                     // Build action using common utility
-                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 2, Statistic.DEFENSE_VALUE, true, 0);
+                    FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 1, Statistic.DEFENSE_VALUE, true, 0);
                     return Collections.singletonList(action);
                 }
                 return null;
