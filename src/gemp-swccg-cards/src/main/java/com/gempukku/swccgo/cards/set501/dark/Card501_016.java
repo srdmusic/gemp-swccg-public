@@ -1,8 +1,5 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import com.gempukku.swccgo.cards.AbstractFirstOrder;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.evaluators.OutOfPlayEvaluator;
@@ -19,10 +16,14 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
+import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Set: Playtesting
@@ -34,7 +35,7 @@ public class Card501_016 extends AbstractFirstOrder {
     public Card501_016() {
         super(Side.DARK, 2, 4, 4, 4, 7, "Vicrul", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Knight of Ren.");
-        setGameText("Power +1 for each opponent's character out of play. Opponent may not cancel your battle destiny draws where you have Kylo or a Knight of Ren. If you just initiated a Force drain (or won a battle) here, may place bottom card of opponent's Lost Pile out of play.");
+        setGameText("[Pilot] 2. Power +1 for each opponent's character out of play. Opponent may not cancel your battle destiny draws where you have Kylo or a Knight of Ren. If you just initiated a Force drain here, may place bottom card of opponent's Lost Pile out of play.");
         addIcons(Icon.EPISODE_VII, Icon.WARRIOR, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.KNIGHT_OF_REN);
         setTestingText("Vicrul");
@@ -46,6 +47,7 @@ public class Card501_016 extends AbstractFirstOrder {
         String opponent = game.getOpponent(playerId);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new PowerModifier(self, new OutOfPlayEvaluator(self, Filters.and(Filters.opponents(self), Filters.character), opponent)));
         modifiers.add(new MayNotCancelBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.or(Filters.Kylo, Filters.Knight_of_Ren)), playerId, opponent));
         return modifiers;
@@ -59,8 +61,7 @@ public class Card501_016 extends AbstractFirstOrder {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if ((TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerId, Filters.here(self))
-                || TriggerConditions.wonBattleAt(game, effectResult, playerId, Filters.here(self)))
+        if (TriggerConditions.forceDrainInitiatedBy(game, effectResult, playerId, Filters.here(self))
                 && GameConditions.hasLostPile(game, opponent)) {
             
             OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
