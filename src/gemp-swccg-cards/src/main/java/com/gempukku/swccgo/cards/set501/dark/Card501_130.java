@@ -35,16 +35,16 @@ import java.util.List;
  * Set: Playtesting
  * Type: Interrupt
  * Subtype: Used
- * Title: More! More!
+ * Title: More! MORE!!!!
  */
 
 public class Card501_130 extends AbstractUsedInterrupt {
     public Card501_130() {
-        super(Side.DARK, 5, "More! MORE!", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 5, "More! MORE!!!!", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("Fire an [Episode VII] blaster or [Episode VII] cannon into a battle at an adjacent site. OR If Kylo in battle, add 1 to a just drawn destiny. OR Once per game during battle, if you just fired an [Episode VII] weapon (except a lightsaber), it may fire again this battle.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_24);
-        setTestingText("More! More!");
+        setTestingText("More! MORE!!!!");
     }
 
     @Override
