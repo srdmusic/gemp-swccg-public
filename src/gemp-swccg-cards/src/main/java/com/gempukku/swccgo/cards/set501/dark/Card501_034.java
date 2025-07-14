@@ -2,7 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUniqueStarshipSite;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -11,13 +11,14 @@ import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
@@ -34,7 +35,7 @@ public class Card501_034 extends AbstractUniqueStarshipSite {
     public Card501_034() {
         super(Side.DARK, "Supremacy: Throne Room", Persona.SUPREMACY, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Once per game, may [download] Snoke here.");
-        setLocationLightSideGameText("While The Resistance Is Doomed on table, your characters (except Rey) deploy +1 here.");
+        setLocationLightSideGameText("If Snoke here (and Kylo or Rey are not), attrition against you here is +1.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.STARSHIP_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
@@ -65,8 +66,10 @@ public class Card501_034 extends AbstractUniqueStarshipSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        Filter charactersExceptRey = Filters.and(Filters.your(playerOnLightSideOfLocation),Filters.character, Filters.not(Filters.Rey));
-        modifiers.add(new DeployCostToLocationModifier(self, charactersExceptRey, new OnTableCondition(self, Filters.title(Title.The_Resistance_Is_Doomed)), 1, Filters.here(self)));
+        Condition snokeHere = new HereCondition(self, Filters.Snoke);
+        Condition kyloOrReyNotHere = new HereCondition(self, Filters.not(Filters.or(Filters.Kylo, Filters.Rey)));
+        Condition attriCondition = new AndCondition(snokeHere, kyloOrReyNotHere);
+        modifiers.add(new AttritionModifier(self, Filters.here(self), attriCondition, 1, playerOnLightSideOfLocation));
         return modifiers;
     }
 }
