@@ -35,7 +35,7 @@ public class Card501_034 extends AbstractUniqueStarshipSite {
     public Card501_034() {
         super(Side.DARK, "Supremacy: Throne Room", Persona.SUPREMACY, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Once per game, may [download] Snoke here.");
-        setLocationLightSideGameText("If Snoke here (and Kylo or Rey are not), attrition against you here is +1.");
+        setLocationLightSideGameText("If Snoke here (and Rey is not), attrition against you here is +1.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.STARSHIP_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
@@ -67,8 +67,8 @@ public class Card501_034 extends AbstractUniqueStarshipSite {
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         Condition snokeHere = new HereCondition(self, Filters.Snoke);
-        Condition kyloOrReyNotHere = new HereCondition(self, Filters.not(Filters.or(Filters.Kylo, Filters.Rey)));
-        Condition attriCondition = new AndCondition(snokeHere, kyloOrReyNotHere);
+        Condition reyNotHere = new HereCondition(self, Filters.not(Filters.Rey));
+        Condition attriCondition = new AndCondition(snokeHere, reyNotHere);
         modifiers.add(new AttritionModifier(self, Filters.here(self), attriCondition, 1, playerOnLightSideOfLocation));
         return modifiers;
     }
