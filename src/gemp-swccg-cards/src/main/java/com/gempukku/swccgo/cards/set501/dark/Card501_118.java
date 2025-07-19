@@ -23,17 +23,17 @@ import java.util.List;
  * Set: Playtesting
  * Type: Location
  * Subtype: Site
- * Title: Crait: The Rebellion's Abandoned Outpost
+ * Title: Crait: Outpost Entrance Cavern
  */
 public class Card501_118 extends AbstractSite {
     public Card501_118() {
-        super(Side.DARK, "Crait: The Rebellion's Abandoned Outpost", Title.Crait, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("Force drain +1. Kylo may not be excluded from battles here.");
+        super(Side.DARK, "Crait: Outpost Entrance Cavern", Title.Crait, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        setLocationDarkSideGameText("Force drain +1 here. Kylo may not be excluded from battles here.");
         setLocationLightSideGameText("During battle here, Force Projection is immune to Sense.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
-        addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_24);
-        setTestingText("Crait: The Rebellion's Abandoned Outpost");
+        addIcons(Icon.EPISODE_VII, Icon.INTERIOR_SITE, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_25);
+        setTestingText("Crait: Outpost Entrance Cavern");
     }
 
     @Override
