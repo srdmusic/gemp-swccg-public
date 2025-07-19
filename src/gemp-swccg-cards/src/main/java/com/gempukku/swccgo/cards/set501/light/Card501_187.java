@@ -29,7 +29,7 @@ import java.util.List;
 public class Card501_187 extends AbstractSite {
     public Card501_187() {
         super(Side.LIGHT, Title.Beldons_Corridor, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("While you occupy, Keeping The Empire Out Forever is suspended.");
+        setLocationDarkSideGameText("Your troopers here are defense value +1. While you occupy, cancels Path Of Least Resistance.");
         setLocationLightSideGameText("While a [Cloud City] Rebel here, Their Fire Has Gone Out Of The Universe flips and may not flip back.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
