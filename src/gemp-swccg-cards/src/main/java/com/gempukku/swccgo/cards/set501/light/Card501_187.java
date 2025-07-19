@@ -9,9 +9,11 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeFlippedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -39,7 +41,8 @@ public class Card501_187 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        
+        Filter filterYourTroopersHere = Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.trooper, Filters.here(self));
+        modifiers.add(new DefenseValueModifier(self, filterYourTroopersHere, 1));
         return modifiers;
     }
 
