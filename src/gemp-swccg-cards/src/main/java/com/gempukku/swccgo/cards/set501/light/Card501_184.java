@@ -55,7 +55,7 @@ public class Card501_184 extends AbstractRebel {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         Condition withDroid = new WithCondition(self, Filters.droid);
-        Condition withCaptive = new WithCondition(self, SpotOverride.INCLUDE_CAPTIVE, Filters.and(Filters.captive, Filters.at(Filters.battleLocation)));
+        Condition withCaptive = new WithCondition(self, SpotOverride.INCLUDE_CAPTIVE, Filters.captive);
         Condition withOppoMaint = new WithCondition(self, Filters.and(Filters.opponents(self), Filters.icon(Icon.MAINTENANCE)));
         Condition modifierCondition = new OrCondition(withDroid, withCaptive, withOppoMaint);
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
