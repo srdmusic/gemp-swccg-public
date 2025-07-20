@@ -125,20 +125,34 @@ public class Card501_190 extends AbstractLostInterrupt {
         }
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
+        final Filter patienceWithCardStacked = Filters.and(Filters.Patience, Filters.hasStacked(Filters.any));
         // Check condition(s)
-        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
+        if (GameConditions.canSpot(game, self, patienceWithCardStacked)
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
                 && GameConditions.canAddBattleDestinyDraws(game, self)) {
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
                 action.setText("Add one battle destiny");
-                // Allow response(s)
-                action.allowResponses(
-                        new RespondablePlayCardEffect(action) {
+                action.setActionMsg("Place a card on Patience! out of play to add one battle destiny");
+                
+                action.appendTargeting(
+                        new ChooseStackedCardEffect(action, playerId, patienceWithCardStacked, Filters.any, false) {
                             @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new AddBattleDestinyEffect(action, 1));
+                            protected void cardSelected(PhysicalCard selectedCard) {
+                                // Pay cost(s)
+                                action.appendCost(
+                                        new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
+                                // Allow response(s)
+                                action.allowResponses(
+                                        new RespondablePlayCardEffect(action) {
+                                            @Override
+                                            protected void performActionResults(Action targetingAction) {
+                                                // Perform result(s)
+                                                action.appendEffect(
+                                                        new AddBattleDestinyEffect(action, 1));
+                                            }
+                                        }
+                                );
                             }
                         }
                 );
