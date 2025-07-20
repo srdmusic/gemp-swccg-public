@@ -21,6 +21,7 @@ import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
 /**
@@ -102,6 +103,39 @@ public class Card501_190 extends AbstractLostInterrupt {
                                                 // Perform result(s)
                                                 action.appendEffect(
                                                         new AddBattleDestinyEffect(action, 1));
+                                            }
+                                        }
+                                );
+                            }
+                        }
+                );
+                actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
+        // Check condition(s)
+        if (GameConditions.canSpot(game, self, patienceWithCardStacked)
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
+
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+                action.setText("Take weapon from Lost Pile");
+                action.setActionMsg("Place a card on Patience! out of play to take a character weapon into hand from Lost Pile");
+                
+                action.appendTargeting(
+                        new ChooseStackedCardEffect(action, playerId, patienceWithCardStacked, Filters.any, false) {
+                            @Override
+                            protected void cardSelected(PhysicalCard selectedCard) {
+                                // Pay cost(s)
+                                action.appendCost(
+                                        new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
+                                // Allow response(s)
+                                action.allowResponses(
+                                        new RespondablePlayCardEffect(action) {
+                                            @Override
+                                            protected void performActionResults(Action targetingAction) {
+                                                // Perform result(s)
+                                                action.appendEffect(
+                                                        new TakeCardIntoHandFromLostPileEffect(action, playerId, Filters.character_weapon, false));
                                             }
                                         }
                                 );
