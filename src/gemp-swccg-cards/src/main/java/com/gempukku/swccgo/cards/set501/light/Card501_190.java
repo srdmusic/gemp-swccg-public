@@ -1,13 +1,11 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
-import com.gempukku.swccgo.cards.effects.SatisfyAllBattleDamageEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -18,15 +16,11 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.Action;
 
 /**
@@ -42,48 +36,6 @@ public class Card501_190 extends AbstractLostInterrupt {
         setGameText("If a [Cloud City] Rebel controls a battleground, turn a card stacked on Patience! face up. OR Place a card stacked on Patience! out of play to choose: if a [Cloud City] Rebel in battle, add one battle destiny. OR Take a character weapon into hand from Lost Pile.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
         setTestingText("Honoring What They Fight For");
-    }
-
-    @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
-
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-        // Check condition(s)
-        if (TriggerConditions.isResolvingBattleDamageAndAttrition(game, effectResult, playerId)
-                && GameConditions.isBattleDamageRemaining(game, playerId)) {
-            final Collection<PhysicalCard> mayBePlacedOutOfPlay = Filters.filter(game.getGameState().getHand(playerId), game, Filters.and(Icon.CLOUD_CITY, Filters.Rebel, Filters.not(Filters.Luke)));
-            if (!mayBePlacedOutOfPlay.isEmpty()) {
-
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-                action.setText("Cancel remaining battle damage");
-                // Choose target(s)
-                action.appendTargeting(
-                    new ChooseCardFromHandEffect(action, playerId, Filters.in(mayBePlacedOutOfPlay)) {
-                        @Override
-                        protected void cardSelected(SwccgGame game, PhysicalCard selectedCard) {
-                            action.setActionMsg("Place " + GameUtils.getFullName(selectedCard) + " out of play to cancel battle damage");
-                            // Pay cost(s)
-                            action.appendCost(
-                                new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
-                            // Allow response(s)
-                            action.allowResponses(
-                                new RespondablePlayCardEffect(action) {
-                                    @Override
-                                    protected void performActionResults(Action targetingAction) {
-                                        // Perform result(s)
-                                        action.appendEffect(
-                                                new SatisfyAllBattleDamageEffect(action, playerId));
-                                    }
-                                }
-                            );
-                        }
-                    }
-                );
-                actions.add(action);
-            }
-        }
-        return actions;
     }
 
     @Override
@@ -124,7 +76,7 @@ public class Card501_190 extends AbstractLostInterrupt {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
         final Filter patienceWithCardStacked = Filters.and(Filters.Patience, Filters.hasStacked(Filters.any));
         // Check condition(s)
         if (GameConditions.canSpot(game, self, patienceWithCardStacked)
