@@ -48,42 +48,7 @@ public class Card501_190 extends AbstractLostInterrupt {
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        final Filter jediTestFaceDown = Filters.and(Filters.Jedi_Test, Filters.face_down);
-        final Filter patienceWithJediTestStackedFaceDown = Filters.and(Filters.Patience, Filters.hasStacked(jediTestFaceDown));
-
-        // Check condition(s)
-        if (TriggerConditions.isStartOfYourTurn(game, effectResult, playerId)
-                && GameConditions.controlsWith(game, self, playerId, Filters.battleground, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
-                && GameConditions.canSpot(game, self, patienceWithJediTestStackedFaceDown)) {
-
-            PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setPerformingPlayer(playerId);
-            action.setText("Turn Jedi Test face up");
-            action.setActionMsg("Turn a Jedi Test on Patience! face up");
-
-            action.allowResponses("Turn a Jedi Test on Patience! face up",
-                new RespondablePlayCardEffect(action) {
-                    @Override
-                    protected void performActionResults(Action targetingAction) {
-                        // Perform result(s)
-                        action.appendEffect(
-                            new ChooseStackedCardEffect(action, playerId, patienceWithJediTestStackedFaceDown, jediTestFaceDown, false) {
-                                @Override
-                                protected void cardSelected(PhysicalCard selectedCard) {
-                                    // Perform result(s)
-                                    action.appendEffect(
-                                        new FlipSingleSidedStackedCard(action, selectedCard));
-                                }
-                            }
-                        );
-                    }
-                }
-            );
-            actions.add(action);
-        }
-
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
         // Check condition(s)
         if (TriggerConditions.isResolvingBattleDamageAndAttrition(game, effectResult, playerId)
                 && GameConditions.isBattleDamageRemaining(game, playerId)) {
@@ -125,7 +90,41 @@ public class Card501_190 extends AbstractLostInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        final Filter jediTestFaceDown = Filters.and(Filters.Jedi_Test, Filters.face_down);
+        final Filter patienceWithJediTestStackedFaceDown = Filters.and(Filters.Patience, Filters.hasStacked(jediTestFaceDown));
+
+        // Check condition(s)
+        if (GameConditions.controlsWith(game, self, playerId, Filters.battleground, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
+                && GameConditions.canSpot(game, self, patienceWithJediTestStackedFaceDown)) {
+
+            PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setPerformingPlayer(playerId);
+            action.setText("Turn Jedi Test face up");
+            action.setActionMsg("Turn a Jedi Test on Patience! face up");
+
+            action.allowResponses("Turn a Jedi Test on Patience! face up",
+                new RespondablePlayCardEffect(action) {
+                    @Override
+                    protected void performActionResults(Action targetingAction) {
+                        // Perform result(s)
+                        action.appendEffect(
+                            new ChooseStackedCardEffect(action, playerId, patienceWithJediTestStackedFaceDown, jediTestFaceDown, false) {
+                                @Override
+                                protected void cardSelected(PhysicalCard selectedCard) {
+                                    // Perform result(s)
+                                    action.appendEffect(
+                                        new FlipSingleSidedStackedCard(action, selectedCard));
+                                }
+                            }
+                        );
+                    }
+                }
+            );
+            actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
         // Check condition(s)
         if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
                 && GameConditions.canAddBattleDestinyDraws(game, self)) {
