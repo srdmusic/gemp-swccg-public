@@ -112,7 +112,7 @@ public class Card501_190 extends AbstractLostInterrupt {
                 actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
+        gameTextActionId = GameTextActionId.HONORING_WHAT_THEY_FIGHT_FOR__UPLOAD_WEAPON_FROM_LOST_PILE;
         // Check condition(s)
         if (GameConditions.canSpot(game, self, patienceWithCardStacked)
                 && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
@@ -122,6 +122,7 @@ public class Card501_190 extends AbstractLostInterrupt {
                 action.setActionMsg("Place a card on Patience! out of play to take a character weapon into hand from Lost Pile");
                 
                 action.appendTargeting(
+                        
                         new ChooseStackedCardEffect(action, playerId, patienceWithCardStacked, Filters.any, false) {
                             @Override
                             protected void cardSelected(PhysicalCard selectedCard) {
