@@ -6,6 +6,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -44,8 +45,9 @@ public class Card501_107 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ArmorModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.capital_starship), 1));
-        modifiers.add(new HyperspeedWhenMovingFromLocationModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.capital_starship), 1, self));
+        Filter yourCapitalStarshipsHere = Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.capital_starship, Filters.here(self));
+        modifiers.add(new ArmorModifier(self, yourCapitalStarshipsHere, 1));
+        modifiers.add(new HyperspeedWhenMovingFromLocationModifier(self, yourCapitalStarshipsHere, 1, self));
         return modifiers;
     }
 }
