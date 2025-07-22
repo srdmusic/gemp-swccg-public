@@ -42,7 +42,7 @@ import java.util.List;
 public class Card501_004 extends AbstractSite {
     public Card501_004() {
         super(Side.DARK, Title.Desert_Heart, Title.Tatooine, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("If you occupy this site or control Audience Chamber, may raise your converted [Jabba's Palace] site to the top.");
+        setLocationDarkSideGameText("Once per turn, if you just deployed an alien here, may raise your converted [Jabba's Palace] site to the top.");
         setLocationLightSideGameText("Unless you occupy, you must first use 1 Force to deploy a non-alien character here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
