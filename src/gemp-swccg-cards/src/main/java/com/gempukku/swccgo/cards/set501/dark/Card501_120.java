@@ -11,6 +11,7 @@ import com.gempukku.swccgo.cards.effects.usage.NumTimesPerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
@@ -203,7 +204,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
         // Check condition(s)
         if (GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canTarget(game, self, tradeAgendaFilter)
-                && GameConditions.isDuringYourTurn(game, playerId)
+                && GameConditions.isDuringYourPhase(game, playerId, Phase.DRAW)
                 && GameConditions.hasHand(game, playerId)
                 && GameConditions.hasLostPile(game, playerId)) {
 
