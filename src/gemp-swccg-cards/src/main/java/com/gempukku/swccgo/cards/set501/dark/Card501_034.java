@@ -36,7 +36,7 @@ public class Card501_034 extends AbstractUniqueStarshipSite {
     public Card501_034() {
         super(Side.DARK, "Supremacy: Throne Room", Persona.SUPREMACY, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Once per game, may [download] Snoke here.");
-        setLocationLightSideGameText("If Snoke here (and Rey is not), attrition against you here is +1.");
+        setLocationLightSideGameText("While Snoke here (and Rey is not), attrition against you here is +1.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.STARSHIP_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
