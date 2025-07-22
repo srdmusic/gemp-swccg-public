@@ -17,6 +17,7 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.NotCondition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.AttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -67,7 +68,7 @@ public class Card501_034 extends AbstractUniqueStarshipSite {
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         Condition snokeHere = new HereCondition(self, Filters.Snoke);
-        Condition reyNotHere = new HereCondition(self, Filters.not(Filters.Rey));
+        Condition reyNotHere = new NotCondition(new HereCondition(self, Filters.not(Filters.Rey)));
         Condition attriCondition = new AndCondition(snokeHere, reyNotHere);
         modifiers.add(new AttritionModifier(self, Filters.here(self), attriCondition, 1, playerOnLightSideOfLocation));
         return modifiers;
