@@ -1920,7 +1920,7 @@ public class Filters {
 
     /**
      * Filter that accepts cards that have a printed alterate destiny > X.
-     * An alternate destiny is the second destiny listed on a card. R2-D2 has a printedDestiny of 2 and an alternateDestiny of 5
+     * An alternate destiny is the second destiny listed on a card. R2-D2 has a printedDestiny of 2 and a printedAlternateDestiny of 5
      *
      * @param destiny the value of X
      * @return Filter
