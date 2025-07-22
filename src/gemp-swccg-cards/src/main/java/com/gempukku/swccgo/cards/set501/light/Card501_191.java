@@ -243,12 +243,12 @@ public class Card501_191 extends AbstractEpicEventDeployable {
         }
 
         Filter taxationAgendaFilter = Filters.and(Filters.your(playerId), Filters.taxation_agenda, Filters.here(self));
-        Filter yourEp1CharacterFilter = Filters.and(Filters.your(playerId), Icon.EPISODE_I, Filters.character);
+        Filter lowDestinyCard = Filters.and(Filters.not(Filters.printedDestinyGreaterThan(4)), Filters.not(Filters.printedAlternateDestinyGreaterThan(4)));
 
         // Check condition(s)
         if (GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canTarget(game, self, taxationAgendaFilter)
-                && GameConditions.hasInHand(game, playerId, yourEp1CharacterFilter)) {
+                && GameConditions.hasInHand(game, playerId, lowDestinyCard)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Taxation: Place card in Used Pile");
@@ -265,7 +265,7 @@ public class Card501_191 extends AbstractEpicEventDeployable {
                             action.addAnimationGroup(cardTargeted);
                             // Pay cost(s)
                             action.appendCost(
-                                    new PutCardFromHandOnUsedPileEffect(action, playerId, Filters.and(Icon.EPISODE_I, Filters.character), false));
+                                    new PutCardFromHandOnUsedPileEffect(action, playerId, lowDestinyCard, false));
                             // Allow response(s)
                             action.allowResponses("Target taxation agenda on " + GameUtils.getCardLink(cardTargeted) + " to activate 1 Force",
                                     new UnrespondableEffect(action) {
