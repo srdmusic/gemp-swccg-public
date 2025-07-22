@@ -25,29 +25,22 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
-import com.gempukku.swccgo.game.AbstractActionProxy;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.BattleState;
-import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.actions.TriggerAction;
-import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnActionProxyEffect;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
+import com.gempukku.swccgo.logic.effects.ActivateForceEffect;
 import com.gempukku.swccgo.logic.effects.CancelCardsOnTableEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromHandOnUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.ReduceAttritionEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
-import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -60,7 +53,7 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 public class Card501_191 extends AbstractEpicEventDeployable {
     public Card501_191() {
         super(Side.LIGHT, PlayCardZoneOption.ATTACHED, Title.How_Liberty_Dies, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on Galactic Senate. Your Political Effects are canceled. Twice per turn, may target your agenda here: Justice: During battle, subtract 1 from a just drawn weapon destiny. Order: During any move phase, peek at the top 2 cards of any Reserve Deck and replace in any order. Peace: Subtract 1 from attrition against you. Taxation: Place a card with no printed destiny number > 4 from hand on Used Pile to activate 1 Force.");
+        setGameText("Deploy on Galactic Senate. Your Political Effects are canceled. Twice per turn, may target your agenda here: Justice: During battle, subtract 1 from a just drawn weapon destiny. Order: During any move phase, peek at the top 2 cards of any Reserve Deck and replace in any order. Peace: Subtract 1 from attrition against you. Taxation: Place a card with no printed destiny number > 4 from hand in Used Pile to activate 1 Force.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
         setTestingText("How Liberty Dies");
     }
@@ -259,17 +252,7 @@ public class Card501_191 extends AbstractEpicEventDeployable {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Taxation: Place card in Used Pile");
-            action.setActionMsg("Make the next [Episode I] character they deploy this turn deploy -1");
-
-            // This is a special separate usage tracker for keeping the two one-time deployment -1 modifiers separate.
-            // Below they'll be set up such that each deployment -1 is allowed to be used once per turn.
-            GameTextActionId taxationUsageActionId;
-            if (game.getModifiersQuerying().getUntilEndOfTurnLimitCounter(self, playerId, gameTextSourceCardId, gameTextActionId).getUsedLimit() == 0) {
-                taxationUsageActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-            }
-            else {
-                taxationUsageActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-            }
+            action.setActionMsg("Place a card with no printed destiny number > 4 from hand in Used Pile to activate 1 Force");
 
             // Update usage limit(s)
             action.appendUsage(
@@ -284,47 +267,13 @@ public class Card501_191 extends AbstractEpicEventDeployable {
                             action.appendCost(
                                     new PutCardFromHandOnUsedPileEffect(action, playerId, Filters.and(Icon.EPISODE_I, Filters.character), false));
                             // Allow response(s)
-                            action.allowResponses("Target taxation agenda on " + GameUtils.getCardLink(cardTargeted) + " to make their next [Episode I] character deploy -1",
+                            action.allowResponses("Target taxation agenda on " + GameUtils.getCardLink(cardTargeted) + " to activate 1 Force",
                                     new UnrespondableEffect(action) {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
-                                            final int permanentCardId = self.getPermanentCardId();
                                             // Perform result(s)
                                             action.appendEffect(
-                                                    new AddUntilEndOfTurnActionProxyEffect(action,
-                                                            new AbstractActionProxy() {
-                                                                @Override
-                                                                public List<TriggerAction> getRequiredAfterTriggers(SwccgGame game, EffectResult effectResult) {
-                                                                    List<TriggerAction> actions = new LinkedList<>();
-
-                                                                    // don't actually need to return an action
-                                                                    // only need to track that an Episode I character was deployed to increment the limit counter so the modifier is turned off
-                                                                    if (TriggerConditions.justDeployed(game, effectResult, playerId, yourEp1CharacterFilter)) {
-                                                                        PhysicalCard card = game.findCardByPermanentId(permanentCardId);
-                                                                        for (String title : card.getTitles()) {
-                                                                            game.getModifiersQuerying().getUntilEndOfTurnForCardTitleLimitCounter(title, taxationUsageActionId).incrementToLimit(1, 1);
-                                                                        }
-                                                                    }
-                                                                    return actions;
-                                                                }
-                                                            }
-                                                    ));
-
-                                            // this can't use EndOfTurnLimitCounterNotReachedCondition just in case it leaves the table because that resets the cardId that it uses to find the limit
-                                            Condition turnLimitCounterNotReachedCondition = new Condition() {
-                                                @Override
-                                                public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
-                                                    PhysicalCard card = gameState.findCardByPermanentId(permanentCardId);
-                                                    for (String title : card.getTitles()) {
-                                                        if (modifiersQuerying.getUntilEndOfTurnForCardTitleLimitCounter(title, taxationUsageActionId).getUsedLimit() >= 1)
-                                                            return false;
-                                                    }
-                                                    return true;
-                                                }
-                                            };
-                                            action.appendEffect(
-                                                    new AddUntilEndOfTurnModifierEffect(action, new DeployCostModifier(self, Filters.and(yourEp1CharacterFilter, Filters.not(Filters.onTable)),
-                                                            turnLimitCounterNotReachedCondition,-1), "Reduces the cost of the next [Episode I] character you deploy this turn by 1"));
+                                                    new ActivateForceEffect(action, playerId, 1));
                                         }
                                     }
                             );
