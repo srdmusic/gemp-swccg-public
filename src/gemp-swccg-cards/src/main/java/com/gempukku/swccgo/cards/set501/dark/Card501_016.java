@@ -35,7 +35,7 @@ public class Card501_016 extends AbstractFirstOrder {
     public Card501_016() {
         super(Side.DARK, 2, 4, 4, 4, 7, "Vicrul", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Knight of Ren.");
-        setGameText("[Pilot] 2. Power +1 for each opponent's character out of play. Opponent may not cancel your battle destiny draws where you have Kylo or a Knight of Ren. If you just initiated a Force drain here, may place bottom card of opponent's Lost Pile out of play.");
+        setGameText("[Pilot] 2. Power +1 for each of opponent's cards out of play. Opponent may not cancel your battle destiny draws where you have Kylo or a Knight of Ren. If you just initiated a Force drain here, may place topmost Interrupt of opponent's Lost Pile out of play.");
         addIcons(Icon.EPISODE_VII, Icon.WARRIOR, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.KNIGHT_OF_REN);
         setTestingText("Vicrul");
@@ -48,7 +48,7 @@ public class Card501_016 extends AbstractFirstOrder {
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
-        modifiers.add(new PowerModifier(self, new OutOfPlayEvaluator(self, Filters.and(Filters.opponents(self), Filters.character), opponent)));
+        modifiers.add(new PowerModifier(self, new OutOfPlayEvaluator(self, Filters.any, opponent)));
         modifiers.add(new MayNotCancelBattleDestinyModifier(self, Filters.sameLocationAs(self, Filters.or(Filters.Kylo, Filters.Knight_of_Ren)), playerId, opponent));
         return modifiers;
     }
@@ -67,11 +67,11 @@ public class Card501_016 extends AbstractFirstOrder {
             OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
 
             action.setText("Place opponent's card out of play.");
-            action.setActionMsg("Place bottom card of opponent's Lost Pile out of play");
+            action.setActionMsg("Place topmost Interrupt of opponent's Lost Pile out of play");
 
             //Perform result(s)
             action.appendEffect(
-                new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, opponent, Filters.bottomOfLostPile(opponent), false)
+                new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, opponent, Filters.Interrupt, false, true)
             );
             actions.add(action);
         }
