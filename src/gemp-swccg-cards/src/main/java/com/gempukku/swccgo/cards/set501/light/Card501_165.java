@@ -39,10 +39,7 @@ public class Card501_165 extends AbstractLostInterrupt {
     public Card501_165() {
         super(Side.LIGHT, 2, Title.Courage_Of_A_Skywalker, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Despite being alone, trapped and desperately outmatched, Luke continued his battle with the Dark Lord of the Sith.");
-        setGameText("When drawn for destiny, destiny +1 for each [Skywalker] Effect on table. " +
-                "If a Skywalker in battle alone, add one destiny to total power. " +
-                "OR Cancel You Are Beaten. " +
-                "OR Once per game, during a battle or duel involving a Skywalker and a Dark Jedi, make a just drawn destiny = 2.");
+        setGameText("If a [Skywalker] Effect on table, destiny +2 when drawn for destiny. Take a lightsaber into hand from Force Pile; reshuffle. OR Retrieve Anakin's Lightsaber. OR Once per game, during a battle or duel involving a Skywalker and a Dark Jedi, make a just drawn destiny = 2.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("Courage Of A Skywalker (V)");
