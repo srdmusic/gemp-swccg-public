@@ -19,6 +19,7 @@ import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.effects.ResetDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromForcePileEffect;
 import com.gempukku.swccgo.logic.modifiers.DestinyWhenDrawnForDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -71,6 +72,27 @@ public class Card501_165 extends AbstractLostInterrupt {
                             // Perform result(s)
                             action.appendEffect(
                                     new TakeCardIntoHandFromForcePileEffect(action, playerId, Filters.lightsaber, true));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.COURAGE_OF_A_SKYWALKER__RETRIEVE_ANAKINS_LIGHTSABER;
+        // Check condition(s)
+        if (GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
+            
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Retrieve Anakin's Lightsaber");
+
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new RetrieveCardEffect(action, playerId, Filters.Anakins_Lightsaber));
                         }
                     }
             );
