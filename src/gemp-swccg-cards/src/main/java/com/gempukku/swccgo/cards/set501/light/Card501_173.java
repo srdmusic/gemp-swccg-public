@@ -38,12 +38,8 @@ public class Card501_173 extends AbstractNormalEffect {
     public Card501_173() {
         super(Side.LIGHT, 6, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Good Friend", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("If your [Skywalker] Epic Event on table, deploy on table. " +
-                "May [download] Be With Me or Jedi Village. " +
-                "Once per turn, you may relocate Anakin's Lightsaber between Ben Solo and Rey. " +
-                "Ben Solo is immune to attrition < 4. " +
-                "Chewie and Finn may move as a 'react.' [Immune to Alter.]");
-        addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_25);
+        setGameText("If a [Skywalker] Epic Event on table, deploy on table. May [download] Be With Me, Jedi Village, or Leia's Lightsaber. Once per turn, you may relocate Anakin's Lightsaber between Rey and a Skywalker. Once per game, may exchange a Skywalker from hand with Ben Solo in Lost Pile. [Immune to Alter.]");
+        addIcons(Icon.EPISODE_VII, Icon.SKYWALKER, Icon.VIRTUAL_SET_25);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("A Good Friend");
     }
