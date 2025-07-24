@@ -19,6 +19,7 @@ import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.effects.ResetDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromForcePileEffect;
 import com.gempukku.swccgo.logic.modifiers.DestinyWhenDrawnForDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -55,6 +56,26 @@ public class Card501_165 extends AbstractLostInterrupt {
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.COURAGE_OF_A_SKYWALKER__UPLOAD_LIGHTSABER_FROM_FORCE_PILE;
+        // Check condition(s)
+        if (GameConditions.canTakeCardsIntoHandFromForcePile(game, playerId, self, gameTextActionId)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Take a lightsaber into hand from Force Pile");
+            // Allow response(s)
+            action.allowResponses("Take a lightsaber into hand from Force Pile",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new TakeCardIntoHandFromForcePileEffect(action, playerId, Filters.lightsaber, true));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
 
         return actions;
     }
