@@ -17,16 +17,19 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.CancelCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromLostPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.UniqueModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -76,6 +79,24 @@ public class Card501_047 extends AbstractNormalEffect {
                         }
                     }
             );
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        String playerId = self.getOwner();
+        
+        // Check condition(s)
+        if (TriggerConditions.justLost(game, effectResult, Filters.Landing_Claw)) {
+            PhysicalCard cardLost = ((LostFromTableResult) effectResult).getCard();
+
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Place " + GameUtils.getFullName(cardLost) + " out of play");
+            // Perform result(s)
+            action.appendEffect(
+                    new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, game.getOpponent(playerId), Filters.samePermanentCardId(cardLost), false));
             return Collections.singletonList(action);
         }
         return null;
