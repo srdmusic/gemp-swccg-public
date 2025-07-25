@@ -84,6 +84,12 @@ public class Card501_182 extends AbstractNormalEffect {
                                 protected void validDecisionMade(int index, String result) {
                                     if (index == 0) {
                                         game.getGameState().sendMessage(opponent + " chooses to capture and seize " + GameUtils.getCardLink(cardToBeLost));
+                                        
+                                        // If there are any "valid" escorts then DS must target one of them
+
+                                        // Else DS must target any potential escort and will be required to release an existing captive and/or disembark as necessary
+
+                                        // Perform result(s)
                                         aboutToLeaveTableResult.getPreventableCardEffect().preventEffectOnCard(cardToBeLost);
                                         action.appendEffect(
                                                 new RestoreCardToNormalEffect(action, cardToBeLost));
