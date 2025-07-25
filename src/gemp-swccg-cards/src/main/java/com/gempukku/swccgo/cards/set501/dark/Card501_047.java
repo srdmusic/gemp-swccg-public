@@ -22,7 +22,6 @@ import com.gempukku.swccgo.logic.effects.CancelCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardIntoHandFromLostPileEffect;
-import com.gempukku.swccgo.logic.effects.choose.PlaceCardOutOfPlayFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.LostInterruptModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.UniqueModifier;
@@ -70,9 +69,6 @@ public class Card501_047 extends AbstractNormalEffect {
                                             // Perform result(s)
                                             action.appendEffect(
                                                     new CancelCardOnTableEffect(action, targetedCard)
-                                            );
-                                            action.appendEffect(
-                                                    new PlaceCardOutOfPlayFromLostPileEffect(action, playerId, game.getOpponent(playerId), Filters.samePermanentCardId(targetedCard), false)
                                             );
                                         }
                                     }
