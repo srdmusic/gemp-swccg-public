@@ -54,15 +54,15 @@ public class Card501_173 extends AbstractNormalEffect {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.A_GOOD_FRIEND__DEPLOY_JEDI_VILLAGE_OR_BE_WITH_ME;
-        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Arrays.asList(Title.Be_With_Me, Title.AhchTo_Jedi_Village))) {
+        GameTextActionId gameTextActionId = GameTextActionId.A_GOOD_FRIEND__DEPLOY_CARD;
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Arrays.asList(Title.Be_With_Me, Title.AhchTo_Jedi_Village, Title.Leias_Lightsaber))) {
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy Be With Me or Jedi Village from Reserve Deck");
+            action.setActionMsg("Deploy Be With Me, Jedi Village, or Leia's Lightsaber from Reserve Deck");
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Be_With_Me, Filters.AhchTo_Jedi_Village), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Be_With_Me, Filters.AhchTo_Jedi_Village, Filters.Leias_Lightsaber), true));
             actions.add(action);
         }
 
