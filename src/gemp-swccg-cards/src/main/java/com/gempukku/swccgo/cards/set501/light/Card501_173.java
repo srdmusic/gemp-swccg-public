@@ -20,9 +20,6 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.RelocateDeviceOrWeaponBetweenCharactersEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.MayMoveOtherCardsAsReactToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Arrays;
@@ -50,15 +47,6 @@ public class Card501_173 extends AbstractNormalEffect {
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, Filters.Ben_Solo, 4));
-        modifiers.add(new MayMoveOtherCardsAsReactToLocationModifier(self, "Move Chewie or Finn as a 'react'", self.getOwner(), Filters.or(Filters.Chewie, Filters.Finn), Filters.any));
-        return modifiers;
-    }
-
-        @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
