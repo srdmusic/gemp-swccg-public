@@ -41,7 +41,7 @@ public class Card501_131 extends AbstractCharacterWeapon {
     public Card501_131() {
         super(Side.DARK, 1, "IG-88's Pulse Cannon (V)", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("IG-88's personal favorite for mass destruction. Rapid-fire fusion plasma bursts are extremely effective against multiple targets. Not widely used due to incidental damage.");
-        setGameText("Deploy on your bounty hunter. May target a character. Draw destiny. If destiny +1 > defense value, target hit, its forfeit = 0 and, if IG-88 firing repeatedly, may add one destiny to power or attrition. May fire repeatedly for 1 Force each time.");
+        setGameText("Deploy on your bounty hunter. May target a character. Draw destiny. If destiny +1 > defense value, target hit, its forfeit = 0 and, if IG-88 firing repeatedly, may add one destiny to power or attrition. May fire repeatedly for 2 Force each time.");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setMatchingCharacterFilter(Filters.IG88);
         setVirtualSuffix(true);
@@ -74,7 +74,7 @@ public class Card501_131 extends AbstractCharacterWeapon {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayFireRepeatedlyModifier(self, 1));
+        modifiers.add(new MayFireRepeatedlyModifier(self, 2));
         return modifiers;
     }
 
