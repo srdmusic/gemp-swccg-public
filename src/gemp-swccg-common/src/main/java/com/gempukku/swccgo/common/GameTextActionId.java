@@ -660,6 +660,7 @@ public enum GameTextActionId {
     // Per game
     _3B310__UPLOAD_HALT(true, true),
     A_BRAVE_RESISTANCE__UPLOAD_RESISTANCE_CHARACTER(true, true),
+    A_GOOD_FRIEND__EXCHANGE_CARD(true, true),
     A_JEDI__TAKE_INTO_HAND(false, true),
     A_JEDIS_FOCUS__EXCLUDE_CHARACTERS(false, true),
     A_MILLION_VOICES_CRYING_OUT__UPLOAD_CPI(true, true),

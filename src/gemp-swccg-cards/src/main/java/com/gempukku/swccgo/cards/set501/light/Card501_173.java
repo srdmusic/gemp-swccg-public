@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -22,6 +23,7 @@ import com.gempukku.swccgo.logic.effects.RelocateDeviceOrWeaponBetweenCharacters
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.ExchangeCardInHandWithCardInLostPileEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
 import java.util.Arrays;
@@ -68,8 +70,8 @@ public class Card501_173 extends AbstractNormalEffect {
         Filter otherSkywalkerWithSaber = Filters.and(otherSkywalker, Filters.armedWith(Filters.Anakins_Lightsaber));
         Filter reyWithSaber = Filters.and(Filters.Rey, Filters.armedWith(Filters.Anakins_Lightsaber));
         
-        GameTextActionId gameTextActionId1 = GameTextActionId.OTHER_CARD_ACTION_1;
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId1)
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canTarget(game, self, Filters.Anakins_Lightsaber)
                 && ((GameConditions.canTarget(game, self, reyWithSaber) && GameConditions.canTarget(game, self, otherSkywalker))
                 || (GameConditions.canTarget(game, self, otherSkywalkerWithSaber) && GameConditions.canTarget(game, self, Filters.Rey)))) {
@@ -77,7 +79,7 @@ public class Card501_173 extends AbstractNormalEffect {
             final PhysicalCard cardWithSaber = Filters.findFirstActive(game, self, Filters.armedWith(Filters.Anakins_Lightsaber));
             final PhysicalCard anakinsLightsaber = Filters.findFirstActive(game, self, Filters.Anakins_Lightsaber);
 
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId1);
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Relocate Anakin's Lightsaber");
             action.addAnimationGroup(anakinsLightsaber);
             action.appendUsage(
@@ -110,7 +112,24 @@ public class Card501_173 extends AbstractNormalEffect {
                     }
                 }
             );
+            actions.add(action);
+        }
 
+        gameTextActionId = GameTextActionId.A_GOOD_FRIEND__EXCHANGE_CARD;
+        // Check condition(s)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.hasInHand(game, playerId, Filters.Skywalker)
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Exchange card for Ben Solo in Lost Pile");
+            action.setActionMsg("Exchange a Skywalker from hand with Ben Solo in Lost Pile");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new ExchangeCardInHandWithCardInLostPileEffect(action, playerId, Filters.Skywalker, Filters.Ben_Solo));
             actions.add(action);
         }
 
