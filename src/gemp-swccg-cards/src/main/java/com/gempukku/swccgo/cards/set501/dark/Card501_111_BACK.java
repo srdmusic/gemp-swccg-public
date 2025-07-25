@@ -83,7 +83,7 @@ public class Card501_111_BACK extends AbstractObjective {
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromLostPileEffect(action, Filters.and(Icon.FIRST_ORDER, Filters.or(Filters.vehicle, Filters.trooper)), true));
+                    new DeployCardFromLostPileEffect(action, Filters.and(Icon.FIRST_ORDER, Filters.or(Filters.vehicle, Filters.trooper)), false));
             actions.add(action);
         }
         return actions;

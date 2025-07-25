@@ -1919,6 +1919,26 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that have a printed alterate destiny > X.
+     * An alternate destiny is the second destiny listed on a card. R2-D2 has a printedDestiny of 2 and a printedAlternateDestiny of 5
+     * If a card only has one destiny number (e.g. 99.99% of cards) then its printedAlternateDestiny is the same as its printedDestiny
+     *
+     * @param destiny the value of X
+     * @return Filter
+     */
+    public static Filter printedAlternateDestinyGreaterThan(final float destiny) {
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                if (physicalCard.getBlueprint().getAlternateDestiny()==null)
+                    return false;
+
+                return physicalCard.getBlueprint().getAlternateDestiny() > destiny;
+            }
+        };
+    }
+
+    /**
      * Filter that accepts cards that have multiple destiny values, such as R2D2.
      */
     public static final Filter multipleDestinyValues = new Filter() {
@@ -18425,6 +18445,7 @@ public class Filters {
     public static final Filter Leebo = Filters.title(Title.Leebo);
     public static final Filter Leia = Filters.persona(Persona.LEIA);
     public static final Filter Leia_Of_Alderaan = Filters.title(Title.Leia_Of_Alderaan);
+    public static final Filter Leias_Lightsaber = Filters.persona(Persona.LEIAS_LIGHTSABER);
     public static final Filter Let_The_Wookiee_Win = Filters.title(Title.Let_The_Wookiee_Win);
     public static final Filter Let_Them_Make_The_First_Move = Filters.title(Title.Let_Them_Make_The_First_Move);
     public static final Filter Lets_Keep_A_Little_Optimism_Here = Filters.title(Title.Lets_Keep_A_Little_Optimism_Here);

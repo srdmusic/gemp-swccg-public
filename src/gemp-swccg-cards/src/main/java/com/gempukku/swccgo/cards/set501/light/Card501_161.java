@@ -6,11 +6,13 @@ import com.gempukku.swccgo.cards.effects.AddToForceDrainEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Statistic;
 import com.gempukku.swccgo.common.TargetingReason;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -38,8 +40,9 @@ import java.util.List;
 public class Card501_161 extends AbstractCharacterWeapon {
     Filter deployFilter = Filters.and(Filters.or(Filters.Leia, Filters.Ben_Solo, Filters.Rey), Filters.abilityMoreThan(4));
     public Card501_161(){
-        super(Side.LIGHT, 1, "Leia's Lightsaber", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 1, Title.Leias_Lightsaber, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on Leia (or Ben Solo or Rey) of ability > 4. Adds 1 to defense value and immunity to attrition. May add 1 to Force drain where present. May target a character or creature for free. Draw two destiny. Target hit, and its forfeit = 0, if total destiny > defense value.");
+        addPersona(Persona.LEIAS_LIGHTSABER);
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.LIGHTSABER);
         setMatchingCharacterFilter(deployFilter);

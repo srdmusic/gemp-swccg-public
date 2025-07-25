@@ -1,13 +1,11 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.AddBattleDestinyEffect;
-import com.gempukku.swccgo.cards.effects.SatisfyAllBattleDamageEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -18,15 +16,12 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromOffTableEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.ChooseCardFromHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
 /**
@@ -39,13 +34,13 @@ public class Card501_190 extends AbstractLostInterrupt {
     public Card501_190() {
         super(Side.LIGHT, 5, "Honoring What They Fight For", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Luke's experience on Dagobah gave him great skill in using the Force. Vader had to keep his focus on Luke at all times, or face the consequences.");
-        setGameText("At the start of your turn, if a [Cloud City] Rebel controls a battleground, turn a card stacked on Patience! face up. OR If a [Cloud City] Rebel in battle, add one battle destiny. OR Place a [Cloud City] Rebel (except Luke) out of play from hand to cancel all battle damage against you.");
+        setGameText("If a [Cloud City] Rebel controls a battleground, turn a card stacked on Patience! face up. OR Place a card stacked on Patience! out of play to choose: if a [Cloud City] Rebel in battle, add one battle destiny. OR Take a character weapon into hand from Lost Pile.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
         setTestingText("Honoring What They Fight For");
     }
 
     @Override
-    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, PhysicalCard self) {
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
@@ -53,8 +48,7 @@ public class Card501_190 extends AbstractLostInterrupt {
         final Filter patienceWithJediTestStackedFaceDown = Filters.and(Filters.Patience, Filters.hasStacked(jediTestFaceDown));
 
         // Check condition(s)
-        if (TriggerConditions.isStartOfYourTurn(game, effectResult, playerId)
-                && GameConditions.controlsWith(game, self, playerId, Filters.battleground, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
+        if (GameConditions.controlsWith(game, self, playerId, Filters.battleground, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
                 && GameConditions.canSpot(game, self, patienceWithJediTestStackedFaceDown)) {
 
             PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
@@ -84,62 +78,68 @@ public class Card501_190 extends AbstractLostInterrupt {
         }
 
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+        final Filter patienceWithCardStacked = Filters.and(Filters.Patience, Filters.hasStacked(Filters.any));
         // Check condition(s)
-        if (TriggerConditions.isResolvingBattleDamageAndAttrition(game, effectResult, playerId)
-                && GameConditions.isBattleDamageRemaining(game, playerId)) {
-            final Collection<PhysicalCard> mayBePlacedOutOfPlay = Filters.filter(game.getGameState().getHand(playerId), game, Filters.and(Icon.CLOUD_CITY, Filters.Rebel, Filters.not(Filters.Luke)));
-            if (!mayBePlacedOutOfPlay.isEmpty()) {
-
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-                action.setText("Cancel remaining battle damage");
-                // Choose target(s)
-                action.appendTargeting(
-                    new ChooseCardFromHandEffect(action, playerId, Filters.in(mayBePlacedOutOfPlay)) {
-                        @Override
-                        protected void cardSelected(SwccgGame game, PhysicalCard selectedCard) {
-                            action.setActionMsg("Place " + GameUtils.getFullName(selectedCard) + " out of play to cancel battle damage");
-                            // Pay cost(s)
-                            action.appendCost(
-                                new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
-                            // Allow response(s)
-                            action.allowResponses(
-                                new RespondablePlayCardEffect(action) {
-                                    @Override
-                                    protected void performActionResults(Action targetingAction) {
-                                        // Perform result(s)
-                                        action.appendEffect(
-                                                new SatisfyAllBattleDamageEffect(action, playerId));
-                                    }
-                                }
-                            );
-                        }
-                    }
-                );
-                actions.add(action);
-            }
-        }
-        return actions;
-    }
-
-    @Override
-    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
-        List<PlayInterruptAction> actions = new LinkedList<>();
-
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
-        // Check condition(s)
-        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
+        if (GameConditions.canSpot(game, self, patienceWithCardStacked)
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Icon.CLOUD_CITY, Filters.Rebel))
                 && GameConditions.canAddBattleDestinyDraws(game, self)) {
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
                 action.setText("Add one battle destiny");
-                // Allow response(s)
-                action.allowResponses(
-                        new RespondablePlayCardEffect(action) {
+                action.setActionMsg("Place a card on Patience! out of play to add one battle destiny");
+                
+                action.appendTargeting(
+                        new ChooseStackedCardEffect(action, playerId, patienceWithCardStacked, Filters.any, false) {
                             @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new AddBattleDestinyEffect(action, 1));
+                            protected void cardSelected(PhysicalCard selectedCard) {
+                                // Pay cost(s)
+                                action.appendCost(
+                                        new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
+                                // Allow response(s)
+                                action.allowResponses(
+                                        new RespondablePlayCardEffect(action) {
+                                            @Override
+                                            protected void performActionResults(Action targetingAction) {
+                                                // Perform result(s)
+                                                action.appendEffect(
+                                                        new AddBattleDestinyEffect(action, 1));
+                                            }
+                                        }
+                                );
+                            }
+                        }
+                );
+                actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.HONORING_WHAT_THEY_FIGHT_FOR__UPLOAD_WEAPON_FROM_LOST_PILE;
+        // Check condition(s)
+        if (GameConditions.canSpot(game, self, patienceWithCardStacked)
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
+
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+                action.setText("Take weapon from Lost Pile");
+                action.setActionMsg("Place a card on Patience! out of play to take a character weapon into hand from Lost Pile");
+                
+                action.appendTargeting(
+                        
+                        new ChooseStackedCardEffect(action, playerId, patienceWithCardStacked, Filters.any, false) {
+                            @Override
+                            protected void cardSelected(PhysicalCard selectedCard) {
+                                // Pay cost(s)
+                                action.appendCost(
+                                        new PlaceCardOutOfPlayFromOffTableEffect(action, selectedCard));
+                                // Allow response(s)
+                                action.allowResponses(
+                                        new RespondablePlayCardEffect(action) {
+                                            @Override
+                                            protected void performActionResults(Action targetingAction) {
+                                                // Perform result(s)
+                                                action.appendEffect(
+                                                        new TakeCardIntoHandFromLostPileEffect(action, playerId, Filters.character_weapon, false));
+                                            }
+                                        }
+                                );
                             }
                         }
                 );
