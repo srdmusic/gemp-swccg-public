@@ -12,6 +12,7 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -19,6 +20,7 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.RelocateDeviceOrWeaponBetweenCharactersEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
@@ -62,56 +64,54 @@ public class Card501_173 extends AbstractNormalEffect {
             actions.add(action);
         }
 
+        Filter otherSkywalker = Filters.and(Filters.not(Filters.Rey), Filters.Skywalker);
+        Filter otherSkywalkerWithSaber = Filters.and(otherSkywalker, Filters.armedWith(Filters.Anakins_Lightsaber));
+        Filter reyWithSaber = Filters.and(Filters.Rey, Filters.armedWith(Filters.Anakins_Lightsaber));
+        
         GameTextActionId gameTextActionId1 = GameTextActionId.OTHER_CARD_ACTION_1;
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId1)
-                && GameConditions.canTarget(game, self, Filters.Ben_Solo)
-                && GameConditions.canTarget(game, self, Filters.Rey)
-                && GameConditions.canTarget(game, self, Filters.Anakins_Lightsaber)) {
+                && GameConditions.canTarget(game, self, Filters.Anakins_Lightsaber)
+                && ((GameConditions.canTarget(game, self, reyWithSaber) && GameConditions.canTarget(game, self, otherSkywalker))
+                || (GameConditions.canTarget(game, self, otherSkywalkerWithSaber) && GameConditions.canTarget(game, self, Filters.Rey)))) {
 
-            final PhysicalCard benSolo = Filters.findFirstActive(game, self, Filters.Ben_Solo);
-            final PhysicalCard rey = Filters.findFirstActive(game, self, Filters.Rey);
+            final PhysicalCard cardWithSaber = Filters.findFirstActive(game, self, Filters.armedWith(Filters.Anakins_Lightsaber));
             final PhysicalCard anakinsLightsaber = Filters.findFirstActive(game, self, Filters.Anakins_Lightsaber);
 
-            if (GameConditions.isArmedWith(game, benSolo, Filters.Anakins_Lightsaber)) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId1);
-                action.setText("Relocate Anakin's Lightsaber");
-                action.addAnimationGroup(anakinsLightsaber);
-                action.appendUsage(
-                        new OncePerTurnEffect(action));
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId1);
+            action.setText("Relocate Anakin's Lightsaber");
+            action.addAnimationGroup(anakinsLightsaber);
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
 
-                // Allow response(s)
-                action.allowResponses("Relocate " + GameUtils.getCardLink(anakinsLightsaber) + " to " + GameUtils.getCardLink(rey),
-                        new UnrespondableEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new RelocateDeviceOrWeaponBetweenCharactersEffect(action, anakinsLightsaber, benSolo, rey));
-                            }
-                        }
-                );
-                actions.add(action);
-            } else if (GameConditions.isArmedWith(game, rey, Filters.Anakins_Lightsaber)) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId1);
-                action.setText("Relocate Anakin's Lightsaber");
-                action.addAnimationGroup(anakinsLightsaber);
-                action.appendUsage(
-                        new OncePerTurnEffect(action));
-
-                // Allow response(s)
-                action.allowResponses("Relocate " + GameUtils.getCardLink(anakinsLightsaber) + " to " + GameUtils.getCardLink(benSolo),
-                        new UnrespondableEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new RelocateDeviceOrWeaponBetweenCharactersEffect(action, anakinsLightsaber, rey, benSolo));
-                            }
-                        }
-                );
-                actions.add(action);
-
+            Filter recipientFilter = Filters.any;
+            //If Rey has the lightsaber, player will target another Skywalker of their choice
+            if (GameConditions.canTarget(game, self, reyWithSaber)) {
+                recipientFilter = otherSkywalker;
             }
+            else { //Else, player can only relocate the lightsaber to Rey
+                recipientFilter = Filters.Rey;
+            }
+            
+            // Choose target(s)
+            action.appendTargeting(
+                new ChooseCardOnTableEffect(action, playerId, "Choose a recipient", recipientFilter) {
+                    protected void cardSelected(PhysicalCard cardWithoutSaber) {
+                        // Allow response(s)
+                        action.allowResponses("Relocate " + GameUtils.getCardLink(anakinsLightsaber) + " to " + GameUtils.getCardLink(cardWithoutSaber),
+                                new UnrespondableEffect(action) {
+                                    @Override
+                                    protected void performActionResults(Action targetingAction) {
+                                        // Perform result(s)
+                                        action.appendEffect(
+                                                new RelocateDeviceOrWeaponBetweenCharactersEffect(action, anakinsLightsaber, cardWithSaber, cardWithoutSaber));
+                                    }
+                                }
+                        );
+                    }
+                }
+            );
+
+            actions.add(action);
         }
 
         return actions;
