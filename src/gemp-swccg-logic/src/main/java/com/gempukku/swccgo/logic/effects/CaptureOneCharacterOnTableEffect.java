@@ -114,7 +114,7 @@ class CaptureOneCharacterOnTableEffect extends AbstractSubActionEffect implement
                                         final Collection<PhysicalCard> validToSeizeCaptive = Filters.filterActive(game, null,
                                                 Filters.and(Filters.owner(_performingPlayerId), Filters.canEscortCaptive(_characterToCapture), Filters.atSameLocation(_characterToCapture)));
 
-                                        // If no valid escorts are found but we need to seize, expand the search
+                                        // If no valid escorts are found but we need to seize even if "not possible", expand the search to allow for escorts who would need to release a captive or disembark a starship/vehicle
                                         final Collection<PhysicalCard> expandedSearchToSeizeCaptive = Filters.filterActive(game, null,
                                                 Filters.and(Filters.owner(_performingPlayerId), Filters.canEscortCaptive(_characterToCapture, false, true, true), Filters.atSameLocation(_characterToCapture)));
 
