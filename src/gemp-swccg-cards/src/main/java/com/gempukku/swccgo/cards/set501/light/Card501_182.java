@@ -19,12 +19,15 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
-import com.gempukku.swccgo.logic.effects.CaptureCharacterOnTableEffect;
+import com.gempukku.swccgo.logic.effects.CaptureWithSeizureEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.RestoreCardToNormalEffect;
+import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToFireWeaponModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.AboutToLeaveTableResult;
 
@@ -85,16 +88,37 @@ public class Card501_182 extends AbstractNormalEffect {
                                     if (index == 0) {
                                         game.getGameState().sendMessage(opponent + " chooses to capture and seize " + GameUtils.getCardLink(cardToBeLost));
                                         
+                                        Filter escortFilter = Filters.any;
                                         // If there are any "valid" escorts then DS must target one of them
+                                        if (GameConditions.canTarget(game, self, Filters.canEscortCaptive(cardToBeLost, false, false, false))) {
+                                            escortFilter = Filters.canEscortCaptive(cardToBeLost, false, false, false);
+                                        }
+                                        // Else DS must target an "invalid" potential escort and will be required to release an existing captive and/or disembark as necessary
+                                        else {
+                                            escortFilter = Filters.canEscortCaptive(cardToBeLost, false, true, true);
+                                        }
 
-                                        // Else DS must target any potential escort and will be required to release an existing captive and/or disembark as necessary
-
-                                        // Perform result(s)
-                                        aboutToLeaveTableResult.getPreventableCardEffect().preventEffectOnCard(cardToBeLost);
-                                        action.appendEffect(
-                                                new RestoreCardToNormalEffect(action, cardToBeLost));
-                                        action.appendEffect(
-                                                new CaptureCharacterOnTableEffect(action, cardToBeLost));
+                                        // Choose target(s)
+                                        action.appendTargeting(
+                                            new ChooseCardOnTableEffect(action, playerId, "Choose an escort", escortFilter) {
+                                                protected void cardSelected(PhysicalCard escortCard) {
+                                                    // Allow response(s)
+                                                    action.allowResponses("Seize " + GameUtils.getCardLink(cardToBeLost) + " with " + GameUtils.getCardLink(escortCard),
+                                                            new UnrespondableEffect(action) {
+                                                                @Override
+                                                                protected void performActionResults(Action targetingAction) {
+                                                                    // Perform result(s)
+                                                                    aboutToLeaveTableResult.getPreventableCardEffect().preventEffectOnCard(cardToBeLost);
+                                                                    action.appendEffect(
+                                                                            new RestoreCardToNormalEffect(action, cardToBeLost));
+                                                                    action.appendEffect(
+                                                                            new CaptureWithSeizureEffect(action, cardToBeLost, escortCard));
+                                                                }
+                                                            }
+                                                    );
+                                                }
+                                            }
+                                        );
                                     }
                                     else {
                                         game.getGameState().sendMessage(opponent + " chooses to lose 2 Force");
