@@ -42,9 +42,9 @@ public class Card501_102 extends AbstractFirstOrder {
     public Card501_102() {
         super(Side.DARK, 2, 3, 2, 2, 5, "Captain Moden Canady", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Leader.");
-        setGameText("Adds 2 power to anything he pilots. While piloting a [FO] starship, it is armor and immunity to attrition +1 (if Fulminatrix, it is immune to attrition < 6 and armor +2 instead). Alternatives To Fighting, Hit And Run, and opponent's reacts are canceled here.");
+        setGameText("[Pilot] 2. While piloting a [First Order] starship, it is armor and immunity to attrition +1 (if Fulminatrix, it is armor +2 and immune to attrition < 6 instead). During battle, cancels Alternatives To Fighting, Hit And Run, and opponent's 'reacts.'");
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.VIRTUAL_SET_25);
-        addKeywords(Keyword.LEADER);
+        addKeywords(Keyword.CAPTAIN, Keyword.LEADER);
         setMatchingStarshipFilter(Filters.Fulminatrix);
         setTestingText("Captain Moden Canady");
     }

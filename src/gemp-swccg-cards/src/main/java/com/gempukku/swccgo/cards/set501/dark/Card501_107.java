@@ -6,6 +6,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -26,8 +27,8 @@ import java.util.List;
 public class Card501_107 extends AbstractSystem {
     public Card501_107() {
         super(Side.DARK, Title.Crait, 8, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("Your shuttling from here is free.");
-        setLocationLightSideGameText("Your capital starships are armor and hyperspeed +1 here.");
+        setLocationDarkSideGameText("You shuttle from here for free.");
+        setLocationLightSideGameText("Your capital starships here are armor +1 and are hyperspeed +1 when moving from here.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
@@ -44,8 +45,9 @@ public class Card501_107 extends AbstractSystem {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ArmorModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.capital_starship), 1));
-        modifiers.add(new HyperspeedWhenMovingFromLocationModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.capital_starship), 1, self));
+        Filter yourCapitalStarshipsHere = Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.capital_starship, Filters.here(self));
+        modifiers.add(new ArmorModifier(self, yourCapitalStarshipsHere, 1));
+        modifiers.add(new HyperspeedWhenMovingFromLocationModifier(self, yourCapitalStarshipsHere, 1, self));
         return modifiers;
     }
 }

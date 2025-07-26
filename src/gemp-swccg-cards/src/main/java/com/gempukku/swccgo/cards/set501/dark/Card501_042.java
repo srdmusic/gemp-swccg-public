@@ -1,7 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractCharacterWeapon;
-import com.gempukku.swccgo.cards.conditions.PlayersTurnCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -16,7 +15,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.FireWeaponAction;
 import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
-import com.gempukku.swccgo.logic.modifiers.MayNotMoveAwayFromLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
@@ -33,12 +32,7 @@ public class Card501_042 extends AbstractCharacterWeapon {
     public Card501_042() {
         super(Side.DARK, 2, "The Grand Inquisitor's Lightsaber", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("Deploy on an Inquisitor. " +
-                "During your turn, opponent's characters may not move from here. " +
-                "May target a character. " +
-                "Draw two destiny. " +
-                "Target hit, and may not be used to satisfy attrition, if total destiny > defense value. " +
-                "If hit by Grand Inquisitor, target's forfeit = 0.");
+        setGameText("Deploy on an Inquisitor. Dodge may not target characters here. May target a character. Draw two destiny. Target hit, and may not be used to satisfy attrition, if total destiny > defense value. If hit by Grand Inquisitor, target's forfeit = 0.");
         addIcons(Icon.VIRTUAL_SET_25);
         addKeywords(Keyword.LIGHTSABER);
         setMatchingCharacterFilter(Filters.The_Grand_Inquisitor);
@@ -51,16 +45,15 @@ public class Card501_042 extends AbstractCharacterWeapon {
     }
 
     @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<>();
-
-        modifiers.add(new MayNotMoveAwayFromLocationModifier(self, Filters.and(Filters.opponents(self), Filters.here(self), Filters.character), new PlayersTurnCondition(self.getOwner()), Filters.here(self)));
-        return modifiers;
+    protected Filter getGameTextValidToUseWeaponFilter(final SwccgGame game, final PhysicalCard self) {
+        return Filters.and(Filters.your(self), Filters.inquisitor);
     }
 
     @Override
-    protected Filter getGameTextValidToUseWeaponFilter(final SwccgGame game, final PhysicalCard self) {
-        return Filters.and(Filters.your(self), Filters.inquisitor);
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.and(Filters.character, Filters.atSameSite(self)), Filters.Dodge));
+        return modifiers;
     }
 
     @Override
