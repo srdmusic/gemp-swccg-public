@@ -27,6 +27,7 @@ class CaptureOneCharacterOnTableEffect extends AbstractSubActionEffect implement
     private PhysicalCard _cardFiringWeapon;
     private Set<PhysicalCard> _preventedCards = new HashSet<PhysicalCard>();
     private CaptureOneCharacterOnTableEffect _that;
+    private boolean _seizeEvenIfNotPossible;
 
     /**
      * Creates an effect that carries out the capturing of a single character on table.
@@ -36,11 +37,24 @@ class CaptureOneCharacterOnTableEffect extends AbstractSubActionEffect implement
      * @param cardFiringWeapon the card that fired weapon that caused capture, or null
      */
     public CaptureOneCharacterOnTableEffect(Action action, PhysicalCard characterToCapture, boolean freezeCharacter, PhysicalCard cardFiringWeapon) {
+        this(action, characterToCapture, freezeCharacter, cardFiringWeapon, false);
+    }
+
+    /**
+     * Creates an effect that carries out the capturing of a single character on table.
+     * @param action the action performing this effect
+     * @param characterToCapture the character to capture
+     * @param freezeCharacter true if the character is 'frozen' when captured, otherwise false
+     * @param cardFiringWeapon the card that fired weapon that caused capture, or null
+     * @param seizeEvenIfNotPossible true if seizing the captive will be facilitated by immediately disembarking a starship/vehicle or releasing another captive
+     */
+    public CaptureOneCharacterOnTableEffect(Action action, PhysicalCard characterToCapture, boolean freezeCharacter, PhysicalCard cardFiringWeapon, boolean seizeEvenIfNotPossible) {
         super(action);
         _performingPlayerId = action.getPerformingPlayer();
         _characterToCapture = characterToCapture;
         _freezeCharacter = freezeCharacter && !characterToCapture.isFrozen();
         _cardFiringWeapon = cardFiringWeapon;
+        _seizeEvenIfNotPossible = seizeEvenIfNotPossible;
         _that = this;
     }
 
@@ -100,15 +114,19 @@ class CaptureOneCharacterOnTableEffect extends AbstractSubActionEffect implement
                                         final Collection<PhysicalCard> validToSeizeCaptive = Filters.filterActive(game, null,
                                                 Filters.and(Filters.owner(_performingPlayerId), Filters.canEscortCaptive(_characterToCapture), Filters.atSameLocation(_characterToCapture)));
 
+                                        // If no valid escorts are found but we need to seize, expand the search
+                                        final Collection<PhysicalCard> expandedSearchToSeizeCaptive = Filters.filterActive(game, null,
+                                                Filters.and(Filters.owner(_performingPlayerId), Filters.canEscortCaptive(_characterToCapture, false, true, true), Filters.atSameLocation(_characterToCapture)));
+
                                         // Check if 'Imprisonment' is a valid option
                                         boolean isAtPrison = Filters.prison.accepts(game.getGameState(), game.getModifiersQuerying(), location);
 
-                                        if (!validToSeizeCaptive.isEmpty() || isAtPrison) {
+                                        if (!validToSeizeCaptive.isEmpty() || isAtPrison || (_seizeEvenIfNotPossible && !expandedSearchToSeizeCaptive.isEmpty())) {
                                             List<String> choices = new ArrayList<String>();
-                                            if (!validToSeizeCaptive.isEmpty()) choices.add(CaptureOption.SEIZE.getHumanReadable());
-                                            if (isAtPrison) choices.add(CaptureOption.IMPRISONMENT.getHumanReadable());
-                                            if (_characterToCapture.isFrozen()) choices.add(CaptureOption.LEAVE_UNATTENDED.getHumanReadable());
-                                            if (!_characterToCapture.isFrozen()) choices.add(CaptureOption.ESCAPE.getHumanReadable());
+                                            if (!validToSeizeCaptive.isEmpty() || (_seizeEvenIfNotPossible && !expandedSearchToSeizeCaptive.isEmpty())) choices.add(CaptureOption.SEIZE.getHumanReadable());
+                                            if (isAtPrison && !_seizeEvenIfNotPossible) choices.add(CaptureOption.IMPRISONMENT.getHumanReadable());
+                                            if (_characterToCapture.isFrozen() && !_seizeEvenIfNotPossible) choices.add(CaptureOption.LEAVE_UNATTENDED.getHumanReadable());
+                                            if (!_characterToCapture.isFrozen() && !_seizeEvenIfNotPossible) choices.add(CaptureOption.ESCAPE.getHumanReadable());
                                             String[] choiceArray = new String[choices.size()];
                                             choices.toArray(choiceArray);
 
@@ -119,9 +137,17 @@ class CaptureOneCharacterOnTableEffect extends AbstractSubActionEffect implement
                                                                 protected void validDecisionMade(int index, String result) {
                                                                     if (result.equals(CaptureOption.SEIZE.getHumanReadable())) {
 
+                                                                        final Collection<PhysicalCard> escortListToUse;
+                                                                        if (!validToSeizeCaptive.isEmpty()) {
+                                                                            escortListToUse = validToSeizeCaptive;
+                                                                        }
+                                                                        else {
+                                                                            escortListToUse = expandedSearchToSeizeCaptive;
+                                                                        }
+
                                                                         // Need to choose character that will "seize" the captive
                                                                         subAction.appendEffect(
-                                                                                new ChooseCardOnTableEffect(subAction, _performingPlayerId, "Choose escort for " + GameUtils.getCardLink(_characterToCapture), validToSeizeCaptive) {
+                                                                                new ChooseCardOnTableEffect(subAction, _performingPlayerId, "Choose escort for " + GameUtils.getCardLink(_characterToCapture), escortListToUse) {
                                                                                     @Override
                                                                                     protected void cardSelected(PhysicalCard escort) {
                                                                                         // Capture with 'Seizure'
