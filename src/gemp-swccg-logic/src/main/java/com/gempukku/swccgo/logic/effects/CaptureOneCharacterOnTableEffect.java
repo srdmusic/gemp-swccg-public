@@ -138,11 +138,13 @@ class CaptureOneCharacterOnTableEffect extends AbstractSubActionEffect implement
                                                                     if (result.equals(CaptureOption.SEIZE.getHumanReadable())) {
 
                                                                         final Collection<PhysicalCard> escortListToUse;
+                                                                        boolean expandedSearchUsed = false;
                                                                         if (!validToSeizeCaptive.isEmpty()) {
                                                                             escortListToUse = validToSeizeCaptive;
                                                                         }
                                                                         else {
                                                                             escortListToUse = expandedSearchToSeizeCaptive;
+                                                                            expandedSearchUsed = true;
                                                                         }
 
                                                                         // Need to choose character that will "seize" the captive
@@ -150,6 +152,11 @@ class CaptureOneCharacterOnTableEffect extends AbstractSubActionEffect implement
                                                                                 new ChooseCardOnTableEffect(subAction, _performingPlayerId, "Choose escort for " + GameUtils.getCardLink(_characterToCapture), escortListToUse) {
                                                                                     @Override
                                                                                     protected void cardSelected(PhysicalCard escort) {
+
+                                                                                        // TO DO: If the expanded search was used and the escort can only hold one captive and is already doing so, release that captive
+
+                                                                                        // TO DO: If the expanded search was used and the escort is aboard a starship/vehicle with no capacity for a captive, disembark
+
                                                                                         // Capture with 'Seizure'
                                                                                         subAction.appendEffect(
                                                                                                 new CaptureWithSeizureEffect(subAction, _characterToCapture, wasUndercover, wasMissing, escort, _cardFiringWeapon));
