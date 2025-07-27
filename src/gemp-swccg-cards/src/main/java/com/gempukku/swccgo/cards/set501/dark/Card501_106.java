@@ -29,8 +29,7 @@ import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.MovesFreeFromLocationUsingHyperspeedModifier;
-import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationUsingHyperspeedModifier;
+import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.StandardEffect;
@@ -66,8 +65,7 @@ public class Card501_106 extends AbstractEpicEventDeployable {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotDeployToLocationModifier(self, Filters.and(Filters.your(self),Filters.starship), Filters.sameLocation(self)));
-        modifiers.add(new MovesFreeToLocationUsingHyperspeedModifier(self, Filters.any, Filters.sameLocation(self)));
-        modifiers.add(new MovesFreeFromLocationUsingHyperspeedModifier(self, Filters.any, Filters.sameLocation(self)));
+        modifiers.add(new MovesFreeToLocationModifier(self, Filters.Supremacy, Filters.sameLocation(self)));
         return modifiers;
     }
 
