@@ -147,7 +147,7 @@ class CaptureOneCharacterOnTableEffect extends AbstractSubActionEffect implement
 
                                                                 PhysicalCard previousCaptive = Filters.findFirstActive(game, null, SpotOverride.INCLUDE_CAPTIVE, Filters.escortedBy(escort));
                                                                 subAction.appendEffect(
-                                                                        new ReleaseCaptiveEffect(subAction, previousCaptive));
+                                                                        new ReleaseWithEscapeEffect(subAction, previousCaptive));
                                                             }
 
                                                             // If the expanded search was used and the escort is aboard a starship/vehicle with no capacity for a captive, disembark
