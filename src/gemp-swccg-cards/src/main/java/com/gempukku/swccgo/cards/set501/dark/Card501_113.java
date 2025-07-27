@@ -39,7 +39,7 @@ public class Card501_113 extends AbstractCapitalStarship {
     public Card501_113() {
         super(Side.DARK, 1, 16, 13, 9, null, 2, 16, Title.Supremacy, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setAsHorizontal(true);
-        setGameText("May add unlimited pilots, passengers, starfighters, and vehicles. Permanent pilot provides ability of 4. Once per game, during your move phase, may relocate Tracked Fleet here. Immune to attrition < 10.");
+        setGameText("May add unlimited pilots, passengers, starfighters, and vehicles. Permanent pilot provides ability of 4. Immune to attrition < 10 (< 12 while Snoke aboard). While Tracked Fleet here, immune to attrition.");
         addPersona(Persona.SUPREMACY);
         addIcons(Icon.SCOMP_LINK, Icon.EPISODE_VII, Icon.FIRST_ORDER, Icon.NAV_COMPUTER, Icon.VIRTUAL_SET_25);
         addIcon(Icon.PILOT, 1);
