@@ -141,7 +141,7 @@ class CaptureOneCharacterOnTableEffect extends AbstractSubActionEffect implement
                                                         protected void cardSelected(PhysicalCard escort) {
 
                                                             // If the expanded search was used and the escort can only hold one captive and is already doing so, release that captive
-                                                            if (expandedSearchUsed && Filters.canEscortCaptive(_characterToCapture, true, false, true).accepts(game, escort)) {
+                                                            if (expandedSearchUsed && !Filters.canEscortCaptive(_characterToCapture, true, false, true).accepts(game, escort)) {
                                                                 // This code executes if performing the "max captives check" fails. That means the escort has 1/1 captive and needs to release their captive
 
                                                                 PhysicalCard previousCaptive = Filters.findFirstActive(game, null, Filters.escortedBy(escort));
@@ -150,7 +150,7 @@ class CaptureOneCharacterOnTableEffect extends AbstractSubActionEffect implement
                                                             }
 
                                                             // If the expanded search was used and the escort is aboard a starship/vehicle with no capacity for a captive, disembark
-                                                            if (expandedSearchUsed && Filters.canEscortCaptive(_characterToCapture, true, true, false).accepts(game, escort)) {
+                                                            if (expandedSearchUsed && !Filters.canEscortCaptive(_characterToCapture, true, true, false).accepts(game, escort)) {
                                                                 // This code executes if performing the "starship/vehicle capacity check" fails. That means the escort's starship/vehicle is full and escort must disembark
                                                                 subAction.appendEffect(
                                                                         new DisembarkEffect(subAction, escort, game.getModifiersQuerying().getLocationThatCardIsAt(game.getGameState(), escort), false, false));

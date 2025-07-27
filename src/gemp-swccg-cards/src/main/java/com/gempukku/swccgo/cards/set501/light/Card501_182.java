@@ -79,7 +79,7 @@ public class Card501_182 extends AbstractNormalEffect {
                     new OncePerTurnEffect(action));
             action.appendEffect(
                     new PlayoutDecisionEffect(action, opponent,
-                            new MultipleChoiceAwaitingDecision("Choose effect", new String[]{"Capture and seize " + GameUtils.getCardLink(cardToBeLost), "Lose 2 Force"}) {
+                            new MultipleChoiceAwaitingDecision("Choose effect", new String[]{"Capture and seize " + GameUtils.getFullName(cardToBeLost), "Lose 2 Force"}) {
                                 @Override
                                 protected void validDecisionMade(int index, String result) {
                                     if (index == 0) {
