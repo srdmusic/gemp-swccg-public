@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.logic.effects;
 
 import com.gempukku.swccgo.common.CaptureOption;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -144,7 +145,7 @@ class CaptureOneCharacterOnTableEffect extends AbstractSubActionEffect implement
                                                             if (expandedSearchUsed && !Filters.canEscortCaptive(_characterToCapture, true, false, true).accepts(game, escort)) {
                                                                 // This code executes if performing the "max captives check" fails. That means the escort has 1/1 captive and needs to release their captive
 
-                                                                PhysicalCard previousCaptive = Filters.findFirstActive(game, null, Filters.escortedBy(escort));
+                                                                PhysicalCard previousCaptive = Filters.findFirstActive(game, null, SpotOverride.INCLUDE_CAPTIVE, Filters.escortedBy(escort));
                                                                 subAction.appendEffect(
                                                                         new ReleaseCaptiveEffect(subAction, previousCaptive));
                                                             }
