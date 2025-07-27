@@ -29,8 +29,7 @@ import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.MovesFreeFromLocationUsingHyperspeedModifier;
-import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationUsingHyperspeedModifier;
+import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.StandardEffect;
@@ -47,7 +46,7 @@ import java.util.List;
 public class Card501_106 extends AbstractEpicEventDeployable {
     public Card501_106() {
         super(Side.DARK, PlayCardZoneOption.ATTACHED, Title.Tracked_Fleet, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on D'Qar system (only at start of game). Tied To The End Of A String: You may not deploy starships here. Hyperspeed movement to and from here is free. There Will Be No Surrender: Three times per game, at start of opponent's move phase, opponent may stack a card from hand face down on this card to relocate it to an [Episode VII] system within 3 parsecs. The Resistance Is Dead!: At the start of your turn, if you control this system, Tracked Fleet is 'annihilated' (placed out of play).");
+        setGameText("Deploy on D'Qar system (only at start of game). Tied To The End Of A String: You may not deploy starships here. Supremacy moves to here for free. There Will Be No Surrender: Three times per game, at start of opponent's move phase, opponent may stack a card from hand face down on this card to relocate it to an [Episode VII] system within 3 parsecs. Fire At Will!: At the start of your turn, if you control this system, Tracked Fleet is 'annihilated' (placed out of play).");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText(Title.Tracked_Fleet);
     }
@@ -66,8 +65,7 @@ public class Card501_106 extends AbstractEpicEventDeployable {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotDeployToLocationModifier(self, Filters.and(Filters.your(self),Filters.starship), Filters.sameLocation(self)));
-        modifiers.add(new MovesFreeToLocationUsingHyperspeedModifier(self, Filters.any, Filters.sameLocation(self)));
-        modifiers.add(new MovesFreeFromLocationUsingHyperspeedModifier(self, Filters.any, Filters.sameLocation(self)));
+        modifiers.add(new MovesFreeToLocationModifier(self, Filters.Supremacy, Filters.sameLocation(self)));
         return modifiers;
     }
 
