@@ -34,7 +34,7 @@ public class Card501_192 extends AbstractLostOrStartingInterrupt {
     public Card501_192() {
         super(Side.LIGHT, 5, Title.New_Leadership_Is_Needed, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("The political process in the Republic is one whereby even the most powerful positions are fraught with peril.");
-        setGameText("LOST: [upload] a Coruscant Guard. STARTING: If Plead My Case To The Senate on table, deploy How Liberty Dies and two Effects that deploy on your side of the table, deploy for free, and are always immune to Alter. Place interrupt in hand.");
+        setGameText("LOST: [upload] Coruscant Guard. STARTING: If Plead My Case To The Senate on table, deploy How Liberty Dies and two Effects that deploy on your side of the table, deploy for free, and are always immune to Alter. Place interrupt in hand.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("New Leadership Is Needed (V)");
@@ -51,13 +51,13 @@ public class Card501_192 extends AbstractLostOrStartingInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
             action.setText("Take Coruscant Guard into hand");
             // Allow response(s)
-            action.allowResponses("Take a Coruscant Guard into hand from Reserve Deck",
+            action.allowResponses("Take Coruscant Guard into hand from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Coruscant_Guard, true));
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.title(Title.Coruscant_Guard), true));
                         }
                     }
             );

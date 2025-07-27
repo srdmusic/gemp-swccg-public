@@ -34,7 +34,7 @@ public class Card501_121 extends AbstractLostOrStartingInterrupt {
     public Card501_121(){
         super(Side.DARK, 4, Title.No_Civility_Only_Politics, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("It's not rare to see a senator using the system to forward his own personal agenda. Much goes on behind closed doors that the Senate never sees.");
-        setGameText("LOST: [upload] a Coruscant Guard. STARTING: If My Lord, Is That Legal? on table, deploy With Thunderous Applause and two Effects that deploy on your side of the table, deploy for free, and are always immune to Alter. Place Interrupt in hand.");
+        setGameText("LOST: [upload] Coruscant Guard. STARTING: If My Lord, Is That Legal? on table, deploy With Thunderous Applause and two Effects that deploy on your side of the table, deploy for free, and are always immune to Alter. Place Interrupt in hand.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("No Civility, Only Politics (V)");
@@ -51,13 +51,13 @@ public class Card501_121 extends AbstractLostOrStartingInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
             action.setText("Take Coruscant Guard into hand");
             // Allow response(s)
-            action.allowResponses("Take a Coruscant Guard into hand from Reserve Deck",
+            action.allowResponses("Take Coruscant Guard into hand from Reserve Deck",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Coruscant_Guard, true));
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.title(Title.Coruscant_Guard), true));
                         }
                     }
             );
