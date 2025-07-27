@@ -5,6 +5,7 @@ import com.gempukku.swccgo.cards.AbstractPermanentAboard;
 import com.gempukku.swccgo.cards.AbstractPermanentPilot;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.HasAboardCondition;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -25,6 +26,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.effects.AttachCardFromTableEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.ArrayList;
@@ -67,8 +69,10 @@ public class Card501_113 extends AbstractCapitalStarship {
         List<Modifier> modifiers = new LinkedList<>();
 
         Condition snokeAboard = new HasAboardCondition(self, Filters.Snoke);
+        Condition trackedFleetHere = new HereCondition(self, Filters.Tracked_Fleet);
 
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, new ConditionEvaluator(10, 12, snokeAboard)));
+        modifiers.add(new ImmuneToAttritionModifier(self, trackedFleetHere));
         return modifiers;
     }
 
