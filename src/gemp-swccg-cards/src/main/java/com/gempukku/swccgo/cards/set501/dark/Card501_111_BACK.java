@@ -15,17 +15,11 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.decisions.DecisionResultInvalidException;
-import com.gempukku.swccgo.logic.decisions.IntegerAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
-import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
@@ -84,40 +78,6 @@ public class Card501_111_BACK extends AbstractObjective {
             // Perform result(s)
             action.appendEffect(
                     new DeployCardFromLostPileEffect(action, Filters.and(Icon.FIRST_ORDER, Filters.or(Filters.vehicle, Filters.trooper)), false));
-            actions.add(action);
-        }
-        return actions;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
-
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-        // Check condition(s)
-        if (TriggerConditions.cardFlipped(game, effectResult, self)) {
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-
-            action.setText("Retrieve Force");
-            action.setActionMsg("Have " + playerId + " retrieve up to 3 Force");
-            // Perform result(s)
-            action.appendEffect(
-                    new PlayoutDecisionEffect(action, playerId,
-                            new IntegerAwaitingDecision("Choose amount of Force to retrieve", 0, 3, 3) {
-                                @Override
-                                public void decisionMade(final int amountToRetrieve) throws DecisionResultInvalidException {
-                                    GameState gameState = game.getGameState();
-                                    if (amountToRetrieve == 0) {
-                                        gameState.sendMessage(playerId + " chooses to not retrieve any Force");
-                                        return;
-                                    }
-                                    gameState.sendMessage(playerId + " chooses to retrieve " + amountToRetrieve + " Force");
-                                    action.appendEffect(
-                                            new RetrieveForceEffect(action, playerId, amountToRetrieve));
-                                }
-                            }
-                    )
-            );
             actions.add(action);
         }
         return actions;
