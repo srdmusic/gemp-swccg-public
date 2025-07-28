@@ -17,7 +17,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.CaptureCharacterOnTableEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
@@ -63,8 +63,9 @@ public class Card501_182 extends AbstractNormalEffect {
 
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        final String opponent = game.getOpponent(self.getOwner());
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        final String playerId = self.getOwner();
+        final String opponent = game.getOpponent(playerId);
         final GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         Filter ccRebelExceptLuke = Filters.and(Filters.icon(Icon.CLOUD_CITY), Filters.Rebel, Filters.except(Filters.Luke), Filters.presentWith(self, Filters.and(Filters.opponents(self), Filters.warrior)));
         if ((TriggerConditions.isAboutToBeLost(game, effectResult, ccRebelExceptLuke) 
@@ -72,22 +73,23 @@ public class Card501_182 extends AbstractNormalEffect {
                 && GameConditions.isOnceDuringOpponentsTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
             final AboutToLeaveTableResult aboutToLeaveTableResult = (AboutToLeaveTableResult) effectResult;
             final PhysicalCard cardToBeLost = aboutToLeaveTableResult.getCardAboutToLeaveTable();
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make " + opponent + " choose");
             action.appendUsage(
                     new OncePerTurnEffect(action));
             action.appendEffect(
                     new PlayoutDecisionEffect(action, opponent,
-                            new MultipleChoiceAwaitingDecision("Choose effect", new String[]{"Capture and seize " + GameUtils.getCardLink(cardToBeLost), "Lose 2 Force"}) {
+                            new MultipleChoiceAwaitingDecision("Choose effect", new String[]{"Capture and seize " + GameUtils.getFullName(cardToBeLost), "Lose 2 Force"}) {
                                 @Override
                                 protected void validDecisionMade(int index, String result) {
                                     if (index == 0) {
                                         game.getGameState().sendMessage(opponent + " chooses to capture and seize " + GameUtils.getCardLink(cardToBeLost));
+
                                         aboutToLeaveTableResult.getPreventableCardEffect().preventEffectOnCard(cardToBeLost);
                                         action.appendEffect(
                                                 new RestoreCardToNormalEffect(action, cardToBeLost));
                                         action.appendEffect(
-                                                new CaptureCharacterOnTableEffect(action, cardToBeLost));
+                                                new CaptureCharacterOnTableEffect(action, cardToBeLost, false, null, true));
                                     }
                                     else {
                                         game.getGameState().sendMessage(opponent + " chooses to lose 2 Force");
