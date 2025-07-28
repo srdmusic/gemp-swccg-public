@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.DuringBattleCondition;
+import com.gempukku.swccgo.cards.conditions.DuringBattleWithParticipantCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -21,7 +23,10 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.TrueCondition;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.FlipSingleSidedStackedCard;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.StackCardFromOutsideDeckEffect;
@@ -31,6 +36,7 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.modifiers.PlaceJediTestOnTableWhenCompletedModifier;
+import com.gempukku.swccgo.logic.modifiers.SuspendsCardModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
@@ -41,7 +47,7 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 public class Card501_179 extends AbstractEpicEventDeployable {
     public Card501_179() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Patience, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("If your [Dagobah] objective on table, deploy on table and stack five Jedi Tests from outside the game face up here. I Won't Fail You: Only Luke may be your apprentice. You may deploy face up Jedi Tests from here as if from hand. Place completed Jedi Tests on table. Jedi Tests are suspended (not lost) while Luke not on table. I've Got To Go To Them: Once per turn, if you just lost Force from a Force drain and you do not occupy a battleground, turn a Jedi Test here face down. Remember Your Failure At The Cave: Jedi Test #3 may not modify destiny draws more than once per battle.");
+        setGameText("If your [Dagobah] objective on table, deploy on table and stack five Jedi Tests from outside the game face up here. I Won't Fail You: Only Luke may be your apprentice. You may deploy face up Jedi Tests from here as if from hand. Place completed Jedi Tests on table. Jedi Tests are suspended (not lost) while Luke not on table. I've Got To Go To Them: Once per turn, if you just lost Force from a Force drain and you do not occupy a battleground, turn a Jedi Test here face down. Remember Your Failure At The Cave: During battle, Jedi Test #3 is suspended unless Luke battling alone.");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setTestingText("Patience!");
     }
@@ -116,7 +122,11 @@ public class Card501_179 extends AbstractEpicEventDeployable {
         modifiers.add(new PlaceJediTestOnTableWhenCompletedModifier(self, Filters.any, new TrueCondition()));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test, ModifyGameTextType.JEDI_TESTS__ONLY_LUKE_MAY_BE_APPRENTICE));
         modifiers.add(new JediTestSuspendedInsteadOfLostModifier(self, Filters.completed_Jedi_Test, new TrueCondition()));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.title(Title.Domain_Of_Evil), ModifyGameTextType.DOMAIN_OF_EVIL__LIMIT_USES_PER_BATTLE));
+
+        Condition lukeBattlingAlone = new DuringBattleWithParticipantCondition(Filters.and(Filters.Luke, Filters.alone));
+        Condition duringBattleUnlessLukeBattlingAlone = new AndCondition(new DuringBattleCondition(), new UnlessCondition(lukeBattlingAlone));
+
+        modifiers.add(new SuspendsCardModifier(self, Filters.Jedi_Test_3, duringBattleUnlessLukeBattlingAlone));
         return modifiers;
     }
 }
