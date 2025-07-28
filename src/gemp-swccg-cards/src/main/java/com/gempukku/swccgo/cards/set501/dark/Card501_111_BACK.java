@@ -70,14 +70,18 @@ public class Card501_111_BACK extends AbstractObjective {
             && GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+
+            Filter nonUniqueTrooper = Filters.and(Filters.non_unique, Filters.trooper);
+            Filter nonUniqueFOVehicle = Filters.and(Filters.non_unique, Icon.FIRST_ORDER, Filters.vehicle);
+
             action.setText("Deploy card from Lost Pile");
-            action.setActionMsg("Deploy [First Order] vehicle or Trooper from Lost Pile");
+            action.setActionMsg("Deploy a non-unique trooper (or non-unique [First Order] vehicle) from Lost Pile");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromLostPileEffect(action, Filters.and(Icon.FIRST_ORDER, Filters.or(Filters.vehicle, Filters.trooper)), false));
+                    new DeployCardFromLostPileEffect(action, Filters.or(nonUniqueTrooper, nonUniqueFOVehicle), false));
             actions.add(action);
         }
         return actions;
