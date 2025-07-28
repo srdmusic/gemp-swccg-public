@@ -93,7 +93,6 @@ public class Card501_111_BACK extends AbstractObjective {
         List<RequiredGameTextTriggerAction> actions = new LinkedList<>();
 
         String playerId = self.getOwner();
-        String opponent = game.getOpponent(playerId);
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
@@ -112,10 +111,9 @@ public class Card501_111_BACK extends AbstractObjective {
             actions.add(action);
         }
 
-        Filter opponentsSite = Filters.and(Filters.your(opponent), Filters.site);
         // Check condition(s)
         if (TriggerConditions.isAboutToRetrieveForce(game, effectResult, game.getOpponent(self.getOwner()))
-                && GameConditions.controlsWith(game, self, playerId, Filters.or(Filters.Crait_Salt_Plateau, opponentsSite), Filters.Kylo)) {
+                && GameConditions.controls(game, playerId, Filters.Crait_Salt_Plateau)) {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Cancel retrieval");
             action.setActionMsg("Force retrieval is canceled");
