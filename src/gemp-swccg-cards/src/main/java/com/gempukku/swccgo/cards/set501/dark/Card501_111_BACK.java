@@ -2,7 +2,8 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.ControlsWithCondition;
+import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
+import com.gempukku.swccgo.cards.conditions.OccupiesWithCondition;
 import com.gempukku.swccgo.cards.effects.CancelForceRetrievalEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -131,15 +132,18 @@ public class Card501_111_BACK extends AbstractObjective {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
-        
-        Filter opponentsSite = Filters.and(Filters.your(opponent), Filters.site);
-        Condition kyloControlsCondition = new ControlsWithCondition(self, playerId, Filters.or(Filters.Crait_Salt_Plateau, opponentsSite), Filters.Kylo);
-        Filter locationHasOneCardsWithAbility = Filters.and(Filters.sameLocationAs(self, Filters.and(Filters.opponents(self), Filters.characterOrPermanentPilotAlone)));
-        Filter battlegroundsWithTwoFirstOrderCharacters = Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.and(Filters.First_Order_character, Filters.with(self, Filters.First_Order_character))));
-
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceDrainModifier(self, battlegroundsWithTwoFirstOrderCharacters, 1, playerId));
-        modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.sameLocationAs(self, locationHasOneCardsWithAbility), kyloControlsCondition, opponent));
+        
+        // While you occupy a Crait location, your Force drains at battlegrounds where you have two First Order characters are +1.
+        Condition youOccupyACraitLocation = new OccupiesCondition(playerId, Filters.Crait_location);
+        Filter battlegroundsWithTwoFirstOrderCharacters = Filters.and(Filters.battleground, Filters.occupiesWith(playerId, self, Filters.and(Filters.First_Order_character, Filters.with(self, Filters.First_Order_character))));
+        modifiers.add(new ForceDrainModifier(self, battlegroundsWithTwoFirstOrderCharacters, youOccupyACraitLocation, 1, playerId));
+
+        // While Kylo occupies Salt Plateau, opponent may not Force drain where their character or permanent pilot is alone.
+        Condition kyloOccupiesSaltPlateau = new OccupiesWithCondition(self, playerId, Filters.Crait_Salt_Plateau, Filters.Kylo);
+        Filter locationHasOneCardsWithAbility = Filters.and(Filters.sameLocationAs(self, Filters.and(Filters.opponents(self), Filters.characterOrPermanentPilotAlone)));
+        modifiers.add(new MayNotForceDrainAtLocationModifier(self, Filters.sameLocationAs(self, locationHasOneCardsWithAbility), kyloOccupiesSaltPlateau, opponent));
+
         return modifiers;
     }
 
