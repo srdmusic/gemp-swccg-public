@@ -68,7 +68,7 @@ public class Card501_034 extends AbstractUniqueStarshipSite {
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         Condition snokeHere = new HereCondition(self, Filters.Snoke);
-        Condition reyNotHere = new NotCondition(new HereCondition(self, Filters.not(Filters.Rey)));
+        Condition reyNotHere = new NotCondition(new HereCondition(self, Filters.Rey));
         Condition attriCondition = new AndCondition(snokeHere, reyNotHere);
         modifiers.add(new AttritionModifier(self, Filters.here(self), attriCondition, 1, playerOnLightSideOfLocation));
         return modifiers;
