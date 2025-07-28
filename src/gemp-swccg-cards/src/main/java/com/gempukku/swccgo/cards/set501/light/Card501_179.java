@@ -116,7 +116,6 @@ public class Card501_179 extends AbstractEpicEventDeployable {
         modifiers.add(new PlaceJediTestOnTableWhenCompletedModifier(self, Filters.any, new TrueCondition()));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Jedi_Test, ModifyGameTextType.JEDI_TESTS__ONLY_LUKE_MAY_BE_APPRENTICE));
         modifiers.add(new JediTestSuspendedInsteadOfLostModifier(self, Filters.completed_Jedi_Test, new TrueCondition()));
-        modifiers.add(new ModifyGameTextModifier(self, Filters.title(Title.Domain_Of_Evil), ModifyGameTextType.DOMAIN_OF_EVIL__LIMIT_USES_PER_BATTLE));
         return modifiers;
     }
 }
