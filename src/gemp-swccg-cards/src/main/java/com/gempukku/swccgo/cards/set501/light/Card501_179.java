@@ -41,7 +41,7 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 public class Card501_179 extends AbstractEpicEventDeployable {
     public Card501_179() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Patience, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("If your [Dagobah] objective on table, deploy on table and stack five Jedi Tests from outside the game face up here. I Won't Fail You: Only Luke may be your apprentice. You may deploy face up Jedi Tests from here as if from hand. Place completed Jedi Tests on table. Jedi Tests are suspended (not lost) while Luke not on table. I've Got To Go To Them: Once per turn, if you just lost Force from a Force drain and you do not occupy a battleground, turn a Jedi Test here face down. Remember Your Failure At The Cave: Jedi Test #3 may not modify destiny draws more than once per battle.");
+        setGameText("If your [Dagobah] objective on table, deploy on table and stack five Jedi Tests from outside the game face up here. I Won't Fail You: Only Luke may be your apprentice. You may deploy face up Jedi Tests from here as if from hand. Place completed Jedi Tests on table. Jedi Tests are suspended (not lost) while Luke not on table. I've Got To Go To Them: Once per turn, if you just lost Force from a Force drain and you do not occupy a battleground, turn a Jedi Test here face down. Remember Your Failure At The Cave: During battle, Jedi Test #3 is suspended unless Luke battling alone.");
         addIcons(Icon.DAGOBAH, Icon.VIRTUAL_SET_25);
         setTestingText("Patience!");
     }
