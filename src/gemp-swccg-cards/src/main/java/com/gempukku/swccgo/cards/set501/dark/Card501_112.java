@@ -37,7 +37,7 @@ import java.util.List;
 public class Card501_112 extends AbstractCapitalStarship {
     public Card501_112() {
         super(Side.DARK, 3, 9, 10, 8, null, 3, 9, Title.Fulminatrix, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("May add 5 pilots, 4 passengers, 3 TIEs, and 2 vehicles. Permanent pilot provides ability of 2. Deploy -3 if Tracked Fleet on table. Opponent must lose 1 force to move a starship from here.");
+        setGameText("May add 5 pilots, 4 passengers, 3 [First Order] TIEs, and 2 vehicles. If opponent about to move a starship from here, opponent loses 1 Force. Deploys -2 if Tracked Fleet on table. Permanent pilot provides ability of 2.");
         addIcons(Icon.NAV_COMPUTER, Icon.EPISODE_VII, Icon.SCOMP_LINK, Icon.FIRST_ORDER, Icon.VIRTUAL_SET_25);
         addIcon(Icon.PILOT, 1);
         addModelType(ModelType.MANDATOR_IV_CLASS_DREADNAUGHT);
@@ -58,7 +58,7 @@ public class Card501_112 extends AbstractCapitalStarship {
     @Override
     protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new DeployCostModifier(self, new OnTableCondition(self, Filters.Tracked_Fleet), -3));
+        modifiers.add(new DeployCostModifier(self, new OnTableCondition(self, Filters.Tracked_Fleet), -2));
         return modifiers;
     }
 
