@@ -23,9 +23,9 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.FireWeaponAction;
 import com.gempukku.swccgo.logic.actions.FireWeaponActionBuilder;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.WeaponBeingFiredByCondition;
 import com.gempukku.swccgo.logic.effects.FireWeaponEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotCancelBattleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.Collections;
@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class Card501_193 extends AbstractCharacterWeapon {
     public Card501_193() {
-        super(Side.LIGHT, 2, Title.Hans_Heavy_Blaster_Pistol, Uniqueness.UNIQUE, ExpansionSet.SET_0, Rarity.V);
+        super(Side.LIGHT, 2, Title.Hans_Heavy_Blaster_Pistol, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("BlasTech DL-44 heavy pistol. Short range, but relatively powerful. Carries energy for 25 shots. Illegal or restricted on most systems.");
         setGameText("Deploy on Han. Battles may not be canceled at same site. Greedo's game text is canceled here. May target a character. Draw destiny. Target hit, and its forfeit = 0, if destiny +2 > defense value. Once per game, if on Han, may fire during your control phase.");
@@ -68,8 +68,7 @@ public class Card501_193 extends AbstractCharacterWeapon {
         if (actionBuilder != null) {
 
             // Build action using common utility
-            FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 2, Statistic.DEFENSE_VALUE,
-                    new WeaponBeingFiredByCondition(self, Filters.or(Filters.Han, Filters.Beckett)), true, 0);
+            FireWeaponAction action = actionBuilder.buildFireWeaponWithHitAction(1, 2, Statistic.DEFENSE_VALUE, true, 0);
             return Collections.singletonList(action);
         }
         return null;
@@ -78,6 +77,7 @@ public class Card501_193 extends AbstractCharacterWeapon {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new MayNotCancelBattleModifier(self, Filters.here(self)));
         modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.Greedo, Filters.here(self))));
         return modifiers;
     }
