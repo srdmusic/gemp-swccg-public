@@ -2,8 +2,8 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OccupiesCondition;
 import com.gempukku.swccgo.cards.effects.ConvertLocationByRaisingToTopEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -18,19 +18,12 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.Condition;
-import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.evaluators.ConstantEvaluator;
-import com.gempukku.swccgo.logic.modifiers.ExtraForceCostToDeployCardToLocationModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -68,6 +61,8 @@ public class Card501_004 extends AbstractSite {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Raise your converted Jabba's Palace site");
+            action.appendUsage(
+                new OncePerTurnEffect(action));
             // Choose target(s)
             action.appendTargeting(
                     new TargetCardOnTableEffect(action, playerOnDarkSideOfLocation, "Target site to convert", convertableTargetsFilter) {
@@ -91,54 +86,5 @@ public class Card501_004 extends AbstractSite {
             return Collections.singletonList(action);
         }
         return null;
-    }
-
-    @Override
-    protected List<TopLevelGameTextAction> getGameTextDarkSideTopLevelActions(final String playerOnDarkSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        //Your [Jabba's Palace] icon sites (the site underneath)
-        Filter yourJPSiteFilter = Filters.and(Filters.your(playerOnDarkSideOfLocation), Icon.JABBAS_PALACE, Filters.site);
-        //Sites on top of your [Jabba's Palace] icon sites (and which are allowed to be converted by raising yours)
-        Filter convertableTargetsFilter = Filters.and(Filters.canBeConvertedByRaisingYourLocationToTop(playerOnDarkSideOfLocation), Filters.convertedLocationOnTopOfLocation(yourJPSiteFilter));
-
-        // Check condition(s)
-        if ((GameConditions.occupies(game, playerOnDarkSideOfLocation, self)
-                || GameConditions.controls(game, playerOnDarkSideOfLocation, Filters.Audience_Chamber))
-                && GameConditions.canTarget(game, self, convertableTargetsFilter)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerOnDarkSideOfLocation, gameTextSourceCardId);
-            action.setText("Raise your converted Jabba's Palace site");
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerOnDarkSideOfLocation, "Target site to convert", convertableTargetsFilter) {
-                        @Override
-                        protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
-                            action.addAnimationGroup(targetedCard);
-                            // Allow response(s)
-                            action.allowResponses("Convert " + GameUtils.getCardLink(targetedCard),
-                                    new UnrespondableEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new ConvertLocationByRaisingToTopEffect(action, targetedCard, true));
-                                        }
-                                    }
-                            );
-                        }
-                    }
-            );
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
-        Condition unlessYouOccupy = new UnlessCondition(new OccupiesCondition(playerOnLightSideOfLocation, self));
-        Filter yourNonAlienCharacters = Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.character, Filters.not(Filters.alien));
-
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new ExtraForceCostToDeployCardToLocationModifier(self, yourNonAlienCharacters, unlessYouOccupy, new ConstantEvaluator(1), self));     
-        return modifiers;
     }
 }
