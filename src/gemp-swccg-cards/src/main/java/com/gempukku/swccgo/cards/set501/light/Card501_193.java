@@ -77,7 +77,7 @@ public class Card501_193 extends AbstractCharacterWeapon {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayNotCancelBattleModifier(self, Filters.here(self)));
+        modifiers.add(new MayNotCancelBattleModifier(self, Filters.sameSite(self)));
         modifiers.add(new CancelsGameTextModifier(self, Filters.and(Filters.Greedo, Filters.here(self))));
         return modifiers;
     }
