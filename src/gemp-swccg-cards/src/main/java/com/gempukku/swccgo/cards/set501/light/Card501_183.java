@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.light;
 import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.InBattleWithCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -13,6 +12,7 @@ import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -52,7 +52,6 @@ public class Card501_183 extends AbstractRebel {
         addKeywords(Keyword.SMUGGLER, Keyword.CAPTAIN);
         addPersona(Persona.HAN);
         setSpecies(Species.CORELLIAN);
-        setMatchingStarshipFilter(Filters.Falcon);
         setVirtualSuffix(true);
         setTestingText("Captain Han Solo (V)");
     }
@@ -72,43 +71,35 @@ public class Card501_183 extends AbstractRebel {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
         GameTextActionId gameTextActionId = GameTextActionId.CAPTAIN_HAN_SOLO_V__DEPLOY_BLASTER;
         // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.isAtLocation(game, self, Filters.site)) {
-            if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Deploy a blaster on Han from Reserve Deck");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerTurnEffect(action));
-                // Perform result(s)
-                action.appendEffect(
-                        new DeployCardToTargetFromReserveDeckEffect(action, Filters.blaster, Filters.sameCardId(self), true));
-                actions.add(action);
-            }
-            if (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)) {
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Deploy a blaster on Han from Lost Pile");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerTurnEffect(action));
-                // Pay cost(s)
-                action.appendCost(
-                        new LoseForceEffect(action, playerId, 1, true));
-                // Perform result(s)
-                action.appendEffect(
-                        new DeployCardToTargetFromLostPileEffect(action, Filters.blaster, Filters.sameCardId(self), true));
-                actions.add(action);
-            }
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Hans_Heavy_Blaster_Pistol)) {
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Han's Heavy Blaster Pistol from Reserve Deck");
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.Hans_Heavy_Blaster_Pistol, Filters.sameCardId(self), true));
+            actions.add(action);
+        }
+        if (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId, Title.Hans_Heavy_Blaster_Pistol)) {
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Han's Heavy Blaster Pistol from Lost Pile");
+
+            // Pay cost(s)
+            action.appendCost(
+                    new LoseForceEffect(action, playerId, 1, true));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardToTargetFromLostPileEffect(action, Filters.Hans_Heavy_Blaster_Pistol, Filters.sameCardId(self), true));
+            actions.add(action);
         }
         return actions;
     }
 
     @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggersWhenInactiveInPlay(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.CAPTAIN_HAN_SOLO_V__UPLOAD_LANDO;
         // Check condition(s)
-        if ((TriggerConditions.captured(game, effectResult, Filters.sameCardId(self))
-                || TriggerConditions.isAboutToBeCaptured(game, effectResult, Filters.sameCardId(self)))
+        if (GameConditions.isOnlyCaptured(game, self)
+                && TriggerConditions.captured(game, effectResult, self)
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
             Filter ccLando = Filters.and(Filters.icon(Icon.CLOUD_CITY), Filters.Lando);
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
@@ -126,7 +117,7 @@ public class Card501_183 extends AbstractRebel {
         GameTextActionId gameTextActionId = GameTextActionId.CAPTAIN_HAN_SOLO_V__UPLOAD_LANDO;
 
         // Check condition(s)
-        if (TriggerConditions.justLost(game, effectResult, self)
+        if ((TriggerConditions.justLost(game, effectResult, self) || TriggerConditions.captured(game, effectResult, self))
                 && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
             Filter ccLando = Filters.and(Filters.icon(Icon.CLOUD_CITY), Filters.Lando);
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
