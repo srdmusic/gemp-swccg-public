@@ -41,7 +41,7 @@ import java.util.List;
  */
 public class Card225_053 extends AbstractObjective {
     public Card225_053() {
-        super(Side.LIGHT, 0, Title.Mind_What_You_Have_Learned, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 0, Title.Mind_What_You_Have_Learned, ExpansionSet.SET_25, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Beldon's Corridor, Yoda's Hut (with [Dagobah] Yoda there), [Cloud City] No Disintegrations!, and Patience! For remainder of game, Sense may not target characters at non-battlegrounds. You may not Force drain on Dagobah. Your non-[Dagobah] characters of ability > 4 (except Ahsoka) are lost. Once per turn, may [download] Bespin system or a Cloud City site. While this side up, may [download] Wise Advice or Yoda's Hope. Once per turn, may [download] a Dagobah location. May flip this card if Luke on Dagobah during your turn.");
         addIcons(Icon.SPECIAL_EDITION, Icon.DAGOBAH, Icon.VIRTUAL_SET_25);

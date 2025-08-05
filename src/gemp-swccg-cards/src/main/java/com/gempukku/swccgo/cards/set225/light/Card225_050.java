@@ -40,7 +40,7 @@ import java.util.List;
 public class Card225_050 extends AbstractCharacterWeapon {
     Filter deployFilter = Filters.and(Filters.or(Filters.Leia, Filters.Ben_Solo, Filters.Rey), Filters.abilityMoreThan(4));
     public Card225_050(){
-        super(Side.LIGHT, 1, Title.Leias_Lightsaber, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 1, Title.Leias_Lightsaber, Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setGameText("Deploy on Leia (or Ben Solo or Rey) of ability > 4. Adds 1 to defense value and immunity to attrition. May add 1 to Force drain where present. May target a character or creature for free. Draw two destiny. Target hit, and its forfeit = 0, if total destiny > defense value.");
         addPersona(Persona.LEIAS_LIGHTSABER);
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);

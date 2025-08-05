@@ -32,7 +32,7 @@ import com.gempukku.swccgo.logic.timing.Action;
  */
 public class Card225_054 extends AbstractLostOrStartingInterrupt {
     public Card225_054() {
-        super(Side.LIGHT, 5, Title.New_Leadership_Is_Needed, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 5, Title.New_Leadership_Is_Needed, Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLore("The political process in the Republic is one whereby even the most powerful positions are fraught with peril.");
         setGameText("LOST: [upload] Coruscant Guard. STARTING: If Plead My Case To The Senate on table, deploy How Liberty Dies and two Effects that deploy on your side of the table, deploy for free, and are always immune to Alter. Place interrupt in hand.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_25);

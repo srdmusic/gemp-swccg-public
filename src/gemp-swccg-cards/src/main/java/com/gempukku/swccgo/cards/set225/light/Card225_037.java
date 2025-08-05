@@ -37,7 +37,7 @@ import java.util.List;
  */
 public class Card225_037 extends AbstractNormalEffect {
     public Card225_037() {
-        super(Side.LIGHT, 6, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Good Friend", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 6, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Good Friend", Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLore("");
         setGameText("If a [Skywalker] Epic Event on table, deploy on table. May [download] Be With Me, Jedi Village, or Leia's Lightsaber. Once per turn, you may relocate Anakin's Lightsaber between Rey and a Skywalker. Once per game, may exchange a Skywalker from hand with Ben Solo in Lost Pile. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.SKYWALKER, Icon.VIRTUAL_SET_25);

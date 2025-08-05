@@ -43,7 +43,7 @@ import java.util.List;
  */
 public class Card225_052 extends AbstractRebel {
     public Card225_052() {
-        super(Side.LIGHT, 2, 2, 2, 2, 4, Title.Major_Panno, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 2, 2, 2, 2, 4, Title.Major_Panno, Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLore("Male Dresselian scout. Former commando. Tactician. Works with General Madine to plan logistics of strike operations.");
         setGameText("Opponent may not 'react' to same site. Once per turn, if [Set 21] Strike Planning on table, may place a card from hand on Used Pile; the next scout you deploy this turn is deploy -1. Your scouts here are immune to Trample.");
         addIcons(Icon.DEATH_STAR_II, Icon.WARRIOR, Icon.VIRTUAL_SET_25);

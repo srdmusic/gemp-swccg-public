@@ -35,7 +35,7 @@ import java.util.List;
  */
 public class Card225_043 extends AbstractStarfighter {
     public Card225_043() {
-        super(Side.LIGHT, 3, 3, 3, null, 5, 3, 5, "Din Djarin's Modified N-1", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 3, 3, 3, null, 5, 3, 5, "Din Djarin's Modified N-1", Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLore("");
         setGameText("May add 1 pilot and Grogu as a passenger. " +
                 "Din Djarin deploys -1 aboard. While Din piloting, immune to attrition < 5 " +

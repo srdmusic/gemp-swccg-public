@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class Card225_051 extends AbstractDefensiveShield {
     public Card225_051() {
-        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Lets_Keep_A_Little_Optimism_Here, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Lets_Keep_A_Little_Optimism_Here, ExpansionSet.SET_25, Rarity.V);
         setLore("The heroes of the Rebellion know that where there is life, there is hope.");
         setGameText("Plays on table. Do They Have A Code Clearance? does not modify forfeit values. While you occupy a Renegade planet location, operatives are forfeit = 0, operatives do not add to Force drains and your Force drains may not be reduced.");
         addIcons(Icon.REFLECTIONS_III, Icon.VIRTUAL_DEFENSIVE_SHIELD);

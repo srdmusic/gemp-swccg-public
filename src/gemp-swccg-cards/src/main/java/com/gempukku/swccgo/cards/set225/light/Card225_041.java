@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class Card225_041 extends AbstractSite {
     public Card225_041() {
-        super(Side.LIGHT, Title.Carbonite_Chamber, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, Title.Carbonite_Chamber, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLocationDarkSideGameText("All Too Easy may not target Luke or Jedi here.");
         setLocationLightSideGameText("Force drain +1 here. Once per game, during battle here, may retrieve Smoke Screen into hand.");
         addIcon(Icon.DARK_FORCE, 1);

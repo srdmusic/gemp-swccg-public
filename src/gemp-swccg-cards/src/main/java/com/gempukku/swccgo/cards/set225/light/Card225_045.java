@@ -42,7 +42,7 @@ import java.util.List;
  */
 public class Card225_045 extends AbstractResistance {
     public Card225_045() {
-        super(Side.LIGHT, 1, 4, 4, 4, 6, "Finn, Resistance Hero", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 1, 4, 4, 4, 6, "Finn, Resistance Hero", Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLore("Leader.");
         setGameText("During battle, if Luke or Paige out of play (or Rose or Jannah here), adds one destiny to total power. Once per game, may [download] a non-leader Resistance character of lesser ability here. Jedi Lightsaber may deploy on Finn. Immune to attrition < 4.");
         addPersona(Persona.FINN);

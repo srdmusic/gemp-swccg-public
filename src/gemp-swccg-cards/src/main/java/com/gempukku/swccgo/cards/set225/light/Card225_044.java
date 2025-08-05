@@ -32,7 +32,7 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
  */
 public class Card225_044 extends AbstractSite{
     public Card225_044() {
-        super(Side.LIGHT, Title.Rebel_Landing_Site, Title.Endor, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, Title.Rebel_Landing_Site, Title.Endor, Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLocationDarkSideGameText("Unless you occupy, you must first use 1 Force to deploy a non-scout character here.");
         setLocationLightSideGameText("Your scouts of ability < 5 are deploy -1 and defense value +2 here.");
         addIcon(Icon.DARK_FORCE, 1);

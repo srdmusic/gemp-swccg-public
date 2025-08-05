@@ -40,7 +40,7 @@ import java.util.List;
 
 public class Card225_039 extends AbstractRebel {
     public Card225_039() {
-        super(Side.LIGHT, 1, 4, 6, 2, 6, "Chewie With Blaster Rifle", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 1, 4, 6, 2, 6, "Chewie With Blaster Rifle", Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLore("Wookiee smuggler. 'Wraaaaaarw!'");
         setGameText("[Pilot] 2. While with a droid, a captive, or opponent's [Maintenance] card, adds one battle destiny. Permanent weapon is Blaster Rifle (may target a character for free; draw destiny; target hit, and its forfeit = 0, if destiny +1 > defense value).");
         addPersona(Persona.CHEWIE);

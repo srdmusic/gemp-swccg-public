@@ -37,7 +37,7 @@ import java.util.List;
  */
 public class Card225_040 extends AbstractSite {
     public Card225_040() {
-        super(Side.LIGHT, Title.Beldons_Corridor, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, Title.Beldons_Corridor, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLocationDarkSideGameText("Your troopers here are defense value +1. While you occupy, cancels Path Of Least Resistance.");
         setLocationLightSideGameText("While a [Cloud City] Rebel here, Their Fire Has Gone Out Of The Universe flips and may not flip back.");
         addIcon(Icon.DARK_FORCE, 1);

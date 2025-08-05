@@ -39,7 +39,7 @@ import java.util.List;
  */
 public class Card225_055 extends AbstractNormalEffect {
     public Card225_055() {
-        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.No_Disintegrations, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.No_Disintegrations, Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLore("'There will be a substantial reward for the one who finds the Millennium Falcon. You are free to use any methods necessary, but I want them alive.'");
         setGameText("Deploy on table. Once per opponent's turn, if their warrior present where a [Cloud City] Rebel (except Luke) is about to be lost, opponent must choose: capture and seize that Rebel or lose 2 Force. For a bounty hunter to fire a weapon, opponent must first use 1 Force (2 if Vader there). [Immune to Alter.]");
         addIcons(Icon.DAGOBAH, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
