@@ -20,8 +20,8 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.AttachCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.BlowAwayEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
@@ -93,17 +93,18 @@ public class Card501_106 extends AbstractEpicEventDeployable {
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getOpponentsCardGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<OptionalGameTextTriggerAction> getOpponentsCardGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         Filter systemToRelocateTo = Filters.and(Icon.EPISODE_VII, Filters.system, Filters.withinParsecsOf(self, 3), Filters.not(Filters.here(self)));
 
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
+        if (TriggerConditions.isStartOfYourPhase(game, effectResult, Phase.MOVE, playerId)
+                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
                 && GameConditions.canSpotLocation(game, systemToRelocateTo)
                 && !(GameConditions.hasStackedCards(game, self, 3))
                 && GameConditions.hasHand(game, playerId)) {
 
-                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
                 action.setText("Relocate Tracked Fleet");
                 // Choose target(s)
                 action.appendUsage(new OncePerPhaseEffect(action));
@@ -115,7 +116,7 @@ public class Card501_106 extends AbstractEpicEventDeployable {
                                 action.addAnimationGroup(systemSelected);
                                 // Pay cost(s)
                                 action.appendCost(
-                                        new StackCardFromHandEffect(action, playerId, self, false));
+                                        new StackCardFromHandEffect(action, playerId, self, true));
                                 // Allow response(s)
                                 action.allowResponses("Relocate " + GameUtils.getCardLink(self) + " to " + GameUtils.getCardLink(systemSelected),
                                         new UnrespondableEffect(action) {
