@@ -435,10 +435,11 @@ class Card {
         }if(setNo == 225){
             return (cardNo == 16) ||
                    (cardNo == 17) ||
-                   (cardNo == 27) ||
                    (cardNo == 28) ||
                    (cardNo == 29) ||
                    (cardNo == 30) ||
+                   (cardNo == 40) ||
+                   (cardNo == 41) ||
                    (cardNo == 44);        
         }if (setNo == 501) {
             return (cardNo == 4) ||
