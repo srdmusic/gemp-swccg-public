@@ -53,7 +53,6 @@ public class Card225_038 extends AbstractRebel {
         addPersona(Persona.HAN);
         setSpecies(Species.CORELLIAN);
         setVirtualSuffix(true);
-        setTestingText("Captain Han Solo (V)");
     }
 
     @Override
