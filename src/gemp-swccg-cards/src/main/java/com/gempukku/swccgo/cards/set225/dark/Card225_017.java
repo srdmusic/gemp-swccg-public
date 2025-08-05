@@ -24,6 +24,5 @@ public class Card225_017 extends AbstractAlien {
         addKeywords(Keyword.INFORMATION_BROKER, Keyword.SPY);
         setSpecies(Species.DEVARONIAN);
         setVirtualSuffix(true);
-        hideFromDeckBuilder();
     }
 }
