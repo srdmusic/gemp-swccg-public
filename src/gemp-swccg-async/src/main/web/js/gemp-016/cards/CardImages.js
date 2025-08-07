@@ -3730,7 +3730,7 @@ const fixedImages = {
 "225_51":"https://res.starwarsccg.org/cards/Virtual25-Light/hires/letskeepalittleoptimismhere.png",
 "225_52":"https://res.starwarsccg.org/cards/Virtual25-Light/hires/majorpanno.png",
 "225_53":"https://res.starwarsccg.org/cards/Virtual25-Light/hires/mindwhatyouhavelearned.png",
-"225_53_BACK":"https://res.starwarsccg.org/cards/Virtual25-Light/hires/saveyouincan.png",
+"225_53_BACK":"https://res.starwarsccg.org/cards/Virtual25-Light/hires/saveyouitcan.png",
 "225_54":"https://res.starwarsccg.org/cards/Virtual25-Light/hires/newleadershipisneeded.png",
 "225_55":"https://res.starwarsccg.org/cards/Virtual25-Light/hires/nodisintegrations.png",
 "225_56":"https://res.starwarsccg.org/cards/Virtual25-Light/hires/orrimaarko.png",

@@ -66,14 +66,14 @@ public class Card225_055 extends AbstractNormalEffect {
         final String playerId = self.getOwner();
         final String opponent = game.getOpponent(playerId);
         final GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        Filter ccRebelExceptLuke = Filters.and(Filters.icon(Icon.CLOUD_CITY), Filters.Rebel, Filters.except(Filters.Luke), Filters.presentWith(self, Filters.and(Filters.opponents(self), Filters.warrior)));
+        Filter ccRebelExceptLuke = Filters.and(Filters.icon(Icon.CLOUD_CITY), Filters.Rebel, Filters.except(Filters.Luke), Filters.with(self, Filters.and(Filters.opponents(self), Filters.warrior, Filters.presentAt(Filters.site))));
         if ((TriggerConditions.isAboutToBeLost(game, effectResult, ccRebelExceptLuke) 
                 || TriggerConditions.isAboutToBeForfeitedToLostPile(game, effectResult, ccRebelExceptLuke))
                 && GameConditions.isOnceDuringOpponentsTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
             final AboutToLeaveTableResult aboutToLeaveTableResult = (AboutToLeaveTableResult) effectResult;
             final PhysicalCard cardToBeLost = aboutToLeaveTableResult.getCardAboutToLeaveTable();
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Make " + opponent + " choose");
+            action.setText("Make opponent choose");
             action.appendUsage(
                     new OncePerTurnEffect(action));
             action.appendEffect(
