@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.cards.set501.dark;
+package com.gempukku.swccgo.cards.set225.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
@@ -22,20 +22,19 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Set: Playtesting
+ * Set: Set 25
  * Type: Location
  * Subtype: Site
  * Title: Crait: Salt Plateau
  */
-public class Card501_108 extends AbstractSite {
-    public Card501_108() {
-        super(Side.DARK, Title.Crait_Salt_Plateau, Title.Crait, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+public class Card225_017 extends AbstractSite {
+    public Card225_017() {
+        super(Side.DARK, Title.Crait_Salt_Plateau, Title.Crait, Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setLocationDarkSideGameText("Your combat vehicles are power and defense value +1 here.");
         setLocationLightSideGameText("While The Resistance Is Doomed on table, Force drains here may not be canceled or reduced.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
-        setTestingText(Title.Crait_Salt_Plateau);
     }
 
     @Override
