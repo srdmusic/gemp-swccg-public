@@ -184,7 +184,7 @@ public class Card501_120 extends AbstractEpicEventDeployable {
                             action.appendCost(
                                     new PutCardFromHandOnUsedPileEffect(action, playerId, lowDestinyCard, false));
                             // Allow response(s)
-                            action.allowResponses("Target taxation agenda on " + GameUtils.getCardLink(cardTargeted) + " to make their next [Episode I] character deploy -1",
+                            action.allowResponses("Target taxation agenda on " + GameUtils.getCardLink(cardTargeted) + " to activate 1 Force",
                                     new UnrespondableEffect(action) {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
