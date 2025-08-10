@@ -65,15 +65,21 @@ public class Card225_020 extends AbstractCapitalStarship {
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
         if (TriggerConditions.movingFromLocation(game, effectResult, Filters.and(Filters.opponents(self), Filters.starship), Filters.here(self))) {
-            String opponent = game.getOpponent(self.getOwner());
+            
             final PhysicalCard starship = ((MovingResult) effectResult).getCardMoving();
+            final PhysicalCard moveFrom = ((MovingResult) effectResult).getMovingFrom();
+            final PhysicalCard moveTo = ((MovingResult) effectResult).getMovingTo();
 
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Lose 1 Force to move " + GameUtils.getFullName(starship));
-            action.setActionMsg("Make " + opponent + " lose 1 Force to move " + GameUtils.getCardLink(starship));
-            // Build action using common utility
-            action.appendEffect(new LoseForceEffect(action, opponent, 1));
-            return Collections.singletonList(action);
+            // Check that the "from" and "to" are different locations. Same location would mean something like a starship embarking
+            if (moveFrom.getPermanentCardId() != moveTo.getPermanentCardId()) {
+                String opponent = game.getOpponent(self.getOwner());
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setText("Lose 1 Force to move " + GameUtils.getFullName(starship));
+                action.setActionMsg("Make " + opponent + " lose 1 Force to move " + GameUtils.getCardLink(starship));
+                // Build action using common utility
+                action.appendEffect(new LoseForceEffect(action, opponent, 1));
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }
