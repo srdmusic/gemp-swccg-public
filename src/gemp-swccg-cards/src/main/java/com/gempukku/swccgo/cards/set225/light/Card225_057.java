@@ -103,6 +103,10 @@ public class Card225_057 extends AbstractEpicEventDeployable {
             action.appendTargeting(
                     new ChooseStackedCardEffect(action, playerId, patienceWithJediTestStackedFaceUp, jediTestFaceUp, false) {
                         @Override
+                        public String getChoiceText(int numCardsToChoose) {
+                            return "Choose stacked Jedi Test";
+                        }
+                        @Override
                         protected void cardSelected(PhysicalCard selectedCard) {
                             // Perform result(s)
                             action.appendEffect(
