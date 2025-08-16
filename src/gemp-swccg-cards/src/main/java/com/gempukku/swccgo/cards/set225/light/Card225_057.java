@@ -96,7 +96,6 @@ public class Card225_057 extends AbstractEpicEventDeployable {
             action.setPerformingPlayer(playerId);
             action.setText("Turn Jedi Test face down");
             action.setActionMsg("Turn a Jedi Test on Patience! face down");
-            action.addAnimationGroup(self);
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
@@ -104,7 +103,7 @@ public class Card225_057 extends AbstractEpicEventDeployable {
                     new ChooseStackedCardEffect(action, playerId, patienceWithJediTestStackedFaceUp, jediTestFaceUp, false) {
                         @Override
                         public String getChoiceText(int numCardsToChoose) {
-                            return "Choose stacked Jedi Test";
+                            return "Choose a Jedi Test on Patience! to turn face down";
                         }
                         @Override
                         protected void cardSelected(PhysicalCard selectedCard) {
