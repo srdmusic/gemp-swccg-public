@@ -96,6 +96,7 @@ public class Card225_057 extends AbstractEpicEventDeployable {
             action.setPerformingPlayer(playerId);
             action.setText("Turn Jedi Test face down");
             action.setActionMsg("Turn a Jedi Test on Patience! face down");
+            action.addAnimationGroup(self);
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
