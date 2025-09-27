@@ -408,6 +408,7 @@ public interface Title {
     String Eyes_In_The_Dark = "Eyes In The Dark";
     String Ezra = "Ezra Bridger";
     String Falleens_Fist = "Falleen's Fist";
+    String Fallen_Order = "Fallen Order";
     String Fallen_Portal = "Fallen Portal";
     String Fear_Will_Keep_Them_In_Line = "Fear Will Keep Them In Line";
     String Fearless_And_Inventive = "Fearless And Inventive";
