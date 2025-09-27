@@ -449,6 +449,7 @@ public interface Title {
     String Gamall_Wironicc = "Gamall Wironicc";
     String Gamorrean_Guard = "Gamorrean Guard";
     String Garrison_Destroyed = "Garrison Destroyed";
+    String Gather_Allies_And_Train = "Gather Allies And Train";
     String General_Calrissian = "General Calrissian";
     String General_Dodonna = "General Dodonna";
     String Geonosis = "Geonosis";
@@ -1125,6 +1126,7 @@ public interface Title {
     String The_Force_Is_Strong_In_My_Family = "The Force Is Strong In My Family";
     String The_Force_Is_Strong_With_This_One = "The Force Is Strong With This One";
     String The_Galaxy_May_Need_A_Legend = "The Galaxy May Need A Legend";
+    String The_Hidden_Path = "The Hidden Path";
     String The_Hyperdrive_Generators_Gone = "The Hyperdrive Generator's Gone";
     String The_Mythrol = "The Mythrol";
     String The_Phantom_Menace = "The Phantom Menace";
