@@ -452,6 +452,11 @@ class Card {
                    (cardNo == 36) ||
                    (cardNo == 38) ||
                    (cardNo == 39) ||
+                   (cardNo == 62) ||
+                   (cardNo == 63) ||
+                   (cardNo == 64) ||
+                   (cardNo == 65) ||
+                   (cardNo == 66) ||
                    (cardNo == 164) ||
                    (cardNo == 171);
         }
