@@ -614,6 +614,8 @@ public interface Title {
     String Jabbas_Influence = "Jabba's Influence";
     String Jabbas_Space_Cruiser = "Jabba's Space Cruiser";
     String Jabbas_Trophies = "Jabba's Trophies";
+    String Jabiim = "Jabiim";
+    String Jabiim_Hangar_Bay = "Jabiim: Hangar Bay";
     String Jakku = "Jakku";
     String Jakku_Landing_Site = "Jakku: Landing Site";
     String Jango_Fett = "Jango Fett";
@@ -728,6 +730,7 @@ public interface Title {
     String Mandalorian_Covert = "Mandalorian Covert";
     String Maneuvering_Flaps = "Maneuvering Flaps";
     String Mantellian_Savrip = "Mantellian Savrip";
+    String Mapuzo = "Mapuzo";
     String Mara_Jade_The_Emperors_Hand = "Mara Jade, The Emperor's Hand";
     String Marketplace = "Tatooine: Marketplace";
     String Marmor = "Corporal Marmor";
@@ -757,6 +760,7 @@ public interface Title {
     String Miiyoom_Onith = "M'iiyoom Onith";
     String Malakili = "Malakili";
     String Mind_What_You_Have_Learned = "Mind What You Have Learned";
+    String Mining_Village = "Mapuzo: Mining Village";
     String Mirax = "Mirax Terrik";
     String Mobilization_Points = "Mobilization Points";
     String Molator = "Molator";
@@ -860,6 +864,7 @@ public interface Title {
     String Passel_Argente = "Passel Argente";
     String Passenger_Deck = "Jabba's Sail Barge: Passenger Deck";
     String Path_Of_Least_Resistance = "Path Of Least Resistance";
+    String Path_Operations_Center = "Jabiim: Path Operations Center";
     String Patience = "Patience!";
     String Patrol_Craft = "Patrol Craft";
     String Perimeter_Patrol = "Perimeter Patrol";
@@ -977,6 +982,7 @@ public interface Title {
     String Sabine = "Sabine Wren";
     String Sabotage = "Sabotage";
     String Sacrifice = "Sacrifice";
+    String Safehouse = "Mapuzo: Safehouse";
     String Saitorr_Kal_Fas = "Sai'torr Kal Fas";
     String Salm = "Colonel Salm";
     String Saddle = "Ahch-To: Saddle";
@@ -1201,6 +1207,7 @@ public interface Title {
     String Uncontrollable_Fury = "Uncontrollable Fury";
     String Under_Attack = "Under Attack";
     String Undercover = "Undercover";
+    String Underground_Corridor = "Mapuzo: Underground Corridor";
     String Underworld_Contacts = "Underworld Contacts";
     String Unlimited_Power = "Unlimited Power!";
     String Unkar_Plutt = "Unkar Plutt";
