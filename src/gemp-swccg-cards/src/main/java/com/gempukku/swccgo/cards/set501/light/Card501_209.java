@@ -13,7 +13,7 @@ import com.gempukku.swccgo.common.Uniqueness;
  * Set: Playtesting
  * Type: Character
  * Subtype: Rebel
- * Title: Obi-Wan, Survivor
+ * Title: Obi-Wan Kenobi, Survivor
  */
 
 public class Card501_209 extends AbstractRebel {
@@ -22,7 +22,7 @@ public class Card501_209 extends AbstractRebel {
         setLore("Jedi survivor.");
         setGameText("Adds one battle destiny with Maul, Sidious, or Vader. Opponent's characters here are power and forfeit -1. Once per game may [upload] (or retrieve into hand) Glancing Blow or Help Me Obi-Wan Kenobi. Immune to You Are Beaten and attrition < 6.");
         addKeyword(Keyword.JEDI_SURVIVOR);
-        addPersona(Persona.QUIGON);
+        addPersona(Persona.OBIWAN);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_26);
         hideFromDeckBuilder();
     }
