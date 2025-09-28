@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractJediMaster;
+import com.gempukku.swccgo.cards.AbstractRebel;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -12,19 +12,19 @@ import com.gempukku.swccgo.common.Uniqueness;
 /**
  * Set: Playtesting
  * Type: Character
- * Subtype: Jedi Master
- * Title: Quinlan Vos
+ * Subtype: Rebel
+ * Title: Obi-Wan, Survivor
  */
 
-public class Card501_208 extends AbstractJediMaster {
-    public Card501_208() {
-        super(Side.LIGHT, 1, 8, 7, 7, 8, "Quinlan Vos", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+public class Card501_209 extends AbstractRebel {
+    public Card501_209() {
+        super(Side.LIGHT, 1, 8, 6, 6, 8, "Obi-Wan Kenobi, Survivor", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Jedi survivor.");
-        setGameText("[Pilot] 2. Adds one battle destiny with Asajj, Dooku, or Grievous. Once per turn, may peek at the top card of any Reserve Deck or subtract 1 from a weapon destiny here. Dark Approach is a Used interrupt. Immune to Sniper and attrition < 6 (< 8 if alone).");
+        setGameText("Adds one battle destiny with Maul, Sidious, or Vader. Opponent's characters here are power and forfeit -1. Once per game may [upload] (or retrieve into hand) Glancing Blow or Help Me Obi-Wan Kenobi. Immune to You Are Beaten and attrition < 6.");
         addKeyword(Keyword.JEDI_SURVIVOR);
         addPersona(Persona.QUIGON);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_26);
         hideFromDeckBuilder();
     }
-
+    
 }
