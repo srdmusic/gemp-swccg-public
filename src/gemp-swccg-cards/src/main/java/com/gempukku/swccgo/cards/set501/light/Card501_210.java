@@ -23,6 +23,7 @@ public class Card501_210 extends AbstractJediMasterRepublic {
         addKeyword(Keyword.JEDI_SURVIVOR);
         addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.VIRTUAL_SET_26);
         addIcon(Icon.WARRIOR, 2);
+        setTestingText("Kelleran Beq");
         hideFromDeckBuilder();
     }
     

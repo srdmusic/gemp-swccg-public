@@ -24,6 +24,7 @@ public class Card501_208 extends AbstractJediMaster {
         addKeyword(Keyword.JEDI_SURVIVOR);
         addPersona(Persona.QUIGON);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_26);
+        setTestingText("Quinlan Vos");
         hideFromDeckBuilder();
     }
 
