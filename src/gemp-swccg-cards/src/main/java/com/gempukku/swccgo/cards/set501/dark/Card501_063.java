@@ -7,6 +7,12 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 
+/**
+ * Set: Playtesting
+ * Type: Interrupt
+ * Subtype: Used
+ * Title: Endless Legions
+ */
 public class Card501_063 extends AbstractUsedInterrupt {
     public Card501_063() {
         super(Side.DARK, 3, "Endless Legions", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
