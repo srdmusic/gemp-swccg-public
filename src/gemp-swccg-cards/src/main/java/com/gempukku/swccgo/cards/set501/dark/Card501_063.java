@@ -20,6 +20,7 @@ public class Card501_063 extends AbstractUsedInterrupt {
         setGameText("If your stormtroopers control three battlegrounds and/or Rebel Base locations, choose: Draw 3 cards from Force Pile, then place 2 cards from hand on Force Pile. OR Once per game, your Force drains where you have a stormtrooper may not be canceled or reduced this turn.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("Endless Legions");
+        hideFromDeckBuilder();
     }
     
 }

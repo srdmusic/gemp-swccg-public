@@ -22,6 +22,7 @@ public class Card501_061 extends AbstractNormalEffect {
         addIcons(Icon.JABBAS_PALACE, Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_26);
         setVirtualSuffix(true);
         setTestingText("Information Exchange (V)");
+        hideFromDeckBuilder();
     }
     
 }

@@ -20,6 +20,7 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
         setGameText("USED: If Dooku is your apprentice, [upload] The Works or Petranaki Arena. LOST: Once per game, if Darth Tyranus in battle at a site and you are about to draw a card for battle destiny, instead use his ability number.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("Welcome Home, Lord Tyranus");
+        hideFromDeckBuilder();
     }
     
 }

@@ -24,6 +24,7 @@ public class Card501_017 extends AbstractAlien {
         setSpecies(Species.KOWAKIAN);
         setVirtualSuffix(true);
         setTestingText("Salacious Crumb (V)");
+        hideFromDeckBuilder();
     }
 
 }

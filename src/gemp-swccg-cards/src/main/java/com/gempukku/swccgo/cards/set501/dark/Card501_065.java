@@ -23,6 +23,7 @@ public class Card501_065 extends AbstractSystem {
         addIcons(Icon.PLANET, Icon.EPISODE_I, Icon.VIRTUAL_SET_26);
         setVirtualSuffix(true);
         setTestingText("Coruscant (V)");
+        hideFromDeckBuilder();
     }
     
 }

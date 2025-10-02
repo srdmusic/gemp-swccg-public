@@ -27,6 +27,7 @@ public class Card501_060 extends AbstractDroid {
         addModelTypes(ModelType.ASSASSIN);
         setVirtualSuffix(true);
         setTestingText("Guri (V)");
+        hideFromDeckBuilder();
     }
 
 }

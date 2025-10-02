@@ -23,5 +23,6 @@ public class Card501_062 extends AbstractAlien {
         addKeywords(Keyword.MUSICIAN, Keyword.FEMALE);
         setVirtualSuffix(true);
         setTestingText("Rystall (V)");
+        hideFromDeckBuilder();
     }
 }
