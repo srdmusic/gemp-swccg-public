@@ -14,7 +14,7 @@ import com.gempukku.swccgo.common.Uniqueness;
  * Set: Playtesting
  * Type: Character
  * Subtype: Droid
- * Title: Guri
+ * Title: Guri (V)
  */
 public class Card501_060 extends AbstractDroid {
     public Card501_060() {
