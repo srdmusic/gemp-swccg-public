@@ -21,10 +21,14 @@ import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
@@ -37,7 +41,7 @@ public class Card501_208 extends AbstractJediMaster {
     public Card501_208() {
         super(Side.LIGHT, 1, 8, 7, 7, 8, "Quinlan Vos", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Jedi survivor.");
-        setGameText("[Pilot] 2. Adds one battle destiny with Dooku, Grievous, or Ventress. Once per turn, may peek at the top card of any Reserve Deck or subtract 1 from a weapon destiny here. Dark Approach is a Used interrupt. Immune to Sniper and attrition < 6 (< 8 if alone).");
+        setGameText("[Pilot] 2. Adds one battle destiny with Dooku, Grievous, or Ventress. Once per turn, may peek at the top card of any Reserve Deck or subtract 1 from a just drawn weapon destiny here. Dark Approach is a Used interrupt. Immune to Sniper and attrition < 6 (< 8 if alone).");
         addKeyword(Keyword.JEDI_SURVIVOR);
         addIcons(Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_26);
         setTestingText("Quinlan Vos");
@@ -52,8 +56,7 @@ public class Card501_208 extends AbstractJediMaster {
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) 
-    {
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         String opponent = game.getOpponent(playerId);
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1; //Action ID shared with the weapon destiny subtract action
 
@@ -79,6 +82,26 @@ public class Card501_208 extends AbstractJediMaster {
                     }
             );
             return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1; //Action ID shared with the Reserve Deck peek action
+        
+        // Check condition(s)
+        if (TriggerConditions.isWeaponDestinyJustDrawn(game, effectResult, Filters.here(self))
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setActionMsg("Subtract 1 from weapon destiny");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new ModifyDestinyEffect(action, -1));
         }
         return null;
     }
