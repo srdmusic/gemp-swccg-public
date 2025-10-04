@@ -14,6 +14,7 @@ import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -24,6 +25,8 @@ import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
@@ -51,6 +54,8 @@ public class Card501_209 extends AbstractRebel {
         modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.or(Filters.Maul, Filters.Sidious, Filters.Vader)), 1));
         modifiers.add(new PowerModifier(self, Filters.and(Filters.opponents(self), Filters.character, Filters.here(self)), -1));
         modifiers.add(new ForfeitModifier(self, Filters.and(Filters.opponents(self), Filters.character, Filters.here(self)), -1));
+        modifiers.add(new ImmuneToTitleModifier(self, Title.You_Are_Beaten));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 6));
         return modifiers;
     }
 
@@ -58,7 +63,7 @@ public class Card501_209 extends AbstractRebel {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.OBIWAN_KENOBI_JEDI_IN_EXILE__UPLOAD_OR_RETRIEVE_CARD;
+        GameTextActionId gameTextActionId = GameTextActionId.OBIWAN_KENOBI_JEDI_IN_EXILE__UPLOAD_OR_RETRIEVE_CARD; //Shared once-per-game action
         Filter GlancingBlowOrHelpMeObiWanKenobi = Filters.or(Filters.Glancing_Blow, Filters.Help_Me_ObiWan_Kenobi);
 
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
