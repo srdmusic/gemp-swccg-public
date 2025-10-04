@@ -16,7 +16,9 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
+import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
 /**
  * Set: Playtesting
@@ -40,6 +42,8 @@ public class Card501_209 extends AbstractRebel {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.or(Filters.Maul, Filters.Sidious, Filters.Vader)), 1));
+        modifiers.add(new PowerModifier(self, Filters.and(Filters.opponents(self), Filters.character, Filters.here(self)), -1));
+        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.opponents(self), Filters.character, Filters.here(self)), -1));
         return modifiers;
     }
     
