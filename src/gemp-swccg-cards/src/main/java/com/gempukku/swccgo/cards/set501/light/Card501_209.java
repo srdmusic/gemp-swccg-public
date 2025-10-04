@@ -20,6 +20,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.RetrieveCardIntoHandEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
@@ -71,6 +72,20 @@ public class Card501_209 extends AbstractRebel {
             // Perform result(s)
             action.appendEffect(
                     new TakeCardIntoHandFromReserveDeckEffect(action, playerId, GlancingBlowOrHelpMeObiWanKenobi, true));
+            actions.add(action);
+        }
+
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId, true)) {
+            
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Retrieve card into hand");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new RetrieveCardIntoHandEffect(action, playerId, GlancingBlowOrHelpMeObiWanKenobi));
             actions.add(action);
         }
 
