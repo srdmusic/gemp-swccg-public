@@ -16,6 +16,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filters;
@@ -27,6 +28,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.UsedInterruptModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -54,6 +56,7 @@ public class Card501_208 extends AbstractJediMaster {
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.or(Filters.Dooku, Filters.Grievous, Filters.Ventress)), 1));
         modifiers.add(new UsedInterruptModifier(self, Filters.Dark_Approach));
+        modifiers.add(new ImmuneToTitleModifier(self, Title.Sniper));
         return modifiers;
     }
 
