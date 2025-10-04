@@ -1,19 +1,27 @@
 package com.gempukku.swccgo.cards.set501.light;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractJediMaster;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
+import com.gempukku.swccgo.cards.effects.PeekAtTopCardOfReserveDeckEffect;
+import com.gempukku.swccgo.cards.effects.complete.ChooseExistingCardPileEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -41,6 +49,38 @@ public class Card501_208 extends AbstractJediMaster {
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.or(Filters.Dooku, Filters.Grievous, Filters.Ventress)), 1));
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) 
+    {
+        String opponent = game.getOpponent(playerId);
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1; //Action ID shared with the weapon destiny subtract action
+
+        // Check condition(s)
+        if ((GameConditions.hasReserveDeck(game, playerId) || GameConditions.hasReserveDeck(game, opponent))
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Peek at top card of any Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Choose target(s)
+            action.appendTargeting(
+                    new ChooseExistingCardPileEffect(action, playerId, Zone.RESERVE_DECK) {
+                        @Override
+                        protected void pileChosen(final SwccgGame game, final String cardPileOwner, Zone cardPile) {
+                            action.setActionMsg("Peek at top card of " + cardPileOwner + "'s Reserve Deck");
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new PeekAtTopCardOfReserveDeckEffect(action, playerId, cardPileOwner));
+                        }
+                    }
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
 }
