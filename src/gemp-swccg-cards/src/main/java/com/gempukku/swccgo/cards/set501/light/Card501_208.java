@@ -111,6 +111,7 @@ public class Card501_208 extends AbstractJediMaster {
             // Perform result(s)
             action.appendEffect(
                     new ModifyDestinyEffect(action, -1));
+            return Collections.singletonList(action);
         }
         return null;
     }
