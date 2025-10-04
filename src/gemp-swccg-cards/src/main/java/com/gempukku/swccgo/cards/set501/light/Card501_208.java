@@ -6,10 +6,12 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractJediMaster;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.AloneCondition;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.PeekAtTopCardOfReserveDeckEffect;
 import com.gempukku.swccgo.cards.effects.complete.ChooseExistingCardPileEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
+import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -28,6 +30,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.UsedInterruptModifier;
@@ -57,6 +60,7 @@ public class Card501_208 extends AbstractJediMaster {
         modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.or(Filters.Dooku, Filters.Grievous, Filters.Ventress)), 1));
         modifiers.add(new UsedInterruptModifier(self, Filters.Dark_Approach));
         modifiers.add(new ImmuneToTitleModifier(self, Title.Sniper));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, new ConditionEvaluator(6, 8, new AloneCondition(self))));
         return modifiers;
     }
 
