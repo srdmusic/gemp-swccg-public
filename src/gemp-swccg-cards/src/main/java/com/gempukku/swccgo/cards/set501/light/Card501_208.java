@@ -28,6 +28,7 @@ import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.UsedInterruptModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
@@ -52,6 +53,7 @@ public class Card501_208 extends AbstractJediMaster {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.or(Filters.Dooku, Filters.Grievous, Filters.Ventress)), 1));
+        modifiers.add(new UsedInterruptModifier(self, Filters.Dark_Approach));
         return modifiers;
     }
 
