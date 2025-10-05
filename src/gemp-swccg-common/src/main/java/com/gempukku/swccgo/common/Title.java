@@ -455,6 +455,7 @@ public interface Title {
     String General_Calrissian = "General Calrissian";
     String General_Dodonna = "General Dodonna";
     String Geonosis = "Geonosis";
+    String Geonosis_Petranaki_Arena = "Geonosis: Petranaki Arena";
     String Get_Alongside_That_One = "Get Alongside That One";
     String Ghhhk = "Ghhhk";
     String Ghost = "Ghost";
