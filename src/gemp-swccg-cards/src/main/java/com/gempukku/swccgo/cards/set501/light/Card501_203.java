@@ -24,6 +24,5 @@ public class Card501_203 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.EXTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_26);
         setTestingText("Mapuzo: Mining Village");
-        hideFromDeckBuilder();
     }
 }
