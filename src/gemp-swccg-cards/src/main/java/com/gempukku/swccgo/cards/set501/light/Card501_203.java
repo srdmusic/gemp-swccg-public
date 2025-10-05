@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractSite;
+import com.gempukku.swccgo.cards.conditions.PresentCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -13,7 +14,9 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeModifiedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 
@@ -40,6 +43,16 @@ public class Card501_203 extends AbstractSite {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new DeployCostToLocationModifier(self, Filters.Jedi_Survivor, -2, self));
         modifiers.add(new PowerModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.miner, Filters.here(self)), 1));
+        return modifiers;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+
+        Condition VaderOrInquisitorPresent = new PresentCondition(self, Filters.or(Filters.Vader, Filters.inquisitor));
+        modifiers.add(new ForceDrainsMayNotBeModifiedModifier(self, self, VaderOrInquisitorPresent, null, playerOnDarkSideOfLocation));
+
         return modifiers;
     }
 }
