@@ -104,7 +104,7 @@ public class Card501_208 extends AbstractJediMaster {
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setActionMsg("Subtract 1 from weapon destiny");
+            action.setText("Subtract 1 from weapon destiny");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
