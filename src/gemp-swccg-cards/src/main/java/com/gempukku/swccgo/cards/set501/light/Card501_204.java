@@ -24,7 +24,6 @@ public class Card501_204 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_26);
         setTestingText("Mapuzo: Safehouse");
-        hideFromDeckBuilder();
     }
     
 }
