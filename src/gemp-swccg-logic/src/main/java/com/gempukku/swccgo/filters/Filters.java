@@ -19076,6 +19076,7 @@ public class Filters {
     public static final Filter Takodana_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Takodana));
     public static final Filter Tala_1 = Filters.title(Title.Tala_1);
     public static final Filter Tala_2 = Filters.title(Title.Tala_2);
+    public static final Filter Tala_Durith = Filters.persona(Persona.TALA_DURITH);
     public static final Filter Tallon_Roll = Filters.title(Title.Tallon_Roll);
     public static final Filter Talz = Filters.species(Species.TALZ);
     public static final Filter Tanbris = Filters.title(Title.Tanbris);
