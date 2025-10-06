@@ -18144,6 +18144,7 @@ public class Filters {
     public static final Filter gangster = Filters.keyword(Keyword.GANGSTER);
     public static final Filter Garrison_Destroyed = Filters.title(Title.Garrison_Destroyed);
     public static final Filter gas_miner = Filters.keyword(Keyword.GAS_MINER);
+    public static final Filter Gather_Allies_And_Train = Filters.title(Title.Gather_Allies_And_Train);
     public static final Filter general = Filters.keyword(Keyword.GENERAL);
     public static final Filter General_Calrissian = Filters.title(Title.General_Calrissian);
     public static final Filter General_Dodonna = Filters.title(Title.General_Dodonna);
