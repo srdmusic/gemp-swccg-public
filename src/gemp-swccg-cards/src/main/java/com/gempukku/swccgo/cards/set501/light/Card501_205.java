@@ -24,7 +24,6 @@ public class Card501_205 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 0);
         addIcons(Icon.UNDERGROUND, Icon.INTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_26);
         setTestingText("Mapuzo: Underground Corridor");
-        hideFromDeckBuilder();
     }
     
 }
