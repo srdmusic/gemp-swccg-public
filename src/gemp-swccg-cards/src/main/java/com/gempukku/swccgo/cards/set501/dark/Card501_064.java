@@ -12,10 +12,15 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.SubstituteDestinyEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.GuiUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -69,6 +74,28 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
                 );
                 return Collections.singletonList(action);
             }
+        }
+        return null;
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
+        // Check condition(s)
+        if (TriggerConditions.isAboutToDrawBattleDestiny(game, effectResult, playerId)
+                && GameConditions.canSubstituteDestiny(game)
+                && GameConditions.isDuringBattleAt(game, Filters.site)
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.Darth_Tyranus)) {
+            
+            PhysicalCard tyranus = Filters.findFirstActive(game, self, Filters.Darth_Tyranus);
+            final float abilityNumber = tyranus.getBlueprint().getAbility();
+            // Perform result(s)
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Substitute destiny");
+            action.setActionMsg("Substitute " + GameUtils.getCardLink(tyranus) + "'s ability number of " + GuiUtils.formatAsString(abilityNumber) + " for battle destiny");
+            action.appendEffect(
+                    new SubstituteDestinyEffect(action, abilityNumber)
+            );
+            return Collections.singletonList(action);
         }
         return null;
     }

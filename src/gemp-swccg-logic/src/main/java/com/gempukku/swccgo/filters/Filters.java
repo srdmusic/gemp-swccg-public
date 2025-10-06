@@ -17878,6 +17878,7 @@ public class Filters {
     public static final Filter Dark_Waters = Filters.title(Title.Dark_Waters);
     public static final Filter Darklighter_Spin = Filters.title(Title.Darklighter_Spin);
     public static final Filter Darksaber = Filters.title(Title.Darksaber);
+    public static final Filter Darth_Tyranus = Filters.title(Title.Darth_Tyranus);
     public static final Filter Dash = Filters.persona(Persona.DASH);
     public static final Filter Dathcha = Filters.title(Title.Dathcha);
     public static final Filter DataVault = Filters.title(Title.DataVault);
