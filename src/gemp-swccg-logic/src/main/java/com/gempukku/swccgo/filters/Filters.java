@@ -19215,6 +19215,7 @@ public class Filters {
     public static final Filter Under_Attack = Filters.title(Title.Under_Attack);
     public static final Filter under_nighttime_conditions = Filters.or(Filters.and(CardType.LOCATION, Keyword.NIGHTTIME_CONDITIONS), Filters.at(Filters.keyword(Keyword.NIGHTTIME_CONDITIONS)));
     public static final Filter Undercover = Filters.title(Title.Undercover);
+    public static final Filter Underground_Corridor = Filters.title(Title.Underground_Corridor);
     public static final Filter underground_site = Filters.and(Icon.UNDERGROUND, CardSubtype.SITE);
     public static final Filter underwater_site = Filters.and(Icon.UNDERWATER, CardSubtype.SITE);
     public static final Filter Underworld_Contacts = Filters.title(Title.Underworld_Contacts);
