@@ -14,6 +14,7 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -44,11 +45,13 @@ public class Card501_205 extends AbstractSite {
     protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
+        Filter JediSurvivorHere = Filters.and(Filters.Jedi_Survivor, Filters.here(self));
+
         // Check condition(s)
         if (GameConditions.isDuringYourPhase(game, playerOnLightSideOfLocation, Phase.MOVE)
-                && GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, Filters.Jedi_Survivor, self, Filters.Jabiim_site, false)) {
+                && GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, JediSurvivorHere, self, Filters.Jabiim_site, false)) {
 
-            MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnLightSideOfLocation, game, self, gameTextSourceCardId, Filters.Jedi_Survivor, self, Filters.Jabiim_site, false);
+            MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnLightSideOfLocation, game, self, gameTextSourceCardId, JediSurvivorHere, self, Filters.Jabiim_site, false);
             action.setText("Move Jedi Survivor here to a Jabiim site");
             actions.add(action);
         }
