@@ -45,13 +45,13 @@ public class Card501_205 extends AbstractSite {
     protected List<TopLevelGameTextAction> getGameTextLightSideTopLevelActions(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        Filter JediSurvivorHere = Filters.and(Filters.Jedi_Survivor, Filters.here(self));
+        Filter jediSurvivorHere = Filters.and(Filters.Jedi_Survivor, Filters.here(self));
 
         // Check condition(s)
         if (GameConditions.isDuringYourPhase(game, playerOnLightSideOfLocation, Phase.MOVE)
-                && GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, JediSurvivorHere, self, Filters.Jabiim_site, false)) {
+                && GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, jediSurvivorHere, self, Filters.Jabiim_site, false)) {
 
-            MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnLightSideOfLocation, game, self, gameTextSourceCardId, JediSurvivorHere, self, Filters.Jabiim_site, false);
+            MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnLightSideOfLocation, game, self, gameTextSourceCardId, jediSurvivorHere, self, Filters.Jabiim_site, false);
             action.setText("Move Jedi Survivor here to a Jabiim site");
             actions.add(action);
         }
