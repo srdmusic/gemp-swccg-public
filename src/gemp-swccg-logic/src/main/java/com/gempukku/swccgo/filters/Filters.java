@@ -18647,6 +18647,7 @@ public class Filters {
     public static final Filter Objective = Filters.type(CardType.OBJECTIVE);
     public static final Filter Obsidian_10 = Filters.title(Title.Obsidian_10);
     public static final Filter Ochi = Filters.persona(Persona.OCHI);
+    public static final Filter Odin_Nesloor = Filters.title(Title.Odin_Nesloor);
     public static final Filter Off_The_Edge = Filters.title(Title.Off_The_Edge);
     public static final Filter Old_Allies = Filters.title(Title.Old_Allies);
     public static final Filter Old_Ben = Filters.title(Title.Old_Ben);

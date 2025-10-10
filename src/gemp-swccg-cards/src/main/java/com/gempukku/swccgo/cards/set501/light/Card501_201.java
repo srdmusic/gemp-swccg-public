@@ -19,6 +19,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -90,6 +91,7 @@ public class Card501_201 extends AbstractObjective {
         modifiers.add(new ResetDeployCostModifier(self, Filters.Jedi_Survivor, 2));
         modifiers.add(new ResetPowerModifier(self, Filters.Jedi_Survivor, 3));
         modifiers.add(new MayNotDeployToLocationModifier(self, Filters.Jedi_Survivor, Filters.not(Filters.Mining_Village)));
+        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.Jedi, Filters.or(Filters.Nabrun_Leids, Filters.Odin_Nesloor)));
         return modifiers;
     }
 
