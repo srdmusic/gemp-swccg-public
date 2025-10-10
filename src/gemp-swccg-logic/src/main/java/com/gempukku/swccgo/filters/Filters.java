@@ -18529,6 +18529,7 @@ public class Filters {
     public static final Filter Mandalorian_Covert = Filters.title(Title.Mandalorian_Covert);
     public static final Filter Maneuvering_Flaps = Filters.title(Title.Maneuvering_Flaps);
     public static final Filter Mantellian_Savrip = Filters.title(Title.Mantellian_Savrip);
+    public static final Filter Mapuzo_site = Filters.and(Filters.partOfSystem(Title.Mapuzo), CardSubtype.SITE);
     public static final Filter Mara_Jade = Filters.persona(Persona.MARA_JADE);
     public static final Filter marker_site = Filters.or(Keyword.MARKER_1, Keyword.MARKER_2, Keyword.MARKER_3, Keyword.MARKER_4, Keyword.MARKER_5, Keyword.MARKER_6, Keyword.MARKER_7);
     public static final Filter Marketplace = Filters.title(Title.Marketplace);
