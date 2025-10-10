@@ -130,7 +130,7 @@ public class Card501_201 extends AbstractObjective {
         return actions;
     }
 
-@Override
+    @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         String playerId = self.getOwner();
 
