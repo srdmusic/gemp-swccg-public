@@ -18227,6 +18227,7 @@ public class Filters {
     public static final Filter hit_character = Filters.and(CardCategory.CHARACTER, Filters.hit());
     public static final Filter Hit_Racer = Filters.title(Title.Hit_Racer);
     public static final Filter Hobbie = Filters.title(Title.Hobbie);
+    public static final Filter holocron = Filters.and(Filters.device, Filters.titleContains("holocron"));
     public static final Filter hologram = Filters.keyword(Keyword.HOLOGRAM);
     public static final Filter holosite = Filters.keyword(Keyword.HOLOSITE);
     public static final Filter Holotheatre = Filters.title(Title.Holotheatre);
@@ -18362,6 +18363,7 @@ public class Filters {
     public static final Filter Jabbas_Sail_Barge = Filters.persona(Persona.JABBAS_SAIL_BARGE);
     public static final Filter Jabbas_Space_Cruiser = Filters.title(Title.Jabbas_Space_Cruiser);
     public static final Filter Jabbas_Trophies = Filters.title(Title.Jabbas_Trophies);
+    public static final Filter Jabiim_location = Filters.partOfSystem(Title.Jabiim);
     public static final Filter Jabiim_site = Filters.and(Filters.partOfSystem(Title.Jabiim), CardSubtype.SITE);
     public static final Filter Jakku_battleground = Filters.and(Filters.partOfSystem(Title.Jakku), Filters.battleground());
     public static final Filter Jakku_battleground_site = Filters.and(Filters.partOfSystem(Title.Jakku), CardSubtype.SITE, Filters.battleground());
@@ -18418,6 +18420,7 @@ public class Filters {
     public static final Filter Kallus = Filters.persona(Persona.KALLUS);
     public static final Filter Kamino_location = Filters.partOfSystem(Title.Kamino);
     public static final Filter Kamino_site = Filters.and(Filters.partOfSystem(Title.Kamino), CardSubtype.SITE);
+    public static final Filter Kamino_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Kamino));
     public static final Filter Kanan = Filters.persona(Persona.KANAN);
     public static final Filter Karie_Neth = Filters.title(Title.Karie_Neth);
     public static final Filter Kashyyyk_location = Filters.partOfSystem(Title.Kashyyyk);

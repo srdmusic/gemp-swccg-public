@@ -4,8 +4,11 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -14,6 +17,7 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -28,7 +32,7 @@ public class Card501_201 extends AbstractObjective {
     public Card501_201() {
         super(Side.LIGHT, 0, Title.The_Hidden_Path, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations or Jedi (except Jedi Survivors). Once per turn, may [download] a holocron, Jabiim location, or non-[Reflections III] battleground (except Kamino). While this side up, Jedi Survivors are deploy = 2, power = 3, and deploy only to Mining Village. Nabrun Leids and Odin Nesloor may not 'transport' Jedi. Your Force drains at Mapuzo sites are -1. Flip this card if Jedi occupy two non-Mapuzo locations.");
+        setGameText("Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations or Jedi (except Jedi Survivors). Once per turn, may [download] a holocron, Jabiim location, or non-[Reflections III] battleground (except Kamino system). While this side up, Jedi Survivors are deploy = 2, power = 3, and deploy only to Mining Village. Nabrun Leids and Odin Nesloor may not 'transport' Jedi. Your Force drains at Mapuzo sites are -1. Flip this card if Jedi occupy two non-Mapuzo locations.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("The Hidden Path");
     }
@@ -78,6 +82,33 @@ public class Card501_201 extends AbstractObjective {
         // For remainder of game
         modifiers.add(new MayNotDeployModifier(self, Filters.or(genericLocations, jediExceptJediSurvivors), playerId));
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.THE_HIDDEN_PATH__DOWNLOAD_CARD;
+
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+            
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+
+            Filter nonRef3BattlegroundExceptKaminoSystem = Filters.and(Filters.not(Icon.REFLECTIONS_III), Filters.battleground, Filters.not(Filters.Kamino_system));
+
+            action.setText("Deploy card from Reserve Deck");
+            action.setActionMsg("Deploy a holocron, Jabiim location, or non-[Reflections III] battleground (except Kamino system) from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.holocron, Filters.Jabiim_location, nonRef3BattlegroundExceptKaminoSystem), true));
+            actions.add(action);
+        }
+
+        return actions;
     }
 
 }
