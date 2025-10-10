@@ -1,11 +1,16 @@
 package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
+import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 
 /**
  * Set: Playtesting
@@ -21,6 +26,40 @@ public class Card501_201 extends AbstractObjective {
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("The Hidden Path");
         hideFromDeckBuilder();
+    }
+
+@Override
+    protected ObjectiveDeployedTriggerAction getGameTextWhenDeployedAction(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        ObjectiveDeployedTriggerAction action = new ObjectiveDeployedTriggerAction(self);
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.Mining_Village, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Mining Village to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.Safehouse, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Safehouse to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.Underground_Corridor, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Underground Corridor to deploy";
+                    }
+                });
+        action.appendRequiredEffect(
+                new DeployCardFromReserveDeckEffect(action, Filters.Fallen_Order, true, false) {
+                    @Override
+                    public String getChoiceText() {
+                        return "Choose Fallen Order to deploy";
+                    }
+                });
+        return action;
     }
 
 }

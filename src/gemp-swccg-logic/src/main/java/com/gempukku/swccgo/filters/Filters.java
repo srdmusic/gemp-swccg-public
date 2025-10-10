@@ -18083,6 +18083,7 @@ public class Filters {
     public static final Filter Fambaa = Filters.keyword(Keyword.FAMBAA);
     public static final Filter Falcon = Filters.persona(Persona.FALCON);
     public static final Filter Falleens_Fist = Filters.title(Title.Falleens_Fist);
+    public static final Filter Fallen_Order = Filters.title(Title.Fallen_Order);
     public static final Filter Fallen_Portal = Filters.title(Title.Fallen_Portal);
     public static final Filter farm = Filters.keyword(Keyword.FARM);
     public static final Filter Fear_Will_Keep_Them_In_Line = Filters.title(Title.Fear_Will_Keep_Them_In_Line);
@@ -18557,6 +18558,7 @@ public class Filters {
     public static final Filter miner = Filters.or(Filters.keyword(Keyword.MINER), Filters.keyword(Keyword.GAS_MINER));
     public static final Filter Mind_What_You_Have_Learned = Filters.title(Title.Mind_What_You_Have_Learned);
     public static final Filter mining_droid = Filters.modelType(ModelType.MINING);
+    public static final Filter Mining_Village = Filters.title(Title.Mining_Village);
     public static final Filter Mirax = Filters.title(Title.Mirax);
     public static final Filter missile = Filters.keyword(Keyword.MISSILE);
     public static final Filter Mistryl = Filters.keyword(Keyword.MISTRYL);
@@ -18881,6 +18883,7 @@ public class Filters {
     public static final Filter Sabine = Filters.persona(Persona.SABINE);
     public static final Filter Sabotage = Filters.title(Title.Sabotage);
     public static final Filter Sache = Filters.persona(Persona.SACHE);
+    public static final Filter Safehouse = Filters.title(Title.Safehouse);
     public static final Filter Saitorr_Kal_Fas = Filters.title(Title.Saitorr_Kal_Fas);
     public static final Filter Salm = Filters.title(Title.Salm);
     public static final Filter sandcrawler = Filters.keyword(Keyword.SANDCRAWLER);
