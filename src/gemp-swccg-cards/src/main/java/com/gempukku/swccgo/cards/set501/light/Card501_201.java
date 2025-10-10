@@ -20,7 +20,11 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ResetDeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.ResetPowerModifier;
+
 
 /**
  * Set: Playtesting
@@ -81,6 +85,11 @@ public class Card501_201 extends AbstractObjective {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         // For remainder of game
         modifiers.add(new MayNotDeployModifier(self, Filters.or(genericLocations, jediExceptJediSurvivors), playerId));
+
+        // While this side up
+        modifiers.add(new ResetDeployCostModifier(self, Filters.Jedi_Survivor, 2));
+        modifiers.add(new ResetPowerModifier(self, Filters.Jedi_Survivor, 3));
+        modifiers.add(new MayNotDeployToLocationModifier(self, Filters.Jedi_Survivor, Filters.not(Filters.Mining_Village)));
         return modifiers;
     }
 
