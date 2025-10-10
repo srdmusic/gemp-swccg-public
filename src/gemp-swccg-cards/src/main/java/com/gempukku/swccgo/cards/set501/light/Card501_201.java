@@ -1,5 +1,8 @@
 package com.gempukku.swccgo.cards.set501.light;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -7,10 +10,13 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 /**
  * Set: Playtesting
@@ -59,6 +65,19 @@ public class Card501_201 extends AbstractObjective {
                     }
                 });
         return action;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        String playerId = self.getOwner();
+
+        Filter genericLocations = Filters.and(Filters.generic, Filters.location);
+        Filter jediExceptJediSurvivors = Filters.and(Filters.Jedi, Filters.not(Filters.Jedi_Survivor));
+
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        // For remainder of game
+        modifiers.add(new MayNotDeployModifier(self, Filters.or(genericLocations, jediExceptJediSurvivors), playerId));
+        return modifiers;
     }
 
 }
