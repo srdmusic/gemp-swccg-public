@@ -1,11 +1,19 @@
 package com.gempukku.swccgo.cards.set501.light;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.modifiers.ForceDrainModifiersMayNotBeCanceledModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 /**
  * Set: Playtesting
@@ -16,10 +24,18 @@ import com.gempukku.swccgo.common.Title;
 public class Card501_201_BACK extends AbstractObjective {
     public Card501_201_BACK() {
         super(Side.LIGHT, 7, Title.Gather_Allies_And_Train, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, at the end of your turn, opponent loses 1 Force. When you initiate battle with a Jedi, you may retrieve 1 Force. Opponent's total battle destiny where they have a character of ability > 4 is -1 (-2 if an Inquisitor there). Force drain bonuses from your lightsabers may not be canceled. If your holocron is about to leave table, place it in Used Pile. During your move phase, may relocate a Jedi between a Jabiim site and a battleground site as a regular move. Flip this card if Jedi do not occupy two locations.");
+        setGameText("While this side up, Force drain bonuses from your lightsabers may not be canceled. Opponent's total battle destiny where they have a character of ability > 4 is -1 (-2 if an Inquisitor there). If your holocron is about to leave table, place it in Used Pile. When you initiate battle with a Jedi, you may retrieve 1 Force. During your move phase, may relocate a Jedi between a Jabiim site and a battleground site as a regular move. At the end of your turn, opponent loses 1 Force. Flip this card if Jedi do not occupy two locations.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("Gather Allies And Train");
-        hideFromDeckBuilder();
     }
-    
+
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+
+        String playerId = self.getOwner();
+        
+        modifiers.add(new ForceDrainModifiersMayNotBeCanceledModifier(self, Filters.and(Filters.your(playerId), Filters.lightsaber)));
+        return modifiers;
+    }    
 }
