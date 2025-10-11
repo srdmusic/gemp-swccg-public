@@ -36,7 +36,7 @@ import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 public class Card501_202 extends AbstractEpicEventDeployable {
     public Card501_202() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Fallen_Order, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("If The Hidden Path on table, deploy on table and stack three Jedi Survivors from Reserve Deck here. During your deploy phase, may deploy a Jedi survivor from here as if from hand. If your Jedi survivor was just lost, may stack it here. The Light Will Fade: While The Hidden Path on table, your Jedi Survivors may not be targeted by weapons and their game text is canceled. But It Is Never Forgotten: During your draw phase, if Gather Allies And Train on table and no Jedi Survivors are stacked here, may retrieve 1 Force.");
+        setGameText("If The Hidden Path on table, deploy on table. When deployed, stack three Jedi survivors from Reserve Deck here. Once during your deploy phase, may deploy a Jedi survivor from here as if from hand. The Light Will Fade: While The Hidden Path on table, your Jedi survivors may not be targeted by weapons and their game text is canceled. But It Is Never Forgotten: If your Jedi survivor was just lost, may stack it here. (Immune to Cold Feet.)");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("Fallen Order");
     }
