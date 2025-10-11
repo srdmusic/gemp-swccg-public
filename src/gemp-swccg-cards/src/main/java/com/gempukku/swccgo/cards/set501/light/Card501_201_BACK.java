@@ -25,6 +25,7 @@ import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
@@ -97,6 +98,18 @@ public class Card501_201_BACK extends AbstractObjective {
                     });
             actions.add(action);
         }
+
+        // Check condition(s)
+        if (TriggerConditions.isEndOfYourTurn(game, effectResult, playerId)) {
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+
+            // Perform result(s)
+            action.setText("Make opponent lose 1 Force");
+            action.appendEffect(
+                    new LoseForceEffect(action, game.getOpponent(playerId), 1));
+            actions.add(action);
+        }
+
         return actions;
     }
 
