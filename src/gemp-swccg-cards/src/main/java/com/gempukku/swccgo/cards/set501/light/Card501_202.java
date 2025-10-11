@@ -19,6 +19,8 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.choose.StackCardsFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.MayDeployAsIfFromHandModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
@@ -60,4 +62,10 @@ public class Card501_202 extends AbstractEpicEventDeployable {
         return actions;
     }
 
+    @Override
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new MayDeployAsIfFromHandModifier(self, Filters.and(Filters.Jedi_Survivor, Filters.stackedOn(self))));
+        return modifiers;
+    }
 }
