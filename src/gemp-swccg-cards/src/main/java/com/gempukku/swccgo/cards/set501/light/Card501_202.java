@@ -16,12 +16,16 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.effects.choose.StackCardsFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.MayDeployAsIfFromHandModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 
 /**
  * Set: Playtesting
@@ -32,7 +36,7 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 public class Card501_202 extends AbstractEpicEventDeployable {
     public Card501_202() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Fallen_Order, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("If The Hidden Path on table, deploy on table and stack three Jedi Survivors from Reserve Deck here. During your deploy phase, may deploy a Jedi survivor from here as if from hand. If your Jedi Survivor is about to be lost from table, stack it here. The Light Will Fade: While The Hidden Path on table, your Jedi Survivors may not be targeted by weapons and their game text is canceled. But It Is Never Forgotten: During your draw phase, if Gather Allies And Train on table and no Jedi Survivors are stacked here, may retrieve 1 Force.");
+        setGameText("If The Hidden Path on table, deploy on table and stack three Jedi Survivors from Reserve Deck here. During your deploy phase, may deploy a Jedi survivor from here as if from hand. If your Jedi survivor was just lost, may stack it here. The Light Will Fade: While The Hidden Path on table, your Jedi Survivors may not be targeted by weapons and their game text is canceled. But It Is Never Forgotten: During your draw phase, if Gather Allies And Train on table and no Jedi Survivors are stacked here, may retrieve 1 Force.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("Fallen Order");
     }
@@ -67,5 +71,26 @@ public class Card501_202 extends AbstractEpicEventDeployable {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayDeployAsIfFromHandModifier(self, Filters.and(Filters.Jedi_Survivor, Filters.stackedOn(self))));
         return modifiers;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
+
+        // Check condition(s)
+        if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.your(self), Filters.Jedi_Survivor))){
+            
+            PhysicalCard cardLost = ((LostFromTableResult) effectResult).getCard();
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Stack " + GameUtils.getFullName(cardLost) + " here");
+            action.setActionMsg("Stack " + GameUtils.getFullName(cardLost) + " on " + GameUtils.getCardLink(self));
+
+            // Perform result(s)
+            action.appendEffect(
+                    new StackOneCardFromLostPileEffect(action, cardLost, self, false, false, true));
+            actions.add(action);
+        }
+
+        return actions;
     }
 }
