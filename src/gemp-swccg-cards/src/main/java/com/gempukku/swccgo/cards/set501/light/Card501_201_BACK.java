@@ -7,6 +7,7 @@ import java.util.List;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -33,7 +34,9 @@ import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifiersMayNotBeCanceledModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -57,16 +60,20 @@ public class Card501_201_BACK extends AbstractObjective {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
-        
-        modifiers.add(new ForceDrainModifiersMayNotBeCanceledModifier(self, Filters.and(Filters.your(playerId), Filters.lightsaber)));
 
+        Filter genericLocations = Filters.and(Filters.generic, Filters.location);
+        Filter jediExceptJediSurvivors = Filters.and(Filters.Jedi, Filters.not(Filters.Jedi_Survivor));
         Filter opponentsHighAbilityCharacter = Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4));
         Filter opponentsHighAbilityInquisitor = Filters.and(opponentsHighAbilityCharacter, Filters.inquisitor);
 
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        // For remainder of game
+        modifiers.add(new MayNotDeployModifier(self, Filters.or(genericLocations, jediExceptJediSurvivors), playerId));
+
+        // While this side up
+        modifiers.add(new ForceDrainModifiersMayNotBeCanceledModifier(self, Filters.and(Filters.your(playerId), Filters.lightsaber)));
         modifiers.add(new TotalBattleDestinyModifier(self, 
                 new InBattleCondition(self, opponentsHighAbilityCharacter),
                 new ConditionEvaluator(-1, -2, new InBattleCondition(self, opponentsHighAbilityInquisitor)),
@@ -153,6 +160,26 @@ public class Card501_201_BACK extends AbstractObjective {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
+        GameTextActionId gameTextActionId = GameTextActionId.THE_HIDDEN_PATH__DOWNLOAD_CARD;
+
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+            
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+
+            Filter nonRef3BattlegroundExceptKaminoSystem = Filters.and(Filters.not(Icon.REFLECTIONS_III), Filters.battleground, Filters.not(Filters.Kamino_system));
+
+            action.setText("Deploy card from Reserve Deck");
+            action.setActionMsg("Deploy a holocron, Jabiim location, or non-[Reflections III] battleground (except Kamino system) from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.holocron, Filters.Jabiim_location, nonRef3BattlegroundExceptKaminoSystem), true));
+            actions.add(action);
+        }
+
         // A Jedi who can relocate from a battleground site to a Jabiim site
         Filter jediValidFromBattleground = Filters.and(Filters.Jedi, Filters.presentAt(Filters.battleground_site), Filters.canBeRelocatedToLocation(Filters.Jabiim_site, true, 0), Filters.hasNotPerformedRegularMove);
         // A Jedi who can relocate from a Jabiim site to a battleground site
@@ -160,7 +187,7 @@ public class Card501_201_BACK extends AbstractObjective {
 
         Filter jediValidToRelocate = Filters.or(jediValidFromBattleground, jediValidFromJabiim);
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
         if (GameConditions.canSpot(game, self, jediValidToRelocate)
