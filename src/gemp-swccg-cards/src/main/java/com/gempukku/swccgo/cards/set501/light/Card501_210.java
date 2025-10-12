@@ -20,7 +20,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardsToTargetFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardsToTargetFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
@@ -77,7 +77,7 @@ public class Card501_210 extends AbstractJediMasterRepublic {
                     new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardsToTargetFromReserveDeckEffect(action, Filters.lightsaber, 1, 2, Filters.Beq, false) {
+                    new DeployCardsToTargetFromLostPileEffect(action, Filters.lightsaber, 1, 2, Filters.Beq, false) {
                         @Override
                         public String getChoiceText(int numCardsToChoose) {
                             return "Choose lightsaber(s) to deploy on Beq";
