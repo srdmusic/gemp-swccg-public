@@ -88,7 +88,7 @@ public class Card501_201_BACK extends AbstractObjective {
         String playerId = self.getOwner();
 
         // Check condition(s)
-        if (TriggerConditions.isAboutToLeaveTable(game, effectResult, Filters.and(Filters.your(playerId), Filters.holocron))) {
+        if (TriggerConditions.isAboutToLeaveTableExceptFromSourceCard(game, effectResult, Filters.and(Filters.your(playerId), Filters.holocron), self)) {
             final AboutToLeaveTableResult result = (AboutToLeaveTableResult) effectResult;
             final PhysicalCard cardToLeaveTable = result.getCardAboutToLeaveTable();
 
