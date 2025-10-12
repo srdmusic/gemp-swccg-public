@@ -104,7 +104,7 @@ public class Card501_201_BACK extends AbstractObjective {
                         }
                     });
             action.appendEffect(
-                    new PlaceCardInUsedPileFromTableEffect(action, result.getCardAboutToLeaveTable()));
+                    new PlaceCardInUsedPileFromTableEffect(action, cardToLeaveTable));
             actions.add(action);
         }
 
