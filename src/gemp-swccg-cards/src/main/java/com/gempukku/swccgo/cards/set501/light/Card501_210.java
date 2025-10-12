@@ -10,9 +10,12 @@ import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.MayDeployToTargetModifier;
+import com.gempukku.swccgo.logic.modifiers.MayUseWeaponModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 /**
@@ -37,6 +40,8 @@ public class Card501_210 extends AbstractJediMasterRepublic {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
+        modifiers.add(new MayDeployToTargetModifier(self, Filters.lightsaber, self));
+        modifiers.add(new MayUseWeaponModifier(self, Filters.lightsaber));
         return modifiers;
     }
 }
