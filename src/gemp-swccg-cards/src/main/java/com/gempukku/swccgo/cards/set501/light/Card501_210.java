@@ -67,7 +67,7 @@ public class Card501_210 extends AbstractJediMasterRepublic {
 
         GameTextActionId gameTextActionId = GameTextActionId.KELLERAN_BEQ__DEPLOY_LIGHTSABERS;
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
+                && GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy lightsaber(s) from Lost Pile");
