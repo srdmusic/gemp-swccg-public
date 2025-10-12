@@ -24,6 +24,7 @@ import com.gempukku.swccgo.logic.effects.choose.DeployCardsToTargetFromReserveDe
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.MayDeployToTargetModifier;
 import com.gempukku.swccgo.logic.modifiers.MayUseWeaponModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -56,6 +57,7 @@ public class Card501_210 extends AbstractJediMasterRepublic {
         modifiers.add(new DefenseValueModifier(self, Filters.and(Filters.your(self), Filters.other(self), Filters.character, Filters.here(self)),
                 new OnTableEvaluator(self, Filters.and(Filters.lightsaber, Filters.attachedTo(self)))));
         modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.or(Filters.Grogu, Filters.padawan)), 1));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, 6));
         return modifiers;
     }
 
