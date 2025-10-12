@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractJediMasterRepublic;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.WithCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.cards.evaluators.OnTableEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -20,6 +21,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsToTargetFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
 import com.gempukku.swccgo.logic.modifiers.MayDeployToTargetModifier;
@@ -53,6 +55,7 @@ public class Card501_210 extends AbstractJediMasterRepublic {
         modifiers.add(new MayUseWeaponModifier(self, Filters.lightsaber));
         modifiers.add(new DefenseValueModifier(self, Filters.and(Filters.your(self), Filters.other(self), Filters.character, Filters.here(self)),
                 new OnTableEvaluator(self, Filters.and(Filters.lightsaber, Filters.attachedTo(self)))));
+        modifiers.add(new AddsBattleDestinyModifier(self, new WithCondition(self, Filters.or(Filters.Grogu, Filters.padawan)), 1));
         return modifiers;
     }
 
