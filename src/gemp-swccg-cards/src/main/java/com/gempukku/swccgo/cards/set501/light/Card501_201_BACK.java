@@ -101,10 +101,10 @@ public class Card501_201_BACK extends AbstractObjective {
                         @Override
                         protected void doPlayEffect(SwccgGame game) {
                             result.getPreventableCardEffect().preventEffectOnCard(cardToLeaveTable);
-                            action.appendEffect(
-                                    new PlaceCardInUsedPileFromTableEffect(action, result.getCardAboutToLeaveTable()));
                         }
                     });
+            action.appendEffect(
+                    new PlaceCardInUsedPileFromTableEffect(action, result.getCardAboutToLeaveTable()));
             actions.add(action);
         }
 
