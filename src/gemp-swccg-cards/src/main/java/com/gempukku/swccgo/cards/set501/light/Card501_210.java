@@ -19,12 +19,11 @@ public class Card501_210 extends AbstractJediMasterRepublic {
     public Card501_210() {
         super(Side.LIGHT, 1, 8, 6, 7, 8, "Kelleran Beq", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Jedi survivor.");
-        setGameText("[Pilot] 2. Adds one battle destiny with Panaka or your Royal Naboo Security. Your Padawans and Royal Naboo Security at same and related sites are defense value +1 and immune to attrition < 5. Once per game, may [download] Grogu. Immune to attrition < 6.");
+        setGameText("[Pilot] 2. Any lightsaber may deploy on Beq. Once per game, may deploy up to two lightsabers on Beq from Lost Pile. Your other characters here are defense value +1 for each lightsaber on Beq. Adds one battle destiny with Grogu or a Padawan. Immune to attrition < 6.");
         addKeyword(Keyword.JEDI_SURVIVOR);
         addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.VIRTUAL_SET_26);
         addIcon(Icon.WARRIOR, 2);
         setTestingText("Kelleran Beq");
-        hideFromDeckBuilder();
     }
     
 }
