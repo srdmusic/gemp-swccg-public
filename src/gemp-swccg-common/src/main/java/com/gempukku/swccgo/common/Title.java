@@ -825,6 +825,7 @@ public interface Title {
     String Old_Ben = "Old Ben";
     String Ominous_Rumors = "Ominous Rumors";
     String Ommni_Box = "Ommni Box";
+    String Ommni_Box_Its_Worse = "Ommni Box & It's Worse";
     String On_Target = "On Target";
     String On_The_Verge_Of_Greatness = "On The Verge Of Greatness";
     String One_In_A_Million = "One In A Million";
