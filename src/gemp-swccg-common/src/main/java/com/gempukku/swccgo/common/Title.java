@@ -557,6 +557,7 @@ public interface Title {
     String I_Will_Make_It_Legal = "I Will Make It Legal";
     String Im_Here_To_Rescue_You = "I'm Here To Rescue You";
     String Im_On_The_Leader = "I'm On The Leader";
+    String Im_Sorry = "I'm Sorry";
     String Im_With_You_Too = "I'm With You Too";
     String Imperial_Arrest_Order = "Imperial Arrest Order";
     String Imperial_Artillery = "Imperial Artillery";
