@@ -24,7 +24,6 @@ public class Card501_068 extends AbstractAlienImperial {
         addIcons(Icon.VIRTUAL_SET_26);
         addKeywords(Keyword.SPY);
         setSpecies(Species.KUBAZ);
-        setVirtualSuffix(true);
         setTestingText("Garindan, Imperial Spy");
         hideFromDeckBuilder();
     }
