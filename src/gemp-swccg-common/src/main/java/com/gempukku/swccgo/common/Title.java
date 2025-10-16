@@ -677,6 +677,7 @@ public interface Title {
     String Laser_Gate = "Laser Gate";
     String Lateral_Damage = "Lateral Damage";
     String Launch_Bay = "Star Destroyer: Launch Bay";
+    String Launching_The_Assault = "Launching The Assault";
     String Leave_Them_To_Me = "Leave Them To Me";
     String Leebo = "LE-BO2D9 (Leebo)";
     String Leia_Of_Alderaan = "Leia Of Alderaan";
