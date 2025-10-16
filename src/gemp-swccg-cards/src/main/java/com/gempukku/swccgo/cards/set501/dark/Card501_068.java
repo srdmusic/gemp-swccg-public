@@ -4,6 +4,7 @@ import com.gempukku.swccgo.cards.AbstractAlienImperial;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
@@ -23,6 +24,7 @@ public class Card501_068 extends AbstractAlienImperial {
         setGameText("May deploy as a 'react.' Imperials move to here for free using landspeed. Unless Garindan 'hit,' may place him in Used Pile to cancel a just drawn weapon destiny targeting another character here (or to make an Undercover spy here lost).");
         addIcons(Icon.VIRTUAL_SET_26);
         addKeywords(Keyword.SPY);
+        addPersona(Persona.GARINDAN);
         setSpecies(Species.KUBAZ);
         setTestingText("Garindan, Imperial Spy");
         hideFromDeckBuilder();
