@@ -1,14 +1,35 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractAlienImperial;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.SpotOverride;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
+import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.modifiers.MayDeployAsReactModifier;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationUsingLandspeedModifier;
+import com.gempukku.swccgo.logic.timing.Action;
 
 /**
  * Set: Playtesting
@@ -29,5 +50,58 @@ public class Card501_068 extends AbstractAlienImperial {
         setTestingText("Garindan, Imperial Spy");
         hideFromDeckBuilder();
     }
+
+    @Override
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new MayDeployAsReactModifier(self));
+        modifiers.add(new MovesFreeToLocationUsingLandspeedModifier(self, Filters.Imperial, Filters.here(self)));
+        return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        List<TopLevelGameTextAction> actions = new LinkedList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        Filter targetFilter = Filters.and(Filters.undercover_spy, Filters.here(self));
+        TargetingReason targetReason = TargetingReason.TO_BE_LOST;
+
+        // Check condition(s)
+        if (!GameConditions.isHit(game, self)
+                && GameConditions.canTarget(game, self, SpotOverride.INCLUDE_UNDERCOVER, targetReason, targetFilter)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Make Undercover spy lost");
+            action.setActionMsg("Place Garindan in Used Pile to make an Undercover spy there lost");
+
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose Undercover spy", SpotOverride.INCLUDE_UNDERCOVER, targetReason, targetFilter) {
+                        @Override
+                        protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Pay cost(s)
+                            action.appendCost(
+                                    new PlaceCardInUsedPileFromTableEffect(action, self));
+                            // Allow response(s)
+                            action.allowResponses("Make " + GameUtils.getCardLink(targetedCard) + " lost",
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new LoseCardFromTableEffect(action, targetedCard));
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
+        }
+        return actions;
+    }
+
+
     
 }
