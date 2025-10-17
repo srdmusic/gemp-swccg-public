@@ -53,7 +53,6 @@ public class Card501_068 extends AbstractAlienImperial {
         addPersona(Persona.GARINDAN);
         setSpecies(Species.KUBAZ);
         setTestingText("Garindan, Imperial Spy");
-        hideFromDeckBuilder();
     }
 
     @Override
