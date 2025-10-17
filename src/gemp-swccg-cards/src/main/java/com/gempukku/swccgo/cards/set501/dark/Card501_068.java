@@ -102,6 +102,7 @@ public class Card501_068 extends AbstractAlienImperial {
                         }
                     }
             );
+            actions.add(action);
         }
         return actions;
     }
