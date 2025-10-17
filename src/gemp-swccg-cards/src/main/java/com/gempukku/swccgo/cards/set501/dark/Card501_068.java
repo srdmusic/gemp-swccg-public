@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -21,7 +22,10 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.CancelDestinyEffect;
 import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
@@ -30,6 +34,7 @@ import com.gempukku.swccgo.logic.modifiers.MayDeployAsReactModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationUsingLandspeedModifier;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
@@ -42,7 +47,7 @@ public class Card501_068 extends AbstractAlienImperial {
     public Card501_068() {
         super(Side.DARK, 4, 2, 1, 1, 3, "Garindan, Imperial Spy", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Long-nosed, male Kubaz from Kubindi. Spy. Squealed on Obi-Wan and Luke outside Docking Bay 94. Works for Jabba the Hutt or the highest bidder. Not particularly brave.");
-        setGameText("May deploy as a 'react.' Imperials move to here for free using landspeed. Unless Garindan 'hit,' may place him in Used Pile to cancel a just drawn weapon destiny targeting another character here (or to make an Undercover spy here lost).");
+        setGameText("May deploy as a 'react.' Imperials move to here for free using landspeed. Unless Garindan 'hit,' may place him in Used Pile to cancel a just drawn weapon destiny targeting your other character here (or to make an Undercover spy here lost).");
         addIcons(Icon.VIRTUAL_SET_26);
         addKeywords(Keyword.SPY);
         addPersona(Persona.GARINDAN);
@@ -102,6 +107,25 @@ public class Card501_068 extends AbstractAlienImperial {
         return actions;
     }
 
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if (TriggerConditions.isWeaponDestinyJustDrawnTargeting(game, effectResult, Filters.any, Filters.and(Filters.your(self), Filters.other(self), Filters.character, Filters.here(self)))
+                && !GameConditions.isHit(game, self)
+                && GameConditions.canCancelDestiny(game, playerId)) {
 
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Cancel weapon destiny");
+            action.setActionMsg("Place Garindan in Used Pile to cancel a just drawn weapon destiny");
+            // Pay cost(s)
+            action.appendCost(
+                    new PlaceCardInUsedPileFromTableEffect(action, self));
+            // Perform result(s)
+            action.appendEffect(
+                    new CancelDestinyEffect(action));
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
     
 }
