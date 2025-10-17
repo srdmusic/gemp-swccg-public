@@ -83,7 +83,7 @@ public class Card13_064 extends AbstractLostInterrupt {
         GameTextActionId gameTextActionId;
 
         // Check condition(s)
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2; //upload Deep Hatred
+        gameTextActionId = GameTextActionId.DARK_RAGE__UPLOAD_DEEP_HATRED;
         if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
@@ -127,21 +127,16 @@ public class Card13_064 extends AbstractLostInterrupt {
                                             // This needs to be done in case the target(s) were changed during the responses.
                                             final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
 
-                                            Collection<PhysicalCard> stackedCombatCards;
-                                            PhysicalCard randomCombatCard;
-
                                             if(finalTarget != null) {
-                                                stackedCombatCards = Filters.filter(game.getGameState().getStackedCards(finalTarget), game, Filters.combatCard);
-                                                if(!stackedCombatCards.isEmpty()) {
-                                                    randomCombatCard = GameUtils.getRandomCards(stackedCombatCards, 1).getFirst();
-                                                }
-                                                else randomCombatCard = null;
-                                            }
-                                            else randomCombatCard = null;
+                                                Collection<PhysicalCard> stackedCombatCards = Filters.filter(game.getGameState().getStackedCards(finalTarget), game, Filters.combatCard);
+                                                if (!stackedCombatCards.isEmpty()) {
+                                                    PhysicalCard randomCombatCard = GameUtils.getRandomCards(stackedCombatCards, 1).getFirst();
+                                                    // Perform result(s)
+                                                    action.appendEffect(
+                                                            new PutStackedCardInUsedPileEffect(action, playerId, randomCombatCard, true));
 
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new PutStackedCardInUsedPileEffect(action,playerId,randomCombatCard,true));
+                                                }
+                                            }
                                         }
                                     }
                             );
