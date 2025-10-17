@@ -3858,7 +3858,7 @@ const fixedImages = {
 "501_212":"https://res.starwarsccg.org/cards/DeathStarII-Light/large/launchingtheassault.gif",
 "501_213":"https://res.starwarsccg.org/cards/Virtual14-Light/large/endorchiefchirpashut.gif",
 "501_214":"https://res.starwarsccg.org/cards/EnhancedJabbasPalace-Light/large/seethreepio.gif",
-"501_215":"https://res.starwarsccg.org/cards/ANewHope-Light/large/chewbacca.gif",
+"501_215":"https://res.starwarsccg.org/cards/Virtual10-Light/large/kitfisto.gif",
 
 //legacy
 "601_1":"https://res.starwarsccg.org/cards/legacy/VirtualBlock4-Dark/large/knowledgeanddefense.gif",
