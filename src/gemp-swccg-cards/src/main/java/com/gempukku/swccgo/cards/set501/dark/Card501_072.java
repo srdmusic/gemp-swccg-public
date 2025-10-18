@@ -17,6 +17,7 @@ import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ResetDeployCostToLocationModifier;
 
 /**
  * Set: Playtesting
@@ -42,9 +43,11 @@ public class Card501_072 extends AbstractSystem {
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         Condition vaderAboardExecutor = new OnTableCondition(self, Filters.and(Filters.Vader, Filters.aboard(Filters.Executor)));
         Condition unlessVaderAboardExecutor = new UnlessCondition(vaderAboardExecutor);
+        Condition yourCloudCityObjOnTable = new OnTableCondition(self, Filters.and(Filters.your(playerOnDarkSideOfLocation), Icon.CLOUD_CITY, Filters.Objective));
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotMoveFromLocationModifier(self, Filters.Executor, unlessVaderAboardExecutor, self));
+        modifiers.add(new ResetDeployCostToLocationModifier(self, Filters.Executor, yourCloudCityObjOnTable, 7, Filters.here(self)));
         return modifiers;
     }
     
