@@ -105,8 +105,8 @@ public class Card13_064 extends AbstractLostInterrupt {
 
         // Check condition(s)
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3; //remove combat card from jedi
-        Filter maulFilter = Filters.and(Filters.your(self), Filters.Maul, Filters.not(Filters.hasStacked(1, Filters.combatCard)));
-        Filter jediFilter = Filters.and(Filters.opponents(self), Filters.Jedi, Filters.hasStacked(1, Filters.combatCard));
+        Filter maulFilter = Filters.and(Filters.Maul, Filters.not(Filters.hasStacked(1, Filters.combatCard)));
+        Filter jediFilter = Filters.and(Filters.Jedi, Filters.hasStacked(1, Filters.combatCard));
 
         if(GameConditions.canSpot(game,self,maulFilter) && GameConditions.canTarget(game,self,jediFilter)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
@@ -140,10 +140,10 @@ public class Card13_064 extends AbstractLostInterrupt {
                                         }
                                     }
                             );
-                            actions.add(action);
                         }
                     }
             );
+            actions.add(action);
         }
         return actions;
     }
