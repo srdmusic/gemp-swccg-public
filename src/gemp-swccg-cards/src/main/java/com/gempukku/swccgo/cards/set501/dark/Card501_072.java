@@ -18,14 +18,13 @@ import com.gempukku.swccgo.common.Title;
 public class Card501_072 extends AbstractSystem {
     public Card501_072() {
         super(Side.DARK, Title.Bespin, 6, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("If your [Cloud City] objective on table, Executor is deploy = 7 here (and may not move from here unless Vader aboard).");
+        setLocationDarkSideGameText("Executor may not move from here unless Vader aboard. If your [Cloud City] objective on table, Executor is deploy = 7 here.");
         setLocationLightSideGameText("You lose no more than 2 Force to Cloud City Occupation. Intensify the Forward Batteries is canceled.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.SPECIAL_EDITION, Icon.PLANET, Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
         setTestingText("Bespin (V)");
-        hideFromDeckBuilder();
     }
     
 }
