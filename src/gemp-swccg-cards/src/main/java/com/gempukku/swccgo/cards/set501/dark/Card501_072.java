@@ -15,6 +15,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromCardModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ResetDeployCostToLocationModifier;
@@ -50,5 +51,11 @@ public class Card501_072 extends AbstractSystem {
         modifiers.add(new ResetDeployCostToLocationModifier(self, Filters.Executor, yourCloudCityObjOnTable, 7, Filters.here(self)));
         return modifiers;
     }
-    
+
+    @Override
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<>();
+        modifiers.add(new LimitForceLossFromCardModifier(self, Filters.Cloud_City_Occupation, 2, playerOnLightSideOfLocation));
+        return modifiers;
+    }
 }
