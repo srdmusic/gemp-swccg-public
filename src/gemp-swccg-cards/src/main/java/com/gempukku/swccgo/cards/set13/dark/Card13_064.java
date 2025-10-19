@@ -111,7 +111,7 @@ public class Card13_064 extends AbstractLostInterrupt {
         if(GameConditions.canSpot(game,self,maulFilter) && GameConditions.canTarget(game,self,jediFilter)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setImmuneTo(Title.Sense);
-            action.setText("Target a Jedi");
+            action.setText("Send a Jedi's combat card to Used Pile");
             // Choose target(s)
             action.appendTargeting(
                     new TargetCardOnTableEffect(action, playerId, "Choose a Jedi", jediFilter) {
