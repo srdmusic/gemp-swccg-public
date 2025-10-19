@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -20,6 +22,7 @@ import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
+import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainBonusesMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeCanceledModifier;
@@ -27,6 +30,7 @@ import com.gempukku.swccgo.logic.modifiers.MayNotBeConvertedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.Effect;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
@@ -88,5 +92,28 @@ public class Card501_066_BACK extends AbstractObjective {
             actions.add(action);
         }
         return actions;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+
+        // Check condition(s)
+        if (TriggerConditions.isTableChanged(game, effectResult)
+                && GameConditions.canBeFlipped(game, self)
+                && GameConditions.controls(game, opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Bespin_system)
+                && GameConditions.controls(game, opponent, 3, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.Cloud_City_location, Filters.battleground))) {
+
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setSingletonTrigger(true);
+            action.setText("Flip");
+            action.setActionMsg(null);
+            // Perform result(s)
+            action.appendEffect(
+                    new FlipCardEffect(action, self));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }
