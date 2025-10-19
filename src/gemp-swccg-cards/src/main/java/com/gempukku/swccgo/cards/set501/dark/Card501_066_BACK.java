@@ -1,9 +1,11 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -12,9 +14,13 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeConvertedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.Effect;
 
 /**
  * Set: Playtesting
@@ -38,5 +44,19 @@ public class Card501_066_BACK extends AbstractObjective {
         modifiers.add(new ImmuneToTitleModifier(self, Filters.Dark_Deal, Title.Surreptitious_Glance));
         modifiers.add(new MayNotBeConvertedModifier(self, Filters.and(Filters.your(self), Filters.Bespin_system)));
         return modifiers;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.Its_A_Trap)
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
+
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }
