@@ -20,12 +20,16 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.modifiers.AddCardTypeModifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
@@ -75,6 +79,23 @@ public class Card501_070 extends AbstractAlienImperial {
             // Perform result(s)
             action.appendEffect(
                     new DeployCardToTargetFromReserveDeckEffect(action, Filters.persona(Persona.MARA_JADES_LIGHTSABER), Filters.atSameLocation(self), true));
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
+        // Check condition(s)
+        if (TriggerConditions.wonBattleAt(game, effectResult, playerId, Filters.here(self))) {
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Retrieve card with 'Mara' in game text");
+            action.setActionMsg("Retrieve a card with 'Mara' in game text");
+            // Perform result(s)
+            action.appendEffect(
+                    new RetrieveCardEffect(action, playerId, Filters.gameTextContains("Mara")));
             return Collections.singletonList(action);
         }
         return null;
