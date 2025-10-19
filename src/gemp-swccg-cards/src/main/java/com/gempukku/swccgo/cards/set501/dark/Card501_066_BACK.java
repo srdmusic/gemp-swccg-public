@@ -1,6 +1,5 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -61,6 +60,8 @@ public class Card501_066_BACK extends AbstractObjective {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
+
         // Check condition(s)
         if (TriggerConditions.isPlayingCard(game, effect, Filters.Its_A_Trap)
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
@@ -68,8 +69,19 @@ public class Card501_066_BACK extends AbstractObjective {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             // Build action using common utility
             CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            return Collections.singletonList(action);
+            actions.add(action);
         }
-        return null;
+
+        // Check condition(s)
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Sense, Filters.Alter))
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)
+                && GameConditions.canSpot(game, self, Filters.and(Filters.Vader, Filters.presentAt(Filters.Cloud_City_site)))) {
+
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            actions.add(action);
+        }
+        return actions;
     }
 }
