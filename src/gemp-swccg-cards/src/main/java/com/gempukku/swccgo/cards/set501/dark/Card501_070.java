@@ -1,10 +1,13 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractAlienImperial;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
+import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
@@ -15,6 +18,8 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
@@ -42,5 +47,23 @@ public class Card501_070 extends AbstractAlienImperial {
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeployCostToLocationModifier(self, 2, Filters.non_battleground_location));
         return modifiers;
+    }
+
+    @Override
+    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.MARA_JADE_THE_EMPERORS_HAND_V__DOWNLOAD_LIGHTSABER;
+
+        // Check condition(s)
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.MARA_JADES_LIGHTSABER)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Mara Jade's Lightsaber from Reserve Deck");
+            action.setActionMsg("Deploy Mara Jade's Lightsaber to Mara's location from Reserve Deck");
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardToTargetFromReserveDeckEffect(action, Filters.persona(Persona.MARA_JADES_LIGHTSABER), Filters.atSameLocation(self), true));
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 }
