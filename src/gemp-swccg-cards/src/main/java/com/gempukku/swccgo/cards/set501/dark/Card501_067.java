@@ -24,7 +24,6 @@ public class Card501_067 extends AbstractNormalEffect {
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
         setTestingText("I'm Sorry (V)");
-        hideFromDeckBuilder();
     }
     
 }
