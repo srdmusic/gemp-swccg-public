@@ -48,11 +48,11 @@ public class Card501_061 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        Filter modifierTargets = Filters.or(Filters.Guri, Filters.and(Icon.REFLECTIONS_II, Filters.Emperor));
+        Filter ref2Emperor = Filters.and(Icon.REFLECTIONS_II, Filters.Emperor);
         modifiers.add(new DefenseValueModifier(self, Filters.Black_Sun_agent, 1));
         modifiers.add(new ForfeitModifier(self, Filters.Black_Sun_agent, 1));
-        modifiers.add(new DeployCostModifier(self, modifierTargets, -2));
-        modifiers.add(new MovesForFreeModifier(self, modifierTargets));
+        modifiers.add(new DeployCostModifier(self, ref2Emperor, -1));
+        modifiers.add(new MovesForFreeModifier(self, ref2Emperor));
         return modifiers;
     }
 
