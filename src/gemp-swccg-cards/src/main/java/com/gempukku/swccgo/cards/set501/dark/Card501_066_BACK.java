@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -17,9 +18,11 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
+import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeConvertedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.Effect;
 
 /**
@@ -40,9 +43,17 @@ public class Card501_066_BACK extends AbstractObjective {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
+        String playerId = self.getOwner();
+
         //For remainder of game
         modifiers.add(new ImmuneToTitleModifier(self, Filters.Dark_Deal, Title.Surreptitious_Glance));
         modifiers.add(new MayNotBeConvertedModifier(self, Filters.and(Filters.your(self), Filters.Bespin_system)));
+
+        //While this side up
+        modifiers.add(new TotalBattleDestinyModifier(self,
+                        new InBattleCondition(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial, Filters.participatingInBattle)))),
+                        new ConditionEvaluator(2, 4, new InBattleCondition(self, Filters.and(Filters.your(self), Filters.alien, Filters.Ugnaught))), playerId));
+
         return modifiers;
     }
 
