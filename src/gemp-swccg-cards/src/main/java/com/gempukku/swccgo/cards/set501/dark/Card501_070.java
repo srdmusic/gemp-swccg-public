@@ -6,7 +6,9 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractAlienImperial;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.AloneCondition;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
+import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -23,11 +25,15 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.NotCondition;
+import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.modifiers.AddCardTypeModifier;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -61,8 +67,12 @@ public class Card501_070 extends AbstractAlienImperial {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
         Condition revengeOfTheSithOnTable = new OnTableCondition(self, Filters.Revenge_Of_The_Sith);
+        Condition alone = new AloneCondition(self);
+        Condition noJediHere = new NotCondition(new OnTableCondition(self, Filters.and(Filters.Jedi, Filters.here(self))));
 
         modifiers.add(new AddCardTypeModifier(self, self, revengeOfTheSithOnTable, CardType.SITH));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, new ConditionEvaluator(4, new ConditionEvaluator(5, 6,
+                new AndCondition(alone, noJediHere)), new OrCondition(alone, noJediHere))));
         return modifiers;
     }
 
