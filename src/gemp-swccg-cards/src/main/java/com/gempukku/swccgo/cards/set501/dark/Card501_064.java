@@ -2,6 +2,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -80,8 +81,11 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
 
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, final EffectResult effectResult, final PhysicalCard self) {
+        GameTextActionId gameTextActionId = GameTextActionId.WELCOME_HOME_LORD_TYRANUS__SUBSTITUTE_ABILITY;
+
         // Check condition(s)
-        if (TriggerConditions.isAboutToDrawBattleDestiny(game, effectResult, playerId)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && TriggerConditions.isAboutToDrawBattleDestiny(game, effectResult, playerId)
                 && GameConditions.canSubstituteDestiny(game)
                 && GameConditions.isDuringBattleAt(game, Filters.site)
                 && GameConditions.isDuringBattleWithParticipant(game, Filters.Darth_Tyranus)) {
@@ -89,8 +93,10 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
             PhysicalCard tyranus = Filters.findFirstActive(game, self, Filters.Darth_Tyranus);
             final float abilityNumber = tyranus.getBlueprint().getAbility();
             // Perform result(s)
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
             action.setText("Substitute destiny");
+            action.appendUsage(
+                new OncePerGameEffect(action));
             action.allowResponses("Substitute " + GameUtils.getCardLink(tyranus) + "'s ability number of " + GuiUtils.formatAsString(abilityNumber) + " for battle destiny",
                     new RespondablePlayCardEffect(action) {
                         @Override
