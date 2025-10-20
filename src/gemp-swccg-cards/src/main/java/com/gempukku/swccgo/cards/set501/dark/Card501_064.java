@@ -89,11 +89,17 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
             PhysicalCard tyranus = Filters.findFirstActive(game, self, Filters.Darth_Tyranus);
             final float abilityNumber = tyranus.getBlueprint().getAbility();
             // Perform result(s)
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setText("Substitute destiny");
-            action.setActionMsg("Substitute " + GameUtils.getCardLink(tyranus) + "'s ability number of " + GuiUtils.formatAsString(abilityNumber) + " for battle destiny");
-            action.appendEffect(
-                    new SubstituteDestinyEffect(action, abilityNumber)
+            action.allowResponses("Substitute " + GameUtils.getCardLink(tyranus) + "'s ability number of " + GuiUtils.formatAsString(abilityNumber) + " for battle destiny",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new SubstituteDestinyEffect(action, abilityNumber));
+                        }
+                    }
             );
             return Collections.singletonList(action);
         }
