@@ -56,25 +56,24 @@ public class Card501_071 extends AbstractUsedOrLostInterrupt {
 
         Filter pingCards = Filters.or(Filters.A_Good_Blaster_At_Your_Side, Filters.No_Disintegrations,
                 Filters.Stardust, Filters.They_Will_Be_Lost_And_Confused);
-        if (GameConditions.canSpot(game, self, pingCards)) {
-            // Check condition(s)
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-            action.setText("Prevent Force loss until end of turn");
-            // Allow response(s)
-            action.allowResponses("Prevent Force loss from A Good Blaster At Your Side, No Disintegrations!, Stardust, and They Will Be Lost And Confused for remainder of turn",
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new AddUntilEndOfTurnModifierEffect(action,
-                                            new NoForceLossFromCardModifier(self, pingCards, playerId),
-                                            "Prevents Force loss from A Good Blaster At Your Side, No Disintegrations!, Stardust, and They Will Be Lost And Confused"));
-                        }
+        // Check condition(s)
+        final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
+        action.setText("Prevent Force loss until end of turn");
+        action.setImmuneTo(Title.Its_A_Hit);
+        // Allow response(s)
+        action.allowResponses("Prevent Force loss from A Good Blaster At Your Side, No Disintegrations!, Stardust, and They Will Be Lost And Confused for remainder of turn",
+                new RespondablePlayCardEffect(action) {
+                    @Override
+                    protected void performActionResults(Action targetingAction) {
+                        // Perform result(s)
+                        action.appendEffect(
+                                new AddUntilEndOfTurnModifierEffect(action,
+                                        new NoForceLossFromCardModifier(self, pingCards, playerId),
+                                        "Prevents Force loss from A Good Blaster At Your Side, No Disintegrations!, Stardust, and They Will Be Lost And Confused"));
                     }
-            );
-            actions.add(action);
-        }
+                }
+        );
+        actions.add(action);
 
         String opponent = game.getOpponent(playerId);
 
@@ -82,56 +81,56 @@ public class Card501_071 extends AbstractUsedOrLostInterrupt {
         if (GameConditions.hasReserveDeck(game, playerId) || GameConditions.hasReserveDeck(game, opponent)
                 || GameConditions.hasLostPile(game, playerId) || GameConditions.hasLostPile(game, opponent)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
-            action.setText("Shuffle card pile");
+            final PlayInterruptAction action1 = new PlayInterruptAction(game, self, CardSubtype.USED);
+            action1.setText("Shuffle card pile");
             // Choose target(s)
-            action.appendTargeting(
-                    new ChooseExistingCardPileEffect(action, playerId, Filters.or(Zone.RESERVE_DECK, Zone.LOST_PILE)) {
+            action1.appendTargeting(
+                    new ChooseExistingCardPileEffect(action1, playerId, Filters.or(Zone.RESERVE_DECK, Zone.LOST_PILE)) {
                         @Override
                         protected void pileChosen(SwccgGame game, final String cardPileOwner, final Zone cardPile) {
                             // Allow response(s)
-                            action.allowResponses("Shuffle " + cardPileOwner + "'s " + cardPile.getHumanReadable(),
-                                    new RespondablePlayCardEffect(action) {
+                            action1.allowResponses("Shuffle " + cardPileOwner + "'s " + cardPile.getHumanReadable(),
+                                    new RespondablePlayCardEffect(action1) {
                                         @Override
                                         protected void performActionResults(Action targetingAction) {
                                             // Perform result(s)
-                                            action.appendEffect(
-                                                    new ShufflePileEffect(action, cardPileOwner, cardPile));
+                                            action1.appendEffect(
+                                                    new ShufflePileEffect(action1, cardPileOwner, cardPile));
                                         }
                                     }
                             );
                         }
                     }
             );
-            actions.add(action);
+            actions.add(action1);
         }
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        GameTextActionId gameTextActionId = GameTextActionId.OMMNI_BOX_ITS_WORSE_V__UPLOAD_CHARACTER;
         if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
-            Filter cardFilter = Filters.or(Filters.loreContains("Cantina"), Filters.gameTextContains("Cantina"));            
-            action.setText("Take card into hand from Reserve Deck");
+            final PlayInterruptAction action2 = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
+            Filter cardFilter = Filters.and(Filters.character, Filters.or(Filters.loreContains("Cantina"), Filters.gameTextContains("Cantina")));
+            action2.setText("Take card into hand from Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Take a character with 'cantina' in lore or game text into hand from Reserve Deck",
-                    new RespondablePlayCardEffect(action) {
+            action2.allowResponses("Take a character with 'cantina' in lore or game text into hand from Reserve Deck",
+                    new RespondablePlayCardEffect(action2) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
-                            action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, cardFilter, true));
+                            action2.appendEffect(
+                                    new TakeCardIntoHandFromReserveDeckEffect(action2, playerId, cardFilter, true));
                         }
                     }
             );
-            actions.add(action);
+            actions.add(action2);
         }
         return actions;
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, Effect effect, PhysicalCard self) {
-        Filter cancelInerrupts = Filters.or(Filters.It_Could_Be_Worse, Filters.It_Can_Wait, Filters.Its_A_Trap);
+        Filter cancelInterrupts = Filters.or(Filters.It_Could_Be_Worse, Filters.It_Can_Wait, Filters.Its_A_Trap);
         // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, cancelInerrupts)
+        if (TriggerConditions.isPlayingCard(game, effect, cancelInterrupts)
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.USED);
             action.setImmuneTo(Title.Its_A_Hit);
@@ -148,7 +147,7 @@ public class Card501_071 extends AbstractUsedOrLostInterrupt {
 
         // Check condition(s)
         if (TriggerConditions.lostBattle(game, effectResult, opponent)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
             action.setText("Make opponent lose 2 Force");
             // Allow response(s)
             action.allowResponses(
