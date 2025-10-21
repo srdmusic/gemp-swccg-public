@@ -52,7 +52,7 @@ public class Card501_060 extends AbstractDroid {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         String playerId = self.getOwner();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
-        Condition presentWithXizor = new PresentWithCondition(self, Filters.and(Filters.Xizor, Filters.atSameSite(self)));
+        Condition presentWithXizor = new PresentWithCondition(self, Filters.and(Filters.Xizor, Filters.present(self)));
         modifiers.add(new ForceDrainModifier(self, Filters.sameSite(self), presentWithXizor, 1, playerId));
         Condition presetnWithXizorAndNotHit = new AndCondition(presentWithXizor, new NotCondition(new HitCondition(self)));
         modifiers.add(new MayNotBeTargetedByWeaponsModifier(self, Filters.Xizor, presetnWithXizorAndNotHit));
