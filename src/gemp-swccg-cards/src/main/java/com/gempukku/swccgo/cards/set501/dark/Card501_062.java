@@ -64,6 +64,7 @@ public class Card501_062 extends AbstractAlien {
 
         // Check condition(s)
         if (TriggerConditions.justDeployedTo(game, effectResult, playerId, Filters.Black_Sun_agent, Filters.sameSite(self))
+                && GameConditions.hasLostPile(game, playerId)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
