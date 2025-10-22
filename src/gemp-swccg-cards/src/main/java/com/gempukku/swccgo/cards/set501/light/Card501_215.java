@@ -78,11 +78,10 @@ public class Card501_215 extends AbstractJediMaster {
         GameTextActionId gameTextActionId = GameTextActionId.KELNACCA__DOWNLOAD_FOREST;
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.hasReserveDeck(game, playerId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy card from Reserve Deck");
+            action.setText("Deploy forest from Reserve Deck");
             action.setActionMsg("Deploy a unique Forest from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
