@@ -17528,6 +17528,7 @@ public class Filters {
     public static final Filter _8D8 = Filters.title(Title._8D8);
     public static final Filter A_Dangerous_Time = Filters.title(Title.A_Dangerous_Time);
     public static final Filter A_Gift = Filters.title(Title.A_Gift);
+    public static final Filter A_Good_Blaster_At_Your_Side = Filters.title(Title.A_Good_Blaster_At_Your_Side);
     public static final Filter A_Power_Loss = Filters.title(Title.A_Power_Loss);
     public static final Filter A_Sith_Legend = Filters.title(Title.A_Sith_Legend);
     public static final Filter A_Stunning_Move = Filters.title(Title.A_Stunning_Move);
@@ -17879,6 +17880,7 @@ public class Filters {
     public static final Filter Dark_Waters = Filters.title(Title.Dark_Waters);
     public static final Filter Darklighter_Spin = Filters.title(Title.Darklighter_Spin);
     public static final Filter Darksaber = Filters.title(Title.Darksaber);
+    public static final Filter Darth_Tyranus = Filters.title(Title.Darth_Tyranus);
     public static final Filter Dash = Filters.persona(Persona.DASH);
     public static final Filter Dathcha = Filters.title(Title.Dathcha);
     public static final Filter DataVault = Filters.title(Title.DataVault);
@@ -18152,6 +18154,7 @@ public class Filters {
     public static final Filter General_Dodonna = Filters.title(Title.General_Dodonna);
     public static final Filter generic_site = Filters.and(Filters.subtype(CardSubtype.SITE), Filters.generic());
     public static final Filter Geonosis_location = Filters.partOfSystem(Title.Geonosis);
+    public static final Filter Geonosis_Petranaki_Arena = Filters.title(Title.Geonosis_Petranaki_Arena);
     public static final Filter Geonosis_site = Filters.and(CardSubtype.SITE, Filters.partOfSystem(Title.Geonosis));
     public static final Filter Geonosis_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Geonosis));
     public static final Filter Get_Alongside_That_One = Filters.title(Title.Get_Alongside_That_One);
@@ -18357,6 +18360,7 @@ public class Filters {
     public static final Filter Its_An_Older_Code = Filters.title(Title.Its_An_Older_Code);
     public static final Filter Its_Worse = Filters.title(Title.Its_Worse);
     public static final Filter Ive_Got_A_Problem_Here = Filters.title(Title.Ive_Got_A_Problem_Here);
+    public static final Filter Ive_Lost_Artoo = Filters.title(Title.Ive_Lost_Artoo);
     public static final Filter Jabba = Filters.persona(Persona.JABBA);
     public static final Filter Jabbas_Influence = Filters.title(Title.Jabbas_Influence);
     public static final Filter Jabbas_Palace = Filters.title(Title.Jabbas_Palace);
@@ -19018,6 +19022,7 @@ public class Filters {
     public static final Filter Starkiller_Base_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Starkiller_Base));
     public static final Filter starship = Filters.type(CardType.STARSHIP);
     public static final Filter starship_cannon = Filters.and(CardType.WEAPON, CardSubtype.STARSHIP, Filters.or(Keyword.CANNON, Keyword.ION_CANNON, Keyword.LASER_CANNON));
+    public static final Filter Starship_Graveyard = Filters.title(Title.Starship_Graveyard);
     public static final Filter Strike_Planning = Filters.title(Title.Strike_Planning);
     public static final Filter Super_class_Star_Destroyer = Filters.modelType(ModelType.SUPER_CLASS_STAR_DESTROYER);
     

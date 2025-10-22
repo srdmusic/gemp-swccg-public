@@ -13,6 +13,7 @@ public interface Title {
     String _8D8 = "8D8";
     String A_Dangerous_Time = "A Dangerous Time";
     String A_Gift = "A Gift";
+    String A_Good_Blaster_At_Your_Side = "A Good Blaster At Your Side";
     String A_Great_Tactician_Creates_Plans = "A Great Tactician Creates Plans";
     String A_Million_Voices_Crying_Out = "A Million Voices Crying Out";
     String A_Siths_Plans = "A Sith's Plans";
@@ -273,6 +274,7 @@ public interface Title {
     String Dark_Waters = "Dark Waters";
     String Darklighter_Spin = "Darklighter Spin";
     String Darksaber = "Darksaber";
+    String Darth_Tyranus = "Darth Tyranus";
     String Darth_Vader_Dark_Lord_of_the_Sith = "Darth Vader, Dark Lord Of The Sith";
     String DataVault = "Scarif: Data Vault";
     String OceanShallows = "Scarif: Ocean Shallows";
@@ -455,6 +457,7 @@ public interface Title {
     String General_Calrissian = "General Calrissian";
     String General_Dodonna = "General Dodonna";
     String Geonosis = "Geonosis";
+    String Geonosis_Petranaki_Arena = "Geonosis: Petranaki Arena";
     String Get_Alongside_That_One = "Get Alongside That One";
     String Ghhhk = "Ghhhk";
     String Ghost = "Ghost";
@@ -611,6 +614,7 @@ public interface Title {
     String Its_An_Older_Code = "It's An Older Code";
     String Its_Worse = "It's Worse";
     String Ive_Got_A_Problem_Here = "I've Got A Problem Here";
+    String Ive_Lost_Artoo = "I've Lost Artoo!";
     String Jabbas_Palace = "Tatooine: Jabba's Palace";
     String Jabbas_Prize = "Jabba's Prize";
     String Jabbas_Influence = "Jabba's Influence";
@@ -1070,6 +1074,7 @@ public interface Title {
     String Stalker = "Stalker";
     String Stardust = "Stardust";
     String Starkiller_Base = "Starkiller Base";
+    String Starship_Graveyard = "Jakku: Starship Graveyard";
     String Steady_Steady = "Steady, Steady";
     String Stolen_Data_Tapes = "Stolen Data Tapes";
     String Stone_Pile = "Stone Pile";

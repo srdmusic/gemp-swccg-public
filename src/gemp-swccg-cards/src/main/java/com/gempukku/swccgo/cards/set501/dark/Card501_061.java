@@ -38,7 +38,7 @@ public class Card501_061 extends AbstractNormalEffect {
     public Card501_061() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Information_Exchange, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'Chisa nyooda ishaley. Kun Jabba neguda len malta.' 'Ikkit ui! Yobbit, yobbit. Nelan tui ke bada.'");
-        setGameText("Deploy on table. Black Sun agents are defense value +1 and forfeit +1. Once per turn, if you just deployed an information broker, may exchange the top card of Force Pile with any one card in hand. Guri and [Reflections II] Emperor deploy -2 and move for free. [Immune to Alter.]");
+        setGameText("Deploy on table. Black Sun agents are defense value +1 and forfeit +1. Once per turn, if you just deployed an information broker, may exchange the top card of Force Pile with any one card in hand. [Reflections II] Emperor deploys -1 and moves for free. [Immune to Alter.]");
         addIcons(Icon.JABBAS_PALACE, Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_26);
         setVirtualSuffix(true);
         setTestingText("Information Exchange (V)");
@@ -48,11 +48,11 @@ public class Card501_061 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        Filter modifierTargets = Filters.or(Filters.Guri, Filters.and(Icon.REFLECTIONS_II, Filters.Emperor));
+        Filter ref2Emperor = Filters.and(Icon.REFLECTIONS_II, Filters.Emperor);
         modifiers.add(new DefenseValueModifier(self, Filters.Black_Sun_agent, 1));
         modifiers.add(new ForfeitModifier(self, Filters.Black_Sun_agent, 1));
-        modifiers.add(new DeployCostModifier(self, modifierTargets, -2));
-        modifiers.add(new MovesForFreeModifier(self, modifierTargets));
+        modifiers.add(new DeployCostModifier(self, ref2Emperor, -1));
+        modifiers.add(new MovesForFreeModifier(self, ref2Emperor));
         return modifiers;
     }
 
