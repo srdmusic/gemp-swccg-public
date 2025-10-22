@@ -63,7 +63,7 @@ public class Card501_062 extends AbstractAlien {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (TriggerConditions.justDeployedToLocation(game, effectResult, playerId, Filters.Black_Sun_agent, Filters.atSameSite(self))
+        if (TriggerConditions.justDeployedTo(game, effectResult, playerId, Filters.Black_Sun_agent, Filters.sameSite(self))
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
@@ -84,7 +84,7 @@ public class Card501_062 extends AbstractAlien {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
 
         // Check condition(s)
-        if (TriggerConditions.justDeployedToLocation(game, effectResult, Filters.and(Filters.opponents(self), Icon.MAINTENANCE), Filters.here(self))) {
+        if (TriggerConditions.justDeployedTo(game, effectResult, Filters.and(Filters.opponents(self), Icon.MAINTENANCE), Filters.here(self))) {
 
             final PlayCardResult playCardResult = (PlayCardResult) effectResult;
             final PhysicalCard playedCard = playCardResult.getPlayedCard();
