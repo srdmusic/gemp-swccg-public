@@ -18,13 +18,17 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.effects.MayNotBattleUntilEndOfTurnEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.PlayCardResult;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 /**
@@ -71,6 +75,26 @@ public class Card501_062 extends AbstractAlien {
             action.appendEffect(
                 new RetrieveForceEffect(action, playerId, 1));
             return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+
+        // Check condition(s)
+        if (TriggerConditions.justDeployedToLocation(game, effectResult, Filters.and(Filters.opponents(self), Icon.MAINTENANCE), Filters.here(self))) {
+
+            final PlayCardResult playCardResult = (PlayCardResult) effectResult;
+            final PhysicalCard playedCard = playCardResult.getPlayedCard();
+            
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Prevent " + GameUtils.getFullName(playedCard) + " from battling");
+            action.addAnimationGroup(playedCard);
+            // Perform result(s)
+            action.appendEffect(
+                    new MayNotBattleUntilEndOfTurnEffect(action, playedCard));
         }
         return null;
     }
