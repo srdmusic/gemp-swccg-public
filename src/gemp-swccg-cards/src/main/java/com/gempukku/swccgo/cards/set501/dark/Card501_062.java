@@ -95,6 +95,7 @@ public class Card501_062 extends AbstractAlien {
             // Perform result(s)
             action.appendEffect(
                     new MayNotBattleUntilEndOfTurnEffect(action, playedCard));
+            return Collections.singletonList(action);
         }
         return null;
     }
