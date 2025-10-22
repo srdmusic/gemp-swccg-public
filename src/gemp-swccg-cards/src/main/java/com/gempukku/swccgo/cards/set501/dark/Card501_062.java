@@ -18,11 +18,10 @@ public class Card501_062 extends AbstractAlien {
     public Card501_062() {
         super(Side.DARK, 3, 2, 1, 2, 3, "Rystall", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Musician. Raised by Ortolans. Grew up on the streets of Coruscant. Rescued from the Black Sun crime cartel by Lando Calrissian.");
-        setGameText("Power and forfeit +2 at a Coruscant site. Once per turn, if you just deployed a Black Sun Agent to same site, may retrieve 1 Force. If opponent's [Maintenance] card just deployed here, it may not battle for remainder of turn.");
+        setGameText("Power and forfeit +2 at a Coruscant site. Once per turn, if you just deployed a Black Sun agent to same site, may retrieve 1 Force. If opponent's [Maintenance] card just deployed here, it may not battle for remainder of turn.");
         addIcons(Icon.SPECIAL_EDITION, Icon.VIRTUAL_SET_26);
         addKeywords(Keyword.MUSICIAN, Keyword.FEMALE);
         setVirtualSuffix(true);
         setTestingText("Rystall (V)");
-        hideFromDeckBuilder();
     }
 }
