@@ -47,16 +47,14 @@ public class Card501_215 extends AbstractJediMaster {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        // Card action 1
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
         // Check condition(s)
         if (TriggerConditions.isStartOfEachTurn(game, effectResult)
+                && GameConditions.isOncePerTurn(game, self, gameTextSourceCardId)
                 && GameConditions.canSpot(game, self, Filters.Wookiee_Homestead)
                 && GameConditions.hasHand(game, playerId)
                 && GameConditions.hasForcePile(game, playerId)) {
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Place card from hand on bottom of Force Pile");
             action.setActionMsg("Draw top card of Force Pile.");
             // Update usage limit(s)
