@@ -16,21 +16,14 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.ChooseEffectEffect;
-import com.gempukku.swccgo.logic.effects.LoseDestinyCardEffect;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
-import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.StandardEffect;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -55,28 +48,6 @@ public class Card501_073 extends AbstractFirstOrder {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         return modifiers;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredDrawnAsDestinyTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        final String playerId = self.getOwner();
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-
-        // Check condition(s)
-        if (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, playerId)) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Use 1 Force or lose card");
-            action.setActionMsg("Use 1 Force or lose " + GameUtils.getCardLink(self));
-            // Perform result(s)
-            List<StandardEffect> choices = new LinkedList<StandardEffect>();
-            choices.add(new UseForceEffect(action, playerId, 1));
-            choices.add(new LoseDestinyCardEffect(action));
-            action.appendEffect(
-                    new ChooseEffectEffect(action, playerId, choices));
-            return Collections.singletonList(action);
-        }
-        return null;
     }
 
     @Override
