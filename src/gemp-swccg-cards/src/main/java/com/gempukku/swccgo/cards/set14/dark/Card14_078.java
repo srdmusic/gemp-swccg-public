@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+//mirror changes to Card14_079 (AI)
 
 /**
  * Set: Theed Palace

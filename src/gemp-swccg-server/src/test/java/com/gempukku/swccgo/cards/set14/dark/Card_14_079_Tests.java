@@ -8,7 +8,6 @@ import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
 import org.junit.Test;
@@ -16,15 +15,13 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static com.gempukku.swccgo.framework.Assertions.assertAtLocation;
-import static com.gempukku.swccgo.framework.Assertions.assertInZone;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-//mirror changes to Card_14_079_Tests (AI)
+//mirror changes to Card_14_078_Tests (non-AI)
 
-public class Card_14_078_Tests {
+public class Card_14_079_Tests {
 	protected VirtualTableScenario GetScenario() {
 		return new VirtualTableScenario(
 				new HashMap<>()
@@ -34,7 +31,7 @@ public class Card_14_078_Tests {
 				}},
 				new HashMap<>()
 				{{
-                    put("sidious", "14_078"); //darth sidious
+                    put("sidious", "14_079"); //darth sidious (AI)
 					put("vader", "9_113"); //lord vader
 				}},
 				10,
@@ -50,9 +47,9 @@ public class Card_14_078_Tests {
 	}
 
 	@Test
-	public void DarthSidiousStatsAndKeywordsAreCorrect() {
+	public void DarthSidiousAIStatsAndKeywordsAreCorrect() {
 		/**
-		 * Title: Darth Sidious
+		 * Title: Darth Sidious (AI)
 		 * Uniqueness: Unique
 		 * Side: Dark
 		 * Type: Character
@@ -81,7 +78,7 @@ public class Card_14_078_Tests {
 		assertFalse(card.hasVirtualSuffix());
 		assertEquals(Uniqueness.UNIQUE, card.getUniqueness());
 		assertEquals(Side.DARK, card.getSide());
-        assertFalse(card.hasAlternateImageSuffix());
+        assertTrue(card.hasAlternateImageSuffix());
 		assertEquals(1, card.getDestiny(), scn.epsilon);
 		assertEquals(6, card.getDeployCost(), scn.epsilon);
 		assertEquals(5, card.getPower(), scn.epsilon);
@@ -107,7 +104,7 @@ public class Card_14_078_Tests {
 	}
 
 	@Test
-	public void DarthSidiousMayPlaceLostJediOutOfPlay() {
+	public void DarthSidiousAIMayPlaceLostJediOutOfPlay() {
         //tests basic functionality of action1
 
 		var scn = GetScenario();
@@ -148,7 +145,7 @@ public class Card_14_078_Tests {
     }
 
     @Test
-    public void DarthSidiousInsightPreventsPlaceLostSkywalkerOutOfPlay() {
+    public void DarthSidiousAIInsightPreventsPlaceLostSkywalkerOutOfPlay() {
         //this test probably belongs with Card200_032 - Your Insight Serves You Well (V) defensive shield
         //same setup as DarthSidiousMayPlaceLostJediOutOfPlay but with Insight on table
 
