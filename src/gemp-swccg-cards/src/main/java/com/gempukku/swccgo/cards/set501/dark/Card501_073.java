@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractFirstOrder;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.WithCondition;
-import com.gempukku.swccgo.cards.effects.PayRelocateBetweenLocationsCostEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -68,7 +67,7 @@ public class Card501_073 extends AbstractFirstOrder {
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)) {
             final Filter sameSiteAsResistanceAgent = Filters.sameSiteAs(self, Filters.Resistance_Agent);
-            Filter kyloFilter = Filters.and(Filters.Kylo, Filters.here(self), Filters.canBeRelocatedToLocation(sameSiteAsResistanceAgent, 3));
+            Filter kyloFilter = Filters.and(Filters.Kylo, Filters.here(self), Filters.canBeRelocatedToLocation(sameSiteAsResistanceAgent, true, 0));
             if (GameConditions.canSpot(game, self, kyloFilter)) {
 
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
@@ -81,16 +80,13 @@ public class Card501_073 extends AbstractFirstOrder {
                         new TargetCardOnTableEffect(action, playerId, "Choose Kylo", kyloFilter) {
                             @Override
                             protected void cardTargeted(int targetGroupId, final PhysicalCard kyloTargeted) {
-                                Filter siteToRelocateKylo = Filters.and(sameSiteAsResistanceAgent, Filters.locationCanBeRelocatedTo(kyloTargeted, 3));
+                                Filter siteToRelocateKylo = Filters.and(sameSiteAsResistanceAgent, Filters.locationCanBeRelocatedTo(kyloTargeted, true, 0));
                                 action.appendTargeting(
                                         new ChooseCardOnTableEffect(action, playerId, "Choose site to relocate " + GameUtils.getCardLink(kyloTargeted) + " to", siteToRelocateKylo) {
                                             @Override
                                             protected void cardSelected(final PhysicalCard siteSelected) {
                                                 action.addAnimationGroup(kyloTargeted);
                                                 action.addAnimationGroup(siteSelected);
-                                                // Pay cost(s)
-                                                action.appendCost(
-                                                        new PayRelocateBetweenLocationsCostEffect(action, playerId, kyloTargeted, siteSelected, 3));
                                                 // Allow response(s)
                                                 action.allowResponses("Relocate " + GameUtils.getCardLink(kyloTargeted) + " to " + GameUtils.getCardLink(siteSelected),
                                                         new UnrespondableEffect(action) {
