@@ -22,6 +22,7 @@ import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToTargetModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
@@ -41,6 +42,13 @@ public class Card501_073 extends AbstractFirstOrder {
         super(Side.DARK, 2, 2, 2, 2, 5, "Lieutenant Dopheld Mitaka", Uniqueness.UNIQUE, ExpansionSet.SET_8, Rarity.V);
         setGameText("[Pilot] 2. Deploys -2 to (and forfeit -2 at) same location as Kylo. During your deploy phase, may relocate Kylo from here to same site as a Resistance Agent.");
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.VIRTUAL_SET_8);
+    }
+
+    @Override
+    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new DeployCostToTargetModifier(self, -2, Filters.sameLocationAs(self, Filters.Kylo)));
+        return modifiers;
     }
 
     @Override
