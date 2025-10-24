@@ -10,7 +10,6 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
@@ -53,6 +52,7 @@ public class Card14_078 extends AbstractDarkJediMaster {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
+        // Check condition(s)
         if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.opponents(self), Filters.Jedi))
                 && GameConditions.isPresent(game, self)
                 && !GameConditions.canSpot(game, self, Filters.and(Filters.other(self), Filters.character, Filters.present(self)))) {
