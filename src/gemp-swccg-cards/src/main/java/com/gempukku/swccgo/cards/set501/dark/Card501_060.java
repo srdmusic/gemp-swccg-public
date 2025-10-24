@@ -54,8 +54,8 @@ public class Card501_060 extends AbstractDroid {
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         Condition presentWithXizor = new PresentWithCondition(self, Filters.and(Filters.Xizor, Filters.present(self)));
         modifiers.add(new ForceDrainModifier(self, Filters.sameSite(self), presentWithXizor, 1, playerId));
-        Condition presetnWithXizorAndNotHit = new AndCondition(presentWithXizor, new NotCondition(new HitCondition(self)));
-        modifiers.add(new MayNotBeTargetedByWeaponsModifier(self, Filters.Xizor, presetnWithXizorAndNotHit));
+        Condition presentWithXizorAndNotHit = new AndCondition(presentWithXizor, new NotCondition(new HitCondition(self)));
+        modifiers.add(new MayNotBeTargetedByWeaponsModifier(self, Filters.Xizor, presentWithXizorAndNotHit));
         Condition yourRef2ObjectiveOnTable = new OnTableCondition(self, Filters.and(Filters.your(self), Icon.REFLECTIONS_II, Filters.Objective));
         modifiers.add(new DrawsBattleDestinyIfUnableToOtherwiseModifier(self, yourRef2ObjectiveOnTable, 1));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, yourRef2ObjectiveOnTable, 5));
