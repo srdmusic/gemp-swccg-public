@@ -44,7 +44,7 @@ public class Card501_201 extends AbstractObjective {
     public Card501_201() {
         super(Side.LIGHT, 0, Title.The_Hidden_Path, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations or Jedi (except Jedi Survivors). Once per turn, may [download] a holocron, Jabiim location, or non-[Reflections III] battleground (except Kamino system). While this side up, Jedi Survivors are deploy = 2, power = 3, and deploy only to Mining Village. Nabrun Leids and Odin Nesloor may not 'transport' Jedi. Your Force drains at Mapuzo sites are -1. Flip this card if Jedi occupy two non-Mapuzo locations.");
+        setGameText("Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations or Jedi (except Jedi survivors). Once per turn, may ▼ a Jabiim site or a battleground (except Kamino system or a [Reflections III] location). While this side up, Interrupts may not 'transport' Jedi. Your Force drains at Mapuzo sites are -1. Once per turn, may ▼ a holocron. Flip this card if Jedi occupy two non-Mapuzo locations.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("The Hidden Path");
     }
