@@ -126,6 +126,24 @@ public class Card501_201 extends AbstractObjective {
                     new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Jabiim_site, battlegroundExceptKaminoOrRef3), true));
             actions.add(action);
         }
+
+        gameTextActionId = GameTextActionId.THE_HIDDEN_PATH__DOWNLOAD_HOLOCRON;
+
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+            
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+
+            action.setText("Deploy a holocron from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.holocron, true));
+            actions.add(action);
+        }
+
         return actions;
     }
 
