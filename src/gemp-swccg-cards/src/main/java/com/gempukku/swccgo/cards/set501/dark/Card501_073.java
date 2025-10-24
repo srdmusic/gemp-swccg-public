@@ -43,6 +43,7 @@ public class Card501_073 extends AbstractFirstOrder {
         super(Side.DARK, 2, 2, 2, 2, 5, "Lieutenant Dopheld Mitaka", Uniqueness.UNIQUE, ExpansionSet.SET_8, Rarity.V);
         setGameText("[Pilot] 2. Deploys -2 to (and forfeit -2 at) same location as Kylo. During your deploy phase, may relocate Kylo from here to same site as a Resistance Agent.");
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.VIRTUAL_SET_8);
+        setTestingText("Lieutenant Dopheld Mitaka");
     }
 
     @Override
