@@ -45,8 +45,8 @@ import java.util.List;
  */
 public class Card501_073 extends AbstractFirstOrder {
     public Card501_073() {
-        super(Side.DARK, 6, 0, 2, 2, 3, "Lieutenant Dopheld Mitaka", Uniqueness.UNIQUE, ExpansionSet.SET_8, Rarity.V);
-        setGameText("[Pilot] 2. When drawn for destiny, use 1 Force or this card is lost. During your deploy phase, may use 3 Force to relocate Kylo from here to same site as a Resistance Agent.");
+        super(Side.DARK, 2, 2, 2, 2, 5, "Lieutenant Dopheld Mitaka", Uniqueness.UNIQUE, ExpansionSet.SET_8, Rarity.V);
+        setGameText("[Pilot] 2. Deploys -2 to (and forfeit -2 at) same location as Kylo. During your deploy phase, may relocate Kylo from here to same site as a Resistance Agent.");
         addIcons(Icon.EPISODE_VII, Icon.PILOT, Icon.VIRTUAL_SET_8);
     }
 
