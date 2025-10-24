@@ -107,26 +107,25 @@ public class Card501_201 extends AbstractObjective {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.THE_HIDDEN_PATH__DOWNLOAD_CARD;
+        GameTextActionId gameTextActionId = GameTextActionId.THE_HIDDEN_PATH__DOWNLOAD_LOCATION;
 
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
             
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
 
-            Filter nonRef3BattlegroundExceptKaminoSystem = Filters.and(Filters.not(Icon.REFLECTIONS_III), Filters.battleground, Filters.not(Filters.Kamino_system));
+            Filter battlegroundExceptKaminoOrRef3 = Filters.and(Filters.battleground, Filters.not(Filters.Kamino_system), Filters.not(Icon.REFLECTIONS_III));
 
-            action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy a holocron, Jabiim location, or non-[Reflections III] battleground (except Kamino system) from Reserve Deck");
+            action.setText("Deploy location from Reserve Deck");
+            action.setActionMsg("Deploy a Jabiim site or a battleground (except Kamino system or a [Reflections III] location) from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.holocron, Filters.Jabiim_location, nonRef3BattlegroundExceptKaminoSystem), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Jabiim_site, battlegroundExceptKaminoOrRef3), true));
             actions.add(action);
         }
-
         return actions;
     }
 
