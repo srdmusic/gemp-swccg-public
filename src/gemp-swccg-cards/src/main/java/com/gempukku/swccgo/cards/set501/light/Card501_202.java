@@ -9,6 +9,7 @@ import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
@@ -83,7 +84,8 @@ public class Card501_202 extends AbstractEpicEventDeployable {
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
-        if (GameConditions.hasStackedCards(game, self, Filters.and(Filters.Jedi_Survivor, Filters.deployable(self, null, false, 0)))) {
+        if (GameConditions.isDuringYourPhase(game, playerId, Phase.DEPLOY)
+                && GameConditions.hasStackedCards(game, self, Filters.and(Filters.Jedi_Survivor, Filters.deployable(self, null, false, 0)))) {
 
             TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy a Jedi Survivor stacked here");
