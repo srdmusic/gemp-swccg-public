@@ -16,6 +16,7 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
@@ -27,6 +28,7 @@ import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.modifiers.NotUniqueModifier;
 import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Effect;
 
 import java.util.Collections;
@@ -96,14 +98,20 @@ public class Card6_022 extends AbstractAlien {
 
     @Override
     protected List<Modifier> getGameTextWhileInactiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        //Excluded From Battle - special rules exception:
+        //"being excluded will not cause ... other cards to be canceled or otherwise removed from table"
         Filter jawaSiesta = Filters.Jawa_Siesta;
 
+        Condition condition = new Condition() {
+            @Override
+            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
+                return GameConditions.isOnlyExcluded(game, self);
+            }
+        };
+
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        if(GameConditions.isOnlyExcluded(game, self)) {
-            //Excluded From Battle - special rules exception:
-            //"being excluded will not cause ... other cards to be canceled or otherwise removed from table"
-            modifiers.add(new NotUniqueModifier(self, jawaSiesta)); //prevent Jawa Siesta from being removed from table
-        }
+        //prevent Jawa Siesta from being removed from table
+        modifiers.add(new NotUniqueModifier(self, jawaSiesta, condition));
         return modifiers;
     }
 }
