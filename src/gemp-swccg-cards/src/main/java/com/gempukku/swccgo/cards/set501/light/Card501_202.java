@@ -6,7 +6,6 @@ import java.util.List;
 import com.gempukku.swccgo.cards.AbstractEpicEventDeployable;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -32,7 +31,11 @@ import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByWeaponsModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ResetDeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.ResetForfeitModifier;
+import com.gempukku.swccgo.logic.modifiers.ResetPowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 
@@ -81,15 +84,12 @@ public class Card501_202 extends AbstractEpicEventDeployable {
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
-        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DEPLOY)
+        if (GameConditions.isDuringYourPhase(game, playerId, Phase.DEPLOY)
                 && GameConditions.hasStackedCards(game, self, Filters.and(Filters.Jedi_Survivor, Filters.deployable(self, null, false, 0)))) {
 
             TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy a Jedi Survivor stacked here");
             action.setActionMsg("Deploy a Jedi Survivor stacked on " + GameUtils.getCardLink(self));
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new DeployStackedCardEffect(action, self, Filters.Jedi_Survivor, false));
@@ -104,6 +104,10 @@ public class Card501_202 extends AbstractEpicEventDeployable {
 
         Condition hiddenPathOnTable = new OnTableCondition(self, Filters.The_Hidden_Path);
 
+        modifiers.add(new ResetDeployCostModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable, 2));
+        modifiers.add(new ResetPowerModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable, 3));
+        modifiers.add(new ResetForfeitModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable, 3));
+        modifiers.add(new MayNotDeployToLocationModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable, Filters.not(Filters.Safehouse)));
         modifiers.add(new MayNotBeTargetedByWeaponsModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable));
         modifiers.add(new CancelsGameTextModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.Jedi_Survivor, Title.Cold_Feet));
