@@ -37,7 +37,7 @@ import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationModifier;
 public class Card501_204 extends AbstractSite {
     public Card501_204() {
         super(Side.LIGHT, Title.Safehouse, Title.Mapuzo, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationLightSideGameText("Jedi Survivors move to here for free. Once per game, may [download] Tala Durith here.");
+        setLocationLightSideGameText("The first Jedi you deploy here each turn is immune to Imperial Barrier.");
         setLocationDarkSideGameText("Unless Third Sister here, Force drain -1 here.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
