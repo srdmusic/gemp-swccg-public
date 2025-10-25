@@ -59,6 +59,7 @@ public class Card501_204 extends AbstractSite {
             final PhysicalCard playedJedi = ((PlayCardResult) effectResult).getPlayedCard();
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make " + GameUtils.getCardLink(playedJedi) + " immune to Imperial Barrier");
+            action.setPerformingPlayer(playerOnLightSideOfLocation);
 
             // Update usage limit(s)
             action.appendUsage(
