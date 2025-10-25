@@ -93,4 +93,17 @@ public class Card6_022 extends AbstractAlien {
         modifiers.add(new PowerModifier(self, yourOtherJawas, atAudienceChamberOrJawaCamp, 2));
         return modifiers;
     }
+
+    @Override
+    protected List<Modifier> getGameTextWhileInactiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
+        Filter jawaSiesta = Filters.Jawa_Siesta;
+
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        if(GameConditions.isOnlyExcluded(game, self)) {
+            //Excluded From Battle - special rules exception:
+            //"being excluded will not cause ... other cards to be canceled or otherwise removed from table"
+            modifiers.add(new NotUniqueModifier(self, jawaSiesta)); //prevent Jawa Siesta from being removed from table
+        }
+        return modifiers;
+    }
 }
