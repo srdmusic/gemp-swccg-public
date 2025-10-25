@@ -30,7 +30,7 @@ import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 public class Card501_203 extends AbstractSite {
     public Card501_203() {
         super(Side.LIGHT, Title.Mining_Village, Title.Mapuzo, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationLightSideGameText("Jedi Survivors deploy -2 here. Your miners are power +1 here.");
+        setLocationLightSideGameText("Your miners are power +1 here. Once per game, may [download] Tala Durith here.");
         setLocationDarkSideGameText("While Vader or an Inquisitor present, your Force drains here may not be modified.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
