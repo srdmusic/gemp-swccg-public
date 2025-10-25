@@ -27,10 +27,7 @@ import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ResetDeployCostModifier;
-import com.gempukku.swccgo.logic.modifiers.ResetPowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 
@@ -44,7 +41,7 @@ public class Card501_201 extends AbstractObjective {
     public Card501_201() {
         super(Side.LIGHT, 0, Title.The_Hidden_Path, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations or Jedi (except Jedi Survivors). Once per turn, may [download] a holocron, Jabiim location, or non-[Reflections III] battleground (except Kamino system). While this side up, Jedi Survivors are deploy = 2, power = 3, and deploy only to Mining Village. Nabrun Leids and Odin Nesloor may not 'transport' Jedi. Your Force drains at Mapuzo sites are -1. Flip this card if Jedi occupy two non-Mapuzo locations.");
+        setGameText("Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations or Jedi (except Jedi survivors). Once per turn, may ▼ a Jabiim site or a battleground (except Kamino system or a [Reflections III] location). While this side up, Interrupts may not 'transport' Jedi. Your Force drains at Mapuzo sites are -1. Once per turn, may ▼ a holocron. Flip this card if Jedi occupy two non-Mapuzo locations.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("The Hidden Path");
     }
@@ -95,9 +92,6 @@ public class Card501_201 extends AbstractObjective {
         modifiers.add(new MayNotDeployModifier(self, Filters.or(genericLocations, jediExceptJediSurvivors), playerId));
 
         // While this side up
-        modifiers.add(new ResetDeployCostModifier(self, Filters.Jedi_Survivor, 2));
-        modifiers.add(new ResetPowerModifier(self, Filters.Jedi_Survivor, 3));
-        modifiers.add(new MayNotDeployToLocationModifier(self, Filters.Jedi_Survivor, Filters.not(Filters.Mining_Village)));
         modifiers.add(new MayNotBeTargetedByModifier(self, Filters.Jedi, Filters.or(Filters.Nabrun_Leids, Filters.Odin_Nesloor)));
         modifiers.add(new ForceDrainModifier(self, Filters.Mapuzo_site, -1, playerId));
         return modifiers;
@@ -107,23 +101,40 @@ public class Card501_201 extends AbstractObjective {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.THE_HIDDEN_PATH__DOWNLOAD_CARD;
+        GameTextActionId gameTextActionId = GameTextActionId.THE_HIDDEN_PATH__DOWNLOAD_LOCATION;
 
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
                 && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
             
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
 
-            Filter nonRef3BattlegroundExceptKaminoSystem = Filters.and(Filters.not(Icon.REFLECTIONS_III), Filters.battleground, Filters.not(Filters.Kamino_system));
+            Filter battlegroundExceptKaminoOrRef3 = Filters.and(Filters.battleground, Filters.not(Filters.Kamino_system), Filters.not(Icon.REFLECTIONS_III));
 
-            action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy a holocron, Jabiim location, or non-[Reflections III] battleground (except Kamino system) from Reserve Deck");
+            action.setText("Deploy location from Reserve Deck");
+            action.setActionMsg("Deploy a Jabiim site or a battleground (except Kamino system or a [Reflections III] location) from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.holocron, Filters.Jabiim_location, nonRef3BattlegroundExceptKaminoSystem), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Jabiim_site, battlegroundExceptKaminoOrRef3), true));
+            actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.THE_HIDDEN_PATH__DOWNLOAD_HOLOCRON;
+
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)
+                && GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)) {
+            
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
+
+            action.setText("Deploy a holocron from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.holocron, true));
             actions.add(action);
         }
 
