@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set6.light;
 import com.gempukku.swccgo.cards.AbstractAlien;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
+import com.gempukku.swccgo.cards.conditions.IsOnlyExcludedCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
@@ -102,16 +103,9 @@ public class Card6_022 extends AbstractAlien {
         //"being excluded will not cause ... other cards to be canceled or otherwise removed from table"
         Filter jawaSiesta = Filters.Jawa_Siesta;
 
-        Condition condition = new Condition() {
-            @Override
-            public boolean isFulfilled(GameState gameState, ModifiersQuerying modifiersQuerying) {
-                return GameConditions.isOnlyExcluded(game, self);
-            }
-        };
-
         List<Modifier> modifiers = new LinkedList<Modifier>();
         //prevent Jawa Siesta from being removed from table
-        modifiers.add(new NotUniqueModifier(self, jawaSiesta, condition));
+        modifiers.add(new NotUniqueModifier(self, jawaSiesta, new IsOnlyExcludedCondition(self)));
         return modifiers;
     }
 }
