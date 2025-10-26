@@ -4,6 +4,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractSystem;
+import com.gempukku.swccgo.cards.conditions.HereCondition;
+import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -13,9 +15,13 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.HyperspeedWhenMovingFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.HyperspeedWhenMovingToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 /**
@@ -44,6 +50,16 @@ public class Card501_065 extends AbstractSystem {
         modifiers.add(new HyperspeedWhenMovingToLocationModifier(self, Filters.Invisible_Hand, 3, self));
         modifiers.add(new HyperspeedWhenMovingFromLocationModifier(self, Filters.Invisible_Hand, 3, self));
         modifiers.add(new DeployCostToLocationModifier(self, yourEp1Pilots, -1, self));
+        return modifiers;
+    }
+
+    @Override
+    protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
+        Condition insidiousPrisonerOnTable = new OnTableCondition(self, Filters.Insidious_Prisoner);
+        Condition unlessJediHere = new UnlessCondition(new HereCondition(self, Filters.Jedi));
+
+        List<Modifier> modifiers = new LinkedList<Modifier>();
+        modifiers.add(new TotalBattleDestinyModifier(self, new AndCondition(insidiousPrisonerOnTable, unlessJediHere), -1, playerOnLightSideOfLocation));
         return modifiers;
     }
 }
