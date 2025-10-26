@@ -9,9 +9,11 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.HyperspeedWhenMovingFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.HyperspeedWhenMovingToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -36,9 +38,12 @@ public class Card501_065 extends AbstractSystem {
     
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
+        Filter yourEp1Pilots = Filters.and(Filters.your(playerOnDarkSideOfLocation), Icon.EPISODE_I, Filters.pilot);
+
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new HyperspeedWhenMovingToLocationModifier(self, Filters.Invisible_Hand, 3, self));
         modifiers.add(new HyperspeedWhenMovingFromLocationModifier(self, Filters.Invisible_Hand, 3, self));
+        modifiers.add(new DeployCostToLocationModifier(self, yourEp1Pilots, -1, self));
         return modifiers;
     }
 }
