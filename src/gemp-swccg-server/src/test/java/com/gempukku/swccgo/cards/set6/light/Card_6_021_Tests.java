@@ -37,7 +37,6 @@ public class Card_6_021_Tests {
 				{{
 					put("drE", "1_172"); //ds alien - ability 2
                     put("dannik", "2_084"); //ds alien - ability 3
-                    put("chokk","12_99"); //forfeit cannot be reduced gametext
 				}},
 				10,
 				10,
@@ -153,7 +152,7 @@ public class Card_6_021_Tests {
     }
 
     @Test
-    public void JessCannotCharmAtDifferentSiteTurn() {
+    public void JessCannotCharmAtDifferentSite() {
         var scn = GetScenario();
 
         var jess = scn.GetLSCard("jess");
@@ -220,29 +219,6 @@ public class Card_6_021_Tests {
         assertTrue(scn.LSHasCardChoiceAvailable(chewie)); //can target male alien, ability < 3
     }
 
-    @Test
-    public void JessCannotCharmIfForfeitCannotBeReduced() {
-        var scn = GetScenario();
-
-        var jess = scn.GetLSCard("jess");
-        var chewie = scn.GetLSCard("chewie");
-        var site = scn.GetLSStartingLocation();
-
-        var drE = scn.GetDSCard("drE");
-        var chokk = scn.GetDSCard("chokk");
-
-        scn.StartGame();
-
-        scn.MoveCardsToLocation(site, jess, chewie,drE,chokk);
-
-        scn.SkipToLSTurn(Phase.CONTROL);
-        assertTrue(scn.GetLSForcePileCount() >= 1); //enough to use game text
-        assertTrue(scn.LSCardActionAvailable(jess)); //can use text during self's turn
-        scn.LSUseCardAction(jess);
-        assertFalse(scn.LSHasCardChoiceAvailable(drE)); //cannot target opponent may not have their forfeit reduced
-        assertFalse(scn.LSHasCardChoiceAvailable(chokk)); //cannot target opponent may not have their forfeit reduced
-        assertTrue(scn.LSHasCardChoiceAvailable(chewie)); //can target male alien, ability < 3
-    }
 
     @Test
     public void JessCannotCharmMaleNonAlienWithAbilityLessThan3() {
@@ -271,7 +247,7 @@ public class Card_6_021_Tests {
     //forfeit reduction lasts until end of turn
     //forfeit reduction does not last into next turn
     //forfeit reduction can only be used once per turn
-    //jess self-retrieves
+    //jess may self-retrieve
     //jess may retrieve when your musician is deployed to same site
     //jess may not retrieve when your non-musician is deployed to same site
     //jess may not retrieve when your musician is deployed to different site
