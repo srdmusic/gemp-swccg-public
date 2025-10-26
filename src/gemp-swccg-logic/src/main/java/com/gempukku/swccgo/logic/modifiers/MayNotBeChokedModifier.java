@@ -19,7 +19,7 @@ public class MayNotBeChokedModifier extends AbstractModifier {
 
     /**
      * Creates a modifier that prevents cards accepted by the filter from being 'choked'.
-     * @param source the card that is the source of the modifier and that may not be 'choked'
+     * @param source the source of the modifier
      * @param affectFilter the filter
      */
     public MayNotBeChokedModifier(PhysicalCard source, Filterable affectFilter) {
