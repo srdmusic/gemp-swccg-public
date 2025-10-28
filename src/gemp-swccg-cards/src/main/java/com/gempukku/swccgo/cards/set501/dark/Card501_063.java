@@ -13,6 +13,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -44,65 +45,68 @@ public class Card501_063 extends AbstractUsedInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-        // Check more condition(s) for action 1
-        if (GameConditions.hasForcePile(game, playerId)
-                && GameConditions.hasHand(game, playerId)) {
+        // Check condition(s)
+        if (GameConditions.controlsWith(game, self, playerId, 3, Filters.battleground, Filters.stormtrooper)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+            // Check more condition(s) for action 1
+            if (GameConditions.hasForcePile(game, playerId)
+                    && GameConditions.hasHand(game, playerId)) {
 
-            action.setText("Draw three cards from Force Pile");
-            // Allow response(s)
-            action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            action.appendEffect(new DrawCardsIntoHandFromForcePileEffect(action, playerId, 3) {
-                                @Override
-                                protected void cardsDrawnIntoHand(Collection<PhysicalCard> cards) {
-                                    if (cards.size()>=3) {
-                                        action.appendEffect(new PutCardsFromHandOnForcePileEffect(action, playerId, 2, 2));
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+
+                action.setText("Draw three cards from Force Pile");
+                // Allow response(s)
+                action.allowResponses(
+                        new RespondablePlayCardEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                action.appendEffect(new DrawCardsIntoHandFromForcePileEffect(action, playerId, 3) {
+                                    @Override
+                                    protected void cardsDrawnIntoHand(Collection<PhysicalCard> cards) {
+                                        if (cards.size()>=3) {
+                                            action.appendEffect(new PutCardsFromHandOnForcePileEffect(action, playerId, 2, 2));
+                                        }
                                     }
-                                }
-                            });
+                                });
+                            }
                         }
-                    }
-            );
-            actions.add(action);
-        }
+                );
+                actions.add(action);
+            }
 
-        gameTextActionId = GameTextActionId.ENDLESS_LEGIONS__PROTECT_FORCE_DRAINS;
-        // Check more condition(s) for action 2
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)) {
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            gameTextActionId = GameTextActionId.ENDLESS_LEGIONS__PROTECT_FORCE_DRAINS;
+            // Check more condition(s) for action 2
+            if (GameConditions.isOncePerGame(game, self, gameTextActionId)) {
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
 
-            action.setText("Protect Force drains");
-            action.setActionMsg("Protect Force drains where they have a stormtrooper from being canceled or reduced this turn");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
-            // Allow response(s)
-            action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new AddUntilEndOfTurnModifierEffect(action,
-                                            new ForceDrainsMayNotBeCanceledModifier(self, Filters.any, playerId), "Force drains may not be canceled")
-                            );
-                            action.appendEffect(
-                                    new AddUntilEndOfTurnModifierEffect(action,
-                                            new ForceDrainsMayNotBeReducedModifier(self, Filters.any, playerId), "Force drains may not be reduced")
-                            );
+                Filter locationsWithYourStormtrooper = Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.stormtrooper));
+
+                action.setText("Protect Force drains");
+                action.setActionMsg("Protect Force drains where they have a stormtrooper from being canceled or reduced this turn");
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerGameEffect(action));
+                // Allow response(s)
+                action.allowResponses(
+                        new RespondablePlayCardEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                // Perform result(s)
+                                action.appendEffect(
+                                        new AddUntilEndOfTurnModifierEffect(action,
+                                                new ForceDrainsMayNotBeCanceledModifier(self, locationsWithYourStormtrooper, playerId), "Force drains may not be canceled")
+                                );
+                                action.appendEffect(
+                                        new AddUntilEndOfTurnModifierEffect(action,
+                                                new ForceDrainsMayNotBeReducedModifier(self, locationsWithYourStormtrooper, playerId), "Force drains may not be reduced")
+                                );
+                            }
                         }
-                    }
-            );
-
-            actions.add(action);
+                );
+                actions.add(action);
+            }
         }
-
         return actions;
     }
-
 }
