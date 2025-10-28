@@ -13,7 +13,7 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.DrawOneCardFromForcePileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DrawCardsIntoHandFromForcePileEffect;
 import com.gempukku.swccgo.logic.effects.PutCardsFromHandOnForcePileEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -42,19 +42,14 @@ public class Card501_063 extends AbstractUsedInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
 
             action.setText("Draw three cards from Force Pile");
-            // Pay cost(s)
-            action.appendCost(
-                    new DrawOneCardFromForcePileEffect(action, playerId));
-            action.appendCost(
-                    new DrawOneCardFromForcePileEffect(action, playerId));
-            action.appendCost(
-                    new DrawOneCardFromForcePileEffect(action, playerId));
             // Allow response(s)
             action.allowResponses(
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
+                            action.appendEffect(
+                                    new DrawCardsIntoHandFromForcePileEffect(action, playerId, 3));
                             action.appendEffect(
                                     new PutCardsFromHandOnForcePileEffect(action, playerId, 2, 2));
                         }
