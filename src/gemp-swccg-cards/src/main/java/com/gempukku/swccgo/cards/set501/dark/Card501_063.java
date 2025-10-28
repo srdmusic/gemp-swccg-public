@@ -1,11 +1,22 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
+import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.DrawOneCardFromForcePileEffect;
+import com.gempukku.swccgo.logic.effects.PutCardsFromHandOnForcePileEffect;
+import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.timing.Action;
 
 /**
  * Set: Playtesting
@@ -22,4 +33,37 @@ public class Card501_063 extends AbstractUsedInterrupt {
         setTestingText("Endless Legions");
     }
     
+    @Override
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();
+
+        // Check condition(s)
+        if (GameConditions.hasForcePile(game, playerId)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+
+            action.setText("Draw three cards from Force Pile");
+            // Pay cost(s)
+            action.appendCost(
+                    new DrawOneCardFromForcePileEffect(action, playerId));
+            action.appendCost(
+                    new DrawOneCardFromForcePileEffect(action, playerId));
+            action.appendCost(
+                    new DrawOneCardFromForcePileEffect(action, playerId));
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new PutCardsFromHandOnForcePileEffect(action, playerId, 2, 2));
+                        }
+                    }
+            );
+            actions.add(action);
+        }
+
+        return actions;
+    }
+
 }
