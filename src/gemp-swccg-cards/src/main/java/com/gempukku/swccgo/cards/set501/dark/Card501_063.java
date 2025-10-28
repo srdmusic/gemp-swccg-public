@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -48,10 +49,20 @@ public class Card501_063 extends AbstractUsedInterrupt {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
+                            /*
                             action.appendEffect(
                                     new DrawCardsIntoHandFromForcePileEffect(action, playerId, 3));
                             action.appendEffect(
                                     new PutCardsFromHandOnForcePileEffect(action, playerId, 2, 2));
+                            */
+                            action.appendEffect(new DrawCardsIntoHandFromForcePileEffect(action, playerId, 3) {
+                                @Override
+                                protected void cardsDrawnIntoHand(Collection<PhysicalCard> cards) {
+                                    if (cards.size()>=3) {
+                                        action.appendEffect(new PutCardsFromHandOnForcePileEffect(action, playerId, 2, 2));
+                                    }
+                                }
+                            });
                         }
                     }
             );
