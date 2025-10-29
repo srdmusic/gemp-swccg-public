@@ -53,7 +53,7 @@ public class Card501_204 extends AbstractSite {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         
         // Check condition(s)
-        if (TriggerConditions.justDeployed(game, effectResult, playerOnLightSideOfLocation, Filters.Jedi)
+        if (TriggerConditions.justDeployedToLocation(game, effectResult, playerOnLightSideOfLocation, Filters.Jedi, Filters.here(self))
                 && GameConditions.isOncePerTurn(game, self, playerOnLightSideOfLocation, gameTextSourceCardId, gameTextActionId)) {
             
             final PhysicalCard playedJedi = ((PlayCardResult) effectResult).getPlayedCard();
