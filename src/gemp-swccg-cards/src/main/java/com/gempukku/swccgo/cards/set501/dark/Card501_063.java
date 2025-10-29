@@ -24,6 +24,7 @@ import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeReducedModifier;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.PutCardsFromHandOnForcePileEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
 /**
@@ -66,6 +67,9 @@ public class Card501_063 extends AbstractUsedInterrupt {
                                     protected void cardsDrawnIntoHand(Collection<PhysicalCard> cards) {
                                         if (cards.size()>=3) {
                                             action.appendEffect(new PutCardsFromHandOnForcePileEffect(action, playerId, 2, 2));
+                                        }
+                                        else {
+                                            action.appendEffect(new SendMessageEffect(action, playerId + " failed to draw three cards."));
                                         }
                                     }
                                 });
