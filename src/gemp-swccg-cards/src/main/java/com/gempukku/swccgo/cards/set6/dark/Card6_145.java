@@ -15,10 +15,12 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.SubAction;
 import com.gempukku.swccgo.logic.decisions.YesNoDecision;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.SendMessageEffect;
+import com.gempukku.swccgo.logic.effects.StackActionEffect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -61,12 +63,15 @@ public class Card6_145 extends AbstractNormalEffect {
                                         new YesNoDecision("Lose 1 Force to cancel this battle?") {
                                             @Override
                                             protected void yes() {
+                                                final SubAction subAction = new SubAction(action, playerId);
                                                 // Pay cost(s)
-                                                action.appendCost(
-                                                        new LoseForceEffect(action, playerId, 1, true));
+                                                subAction.appendCost(
+                                                        new LoseForceEffect(subAction, playerId, 1, true));
                                                 // Perform result(s)
+                                                subAction.appendEffect(
+                                                        new CancelBattleEffect(subAction));
                                                 action.appendEffect(
-                                                        new CancelBattleEffect(action));
+                                                        new StackActionEffect(action, subAction));
                                             }
                                             @Override
                                             protected void no() {
