@@ -103,7 +103,6 @@ class Card {
             return;
         }
 
-
         this.horizontal = horizontal === true || horizontal === 'true';
 
         if (this.alternateImage) {
@@ -113,6 +112,11 @@ class Card {
                     || this.blueprintId == "206_6ai") {
                 this.horizontal = true;
             }
+        }
+
+        // For some zones, never show the card as horizontal
+        if (Card.isZoneNeverHorizontal(zone)) {
+            this.horizontal = false;
         }
 
         if (this.bareBlueprint != "-1_1" && this.bareBlueprint != "-1_2" && Card.CardCache[this.bareBlueprint] != null) {
@@ -198,7 +202,7 @@ class Card {
     }
     
     effectivelyHorizontal() {
-        return this.zone.indexOf("TOP_OF") && this.horizontal;
+        return this.zone.startsWith("TOP_OF") && this.horizontal;
     }
 
     static isZoneNeverHorizontal(zone) {
