@@ -81,7 +81,7 @@ public class Card6_145 extends AbstractNormalEffect {
                     }
                     else {
                         action.appendEffect(
-                                new SendMessageEffect(action, "Player failed to peek at four cards."));
+                                new SendMessageEffect(action, playerId + " failed to peek at four cards."));
                     }
                 }
             });
