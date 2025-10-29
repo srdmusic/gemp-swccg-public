@@ -103,7 +103,7 @@ class Card {
             return;
         }
 
-        this.horizontal = horizontal === true || horizontal === 'true';
+        this.horizontal = (horizontal === true || horizontal === 'true');
 
         if (this.alternateImage) {
             // AIs that are horizontal and the non-AI is not
