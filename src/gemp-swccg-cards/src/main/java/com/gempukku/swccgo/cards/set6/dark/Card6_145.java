@@ -52,7 +52,7 @@ public class Card6_145 extends AbstractNormalEffect {
                 && GameConditions.hasReserveDeck(game, opponent)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Examine top four cards of opponent's Reserve Deck");
+            action.setText("Examine top cards of opponent's Reserve Deck");
             // Perform result(s)
             action.appendEffect(new PeekAtTopCardsOfReserveDeckEffect(action, playerId, opponent, numCards){
                 @Override
