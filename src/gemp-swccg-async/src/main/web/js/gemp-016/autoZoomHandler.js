@@ -113,7 +113,7 @@ class AutoZoom {
 		var targetLong = Math.min(maxLongSide, CardDisplay.TargetLong);
 		var targetShort = Math.min(maxShortSide, CardDisplay.TargetShort);
 
-		if(card.horizontal || card.effectivelyHorizontal()) {
+		if(card.horizontal) {
 			this.cardDisplay.reloadFromCard(card, targetLong, targetShort);
 		}
 		else {

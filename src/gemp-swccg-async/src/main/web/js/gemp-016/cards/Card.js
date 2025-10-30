@@ -201,16 +201,15 @@ class Card {
         return packBlueprints[this.blueprintId] != null;
     }
     
-    effectivelyHorizontal() {
-        return this.zone.startsWith("TOP_OF") && this.horizontal;
-    }
+
 
     static isZoneNeverHorizontal(zone) {
         if (zone == "RESERVE_DECK" || zone == "FORCE_PILE"
                 || zone == "USED_PILE" || zone == "LOST_PILE"
                 || zone == "TOP_OF_RESERVE_DECK" || zone == "TOP_OF_FORCE_PILE"
                 || zone == "TOP_OF_USED_PILE" || zone == "TOP_OF_LOST_PILE"
-                || zone == "STACKED" || zone == "STACKED_FACE_DOWN") {
+                || zone == "STACKED" || zone == "STACKED_FACE_DOWN"
+                || zone == "ANIMATION") {
             return true;
         }
 
