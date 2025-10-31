@@ -103,22 +103,8 @@ class Card {
             return;
         }
 
-        this.horizontal = (horizontal === true || horizontal === 'true');
-
-        if (this.alternateImage) {
-            // AIs that are horizontal and the non-AI is not
-            if (this.blueprintId == "204_47ai"
-                    || this.blueprintId == "200_41ai"
-                    || this.blueprintId == "206_6ai") {
-                this.horizontal = true;
-            }
-        }
-
-        // For some zones, never show the card as horizontal
-        if (Card.isZoneNeverHorizontal(zone)) {
-            this.horizontal = false;
-        }
-
+        this.horizontal = (horizontal === true || horizontal === 'true' || this.isHorizontalVirtualAiImage()) && !Card.isZoneNeverHorizontal(zone)
+        
         if (this.bareBlueprint != "-1_1" && this.bareBlueprint != "-1_2" && Card.CardCache[this.bareBlueprint] != null) {
             var cardFromCache = Card.CardCache[this.bareBlueprint];
             this.imageUrl = cardFromCache.imageUrl;
@@ -200,8 +186,12 @@ class Card {
     isPack() {
         return packBlueprints[this.blueprintId] != null;
     }
-    
 
+    isHorizontalVirtualAiImage() {
+        return this.bareBlueprint == "204_47ai"
+                || this.bareBlueprint == "200_41ai"
+                || this.bareBlueprint == "206_6ai";
+    }
 
     static isZoneNeverHorizontal(zone) {
         if (zone == "RESERVE_DECK" || zone == "FORCE_PILE"

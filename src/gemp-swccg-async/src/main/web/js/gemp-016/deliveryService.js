@@ -58,9 +58,10 @@ function deliveryService(xml) {
                 var cardElem = cards[j];
                 var blueprintId = cardElem.getAttribute("blueprintId");
                 var count = cardElem.getAttribute("count");
-                var card = new Card(blueprintId, null, null, false, "delivery", "deliveryCard" + i, "player");
+                var horizontal = cardElem.getAttribute("horizontal");
+                var card = new Card(blueprintId, null, null, horizontal, "delivery", "deliveryCard" + i, "player");
                 card.tokens = {"count":count};
-                var cardDiv = Card.CreateCardDiv(card.imageUrl, card.testingText, null, card.isFoil(), false, false, card.incomplete);
+                var cardDiv = Card.CreateCardDiv(card.imageUrl, card.testingText, null, card.isFoil(), false, card.incomplete);
                 cardDiv.data("card", card);
                 deliveryDialogs[collectionName].append(cardDiv);
             }
