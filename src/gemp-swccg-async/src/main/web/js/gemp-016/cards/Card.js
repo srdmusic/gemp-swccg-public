@@ -199,7 +199,7 @@ class Card {
                 || zone == "TOP_OF_RESERVE_DECK" || zone == "TOP_OF_FORCE_PILE"
                 || zone == "TOP_OF_USED_PILE" || zone == "TOP_OF_LOST_PILE"
                 || zone == "STACKED" || zone == "STACKED_FACE_DOWN"
-                || zone == "ANIMATION") {
+                || zone == "DESTINY_ANIMATION") {
             return true;
         }
 

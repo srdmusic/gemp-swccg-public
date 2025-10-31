@@ -61,7 +61,7 @@ var GameAnimations = Class.extend({
             var horizontal = element.getAttribute("horizontal");
 
             // Play-out game event animation to both players
-            var card = new Card(blueprintId, testingText, backSideTestingText, horizontal, "ANIMATION", "anim", participantId);
+            var card = new Card(blueprintId, testingText, backSideTestingText, horizontal, "DESTINY_ANIMATION", "anim", participantId);
             var cardDiv = Card.CreateSimpleCardDiv(card.imageUrl, card.testingText, card.foil, card.incomplete, 16);
             // Overlay destiny card with text explaining destiny type
             var destinyTypeOverlayDiv = $("<div class='destinyTypeOverlay'></div>");
