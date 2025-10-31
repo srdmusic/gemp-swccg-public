@@ -3,6 +3,7 @@ class Card {
     bareBlueprint = null;
     foil = null;
     alternateImage = null;
+    blueprintHorizontal = null
     horizontal = null;
     imageUrl = null;
     backSideImageUrl = null;
@@ -103,7 +104,8 @@ class Card {
             return;
         }
 
-        this.horizontal = (horizontal === true || horizontal === 'true' || this.isHorizontalVirtualAiImage()) && !Card.isZoneNeverHorizontal(zone)
+        this.blueprintHorizontal = horizontal === true || horizontal === 'true' || this.isHorizontalVirtualAiImage()
+        this.horizontal = this.blueprintHorizontal && !Card.isZoneNeverHorizontal(zone);
         
         if (this.bareBlueprint != "-1_1" && this.bareBlueprint != "-1_2" && Card.CardCache[this.bareBlueprint] != null) {
             var cardFromCache = Card.CardCache[this.bareBlueprint];
