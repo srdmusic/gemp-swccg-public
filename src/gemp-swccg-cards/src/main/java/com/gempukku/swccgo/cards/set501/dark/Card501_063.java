@@ -13,7 +13,6 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -22,9 +21,6 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardsIntoHandFromForcePileEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeCanceledModifier;
-import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeReducedModifier;
-import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.PutCardsFromHandOnForcePileEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.SendMessageEffect;
@@ -78,38 +74,6 @@ public class Card501_063 extends AbstractUsedInterrupt {
                                         }
                                     }
                                 });
-                            }
-                        }
-                );
-                actions.add(action);
-            }
-
-            gameTextActionId = GameTextActionId.ENDLESS_LEGIONS__TAKE_JUST_LOST_STORMTROOPER_INTO_HAND;
-            // Check more condition(s) for action 2
-            if (GameConditions.isOncePerGame(game, self, gameTextActionId)) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-
-                Filter locationsWithYourStormtrooper = Filters.sameLocationAs(self, Filters.and(Filters.your(self), Filters.stormtrooper));
-
-                action.setText("Protect Force drains");
-                action.setActionMsg("Protect Force drains where they have a stormtrooper from being canceled or reduced this turn");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerGameEffect(action));
-                // Allow response(s)
-                action.allowResponses(
-                        new RespondablePlayCardEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                // Perform result(s)
-                                action.appendEffect(
-                                        new AddUntilEndOfTurnModifierEffect(action,
-                                                new ForceDrainsMayNotBeCanceledModifier(self, locationsWithYourStormtrooper, playerId), "Force drains may not be canceled")
-                                );
-                                action.appendEffect(
-                                        new AddUntilEndOfTurnModifierEffect(action,
-                                                new ForceDrainsMayNotBeReducedModifier(self, locationsWithYourStormtrooper, playerId), "Force drains may not be reduced")
-                                );
                             }
                         }
                 );
