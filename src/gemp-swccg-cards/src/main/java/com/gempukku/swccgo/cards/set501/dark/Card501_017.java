@@ -14,17 +14,23 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
+import com.gempukku.swccgo.common.SpotOverride;
+import com.gempukku.swccgo.common.TargetingReason;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.common.Zone;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.ChooseArbitraryCardsEffect;
+import com.gempukku.swccgo.logic.effects.LoseCardsFromTableEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromReserveDeckOnTopOfCardPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByWeaponsModifier;
@@ -96,5 +102,29 @@ public class Card501_017 extends AbstractAlien {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotBeTargetedByWeaponsModifier(self, Filters.and(Filters.your(self), Filters.leader, Filters.here(self)), unlessCrumbHit));
         return modifiers;
+    }
+
+    @Override
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+
+        Filter undercoverSpies = Filters.and(Filters.here(self), Filters.undercover_spy);
+        if (TriggerConditions.isTableChanged(game, effectResult)
+                && GameConditions.canTarget(game, self, SpotOverride.INCLUDE_UNDERCOVER, TargetingReason.TO_BE_LOST, undercoverSpies)) {
+
+            Collection<PhysicalCard> toBeLost = Filters.filterActive(game, self, SpotOverride.INCLUDE_UNDERCOVER, TargetingReason.TO_BE_LOST, undercoverSpies);
+            if (!toBeLost.isEmpty()) {
+
+                final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setSingletonTrigger(true);
+                action.setText("Make Undercover spies here lost");
+                action.setActionMsg("Make " + GameUtils.getAppendedNames(toBeLost) + " lost");
+
+                // Perform result(s)
+                action.appendEffect(
+                        new LoseCardsFromTableEffect(action, toBeLost));
+                return Collections.singletonList(action);
+            }
+        }
+        return null;
     }
 }
