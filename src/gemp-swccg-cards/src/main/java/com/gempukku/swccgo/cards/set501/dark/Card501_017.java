@@ -19,12 +19,11 @@ public class Card501_017 extends AbstractAlien {
     public Card501_017() {
         super(Side.DARK, 3, 1, 1, 1, 3, Title.Salacious_Crumb, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Male Kowakian. Prankster. Humiliates others for Jabba's amusement. His life depends on making Jabba laugh at least once per day.");
-        setGameText("When deployed, may shuffle opponent's Reserve Deck or search your Force Pile and take any one card into hand; reshuffle. Unless Crumb is 'hit', Jabba may not be targeted by weapons here. Undercover droids here are lost. ('AH-hahahaha!')");
+        setGameText("When deployed, may reveal the top two cards of your Reserve Deck; take one into hand and place the other in Used Pile. Unless Crumb is 'hit', your leaders here may not be targeted by weapons. Undercover spies here are lost. ('AH-hahahaha!')");
         addIcons(Icon.JABBAS_PALACE, Icon.VIRTUAL_SET_26);
         setSpecies(Species.KOWAKIAN);
         setVirtualSuffix(true);
         setTestingText("Salacious Crumb (V)");
-        hideFromDeckBuilder();
     }
 
 }
