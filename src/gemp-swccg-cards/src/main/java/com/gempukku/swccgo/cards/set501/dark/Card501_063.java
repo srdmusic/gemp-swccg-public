@@ -17,8 +17,11 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
+import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.choose.DrawCardsIntoHandFromForcePileEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainsMayNotBeReducedModifier;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
@@ -26,6 +29,8 @@ import com.gempukku.swccgo.logic.effects.PutCardsFromHandOnForcePileEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
 
 /**
  * Set: Playtesting
@@ -79,7 +84,7 @@ public class Card501_063 extends AbstractUsedInterrupt {
                 actions.add(action);
             }
 
-            gameTextActionId = GameTextActionId.ENDLESS_LEGIONS__PROTECT_FORCE_DRAINS;
+            gameTextActionId = GameTextActionId.ENDLESS_LEGIONS__TAKE_JUST_LOST_STORMTROOPER_INTO_HAND;
             // Check more condition(s) for action 2
             if (GameConditions.isOncePerGame(game, self, gameTextActionId)) {
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
@@ -110,6 +115,37 @@ public class Card501_063 extends AbstractUsedInterrupt {
                 );
                 actions.add(action);
             }
+        }
+        return actions;
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.ENDLESS_LEGIONS__TAKE_JUST_LOST_STORMTROOPER_INTO_HAND;
+
+        // Check condition(s)
+        if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.your(self), Filters.not(Icon.MAINTENANCE), Filters.stormtrooper))
+                && GameConditions.occupiesWith(game, self, playerId, 3, Filters.battleground, Filters.stormtrooper)
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
+
+            final PhysicalCard justLostCard = ((LostFromTableResult) effectResult).getCard();
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Take " + GameUtils.getFullName(justLostCard) + " into hand");
+            // Allow response(s)
+            action.allowResponses("Take " + GameUtils.getCardLink(justLostCard) + " into hand",
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new TakeCardIntoHandFromLostPileEffect(action, playerId, justLostCard, false, true));
+                        }
+                    }
+            );
+            actions.add(action);
         }
         return actions;
     }
