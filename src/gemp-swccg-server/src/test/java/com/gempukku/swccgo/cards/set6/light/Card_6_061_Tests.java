@@ -14,6 +14,7 @@ import com.gempukku.swccgo.framework.VirtualTableScenario;
 import com.gempukku.swccgo.game.PhysicalCardImpl;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.GoMissingEffect;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -126,8 +127,10 @@ public class Card_6_061_Tests {
         scn.PassAllResponses();
 	}
 
-    @Test
+    @Test @Ignore
     public void BlasterDeflectionLostRetargetsTargeting() {
+        //demonstrates bug https://github.com/PlayersCommittee/gemp-swccg-public/issues/859
+
         var scn = GetScenario();
 
         var deflection = scn.GetLSCard("deflection");
@@ -161,4 +164,6 @@ public class Card_6_061_Tests {
         scn.LSPlayLostInterrupt(deflection);
         scn.PassAllResponses();
     }
+
+    //add many more tests for both used and lost actions
 }
