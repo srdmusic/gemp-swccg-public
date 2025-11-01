@@ -134,6 +134,9 @@ public class Card501_063 extends AbstractUsedInterrupt {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setText("Take " + GameUtils.getFullName(justLostCard) + " into hand");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
             // Allow response(s)
             action.allowResponses("Take " + GameUtils.getCardLink(justLostCard) + " into hand",
                     new RespondablePlayCardEffect(action) {
