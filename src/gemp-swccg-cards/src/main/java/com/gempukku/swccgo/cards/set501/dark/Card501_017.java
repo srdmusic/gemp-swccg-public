@@ -32,6 +32,7 @@ import com.gempukku.swccgo.logic.conditions.UnlessCondition;
 import com.gempukku.swccgo.logic.effects.ChooseArbitraryCardsEffect;
 import com.gempukku.swccgo.logic.effects.LoseCardsFromTableEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromReserveDeckOnTopOfCardPileEffect;
+import com.gempukku.swccgo.logic.effects.SendMessageEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByWeaponsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -119,6 +120,9 @@ public class Card501_017 extends AbstractAlien {
                 action.setText("Make Undercover spies here lost");
                 action.setActionMsg("Make " + GameUtils.getAppendedNames(toBeLost) + " lost");
 
+                // Send Easter Egg Message
+                action.appendCost(
+                    new SendMessageEffect(action, "Salacious Crumb: AH-hahahaha!"));
                 // Perform result(s)
                 action.appendEffect(
                         new LoseCardsFromTableEffect(action, toBeLost));
