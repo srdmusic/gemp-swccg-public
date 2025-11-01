@@ -47,38 +47,36 @@ public class Card501_063 extends AbstractUsedInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+
         // Check condition(s)
-        if (GameConditions.occupiesWith(game, self, playerId, 3, Filters.battleground, Filters.stormtrooper)) {
+        if (GameConditions.occupiesWith(game, self, playerId, 3, Filters.battleground, Filters.stormtrooper)
+                && GameConditions.hasForcePile(game, playerId)
+                && GameConditions.hasHand(game, playerId)) {
 
-            GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
-            // Check more condition(s) for action 1
-            if (GameConditions.hasForcePile(game, playerId)
-                    && GameConditions.hasHand(game, playerId)) {
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
 
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-
-                action.setText("Draw three cards from Force Pile");
-                // Allow response(s)
-                action.allowResponses(
-                        new RespondablePlayCardEffect(action) {
-                            @Override
-                            protected void performActionResults(Action targetingAction) {
-                                action.appendEffect(new DrawCardsIntoHandFromForcePileEffect(action, playerId, 3) {
-                                    @Override
-                                    protected void cardsDrawnIntoHand(Collection<PhysicalCard> cards) {
-                                        if (cards.size()>=3) {
-                                            action.appendEffect(new PutCardsFromHandOnForcePileEffect(action, playerId, 2, 2));
-                                        }
-                                        else {
-                                            action.appendEffect(new SendMessageEffect(action, playerId + " failed to draw three cards."));
-                                        }
+            action.setText("Draw three cards from Force Pile");
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            action.appendEffect(new DrawCardsIntoHandFromForcePileEffect(action, playerId, 3) {
+                                @Override
+                                protected void cardsDrawnIntoHand(Collection<PhysicalCard> cards) {
+                                    if (cards.size()>=3) {
+                                        action.appendEffect(new PutCardsFromHandOnForcePileEffect(action, playerId, 2, 2));
                                     }
-                                });
-                            }
+                                    else {
+                                        action.appendEffect(new SendMessageEffect(action, playerId + " failed to draw three cards."));
+                                    }
+                                }
+                            });
                         }
-                );
-                actions.add(action);
-            }
+                    }
+            );
+            actions.add(action);
         }
         return actions;
     }
