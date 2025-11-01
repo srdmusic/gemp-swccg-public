@@ -47,7 +47,7 @@ public class Card501_063 extends AbstractUsedInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         // Check condition(s)
-        if (GameConditions.controlsWith(game, self, playerId, 3, Filters.battleground, Filters.stormtrooper)) {
+        if (GameConditions.occupiesWith(game, self, playerId, 3, Filters.battleground, Filters.stormtrooper)) {
 
             GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
             // Check more condition(s) for action 1
