@@ -9,6 +9,7 @@ import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
@@ -58,7 +59,7 @@ public class Card6_038 extends AbstractAlien {
     protected List<Modifier> getGameTextWhileInactiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         //Excluded From Battle - special rules exception:
         //"being excluded will not cause ... other cards to be canceled or otherwise removed from table"
-        Condition onTatooine = new OnCondition(self, Filters.Doallyn, Title.Tatooine);
+        Condition onTatooine = new OnCondition(self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Doallyn, Title.Tatooine);
         Filter tuskenBreathMask = Filters.Tusken_Breath_Mask;
 
         List<Modifier> modifiers = new LinkedList<Modifier>();

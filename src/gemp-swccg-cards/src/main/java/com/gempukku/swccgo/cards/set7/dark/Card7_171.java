@@ -8,6 +8,7 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
@@ -47,7 +48,7 @@ public class Card7_171 extends AbstractImperial {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        Condition onDeathStarCondition = new OnCondition(self, Title.Death_Star);
+        Condition onDeathStarCondition = new OnCondition(self, Filters.Grenwick, Title.Death_Star);
         Filter deathStarSentryFilter = Filters.and(Filters.your(self), Filters.Death_Star_Sentry);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
@@ -64,7 +65,7 @@ public class Card7_171 extends AbstractImperial {
     protected List<Modifier> getGameTextWhileInactiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         //Excluded From Battle - special rules exception:
         //"being excluded will not cause ... other cards to be canceled or otherwise removed from table"
-        Condition onDeathStarCondition = new OnCondition(self, Title.Death_Star);
+        Condition onDeathStarCondition = new OnCondition(self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Grenwick, Title.Death_Star);
         Filter deathStarSentryFilter = Filters.and(Filters.your(self), Filters.Death_Star_Sentry);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();

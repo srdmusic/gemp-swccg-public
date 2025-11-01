@@ -9,6 +9,7 @@ import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
@@ -66,7 +67,7 @@ public class Card7_018 extends AbstractRebel {
     protected List<Modifier> getGameTextWhileInactiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         //Excluded From Battle - special rules exception:
         //"being excluded will not cause ... other cards to be canceled or otherwise removed from table"
-        Condition onHothCondition = new OnCondition(self, Filters.McQuarrie, Title.Hoth);
+        Condition onHothCondition = new OnCondition(self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.McQuarrie, Title.Hoth);
         Filter hothSentryFilter = Filters.and(Filters.your(self), Filters.Hoth_Sentry);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
