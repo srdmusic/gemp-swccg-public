@@ -1,6 +1,12 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractAlien;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.RevealTopCardsOfReserveDeckEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -8,6 +14,16 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.Zone;
+import com.gempukku.swccgo.filters.Filters;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
+import com.gempukku.swccgo.logic.effects.ChooseArbitraryCardsEffect;
+import com.gempukku.swccgo.logic.effects.PutCardFromReserveDeckOnTopOfCardPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
  * Set: Playtesting
@@ -26,4 +42,44 @@ public class Card501_017 extends AbstractAlien {
         setTestingText("Salacious Crumb (V)");
     }
 
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        // Check condition(s)
+        if (TriggerConditions.justDeployed(game, effectResult, self)
+                && GameConditions.hasReserveDeck(game, playerId)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Reveal top two cards of Reserve Deck");
+            // Perform result(s)
+            action.appendEffect(
+                    new RevealTopCardsOfReserveDeckEffect(action, playerId, 2) {
+                        @Override
+                        protected void cardsRevealed(final List<PhysicalCard> cards) {
+                            if (cards.size() == 2) {
+                                action.appendEffect(
+                                        new ChooseArbitraryCardsEffect(action, playerId, "Choose card to take into hand", cards, 1, 1) {
+                                            @Override
+                                            protected void cardsSelected(SwccgGame game, Collection<PhysicalCard> selectedCards) {
+                                                PhysicalCard cardToTakeIntoHand = selectedCards.iterator().next();
+                                                if (cardToTakeIntoHand != null) {
+                                                    action.appendEffect(
+                                                            new TakeCardIntoHandFromReserveDeckEffect(action, playerId, cardToTakeIntoHand, false));
+                                                    Collection<PhysicalCard> nonSelectedCards = Filters.filter(cards, game, Filters.not(cardToTakeIntoHand));
+                                                    PhysicalCard cardToPlaceInUsedPile = nonSelectedCards.iterator().next();
+                                                    if (cardToPlaceInUsedPile != null) {
+                                                        action.appendEffect(
+                                                                new PutCardFromReserveDeckOnTopOfCardPileEffect(action, cardToPlaceInUsedPile, Zone.USED_PILE, false));
+                                                    }
+                                                }
+                                            }
+                                        }
+                                );
+                            }
+                        }
+                    }
+            );
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
 }
