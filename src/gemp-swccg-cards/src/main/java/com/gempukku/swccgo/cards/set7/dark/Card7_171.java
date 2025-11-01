@@ -6,6 +6,7 @@ import com.gempukku.swccgo.cards.conditions.IsOnlyExcludedCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Keyword;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
@@ -44,6 +45,7 @@ public class Card7_171 extends AbstractImperial {
         setGameText("While Grenwick is on Death Star, your Death Star Sentry is not unique (•), is doubled, deploys free, applies all three of its modifiers and is immune to Alter. Power -1 when not on Death Star.");
         addIcons(Icon.SPECIAL_EDITION, Icon.WARRIOR);
         addKeywords(Keyword.DEATH_STAR_TROOPER);
+        addPersona(Persona.GRENWICK);
     }
 
     @Override
