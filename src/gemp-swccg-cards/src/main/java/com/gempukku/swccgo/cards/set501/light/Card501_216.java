@@ -16,6 +16,7 @@ import com.gempukku.swccgo.logic.effects.PutCardFromVoidInLostPileEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 
 /**
@@ -38,24 +39,24 @@ public class Card501_216 extends AbstractStartingInterrupt {
     protected PlayInterruptAction getGameTextStartingAction(final String playerId, final SwccgGame game, final PhysicalCard self) {
         // Check condition(s)
         final PhysicalCard startingLocation = game.getModifiersQuerying().getStartingLocation(playerId);
-        if (startingLocation != null && Filters.City_Outskirts.accepts(game, startingLocation)) {
+        if (startingLocation != null && Filters.Slave_Quarters.accepts(game, startingLocation)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Deploy Slave Quarters and other cards from Reserve Deck");
+            action.setText("Deploy Prophecy Of The Force and other cards from Reserve Deck");
             // Allow response(s)
-            action.allowResponses("Deploy Slave Quarters (with Prophecy Of The Force there), Jedi Business and Your Thoughts Dwell On Your Mother from Reserve Deck.",
+            action.allowResponses("Deploy Prophecy Of The Force, Jedi Business, and Your Thoughts Dwell On Your Mother from Reserve Deck.",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
-                            action.appendEffect(
-                                    new DeployCardFromReserveDeckEffect(action, Filters.Slave_Quarters, true, false));
                             action.appendEffect(
                                     new DeployCardToTargetFromReserveDeckEffect(action, Filters.Prophecy_Of_The_Force, Filters.Slave_Quarters, true, false));
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.Jedi_Business, true, false));
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.Your_Thoughts_Dwell_On_Your_Mother, true, false));
+                            action.appendEffect(
+                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.City_Outskirts, false));
                             action.appendEffect(
                                     new LightSideGoesFirstEffect(action));
                             action.appendEffect(
