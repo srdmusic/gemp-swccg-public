@@ -65,32 +65,4 @@ public class Card501_072 extends AbstractSystem {
         modifiers.add(new LimitForceLossFromCardModifier(self, Filters.Cloud_City_Occupation, 2, playerOnLightSideOfLocation));
         return modifiers;
     }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredBeforeTriggers(String playerOnDarkSideOfLocation, SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.Intensify_The_Forward_Batteries)
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextDarkSideRequiredAfterTriggers(String playerOnDarkSideOfLocation, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-        // Check condition(s)
-        if (TriggerConditions.isTableChanged(game, effectResult)
-                && GameConditions.canTargetToCancel(game, self, Filters.Intensify_The_Forward_Batteries)) {
-
-            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardAction(action, Filters.Intensify_The_Forward_Batteries, Title.Intensify_The_Forward_Batteries);
-            return Collections.singletonList(action);
-        }
-        return null;
-    }
 }
