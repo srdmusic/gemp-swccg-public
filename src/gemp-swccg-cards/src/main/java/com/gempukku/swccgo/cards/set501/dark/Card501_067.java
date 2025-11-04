@@ -35,7 +35,7 @@ public class Card501_067 extends AbstractNormalEffect {
     public Card501_067() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Im_Sorry, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'I'm sorry, too.'");
-        setGameText("If your [Cloud City] objective on table, deploy on table. You may not play Imperial Barrier. Once per turn, may [download] an interior Cloud City site (or Lando to Dining Room). Your unique (•) characters of ability < 4 are forfeit +2 (limit +2). [Immune to Alter.]");
+        setGameText("If your [Cloud City] objective on table, deploy on table. Imperial Barrier, Stunning Leader, and Surreptitious Glance are canceled. Once per turn, may [download] an interior Cloud City site. Your unique (•) characters with printed forfeit < 5 are forfeit +2 (limit +2). [Immune to Alter.]");
         addIcons(Icon.TATOOINE, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_26);
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
