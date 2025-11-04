@@ -14,8 +14,7 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.modifiers.FiresForFreeModifier;
-import com.gempukku.swccgo.logic.modifiers.MayDeployOtherCardsAsReactToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 /**
@@ -41,14 +40,14 @@ public class Card501_069 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new MayDeployOtherCardsAsReactToLocationModifier(self, "Deploy card as a 'react'", playerOnDarkSideOfLocation, Filters.or(Filters.character, Filters.weapon), self));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.or(Filters.Vader, Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.Boba_Fett), Filters.and(Filters.your(playerOnDarkSideOfLocation), Filters.Lando)), -1, self));
         return modifiers;
     }
 
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new FiresForFreeModifier(self, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.blaster, Filters.here(self))));
+
         return modifiers;
     }
     
