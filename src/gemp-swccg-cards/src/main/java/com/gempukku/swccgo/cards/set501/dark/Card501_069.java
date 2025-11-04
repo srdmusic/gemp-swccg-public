@@ -22,6 +22,7 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationUsingLandspeedModifier;
 
 /**
  * Set: Playtesting
@@ -70,7 +71,7 @@ public class Card501_069 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextLightSideWhileActiveModifiers(String playerOnLightSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-
+        modifiers.add(new MovesFreeToLocationUsingLandspeedModifier(self, Filters.or(Filters.Chewie, Filters.Han, Filters.Leia, Filters.and(Filters.your(playerOnLightSideOfLocation), Filters.Lando)), self));
         return modifiers;
     }
     
