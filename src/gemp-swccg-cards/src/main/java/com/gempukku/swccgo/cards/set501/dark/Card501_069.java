@@ -28,8 +28,8 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 public class Card501_069 extends AbstractSite {
     public Card501_069() {
         super(Side.DARK, Title.Dining_Room, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("Your characters and weapons may deploy here as a 'react.'");
-        setLocationLightSideGameText("Your blasters here fire for free.");
+        setLocationDarkSideGameText("Vader, your Boba Fett, and your Lando deploy -1 here. May [download] Lando here.");
+        setLocationLightSideGameText("Chewie, Han, Leia, and your Lando move to here using landspeed for free.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.CLOUD_CITY, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_26);
