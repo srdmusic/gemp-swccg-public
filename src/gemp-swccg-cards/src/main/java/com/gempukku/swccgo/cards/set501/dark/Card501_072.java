@@ -39,7 +39,7 @@ public class Card501_072 extends AbstractSystem {
     public Card501_072() {
         super(Side.DARK, Title.Bespin, 6, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Executor may not move from here unless Vader aboard. If your [Cloud City] objective on table, Executor is deploy = 7 here.");
-        setLocationLightSideGameText("You lose no more than 2 Force to Cloud City Occupation. Intensify the Forward Batteries is canceled.");
+        setLocationLightSideGameText("You lose no more than 2 Force to Cloud City Occupation. May not be converted.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.SPECIAL_EDITION, Icon.PLANET, Icon.VIRTUAL_SET_23);
