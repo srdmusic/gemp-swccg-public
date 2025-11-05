@@ -19,7 +19,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ForfeitIncreaseLimitModifier;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
@@ -62,7 +62,7 @@ public class Card501_067 extends AbstractNormalEffect {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.IM_SORRY_V__DOWNLOAD_CARD;
+        GameTextActionId gameTextActionId = GameTextActionId.IM_SORRY_V__DOWNLOAD_SITE;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
@@ -70,14 +70,14 @@ public class Card501_067 extends AbstractNormalEffect {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
 
-            action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy an interior Cloud City site (or Lando to Dining Room) from Reserve Deck");
+            action.setText("Deploy site from Reserve Deck");
+            action.setActionMsg("Deploy an interior Cloud City site from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.or(Filters.and(Filters.interior_site, Filters.Cloud_City_site), Filters.Lando), Filters.Dining_Room, Filters.location, true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.interior_site, Filters.Cloud_City_site), true));
             actions.add(action);
         }
         return actions;
