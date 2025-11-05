@@ -52,7 +52,7 @@ public class Card501_067 extends AbstractNormalEffect {
         String playerId = self.getOwner();
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotPlayModifier(self, Filters.Imperial_Barrier, playerId));
+        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Imperial_Barrier, Filters.Stunning_Leader, Filters.Surreptitious_Glance)));
         modifiers.add(new ForfeitModifier(self, Filters.and(Filters.your(playerId), Filters.unique, Filters.character, Filters.abilityLessThan(4)), 2));
         modifiers.add(new ForfeitIncreaseLimitModifier(self, Filters.and(Filters.your(playerId), Filters.unique, Filters.character, Filters.abilityLessThan(4)), 2));
         return modifiers;
