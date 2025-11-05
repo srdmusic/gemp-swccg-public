@@ -26,7 +26,7 @@ import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.DeploysFreeToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationModifier;
-import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.Effect;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -54,12 +54,13 @@ public class Card110_003 extends AbstractDroid {
     }
 
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(final SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(final SwccgGame game, Effect effect, final PhysicalCard self, int gameTextSourceCardId) {
         String playerId = self.getOwner();
         GameTextActionId gameTextActionId = GameTextActionId.SEE_THREEPIO__RETRIEVE_FORCE;
 
         // Check condition(s)
-        if (TriggerConditions.justPersonaReplacedCharacter(game, effectResult, self)
+        if (TriggerConditions.isPersonaReplacingCharacter(game, effect, self)
+//        if (TriggerConditions.justPersonaReplacedCharacter(game, effectResult, self)
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
 
             final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
