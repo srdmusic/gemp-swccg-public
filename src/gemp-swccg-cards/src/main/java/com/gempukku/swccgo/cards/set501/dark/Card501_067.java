@@ -15,11 +15,12 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ForfeitIncreaseLimitModifier;
 import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
@@ -35,7 +36,7 @@ public class Card501_067 extends AbstractNormalEffect {
     public Card501_067() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Im_Sorry, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'I'm sorry, too.'");
-        setGameText("If your [Cloud City] objective on table, deploy on table. You may not play Imperial Barrier. Once per turn, may [download] an interior Cloud City site (or Lando to Dining Room). Your unique (•) characters of ability < 4 are forfeit +2 (limit +2). [Immune to Alter.]");
+        setGameText("If your [Cloud City] objective on table, deploy on table. Imperial Barrier, Stunning Leader, and Surreptitious Glance may not be played. Once per turn, may [download] an interior Cloud City site. Your unique (•) characters with printed forfeit < 5 are forfeit +2 (limit +2). [Immune to Alter.]");
         addIcons(Icon.TATOOINE, Icon.CLOUD_CITY, Icon.VIRTUAL_SET_26);
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
@@ -51,10 +52,12 @@ public class Card501_067 extends AbstractNormalEffect {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         String playerId = self.getOwner();
 
+        Filter yourUniqueCharactersWithPrintedForfeitLessThanFive = Filters.and(Filters.your(playerId), Filters.unique, Filters.character, Filters.printedForfeitValueLessThan(5));
+
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotPlayModifier(self, Filters.Imperial_Barrier, playerId));
-        modifiers.add(new ForfeitModifier(self, Filters.and(Filters.your(playerId), Filters.unique, Filters.character, Filters.abilityLessThan(4)), 2));
-        modifiers.add(new ForfeitIncreaseLimitModifier(self, Filters.and(Filters.your(playerId), Filters.unique, Filters.character, Filters.abilityLessThan(4)), 2));
+        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Imperial_Barrier, Filters.Stunning_Leader, Filters.Surreptitious_Glance)));
+        modifiers.add(new ForfeitModifier(self, yourUniqueCharactersWithPrintedForfeitLessThanFive, 2));
+        modifiers.add(new ForfeitIncreaseLimitModifier(self, yourUniqueCharactersWithPrintedForfeitLessThanFive, 2));
         return modifiers;
     }
 
@@ -62,7 +65,7 @@ public class Card501_067 extends AbstractNormalEffect {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.IM_SORRY_V__DOWNLOAD_CARD;
+        GameTextActionId gameTextActionId = GameTextActionId.IM_SORRY_V__DOWNLOAD_SITE;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
@@ -70,14 +73,14 @@ public class Card501_067 extends AbstractNormalEffect {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
 
-            action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy an interior Cloud City site (or Lando to Dining Room) from Reserve Deck");
+            action.setText("Deploy site from Reserve Deck");
+            action.setActionMsg("Deploy an interior Cloud City site from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.or(Filters.and(Filters.interior_site, Filters.Cloud_City_site), Filters.Lando), Filters.Dining_Room, Filters.location, true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.interior_site, Filters.Cloud_City_site), true));
             actions.add(action);
         }
         return actions;
