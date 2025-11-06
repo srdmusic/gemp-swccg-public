@@ -20,6 +20,12 @@ public class ImmuneToCardTests {
 					put("demotion", "1_047");
 					put("revolution", "1_062");
                     put("fury","5_029"); //uncontrollable fury
+                    put("yavin","1_135");
+                    put("yavin_db","1_136");
+                    put("kessel","1_126");
+                    put("corvette","1_140");
+                    put("r2d2","2_014");
+                    put("r3a2_v","217_045");
 				}},
 				new HashMap<>()
 				{{
@@ -28,6 +34,8 @@ public class ImmuneToCardTests {
                     put("promotion", "4_121"); //field promotion (target is immune to demotion)
                     put("justice", "2_121"); //imperial justice (target is immune to revolution)
                     put("ozzel", "3_082");
+                    put("war_room","1_287");
+                    put("lateral_damage","1_222");
 				}},
 				10,
 				10,
@@ -81,7 +89,7 @@ public class ImmuneToCardTests {
 
     //shows fixed: https://github.com/PlayersCommittee/gemp-swccg-public/issues/845
     @Test
-    public void GainingImmunityByDeployMakesAttachedCardLost() {
+    public void GainingImmunityByDeployMakesAttachedCardLost1() {
         //verifies:
         //if card A is attached to card B and card B later gains immunity to card A, card A is lost
         var scn = GetScenario();
@@ -116,6 +124,113 @@ public class ImmuneToCardTests {
         assertFalse(scn.IsAttachedTo(ozzel,demotion));
         assertEquals(1,scn.GetLSLostPileCount()); //demotion in lost
         assertEquals(4,scn.GetPower(ozzel), scn.epsilon); //3 + 1 from promotion
+    }
+
+    //shows fixed: https://github.com/PlayersCommittee/gemp-swccg-public/issues/654
+    @Test
+    public void GainingImmunityByDeployMakesAttachedCardLost2() {
+        //verifies:
+        //if card A is attached to card B and card B later gains immunity to card A, card A is lost
+        var scn = GetScenario();
+
+        var revolution = scn.GetLSCard("revolution");
+
+        var justice = scn.GetDSCard("justice");
+        var war_room = scn.GetDSCard("war_room");
+
+        scn.StartGame();
+
+        scn.MoveLocationToTable(war_room);
+
+        scn.MoveCardsToLSHand(revolution);
+        scn.MoveCardsToDSHand(justice);
+
+        scn.SkipToLSTurn(Phase.DEPLOY);
+        assertEquals(0,scn.GetLSIconsOnLocation(war_room));
+        assertTrue(scn.GetLSForcePileCount() >= 3);
+        assertTrue(scn.LSCardPlayAvailable(revolution));
+        scn.LSPlayCard(revolution);
+        assertTrue(scn.LSHasCardChoiceAvailable(war_room));
+        scn.LSChooseCard(war_room);
+        scn.PassAllResponses();
+
+        assertTrue(scn.IsAttachedTo(war_room, revolution));
+
+        assertEquals(3,scn.GetDSForcePileCount());
+        scn.SkipToDSTurn(Phase.DEPLOY);
+        assertEquals(6,scn.GetDSForcePileCount()); //activate 3 means no force from war room
+        assertTrue(scn.DSCardPlayAvailable(justice));
+        scn.DSPlayCard(justice);
+        assertTrue(scn.DSHasCardChoiceAvailable(war_room));
+        scn.DSChooseCard(war_room);
+        scn.PassAllResponses();
+
+        assertTrue(scn.IsAttachedTo(war_room, justice));
+        assertFalse(scn.IsAttachedTo(war_room,revolution));
+        assertEquals(1,scn.GetLSLostPileCount()); //revolution in lost
+    }
+
+    @Test
+    public void GainingImmunityMakesUtinniEffectLost() {
+        //verifies:
+        //if utinni effect card A has targeted card B and card B later gains immunity to card A, card A is lost
+        var scn = GetScenario();
+
+        var yavin = scn.GetLSCard("yavin");
+        var yavin_db = scn.GetLSCard("yavin_db");
+        var kessel = scn.GetLSCard("kessel");
+        var corvette = scn.GetLSCard("corvette");
+        var r2d2 = scn.GetLSCard("r2d2");
+        var r3a2_v = scn.GetLSCard("r3a2_v");
+
+        var lateral_damage = scn.GetDSCard("lateral_damage");
+
+        scn.StartGame();
+
+        scn.MoveLocationToTable(yavin);
+        scn.MoveLocationToTable(yavin_db);
+        scn.MoveLocationToTable(kessel);
+
+        scn.MoveCardsToLocation(yavin,corvette);
+        scn.MoveCardsToLocation(yavin_db,r3a2_v,r2d2);
+
+        scn.MoveCardsToDSHand(lateral_damage);
+
+        scn.SkipToPhase(Phase.DEPLOY);
+        assertTrue(scn.DSCardPlayAvailable(lateral_damage));
+        scn.DSPlayCard(lateral_damage);
+        assertTrue(scn.DSHasCardChoiceAvailable(kessel));
+        scn.DSChooseCard(kessel); //attach utinni effect to kessel
+        assertTrue(scn.DSHasCardChoiceAvailable(corvette));
+        scn.DSChooseCard(corvette); //corvette is utinni target
+        scn.PassAllResponses();
+
+        assertTrue(scn.IsAttachedTo(kessel, lateral_damage));
+        assertEquals(0,scn.GetPower(corvette), scn.epsilon);
+
+        scn.SkipToLSTurn(Phase.MOVE);
+        assertTrue(scn.GetLSForcePileCount() >= 2); //enough to shuttle
+
+        assertTrue(scn.LSCardActionAvailable(r2d2));
+        scn.LSUseCardAction(r2d2); //shuttle
+        assertTrue(scn.LSHasCardChoiceAvailable(corvette));
+        scn.LSChooseCard(corvette);
+        scn.PassAllResponses(); //astromech character now on corvette
+
+        scn.DSPass();
+        assertTrue(scn.AwaitingLSMovePhaseActions());
+        assertTrue(scn.IsAttachedTo(kessel,lateral_damage)); //lateral damage still in play
+        assertEquals(0,scn.GetPower(corvette), scn.epsilon);
+
+        assertTrue(scn.LSCardActionAvailable(r3a2_v));
+        scn.LSUseCardAction(r3a2_v); //shuttle
+        assertTrue(scn.LSHasCardChoiceAvailable(corvette));
+        scn.LSChooseCard(corvette);
+        scn.PassAllResponses(); //r3a2_v gametext should cause corvette to become immune to lateral damage
+
+        assertEquals(6,scn.GetPower(corvette), scn.epsilon); //5 + 1 from R3-A2
+        assertFalse(scn.IsAttachedTo(kessel,lateral_damage));
+        assertEquals(1,scn.GetDSLostPileCount()); //lateral damage in lost
     }
 
     @Test
@@ -154,8 +269,6 @@ public class ImmuneToCardTests {
         assertEquals(1,scn.GetLSLostPileCount()); //fury in lost
         assertEquals(1,scn.GetDSLostPileCount()); //weakvader in lost
     }
-
-    //add testing for immunity involving utinni effects
 
     //add testing for immunity to interrupt targeting?
 }

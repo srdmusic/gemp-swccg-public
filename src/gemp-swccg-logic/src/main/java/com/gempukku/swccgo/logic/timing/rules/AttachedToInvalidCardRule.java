@@ -48,11 +48,8 @@ public class AttachedToInvalidCardRule implements Rule {
 
                             for (PhysicalCard attachedCard : cardsAttachedToOtherCards) {
                                 PhysicalCard attachedTo = attachedCard.getAttachedTo();
-                                if (attachedTo != null && !attachedCard.getBlueprint().getValidTargetFilterToRemainAttachedTo(game, attachedCard).accepts(game, attachedTo)) {
-                                    cardsToLose.add(attachedCard);
-                                }
-                                //gained immunity to attached card
-                                else if(attachedTo != null && game.getModifiersQuerying().isImmuneToCardTitle(game.getGameState(), attachedTo, attachedCard.getTitle())) {
+                                if (attachedTo != null && (!attachedCard.getBlueprint().getValidTargetFilterToRemainAttachedTo(game, attachedCard).accepts(game, attachedTo) ||
+                                        game.getModifiersQuerying().isImmuneToCardTitle(game.getGameState(), attachedTo, attachedCard.getTitle()))) {
                                     cardsToLose.add(attachedCard);
                                 }
                             }
