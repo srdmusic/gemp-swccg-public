@@ -22,7 +22,6 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
@@ -30,7 +29,6 @@ import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
@@ -126,25 +124,6 @@ public class Card501_201_BACK extends AbstractObjective {
             // Perform result(s)
             action.appendEffect(
                     new FlipCardEffect(action, self));
-            actions.add(action);
-        }
-
-        return actions;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
-
-        // Check condition(s)
-        if (TriggerConditions.battleInitiated(game, effectResult, playerId)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.Jedi)) {
-            
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Retrieve 1 Force");
-            // Perform result(s)
-            action.appendEffect(
-                    new RetrieveForceEffect(action, playerId, 1));
             actions.add(action);
         }
 
