@@ -41,7 +41,7 @@ public class Card501_201 extends AbstractObjective {
     public Card501_201() {
         super(Side.LIGHT, 0, Title.The_Hidden_Path, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations or Jedi (except Jedi survivors). Once per turn, may [download] a Jabiim site or a battleground (except a Kamino, Tatooine, or [Reflections III] location). While this side up, you may not play Nabrun Leids. Your Force drains at Mapuzo sites are -1. Once per turn, may [download] a holocron. Flip this card if Jedi occupy two non-Mapuzo locations.");
+        setGameText("Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations or Jedi (except Jedi survivors). Once per turn, may [download] a Jabiim site or a battleground (except a Kamino, Tatooine, or [Reflections III] location). While this side up, you may not play Nabrun Leids. Your Force drains at Mapuzo sites are -1. Once per turn, may [download] a holocron. Flip this card if Jedi occupy two non-Mapuzo sites.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("The Hidden Path");
     }
@@ -148,7 +148,7 @@ public class Card501_201 extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && GameConditions.occupiesWith(game, self, playerId, 2, Filters.and(Filters.not(Filters.Mapuzo_location), Filters.location), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jedi)) {
+                && GameConditions.occupiesWith(game, self, playerId, 2, Filters.and(Filters.not(Filters.Mapuzo_location), Filters.site), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jedi)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setSingletonTrigger(true);
