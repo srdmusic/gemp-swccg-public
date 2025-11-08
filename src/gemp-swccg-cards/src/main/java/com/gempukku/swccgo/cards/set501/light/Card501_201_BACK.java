@@ -53,7 +53,7 @@ import com.gempukku.swccgo.logic.timing.Action;
 public class Card501_201_BACK extends AbstractObjective {
     public Card501_201_BACK() {
         super(Side.LIGHT, 7, Title.Gather_Allies_And_Train, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, Force drain bonuses from your lightsabers may not be canceled. Opponent's total battle destiny where they have a character of ability > 4 is -1 (-2 if an Inquisitor). If your holocron is about to leave table, place it in Used Pile. When you initiate battle with a Jedi, may retrieve 1 Force. During your move phase, may relocate a Jedi between a Jabiim site and a battleground site as a regular move for free. At the end of your turn, opponent loses 1 Force. Flip this card if Jedi do not occupy two locations.");
+        setGameText("While this side up, if your holocron is about to leave table, place it in Used Pile. Your lightsaber Force drain bonuses may not be canceled. Opponent's total battle destiny where they have a character of ability > 4 is -1. During your move phase, may relocate a Jedi between a Jabiim site and a battleground site as a regular move for free. At the end of your turn, opponent loses 1 Force. Flip this card if there are no Jedi at sites.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("Gather Allies And Train");
     }
