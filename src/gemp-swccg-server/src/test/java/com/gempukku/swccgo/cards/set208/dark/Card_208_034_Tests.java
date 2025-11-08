@@ -142,6 +142,7 @@ public class Card_208_034_Tests {
         assertEquals(2,scn.GetLSLostPileCount()); //1 + 1 from Maul
 	}
 
+    //demonstrates bug https://github.com/PlayersCommittee/gemp-swccg-public/issues/7
     @Test @Ignore
     public void LordMaulWithLightsaberMayNotAddToForceDrainIfUsedOtherWeapon() {
         //Test1: using saber prevents maul adding to force drain this turn (only able to use 1 weapon per turn)
@@ -171,6 +172,7 @@ public class Card_208_034_Tests {
         assertFalse(scn.DSCardActionAvailable(maul,"Add")); //Test1: already used saber this turn
     }
 
+    //demonstrates bug https://github.com/PlayersCommittee/gemp-swccg-public/issues/7
     @Test @Ignore
     public void LordMaulWithLightsaberAddingToForceDrainUsesWeapon() {
         //Test1: using maul's permanent weapon prevents using saber to add (only able to use 1 weapon per turn)
