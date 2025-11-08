@@ -33,8 +33,8 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 public class Card501_205 extends AbstractSite {
     public Card501_205() {
         super(Side.LIGHT, Title.Underground_Corridor, Title.Mapuzo, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationLightSideGameText("During your move phase, Jedi Survivors may move from here to a Jabiim site.");
-        setLocationDarkSideGameText("While Gather Allies and Train on table, Force drain +1 here.");
+        setLocationLightSideGameText("During your move phase, Jedi survivors may move from here to a Jabiim site (or to opponent's battleground site).");
+        setLocationDarkSideGameText("");
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcon(Icon.DARK_FORCE, 0);
         addIcons(Icon.UNDERGROUND, Icon.INTERIOR_SITE, Icon.PLANET, Icon.VIRTUAL_SET_26);
