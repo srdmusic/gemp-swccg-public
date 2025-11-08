@@ -8,7 +8,6 @@ import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -66,7 +65,6 @@ public class Card501_201_BACK extends AbstractObjective {
         Filter genericLocations = Filters.and(Filters.generic, Filters.location);
         Filter jediExceptJediSurvivors = Filters.and(Filters.Jedi, Filters.not(Filters.Jedi_Survivor));
         Filter opponentsHighAbilityCharacter = Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4));
-        Filter opponentsHighAbilityInquisitor = Filters.and(opponentsHighAbilityCharacter, Filters.inquisitor);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         // For remainder of game
@@ -74,10 +72,7 @@ public class Card501_201_BACK extends AbstractObjective {
 
         // While this side up
         modifiers.add(new ForceDrainModifiersMayNotBeCanceledModifier(self, Filters.and(Filters.your(playerId), Filters.lightsaber)));
-        modifiers.add(new TotalBattleDestinyModifier(self, 
-                new InBattleCondition(self, opponentsHighAbilityCharacter),
-                new ConditionEvaluator(-1, -2, new InBattleCondition(self, opponentsHighAbilityInquisitor)),
-                opponent, true));
+        modifiers.add(new TotalBattleDestinyModifier(self, new InBattleCondition(self, opponentsHighAbilityCharacter), -1, opponent, true));
 
         return modifiers;
     }
