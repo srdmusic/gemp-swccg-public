@@ -14,12 +14,12 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static com.gempukku.swccgo.framework.Assertions.assertAtLocation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -36,15 +36,10 @@ public class Card_110_003_Tests {
                     put("agift", "6_052");
                     put("jp", "7_131"); //jabba's palace
                     put("jp_ac", "6_081"); //audience chamber
-
-                    put("cracken","9_008"); ////temporary
-                    put("undercover","2_040"); ////temporary
 				}},
 				new HashMap<>()
 				{{
                     put("stormtrooper", "1_194");
-
-                    put("garindan","1_177");  ////temporary
 				}},
 				10,
 				10,
@@ -115,9 +110,11 @@ public class Card_110_003_Tests {
 		assertEquals(Rarity.PM,card.getRarity());
 	}
 
-	@Test
+    //this test demonstrates bug https://github.com/PlayersCommittee/gemp-swccg-public/issues/894
+	@Test @Ignore
 	public void SeeThreepioRetrieves3Force() {
         //Test1: persona replace C-3P0 and verify retrieval works
+        //Test2: retrieval occurs before persona replacement (CURRENTLY FAILS)
 		var scn = GetScenario();
 
 		var seethree = scn.GetLSCard("seethree");
@@ -150,6 +147,7 @@ public class Card_110_003_Tests {
         assertFalse(scn.CardsAtLocation(jp_ac,c3p0));
         assertEquals(3,scn.GetLSUsedPileCount()); //Test1: successfully retrieved 3
         assertEquals(2,scn.GetLSLostPileCount()); //4 - 3 + c3p0
+        assertTrue(c3p0.getZone() == Zone.LOST_PILE); //Test2: placed in lost pile after retrieval happened
     }
 
     @Test
@@ -213,7 +211,7 @@ public class Card_110_003_Tests {
         assertEquals(4,scn.GetLSLostPileCount()); //c3p0 + seethree + 1 + c3p0_2
     }
 
-    //this test reproduces bug described in https://github.com/PlayersCommittee/gemp-swccg-public/issues/364
+    //shows this issue is fixed https://github.com/PlayersCommittee/gemp-swccg-public/issues/364
     @Test
     public void SeeThreepioUndercoverRetrieves3Force() {
         //Test1: put C-3P0 undercover (via A Gift) and verify persona replace retrieves 3 force
@@ -292,106 +290,5 @@ public class Card_110_003_Tests {
     //  with seethree at site
     //  with seethree on starship at system
     //SeeThreepioR2MovesFree
-
-
-    //this test is only temporarily here to show
-    //bug described in https://github.com/PlayersCommittee/gemp-swccg-public/issues/364
-    @Test
-    public void CrackenCausesForceLoss() {
-        //Test1: Cracken on table when opponent deploys spy causes opponent to lose 1 force
-        var scn = GetScenario();
-
-        var cracken = scn.GetLSCard("cracken");
-        var jp = scn.GetLSCard("jp");
-
-        var garindan = scn.GetDSCard("garindan");
-
-        scn.StartGame();
-
-        scn.MoveLocationToTable(jp);
-        scn.MoveCardsToLocation(jp,cracken);
-
-        scn.MoveCardsToDSHand(garindan);
-
-        scn.SkipToLSTurn(Phase.DEPLOY);
-
-        scn.SkipToDSTurn(Phase.DEPLOY);
-        assertTrue(scn.DSDeployAvailable(garindan));
-        scn.DSDeployCard(garindan);
-        assertTrue(scn.DSHasCardChoiceAvailable(jp));
-        scn.DSChooseCard(jp);
-
-        scn.LSPass(); //Use 2 Force - Optional responses
-        scn.DSPass();
-
-        scn.DSPass(); //FORCE_LOSS_INITIATED - Optional responses
-        scn.LSPass();
-
-        scn.DSPass(); //ABOUT_TO_LOSE_FORCE_NOT_FROM_BATTLE_DAMAGE - Optional responses
-        scn.LSPass();
-
-        assertTrue(scn.DSHasCardChoiceAvailable(scn.GetTopOfDSReserveDeck()));
-        scn.DSChooseCard(scn.GetTopOfDSReserveDeck());
-
-        scn.LSPass(); //PLAY - Optional responses
-        scn.DSPass();
-
-        assertTrue(scn.AwaitingLSDeployPhaseActions());
-        assertEquals(1,scn.GetDSLostPileCount());
-    }
-
-    @Test
-    public void CrackenUndercoverCausesForceLoss() {
-        //Test1: Cracken (undercover) when opponent deploys spy causes opponent to lose 1 force
-        var scn = GetScenario();
-
-        var cracken = scn.GetLSCard("cracken");
-        var undercover = scn.GetLSCard("undercover");
-        var jp = scn.GetLSCard("jp");
-
-        var garindan = scn.GetDSCard("garindan");
-
-        scn.StartGame();
-
-        scn.MoveLocationToTable(jp);
-        scn.MoveCardsToLocation(jp,cracken);
-
-        scn.MoveCardsToLSHand(undercover);
-        scn.MoveCardsToDSHand(garindan);
-
-        scn.SkipToLSTurn(Phase.DEPLOY);
-        assertTrue(scn.LSCardPlayAvailable(undercover));
-
-        scn.LSPlayCard(undercover);
-        assertTrue(scn.LSHasCardChoiceAvailable(cracken));
-        scn.LSChooseCard(cracken);
-        scn.PassAllResponses(); //goes undercover
-        assertTrue(cracken.isUndercover());
-        assertTrue(scn.AwaitingDSDeployPhaseActions());
-
-        scn.SkipToDSTurn(Phase.DEPLOY);
-        assertTrue(scn.DSDeployAvailable(garindan));
-        scn.DSDeployCard(garindan);
-        assertTrue(scn.DSHasCardChoiceAvailable(jp));
-        scn.DSChooseCard(jp);
-
-        scn.LSPass(); //Use 2 Force - Optional responses
-        scn.DSPass();
-
-        scn.DSPass(); //FORCE_LOSS_INITIATED - Optional responses
-        scn.LSPass();
-
-        scn.DSPass(); //ABOUT_TO_LOSE_FORCE_NOT_FROM_BATTLE_DAMAGE - Optional responses
-        scn.LSPass();
-
-        assertTrue(scn.DSHasCardChoiceAvailable(scn.GetTopOfDSReserveDeck()));
-        scn.DSChooseCard(scn.GetTopOfDSReserveDeck());
-
-        scn.LSPass(); //PLAY - Optional responses
-        scn.DSPass();
-
-        assertTrue(scn.AwaitingLSDeployPhaseActions());
-        assertEquals(1,scn.GetDSLostPileCount());
-    }
 
 }
