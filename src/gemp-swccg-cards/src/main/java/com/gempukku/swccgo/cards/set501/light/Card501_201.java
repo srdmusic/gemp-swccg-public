@@ -25,8 +25,8 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -92,7 +92,7 @@ public class Card501_201 extends AbstractObjective {
         modifiers.add(new MayNotDeployModifier(self, Filters.or(genericLocations, jediExceptJediSurvivors), playerId));
 
         // While this side up
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.Jedi, Filters.or(Filters.Nabrun_Leids, Filters.Odin_Nesloor)));
+        modifiers.add(new MayNotPlayModifier(self, Filters.Nabrun_Leids, playerId));
         modifiers.add(new ForceDrainModifier(self, Filters.Mapuzo_site, -1, playerId));
         return modifiers;
     }
