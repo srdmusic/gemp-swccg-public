@@ -32,6 +32,7 @@ import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.MovesForFreeUsingLandspeedModifier;
 import com.gempukku.swccgo.logic.modifiers.ResetDeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.ResetForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.ResetPowerModifier;
@@ -107,6 +108,7 @@ public class Card501_202 extends AbstractEpicEventDeployable {
         modifiers.add(new ResetPowerModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable, 3));
         modifiers.add(new ResetForfeitModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable, 3));
         modifiers.add(new MayNotDeployToLocationModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable, Filters.not(Filters.Safehouse)));
+        modifiers.add(new MovesForFreeUsingLandspeedModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable));
         modifiers.add(new CancelsGameTextModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable));
         modifiers.add(new ImmuneToTitleModifier(self, Filters.Jedi_Survivor, Title.Cold_Feet));
         return modifiers;
