@@ -115,7 +115,7 @@ public class Card501_201_BACK extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && !GameConditions.occupiesWith(game, self, playerId, 2, Filters.location, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jedi)) {
+                && !GameConditions.occupiesWith(game, self, playerId, 1, Filters.site, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jedi)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setSingletonTrigger(true);
