@@ -25,8 +25,8 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeTargetedByModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -41,7 +41,7 @@ public class Card501_201 extends AbstractObjective {
     public Card501_201() {
         super(Side.LIGHT, 0, Title.The_Hidden_Path, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations or Jedi (except Jedi survivors). Once per turn, may ▼ a Jabiim site or a battleground (except Kamino system or a [Reflections III] location). While this side up, Interrupts may not 'transport' Jedi. Your Force drains at Mapuzo sites are -1. Once per turn, may ▼ a holocron. Flip this card if Jedi occupy two non-Mapuzo locations.");
+        setGameText("Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations or Jedi (except Jedi survivors). Once per turn, may [download] a Jabiim site or a battleground (except a Kamino, Tatooine, or [Reflections III] location). While this side up, you may not play Nabrun Leids. Your Force drains at Mapuzo sites are -1. Once per turn, may [download] a holocron. Flip this card if Jedi occupy two non-Mapuzo sites.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("The Hidden Path");
     }
@@ -92,7 +92,7 @@ public class Card501_201 extends AbstractObjective {
         modifiers.add(new MayNotDeployModifier(self, Filters.or(genericLocations, jediExceptJediSurvivors), playerId));
 
         // While this side up
-        modifiers.add(new MayNotBeTargetedByModifier(self, Filters.Jedi, Filters.or(Filters.Nabrun_Leids, Filters.Odin_Nesloor)));
+        modifiers.add(new MayNotPlayModifier(self, Filters.Nabrun_Leids, playerId));
         modifiers.add(new ForceDrainModifier(self, Filters.Mapuzo_site, -1, playerId));
         return modifiers;
     }
@@ -108,16 +108,16 @@ public class Card501_201 extends AbstractObjective {
             
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
 
-            Filter battlegroundExceptKaminoOrRef3 = Filters.and(Filters.battleground, Filters.not(Filters.Kamino_system), Filters.not(Icon.REFLECTIONS_III));
+            Filter battlegroundExceptTatooineKaminoOrRef3 = Filters.and(Filters.battleground, Filters.not(Filters.Kamino_location), Filters.not(Filters.Tatooine_location), Filters.not(Icon.REFLECTIONS_III));
 
             action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy a Jabiim site or a battleground (except Kamino system or a [Reflections III] location) from Reserve Deck");
+            action.setActionMsg("Deploy a Jabiim site or a battleground (except a Kamino, Tatooine, or [Reflections III] location) from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Jabiim_site, battlegroundExceptKaminoOrRef3), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Jabiim_site, battlegroundExceptTatooineKaminoOrRef3), true));
             actions.add(action);
         }
 
@@ -148,7 +148,7 @@ public class Card501_201 extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && GameConditions.occupiesWith(game, self, playerId, 2, Filters.and(Filters.not(Filters.Mapuzo_location), Filters.location), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jedi)) {
+                && GameConditions.occupiesWith(game, self, playerId, 2, Filters.and(Filters.not(Filters.Mapuzo_location), Filters.site), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jedi)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setSingletonTrigger(true);

@@ -8,7 +8,6 @@ import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
-import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -23,7 +22,6 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
@@ -31,7 +29,6 @@ import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveForceEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
@@ -53,7 +50,7 @@ import com.gempukku.swccgo.logic.timing.Action;
 public class Card501_201_BACK extends AbstractObjective {
     public Card501_201_BACK() {
         super(Side.LIGHT, 7, Title.Gather_Allies_And_Train, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, Force drain bonuses from your lightsabers may not be canceled. Opponent's total battle destiny where they have a character of ability > 4 is -1 (-2 if an Inquisitor). If your holocron is about to leave table, place it in Used Pile. When you initiate battle with a Jedi, may retrieve 1 Force. During your move phase, may relocate a Jedi between a Jabiim site and a battleground site as a regular move for free. At the end of your turn, opponent loses 1 Force. Flip this card if Jedi do not occupy two locations.");
+        setGameText("While this side up, if your holocron is about to leave table, place it in Used Pile. Your lightsaber Force drain bonuses may not be canceled. Opponent's total battle destiny where they have a character of ability > 4 is -1. During your move phase, may relocate a Jedi between a Jabiim site and a battleground site as a regular move for free. At the end of your turn, opponent loses 1 Force. Flip this card if there are no Jedi at sites.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("Gather Allies And Train");
     }
@@ -66,7 +63,6 @@ public class Card501_201_BACK extends AbstractObjective {
         Filter genericLocations = Filters.and(Filters.generic, Filters.location);
         Filter jediExceptJediSurvivors = Filters.and(Filters.Jedi, Filters.not(Filters.Jedi_Survivor));
         Filter opponentsHighAbilityCharacter = Filters.and(Filters.opponents(self), Filters.character, Filters.abilityMoreThan(4));
-        Filter opponentsHighAbilityInquisitor = Filters.and(opponentsHighAbilityCharacter, Filters.inquisitor);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         // For remainder of game
@@ -74,10 +70,7 @@ public class Card501_201_BACK extends AbstractObjective {
 
         // While this side up
         modifiers.add(new ForceDrainModifiersMayNotBeCanceledModifier(self, Filters.and(Filters.your(playerId), Filters.lightsaber)));
-        modifiers.add(new TotalBattleDestinyModifier(self, 
-                new InBattleCondition(self, opponentsHighAbilityCharacter),
-                new ConditionEvaluator(-1, -2, new InBattleCondition(self, opponentsHighAbilityInquisitor)),
-                opponent, true));
+        modifiers.add(new TotalBattleDestinyModifier(self, new InBattleCondition(self, opponentsHighAbilityCharacter), -1, opponent, true));
 
         return modifiers;
     }
@@ -122,7 +115,7 @@ public class Card501_201_BACK extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && !GameConditions.occupiesWith(game, self, playerId, 2, Filters.location, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jedi)) {
+                && !GameConditions.occupiesWith(game, self, playerId, 1, Filters.site, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jedi)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setSingletonTrigger(true);
@@ -131,25 +124,6 @@ public class Card501_201_BACK extends AbstractObjective {
             // Perform result(s)
             action.appendEffect(
                     new FlipCardEffect(action, self));
-            actions.add(action);
-        }
-
-        return actions;
-    }
-
-    @Override
-    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, final EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
-
-        // Check condition(s)
-        if (TriggerConditions.battleInitiated(game, effectResult, playerId)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.Jedi)) {
-            
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("Retrieve 1 Force");
-            // Perform result(s)
-            action.appendEffect(
-                    new RetrieveForceEffect(action, playerId, 1));
             actions.add(action);
         }
 
@@ -167,16 +141,16 @@ public class Card501_201_BACK extends AbstractObjective {
             
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
 
-            Filter battlegroundExceptKaminoOrRef3 = Filters.and(Filters.battleground, Filters.not(Filters.Kamino_system), Filters.not(Icon.REFLECTIONS_III));
+            Filter battlegroundExceptTatooineKaminoOrRef3 = Filters.and(Filters.battleground, Filters.not(Filters.Kamino_location), Filters.not(Filters.Tatooine_location), Filters.not(Icon.REFLECTIONS_III));
 
             action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy a Jabiim site or a battleground (except Kamino system or a [Reflections III] location) from Reserve Deck");
+            action.setActionMsg("Deploy a Jabiim site or a battleground (except a Kamino, Tatooine, or [Reflections III] location) from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Jabiim_site, battlegroundExceptKaminoOrRef3), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Jabiim_site, battlegroundExceptTatooineKaminoOrRef3), true));
             actions.add(action);
         }
 
