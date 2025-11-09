@@ -1,11 +1,11 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -23,9 +23,12 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.MoveCardAsRegularMoveEffect;
+import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainBonusesMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
@@ -53,15 +56,18 @@ public class Card501_066_BACK extends AbstractObjective {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         String playerId = self.getOwner();
 
+        Condition vaderAtBespin = new AtCondition(self, Filters.Vader, Filters.Bespin_location);
+
         //For remainder of game
         modifiers.add(new MayNotDeployModifier(self, Filters.Admirals_Order, playerId));
 
         //While this side up
         modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Sense, Filters.Alter)));
+        modifiers.add(new ForceDrainBonusesMayNotBeCanceledModifier(self, Filters.your(playerId), Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.or(Filters.Lando, Filters.Lobot)))));
+        modifiers.add(new CancelsGameTextModifier(self, Filters.Admirals_Order, vaderAtBespin));
         modifiers.add(new TotalBattleDestinyModifier(self,
                         new InBattleCondition(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial, Filters.participatingInBattle)))),
                         2, playerId));
-        modifiers.add(new ForceDrainBonusesMayNotBeCanceledModifier(self, Filters.your(playerId), Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.or(Filters.Lando, Filters.Lobot)))));
 
         return modifiers;
     }
@@ -97,8 +103,21 @@ public class Card501_066_BACK extends AbstractObjective {
 
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
+        
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
+
+        if (TriggerConditions.frozen(game, effectResult, Filters.character)
+                && GameConditions.canSpot(game, self, Filters.and(Filters.Vader, Filters.at(Filters.Bespin_location)))) {
+
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Make " + opponent + " lose 3 Force");
+            // Perform result(s)
+            action.appendEffect(
+                    new LoseForceEffect(action, opponent, 3));
+            actions.add(action);
+        }
 
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
@@ -113,8 +132,8 @@ public class Card501_066_BACK extends AbstractObjective {
             // Perform result(s)
             action.appendEffect(
                     new FlipCardEffect(action, self));
-            return Collections.singletonList(action);
+            actions.add(action);
         }
-        return null;
+        return actions;
     }
 }
