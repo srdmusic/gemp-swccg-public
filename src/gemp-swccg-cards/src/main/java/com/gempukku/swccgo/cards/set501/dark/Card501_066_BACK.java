@@ -142,6 +142,7 @@ public class Card501_066_BACK extends AbstractObjective {
                         }
                     }
             );
+            actions.add(action);
         }
         return actions;
     }
