@@ -8,7 +8,6 @@ import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
-import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -67,7 +66,7 @@ public class Card501_066_BACK extends AbstractObjective {
         modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Sense, Filters.Alter)));
         modifiers.add(new TotalBattleDestinyModifier(self,
                         new InBattleCondition(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial, Filters.participatingInBattle)))),
-                        new ConditionEvaluator(2, 4, new InBattleCondition(self, Filters.and(Filters.your(self), Filters.alien, Filters.Ugnaught))), playerId));
+                        2, playerId));
         modifiers.add(new ForceDrainBonusesMayNotBeCanceledModifier(self, Filters.your(playerId), Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.or(Filters.Lando, Filters.Lobot)))));
         modifiers.add(new MayNotBeCanceledModifier(self, Filters.Cloud_City_Occupation, executorAtBespin));
 
