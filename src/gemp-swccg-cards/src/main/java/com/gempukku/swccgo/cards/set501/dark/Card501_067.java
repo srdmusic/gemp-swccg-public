@@ -55,7 +55,7 @@ public class Card501_067 extends AbstractNormalEffect {
         Filter yourUniqueCharactersWithPrintedForfeitLessThanFive = Filters.and(Filters.your(playerId), Filters.unique, Filters.character, Filters.printedForfeitValueLessThan(5));
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Imperial_Barrier, Filters.Stunning_Leader, Filters.Surreptitious_Glance)));
+        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Elis_Helrot, Filters.Stunning_Leader, Filters.Surreptitious_Glance)));
         modifiers.add(new ForfeitModifier(self, yourUniqueCharactersWithPrintedForfeitLessThanFive, 2));
         modifiers.add(new ForfeitIncreaseLimitModifier(self, yourUniqueCharactersWithPrintedForfeitLessThanFive, 2));
         return modifiers;
