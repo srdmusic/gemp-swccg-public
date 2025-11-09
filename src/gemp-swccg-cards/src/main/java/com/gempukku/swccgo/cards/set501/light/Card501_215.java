@@ -48,12 +48,12 @@ public class Card501_215 extends AbstractJediMaster {
 
         GameTextActionId gameTextActionId1 = GameTextActionId.OTHER_CARD_ACTION_1;
         // Check condition(s)
-        if (GameConditions.isOncePerTurn(game, self, gameTextSourceCardId, gameTextActionId1)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId1)
                 && GameConditions.canSpot(game, self, Filters.Wookiee_Homestead)
                 && GameConditions.hasHand(game, playerId)
                 && GameConditions.hasForcePile(game, playerId)) {
 
-            final TopLevelGameTextAction action1 = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId1);
+            final TopLevelGameTextAction action1 = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId1);
             action1.setText("Place card from hand on top of Force Pile");
             action1.setActionMsg("Draw bottom card of Force Pile.");
             // Update usage limit(s)
