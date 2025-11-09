@@ -1,9 +1,8 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
-import com.gempukku.swccgo.cards.AbstractUsedOrLostInterrupt;
+import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -15,11 +14,13 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.SubstituteDestinyEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.GuiUtils;
 
@@ -32,11 +33,11 @@ import java.util.List;
  * Subtype: Used Or Lost
  * Title: Welcome Home, Lord Tyranus
  */
-public class Card501_064 extends AbstractUsedOrLostInterrupt {
+public class Card501_064 extends AbstractLostInterrupt {
     public Card501_064() {
         super(Side.DARK, 4, "Welcome Home, Lord Tyranus", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("USED: If Dooku is your apprentice, [upload] The Works or Petranaki Arena. LOST: Once per game, if Darth Tyranus in battle at a site and you are about to draw a card for battle destiny, instead use his ability number.");
+        setGameText("If Dooku is your apprentice, choose: [upload] Petranaki Arena or The Works. OR Once per game, if Darth Tyranus in battle at a site and you are about to draw a card for battle destiny, you may instead use his ability number. OR If Dooku and Sidious on table, cancel Sense.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("Welcome Home, Lord Tyranus");
     }
@@ -59,7 +60,7 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
 
             // Check condition(s)
             if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
                 action.setText("Take location into hand from Reserve Deck");
                 action.setActionMsg("Take Coruscant: The Works or Geonosis: Petranaki Arena into hand from Reserve Deck.");
                 // Allow response(s)
@@ -93,7 +94,7 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
             PhysicalCard tyranus = Filters.findFirstActive(game, self, Filters.Darth_Tyranus);
             final float abilityNumber = tyranus.getBlueprint().getAbility();
             // Perform result(s)
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.LOST);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setText("Substitute destiny");
             action.appendUsage(
                 new OncePerGameEffect(action));
@@ -107,6 +108,19 @@ public class Card501_064 extends AbstractUsedOrLostInterrupt {
                         }
                     }
             );
+            return Collections.singletonList(action);
+        }
+        return null;
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self) {
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.Sense)
+                && GameConditions.canSpot(game, self, Filters.and(Filters.Dooku, Filters.Sidious))) {
+    
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Cancel Sense");
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);;
             return Collections.singletonList(action);
         }
         return null;
