@@ -6,6 +6,8 @@ import java.util.List;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
+import com.gempukku.swccgo.cards.conditions.DuringBattleCondition;
+import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -25,9 +27,13 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
+import com.gempukku.swccgo.logic.conditions.NotCondition;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.MoveCardAsRegularMoveEffect;
+import com.gempukku.swccgo.logic.effects.ResetForfeitEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainBonusesMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
@@ -35,6 +41,7 @@ import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
+import com.gempukku.swccgo.logic.timing.Action;
 
 /**
  * Set: Playtesting
@@ -97,6 +104,44 @@ public class Card501_066_BACK extends AbstractObjective {
                         new MoveCardAsRegularMoveEffect(action, playerId, yourLandoCard, false, false, Filters.any));
                 actions.add(action);
             }
+        }
+
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
+        Filter yourLandoInBattleFilter = Filters.and(Filters.your(playerId), Filters.Lando, Filters.participatingInBattle);
+        Filter targetFilter = Filters.and(Filters.character, Filters.presentWith(self, yourLandoInBattleFilter), Filters.participatingInBattle);
+
+        Condition endOfBattlCondition = new NotCondition(new DuringBattleCondition());
+
+        // Check condition(s)
+        if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canSpot(game, self, yourLandoInBattleFilter)
+                && GameConditions.canSpot(game, self, targetFilter)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Reset forfeit to 0");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerBattleEffect(action));
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose character", targetFilter) {
+                        @Override
+                        protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Reset " + GameUtils.getCardLink(targetedCard) + "'s forfeit to 0",
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(final Action targetingAction) {
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new ResetForfeitEffect(action, targetedCard, 0, endOfBattlCondition));
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
         }
         return actions;
     }
