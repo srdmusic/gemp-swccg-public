@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -22,20 +21,16 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
-import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.MoveCardAsRegularMoveEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainBonusesMayNotBeCanceledModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
-import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 /**
@@ -57,7 +52,6 @@ public class Card501_066_BACK extends AbstractObjective {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         String playerId = self.getOwner();
-        Condition executorAtBespin = new OnTableCondition(self, Filters.and(Filters.Executor, Filters.at(Filters.Bespin_system)));
 
         //For remainder of game
         modifiers.add(new MayNotDeployModifier(self, Filters.Admirals_Order, playerId));
@@ -68,7 +62,6 @@ public class Card501_066_BACK extends AbstractObjective {
                         new InBattleCondition(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial, Filters.participatingInBattle)))),
                         2, playerId));
         modifiers.add(new ForceDrainBonusesMayNotBeCanceledModifier(self, Filters.your(playerId), Filters.sameSiteAs(self, Filters.and(Filters.your(self), Filters.or(Filters.Lando, Filters.Lobot)))));
-        modifiers.add(new MayNotBeCanceledModifier(self, Filters.Cloud_City_Occupation, executorAtBespin));
 
         return modifiers;
     }
@@ -98,33 +91,6 @@ public class Card501_066_BACK extends AbstractObjective {
                         new MoveCardAsRegularMoveEffect(action, playerId, yourLandoCard, false, false, Filters.any));
                 actions.add(action);
             }
-        }
-        return actions;
-    }
-
-    @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredBeforeTriggers(SwccgGame game, Effect effect, PhysicalCard self, int gameTextSourceCardId) {
-        List<RequiredGameTextTriggerAction> actions = new LinkedList<RequiredGameTextTriggerAction>();
-
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.Its_A_Trap)
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            actions.add(action);
-        }
-
-        // Check condition(s)
-        if (TriggerConditions.isPlayingCard(game, effect, Filters.or(Filters.Sense, Filters.Alter))
-                && GameConditions.canCancelCardBeingPlayed(game, self, effect)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.Vader, Filters.presentAt(Filters.Cloud_City_site)))) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
-            // Build action using common utility
-            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
-            actions.add(action);
         }
         return actions;
     }
