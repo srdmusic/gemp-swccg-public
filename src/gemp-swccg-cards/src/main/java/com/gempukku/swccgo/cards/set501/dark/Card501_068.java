@@ -30,7 +30,6 @@ import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
-import com.gempukku.swccgo.logic.modifiers.MayDeployAsReactModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationUsingLandspeedModifier;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -47,19 +46,12 @@ public class Card501_068 extends AbstractAlienImperial {
     public Card501_068() {
         super(Side.DARK, 4, 2, 1, 1, 3, "Garindan, Imperial Spy", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Long-nosed, male Kubaz from Kubindi. Spy. Squealed on Obi-Wan and Luke outside Docking Bay 94. Works for Jabba the Hutt or the highest bidder. Not particularly brave.");
-        setGameText("May deploy as a 'react.' Imperials move to here for free using landspeed. Unless 'hit,' may place Garindan in Used Pile to cancel a just drawn weapon destiny targeting your other character here (or to make an Undercover spy here lost).");
+        setGameText("Imperials move to here for free using landspeed. If present at a site and not 'hit,' may place Garindan in Used Pile to cancel a just drawn weapon destiny targeting your other character here (or to make an Undercover spy here lost).");
         addIcons(Icon.VIRTUAL_SET_26);
         addKeywords(Keyword.SPY);
         addPersona(Persona.GARINDAN);
         setSpecies(Species.KUBAZ);
         setTestingText("Garindan, Imperial Spy");
-    }
-
-    @Override
-    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new MayDeployAsReactModifier(self));
-        return modifiers;
     }
 
     @Override
@@ -78,7 +70,8 @@ public class Card501_068 extends AbstractAlienImperial {
         TargetingReason targetReason = TargetingReason.TO_BE_LOST;
 
         // Check condition(s)
-        if (!GameConditions.isHit(game, self)
+        if (GameConditions.isPresentAt(game, self, Filters.site)
+                && !GameConditions.isHit(game, self)
                 && GameConditions.canTarget(game, self, SpotOverride.INCLUDE_UNDERCOVER, targetReason, targetFilter)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
@@ -117,6 +110,7 @@ public class Card501_068 extends AbstractAlienImperial {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         // Check condition(s)
         if (TriggerConditions.isWeaponDestinyJustDrawnTargeting(game, effectResult, Filters.any, Filters.and(Filters.your(self), Filters.other(self), Filters.character, Filters.here(self)))
+                && GameConditions.isPresentAt(game, self, Filters.site)
                 && !GameConditions.isHit(game, self)
                 && GameConditions.canCancelDestiny(game, playerId)) {
 
