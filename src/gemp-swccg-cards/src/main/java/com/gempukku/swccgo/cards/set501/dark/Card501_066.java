@@ -39,7 +39,7 @@ public class Card501_066 extends AbstractObjective {
     public Card501_066() {
         super(Side.DARK, 0, Title.This_Deal_Is_Getting_Worse_All_The_Time, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy one Cloud City battleground site and I'm Sorry. For remainder of game, Surreptitious Glance may not cancel Dark Deal and your Bespin system may not be converted. While this side up, once per turn, may [upload] Cloud City Occupation, Dark Deal, or [Special Edition] Bespin system. Flip this card if [Set 23] Dark Deal on table, you occupy Bespin System, and opponent controls less than 3 Cloud City battlegrounds.");
+        setGameText("Deploy one Cloud City battleground site and [Cloud City] I'm Sorry. For remainder of game, you may not deploy Admiral's Orders. During your control phase, your Lando may make a regular move. While this side up, once per turn, may ▲ Cloud City Occupation, Dark Deal, Vader’s Bounty, or [Special Edition] Bespin. Flip this card if you control 3 Bespin locations and opponent controls fewer than 3 Bespin locations.");
         addIcons(Icon.CLOUD_CITY, Icon.PREMIUM, Icon.VIRTUAL_SET_26);
         setVirtualSuffix(true);
         setTestingText("This Deal Is Getting Worse All The Time (V)");
