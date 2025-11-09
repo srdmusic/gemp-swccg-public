@@ -116,7 +116,8 @@ public class Card501_064 extends AbstractLostInterrupt {
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self) {
         if (TriggerConditions.isPlayingCard(game, effect, Filters.Sense)
-                && GameConditions.canSpot(game, self, Filters.and(Filters.Dooku, Filters.Sidious))) {
+                && GameConditions.canSpot(game, self, Filters.Dooku)
+                && GameConditions.canSpot(game, self, Filters.Sidious)) {
     
             final PlayInterruptAction action = new PlayInterruptAction(game, self);
             action.setText("Cancel Sense");
