@@ -7,21 +7,26 @@ import java.util.List;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.actions.ObjectiveDeployedTriggerAction;
+import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
 import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
+import com.gempukku.swccgo.logic.effects.MoveCardAsRegularMoveEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
@@ -77,7 +82,30 @@ public class Card501_066 extends AbstractObjective {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.THIS_DEAL_IS_GETTING_WORSE_ALL_THE_TIME_V__UPLOAD_CARD;
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+        Filter yourLandoFilter = Filters.and(Filters.your(playerId), Filters.Lando, Filters.movableAsRegularMove(playerId, false, 0, false, Filters.any));
+
+        // Check condition(s)
+        if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+                && GameConditions.canSpot(game, self, yourLandoFilter)) {
+
+            PhysicalCard yourLandoCard = Filters.findFirstActive(game, self, yourLandoFilter);
+
+            if (yourLandoCard != null) {
+                final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Have your Lando make a regular move");
+                action.setActionMsg("Have " + GameUtils.getCardLink(yourLandoCard) + " make a regular move");
+                // Update usage limit(s)
+                action.appendUsage(
+                        new OncePerPhaseEffect(action));
+                // Perform result(s)
+                action.appendEffect(
+                        new MoveCardAsRegularMoveEffect(action, playerId, yourLandoCard, false, false, Filters.any));
+                actions.add(action);
+            }
+        }
+
+        gameTextActionId = GameTextActionId.THIS_DEAL_IS_GETTING_WORSE_ALL_THE_TIME_V__UPLOAD_CARD;
 
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
