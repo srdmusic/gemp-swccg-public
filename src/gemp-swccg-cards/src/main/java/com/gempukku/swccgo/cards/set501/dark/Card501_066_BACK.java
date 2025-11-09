@@ -33,6 +33,7 @@ import com.gempukku.swccgo.logic.effects.MoveCardAsRegularMoveEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainBonusesMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.Effect;
@@ -63,6 +64,7 @@ public class Card501_066_BACK extends AbstractObjective {
         modifiers.add(new MayNotDeployModifier(self, Filters.Admirals_Order, playerId));
 
         //While this side up
+        modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Sense, Filters.Alter)));
         modifiers.add(new TotalBattleDestinyModifier(self,
                         new InBattleCondition(self, Filters.and(Filters.your(self), Filters.alien, Filters.with(self, Filters.and(Filters.your(self), Filters.Imperial, Filters.participatingInBattle)))),
                         new ConditionEvaluator(2, 4, new InBattleCondition(self, Filters.and(Filters.your(self), Filters.alien, Filters.Ugnaught))), playerId));
