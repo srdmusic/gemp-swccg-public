@@ -47,7 +47,7 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 public class Card501_066_BACK extends AbstractObjective {
     public Card501_066_BACK() {
         super(Side.DARK, 7, Title.Pray_I_Dont_Alter_It_Any_Further, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, Sense and Alter are canceled. If you have an alien/Imperial pair in battle, your total battle destiny is +2. Force drain bonuses at same site as your Lando or your Lobot may not be canceled. While Vader at a Bespin location, game text of Admiral’s Orders are canceled and opponent loses 3 Force if their character was just frozen. If your Lando in battle, may target a character present with him; target is forfeit = 0. Flip this card if opponent controls more Bespin locations than you do.");
+        setGameText("While this side up, Sense and Alter may not be played. Force drain bonuses at same site as your Lando or your Lobot may not be canceled. While Vader at a Bespin location, game text of Admiral's Orders is canceled and opponent loses 3 Force if a character was just frozen. If your alien/Imperial pair in battle, your total battle destiny is +2. If your Lando in battle, may target a character present with him; target is forfeit = 0. Flip this card if opponent controls more Bespin locations than you.");
         addIcons(Icon.CLOUD_CITY, Icon.PREMIUM, Icon.VIRTUAL_SET_26);
         setVirtualSuffix(true);
         setTestingText("Pray I Don't Alter It Any Further (V)");
