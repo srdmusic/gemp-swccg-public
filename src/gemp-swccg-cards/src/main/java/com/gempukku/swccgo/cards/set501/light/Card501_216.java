@@ -63,7 +63,7 @@ public class Card501_216 extends AbstractStartingInterrupt {
                             action.appendEffect(
                                     new LightSideGoesFirstEffect(action));
                             action.appendEffect(
-                                new ModifyNumCardsDrawnInStartingHandEffect(action, playerId, 6));
+                                new ModifyNumCardsDrawnInStartingHandEffect(action, playerId, 5));
                             action.appendEffect(
                                     new PutCardFromVoidInLostPileEffect(action, playerId, self));
                         }
