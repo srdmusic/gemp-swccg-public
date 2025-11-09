@@ -43,7 +43,7 @@ public class Card501_066 extends AbstractObjective {
     public Card501_066() {
         super(Side.DARK, 0, Title.This_Deal_Is_Getting_Worse_All_The_Time, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy one Cloud City battleground site and [Cloud City] I'm Sorry. For remainder of game, you may not deploy Admiral's Orders. During your control phase, your Lando may make a regular move. While this side up, once per turn, may ▲ Cloud City Occupation, Dark Deal, Vader’s Bounty, or [Special Edition] Bespin. Flip this card if you control 3 Bespin locations and opponent controls fewer than 3 Bespin locations.");
+        setGameText("Deploy one Cloud City battleground site and [Cloud City] I'm Sorry. For remainder of game, you may not deploy Admiral's Orders. During your control phase, your Lando may make a regular move. While this side up, once per turn, may [upload] Cloud City Occupation, Dark Deal, Vader's Bounty, or [Special Edition] Bespin. Flip this card if you control 3 Bespin locations and opponent controls fewer than 3 Bespin locations.");
         addIcons(Icon.CLOUD_CITY, Icon.PREMIUM, Icon.VIRTUAL_SET_26);
         setVirtualSuffix(true);
         setTestingText("This Deal Is Getting Worse All The Time (V)");
@@ -113,13 +113,13 @@ public class Card501_066 extends AbstractObjective {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Take card into hand from Reserve Deck");
-            action.setActionMsg("Take Cloud City Occupation, Dark Deal, or [Special Edition] Bespin system into hand from Reserve Deck");
+            action.setActionMsg("Take Cloud City Occupation, Dark Deal, Vader's Bounty, or [Special Edition] Bespin into hand from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.Cloud_City_Occupation, Filters.Dark_Deal, Filters.and(Icon.SPECIAL_EDITION, Filters.Bespin_system)), true));
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.Cloud_City_Occupation, Filters.Dark_Deal, Filters.Vaders_Bounty, Filters.and(Icon.SPECIAL_EDITION, Filters.Bespin_system)), true));
             actions.add(action);
         }
         return actions;
