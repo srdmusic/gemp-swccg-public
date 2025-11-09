@@ -154,10 +154,12 @@ public class Card501_066_BACK extends AbstractObjective {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
 
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
+        // Check condition(s)
         if (TriggerConditions.frozen(game, effectResult, Filters.character)
                 && GameConditions.canSpot(game, self, Filters.and(Filters.Vader, Filters.at(Filters.Bespin_location)))) {
 
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Make " + opponent + " lose 3 Force");
             // Perform result(s)
             action.appendEffect(
@@ -165,13 +167,14 @@ public class Card501_066_BACK extends AbstractObjective {
             actions.add(action);
         }
 
+        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_4;
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
                 && (Filters.countTopLocationsOnTable(game, Filters.and(Filters.Bespin_location, Filters.controls(opponent, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))) >
                 Filters.countTopLocationsOnTable(game, Filters.and(Filters.Bespin_location, Filters.controls(playerId, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE))))) {
 
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setSingletonTrigger(true);
             action.setText("Flip");
             action.setActionMsg(null);
