@@ -156,7 +156,8 @@ public class Card501_066_BACK extends AbstractObjective {
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
         // Check condition(s)
-        if (TriggerConditions.frozen(game, effectResult, Filters.character)
+        if ((TriggerConditions.frozen(game, effectResult, Filters.character)
+                || TriggerConditions.frozenAndCaptured(game, effectResult, Filters.character))
                 && GameConditions.canSpot(game, self, Filters.and(Filters.Vader, Filters.at(Filters.Bespin_location)))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
