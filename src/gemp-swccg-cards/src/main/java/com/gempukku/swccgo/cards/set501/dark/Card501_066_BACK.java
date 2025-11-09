@@ -24,9 +24,8 @@ import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainBonusesMayNotBeCanceledModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeCanceledModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeConvertedModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.Effect;
@@ -54,8 +53,7 @@ public class Card501_066_BACK extends AbstractObjective {
         Condition executorAtBespin = new OnTableCondition(self, Filters.and(Filters.Executor, Filters.at(Filters.Bespin_system)));
 
         //For remainder of game
-        modifiers.add(new ImmuneToTitleModifier(self, Filters.Dark_Deal, Title.Surreptitious_Glance));
-        modifiers.add(new MayNotBeConvertedModifier(self, Filters.and(Filters.your(self), Filters.Bespin_system)));
+        modifiers.add(new MayNotDeployModifier(self, Filters.Admirals_Order, playerId));
 
         //While this side up
         modifiers.add(new TotalBattleDestinyModifier(self,
