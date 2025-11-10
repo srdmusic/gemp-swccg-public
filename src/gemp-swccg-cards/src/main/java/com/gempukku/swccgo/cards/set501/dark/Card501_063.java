@@ -36,7 +36,7 @@ import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
  */
 public class Card501_063 extends AbstractUsedInterrupt {
     public Card501_063() {
-        super(Side.DARK, 3, "Endless Legions", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 4, "Endless Legions", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("If your stormtroopers occupy three battleground and/or Rebel Base locations, choose: Draw three cards from Force Pile, then place two cards from hand on Force Pile. OR Once per game, if you just lost a non-[Maintenance] stormtrooper, take it into hand.");
         addIcons(Icon.VIRTUAL_SET_26);
