@@ -44,7 +44,7 @@ public class Card501_071 extends AbstractUsedOrLostInterrupt {
     public Card501_071() {
         super(Side.DARK, 5, Title.Ommni_Box_Its_Worse, Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         addComboCardTitles(Title.Ommni_Box, Title.Its_Worse);
-        setGameText("USED: For remainder of turn, you lose no Force to the following cards on table (if any): A Good Blaster At Your Side, No Disintegrations!, Stardust, and They Will Be Lost And Confused. OR Cancel It Could Be Worse, It Can Wait or It's a Trap! (Immune to It's A Hit!) OR Shuffle any player's Reserve Deck or Lost Pile. OR ▲ a character with 'Cantina' in lore or game text. LOST: If opponent just lost a battle, they lose 2 Force.");
+        setGameText("USED: For remainder of turn, you lose no Force to the following cards on table (if any): A Good Blaster At Your Side, No Disintegrations!, Stardust, and They Will Be Lost And Confused. OR Cancel Blast The Door, Kid! or It Could Be Worse. (Immune to It's A Hit!) OR Shuffle any player's Reserve Deck or Lost Pile. LOST: If opponent just lost a battle, they lose 2 Force.");
         addIcons(Icon.REFLECTIONS_II, Icon.VIRTUAL_SET_26);
         setVirtualSuffix(true);
         setTestingText("Ommni Box & It's Worse (V)");
@@ -105,30 +105,12 @@ public class Card501_071 extends AbstractUsedOrLostInterrupt {
             actions.add(action1);
         }
 
-        GameTextActionId gameTextActionId = GameTextActionId.OMMNI_BOX_ITS_WORSE_V__UPLOAD_CHARACTER;
-        if (GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
-            final PlayInterruptAction action2 = new PlayInterruptAction(game, self, gameTextActionId, CardSubtype.USED);
-            Filter cardFilter = Filters.and(Filters.character, Filters.or(Filters.loreContains("Cantina"), Filters.gameTextContains("Cantina")));
-            action2.setText("Take card into hand from Reserve Deck");
-            // Allow response(s)
-            action2.allowResponses("Take a character with 'cantina' in lore or game text into hand from Reserve Deck",
-                    new RespondablePlayCardEffect(action2) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action2.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action2, playerId, cardFilter, true));
-                        }
-                    }
-            );
-            actions.add(action2);
-        }
         return actions;
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, Effect effect, PhysicalCard self) {
-        Filter cancelInterrupts = Filters.or(Filters.It_Could_Be_Worse, Filters.It_Can_Wait, Filters.Its_A_Trap);
+        Filter cancelInterrupts = Filters.or(Filters.Blast_The_Door_Kid, Filters.It_Could_Be_Worse);
         // Check condition(s)
         if (TriggerConditions.isPlayingCard(game, effect, cancelInterrupts)
                 && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
