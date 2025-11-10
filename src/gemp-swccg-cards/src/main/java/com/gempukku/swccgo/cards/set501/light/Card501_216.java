@@ -1,6 +1,6 @@
 package com.gempukku.swccgo.cards.set501.light;
 
-import com.gempukku.swccgo.cards.AbstractStartingInterrupt;
+import com.gempukku.swccgo.cards.AbstractLostOrStartingInterrupt;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -27,11 +27,11 @@ import com.gempukku.swccgo.logic.timing.Action;
  * Title: Something About This Boy
  */
 
-public class Card501_216 extends AbstractStartingInterrupt {
+public class Card501_216 extends AbstractLostOrStartingInterrupt {
     public Card501_216() {
         super(Side.LIGHT, 3, "Something About This Boy", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'What'd he mean by that?' 'I'll tell you later.'");
-        setGameText("If your starting location was [Skywalker] Slave Quarters, deploy Prophecy Of The Force there, Jedi Business, and Your Thoughts Dwell On Your Mother. [Upload] City Outskirts. Light Side goes first. When you draw your starting hand, draw only 5 cards. Place Interrupt in Lost Pile.");
+        setGameText("LOST: Relocate Prophecy Of The Force to a site. STARTING: If your starting location was Skywalker Hut, deploy Prophecy Of The Force there, Do, Or Do Not and Jedi Business. [Upload] City Outskirts. Light Side goes first. Place Interrupt in Reserve Deck.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_26);
         setTestingText("Something About This Boy");
     }
