@@ -16,7 +16,6 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.AttachCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.LightSideGoesFirstEffect;
@@ -99,7 +98,7 @@ public class Card501_216 extends AbstractLostOrStartingInterrupt {
             if (canRelocate) {
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
-                action.setText("Relocate " + GameUtils.getCardLink(prophecyOfTheForce) + " to a site");
+                action.setText("Relocate Prophecy Of The Force");
                 action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose site", Filters.canRelocateEffectTo(playerId, prophecyOfTheForce)) {
                     @Override
                     protected void cardTargeted(int targetGroupId, PhysicalCard site) {
