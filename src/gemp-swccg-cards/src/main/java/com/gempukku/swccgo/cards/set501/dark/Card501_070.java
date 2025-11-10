@@ -24,9 +24,11 @@ import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.InBattleCondition;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotAddBattleDestinyDrawsModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -55,7 +57,9 @@ public class Card501_070 extends AbstractAlienImperial {
         List<Modifier> modifiers = new LinkedList<>();
         
         Condition lukeOnTable = new OnTableCondition(self, Filters.Luke);
+        Condition selfInBattle = new InBattleCondition(self);
 
+        modifiers.add(new MayNotAddBattleDestinyDrawsModifier(self, Filters.any, selfInBattle));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, new ConditionEvaluator(4, 5, lukeOnTable)));
         return modifiers;
     }
