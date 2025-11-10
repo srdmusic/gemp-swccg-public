@@ -48,7 +48,7 @@ public class Card501_070 extends AbstractAlienImperial {
         setGameText("Functions as your apprentice. Battle destiny draws may not be added here. May [download] Mara Jade's Lightsaber here. If you just won a battle here, may retrieve a card with 'Mara' in game text. Immune to Rebel Barrier and attrition < 4 (< 5 if Luke on table).");
         addPersona(Persona.MARA_JADE);
         addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_26);
-        addKeywords(Keyword.SPY, Keyword.FEMALE);
+        addKeywords(Keyword.SPY, Keyword.FEMALE, Keyword.SITH_APPRENTICE);
         setVirtualSuffix(true);
         setTestingText("Mara Jade, The Emperor's Hand (V)");
     }
