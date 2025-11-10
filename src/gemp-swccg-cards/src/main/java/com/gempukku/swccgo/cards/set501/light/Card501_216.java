@@ -1,6 +1,12 @@
 package com.gempukku.swccgo.cards.set501.light;
 
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.gempukku.swccgo.cards.AbstractLostOrStartingInterrupt;
+import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -10,13 +16,18 @@ import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.AttachCardFromTableEffect;
 import com.gempukku.swccgo.logic.effects.LightSideGoesFirstEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromVoidInReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
+import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.Action;
 
 /**
@@ -43,7 +54,7 @@ public class Card501_216 extends AbstractLostOrStartingInterrupt {
         final PhysicalCard startingLocation = game.getModifiersQuerying().getStartingLocation(playerId);
         if (startingLocation != null && requiredStartingLocation.accepts(game, startingLocation)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.STARTING);
             action.setText("Deploy Prophecy Of The Force and other cards from Reserve Deck");
             // Allow response(s)
             action.allowResponses("Deploy Prophecy Of The Force, Do, Or Do Not, and Jedi Business from Reserve Deck.",
@@ -69,5 +80,47 @@ public class Card501_216 extends AbstractLostOrStartingInterrupt {
             return action;
         }
         return null;
+    }
+
+    @Override
+    protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<>();    
+
+        // Check condition(s)
+        if (GameConditions.canSpot(game, self, Filters.Prophecy_Of_The_Force)) {
+            final PhysicalCard prophecyOfTheForce = Filters.findFirstActive(game, self, Filters.Prophecy_Of_The_Force);
+            boolean canRelocate = GameConditions.canSpot(game, self, Filters.canRelocateEffectTo(playerId, prophecyOfTheForce));
+            Collection<Modifier> modifiers = game.getModifiersQuerying().getModifiersAffecting(game.getGameState(), prophecyOfTheForce);
+            for (Modifier m : modifiers) {
+                if (m.getModifyGameTextType(game.getGameState(), game.getModifiersQuerying(), prophecyOfTheForce) == ModifyGameTextType.PROPHECY_OF_THE_FORCE__MAY_NOT_BE_RELOCATED)
+                    canRelocate = false;
+            }
+
+            if (canRelocate) {
+
+                final PlayInterruptAction action = new PlayInterruptAction(game, self, CardSubtype.LOST);
+                action.setText("Relocate " + GameUtils.getCardLink(prophecyOfTheForce) + " to a site");
+                action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose site", Filters.canRelocateEffectTo(playerId, prophecyOfTheForce)) {
+                    @Override
+                    protected void cardTargeted(int targetGroupId, PhysicalCard site) {
+
+                        final PhysicalCard finalSite = action.getPrimaryTargetCard(targetGroupId);
+                        action.addAnimationGroup(prophecyOfTheForce);
+                        action.addAnimationGroup(finalSite);
+                        action.allowResponses(new RespondablePlayCardEffect(action) {
+                            @Override
+                            protected void performActionResults(Action targetingAction) {
+                                action.appendEffect(
+                                        new AttachCardFromTableEffect(action, prophecyOfTheForce, finalSite)
+                                );
+                            }
+                        });
+                    }
+                });
+
+                actions.add(action);
+            }
+        }
+        return actions;
     }
 }
