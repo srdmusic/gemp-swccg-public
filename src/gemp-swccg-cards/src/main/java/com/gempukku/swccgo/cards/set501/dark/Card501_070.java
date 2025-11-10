@@ -72,7 +72,7 @@ public class Card501_070 extends AbstractAlienImperial {
         if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.MARA_JADES_LIGHTSABER)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy Mara Jade's Lightsaber from Reserve Deck");
+            action.setText("Deploy Mara Jade's Lightsaber");
             action.setActionMsg("Deploy Mara Jade's Lightsaber to Mara's location from Reserve Deck");
             // Perform result(s)
             action.appendEffect(
