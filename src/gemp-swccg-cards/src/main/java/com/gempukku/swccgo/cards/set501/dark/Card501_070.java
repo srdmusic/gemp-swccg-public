@@ -48,7 +48,7 @@ public class Card501_070 extends AbstractAlienImperial {
     public Card501_070() {
         super(Side.DARK, 1, 5, 4, 5, 7, Title.Mara_Jade_The_Emperors_Hand, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Spy. Ordered to kill Luke Skywalker. Assumed the identity of a dancer named 'Arica' in order to sneak into Jabba's palace.");
-        setGameText("While Revenge Of The Sith on table, gains [Sith]. Deploys +2 to non-battlegrounds. If you just won a battle here, may retrieve a card with 'Mara' in game text. May [download] Mara Jade's Lightsaber here. Immune to attrition < 4 (< 5 if alone or no Jedi here, < 6 if both).");
+        setGameText("Functions as your apprentice. Battle destiny draws may not be added here. May [download] Mara Jade's Lightsaber here. If Mara just won a battle, may retrieve a card with 'Mara' in gametext. Immune to Rebel Barrier and attrition < 4 (< 5 if Luke on table).");
         addPersona(Persona.MARA_JADE);
         addIcons(Icon.PREMIUM, Icon.PILOT, Icon.WARRIOR, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_26);
         addKeywords(Keyword.SPY, Keyword.FEMALE);
