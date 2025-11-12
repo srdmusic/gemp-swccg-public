@@ -138,6 +138,7 @@ public class Card_8_080_Tests {
         assertTrue(scn.IsAttachedTo(yt1300,cannon));
     }
 
+    //shows fixed: https://github.com/PlayersCommittee/gemp-swccg-public/issues/667
     @Test
     public void YT1300TransportSDCFiringCost() {
         //Test1: fires for free YT-1300
@@ -176,42 +177,8 @@ public class Card_8_080_Tests {
         scn.PassAllResponses();
         assertEquals(2,scn.GetLSUsedPileCount()); //1 to battle + 1 destiny draw
         assertTrue(scn.AwaitingDSWeaponsSegmentActions());
-
-//
-//        scn.DSPass();
-//        scn.LSPass();
-//
-//        scn.DSPass();
-//        scn.LSPass();
-//
-//        scn.DSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
-//        scn.LSPass();
-//
-//        scn.DSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
-//        scn.LSPass();
-//
-//        scn.DSPass(); //DESTINY_DRAWN - Optional responses
-//        scn.LSPass();
-//
-//        scn.DSPass(); //COMPLETE_DESTINY_DRAW - Optional responses
-//        scn.LSPass();
-//
-//        scn.DSPass(); //DRAWING_DESTINY_COMPLETE - Optional responses
-//        scn.LSPass();
-//
-//        scn.DSPass(); //ABOUT_TO_BE_HIT - Optional responses
-//        scn.LSPass();
-//
-//        scn.DSPass(); //HIT - Optional responses
-//        scn.LSPass();
-//
-//        scn.DSPass();
-//        scn.LSPass();
-//
-//        scn.DSPass();
-//        scn.LSPass();
-
-
     }
 
+    //other tests:
+    //check perm pilot ability
 }

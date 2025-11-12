@@ -59,14 +59,4 @@ public class Card8_080 extends AbstractStarfighter {
         modifiers.add(new FiresForFreeModifier(self, Filters.and(quadLaserCannonAndSurfaceDefenseCannon, Filters.attachedTo(self))));
         return modifiers;
     }
-
-//    @Override
-//    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-//        Filter quadLaserCannonAndSurfaceDefenseCannon = Filters.or(Filters.Quad_Laser_Cannon, Filters.Surface_Defense_Cannon);
-//
-//        List<Modifier> modifiers = new LinkedList<Modifier>();
-//        //modifiers.add(new FiresForFreeModifier(self, Filters.and(quadLaserCannonAndSurfaceDefenseCannon, Filters.attachedTo(self))));
-//        //modifiers.add(new FiresForFreeModifier(self, Filters.any));
-//        return modifiers;
-//    }
 }

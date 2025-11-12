@@ -15,7 +15,6 @@ import com.gempukku.swccgo.framework.VirtualTableScenario;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.security.Key;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -177,4 +176,9 @@ public class Card_3_080_Tests {
         assertEquals(0,scn.GetLSForcePileCount()); //Test2: 1 to fire
         assertTrue(scn.AwaitingDSWeaponsSegmentActions());
     }
+
+    //other tests:
+    //hit when destiny + 1 > defense
+    //not hit when destiny + 1 = defense
+    //can fire at a creature
 }
