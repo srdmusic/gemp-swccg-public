@@ -48,7 +48,7 @@ public class Card9_115 extends AbstractImperial {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 2));
         modifiers.add(new MayNotMoveFromLocationToLocationUsingLandspeedModifier(self, Filters.and(Filters.opponents(self), Filters.character,
-                Filters.atSameSite(self)), new PilotingCondition(self, Filters.and(Filters.bomber, Filters.makingBombingRun)), Filters.sameLocation(self), Filters.any));
+                Filters.atSameSite(self)), new PilotingCondition(self, Filters.and(Filters.bomber, Filters.makingBombingRun)), Filters.any, Filters.any));
         return modifiers;
     }
 }
