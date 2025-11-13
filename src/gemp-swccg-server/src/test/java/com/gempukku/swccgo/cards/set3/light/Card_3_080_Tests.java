@@ -68,7 +68,7 @@ public class Card_3_080_Tests {
 
 		var scn = GetScenario();
 
-		var card = scn.GetLSCard("cannon").getBlueprint();
+		var card = scn.GetLSCard("cannon1").getBlueprint();
 
 		assertEquals("Surface Defense Cannon", card.getTitle());
 		assertFalse(card.hasVirtualSuffix());
