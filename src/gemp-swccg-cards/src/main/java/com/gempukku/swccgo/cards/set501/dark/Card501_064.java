@@ -35,9 +35,9 @@ import java.util.List;
  */
 public class Card501_064 extends AbstractLostInterrupt {
     public Card501_064() {
-        super(Side.DARK, 4, "Welcome Home, Lord Tyranus", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.DARK, 6, "Welcome Home, Lord Tyranus", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("If Dooku is your apprentice, choose: [upload] Petranaki Arena or The Works. OR Once per game, if Darth Tyranus in battle at a site and you are about to draw a card for battle destiny, you may instead use his ability number. OR If Dooku and Sidious on table, cancel Sense.");
+        setGameText("If Dooku is your apprentice, choose: [Upload] Petranaki Arena or The Works. OR If Dooku and Sidious on table, cancel Sense. OR Once per game, if Darth Tyranus in battle at a site and you are about to draw a card for battle destiny, instead use his ability number.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("Welcome Home, Lord Tyranus");
     }
