@@ -40,7 +40,7 @@ public class Card501_210 extends AbstractJediMasterRepublic {
     public Card501_210() {
         super(Side.LIGHT, 1, 8, 6, 7, 8, "Kelleran Beq", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Jedi survivor.");
-        setGameText("[Pilot] 2. Any lightsaber may deploy on Beq. Once per game, may deploy up to two lightsabers on Beq from Lost Pile. Your other characters here are defense value +1 for each lightsaber on Beq. Adds one battle destiny with Grogu or a Padawan. Immune to attrition < 6.");
+        setGameText("[Pilot] 2. Adds one battle destiny with Grogu or a Padawan. Any lightsaber may deploy on Beq. Once per game, may deploy a lightsaber on Beq from Lost Pile. Your other characters here are defense value +1 for each lightsaber on Beq. Immune to attrition < 6.");
         addKeyword(Keyword.JEDI_SURVIVOR);
         addPersona(Persona.BEQ);
         addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.VIRTUAL_SET_26);
