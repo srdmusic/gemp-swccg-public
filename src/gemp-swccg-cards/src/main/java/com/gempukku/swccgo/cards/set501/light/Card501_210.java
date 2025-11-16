@@ -20,7 +20,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardsToTargetFromLostPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
@@ -65,24 +65,19 @@ public class Card501_210 extends AbstractJediMasterRepublic {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.KELLERAN_BEQ__DEPLOY_LIGHTSABERS;
+        GameTextActionId gameTextActionId = GameTextActionId.KELLERAN_BEQ__DEPLOY_LIGHTSABER;
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy lightsaber(s) from Lost Pile");
-            action.setActionMsg("Deploy up to two lightsabers on Beq from Lost Pile");
+            action.setText("Deploy lightsaber from Lost Pile");
+            action.setActionMsg("Deploy a lightsaber on Beq from Lost Pile");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardsToTargetFromLostPileEffect(action, Filters.lightsaber, 1, 2, Filters.Beq, false) {
-                        @Override
-                        public String getChoiceText(int numCardsToChoose) {
-                            return "Choose lightsaber(s) to deploy on Beq";
-                        }
-                    });
+                    new DeployCardToTargetFromLostPileEffect(action, Filters.lightsaber, Filters.Beq, false));
             actions.add(action);
         }
         return actions;
