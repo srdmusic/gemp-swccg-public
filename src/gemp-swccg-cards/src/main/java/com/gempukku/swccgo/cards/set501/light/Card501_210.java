@@ -20,7 +20,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.effects.choose.DeployCardsToTargetFromLostPileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.AddsBattleDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.AddsPowerToPilotedBySelfModifier;
 import com.gempukku.swccgo.logic.modifiers.DefenseValueModifier;
@@ -40,7 +40,7 @@ public class Card501_210 extends AbstractJediMasterRepublic {
     public Card501_210() {
         super(Side.LIGHT, 1, 8, 6, 7, 8, "Kelleran Beq", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Jedi survivor.");
-        setGameText("[Pilot] 2. Any lightsaber may deploy on Beq. Once per game, may deploy up to two lightsabers on Beq from Lost Pile. Your other characters here are defense value +1 for each lightsaber on Beq. Adds one battle destiny with Grogu or a Padawan. Immune to attrition < 6.");
+        setGameText("[Pilot] 2. Adds one battle destiny with Grogu or a Padawan. Any lightsaber may deploy on Beq. Once per game, may deploy a lightsaber on Beq from Lost Pile. Your other characters here are defense value +1 for each lightsaber on Beq. Immune to attrition < 6.");
         addKeyword(Keyword.JEDI_SURVIVOR);
         addPersona(Persona.BEQ);
         addIcons(Icon.EPISODE_I, Icon.PILOT, Icon.VIRTUAL_SET_26);
@@ -65,24 +65,19 @@ public class Card501_210 extends AbstractJediMasterRepublic {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.KELLERAN_BEQ__DEPLOY_LIGHTSABERS;
+        GameTextActionId gameTextActionId = GameTextActionId.KELLERAN_BEQ__DEPLOY_LIGHTSABER;
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy lightsaber(s) from Lost Pile");
-            action.setActionMsg("Deploy up to two lightsabers on Beq from Lost Pile");
+            action.setText("Deploy lightsaber from Lost Pile");
+            action.setActionMsg("Deploy a lightsaber on Beq from Lost Pile");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerGameEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardsToTargetFromLostPileEffect(action, Filters.lightsaber, 1, 2, Filters.Beq, false) {
-                        @Override
-                        public String getChoiceText(int numCardsToChoose) {
-                            return "Choose lightsaber(s) to deploy on Beq";
-                        }
-                    });
+                    new DeployCardToTargetFromLostPileEffect(action, Filters.lightsaber, Filters.Beq, false));
             actions.add(action);
         }
         return actions;
