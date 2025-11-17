@@ -113,7 +113,7 @@ public class SabaccTests {
         //(no way to verify "Done" option is unavailable?)
         //scn.DSPass(); //if uncommented, fails here because "Done" is not available
 
-        assertEquals(7,scn.GetDSSabaccTotal(),scn.epsilon); //5 + 3 + -1 clone
+        assertEquals(7,scn.GetDSSabaccTotal()); //5 + 3 + -1 clone
 
         assertTrue(scn.DSHasCardChoiceAvailable(ds_clone));
         scn.DSChooseCard(ds_clone);
@@ -121,8 +121,8 @@ public class SabaccTests {
         assertTrue(scn.DSHasCardChoiceAvailable(ds_destiny5));
         scn.DSChooseCard(ds_destiny3);
 
-        assertEquals(11,scn.GetDSSabaccTotal(),scn.epsilon); //5 + 3 + cloned 3
-        assertEquals(8,scn.GetLSSabaccTotal(),scn.epsilon); //5 + 3
+        assertEquals(11,scn.GetDSSabaccTotal()); //5 + 3 + cloned 3
+        assertEquals(8,scn.GetLSSabaccTotal()); //5 + 3
         //(no way to verify "Done" option is available?)
         scn.DSPass(); //choose 'Done'
 
