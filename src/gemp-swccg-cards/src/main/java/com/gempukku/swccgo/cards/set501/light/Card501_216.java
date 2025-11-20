@@ -24,7 +24,6 @@ import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.Action;
@@ -40,7 +39,7 @@ public class Card501_216 extends AbstractLostOrStartingInterrupt {
     public Card501_216() {
         super(Side.LIGHT, 3, "Something About This Boy", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("'What'd he mean by that?' 'I'll tell you later.'");
-        setGameText("LOST: Relocate Prophecy Of The Force to a site. STARTING: If your starting location was Skywalker Hut, deploy Prophecy Of The Force there, Do, Or Do Not and Jedi Business. [Upload] City Outskirts. Light Side goes first. Place Interrupt in Reserve Deck.");
+        setGameText("LOST: Relocate Prophecy Of The Force to a site. STARTING: If your starting location was Skywalker Hut, deploy Prophecy Of The Force there, Do, Or Do Not and Jedi Business. Light Side goes first. Place Interrupt in Reserve Deck.");
         addIcons(Icon.EPISODE_I, Icon.VIRTUAL_SET_26);
         setTestingText("Something About This Boy");
     }
@@ -67,8 +66,6 @@ public class Card501_216 extends AbstractLostOrStartingInterrupt {
                                     new DeployCardFromReserveDeckEffect(action, Filters.Do_Or_Do_Not, true, false));
                             action.appendEffect(
                                     new DeployCardFromReserveDeckEffect(action, Filters.Jedi_Business, true, false));
-                            action.appendEffect(
-                                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.City_Outskirts, false));
                             action.appendEffect(
                                     new LightSideGoesFirstEffect(action));
                             action.appendEffect(
