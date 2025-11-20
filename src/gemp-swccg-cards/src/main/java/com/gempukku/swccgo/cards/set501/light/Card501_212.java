@@ -4,7 +4,6 @@ import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.MoveAsReactEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
-import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -72,16 +71,12 @@ public class Card501_212 extends AbstractNormalEffect {
         List<TopLevelGameTextAction> actions = new LinkedList<>();
 
         GameTextActionId gameTextActionId = GameTextActionId.LAUNCHING_THE_ASSAULT_V__DOWNLOAD_HOME_ONE_OR_SULLUST;
-        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.HOME_ONE)
-                || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Sullust))) {
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.HOME_ONE)
+                || GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Sullust)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy a card from Reserve Deck");
             action.setActionMsg("Deploy Home One or Sullust from Reserve Deck");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
                     new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Home_One, Filters.Sullust_system), true));
