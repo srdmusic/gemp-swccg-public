@@ -45,7 +45,7 @@ public class Card501_212 extends AbstractNormalEffect {
     public Card501_212() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Launching_The_Assault, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("By recruiting the Mon Calamari, a race of master shipwrights, the Rebel starfleet gained capital starships rivaling the dreaded Imperial Star Destroyers.");
-        setGameText("If your Endor (or Rebel Base) location on table, deploy on table. Once per turn, may [download] Home One or Sullust. Home One is deploy = 8 and may not have its power reduced. Once per game, Home One may move to same system as [Death Star II] Falcon (or vice versa) as a 'react.' [Immune to Alter.]");
+        setGameText("If your Endor or Rebel Base location on table, deploy on table. May [download] Home One or Sullust. Home One is deploy = 8 to an [Endor] or [Death Star II] system and its power may not be reduced. Once per game, Home One may move as a 'react' to [Death Star II] Falcon's location (or vice versa). [Immune to Alter.]");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_26);
         addImmuneToCardTitle(Title.Alter);
         setVirtualSuffix(true);
