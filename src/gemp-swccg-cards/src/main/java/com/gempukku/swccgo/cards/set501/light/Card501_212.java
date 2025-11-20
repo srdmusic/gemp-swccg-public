@@ -89,80 +89,61 @@ public class Card501_212 extends AbstractNormalEffect {
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         String opponent = game.getOpponent(playerId);
-        Filter ds2Falcon = Filters.and(Icon.DEATH_STAR_II, Filters.Falcon);
+        Filter filterHomeOne = Filters.Home_One;
+        Filter filterDS2Falcon = Filters.and(Icon.DEATH_STAR_II, Filters.Falcon);
+        GameTextActionId gameTextActionId = GameTextActionId.LAUNCHING_THE_ASSAULT_V__REACT_TO_FALCON;
+
         List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.LAUNCHING_THE_ASSAULT_V__REACT_TO_FALCON;
-        if ((TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.sameSystemAs(self, ds2Falcon))
-                || TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent, Filters.sameSystemAs(self, ds2Falcon)))
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
+        final OptionalGameTextTriggerAction actionHomeOneToFalcon = getShipToShipReactAction(playerId, opponent, game, effectResult, self, gameTextSourceCardId, gameTextActionId, "Home One", filterHomeOne, filterDS2Falcon);
+        if (actionHomeOneToFalcon != null)
+            actions.add(actionHomeOneToFalcon);
 
-            Filter homeOneFilter = Filters.and(Filters.Home_One, Filters.canMoveAsReactAsActionFromOtherCard(self, false, 0 , false));
-            if (GameConditions.canTarget(game, self, homeOneFilter)) {
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Move Home One as 'react'");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerGameEffect(action));
-                // Choose target(s)
-                action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Choose Home One", homeOneFilter) {
-                            @Override
-                            protected void cardTargeted(final int targetGroupId, final PhysicalCard homeOne) {
-                                action.addAnimationGroup(homeOne);
-                                // Allow response(s)
-                                action.allowResponses("Move " + GameUtils.getCardLink(homeOne) + " as a 'react'",
-                                        new UnrespondableEffect(action) {
-                                            @Override
-                                            protected void performActionResults(Action targetingAction) {
-                                                // Perform result(s)
-                                                action.appendEffect(
-                                                        new MoveAsReactEffect(action, homeOne, false));
-                                            }
-                                        }
-                                );
-                            }
-                        }
-                );
-                actions.add(action);
-            }
-        }
-
-        if ((TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.sameSystemAs(self, Filters.Home_One))
-                || TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent, Filters.sameSystemAs(self, Filters.Home_One)))
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)) {
-
-            Filter ds2FalconFilter = Filters.and(ds2Falcon, Filters.canMoveAsReactAsActionFromOtherCard(self, false, 0 , false));
-            if (GameConditions.canTarget(game, self, ds2FalconFilter)) {
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Move Falcon as 'react'");
-                // Update usage limit(s)
-                action.appendUsage(
-                        new OncePerGameEffect(action));
-                // Choose target(s)
-                action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Choose Falcon", ds2FalconFilter) {
-                            @Override
-                            protected void cardTargeted(final int targetGroupId, final PhysicalCard ds2Falcon) {
-                                action.addAnimationGroup(ds2Falcon);
-                                // Allow response(s)
-                                action.allowResponses("Move " + GameUtils.getCardLink(ds2Falcon) + " as a 'react'",
-                                        new UnrespondableEffect(action) {
-                                            @Override
-                                            protected void performActionResults(Action targetingAction) {
-                                                // Perform result(s)
-                                                action.appendEffect(
-                                                        new MoveAsReactEffect(action, ds2Falcon, false));
-                                            }
-                                        }
-                                );
-                            }
-                        }
-                );
-                actions.add(action);
-            }
-        }
+        final OptionalGameTextTriggerAction actionFalconToHomeOne = getShipToShipReactAction(playerId, opponent, game, effectResult, self, gameTextSourceCardId, gameTextActionId, "Falcon", filterDS2Falcon, filterHomeOne);
+        if (actionFalconToHomeOne != null)
+            actions.add(actionFalconToHomeOne);
 
         return actions;
+    }
+
+    protected OptionalGameTextTriggerAction getShipToShipReactAction(String playerId, String opponent, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId, GameTextActionId gameTextActionId, String reactingShipText, Filter reactingShip, Filter otherShip)
+    {
+        Filter validReactingShip = Filters.and(reactingShip, Filters.canMoveAsReactAsActionFromOtherCard(self, false, 0 , false));
+
+        if ((TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.sameSystemAs(self, otherShip))
+                || TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent, Filters.sameSystemAs(self, otherShip)))
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canTarget(game, self, validReactingShip)) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
+            action.setText("Move " + reactingShipText +" as 'react'");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose " + reactingShipText, validReactingShip) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, final PhysicalCard reactingShipCard) {
+                            action.addAnimationGroup(reactingShipCard);
+                            // Allow response(s)
+                            action.allowResponses("Move " + GameUtils.getCardLink(reactingShipCard) + " as a 'react'",
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new MoveAsReactEffect(action, reactingShipCard, false));
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
+            return action;
+        }
+        else {
+            return null;
+        }        
     }
 }
