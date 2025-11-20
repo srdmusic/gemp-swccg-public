@@ -110,8 +110,8 @@ public class Card501_212 extends AbstractNormalEffect {
     {
         Filter validReactingShip = Filters.and(reactingShip, Filters.canMoveAsReactAsActionFromOtherCard(self, false, 0 , false));
 
-        if ((TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.sameSystemAs(self, otherShip))
-                || TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent, Filters.sameSystemAs(self, otherShip)))
+        if ((TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.sameLocationAs(self, otherShip))
+                || TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent, Filters.sameLocationAs(self, otherShip)))
                 && GameConditions.isOncePerGame(game, self, gameTextActionId)
                 && GameConditions.canTarget(game, self, validReactingShip)) {
 
