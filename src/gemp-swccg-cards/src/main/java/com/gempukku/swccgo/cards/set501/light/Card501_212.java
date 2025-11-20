@@ -27,7 +27,7 @@ import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotHavePowerReducedModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ResetDeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.ResetDeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -60,7 +60,7 @@ public class Card501_212 extends AbstractNormalEffect {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
 
-        modifiers.add(new ResetDeployCostModifier(self, Filters.Home_One, 8));
+        modifiers.add(new ResetDeployCostToLocationModifier(self, Filters.Home_One, 8, Filters.and(Filters.or(Icon.ENDOR, Icon.DEATH_STAR_II), Filters.system)));
         modifiers.add(new MayNotHavePowerReducedModifier(self, Filters.Home_One, self.getOwner()));
         modifiers.add(new MayNotHavePowerReducedModifier(self, Filters.Home_One, game.getOpponent(self.getOwner())));
         return modifiers;
