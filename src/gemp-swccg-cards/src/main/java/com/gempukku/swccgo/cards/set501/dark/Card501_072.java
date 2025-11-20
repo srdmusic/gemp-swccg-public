@@ -15,11 +15,11 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromCardModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotBeConvertedModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.ResetDeployCostToLocationModifier;
 
 /**
  * Set: Playtesting
@@ -32,7 +32,7 @@ import com.gempukku.swccgo.logic.modifiers.ResetDeployCostToLocationModifier;
 public class Card501_072 extends AbstractSystem {
     public Card501_072() {
         super(Side.DARK, Title.Bespin, 6, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("Executor may not move from here unless Vader aboard. If your [Cloud City] objective on table, Executor is deploy = 7 here.");
+        setLocationDarkSideGameText("Executor may not move from here unless Vader aboard. If your [Cloud City] objective on table, Executor deploys -8 here.");
         setLocationLightSideGameText("You lose no more than 2 Force to Cloud City Occupation. May not be converted.");
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
@@ -49,7 +49,7 @@ public class Card501_072 extends AbstractSystem {
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotMoveFromLocationModifier(self, Filters.Executor, unlessVaderAboardExecutor, self));
-        modifiers.add(new ResetDeployCostToLocationModifier(self, Filters.Executor, yourCloudCityObjOnTable, 7, Filters.here(self)));
+        modifiers.add(new DeployCostToLocationModifier(self, Filters.Executor, yourCloudCityObjOnTable, -8, Filters.here(self)));
         return modifiers;
     }
 
