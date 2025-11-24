@@ -31,12 +31,22 @@ public abstract class CardActionSelectionDecision extends AbstractAwaitingDecisi
         setParam("blueprintId", getBlueprintIdsForVirtualActions(actions));
         setParam("testingText", getTestingTextsForVirtualActions(actions));
         setParam("backSideTestingText", getBackSideTestingTextsForVirtualActions(actions));
+        setParam("horizontal", getHorizontalsForVirtualActions(actions));
         setParam("actionText", getActionTexts(actions));
         setParam("yourTurn", String.valueOf(yourTurn));
         setParam("autoPassEligible", String.valueOf(autoPassEligible));
         setParam("noPass", String.valueOf(noPass));
         setParam("noLongDelay", String.valueOf(noLongDelay));
         setParam("revertEligible", String.valueOf(revertEligible));
+    }
+
+    /**
+     * For testing, being able to inject an extra action at any point.
+     *
+     * @param action
+     */
+    public void addAction(Action action) {
+        _actions.add(action);
     }
 
     /**
@@ -115,6 +125,23 @@ public abstract class CardActionSelectionDecision extends AbstractAwaitingDecisi
                 result[i] = String.valueOf(physicalCard.getTestingText(null, physicalCard.getBlueprint().getCardCategory() != CardCategory.OBJECTIVE, true));
             else
                 result[i] = "null";
+        }
+        return result;
+    }
+
+    /**
+     * Gets the card horizontals.
+     * @param actions the actions
+     * @return the card horizontals
+     */
+    private String[] getHorizontalsForVirtualActions(List<Action> actions) {
+        String[] result = new String[actions.size()];
+        for (int i = 0; i < result.length; i++) {
+            PhysicalCard physicalCard = actions.get(i).getActionAttachedToCard();
+            if (physicalCard != null)
+                result[i] = String.valueOf(physicalCard.getBlueprint().isHorizontal());
+            else
+                result[i] = "false";
         }
         return result;
     }

@@ -6,6 +6,7 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 
 /**
  * A modifier that prevents a specified player from modifying a specified player's Force drains at specified locations.
@@ -19,7 +20,7 @@ public class ForceDrainsMayNotBeModifiedModifier extends AbstractModifier {
      * accepted by the location filter.
      * @param source the source of the modifier
      * @param locationFilter the location filter
-     * @param playerModifying the player to modify the Force drain
+     * @param playerModifying the player to modify the Force drain, or null for either player
      * @param playerDraining the player Force draining, or null for either player
      */
     public ForceDrainsMayNotBeModifiedModifier(PhysicalCard source, Filterable locationFilter, String playerModifying, String playerDraining) {
@@ -32,7 +33,7 @@ public class ForceDrainsMayNotBeModifiedModifier extends AbstractModifier {
      * @param source the source of the modifier
      * @param locationFilter the location filter
      * @param condition the condition that must be fulfilled for the modifier to be in effect
-     * @param playerModifying the player to modify the Force drain
+     * @param playerModifying the player to modify the Force drain, or null for either player
      * @param playerDraining the player Force draining, or null for either player
      */
     public ForceDrainsMayNotBeModifiedModifier(PhysicalCard source, Filterable locationFilter, Condition condition, String playerModifying, String playerDraining) {

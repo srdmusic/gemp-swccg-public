@@ -50,7 +50,7 @@ public class Card6_021 extends AbstractAlien {
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
         // Check condition(s)
-        if (TriggerConditions.justDeployedToLocation(game, effectResult, playerId, Filters.and(Filters.not(self), Filters.musician), Filters.sameSite(self))) {
+        if (TriggerConditions.justDeployedToLocation(game, effectResult, playerId, Filters.musician, Filters.sameSite(self))) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Retrieve 1 Force");
@@ -64,7 +64,7 @@ public class Card6_021 extends AbstractAlien {
 
     @Override
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        Filter filter = Filters.and(Filters.opponents(self), Filters.male, Filters.alien, Filters.abilityLessThan(3), Filters.present(self));
+        Filter filter = Filters.and(Filters.male, Filters.alien, Filters.abilityLessThan(3), Filters.present(self));
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
 

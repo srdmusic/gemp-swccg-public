@@ -128,10 +128,10 @@ class CardDisplay {
 			}
 		}
 		
-		
+		var effectivelyHorizontal = card.onSide ? !card.blueprintHorizontal : card.blueprintHorizontal;
 
 		this.reload(maxWidth, maxHeight, card.imageUrl, 
-			card.horizontal || card.effectivelyHorizontal(), card.foil, noborder, card.testingText);
+			effectivelyHorizontal, card.foil, noborder, card.testingText);
 	}
 
 	reload(maxWidth, maxHeight, image, horizontal, foil, noborder, testingText) {

@@ -1,6 +1,12 @@
 package com.gempukku.swccgo.game.layout;
 
-import com.gempukku.swccgo.common.*;
+import com.gempukku.swccgo.common.CardCategory;
+import com.gempukku.swccgo.common.CardCounts;
+import com.gempukku.swccgo.common.CardSubtype;
+import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Persona;
+import com.gempukku.swccgo.common.Title;
+import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
@@ -9,11 +15,17 @@ import com.gempukku.swccgo.game.SwccgCardBlueprintLibrary;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.modifiers.ModifiersQuerying;
+import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.SnapshotData;
 import com.gempukku.swccgo.logic.timing.Snapshotable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This class contains the layout information for the locations in the game.
@@ -99,6 +111,9 @@ public class LocationsLayout implements Snapshotable<LocationsLayout> {
             else if (system.getTitle().equals(Title.Lothal)) {
                 systemLayout = new LothalLayout(system.getTitle(), system.getParsec());
             }
+            else if (system.getTitle().equals(Title.Mapuzo)) {
+                systemLayout = new MapuzoLayout(system.getTitle(), 6);
+            }
             else if (system.getTitle().equals(Title.Naboo)) {
                 systemLayout = new NabooLayout(system.getTitle(), system.getParsec());
             }
@@ -122,11 +137,13 @@ public class LocationsLayout implements Snapshotable<LocationsLayout> {
                 addToLayouts(systemLayout);
             }
         }
+        //Add layouts for planets that have sites, but no system location in the game yet
         addToLayouts(new DefaultPlanetLayout(Title.Ajan_Kloss, 9));
         addToLayouts(new DefaultPlanetLayout(Title.Dathomir, 4));
         addToLayouts(new DefaultPlanetLayout(Title.Exegol, 10));
-        addToLayouts(new DefaultPlanetLayout(Title.Malachor, 6));
+        addToLayouts(new DefaultPlanetLayout(Title.Jabiim, 6));
         addToLayouts(new DefaultPlanetLayout(Title.Kef_Bir, 8));
+        addToLayouts(new MapuzoLayout(Title.Mapuzo, 6));
     }
 
     /**
