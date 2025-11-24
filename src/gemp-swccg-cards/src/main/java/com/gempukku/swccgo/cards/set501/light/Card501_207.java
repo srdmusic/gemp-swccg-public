@@ -27,18 +27,18 @@ import java.util.List;
  * Set: Playtesting
  * Type: Location
  * Subtype: Site
- * Title: Jabiim: Hangar Bay
+ * Title: Jabiim: Starship Hangar
  */
 
 public class Card501_207 extends AbstractSite {
     public Card501_207() {
-        super(Side.LIGHT, Title.Jabiim_Hangar_Bay, Title.Jabiim, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
+        super(Side.LIGHT, Title.Jabiim_Starship_Hangar, Title.Jabiim, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationLightSideGameText("While a Jedi Survivor present, you lose no Force to Visage Of The Emperor.");
         setLocationDarkSideGameText("Once per game, may [download] (or deploy from Lost Pile) Grand Inquisitor here.");
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_26);
-        setTestingText("Jabiim: Hangar Bay");
+        setTestingText("Jabiim: Starship Hangar");
     }
     
     @Override
@@ -52,7 +52,7 @@ public class Card501_207 extends AbstractSite {
     @Override
     protected List<TopLevelGameTextAction> getGameTextDarkSideTopLevelActions(String playerOnDarkSideOfLocation, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
-        GameTextActionId gameTextActionId = GameTextActionId.JABIIM_HANGAR_BAY__DOWNLOAD_GRAND_INQUISITOR;
+        GameTextActionId gameTextActionId = GameTextActionId.JABIIM_STARSHIP_HANGAR__DOWNLOAD_GRAND_INQUISITOR;
 
         // Check condition(s)
         if (GameConditions.isOncePerGame(game, self, gameTextActionId)
