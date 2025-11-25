@@ -144,6 +144,10 @@ var GempSwccgSoloDraftUI = Class.extend({
                         }
                     }
                     that.picksCardGroup.layoutCards();
+                    // Fade in cards with staggered animation
+                    that.picksDiv.find(".card").each(function(index) {
+                        $(this).css({opacity: 0}).delay(index * 50).animate({opacity: 1}, 400, "easeOutQuad");
+                    });
                     if (availablePicks.length > 0) {
                         that.messageDiv.text("Make a pick (stage " + stage + " / " + stages + ")");
                     }
@@ -239,6 +243,10 @@ var GempSwccgSoloDraftUI = Class.extend({
                                         }
                                     }
                                     that.picksCardGroup.layoutCards();
+                                    // Fade in cards with staggered animation
+                                    that.picksDiv.find(".card").each(function(index) {
+                                        $(this).css({opacity: 0}).delay(index * 50).animate({opacity: 1}, 400, "easeOutQuad");
+                                    });
                                     if (availablePicks.length > 0) {
                                         that.messageDiv.text("Make a pick (stage " + stage + " / " + stages + ")");
                                     }
