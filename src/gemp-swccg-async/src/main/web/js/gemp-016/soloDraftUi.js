@@ -7,11 +7,13 @@ var GempSwccgSoloDraftUI = Class.extend({
     messageDiv:null,
     picksDiv:null,
     draftedDiv:null,
+    completionScreen:null,
 
     picksCardGroup:null,
     draftedCardGroup:null,
 
     leagueType:null,
+    autoZoom:null,
 
     init:function (url) {
         var that = this;
@@ -28,6 +30,7 @@ var GempSwccgSoloDraftUI = Class.extend({
         this.messageDiv = $("#messageDiv");
         this.picksDiv = $("#picksDiv");
         this.draftedDiv = $("#draftedDiv");
+        this.completionScreen = $("#completionScreen");
 
         this.picksCardGroup = new NormalCardGroup(this.picksDiv, function (card) {
             return true;
@@ -39,19 +42,48 @@ var GempSwccgSoloDraftUI = Class.extend({
         });
         this.draftedCardGroup.maxCardHeight = 200;
 
+        this.autoZoom = new AutoZoom("autoZoomInSoloDraft");
+
         this.selectionFunc = this.addCardToDeckAndLayout;
 
         $("body").click(
                 function (event) {
                     return that.clickCardFunction(event);
                 });
+
+        $('body').unbind('mouseover');
+        $("body").mouseover(
+                function (event) {
+                    return that.autoZoom.handleMouseOver(event.originalEvent,
+                        that.dragCardData != null, that.infoDialog.dialog("isOpen"));
+                });
+
+        $('body').unbind('mouseout');
+        $("body").mouseout(
+                function (event) {
+                    return that.autoZoom.handleMouseOut(event.originalEvent);
+                });
+
         $("body").mousedown(
                 function (event) {
+                    that.autoZoom.handleMouseDown(event.originalEvent);
                     return that.dragStartCardFunction(event);
                 });
         $("body").mouseup(
                 function (event) {
                     return that.dragStopCardFunction(event);
+                });
+
+        $('body').unbind('keydown');
+        $("body").keydown(
+                function (event) {
+                    return that.autoZoom.handleKeyDown(event.originalEvent);
+                });
+
+        $('body').unbind('keyup');
+        $("body").keyup(
+                function (event) {
+                    return that.autoZoom.handleKeyUp(event.originalEvent);
                 });
 
         var width = $(window).width();
@@ -98,14 +130,14 @@ var GempSwccgSoloDraftUI = Class.extend({
                         var blueprintId = availablePick.getAttribute("blueprintId");
 
                         if (blueprintId != null) {
-                            var card = new Card(blueprintId, null, null, "picks", "deck", "player");
-                            var cardDiv = createCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, false);
+                            var card = new Card(blueprintId, null, null, false, "picks", "deck", "player");
+                            var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
                             cardDiv.data("card", card);
                             cardDiv.data("choiceId", id);
                             that.picksDiv.append(cardDiv);
                         } else {
-                            var card = new Card("rules", null, null, "picks", "deck", "player");
-                            var cardDiv = createCardDiv(url, null, null, false, false, true, false);
+                            var card = new Card("rules", null, null, false, "picks", "deck", "player");
+                            var cardDiv = Card.CreateCardDiv(url, null, null, false, false, true, false);
                             cardDiv.data("card", card);
                             cardDiv.data("choiceId", id);
                             that.picksDiv.append(cardDiv);
@@ -117,6 +149,7 @@ var GempSwccgSoloDraftUI = Class.extend({
                     }
                     else {
                         that.messageDiv.text("Draft is finished");
+                        that.showCompletionScreen();
                     }
                 }
             });
@@ -131,8 +164,8 @@ var GempSwccgSoloDraftUI = Class.extend({
                         var count = card.getAttribute("count");
                         var blueprintId = card.getAttribute("blueprintId");
                         for (var no = 0; no < count; no++) {
-                            var card = new Card(blueprintId, null, null, "drafted", "deck", "player");
-                            var cardDiv = createCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, false);
+                            var card = new Card(blueprintId, null, null, false, "drafted", "deck", "player");
+                            var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
                             cardDiv.data("card", card);
                             that.draftedDiv.append(cardDiv);
                         }
@@ -173,8 +206,8 @@ var GempSwccgSoloDraftUI = Class.extend({
                                         var blueprintId = pickedCard.getAttribute("blueprintId");
                                         var count = pickedCard.getAttribute("count");
                                         for (var no = 0; no < count; no++) {
-                                            var card = new Card(blueprintId, null, null, "drafted", "deck", "player");
-                                            var cardDiv = createCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, false);
+                                            var card = new Card(blueprintId, null, null, false, "drafted", "deck", "player");
+                                            var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
                                             cardDiv.data("card", card);
                                             that.draftedDiv.append(cardDiv);
                                         }
@@ -192,14 +225,14 @@ var GempSwccgSoloDraftUI = Class.extend({
                                         var blueprintId = availablePick.getAttribute("blueprintId");
 
                                         if (blueprintId != null) {
-                                            var card = new Card(blueprintId, null, null, "picks", "deck", "player");
-                                            var cardDiv = createCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, false);
+                                            var card = new Card(blueprintId, null, null, false, "picks", "deck", "player");
+                                            var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
                                             cardDiv.data("card", card);
                                             cardDiv.data("choiceId", id);
                                             that.picksDiv.append(cardDiv);
                                         } else {
-                                            var card = new Card("rules", null, null, "picks", "deck", "player");
-                                            var cardDiv = createCardDiv(url, null, null, false, false, true, false);
+                                            var card = new Card("rules", null, null, false, "picks", "deck", "player");
+                                            var cardDiv = Card.CreateCardDiv(url, null, null, false, false, true, false);
                                             cardDiv.data("card", card);
                                             cardDiv.data("choiceId", id);
                                             that.picksDiv.append(cardDiv);
@@ -211,6 +244,7 @@ var GempSwccgSoloDraftUI = Class.extend({
                                     }
                                     else {
                                         that.messageDiv.text("Draft is finished");
+                                        that.showCompletionScreen();
                                     }
                                 }
                             });
@@ -265,7 +299,7 @@ var GempSwccgSoloDraftUI = Class.extend({
          this.infoDialog.html("");
          this.infoDialog.html("<div style='scroll: auto'></div>");
          var floatCardDiv = $("<div style='float: left;'></div>");
-         var cardDiv = createFullCardDiv(card.imageUrl, null, card.foil, card.horizontal, card.isPack());
+         var cardDiv = Card.CreateFullCardDiv(card.imageUrl, null, card.foil, card.horizontal, card.isPack());
 
          // Check if card div needs to be inverted
          this.infoDialog.cardImageRotation = 0;
@@ -329,6 +363,10 @@ var GempSwccgSoloDraftUI = Class.extend({
             this.picksCardGroup.layoutCards();
             this.draftedCardGroup.layoutCards();
         }
+    },
+
+    showCompletionScreen:function () {
+        this.completionScreen.fadeIn(500);
     },
 
     processError:function (xhr, ajaxOptions, thrownError) {
