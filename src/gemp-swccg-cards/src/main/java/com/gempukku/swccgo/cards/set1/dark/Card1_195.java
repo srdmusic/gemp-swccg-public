@@ -17,12 +17,10 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
-import com.gempukku.swccgo.logic.actions.SubAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
-import com.gempukku.swccgo.logic.effects.StackActionEffect;
 import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardsToStealAndAttachOrBeLostEffect;
 
@@ -121,20 +119,15 @@ public class Card1_195 extends AbstractAlien {
                                                     new MultipleChoiceAwaitingDecision("Choose effect", choices) {
                                                         @Override
                                                         protected void validDecisionMade(int index, String result) {
-                                                            final SubAction subAction = new SubAction(action);
                                                             if (isDevicesOptionValid && index == 0) {
                                                                 game.getGameState().sendMessage(playerId + " chooses to destroy or steal up to " + numberOnCard + " devices present");
-                                                                subAction.appendEffect(
-                                                                        new ChooseCardsToStealAndAttachOrBeLostEffect(action, playerId, 1, numberOnCard, Filters.or(deviceToDestroyFilter, deviceToStealFilter), self));
                                                                 action.appendEffect(
-                                                                        new StackActionEffect(action, subAction));
+                                                                        new ChooseCardsToStealAndAttachOrBeLostEffect(action, playerId, 1, numberOnCard, Filters.or(deviceToDestroyFilter, deviceToStealFilter), self));
                                                             }
                                                             else if (isWeaponsOptionValid && ((!isDevicesOptionValid && index == 0) || (isDevicesOptionValid && index == 1))) {
                                                                 game.getGameState().sendMessage(playerId + " chooses to destroy or steal up to " + numberOnCard + " weapons present");
-                                                                subAction.appendEffect(
-                                                                        new ChooseCardsToStealAndAttachOrBeLostEffect(action, playerId, 1, numberOnCard, Filters.or(weaponToDestroyFilter, weaponToStealFilter), self));
                                                                 action.appendEffect(
-                                                                        new StackActionEffect(action, subAction));
+                                                                        new ChooseCardsToStealAndAttachOrBeLostEffect(action, playerId, 1, numberOnCard, Filters.or(weaponToDestroyFilter, weaponToStealFilter), self));
                                                             }
                                                             else {
                                                                 game.getGameState().sendMessage(playerId + " chooses to not destroy or steal any weapons or devices present");

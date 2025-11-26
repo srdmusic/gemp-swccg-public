@@ -96,7 +96,7 @@ public class ChooseCardsToStealAndAttachOrBeLostEffect extends AbstractSubAction
                 // SubAction to carry out choose card to be stolen or lost from table
                 SubAction moveAwayOrBeLostSubAction = new SubAction(_subAction);
                 moveAwayOrBeLostSubAction.appendEffect(
-                        new ChooseToStealAndAttachOrBeLostEffect(moveAwayOrBeLostSubAction, selectedCard.getOwner(), selectedCard, _attachTo));
+                        new ChooseToStealAndAttachOrBeLostEffect(moveAwayOrBeLostSubAction, _performingPlayerId, selectedCard, _attachTo));
                 // Stack sub-action
                 _subAction.stackSubAction(moveAwayOrBeLostSubAction);
 
