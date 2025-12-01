@@ -128,9 +128,10 @@ var GempSwccgSoloDraftUI = Class.extend({
                         var id = availablePick.getAttribute("id");
                         var url = availablePick.getAttribute("url");
                         var blueprintId = availablePick.getAttribute("blueprintId");
+                        var horizontal = availablePick.getAttribute("horizontal");
 
                         if (blueprintId != null) {
-                            var card = new Card(blueprintId, null, null, false, "picks", "deck", "player");
+                            var card = new Card(blueprintId, null, null, horizontal, "picks", "deck", "player");
                             var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
                             cardDiv.data("card", card);
                             cardDiv.data("choiceId", id);
@@ -209,8 +210,9 @@ var GempSwccgSoloDraftUI = Class.extend({
                                         var pickedCard = pickedCards[i];
                                         var blueprintId = pickedCard.getAttribute("blueprintId");
                                         var count = pickedCard.getAttribute("count");
+                                        var horizontal = pickedCard.getAttribute("horizontal");
                                         for (var no = 0; no < count; no++) {
-                                            var card = new Card(blueprintId, null, null, false, "drafted", "deck", "player");
+                                            var card = new Card(blueprintId, null, null, horizontal, "drafted", "deck", "player");
                                             var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
                                             cardDiv.data("card", card);
                                             that.draftedDiv.append(cardDiv);
