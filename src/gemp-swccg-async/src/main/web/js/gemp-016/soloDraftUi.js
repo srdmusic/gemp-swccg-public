@@ -168,8 +168,9 @@ var GempSwccgSoloDraftUI = Class.extend({
                         var card = cards[i];
                         var count = card.getAttribute("count");
                         var blueprintId = card.getAttribute("blueprintId");
+                        var horizontal = card.getAttribute("horizontal");
                         for (var no = 0; no < count; no++) {
-                            var card = new Card(blueprintId, null, null, false, "drafted", "deck", "player");
+                            var card = new Card(blueprintId, null, null, horizontal, "drafted", "deck", "player");
                             var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
                             cardDiv.data("card", card);
                             that.draftedDiv.append(cardDiv);
