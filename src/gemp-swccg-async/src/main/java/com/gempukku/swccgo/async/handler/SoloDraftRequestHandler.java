@@ -65,9 +65,8 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
             throw new HttpProcessingException(404);
 
         LeagueData leagueData = league.getLeagueData(_soloDraftDefinitions);
-        int leagueStart = leagueData.getSeries().get(0).getStart();
 
-        if (!leagueData.isSoloDraftLeague() || DateUtils.getCurrentDate() < leagueStart)
+        if (!leagueData.isSoloDraftLeague())
             throw new HttpProcessingException(404);
 
         NewSoloDraftLeagueData soloDraftLeagueData = (NewSoloDraftLeagueData) leagueData;
@@ -129,9 +128,8 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
             throw new HttpProcessingException(404);
 
         LeagueData leagueData = league.getLeagueData(_soloDraftDefinitions);
-        int leagueStart = leagueData.getSeries().get(0).getStart();
 
-        if (!leagueData.isSoloDraftLeague() || DateUtils.getCurrentDate() < leagueStart)
+        if (!leagueData.isSoloDraftLeague())
             throw new HttpProcessingException(404);
 
         NewSoloDraftLeagueData soloDraftLeagueData = (NewSoloDraftLeagueData) leagueData;
@@ -186,8 +184,11 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
             pickedCard.setAttribute("blueprintId", blueprintId);
             pickedCard.setAttribute("count", String.valueOf(item.getCount()));
             SwccgCardBlueprint blueprint = _library.getSwccgoCardBlueprint(blueprintId);
-            if (blueprint.isHorizontal()) {
-                pickedCard.setAttribute("horizontal", "true");
+            if (blueprint != null) {
+                if (blueprint.isHorizontal()) {
+                    pickedCard.setAttribute("horizontal", "true");
+                }
+                pickedCard.setAttribute("side", blueprint.getSide().toString().toLowerCase());
             }
             pickResultElem.appendChild(pickedCard);
         }
@@ -211,8 +212,11 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
             if (blueprintId != null) {
                 availablePick.setAttribute("blueprintId", blueprintId);
                 SwccgCardBlueprint blueprint = _library.getSwccgoCardBlueprint(blueprintId);
-                if (blueprint.isHorizontal()) {
-                    availablePick.setAttribute("horizontal", "true");
+                if (blueprint != null) {
+                    if (blueprint.isHorizontal()) {
+                        availablePick.setAttribute("horizontal", "true");
+                    }
+                    availablePick.setAttribute("side", blueprint.getSide().toString().toLowerCase());
                 }
             }
             if (choiceUrl != null)

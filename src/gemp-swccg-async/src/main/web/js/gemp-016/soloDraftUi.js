@@ -14,6 +14,7 @@ var GempSwccgSoloDraftUI = Class.extend({
 
     leagueType:null,
     autoZoom:null,
+    currentDraftingSide:null,
 
     init:function (url) {
         var that = this;
@@ -129,12 +130,15 @@ var GempSwccgSoloDraftUI = Class.extend({
                         var url = availablePick.getAttribute("url");
                         var blueprintId = availablePick.getAttribute("blueprintId");
                         var horizontal = availablePick.getAttribute("horizontal");
+                        var side = availablePick.getAttribute("side");
+                        if (side) side = side.toLowerCase();
 
                         if (blueprintId != null) {
                             var card = new Card(blueprintId, null, null, horizontal, "picks", "deck", "player");
                             var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
                             cardDiv.data("card", card);
                             cardDiv.data("choiceId", id);
+                            cardDiv.addClass(side + "-side");
                             that.picksDiv.append(cardDiv);
                         } else {
                             var card = new Card("rules", null, null, false, "picks", "deck", "player");
@@ -150,33 +154,53 @@ var GempSwccgSoloDraftUI = Class.extend({
                         $(this).css({opacity: 0}).delay(index * 50).animate({opacity: 1}, 400, "easeOutQuad");
                     });
                     if (availablePicks.length > 0) {
-                        that.messageDiv.text("Make a pick (stage " + stage + " / " + stages + ")");
+                        var currentSide = availablePicks.length > 0 ? availablePicks[0].getAttribute("side") : null;
+                        that.currentDraftingSide = currentSide;
+                        var totalStages = parseInt(stages);
+                        var currentStage = parseInt(stage);
+                        var halfStages = Math.floor(totalStages / 2);
+
+                        var lsRemaining, dsRemaining;
+                        if (currentSide === "light") {
+                            lsRemaining = halfStages - currentStage;
+                            dsRemaining = halfStages;
+                        } else {
+                            lsRemaining = 0;
+                            dsRemaining = totalStages - currentStage;
+                        }
+
+                        that.messageDiv.text("Picks Remaining  LS: " + lsRemaining + "  DS: " + dsRemaining);
                     }
                     else {
                         that.messageDiv.text("Draft is finished");
                         that.showCompletionScreen();
                     }
-                }
-            });
 
-        this.comm.getCollection(this.leagueType, "sort:cardType,side,name", 0, 1000,
-            function (xml) {
-                var root = xml.documentElement;
-                if (root.tagName == "collection") {
-                    var cards = root.getElementsByTagName("card");
-                    for (var i=0; i<cards.length; i++) {
-                        var card = cards[i];
-                        var count = card.getAttribute("count");
-                        var blueprintId = card.getAttribute("blueprintId");
-                        var horizontal = card.getAttribute("horizontal");
-                        for (var no = 0; no < count; no++) {
-                            var card = new Card(blueprintId, null, null, horizontal, "drafted", "deck", "player");
-                            var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
-                            cardDiv.data("card", card);
-                            that.draftedDiv.append(cardDiv);
-                        }
-                    }
-                    that.draftedCardGroup.layoutCards();
+                    that.comm.getCollection(that.leagueType, "sort:cardType,side,name", 0, 1000,
+                        function (xml) {
+                            var root = xml.documentElement;
+                            if (root.tagName == "collection") {
+                                var cards = root.getElementsByTagName("card");
+                                for (var i=0; i<cards.length; i++) {
+                                    var card = cards[i];
+                                    var count = card.getAttribute("count");
+                                    var blueprintId = card.getAttribute("blueprintId");
+                                    var horizontal = card.getAttribute("horizontal");
+                                    var side = card.getAttribute("side");
+                                    if (side) side = side.toLowerCase();
+                                    if (side && side === that.currentDraftingSide) {
+                                        for (var no = 0; no < count; no++) {
+                                            var card = new Card(blueprintId, null, null, horizontal, "drafted", "deck", "player");
+                                            var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
+                                            cardDiv.data("card", card);
+                                            cardDiv.addClass(side + "-side");
+                                            that.draftedDiv.append(cardDiv);
+                                        }
+                                    }
+                                }
+                                that.draftedCardGroup.layoutCards();
+                            }
+                        });
                 }
             });
     },
@@ -196,9 +220,9 @@ var GempSwccgSoloDraftUI = Class.extend({
 
         if (tar.hasClass("actionArea")) {
             var selectedCardElem = tar.closest(".card");
-            if (event.which == 1) {
+            if (event.which >= 1) {
                 if (!this.successfulDrag) {
-                    if (event.shiftKey) {
+                    if (event.shiftKey || event.which > 1) {
                         this.displayCardInfo(selectedCardElem.data("card"));
                     } else {
                         if (selectedCardElem.data("card").zone == "picks") {
@@ -230,12 +254,16 @@ var GempSwccgSoloDraftUI = Class.extend({
                                         var id = availablePick.getAttribute("id");
                                         var url = availablePick.getAttribute("url");
                                         var blueprintId = availablePick.getAttribute("blueprintId");
+                                        var horizontal = availablePick.getAttribute("horizontal");
+                                        var side = availablePick.getAttribute("side");
+                                        if (side) side = side.toLowerCase();
 
                                         if (blueprintId != null) {
-                                            var card = new Card(blueprintId, null, null, false, "picks", "deck", "player");
+                                            var card = new Card(blueprintId, null, null, horizontal, "picks", "deck", "player");
                                             var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
                                             cardDiv.data("card", card);
                                             cardDiv.data("choiceId", id);
+                                            cardDiv.addClass(side + "-side");
                                             that.picksDiv.append(cardDiv);
                                         } else {
                                             var card = new Card("rules", null, null, false, "picks", "deck", "player");
@@ -251,7 +279,52 @@ var GempSwccgSoloDraftUI = Class.extend({
                                         $(this).css({opacity: 0}).delay(index * 50).animate({opacity: 1}, 400, "easeOutQuad");
                                     });
                                     if (availablePicks.length > 0) {
-                                        that.messageDiv.text("Make a pick (stage " + stage + " / " + stages + ")");
+                                        var currentSide = availablePicks.length > 0 ? availablePicks[0].getAttribute("side") : null;
+                                        var sideChanged = that.currentDraftingSide !== currentSide;
+                                        that.currentDraftingSide = currentSide;
+                                        var totalStages = parseInt(stages);
+                                        var currentStage = parseInt(stage);
+                                        var halfStages = Math.floor(totalStages / 2);
+
+                                        var lsRemaining, dsRemaining;
+                                        if (currentSide === "light") {
+                                            lsRemaining = halfStages - currentStage;
+                                            dsRemaining = halfStages;
+                                        } else {
+                                            lsRemaining = 0;
+                                            dsRemaining = totalStages - currentStage;
+                                        }
+
+                                        that.messageDiv.text("Picks Remaining  LS: " + lsRemaining + "  DS: " + dsRemaining);
+
+                                        if (sideChanged) {
+                                            $(".card", that.draftedDiv).remove();
+                                            that.comm.getCollection(that.leagueType, "sort:cardType,side,name", 0, 1000,
+                                                function (xml) {
+                                                    var root = xml.documentElement;
+                                                    if (root.tagName == "collection") {
+                                                        var cards = root.getElementsByTagName("card");
+                                                        for (var i=0; i<cards.length; i++) {
+                                                            var card = cards[i];
+                                                            var count = card.getAttribute("count");
+                                                            var blueprintId = card.getAttribute("blueprintId");
+                                                            var horizontal = card.getAttribute("horizontal");
+                                                            var side = card.getAttribute("side");
+                                                            if (side) side = side.toLowerCase();
+                                                            if (side && side === that.currentDraftingSide) {
+                                                                for (var no = 0; no < count; no++) {
+                                                                    var card = new Card(blueprintId, null, null, horizontal, "drafted", "deck", "player");
+                                                                    var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
+                                                                    cardDiv.data("card", card);
+                                                                    cardDiv.addClass(side + "-side");
+                                                                    that.draftedDiv.append(cardDiv);
+                                                                }
+                                                            }
+                                                        }
+                                                        that.draftedCardGroup.layoutCards();
+                                                    }
+                                                });
+                                        }
                                     }
                                     else {
                                         that.messageDiv.text("Draft is finished");
