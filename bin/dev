@@ -38,7 +38,9 @@ show_help() {
     echo "  stop        - Stop the application containers (preserves containers)"
     echo "  restart     - Restart the application containers"
     echo "  rebuild     - Recompile the application with Maven"
+    echo "  rebuild-fast- Recompile the application with Maven (skip tests)"
     echo "  reload      - Rebuild and restart the application"
+    echo "  reload-fast - Rebuild and restart the application (skip tests)"
     echo "  logs        - Show application logs (tail -f)"
     echo "  status      - Show container status"
     echo "  shell       - Open a shell in the app container"
@@ -192,6 +194,15 @@ case "$1" in
         fi
         ;;
 
+    rebuild-fast)
+        print_status "Recompiling application with Maven (skipping tests)..."
+        if check_containers; then
+            docker exec gemp_swccg_app_1 mvn install -DskipTests
+            print_success "Application recompiled (tests skipped)"
+            echo "Run './bin/dev restart' to restart with the new build"
+        fi
+        ;;
+
     reload)
         print_status "Rebuilding and restarting application..."
         if check_containers; then
@@ -212,6 +223,30 @@ case "$1" in
             # Wait for application to start
             sleep 5
             print_success "Application rebuilt and restarted"
+            echo "Check logs with: ./bin/dev logs"
+        fi
+        ;;
+
+    reload-fast)
+        print_status "Rebuilding and restarting application (skipping tests)..."
+        if check_containers; then
+            # Run Maven build inside container and wait for completion
+            print_status "Running Maven build (skipping tests)..."
+            if ! docker exec gemp_swccg_app_1 mvn install -DskipTests; then
+                print_error "Maven build failed!"
+                exit 1
+            fi
+            print_success "Maven build completed (tests skipped)"
+
+            # Restart only the app container (not the database)
+            print_status "Restarting application container..."
+            SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+            cd "$SCRIPT_DIR/../src"
+            docker compose restart build
+
+            # Wait for application to start
+            sleep 5
+            print_success "Application rebuilt and restarted (tests skipped)"
             echo "Check logs with: ./bin/dev logs"
         fi
         ;;
