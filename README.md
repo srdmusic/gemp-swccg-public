@@ -13,16 +13,16 @@ GEMP-SWCCG - server/client for playing Star Wars CCG using a web browser. The pr
 
 ## Quick Start
 
-### Recommended: Automated Setup Script
+### Initial Setup
 
-The fastest way to get GEMP-SWCCG running is using the automated setup script:
+The fastest way to get GEMP-SWCCG running is using the initialize command:
 
 **macOS/Linux:**
 ```bash
-./bin/setup
+./bin/gemp initialize
 ```
 
-This script handles all setup steps including creating required directories, building containers, compiling the application, and starting the server.
+This command handles all setup steps including creating required directories, building containers, compiling the application, and starting the server.
 
 **Windows:**
 
@@ -56,10 +56,10 @@ For Windows users, we **strongly recommend** using WSL2 (Windows Subsystem for L
    cd ~
    git clone <repository-url>
    cd gemp-swccg
-   ./bin/setup
+   ./bin/gemp initialize
    ```
 
-**Why WSL2?** The development scripts (`setup` and `dev`) are bash scripts that use Linux-specific commands and path handling. WSL2 provides a genuine Linux environment, making these scripts work seamlessly. While you can use Git Bash or other emulators, WSL2 provides the best compatibility and performance.
+**Why WSL2?** The `gemp` development script is a bash script that uses Linux-specific commands and path handling. WSL2 provides a genuine Linux environment, making these scripts work seamlessly. While you can use Git Bash or other emulators, WSL2 provides the best compatibility and performance.
 
 **Alternative:** If you prefer not to use WSL2, you can follow the manual Docker setup steps documented in [src/docker/readme.md](src/docker/readme.md).
 
@@ -71,7 +71,7 @@ After setup completes:
 
 ### Additional Tools / Full Install (Optional)
 
-The [docker readme](src/docker/readme.md) recommends tools like Portainer for container management. However, **the `dev` script provides all essential functionality** (shell access, logs, status checks) via convenient commands. Portainer is mainly useful if you prefer GUI-based management or need visual resource monitoring (CPU/memory graphs). For typical development, `dev` is simpler and more efficient. -- If you run into any issues with docker or want to understand the underlying docker structure better, it's documented in the [docker readme](src/docker/readme.md). 
+The [docker readme](src/docker/readme.md) recommends tools like Portainer for container management. However, **the `gemp` script provides all essential functionality** (shell access, logs, status checks) via convenient commands. Portainer is mainly useful if you prefer GUI-based management or need visual resource monitoring (CPU/memory graphs). For typical development, `gemp` is simpler and more efficient. -- If you run into any issues with docker or want to understand the underlying docker structure better, it's documented in the [docker readme](src/docker/readme.md). 
 
 ---
 
@@ -79,41 +79,57 @@ The [docker readme](src/docker/readme.md) recommends tools like Portainer for co
 
 ## Development Commands
 
-The `dev` script provides convenient commands for common development tasks:
+The `gemp` script provides convenient commands for common development tasks:
 
 ```bash
-./bin/dev [command]
+./bin/gemp [command]
 ```
 
 ### Available Commands
 
 | Command | Description |
 |---------|-------------|
+| `initialize` | First-time setup (builds containers and compiles application) |
 | `start` | Start the application containers |
 | `stop` | Stop the application containers |
 | `restart` | Restart the application (after code changes) |
 | `rebuild` | Recompile the application with Maven |
+| `rebuild-fast` | Recompile the application with Maven (skip tests) |
 | `reload` | Rebuild and restart in one command |
+| `reload-fast` | Rebuild and restart in one command (skip tests) |
 | `logs` | Show application logs (tail -f, Ctrl+C to exit) |
+| `status` | Check container and application status |
 | `shell` | Open a bash shell in the app container |
 | `db-shell` | Open MySQL shell for database access |
+| `destroy` | Stop and remove containers (preserves database) |
+| `reset-db` | Reset the database (WARNING: deletes all data) |
 | `help` | Show help message with all commands |
 
 ### Common Workflows
 
-**After making code changes:**
+**After making code changes (runs all tests):**
 ```bash
-./bin/dev reload
+./bin/gemp reload
+```
+
+**After making code changes (skip tests for faster iteration):**
+```bash
+./bin/gemp reload-fast
 ```
 
 **View logs to debug issues:**
 ```bash
-./bin/dev logs
+./bin/gemp logs
+```
+
+**Check application status:**
+```bash
+./bin/gemp status
 ```
 
 **Access the database:**
 ```bash
-./bin/dev db-shell
+./bin/gemp db-shell
 ```
 
 ---

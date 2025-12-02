@@ -5,7 +5,7 @@
 #
 # Provides convenient commands for common development tasks
 #
-# Usage: ./bin/dev [command]
+# Usage: ./bin/gemp [command]
 ################################################################################
 
 # Colors for output
@@ -30,7 +30,7 @@ print_error() {
 show_help() {
     echo "GEMP-SWCCG Development Helper"
     echo ""
-    echo "Usage: ./bin/dev [command]"
+    echo "Usage: ./bin/gemp [command]"
     echo ""
     echo "Commands:"
     echo "  initialize  - First-time setup (builds containers and compiles application)"
@@ -38,7 +38,9 @@ show_help() {
     echo "  stop        - Stop the application containers (preserves containers)"
     echo "  restart     - Restart the application containers"
     echo "  rebuild     - Recompile the application with Maven"
+    echo "  rebuild-fast- Recompile the application with Maven (skip tests)"
     echo "  reload      - Rebuild and restart the application"
+    echo "  reload-fast - Rebuild and restart the application (skip tests)"
     echo "  logs        - Show application logs (tail -f)"
     echo "  status      - Show container status"
     echo "  shell       - Open a shell in the app container"
@@ -52,7 +54,7 @@ show_help() {
 check_containers() {
     if ! docker ps --filter "name=gemp_swccg_app_1" --format "{{.Names}}" | grep -q gemp_swccg_app_1; then
         print_error "Application container is not running"
-        echo "Run './bin/dev start' to start the containers"
+        echo "Run './bin/gemp start' to start the containers"
         return 1
     fi
     return 0
@@ -128,7 +130,7 @@ case "$1" in
             print_success "Java application is running"
         else
             print_error "Java process may not have started correctly"
-            print_status "Check logs with: ./bin/dev logs"
+            print_status "Check logs with: ./bin/gemp logs"
         fi
 
         print_success "Initialization complete!"
@@ -137,8 +139,8 @@ case "$1" in
         echo "Default Login:    asdf / asdf"
         echo ""
         echo "Useful commands:"
-        echo "  ./bin/dev logs    - View application logs"
-        echo "  ./bin/dev status  - Check application status"
+        echo "  ./bin/gemp logs    - View application logs"
+        echo "  ./bin/gemp status  - Check application status"
         ;;
 
     start)
@@ -149,7 +151,7 @@ case "$1" in
         # Check if web.jar exists
         if [ ! -f "gemp-swccg-async/target/web.jar" ]; then
             print_error "Application has not been built yet!"
-            echo "Run './bin/dev initialize' first to set up the application"
+            echo "Run './bin/gemp initialize' first to set up the application"
             exit 1
         fi
 
@@ -166,7 +168,7 @@ case "$1" in
         cd "$SCRIPT_DIR/../src"
         docker compose stop
         print_success "Containers stopped"
-        echo "Use './bin/dev start' to start them again"
+        echo "Use './bin/gemp start' to start them again"
         ;;
 
     restart)
@@ -179,7 +181,7 @@ case "$1" in
             # May take a few seconds to start the actual process in the container
             sleep 5
             print_success "Application restarted"
-            echo "Check logs with: ./bin/dev logs"
+            echo "Check logs with: ./bin/gemp logs"
         fi
         ;;
 
@@ -188,7 +190,16 @@ case "$1" in
         if check_containers; then
             docker exec gemp_swccg_app_1 mvn install
             print_success "Application recompiled"
-            echo "Run './bin/dev restart' to restart with the new build"
+            echo "Run './bin/gemp restart' to restart with the new build"
+        fi
+        ;;
+
+    rebuild-fast)
+        print_status "Recompiling application with Maven (skipping tests)..."
+        if check_containers; then
+            docker exec gemp_swccg_app_1 mvn install -DskipTests
+            print_success "Application recompiled (tests skipped)"
+            echo "Run './bin/gemp restart' to restart with the new build"
         fi
         ;;
 
@@ -212,7 +223,31 @@ case "$1" in
             # Wait for application to start
             sleep 5
             print_success "Application rebuilt and restarted"
-            echo "Check logs with: ./bin/dev logs"
+            echo "Check logs with: ./bin/gemp logs"
+        fi
+        ;;
+
+    reload-fast)
+        print_status "Rebuilding and restarting application (skipping tests)..."
+        if check_containers; then
+            # Run Maven build inside container and wait for completion
+            print_status "Running Maven build (skipping tests)..."
+            if ! docker exec gemp_swccg_app_1 mvn install -DskipTests; then
+                print_error "Maven build failed!"
+                exit 1
+            fi
+            print_success "Maven build completed (tests skipped)"
+
+            # Restart only the app container (not the database)
+            print_status "Restarting application container..."
+            SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+            cd "$SCRIPT_DIR/../src"
+            docker compose restart build
+
+            # Wait for application to start
+            sleep 5
+            print_success "Application rebuilt and restarted (tests skipped)"
+            echo "Check logs with: ./bin/gemp logs"
         fi
         ;;
 
@@ -265,7 +300,7 @@ case "$1" in
             cd "$SCRIPT_DIR/../src"
             docker compose down
             print_success "Containers removed"
-            echo "Use './bin/dev start' to recreate and start containers"
+            echo "Use './bin/gemp start' to recreate and start containers"
         fi
         ;;
 
@@ -287,7 +322,7 @@ case "$1" in
             cd "$SCRIPT_DIR/.."
             rm -rf database/*
             print_success "Database reset"
-            echo "Run './bin/dev start' to reinitialize the database"
+            echo "Run './bin/gemp start' to reinitialize the database"
         else
             print_status "Database reset cancelled"
         fi
