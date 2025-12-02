@@ -1,4 +1,12 @@
 var GempSwccgSoloDraftUI = Class.extend({
+    // Constants for card info dialog sizing
+    DIALOG_HORIZONTAL_SPACE: 30,
+    DIALOG_VERTICAL_SPACE: 45,
+    CARD_HORIZONTAL_WIDTH: 500,
+    CARD_HORIZONTAL_HEIGHT: 380,
+    CARD_VERTICAL_WIDTH: 360,
+    CARD_VERTICAL_HEIGHT: 520,
+
     communication:null,
 
     topDiv:null,
@@ -114,6 +122,110 @@ var GempSwccgSoloDraftUI = Class.extend({
         this.getDraftState();
     },
 
+    normalizeSide:function (side) {
+        return side ? side.toLowerCase() : null;
+    },
+
+    addDraftedCardsToDisplay:function (blueprintId, horizontal, side, count) {
+        var that = this;
+        var sideClass = side ? this.normalizeSide(side) + "-side" : "";
+
+        Array.from({length: count}).forEach(function() {
+            var card = new Card(blueprintId, null, null, horizontal, "drafted", "deck", "player");
+            var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
+            cardDiv.data("card", card);
+            if (sideClass) {
+                cardDiv.addClass(sideClass);
+            }
+            that.draftedDiv.append(cardDiv);
+        });
+    },
+
+    createPickCardFromXmlElement:function (availablePick) {
+        var id = availablePick.getAttribute("id");
+        var url = availablePick.getAttribute("url");
+        var blueprintId = availablePick.getAttribute("blueprintId");
+        var horizontal = availablePick.getAttribute("horizontal");
+        var side = this.normalizeSide(availablePick.getAttribute("side"));
+
+        var card, cardDiv;
+        if (blueprintId != null) {
+            card = new Card(blueprintId, null, null, horizontal, "picks", "deck", "player");
+            cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
+            if (side) {
+                cardDiv.addClass(side + "-side");
+            }
+        } else {
+            card = new Card("rules", null, null, false, "picks", "deck", "player");
+            cardDiv = Card.CreateCardDiv(url, null, null, false, false, true, false);
+        }
+
+        cardDiv.data("card", card);
+        cardDiv.data("choiceId", id);
+
+        return cardDiv;
+    },
+
+    animateCardFadeIn:function (containerDiv) {
+        containerDiv.find(".card").each(function(index) {
+            $(this).css({opacity: 0}).delay(index * 50).animate({opacity: 1}, 400, "easeOutQuad");
+        });
+    },
+
+    calculateAndDisplayRemainingPicks:function (stage, stages, currentSide) {
+        var totalStages = parseInt(stages);
+        var currentStage = parseInt(stage);
+        var halfStages = Math.floor(totalStages / 2);
+
+        var lsRemaining, dsRemaining;
+        if (currentSide === "light") {
+            lsRemaining = halfStages - currentStage;
+            dsRemaining = halfStages;
+        } else {
+            lsRemaining = 0;
+            dsRemaining = totalStages - currentStage;
+        }
+
+        this.messageDiv.text("Picks Remaining  LS: " + lsRemaining + "  DS: " + dsRemaining);
+
+        return {lsRemaining: lsRemaining, dsRemaining: dsRemaining};
+    },
+
+    loadDraftedCardsForCurrentSide:function (callback) {
+        var that = this;
+        this.comm.getCollection(this.leagueType, "sort:cardType,side,name", 0, 1000,
+            function (xml) {
+                var root = xml.documentElement;
+                if (root.tagName == "collection") {
+                    var cards = root.getElementsByTagName("card");
+                    Array.from(cards).forEach(function(card) {
+                        var count = parseInt(card.getAttribute("count"));
+                        var blueprintId = card.getAttribute("blueprintId");
+                        var horizontal = card.getAttribute("horizontal");
+                        var side = that.normalizeSide(card.getAttribute("side"));
+
+                        if (side && side === that.currentDraftingSide) {
+                            that.addDraftedCardsToDisplay(blueprintId, horizontal, side, count);
+                        }
+                    });
+                    that.draftedCardGroup.layoutCards();
+                    if (callback) callback();
+                }
+            });
+    },
+
+    renderAvailablePicks:function (availablePicks) {
+        var that = this;
+
+        Array.from(availablePicks).forEach(function(availablePick) {
+            var cardDiv = that.createPickCardFromXmlElement(availablePick);
+            that.picksDiv.append(cardDiv);
+        });
+
+        this.picksCardGroup.layoutCards();
+        this.animateCardFadeIn(this.picksDiv);
+    },
+
     getDraftState:function () {
         var that = this;
         this.comm.getDraft(this.leagueType,
@@ -124,91 +236,87 @@ var GempSwccgSoloDraftUI = Class.extend({
                     var draftState = root.getElementsByTagName("state")[0];
                     var stage = draftState.getAttribute("stage");
                     var stages = draftState.getAttribute("stages");
-                    for (var i = 0; i < availablePicks.length; i++) {
-                        var availablePick = availablePicks[i];
-                        var id = availablePick.getAttribute("id");
-                        var url = availablePick.getAttribute("url");
-                        var blueprintId = availablePick.getAttribute("blueprintId");
-                        var horizontal = availablePick.getAttribute("horizontal");
-                        var side = availablePick.getAttribute("side");
-                        if (side) side = side.toLowerCase();
 
-                        if (blueprintId != null) {
-                            var card = new Card(blueprintId, null, null, horizontal, "picks", "deck", "player");
-                            var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
-                            cardDiv.data("card", card);
-                            cardDiv.data("choiceId", id);
-                            cardDiv.addClass(side + "-side");
-                            that.picksDiv.append(cardDiv);
-                        } else {
-                            var card = new Card("rules", null, null, false, "picks", "deck", "player");
-                            var cardDiv = Card.CreateCardDiv(url, null, null, false, false, true, false);
-                            cardDiv.data("card", card);
-                            cardDiv.data("choiceId", id);
-                            that.picksDiv.append(cardDiv);
-                        }
-                    }
-                    that.picksCardGroup.layoutCards();
-                    // Fade in cards with staggered animation
-                    that.picksDiv.find(".card").each(function(index) {
-                        $(this).css({opacity: 0}).delay(index * 50).animate({opacity: 1}, 400, "easeOutQuad");
-                    });
+                    // Render available picks with animation
+                    that.renderAvailablePicks(availablePicks);
+
                     if (availablePicks.length > 0) {
-                        var currentSide = availablePicks.length > 0 ? availablePicks[0].getAttribute("side") : null;
+                        var currentSide = availablePicks[0].getAttribute("side");
                         that.currentDraftingSide = currentSide;
-                        var totalStages = parseInt(stages);
-                        var currentStage = parseInt(stage);
-                        var halfStages = Math.floor(totalStages / 2);
-
-                        var lsRemaining, dsRemaining;
-                        if (currentSide === "light") {
-                            lsRemaining = halfStages - currentStage;
-                            dsRemaining = halfStages;
-                        } else {
-                            lsRemaining = 0;
-                            dsRemaining = totalStages - currentStage;
-                        }
-
-                        that.messageDiv.text("Picks Remaining  LS: " + lsRemaining + "  DS: " + dsRemaining);
+                        that.calculateAndDisplayRemainingPicks(stage, stages, currentSide);
                     }
                     else {
                         that.messageDiv.text("Draft is finished");
                         that.showCompletionScreen();
                     }
 
-                    that.comm.getCollection(that.leagueType, "sort:cardType,side,name", 0, 1000,
-                        function (xml) {
-                            var root = xml.documentElement;
-                            if (root.tagName == "collection") {
-                                var cards = root.getElementsByTagName("card");
-                                for (var i=0; i<cards.length; i++) {
-                                    var card = cards[i];
-                                    var count = card.getAttribute("count");
-                                    var blueprintId = card.getAttribute("blueprintId");
-                                    var horizontal = card.getAttribute("horizontal");
-                                    var side = card.getAttribute("side");
-                                    if (side) side = side.toLowerCase();
-                                    if (side && side === that.currentDraftingSide) {
-                                        for (var no = 0; no < count; no++) {
-                                            var card = new Card(blueprintId, null, null, horizontal, "drafted", "deck", "player");
-                                            var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
-                                            cardDiv.data("card", card);
-                                            cardDiv.addClass(side + "-side");
-                                            that.draftedDiv.append(cardDiv);
-                                        }
-                                    }
-                                }
-                                that.draftedCardGroup.layoutCards();
-                            }
-                        });
+                    // Load drafted cards for current side
+                    that.loadDraftedCardsForCurrentSide();
                 }
             });
     },
 
-    clickCardFunction:function (event) {
+    addPickedCardsToDrafted:function (pickedCards) {
         var that = this;
+        Array.from(pickedCards).forEach(function(pickedCard) {
+            var blueprintId = pickedCard.getAttribute("blueprintId");
+            var count = parseInt(pickedCard.getAttribute("count"));
+            var horizontal = pickedCard.getAttribute("horizontal");
+            that.addDraftedCardsToDisplay(blueprintId, horizontal, null, count);
+        });
+        this.draftedCardGroup.layoutCards();
+    },
 
+    processPickResult:function (xml) {
+        var root = xml.documentElement;
+        if (root.tagName == "pickResult") {
+            // Add picked cards to drafted area
+            var pickedCards = root.getElementsByTagName("pickedCard");
+            this.addPickedCardsToDrafted(pickedCards);
+
+            // Clear current picks and render new ones
+            $(".card", this.picksDiv).remove();
+
+            var availablePicks = root.getElementsByTagName("availablePick");
+            var draftState = root.getElementsByTagName("state")[0];
+            var stage = draftState.getAttribute("stage");
+            var stages = draftState.getAttribute("stages");
+
+            // Render new available picks
+            this.renderAvailablePicks(availablePicks);
+
+            if (availablePicks.length > 0) {
+                var currentSide = availablePicks[0].getAttribute("side");
+                var sideChanged = this.currentDraftingSide !== currentSide;
+                this.currentDraftingSide = currentSide;
+
+                this.calculateAndDisplayRemainingPicks(stage, stages, currentSide);
+
+                // If side changed, reload drafted cards for the new side
+                if (sideChanged) {
+                    $(".card", this.draftedDiv).remove();
+                    this.loadDraftedCardsForCurrentSide();
+                }
+            }
+            else {
+                this.messageDiv.text("Draft is finished");
+                this.showCompletionScreen();
+            }
+        }
+    },
+
+    handlePickSelection:function (selectedCardElem) {
+        var that = this;
+        var choiceId = selectedCardElem.data("choiceId");
+        this.comm.makeDraftPick(this.leagueType, choiceId, function (xml) {
+            that.processPickResult(xml);
+        });
+    },
+
+    clickCardFunction:function (event) {
         var tar = $(event.target);
+
+        // Allow anchor tag clicks to proceed normally
         if (tar.length == 1 && tar[0].tagName == "A")
             return true;
 
@@ -220,124 +328,16 @@ var GempSwccgSoloDraftUI = Class.extend({
 
         if (tar.hasClass("actionArea")) {
             var selectedCardElem = tar.closest(".card");
-            if (event.which >= 1) {
-                if (!this.successfulDrag) {
-                    if (event.shiftKey || event.which > 1) {
-                        this.displayCardInfo(selectedCardElem.data("card"));
-                    } else {
-                        if (selectedCardElem.data("card").zone == "picks") {
-                            var choiceId = selectedCardElem.data("choiceId");
-                            that.comm.makeDraftPick(that.leagueType, choiceId, function (xml) {
-                                var root = xml.documentElement;
-                                if (root.tagName == "pickResult") {
-                                    var pickedCards = root.getElementsByTagName("pickedCard");
-                                    for (var i = 0; i < pickedCards.length; i++) {
-                                        var pickedCard = pickedCards[i];
-                                        var blueprintId = pickedCard.getAttribute("blueprintId");
-                                        var count = pickedCard.getAttribute("count");
-                                        var horizontal = pickedCard.getAttribute("horizontal");
-                                        for (var no = 0; no < count; no++) {
-                                            var card = new Card(blueprintId, null, null, horizontal, "drafted", "deck", "player");
-                                            var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
-                                            cardDiv.data("card", card);
-                                            that.draftedDiv.append(cardDiv);
-                                        }
-                                    }
-                                    that.draftedCardGroup.layoutCards();
-
-                                    var availablePicks = root.getElementsByTagName("availablePick");
-                                    var draftState = root.getElementsByTagName("state")[0];
-                                    var stage = draftState.getAttribute("stage");
-                                    var stages = draftState.getAttribute("stages");
-                                    for (var i = 0; i < availablePicks.length; i++) {
-                                        var availablePick = availablePicks[i];
-                                        var id = availablePick.getAttribute("id");
-                                        var url = availablePick.getAttribute("url");
-                                        var blueprintId = availablePick.getAttribute("blueprintId");
-                                        var horizontal = availablePick.getAttribute("horizontal");
-                                        var side = availablePick.getAttribute("side");
-                                        if (side) side = side.toLowerCase();
-
-                                        if (blueprintId != null) {
-                                            var card = new Card(blueprintId, null, null, horizontal, "picks", "deck", "player");
-                                            var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
-                                            cardDiv.data("card", card);
-                                            cardDiv.data("choiceId", id);
-                                            cardDiv.addClass(side + "-side");
-                                            that.picksDiv.append(cardDiv);
-                                        } else {
-                                            var card = new Card("rules", null, null, false, "picks", "deck", "player");
-                                            var cardDiv = Card.CreateCardDiv(url, null, null, false, false, true, false);
-                                            cardDiv.data("card", card);
-                                            cardDiv.data("choiceId", id);
-                                            that.picksDiv.append(cardDiv);
-                                        }
-                                    }
-                                    that.picksCardGroup.layoutCards();
-                                    // Fade in cards with staggered animation
-                                    that.picksDiv.find(".card").each(function(index) {
-                                        $(this).css({opacity: 0}).delay(index * 50).animate({opacity: 1}, 400, "easeOutQuad");
-                                    });
-                                    if (availablePicks.length > 0) {
-                                        var currentSide = availablePicks.length > 0 ? availablePicks[0].getAttribute("side") : null;
-                                        var sideChanged = that.currentDraftingSide !== currentSide;
-                                        that.currentDraftingSide = currentSide;
-                                        var totalStages = parseInt(stages);
-                                        var currentStage = parseInt(stage);
-                                        var halfStages = Math.floor(totalStages / 2);
-
-                                        var lsRemaining, dsRemaining;
-                                        if (currentSide === "light") {
-                                            lsRemaining = halfStages - currentStage;
-                                            dsRemaining = halfStages;
-                                        } else {
-                                            lsRemaining = 0;
-                                            dsRemaining = totalStages - currentStage;
-                                        }
-
-                                        that.messageDiv.text("Picks Remaining  LS: " + lsRemaining + "  DS: " + dsRemaining);
-
-                                        if (sideChanged) {
-                                            $(".card", that.draftedDiv).remove();
-                                            that.comm.getCollection(that.leagueType, "sort:cardType,side,name", 0, 1000,
-                                                function (xml) {
-                                                    var root = xml.documentElement;
-                                                    if (root.tagName == "collection") {
-                                                        var cards = root.getElementsByTagName("card");
-                                                        for (var i=0; i<cards.length; i++) {
-                                                            var card = cards[i];
-                                                            var count = card.getAttribute("count");
-                                                            var blueprintId = card.getAttribute("blueprintId");
-                                                            var horizontal = card.getAttribute("horizontal");
-                                                            var side = card.getAttribute("side");
-                                                            if (side) side = side.toLowerCase();
-                                                            if (side && side === that.currentDraftingSide) {
-                                                                for (var no = 0; no < count; no++) {
-                                                                    var card = new Card(blueprintId, null, null, horizontal, "drafted", "deck", "player");
-                                                                    var cardDiv = Card.CreateCardDiv(card.imageUrl, null, null, card.isFoil(), false, false, card.incomplete);
-                                                                    cardDiv.data("card", card);
-                                                                    cardDiv.addClass(side + "-side");
-                                                                    that.draftedDiv.append(cardDiv);
-                                                                }
-                                                            }
-                                                        }
-                                                        that.draftedCardGroup.layoutCards();
-                                                    }
-                                                });
-                                        }
-                                    }
-                                    else {
-                                        that.messageDiv.text("Draft is finished");
-                                        that.showCompletionScreen();
-                                    }
-                                }
-                            });
-                            $(".card", that.picksDiv).remove();
-                        }
+            if (event.which >= 1 && !this.successfulDrag) {
+                // Shift-click or right-click shows card info
+                if (event.shiftKey || event.which > 1) {
+                    this.displayCardInfo(selectedCardElem.data("card"));
+                } else {
+                    if (selectedCardElem.data("card").zone == "picks") {
+                        this.handlePickSelection(selectedCardElem);
                     }
-
-                    event.stopPropagation();
                 }
+                event.stopPropagation();
             }
             return false;
         }
@@ -414,15 +414,16 @@ var GempSwccgSoloDraftUI = Class.extend({
          var windowWidth = $(window).width();
          var windowHeight = $(window).height();
 
-         var horSpace = 30;
-         var vertSpace = 45;
-
          if (card.horizontal) {
-             // 500x360
-             this.infoDialog.dialog({width:Math.min(500 + horSpace, windowWidth), height:Math.min(380 + vertSpace, windowHeight)});
+             this.infoDialog.dialog({
+                 width: Math.min(this.CARD_HORIZONTAL_WIDTH + this.DIALOG_HORIZONTAL_SPACE, windowWidth),
+                 height: Math.min(this.CARD_HORIZONTAL_HEIGHT + this.DIALOG_VERTICAL_SPACE, windowHeight)
+             });
          } else {
-             // 360x500
-             this.infoDialog.dialog({width:Math.min(360 + horSpace, windowWidth), height:Math.min(520 + vertSpace, windowHeight)});
+             this.infoDialog.dialog({
+                 width: Math.min(this.CARD_VERTICAL_WIDTH + this.DIALOG_HORIZONTAL_SPACE, windowWidth),
+                 height: Math.min(this.CARD_VERTICAL_HEIGHT + this.DIALOG_VERTICAL_SPACE, windowHeight)
+             });
          }
          this.infoDialog.dialog("open");
      },
