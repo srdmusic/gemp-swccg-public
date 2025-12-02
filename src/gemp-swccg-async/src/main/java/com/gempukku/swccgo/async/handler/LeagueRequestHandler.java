@@ -102,7 +102,7 @@ public class LeagueRequestHandler extends SwccgoServerRequestHandler implements 
 
         leagueElem.setAttribute("member", String.valueOf(inLeague));
         leagueElem.setAttribute("joinable", String.valueOf(!inLeague && end >= DateUtils.getCurrentDate()));
-        leagueElem.setAttribute("draftable", String.valueOf(inLeague && leagueData.isSoloDraftLeague() && start <= currentDate));
+        leagueElem.setAttribute("draftable", String.valueOf(inLeague && leagueData.isSoloDraftLeague()));
         leagueElem.setAttribute("type", league.getType());
         leagueElem.setAttribute("name", league.getName());
         leagueElem.setAttribute("cost", String.valueOf(league.getCost()));
