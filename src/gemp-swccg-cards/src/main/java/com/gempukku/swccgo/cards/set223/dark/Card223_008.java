@@ -22,7 +22,7 @@ import com.gempukku.swccgo.logic.modifiers.MayNotMoveFromLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 /**
- * Set: Set 223
+ * Set: Set 23
  * Type: Location
  * Subtype: System
  * Title: Bespin (V)
