@@ -65,8 +65,9 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
             throw new HttpProcessingException(404);
 
         LeagueData leagueData = league.getLeagueData(_soloDraftDefinitions);
+        int leagueStart = leagueData.getSeries().get(0).getStart();
 
-        if (!leagueData.isSoloDraftLeague())
+        if (!leagueData.isSoloDraftLeague() || DateUtils.getCurrentDate() < leagueStart)
             throw new HttpProcessingException(404);
 
         NewSoloDraftLeagueData soloDraftLeagueData = (NewSoloDraftLeagueData) leagueData;
@@ -128,8 +129,9 @@ public class SoloDraftRequestHandler extends SwccgoServerRequestHandler implemen
             throw new HttpProcessingException(404);
 
         LeagueData leagueData = league.getLeagueData(_soloDraftDefinitions);
+        int leagueStart = leagueData.getSeries().get(0).getStart();
 
-        if (!leagueData.isSoloDraftLeague())
+        if (!leagueData.isSoloDraftLeague() || DateUtils.getCurrentDate() < leagueStart)
             throw new HttpProcessingException(404);
 
         NewSoloDraftLeagueData soloDraftLeagueData = (NewSoloDraftLeagueData) leagueData;
