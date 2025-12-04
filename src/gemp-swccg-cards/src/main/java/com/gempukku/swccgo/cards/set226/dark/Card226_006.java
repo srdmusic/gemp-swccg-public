@@ -29,9 +29,8 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
 /**
  * Set: Set 26
  * Type: Effect
-  * Title: I'm Sorry (V)
+ * Title: I'm Sorry (V)
  */
-
 public class Card226_006 extends AbstractNormalEffect {
     public Card226_006() {
         super(Side.DARK, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Im_Sorry, Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

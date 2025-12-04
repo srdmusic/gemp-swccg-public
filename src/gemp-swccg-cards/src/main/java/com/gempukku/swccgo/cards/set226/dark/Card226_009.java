@@ -37,7 +37,6 @@ import java.util.List;
  * Subtype: Used Or Lost
  * Title: Ommni Box & It's Worse (V)
  */
-
 public class Card226_009 extends AbstractUsedOrLostInterrupt {
     public Card226_009() {
         super(Side.DARK, 5, Title.Ommni_Box_Its_Worse, Uniqueness.UNRESTRICTED, ExpansionSet.SET_26, Rarity.V);

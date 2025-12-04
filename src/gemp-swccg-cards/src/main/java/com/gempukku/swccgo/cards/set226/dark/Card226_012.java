@@ -38,7 +38,6 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
  * Type: Objective
  * Title: This Deal Is Getting Worse All The Time / Pray I Don't Alter It Any Further (V)
  */
-
 public class Card226_012 extends AbstractObjective {
     public Card226_012() {
         super(Side.DARK, 0, Title.This_Deal_Is_Getting_Worse_All_The_Time, ExpansionSet.SET_26, Rarity.V);

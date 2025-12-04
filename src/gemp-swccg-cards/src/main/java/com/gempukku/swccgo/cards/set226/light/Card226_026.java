@@ -42,7 +42,6 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
  * Subtype: Jedi Master
  * Title: Quinlan Vos
  */
-
 public class Card226_026 extends AbstractJediMaster {
     public Card226_026() {
         super(Side.LIGHT, 1, 8, 7, 7, 8, "Quinlan Vos", Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

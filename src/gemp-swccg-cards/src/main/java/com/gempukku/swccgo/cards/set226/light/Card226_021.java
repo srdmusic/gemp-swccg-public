@@ -32,7 +32,6 @@ import com.gempukku.swccgo.logic.modifiers.PowerModifier;
  * Subtype: Site
  * Title: Mapuzo: Mining Village
  */
-
 public class Card226_021 extends AbstractSite {
     public Card226_021() {
         super(Side.LIGHT, Title.Mining_Village, Title.Mapuzo, Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

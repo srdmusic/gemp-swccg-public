@@ -25,7 +25,6 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
  * Subtype: Site
  * Title: Mapuzo: Underground Corridor
  */
-
 public class Card226_023 extends AbstractSite {
     public Card226_023() {
         super(Side.LIGHT, Title.Underground_Corridor, Title.Mapuzo, Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

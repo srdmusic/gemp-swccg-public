@@ -36,7 +36,6 @@ import com.gempukku.swccgo.logic.modifiers.PowerModifier;
  * Subtype: Rebel
  * Title: Obi-Wan Kenobi, Jedi In Exile
  */
-
 public class Card226_024 extends AbstractRebel {
     public Card226_024() {
         super(Side.LIGHT, 1, 8, 6, 6, 8, "Obi-Wan Kenobi, Jedi In Exile", Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

@@ -46,7 +46,6 @@ import com.gempukku.swccgo.logic.timing.Action;
  * Type: Objective
  * Title: The Hidden Path / Gather Allies And Train
  */
-
 public class Card226_028_BACK extends AbstractObjective {
     public Card226_028_BACK() {
         super(Side.LIGHT, 7, Title.Gather_Allies_And_Train, ExpansionSet.SET_26, Rarity.V);

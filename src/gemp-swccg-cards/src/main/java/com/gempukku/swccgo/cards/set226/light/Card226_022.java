@@ -36,7 +36,6 @@ import com.gempukku.swccgo.logic.timing.results.PlayCardResult;
  * Subtype: Site
  * Title: Mapuzo: Safehouse
  */
-
 public class Card226_022 extends AbstractSite {
     public Card226_022() {
         super(Side.LIGHT, Title.Safehouse, Title.Mapuzo, Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

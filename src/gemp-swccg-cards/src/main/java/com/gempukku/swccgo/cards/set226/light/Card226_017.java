@@ -30,7 +30,6 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
  * Subtype: Site
  * Title: Kashyyyk: Chewie's Hut
  */
-
 public class Card226_017 extends AbstractSite {
     public Card226_017() {
         super(Side.LIGHT, "Kashyyyk: Chewie's Hut", Title.Kashyyyk, Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

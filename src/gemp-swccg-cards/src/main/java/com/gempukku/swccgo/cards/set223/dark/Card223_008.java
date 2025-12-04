@@ -26,8 +26,7 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
  * Type: Location
  * Subtype: System
  * Title: Bespin (V)
-  */
-
+ */
 public class Card223_008 extends AbstractSystem {
     public Card223_008() {
         super(Side.DARK, Title.Bespin, 6, ExpansionSet.SET_23, Rarity.V);

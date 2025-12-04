@@ -41,7 +41,6 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
  * Subtype: Alien/Imperial
  * Title: Garindan, Imperial Spy
  */
-
 public class Card226_004 extends AbstractAlienImperial {
     public Card226_004() {
         super(Side.DARK, 4, 2, 1, 1, 3, "Garindan, Imperial Spy", Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

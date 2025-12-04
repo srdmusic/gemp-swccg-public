@@ -35,7 +35,6 @@ import com.gempukku.swccgo.logic.modifiers.Modifier;
  * Subtype: Jedi Master/Republic
  * Title: Kelleran Beq
  */
-
 public class Card226_018 extends AbstractJediMasterRepublic {
     public Card226_018() {
         super(Side.LIGHT, 1, 8, 6, 7, 8, "Kelleran Beq", Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

@@ -48,7 +48,6 @@ import com.gempukku.swccgo.logic.timing.Action;
  * Type: Objective
  * Title: This Deal Is Getting Worse All The Time / Pray I Don't Alter It Any Further (V)
  */
-
 public class Card226_012_BACK extends AbstractObjective {
     public Card226_012_BACK() {
         super(Side.DARK, 7, Title.Pray_I_Dont_Alter_It_Any_Further, ExpansionSet.SET_26, Rarity.V);

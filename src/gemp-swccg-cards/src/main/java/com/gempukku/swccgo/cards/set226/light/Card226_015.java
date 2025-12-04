@@ -25,7 +25,6 @@ import java.util.List;
  * Subtype: Site
  * Title: Jabiim: Path Operations Center
  */
-
 public class Card226_015 extends AbstractSite {
     public Card226_015() {
         super(Side.LIGHT, Title.Path_Operations_Center, Title.Jabiim, Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

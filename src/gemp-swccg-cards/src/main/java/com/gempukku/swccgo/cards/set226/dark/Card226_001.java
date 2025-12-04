@@ -30,7 +30,6 @@ import com.gempukku.swccgo.logic.modifiers.MovesFreeToLocationUsingLandspeedModi
  * Subtype: Site
  * Title: Cloud City: Dining Room (V)
  */
-
 public class Card226_001 extends AbstractSite {
     public Card226_001() {
         super(Side.DARK, Title.Dining_Room, Title.Bespin, Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

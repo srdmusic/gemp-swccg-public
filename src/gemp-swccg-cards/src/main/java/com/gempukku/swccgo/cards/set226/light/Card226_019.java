@@ -29,7 +29,6 @@ import java.util.List;
  * Subtype: Jedi Master
  * Title: Kelnacca
  */
-
 public class Card226_019 extends AbstractJediMaster {
     public Card226_019() {
         super(Side.LIGHT, 2, 5, 5, 7, 7, "Kelnacca", Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

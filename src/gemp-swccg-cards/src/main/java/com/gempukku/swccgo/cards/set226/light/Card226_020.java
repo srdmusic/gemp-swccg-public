@@ -37,9 +37,8 @@ import java.util.List;
 /**
  * Set: Set 26
  * Type: Effect
-  * Title: Launching The Assault (V)
+ * Title: Launching The Assault (V)
  */
-
 public class Card226_020 extends AbstractNormalEffect {
     public Card226_020() {
         super(Side.LIGHT, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Launching_The_Assault, Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

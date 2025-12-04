@@ -44,7 +44,6 @@ import com.gempukku.swccgo.logic.timing.results.LostFromTableResult;
  * Type: Epic Event
  * Title: Fallen Order
  */
-
 public class Card226_014 extends AbstractEpicEventDeployable {
     public Card226_014() {
         super(Side.LIGHT, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, Title.Fallen_Order, Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

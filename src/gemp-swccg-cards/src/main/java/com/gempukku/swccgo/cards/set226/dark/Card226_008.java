@@ -38,7 +38,6 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
  * Subtype: Alien/Imperial
  * Title: Mara Jade, The Emperor's Hand (V)
  */
-
 public class Card226_008 extends AbstractAlienImperial {
     public Card226_008() {
         super(Side.DARK, 1, 5, 4, 5, 7, Title.Mara_Jade_The_Emperors_Hand, Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

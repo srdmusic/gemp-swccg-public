@@ -34,7 +34,6 @@ import com.gempukku.swccgo.logic.timing.Action;
  * Subtype: Lost or Starting
  * Title: Something About This Boy
  */
-
 public class Card226_027 extends AbstractLostOrStartingInterrupt {
     public Card226_027() {
         super(Side.LIGHT, 3, "Something About This Boy", Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);

@@ -29,7 +29,6 @@ import java.util.List;
  * Subtype: Site
  * Title: Jabiim: Starship Hangar
  */
-
 public class Card226_016 extends AbstractSite {
     public Card226_016() {
         super(Side.LIGHT, Title.Jabiim_Starship_Hangar, Title.Jabiim, Uniqueness.UNIQUE, ExpansionSet.SET_26, Rarity.V);
