@@ -409,90 +409,79 @@ public class Card_1_046_Tests {
         assertTrue(plans.getZone() == Zone.TOP_OF_LOST_PILE);
     }
 
-    //retrieves when carried to yavin location (errata)
-//    @Test
-//    public void DeathStarPlansRetrievesWhenTargetCarriedToYavin() {
-//        var scn = GetScenario();
-//
-//        var plans = scn.GetLSCard("plans");
-//        var ds_site = scn.GetLSCard("ds_site");
-//        var ds_db = scn.GetLSCard("ds_db");
-//        var yavin_db = scn.GetLSCard("yavin_db");
-//        var droid = scn.GetLSCard("droid");
-//        var ronto = scn.GetLSCard("ronto");
-//
-//        scn.StartGame();
-//
-//        scn.MoveCardsToLSHand(plans);
-//
-//        scn.MoveLocationToTable(ds_db);
-//        scn.MoveLocationToTable(ds_site);
-//        scn.MoveLocationToTable(yavin_db);
-//
-//        scn.MoveCardsToLocation(yavin_db,droid,ronto);
-//
-//        scn.SkipToLSTurn(Phase.DEPLOY); //get plans deployed and target droid
-//        scn.LSPlayCard(plans);
-//        scn.LSChooseCard(ds_site);
-//        scn.LSChooseCard(droid);
-//        scn.PassAllResponses();
-//
-//        scn.SkipToLSTurn(Phase.MOVE); //droid yavin db -> ds db
-//        assertTrue(scn.LSCardActionAvailable(droid,"Embark"));
-//        scn.LSUseCardAction(droid,"Embark"); /// need to add overload to supply text string
-//        scn.LSUseCardAction(yavin_db);
-//        scn.LSChooseCard(ds_db);
-//        scn.LSChooseCard(ronto);
-//        scn.PassAllResponses();
-//        assertTrue(scn.LSCardActionAvailable(droid,"Disembark"));
-//        scn.LSUseCardAction(droid);
-//        assertTrue(scn.LSCardActionAvailable(droid));
-//        scn.LSUseCardAction(droid);
-//
-//
-//        scn.SkipToDSTurn();
-//
-//        scn.SkipToLSTurn(Phase.MOVE); //droid ds db -> ds site
-//        scn.LSUseCardAction(droid);
-//        scn.LSChooseCard(ds_site);
-//        scn.PassAllResponses();
-//        scn.SkipToDSTurn();
-//
-//        scn.SkipToLSTurn(Phase.MOVE); //droid ds site -> ds db
-//        scn.LSUseCardAction(droid);
-//        scn.LSChooseCard(ds_db);
-//        scn.PassAllResponses();
-//        scn.SkipToDSTurn();
-//
-//        scn.SkipToLSTurn(Phase.MOVE); //droid ds db -> yavin db
-//        assertTrue(scn.GetLSForcePileCount() >= 8);
-//        scn.MoveCardsToTopOfLSLostPile(scn.GetTopOfLSForcePile());
-//        scn.MoveCardsToTopOfLSLostPile(scn.GetTopOfLSForcePile());
-//        scn.MoveCardsToTopOfLSLostPile(scn.GetTopOfLSForcePile());
-//        scn.MoveCardsToTopOfLSLostPile(scn.GetTopOfLSForcePile());
-//        scn.MoveCardsToTopOfLSLostPile(scn.GetTopOfLSForcePile());
-//        scn.MoveCardsToTopOfLSLostPile(scn.GetTopOfLSForcePile());
-//        scn.MoveCardsToTopOfLSLostPile(scn.GetTopOfLSForcePile());
-//        assertEquals(7,scn.GetLSLostPileCount());
-//        scn.PrepareLSDestiny(1);
-//        scn.PrepareLSDestiny(2);
-//        scn.PrepareLSDestiny(3);
-//        assertEquals(4,scn.GetLSReserveDeckCount());
-//
-//        scn.LSUseCardAction(ds_db);
-//        scn.LSChooseCard(yavin_db);
-//        scn.LSChooseCard(droid);
-//        scn.PassAllResponses();
-//        scn.PassAllResponses(); //RETRIEVED_FORCE - Optional responses, etc
-//
-//        assertEquals(1,scn.GetLSReserveDeckCount()); //drew 3 destiny
-//        assertEquals(2,scn.GetLSLostPileCount()); //2 = 7 - 6 retrieved + 1 plans
-//        assertTrue(plans.getZone() == Zone.TOP_OF_LOST_PILE);
-//    }
+    //demonstrates 'bug 3' fixed (post-errata) from: https://github.com/PlayersCommittee/gemp-swccg-public/issues/770
+    @Test
+    public void DeathStarPlansRetrievesWhenTargetCarriedToYavin() {
+        //get target droid to death star site to steal the plans then move Ronto (with droid as a passenger)
+        //to Yavin 4 and confirm retrieval triggers (even though the droid did not use a move action)
+        var scn = GetScenario();
 
+        var plans = scn.GetLSCard("plans");
+        var ds_site = scn.GetLSCard("ds_site");
+        var ds_db = scn.GetLSCard("ds_db");
+        var yavin_db = scn.GetLSCard("yavin_db");
+        var droid = scn.GetLSCard("droid");
+        var ronto = scn.GetLSCard("ronto");
+
+        scn.StartGame();
+
+        scn.MoveCardsToLSHand(plans);
+
+        scn.MoveLocationToTable(ds_db);
+        scn.MoveLocationToTable(ds_site);
+        scn.MoveLocationToTable(yavin_db);
+
+        scn.MoveCardsToLocation(yavin_db,droid,ronto);
+
+        scn.SkipToLSTurn(Phase.DEPLOY); //get plans deployed and target droid
+        scn.LSPlayCard(plans);
+        scn.LSChooseCard(ds_site);
+        scn.LSChooseCard(droid);
+        scn.PassAllResponses();
+
+        scn.SkipToLSTurn(Phase.MOVE);
+        scn.LSUseCardAction(droid,"Embark");
+        scn.PassAllResponses();
+        scn.DSPass();
+
+        scn.LSUseCardAction(yavin_db);
+        scn.LSChooseCard(ds_db);
+        scn.LSChooseCard(ronto);
+        scn.PassAllResponses();
+        scn.DSPass();
+
+        scn.LSUseCardAction(droid,"Disembark");
+        scn.PassAllResponses();
+        scn.DSPass();
+
+        scn.LSUseCardAction(droid,"Move");
+        scn.LSChooseCard(ds_site);
+        scn.PassAllResponses();
+
+        assertTrue(scn.IsAttachedTo(droid,plans)); //plans stolen
+
+        scn.SkipToDSTurn();
+
+        scn.SkipToLSTurn(Phase.MOVE); //droid ds site -> ds db
+        scn.LSUseCardAction(droid,"Move");
+        scn.LSChooseCard(ds_db);
+        scn.PassAllResponses();
+        scn.DSPass();
+
+        scn.LSUseCardAction(droid,"Embark");
+        scn.PassAllResponses();
+        scn.DSPass();
+
+        scn.LSUseCardAction(ds_db);
+        scn.LSChooseCard(yavin_db);
+        scn.LSChooseCard(ronto); //ronto carrying target to yavin
+        scn.PassAllResponses();
+        scn.PassAllResponses();
+
+        assertTrue(plans.getZone() == Zone.TOP_OF_LOST_PILE);
+    }
 
     //additional tests:
     //verify cannot play without eligible location and target
-
 
 }
