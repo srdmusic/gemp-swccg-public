@@ -1141,7 +1141,7 @@ public class Card_5_036_Tests {
 
         assertTrue(scn.DSDecisionAvailable("Target captives(s) to forfeit"));
 		assertTrue(scn.DSHasCardChoiceAvailable(chewie));
-        scn.DSChooseCard(chewie);
+        scn.DSChooseCard(chewie); //captive to forfeit
 		scn.PassCardPlayResponses();
 		scn.PassCardLeavingTable(); //chewie forfeited
 		scn.PassCardLeavingTable(); //human shield

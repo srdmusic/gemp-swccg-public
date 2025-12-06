@@ -279,7 +279,7 @@ public interface Choices extends Decisions {
 	 * @param cards Which cards to select
 	 */
 	default void DSChooseCards(PhysicalCardImpl...cards) {
-        assertTrue("One more more card choices unavailable",DSHasCardChoicesAvailable(cards));
+        assertTrue("One or more card choices unavailable",DSHasCardChoicesAvailable(cards));
 		if(GetChoiceCount(DSGetBPChoices()) > 0) {
 			ChooseCardBPFromSelection(DS, cards);
 		}
@@ -292,7 +292,7 @@ public interface Choices extends Decisions {
 	 * @param cards Which cards to select
 	 */
 	default void LSChooseCards(PhysicalCardImpl...cards) {
-        assertTrue("One more more card choices unavailable",LSHasCardChoicesAvailable(cards));
+        assertTrue("One or more card choices unavailable",LSHasCardChoicesAvailable(cards));
 		if(GetChoiceCount(LSGetBPChoices()) > 0) {
 			ChooseCardBPFromSelection(LS, cards);
 		}
