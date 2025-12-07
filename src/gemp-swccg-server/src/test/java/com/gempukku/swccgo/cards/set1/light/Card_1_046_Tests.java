@@ -409,11 +409,12 @@ public class Card_1_046_Tests {
         assertTrue(plans.getZone() == Zone.TOP_OF_LOST_PILE);
     }
 
-    //demonstrates 'bug 3' fixed (post-errata) from: https://github.com/PlayersCommittee/gemp-swccg-public/issues/770
     @Test
-    public void DeathStarPlansRetrievesWhenTargetCarriedToYavin() {
-        //get target droid to death star site to steal the plans then move Ronto (with droid as a passenger)
-        //to Yavin 4 and confirm retrieval triggers (even though the droid did not use a move action)
+    public void DeathStarPlansDoesNotRetrieveWhenTargetCarriedToYavin() {
+        //get target droid to death star site to steal the plans, then move Ronto (with droid as a passenger)
+        //to Yavin 4 and disembark - confirm no retrieval triggers because:
+        // - ronto is not the target, so ronto's move to yavin does not count
+        // - droid's disembark unlimited move action did not cause target to move to yavin (already there)
         var scn = GetScenario();
 
         var plans = scn.GetLSCard("plans");
@@ -476,12 +477,16 @@ public class Card_1_046_Tests {
         scn.LSChooseCard(yavin_db);
         scn.LSChooseCard(ronto); //ronto carrying target to yavin
         scn.PassAllResponses();
-        scn.PassAllResponses();
+        scn.DSPass();
 
-        assertTrue(plans.getZone() == Zone.TOP_OF_LOST_PILE);
+        scn.LSUseCardAction(droid,"Disembark");
+        scn.PassAllResponses();
+        scn.DSPass();
+
+        assertTrue(scn.AwaitingLSMovePhaseActions());
+        assertTrue(scn.IsAttachedTo(droid,plans)); //did not trigger yet
     }
 
     //additional tests:
     //verify cannot play without eligible location and target
-
 }

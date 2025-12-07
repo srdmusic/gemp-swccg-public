@@ -98,8 +98,7 @@ public class Card1_046 extends AbstractUtinniEffect {
             }
         }
         else if (!GameConditions.isUtinniEffectCompleted(game, self)) {
-            Filter targetOrCardCarryingTarget = Filters.or(target, Filters.hasAttachedWithRecursiveChecking(target));
-            if (TriggerConditions.movedToLocation(game, effectResult, targetOrCardCarryingTarget, Filters.Yavin_4_site)) {
+            if (TriggerConditions.movedToLocation(game, effectResult, target, Filters.Yavin_4_site)) {
                 int numDestinyToDraw = 3;
                 if (game.getModifiersQuerying().hasGameTextModification(game.getGameState(), self, ModifyGameTextType.DEATH_STAR_PLANS__ADD_DESTINY_TO_FORCE_RETRIEVED)) {
                     numDestinyToDraw++;
