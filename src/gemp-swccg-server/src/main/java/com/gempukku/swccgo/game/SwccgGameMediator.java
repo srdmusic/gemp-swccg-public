@@ -1291,6 +1291,10 @@ public class SwccgGameMediator {
                     // Slip Sliding Away (v)
                     return startingLocation.getBlueprint().getTitle() + " SSAv";
                 }
+                if(Filters.Something_About_This_Boy.accepts(_swccgoGame, startingInterrupt)) {
+                    // Something About This Boy
+                    return "Boy";
+                }
                 if(Filters.Let_The_Wookiee_Win.accepts(_swccgoGame, startingInterrupt)
                         && startingInterrupt.getBlueprint().hasVirtualSuffix()
                         && startingLocation.getBlueprint().getTitle() != null){
