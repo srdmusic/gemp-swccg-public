@@ -1493,6 +1493,10 @@ public class SwccgGameMediator {
                         objectiveLabel = "Imperial Occupation - " + system;
                 }
             }
+            if (Filters.or(Filters.The_Hidden_Path, Filters.Gather_Allies_And_Train).accepts(_swccgoGame, objective)) {
+                // The Hidden Path
+                objectiveLabel = "Path";
+            }
             if (Filters.or(Filters.You_Can_Either_Profit_By_This, Filters.Or_Be_Destroyed).accepts(_swccgoGame, objective)) {
                 // You Can Either Profit By This...
                 objectiveLabel = "Profit";
