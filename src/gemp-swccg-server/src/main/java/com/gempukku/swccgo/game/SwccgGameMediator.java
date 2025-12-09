@@ -1418,6 +1418,10 @@ public class SwccgGameMediator {
                 // Hidden Base
                 objectiveLabel = "Hidden Base";
             }
+            if (Filters.or(Filters.The_Hidden_Path, Filters.Gather_Allies_And_Train).accepts(_swccgoGame, objective)) {
+                // The Hidden Path
+                objectiveLabel = "Hidden Path";
+            }
             if (Filters.or(Filters.Hunt_Down_And_Destroy_The_Jedi, Filters.Their_Fire_Has_Gone_Out_Of_The_Universe).accepts(_swccgoGame, objective)) {
                 // Hunt Down
                 objectiveLabel = "Hunt Down";
@@ -1496,10 +1500,6 @@ public class SwccgGameMediator {
                     if (system != null)
                         objectiveLabel = "Imperial Occupation - " + system;
                 }
-            }
-            if (Filters.or(Filters.The_Hidden_Path, Filters.Gather_Allies_And_Train).accepts(_swccgoGame, objective)) {
-                // The Hidden Path
-                objectiveLabel = "Path";
             }
             if (Filters.or(Filters.You_Can_Either_Profit_By_This, Filters.Or_Be_Destroyed).accepts(_swccgoGame, objective)) {
                 // You Can Either Profit By This...
