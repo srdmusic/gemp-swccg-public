@@ -395,6 +395,22 @@ public interface ZoneManipulation extends TestBase{
 	}
 
 	/**
+	 * Makes a character 'go missing'
+	 * @param character The card to become missing.
+	 */
+	default void MakeCardGoMissing(PhysicalCardImpl character) {
+		gameState().makeGoMissing(game(), character);
+	}
+
+	/**
+	 * Makes a character undercover
+	 * @param character The card to become undercover (must be spy or cover will be automatically broken)
+	 */
+	default void MakeCardGoUndercover(PhysicalCardImpl character) {
+		gameState().putUndercover(character);
+	}
+
+	/**
 	 * Causes a card to be attached to the given vehicle or ship as a passenger, and updates all the appropriate state
 	 * on each card.  This does not follow the game procedure and is cheating the card into place.
 	 * @param vehicle The vehicle (or ship) that will hold the passenger(s).
