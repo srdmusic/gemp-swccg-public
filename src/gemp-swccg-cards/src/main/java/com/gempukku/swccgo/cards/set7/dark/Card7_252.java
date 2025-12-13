@@ -9,37 +9,22 @@ import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.SpotOverride;
-import com.gempukku.swccgo.common.TargetingReason;
-import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.common.Zone;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
-import com.gempukku.swccgo.logic.actions.PlayCardAction;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.effects.CaptureCharacterOnTableEffect;
-import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
-import com.gempukku.swccgo.logic.effects.HitCardEffect;
-import com.gempukku.swccgo.logic.effects.LoseCardFromTableEffect;
-import com.gempukku.swccgo.logic.effects.PlaceCardsInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.StackActionEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Set: Special Edition
@@ -64,9 +49,9 @@ public class Card7_252 extends AbstractUsedInterrupt {
 
             List<PhysicalCard> validSites = new LinkedList<PhysicalCard>();
             for (PhysicalCard site : sites) {
-                if ((Filters.canSpot(game, null, SpotOverride.INCLUDE_MISSING_AND_UNDERCOVER, Filters.and(Filters.owner(opponent), Filters.missing, Filters.at(site)))) &&
-                        Filters.canSpot(game, null, Filters.canJoinSearchPartyAt(playerId, self))) validSites.add(site);
-                }
+                if ((Filters.canSpot(game, self, SpotOverride.INCLUDE_MISSING_AND_UNDERCOVER, Filters.and(Filters.owner(opponent), Filters.missing, Filters.at(site)))) &&
+                        Filters.canSpot(game, self, Filters.canJoinSearchPartyAt(playerId, site))) validSites.add(site);
+            }
             if (!validSites.isEmpty()) {
                 final PlayInterruptAction action = new PlayInterruptAction(game, self);
                 action.setText("Form a search party");
@@ -86,7 +71,15 @@ public class Card7_252 extends AbstractUsedInterrupt {
                                                             @Override
                                                             protected void doPlayEffect(SwccgGame game) {
                                                                 action.appendEffect(
-                                                                        new StackActionEffect(action, new SearchPartyAction(playerId, site, true)));
+                                                                        new StackActionEffect(action, new SearchPartyAction(playerId, site, true) {
+                                                                            //SearchPartyAction is normally top level action with null source, so must overload
+                                                                            @Override
+                                                                            public PhysicalCard getActionSource() {
+                                                                                return self;
+                                                                            }
+                                                                        }
+                                                                        )
+                                                                );
                                                             }
                                                         }
                                                 );

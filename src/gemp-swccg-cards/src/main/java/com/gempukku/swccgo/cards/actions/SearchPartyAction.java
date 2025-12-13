@@ -9,10 +9,15 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.AbstractTopLevelRuleAction;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfCardPlayedModifierEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfDrawDestinyModifierEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfEffectResultModifierEffect;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.CaptureCharacterOnTableEffect;
 import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
 import com.gempukku.swccgo.logic.effects.FindMissingCharacterEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardsOnTableEffect;
+import com.gempukku.swccgo.logic.modifiers.EachSearchPartyDestinyModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotJoinSearchPartyModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotMoveModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotParticipateInBattleModifier;
@@ -66,6 +71,12 @@ public class SearchPartyAction extends AbstractTopLevelRuleAction {
                                                 new MayNotJoinSearchPartyModifier(null, filter));
                                         modifiersEnvironment.addUntilEndOfTurnModifier(
                                                 new MayNotParticipateInBattleModifier(null, filter));
+
+                                        if (isHuntingParty) {
+                                            int numBountyHuntersInSearchParty = Filters.count(cards,game,Filters.and(filter,Filters.bounty_hunter));
+                                            _that.appendEffect(new AddUntilEndOfCardPlayedModifierEffect(_that,getActionSource(),
+                                                    new EachSearchPartyDestinyModifier(getActionSource(), site, numBountyHuntersInSearchParty, playerId),null));
+                                        }
 
                                         _that.appendEffect(
                                                 new DrawDestinyEffect(_that, playerId, 1, DestinyType.SEARCH_PARTY_DESTINY) {

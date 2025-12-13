@@ -88,7 +88,7 @@ public class SearchPartyTests {
 		//test2: search party can be formed at a site where you have a character (even one without ability/presence)
 		var scn = GetScenario();
 
-		var site = scn.GetDSStartingLocation();
+		var site1 = scn.GetDSStartingLocation();
 		var site2 = scn.GetLSStartingLocation();
 
 		var trooper1 = scn.GetDSFiller(1);
@@ -97,14 +97,14 @@ public class SearchPartyTests {
 
 		scn.StartGame();
 
-		scn.MoveCardsToLocation(site,trooper1);
+		scn.MoveCardsToLocation(site1,trooper1);
 		scn.MakeCardGoMissing(trooper1);
 
 		scn.MoveCardsToLocation(site2,trooper2,droid);
 		scn.MakeCardGoMissing(trooper2);
 
 		scn.SkipToPhase(Phase.CONTROL);
-		assertFalse(scn.DSCardActionAvailable(site,"Form search party")); //test1
+		assertFalse(scn.DSCardActionAvailable(site1,"Form search party")); //test1
 		assertTrue(scn.DSCardActionAvailable(site2,"Form search party")); //test2
 	}
 
@@ -136,7 +136,7 @@ public class SearchPartyTests {
 		//test2: search party cannot be formed where no missing characters at site
 		var scn = GetScenario();
 
-		var site = scn.GetDSStartingLocation();
+		var site1 = scn.GetDSStartingLocation();
 		var site2 = scn.GetLSStartingLocation();
 
 		var rebelTrooper1 = scn.GetLSFiller(1);
@@ -146,13 +146,13 @@ public class SearchPartyTests {
 
 		scn.StartGame();
 
-		scn.MoveCardsToLocation(site,rebelTrooper1,trooper1);
+		scn.MoveCardsToLocation(site1,rebelTrooper1,trooper1);
 		scn.MakeCardGoMissing(trooper1);
 
 		scn.MoveCardsToLocation(site2,trooper2);
 
 		scn.SkipToPhase(Phase.CONTROL);
-		assertFalse(scn.DSCardActionAvailable(site,"Form search party")); //test1
+		assertFalse(scn.DSCardActionAvailable(site1,"Form search party")); //test1
 		assertFalse(scn.DSCardActionAvailable(site2,"Form search party")); //test2
 	}
 
