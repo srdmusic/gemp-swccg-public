@@ -320,7 +320,7 @@ public class BattleDamageSegmentAction extends SystemQueueAction {
                             else if (!cardsThatMustBeForfeited.isEmpty()
                                     && attritionRemaining > 0 && attritionCanBeIgnored) {
 
-                                // Add cards that must be forfeited
+                                // Add cards that may be forfeited
                                 selectableCards.addAll(cardsThatMayBeForfeited);
 
                                 // Set text and send message
