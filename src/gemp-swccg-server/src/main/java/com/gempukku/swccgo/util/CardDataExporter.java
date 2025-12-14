@@ -61,6 +61,11 @@ public class CardDataExporter {
 
         System.out.println("Found " + cardIds.size() + " card files to process...\n");
 
+        // First pass: determine which card titles need -v suffix
+        System.out.println("Analyzing card versions...");
+        Set<String> titlesNeedingVSuffix = determineTitlesNeedingVirtualSuffix(library, cardIds);
+        System.out.println("Found " + titlesNeedingVSuffix.size() + " card titles with both virtual and non-virtual versions\n");
+
         int successCount = 0;
         int failCount = 0;
 
@@ -69,7 +74,7 @@ public class CardDataExporter {
                 SwccgCardBlueprint blueprint = library.getSwccgoCardBlueprint(cardId);
 
                 if (blueprint != null) {
-                    Map<String, Object> cardDataMap = extractCardData(cardId, blueprint);
+                    Map<String, Object> cardDataMap = extractCardData(cardId, blueprint, titlesNeedingVSuffix);
                     allCardData.add(cardDataMap);
                     successCount++;
 
@@ -92,6 +97,51 @@ public class CardDataExporter {
         System.out.println("  Failed: " + failCount);
 
         return allCardData;
+    }
+
+    /**
+     * Determines which card titles have both virtual (SET_X with rarity V) and non-virtual versions.
+     */
+    private Set<String> determineTitlesNeedingVirtualSuffix(SwccgCardBlueprintLibrary library, List<String> cardIds) {
+        Map<String, Boolean> hasVirtualVersion = new HashMap<>();
+        Map<String, Boolean> hasNonVirtualVersion = new HashMap<>();
+
+        for (String cardId : cardIds) {
+            try {
+                SwccgCardBlueprint blueprint = library.getSwccgoCardBlueprint(cardId);
+                if (blueprint == null) continue;
+
+                String title = blueprint.getTitle();
+                ExpansionSet expansionSet = blueprint.getExpansionSet();
+                Rarity rarity = blueprint.getRarity();
+
+                // Determine if this is a virtual card
+                boolean isVirtualSet = expansionSet != null && expansionSet.name().startsWith("SET_");
+                boolean isVirtual = isVirtualSet && (rarity != null && rarity == Rarity.V);
+
+                // Determine if this is a non-virtual card (physical sets or Legacy reprints)
+                boolean isNonVirtual = !isVirtualSet || (rarity != null && rarity != Rarity.V);
+
+                if (isVirtual) {
+                    hasVirtualVersion.put(title, true);
+                }
+                if (isNonVirtual) {
+                    hasNonVirtualVersion.put(title, true);
+                }
+            } catch (Exception e) {
+                // Skip cards that fail to load
+            }
+        }
+
+        // Return titles that have BOTH virtual and non-virtual versions
+        Set<String> needsSuffix = new HashSet<>();
+        for (String title : hasVirtualVersion.keySet()) {
+            if (hasNonVirtualVersion.containsKey(title)) {
+                needsSuffix.add(title);
+            }
+        }
+
+        return needsSuffix;
     }
 
     /**
@@ -159,15 +209,43 @@ public class CardDataExporter {
     /**
      * Extracts all relevant data from a card blueprint.
      */
-    private Map<String, Object> extractCardData(String cardId, SwccgCardBlueprint blueprint) {
+    private Map<String, Object> extractCardData(String cardId, SwccgCardBlueprint blueprint, Set<String> titlesNeedingVSuffix) {
         Map<String, Object> data = new LinkedHashMap<>();
 
         // Basic identification
         data.put("cardId", cardId);
-        data.put("title", blueprint.getTitle());
+        String title = blueprint.getTitle();
+        data.put("title", title);
+
+        // Generate base slug
+        String baseSlug = slugify(title);
+
+        // Get expansion set and rarity for determining virtual suffix
+        ExpansionSet expansionSet = blueprint.getExpansionSet();
+        Rarity rarity = blueprint.getRarity();
+
+        // Only add -v suffix if this card title has both virtual and non-virtual versions
+        // AND this specific card is the virtual version
+        boolean isVirtualSet = expansionSet != null && expansionSet.name().startsWith("SET_");
+        boolean isVirtual = isVirtualSet && (rarity != null && rarity == Rarity.V);
+        boolean needsVSuffix = titlesNeedingVSuffix.contains(title) && isVirtual;
+        String slugSuffix = needsVSuffix ? "-v" : "";
+
+        data.put("slug", baseSlug + slugSuffix);
+
+        // Get expansion set name for slugWithSetName
+        if (expansionSet != null) {
+            String setName = expansionSet.getHumanReadable();
+            // Add -v before the set name
+            data.put("slugWithSetName", baseSlug + slugSuffix + "-" + slugify(setName));
+        } else {
+            // Fallback to just the title slug if no expansion set
+            data.put("slugWithSetName", baseSlug + slugSuffix);
+        }
+
         data.put("side", safeToString(blueprint.getSide()));
         data.put("uniqueness", safeToString(blueprint.getUniqueness()));
-        data.put("expansionSet", safeToString(blueprint.getExpansionSet()));
+        data.put("expansionSet", safeToString(expansionSet));
         data.put("rarity", safeToString(blueprint.getRarity()));
 
         // Card categories and types
@@ -401,5 +479,28 @@ public class CardDataExporter {
         File outputFile = new File(outputPath);
         long fileSizeKB = outputFile.length() / 1024;
         System.out.println("Output file size: " + fileSizeKB + " KB");
+    }
+
+    /**
+     * Converts a string to a URL-friendly slug.
+     * Converts to lowercase, replaces spaces and special characters with hyphens,
+     * and removes consecutive hyphens.
+     *
+     * @param text the text to slugify
+     * @return the slugified text
+     */
+    private String slugify(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+
+        return text
+            .toLowerCase()
+            // Replace apostrophes and quotes with empty string
+            .replaceAll("['\"`]", "")
+            // Replace spaces, underscores, and other non-alphanumeric characters with hyphens
+            .replaceAll("[^a-z0-9]+", "-")
+            // Remove leading/trailing hyphens
+            .replaceAll("^-+|-+$", "");
     }
 }
