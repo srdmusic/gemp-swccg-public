@@ -17,6 +17,7 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.StackActionEffect;
+import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
@@ -57,9 +58,9 @@ public class Card7_252 extends AbstractUsedInterrupt {
                 action.setText("Form a search party");
                 // Choose target(s)
                 action.appendTargeting(
-                        new ChooseCardOnTableEffect(action, playerId, "Choose site", validSites) {
+                        new TargetCardOnTableEffect(action, playerId, "Choose site", Filters.in(validSites)) {
                             @Override
-                            protected void cardSelected(PhysicalCard site) {
+                            protected void cardTargeted(int siteTargetGroupId, PhysicalCard site) {
                                 // Allow response(s)
                                 action.allowResponses("Form a search party at " + GameUtils.getCardLink(site),
                                         new RespondablePlayCardEffect(action) {
@@ -70,8 +71,9 @@ public class Card7_252 extends AbstractUsedInterrupt {
                                                         new PassthruEffect(action) {
                                                             @Override
                                                             protected void doPlayEffect(SwccgGame game) {
+                                                                PhysicalCard finalSite = action.getPrimaryTargetCard(siteTargetGroupId);
                                                                 action.appendEffect(
-                                                                        new StackActionEffect(action, new SearchPartyAction(playerId, site, true) {
+                                                                        new StackActionEffect(action, new SearchPartyAction(playerId, finalSite, true) {
                                                                             //SearchPartyAction is normally top level action with null source, so must overload
                                                                             @Override
                                                                             public PhysicalCard getActionSource() {

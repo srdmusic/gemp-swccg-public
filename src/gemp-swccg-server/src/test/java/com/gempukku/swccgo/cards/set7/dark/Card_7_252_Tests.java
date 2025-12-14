@@ -7,7 +7,6 @@ import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.framework.StartingSetup;
@@ -29,6 +28,7 @@ public class Card_7_252_Tests {
 				new HashMap<>()
 				{{
 					put("site3","1_128");
+					put("bad_feeling","4_052");
 				}},
 				new HashMap<>()
 				{{
@@ -588,6 +588,75 @@ public class Card_7_252_Tests {
 		scn.PassAllResponses();
 		assertTrue(scn.AwaitingLSControlPhaseActions());
 		assertTrue(rebelTrooper.isMissing()); //test1
+	}
+
+	@Test @Ignore
+	public void HuntingPartyCanBeRetargetedByIHaveABadFeelingAboutThis() {
+		//incomplete test
+		//should be able to play IHABFAT to retarget search party members?
+		var scn = GetScenario();
+
+		var site1 = scn.GetDSStartingLocation();
+		var site2 = scn.GetLSStartingLocation();
+		var site3 = scn.GetLSCard("site3");
+
+		var rebelTrooper1 = scn.GetLSFiller(1);
+		var rebelTrooper2 = scn.GetLSFiller(2);
+		var bad_feeling = scn.GetLSCard("bad_feeling");
+
+		var trooper1A = scn.GetDSFiller(1);
+		var trooper1B = scn.GetDSFiller(2);
+		var trooper2A = scn.GetDSFiller(3);
+		var trooper2B = scn.GetDSFiller(4);
+		var hunting = scn.GetDSCard("hunting");
+
+		scn.StartGame();
+
+		scn.MoveCardsToDSHand(hunting);
+		scn.MoveCardsToLSHand(bad_feeling);
+
+		scn.MoveLocationToTable(site3);
+
+		scn.MoveCardsToLocation(site1,trooper1A,trooper1B,rebelTrooper1);
+		scn.MakeCardGoMissing(rebelTrooper1);
+
+		scn.MoveCardsToLocation(site2,trooper2A,trooper2B,rebelTrooper2);
+		scn.MakeCardGoMissing(rebelTrooper2);
+
+		scn.LSActivateForceCheat(3); //enough to play bad_feeling
+
+		scn.SkipToPhase(Phase.CONTROL);
+		scn.DSPlayCard(hunting);
+		assertTrue(scn.DSHasCardChoicesAvailable(site1,site2));
+		scn.DSChooseCard(site1);
+		scn.PrepareDSDestiny(5); //
+
+		assertFalse(scn.LSCardPlayAvailable(bad_feeling));
+		scn.LSPass(); //Playing Hunting Party - Optional responses
+		scn.DSPass();
+
+		assertTrue(scn.DSHasCardChoicesAvailable(trooper1A,trooper1B)); //select search party members
+		scn.DSChooseCard(trooper1A);
+
+		/// should be able to play bad_feeling here and choose different search party members?
+
+		assertFalse(scn.LSCardPlayAvailable(bad_feeling));
+		scn.LSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.DSPass();
+
+		assertFalse(scn.LSCardPlayAvailable(bad_feeling));
+		scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.DSPass();
+
+		assertFalse(scn.LSCardPlayAvailable(bad_feeling));
+		scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+		scn.DSPass();
+
+		scn.PassAllResponses();
+
+		//add more test conditions, depending on how IHABFAT is used
+		//if needed, add additional missing DS character to allow a search party action at the site
+		//and confirm which search party member was actually selected after IHABFAT retargets
 	}
 
 }
