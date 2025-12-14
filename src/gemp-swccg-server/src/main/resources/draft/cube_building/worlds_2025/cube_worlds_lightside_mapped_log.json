@@ -1,0 +1,400 @@
+{
+  "input_file": "/Users/jasonayre/code/gemp-swccg/cube_worlds_lightside.csv",
+  "timestamp": "2025-12-14T14:33:18.286969",
+  "total_rows": 300,
+  "total_cells": 1800,
+  "successful_matches": 319,
+  "multiple_matches": 31,
+  "missing_cards": [
+    {
+      "row": 5,
+      "column": 2,
+      "card_name": "Rise of the Sith & Lord Sidious",
+      "slug": "rise-of-the-sith-lord-sidious",
+      "reason": "not_found"
+    },
+    {
+      "row": 27,
+      "column": 1,
+      "card_name": "Captain Khurgee (V)",
+      "slug": "captain-khurgee-v",
+      "reason": "not_found"
+    },
+    {
+      "row": 126,
+      "column": 1,
+      "card_name": "Boba Fett In Slave 1 (V)",
+      "slug": "boba-fett-in-slave-1-v",
+      "reason": "not_found"
+    },
+    {
+      "row": 151,
+      "column": 1,
+      "card_name": "Slave 1, Symbol Of Fear",
+      "slug": "slave-1-symbol-of-fear",
+      "reason": "not_found"
+    },
+    {
+      "row": 152,
+      "column": 1,
+      "card_name": "Slave 1, Symbol Of Fear",
+      "slug": "slave-1-symbol-of-fear",
+      "reason": "not_found"
+    },
+    {
+      "row": 173,
+      "column": 2,
+      "card_name": "Fanfare (shield)",
+      "slug": "fanfare-shield",
+      "reason": "not_found"
+    },
+    {
+      "row": 211,
+      "column": 2,
+      "card_name": "U-3PO",
+      "slug": "u-3po",
+      "reason": "not_found"
+    },
+    {
+      "row": 248,
+      "column": 1,
+      "card_name": "Force Push & Podrace Collision",
+      "slug": "force-push-podrace-collision",
+      "reason": "not_found"
+    },
+    {
+      "row": 251,
+      "column": 1,
+      "card_name": "Hunting Party (V)",
+      "slug": "hunting-party-v",
+      "reason": "not_found"
+    },
+    {
+      "row": 277,
+      "column": 1,
+      "card_name": "Sense (ep1)",
+      "slug": "sense-ep1",
+      "reason": "not_found"
+    }
+  ],
+  "warnings": [
+    {
+      "row": 1,
+      "column": 2,
+      "card_name": "Sarlacc",
+      "message": "Multiple cards found, using first match: 107_5",
+      "alternatives": [
+        "107_5",
+        "7_214"
+      ]
+    },
+    {
+      "row": 6,
+      "column": 1,
+      "card_name": "4-LOM With Concussion Rifle",
+      "message": "Multiple cards found, using first match: 109_6",
+      "alternatives": [
+        "109_6",
+        "601_177"
+      ]
+    },
+    {
+      "row": 33,
+      "column": 1,
+      "card_name": "Darth Maul",
+      "message": "Multiple cards found, using first match: 11_54",
+      "alternatives": [
+        "11_54",
+        "11_55"
+      ]
+    },
+    {
+      "row": 37,
+      "column": 1,
+      "card_name": "Darth Sidious",
+      "message": "Multiple cards found, using first match: 14_78",
+      "alternatives": [
+        "14_78",
+        "14_79"
+      ]
+    },
+    {
+      "row": 54,
+      "column": 2,
+      "card_name": "Emperor's Power",
+      "message": "Multiple cards found, using first match: 601_77",
+      "alternatives": [
+        "601_77",
+        "9_123"
+      ]
+    },
+    {
+      "row": 61,
+      "column": 1,
+      "card_name": "Grand Admiral Thrawn (V)",
+      "message": "Multiple cards found, using first match: 207_21",
+      "alternatives": [
+        "207_21",
+        "207_30"
+      ]
+    },
+    {
+      "row": 65,
+      "column": 1,
+      "card_name": "Guri",
+      "message": "Multiple cards found, using first match: 10_41",
+      "alternatives": [
+        "10_41",
+        "501_60"
+      ]
+    },
+    {
+      "row": 78,
+      "column": 1,
+      "card_name": "Mara Jade, The Emperor's Hand",
+      "message": "Multiple cards found, using first match: 110_10",
+      "alternatives": [
+        "110_10",
+        "501_70"
+      ]
+    },
+    {
+      "row": 104,
+      "column": 1,
+      "card_name": "Blaster Rifle (V)",
+      "message": "Multiple cards found, using first match: 200_141",
+      "alternatives": [
+        "200_141",
+        "200_69"
+      ]
+    },
+    {
+      "row": 114,
+      "column": 1,
+      "card_name": "Stun Blaster",
+      "message": "Multiple cards found, using first match: 112_19",
+      "alternatives": [
+        "112_19",
+        "112_8"
+      ]
+    },
+    {
+      "row": 149,
+      "column": 1,
+      "card_name": "Maul's Sith Infiltrator",
+      "message": "Multiple cards found, using first match: 12_182",
+      "alternatives": [
+        "12_182",
+        "12_183"
+      ]
+    },
+    {
+      "row": 162,
+      "column": 1,
+      "card_name": "Allegations Of Corruption",
+      "message": "Multiple cards found, using first match: 12_128",
+      "alternatives": [
+        "12_128",
+        "13_52"
+      ]
+    },
+    {
+      "row": 163,
+      "column": 1,
+      "card_name": "Battle Order",
+      "message": "Multiple cards found, using first match: 13_54",
+      "alternatives": [
+        "13_54",
+        "8_118"
+      ]
+    },
+    {
+      "row": 164,
+      "column": 1,
+      "card_name": "Battle Order",
+      "message": "Multiple cards found, using first match: 13_54",
+      "alternatives": [
+        "13_54",
+        "8_118"
+      ]
+    },
+    {
+      "row": 165,
+      "column": 1,
+      "card_name": "Come Here You Big Coward",
+      "message": "Multiple cards found, using first match: 13_61",
+      "alternatives": [
+        "13_61",
+        "7_224"
+      ]
+    },
+    {
+      "row": 166,
+      "column": 1,
+      "card_name": "Come Here You Big Coward",
+      "message": "Multiple cards found, using first match: 13_61",
+      "alternatives": [
+        "13_61",
+        "7_224"
+      ]
+    },
+    {
+      "row": 167,
+      "column": 1,
+      "card_name": "Resistance",
+      "message": "Multiple cards found, using first match: 13_84",
+      "alternatives": [
+        "13_84",
+        "6_147"
+      ]
+    },
+    {
+      "row": 168,
+      "column": 1,
+      "card_name": "Resistance",
+      "message": "Multiple cards found, using first match: 13_84",
+      "alternatives": [
+        "13_84",
+        "6_147"
+      ]
+    },
+    {
+      "row": 169,
+      "column": 1,
+      "card_name": "There Is No Try",
+      "message": "Multiple cards found, using first match: 13_90",
+      "alternatives": [
+        "13_90",
+        "4_134"
+      ]
+    },
+    {
+      "row": 177,
+      "column": 1,
+      "card_name": "Colo Claw Fish",
+      "message": "Multiple cards found, using first match: 13_11",
+      "alternatives": [
+        "13_11",
+        "13_60"
+      ]
+    },
+    {
+      "row": 180,
+      "column": 1,
+      "card_name": "Disarmed",
+      "message": "Multiple cards found, using first match: 1_214",
+      "alternatives": [
+        "1_214",
+        "1_48"
+      ]
+    },
+    {
+      "row": 181,
+      "column": 1,
+      "card_name": "Do They Have A Code Clearance?",
+      "message": "Multiple cards found, using first match: 12_131",
+      "alternatives": [
+        "12_131",
+        "13_66",
+        "601_34"
+      ]
+    },
+    {
+      "row": 183,
+      "column": 2,
+      "card_name": "Ominous Rumors",
+      "message": "Multiple cards found, using first match: 601_261",
+      "alternatives": [
+        "601_261",
+        "8_127"
+      ]
+    },
+    {
+      "row": 197,
+      "column": 1,
+      "card_name": "I've Lost Artoo!",
+      "message": "Multiple cards found, using first match: 1_218",
+      "alternatives": [
+        "1_218",
+        "601_157"
+      ]
+    },
+    {
+      "row": 218,
+      "column": 1,
+      "card_name": "The Phantom Menace",
+      "message": "Multiple cards found, using first match: 12_139",
+      "alternatives": [
+        "12_139",
+        "12_140"
+      ]
+    },
+    {
+      "row": 219,
+      "column": 1,
+      "card_name": "The Phantom Menace",
+      "message": "Multiple cards found, using first match: 12_139",
+      "alternatives": [
+        "12_139",
+        "12_140"
+      ]
+    },
+    {
+      "row": 222,
+      "column": 1,
+      "card_name": "Wipe Them Out, All Of Them",
+      "message": "Multiple cards found, using first match: 12_143",
+      "alternatives": [
+        "12_143",
+        "13_98"
+      ]
+    },
+    {
+      "row": 227,
+      "column": 1,
+      "card_name": "Alter (V)",
+      "message": "Multiple cards found, using first match: 200_115",
+      "alternatives": [
+        "200_115",
+        "200_143",
+        "200_144",
+        "200_48"
+      ]
+    },
+    {
+      "row": 236,
+      "column": 1,
+      "card_name": "Control",
+      "message": "Multiple cards found, using first match: 12_146",
+      "alternatives": [
+        "12_146",
+        "12_57",
+        "4_139",
+        "4_48"
+      ]
+    },
+    {
+      "row": 272,
+      "column": 1,
+      "card_name": "Ommni Box & It's Worse",
+      "message": "Multiple cards found, using first match: 10_44",
+      "alternatives": [
+        "10_44",
+        "501_71"
+      ]
+    },
+    {
+      "row": 299,
+      "column": 1,
+      "card_name": "Weapon Levitation",
+      "message": "Multiple cards found, using first match: 5_160",
+      "alternatives": [
+        "5_160",
+        "6_79"
+      ]
+    }
+  ],
+  "num_columns": 6,
+  "missing_count": 10,
+  "success_rate": "17.72%"
+}
