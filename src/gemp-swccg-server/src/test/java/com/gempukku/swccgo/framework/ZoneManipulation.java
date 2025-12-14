@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertSame;
+
+
 /**
  * While the ability to programmatically execute games is a boon to testing efforts, the real strength of this test rig
  * is in bald-faced cheating to arrange the table however we like without needing to abide by all the costs,
@@ -73,7 +76,9 @@ public interface ZoneManipulation extends TestBase{
 	 * @param cards The cards to move
 	 */
 	default void MoveCardsToLocation(PhysicalCardImpl location, PhysicalCardImpl...cards) {
-        //TODO add assert that location is on table (zone check)?
+        assertSame(Zone.LOCATIONS,location.getZone());
+		//TODO add assert that cards is not empty?
+		//TODO add assert that location is top location?
 		Arrays.stream(cards).forEach(card -> {
 			//If it's not in play, we have to use a different method that properly activates the card
 			if(!card.getZone().isInPlay()) {

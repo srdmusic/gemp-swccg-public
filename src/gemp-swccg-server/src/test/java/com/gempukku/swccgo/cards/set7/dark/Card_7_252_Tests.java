@@ -17,6 +17,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static com.gempukku.swccgo.framework.Assertions.assertInHand;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -29,6 +30,7 @@ public class Card_7_252_Tests {
 				{{
 					put("site3","1_128");
 					put("bad_feeling","4_052");
+					put("sense_ls","1_109");
 				}},
 				new HashMap<>()
 				{{
@@ -36,6 +38,7 @@ public class Card_7_252_Tests {
 					put("bh_djas","1_171"); //djas puhr (bounty hunter)
 					put("bh_4lom","4_091"); //4-lom (bounty hunter, droid)
 					put("bh_scout","4_107"); //zuckuss (bounty hunter, scout)
+					put("sense_ds","1_267");
 				}},
 				10,
 				10,
@@ -591,9 +594,9 @@ public class Card_7_252_Tests {
 	}
 
 	@Test @Ignore
-	public void HuntingPartyCanBeRetargetedByIHaveABadFeelingAboutThis() {
-		//incomplete test
-		//should be able to play IHABFAT to retarget search party members?
+	public void HuntingPartyCanHaveSiteRetargetedByIHaveABadFeelingAboutThis() {
+		//incomplete test - works as described in actual instance but need to rework test to catch
+		//the respondable inner action allowing IHABFAT to be played?
 		var scn = GetScenario();
 
 		var site1 = scn.GetDSStartingLocation();
@@ -631,32 +634,59 @@ public class Card_7_252_Tests {
 		scn.DSChooseCard(site1);
 		scn.PrepareDSDestiny(5); //
 
-		assertFalse(scn.LSCardPlayAvailable(bad_feeling));
 		scn.LSPass(); //Playing Hunting Party - Optional responses
 		scn.DSPass();
 
-		assertTrue(scn.DSHasCardChoicesAvailable(trooper1A,trooper1B)); //select search party members
-		scn.DSChooseCard(trooper1A);
+		/// should be able to play bad_feeling here (as some kind of inner action?) and choose different site?
+		assertInHand(bad_feeling);
+		assertTrue(scn.GetLSForcePileCount() >= 3);
 
-		/// should be able to play bad_feeling here and choose different search party members?
+		//insert code here to catch inner targeting action to respond with bad_feeling?
+		//assertTrue(scn.LSCardPlayAvailable(bad_feeling,"Retarget"));
+		//scn.LSPlayCard(bad_feeling);
 
-		assertFalse(scn.LSCardPlayAvailable(bad_feeling));
-		scn.LSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
-		scn.DSPass();
+		//insert code here to retarget (choose site2 instead of the original site1 target)
 
-		assertFalse(scn.LSCardPlayAvailable(bad_feeling));
-		scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
-		scn.DSPass();
+		assertFalse(scn.DSHasCardChoicesAvailable(trooper1A,trooper1B)); //these are at site1 (the original target)
+		assertTrue(scn.DSHasCardChoicesAvailable(trooper2A,trooper2B)); //these are at site2 (the new target)
+		scn.DSChooseCard(trooper2A);
 
-		assertFalse(scn.LSCardPlayAvailable(bad_feeling));
-		scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
-		scn.DSPass();
+		/// should also be able to play bad_feeling here and choose different search party members?
 
 		scn.PassAllResponses();
-
-		//add more test conditions, depending on how IHABFAT is used
-		//if needed, add additional missing DS character to allow a search party action at the site
-		//and confirm which search party member was actually selected after IHABFAT retargets
+		assertTrue(rebelTrooper1.isMissing()); //test1
+		assertFalse(rebelTrooper2.isMissing()); //found at the new targeted site
 	}
 
+	@Test @Ignore
+	public void HuntingPartyCanBeTargetedBySense() {
+		//show optional Sense response available after site is selected (before search party members are selected)
+		var scn = GetScenario();
+
+		var site = scn.GetDSStartingLocation();
+
+		var rebelTrooper1 = scn.GetLSFiller(1);
+		var rebelTrooper2 = scn.GetLSFiller(2);
+		var sense_ls = scn.GetLSCard("sense_ls");
+
+		var trooper = scn.GetDSFiller(1);
+		var hunting = scn.GetDSCard("hunting");
+
+		scn.StartGame();
+
+		scn.MoveCardsToDSHand(hunting);
+
+		scn.MoveCardsToLSHand(sense_ls);
+
+		scn.MoveCardsToLocation(site,trooper,rebelTrooper1,rebelTrooper2);
+		scn.MakeCardGoMissing(rebelTrooper1);
+
+		scn.SkipToPhase(Phase.CONTROL);
+		scn.DSPlayCard(hunting);
+		assertTrue(scn.DSHasCardChoicesAvailable(site));
+		scn.DSChooseCard(site);
+
+		//LS: Playing •Hunting Party - Optional responses
+		assertTrue(scn.LSCardPlayAvailable(sense_ls));
+	}
 }
