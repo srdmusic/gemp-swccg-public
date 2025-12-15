@@ -410,7 +410,11 @@ public class FireWeaponActionBuilder {
                     Set<TargetingReason> targetingReasons = _targetingReasonList.get(i);
                     for (TargetingReason targetingReason : targetingReasons) {
 
-                        Filter filterToAddToMap = Filters.and(newTargetFilterable, validForUserToTargetFilter, Filters.canBeTargetedBy(_weaponOrCardWithPermanentWeapon, _permanentWeapon, targetingReason));
+                        Filter filterToAddToMap = Filters.and(newTargetFilterable, validForUserToTargetFilter);
+                        // needs to be able to be targeted for all targetingReasons
+                        for (TargetingReason targetingReason2 : targetingReasons) {
+                            filterToAddToMap = Filters.and(filterToAddToMap, Filters.canBeTargetedBy(_weaponOrCardWithPermanentWeapon, _permanentWeapon, targetingReason2));
+                        }
 
                         Filterable targetFilterable = _targetFiltersMap.get(targetingReason);
                         if (targetFilterable == null) {
