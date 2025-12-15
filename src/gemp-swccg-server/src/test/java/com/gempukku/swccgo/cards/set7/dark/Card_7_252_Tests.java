@@ -17,7 +17,6 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static com.gempukku.swccgo.framework.Assertions.assertInHand;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -28,7 +27,7 @@ public class Card_7_252_Tests {
 		return new VirtualTableScenario(
 				new HashMap<>()
 				{{
-					put("site3","1_128");
+					put("site3","1_128"); //tatooine: cantina
 					put("bad_feeling","4_052");
 					put("sense_ls","1_109");
 				}},
@@ -38,7 +37,7 @@ public class Card_7_252_Tests {
 					put("bh_djas","1_171"); //djas puhr (bounty hunter)
 					put("bh_4lom","4_091"); //4-lom (bounty hunter, droid)
 					put("bh_scout","4_107"); //zuckuss (bounty hunter, scout)
-					put("sense_ds","1_267");
+					put("site4","1_291"); //tatooine: docking bay 94
 				}},
 				10,
 				10,
@@ -593,72 +592,7 @@ public class Card_7_252_Tests {
 		assertTrue(rebelTrooper.isMissing()); //test1
 	}
 
-	@Test @Ignore
-	public void HuntingPartyCanHaveSiteRetargetedByIHaveABadFeelingAboutThis() {
-		//incomplete test - works as described in actual instance but need to rework test to catch
-		//the respondable inner action allowing IHABFAT to be played?
-		var scn = GetScenario();
-
-		var site1 = scn.GetDSStartingLocation();
-		var site2 = scn.GetLSStartingLocation();
-		var site3 = scn.GetLSCard("site3");
-
-		var rebelTrooper1 = scn.GetLSFiller(1);
-		var rebelTrooper2 = scn.GetLSFiller(2);
-		var bad_feeling = scn.GetLSCard("bad_feeling");
-
-		var trooper1A = scn.GetDSFiller(1);
-		var trooper1B = scn.GetDSFiller(2);
-		var trooper2A = scn.GetDSFiller(3);
-		var trooper2B = scn.GetDSFiller(4);
-		var hunting = scn.GetDSCard("hunting");
-
-		scn.StartGame();
-
-		scn.MoveCardsToDSHand(hunting);
-		scn.MoveCardsToLSHand(bad_feeling);
-
-		scn.MoveLocationToTable(site3);
-
-		scn.MoveCardsToLocation(site1,trooper1A,trooper1B,rebelTrooper1);
-		scn.MakeCardGoMissing(rebelTrooper1);
-
-		scn.MoveCardsToLocation(site2,trooper2A,trooper2B,rebelTrooper2);
-		scn.MakeCardGoMissing(rebelTrooper2);
-
-		scn.LSActivateForceCheat(3); //enough to play bad_feeling
-
-		scn.SkipToPhase(Phase.CONTROL);
-		scn.DSPlayCard(hunting);
-		assertTrue(scn.DSHasCardChoicesAvailable(site1,site2));
-		scn.DSChooseCard(site1);
-		scn.PrepareDSDestiny(5); //
-
-		scn.LSPass(); //Playing Hunting Party - Optional responses
-		scn.DSPass();
-
-		/// should be able to play bad_feeling here (as some kind of inner action?) and choose different site?
-		assertInHand(bad_feeling);
-		assertTrue(scn.GetLSForcePileCount() >= 3);
-
-		//insert code here to catch inner targeting action to respond with bad_feeling?
-		//assertTrue(scn.LSCardPlayAvailable(bad_feeling,"Retarget"));
-		//scn.LSPlayCard(bad_feeling);
-
-		//insert code here to retarget (choose site2 instead of the original site1 target)
-
-		assertFalse(scn.DSHasCardChoicesAvailable(trooper1A,trooper1B)); //these are at site1 (the original target)
-		assertTrue(scn.DSHasCardChoicesAvailable(trooper2A,trooper2B)); //these are at site2 (the new target)
-		scn.DSChooseCard(trooper2A);
-
-		/// should also be able to play bad_feeling here and choose different search party members?
-
-		scn.PassAllResponses();
-		assertTrue(rebelTrooper1.isMissing()); //test1
-		assertFalse(rebelTrooper2.isMissing()); //found at the new targeted site
-	}
-
-	@Test @Ignore
+	@Test
 	public void HuntingPartyCanBeTargetedBySense() {
 		//show optional Sense response available after site is selected (before search party members are selected)
 		var scn = GetScenario();
@@ -688,5 +622,92 @@ public class Card_7_252_Tests {
 
 		//LS: Playing •Hunting Party - Optional responses
 		assertTrue(scn.LSCardPlayAvailable(sense_ls));
+	}
+
+	@Test
+	public void HuntingPartyCanHaveSiteRetargetedByIHaveABadFeelingAboutThis() {
+		//test1: shows I Have A Bad Feeling About This can be played to correctly re-target
+		//	the selected search party site to a different (valid site on same side of the force)
+		var scn = GetScenario();
+
+		var site1 = scn.GetDSStartingLocation();
+		var site2 = scn.GetLSStartingLocation();
+		var site3 = scn.GetLSCard("site3");
+		var site4 = scn.GetDSCard("site4");
+
+		var rebelTrooper1 = scn.GetLSFiller(1);
+		var rebelTrooper2 = scn.GetLSFiller(2);
+		var rebelTrooper3 = scn.GetLSFiller(3);
+		var rebelTrooper4 = scn.GetLSFiller(4);
+		var bad_feeling = scn.GetLSCard("bad_feeling");
+
+		var trooper1A = scn.GetDSFiller(1);
+		var trooper1B = scn.GetDSFiller(2);
+		var trooper2A = scn.GetDSFiller(3);
+		var trooper2B = scn.GetDSFiller(4);
+		var trooper3A = scn.GetDSFiller(5);
+		var trooper3B = scn.GetDSFiller(6);
+		var trooper4A = scn.GetDSFiller(7);
+		var trooper4B = scn.GetDSFiller(8);
+		var hunting = scn.GetDSCard("hunting");
+
+		scn.StartGame();
+
+		scn.MoveCardsToDSHand(hunting);
+		scn.MoveCardsToLSHand(bad_feeling);
+
+		scn.MoveCardsToLocation(site1,trooper1A,trooper1B,rebelTrooper1);
+		scn.MakeCardGoMissing(rebelTrooper1);
+
+		scn.MoveCardsToLocation(site2,trooper2A,trooper2B,rebelTrooper2);
+		scn.MakeCardGoMissing(rebelTrooper2);
+
+		scn.MoveLocationToTable(site3);
+		scn.MoveCardsToLocation(site3,trooper3A,trooper3B,rebelTrooper3);
+		scn.MakeCardGoMissing(rebelTrooper3);
+
+		scn.MoveLocationToTable(site4);
+		scn.MoveCardsToLocation(site4,trooper4A,trooper4B,rebelTrooper4);
+		scn.MakeCardGoMissing(rebelTrooper4);
+
+		scn.LSActivateForceCheat(3); //enough to play bad_feeling
+
+		scn.SkipToPhase(Phase.CONTROL);
+
+		scn.PrepareDSDestiny(5);
+		scn.DSPlayCard(hunting);
+		assertTrue(scn.DSHasCardChoicesAvailable(site1,site2,site4));
+		scn.DSChooseCard(site1);
+
+		//Playing Hunting Party - Optional responses
+		assertTrue(scn.LSCardPlayAvailable(bad_feeling));
+		scn.LSPlayCard(bad_feeling);
+
+		//Choose card (or card in group) to re-target from, or click 'Done' to cancel
+		assertTrue(scn.LSHasCardChoiceAvailable(site1)); //original selection
+		assertFalse(scn.LSHasCardChoicesAvailable(site2,site3,site4));
+		scn.LSChooseCard(site1);
+
+		//Choose card (or card in group) to re-target from, or click 'Done' to cancel
+		assertFalse(scn.LSHasCardChoiceAvailable(site1)); //must retarget somewhere different
+		assertFalse(scn.LSHasCardChoiceAvailable(site2)); //can't retarget to LS site, since original was DS site and must be "on the same side of the force"
+		assertFalse(scn.LSHasCardChoiceAvailable(site3)); //can't retarget to LS site
+		assertTrue(scn.LSHasCardChoiceAvailable(site4)); //DS site that meets criteria
+		scn.LSChooseCard(site4);
+
+		scn.PassAllResponses();
+
+		assertTrue(scn.DSDecisionAvailable("Choose members of search party"));
+		assertFalse(scn.DSHasCardChoicesAvailable(trooper1A,trooper1B)); //these are at site1 (the original target)
+		assertFalse(scn.DSHasCardChoicesAvailable(trooper2A,trooper2B)); //these are at site2
+		assertFalse(scn.DSHasCardChoicesAvailable(trooper3A,trooper3B)); //these are at site3
+		assertTrue(scn.DSHasCardChoicesAvailable(trooper4A,trooper4B)); //these are at site4 (the new target)
+		scn.DSChooseCard(trooper4A);
+
+		scn.PassAllResponses();
+		assertTrue(rebelTrooper1.isMissing());
+		assertTrue(rebelTrooper2.isMissing());
+		assertTrue(rebelTrooper3.isMissing());
+		assertFalse(rebelTrooper4.isMissing()); //test1: found at the new targeted site
 	}
 }
