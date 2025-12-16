@@ -1158,9 +1158,9 @@
       "NO_HYPERDRIVE"
     ],
     "personas": [
-      "VADERS_CUSTOM_TIE",
+      "BLACK_2",
       "BLACK_3",
-      "BLACK_2"
+      "VADERS_CUSTOM_TIE"
     ],
     "modelTypes": [
       "TIE_ADVANCED_X1",
@@ -4756,8 +4756,8 @@
     "rarity": "PM",
     "cardCategory": "CHARACTER",
     "cardTypes": [
-      "IMPERIAL",
-      "DARK_JEDI_MASTER"
+      "DARK_JEDI_MASTER",
+      "IMPERIAL"
     ],
     "lore": "Leader. Secretive manipulator of the galaxy. Played Darth Vader and Prince Xizor off against one another in his relentless pursuit of 'young Skywalker'.",
     "gameText": "Deploys only to Coruscant or Death Star II. Never moves to a site occupied by opponent (even if carried). If Vader or Xizor here, and Luke is not on table, adds 2 to attrition against opponent at other locations. Immune to attrition.",
@@ -48435,8 +48435,8 @@
     "rarity": "V",
     "cardCategory": "CHARACTER",
     "cardTypes": [
-      "IMPERIAL",
-      "DARK_JEDI_MASTER"
+      "DARK_JEDI_MASTER",
+      "IMPERIAL"
     ],
     "lore": "From his throne room aboard the second Death Star, Emperor Palpatine monitors activity throughout the galaxy. Leader.",
     "gameText": "Never deploys or moves (even if carried) to a site opponent occupies. Once during your turn, may peek at the top three cards of your Reserve Deck; place one in Used Pile, one in Lost Pile, and take one into hand. Immune to attrition.",
@@ -52318,12 +52318,12 @@
     "cardTypes": [
       "FIRST_ORDER"
     ],
-    "gameText": "[Pilot] 2. When drawn for destiny, use 1 Force or this card is lost. During your deploy phase, may use 3 Force to relocate Kylo from here to same site as a Resistance Agent.",
-    "deployCost": 0.0,
-    "destiny": 6.0,
+    "gameText": "[Pilot] 2. Deploys -2 to (and forfeit -2 at) same location as Kylo. During your deploy phase, may relocate Kylo from here to same site as a Resistance Agent.",
+    "deployCost": 2.0,
+    "destiny": 2.0,
     "power": 2.0,
     "ability": 2.0,
-    "forfeit": 3.0,
+    "forfeit": 5.0,
     "landspeed": 1.0,
     "politics": 0.0,
     "icons": [
@@ -54263,8 +54263,8 @@
   {
     "cardId": "209_23",
     "title": "Scarif",
-    "slug": "scarif-v",
-    "slugWithSetName": "scarif-v-set-9",
+    "slug": "scarif",
+    "slugWithSetName": "scarif-set-9",
     "side": "LIGHT",
     "uniqueness": "UNIQUE",
     "expansionSet": "SET_9",
@@ -55099,8 +55099,8 @@
     "rarity": "V",
     "cardCategory": "CHARACTER",
     "cardTypes": [
-      "FIRST_ORDER",
-      "DARK_JEDI_MASTER"
+      "DARK_JEDI_MASTER",
+      "FIRST_ORDER"
     ],
     "lore": "Leader.",
     "gameText": "If you just initiated a battle where all your ability is provided by First Order characters and/or [First Order] starships, opponent loses 1 Force. If just lost, Kylo is power +3 until end of your next turn. Immune to attrition < 8 (< 4 if with Kylo).",
@@ -55213,8 +55213,8 @@
   {
     "cardId": "209_41",
     "title": "An Inkling Of Its Destructive Potential",
-    "slug": "an-inkling-of-its-destructive-potential-v",
-    "slugWithSetName": "an-inkling-of-its-destructive-potential-v-set-9",
+    "slug": "an-inkling-of-its-destructive-potential",
+    "slugWithSetName": "an-inkling-of-its-destructive-potential-set-9",
     "side": "DARK",
     "uniqueness": "UNIQUE",
     "expansionSet": "SET_9",
@@ -63568,8 +63568,8 @@
     "rarity": "V",
     "cardCategory": "CHARACTER",
     "cardTypes": [
-      "FIRST_ORDER",
-      "DARK_JEDI_MASTER"
+      "DARK_JEDI_MASTER",
+      "FIRST_ORDER"
     ],
     "lore": "Leader.",
     "gameText": "Never deploys or moves (even if carried) except to an [Episode VII] location without a [Light Side] icon. Once per turn, may draw bottom card of your Force Pile. Once per game, if about to be lost, may take him into hand. Immune to attrition.",
@@ -64934,8 +64934,8 @@
   {
     "cardId": "216_11",
     "title": "On The Verge Of Greatness",
-    "slug": "on-the-verge-of-greatness-v",
-    "slugWithSetName": "on-the-verge-of-greatness-v-set-16",
+    "slug": "on-the-verge-of-greatness",
+    "slugWithSetName": "on-the-verge-of-greatness-set-16",
     "side": "DARK",
     "expansionSet": "SET_16",
     "rarity": "V",
@@ -64960,8 +64960,8 @@
   {
     "cardId": "216_11_BACK",
     "title": "Taking Control Of The Weapon",
-    "slug": "taking-control-of-the-weapon-v",
-    "slugWithSetName": "taking-control-of-the-weapon-v-set-16",
+    "slug": "taking-control-of-the-weapon",
+    "slugWithSetName": "taking-control-of-the-weapon-set-16",
     "side": "DARK",
     "expansionSet": "SET_16",
     "rarity": "V",
@@ -65018,8 +65018,8 @@
   {
     "cardId": "216_13",
     "title": "Scarif",
-    "slug": "scarif-v",
-    "slugWithSetName": "scarif-v-set-16",
+    "slug": "scarif",
+    "slugWithSetName": "scarif-set-16",
     "side": "DARK",
     "uniqueness": "UNIQUE",
     "expansionSet": "SET_16",
@@ -65096,8 +65096,8 @@
   {
     "cardId": "216_15",
     "title": "Scarif: Citadel Tower",
-    "slug": "scarif-citadel-tower-v",
-    "slugWithSetName": "scarif-citadel-tower-v-set-16",
+    "slug": "scarif-citadel-tower",
+    "slugWithSetName": "scarif-citadel-tower-set-16",
     "side": "DARK",
     "uniqueness": "UNIQUE",
     "expansionSet": "SET_16",
@@ -65141,8 +65141,8 @@
   {
     "cardId": "216_16",
     "title": "Scarif: Command Center",
-    "slug": "scarif-command-center-v",
-    "slugWithSetName": "scarif-command-center-v-set-16",
+    "slug": "scarif-command-center",
+    "slugWithSetName": "scarif-command-center-set-16",
     "side": "DARK",
     "uniqueness": "UNIQUE",
     "expansionSet": "SET_16",
@@ -65230,8 +65230,8 @@
   {
     "cardId": "216_18",
     "title": "Shield Gate",
-    "slug": "shield-gate-v",
-    "slugWithSetName": "shield-gate-v-set-16",
+    "slug": "shield-gate",
+    "slugWithSetName": "shield-gate-set-16",
     "side": "DARK",
     "uniqueness": "UNIQUE",
     "expansionSet": "SET_16",
@@ -65665,10 +65665,10 @@
       "MUSICIAN"
     ],
     "personas": [
-      "NALAN_CHEEL",
-      "TEDN_DAHAI",
       "DOIKK_NATS",
       "ICKABEL_GONT",
+      "TEDN_DAHAI",
+      "NALAN_CHEEL",
       "FIGRIN_DAN"
     ],
     "species": "BITH",
@@ -70568,8 +70568,8 @@
     "rarity": "V",
     "cardCategory": "CHARACTER",
     "cardTypes": [
-      "IMPERIAL",
-      "DARK_JEDI_MASTER"
+      "DARK_JEDI_MASTER",
+      "IMPERIAL"
     ],
     "lore": "Leader. Secretive manipulator of the galaxy. Played Darth Vader and Prince Xizor off against one another in his relentless pursuit of 'young Skywalker'.",
     "gameText": "Destiny +1 for each Black Sun agent or Jedi on table (limit +5) when drawn for destiny. Deploys only to Coruscant. Never deploys or moves (even if carried) to a site opponent occupies. May cancel Projection Of A Skywalker here. Immune to attrition.",
@@ -74443,8 +74443,8 @@
   {
     "cardId": "221_52",
     "title": "Christophsis",
-    "slug": "christophsis-v",
-    "slugWithSetName": "christophsis-v-set-21",
+    "slug": "christophsis",
+    "slugWithSetName": "christophsis-set-21",
     "side": "LIGHT",
     "uniqueness": "UNIQUE",
     "expansionSet": "SET_21",
@@ -74914,8 +74914,8 @@
   {
     "cardId": "221_62",
     "title": "Geonosis",
-    "slug": "geonosis-v",
-    "slugWithSetName": "geonosis-v-set-21",
+    "slug": "geonosis",
+    "slugWithSetName": "geonosis-set-21",
     "side": "LIGHT",
     "uniqueness": "UNIQUE",
     "expansionSet": "SET_21",
@@ -75814,8 +75814,8 @@
     "rarity": "V",
     "cardCategory": "CHARACTER",
     "cardTypes": [
-      "IMPERIAL",
-      "DARK_JEDI_MASTER"
+      "DARK_JEDI_MASTER",
+      "IMPERIAL"
     ],
     "lore": "Leader.",
     "gameText": "Never deploys or moves (even if carried) to a site opponent occupies. Once per turn, may [upload] The Empire's Back. Opponent may not limit your Force generation at your mobile sites. Immune to attrition.",
@@ -78758,8 +78758,8 @@
       "LOCATION"
     ],
     "cardSubtype": "SYSTEM",
-    "locationDarkSideGameText": "If you occupy and Dark Deal on table, flip This Deal Is Getting Worse All The Time. Immune to Revolution.",
-    "locationLightSideGameText": "You lose no more than 2 Force to Cloud City Occupation. Game text of opponent's Admiral's Orders is canceled.",
+    "locationDarkSideGameText": "Executor may not move from here unless Vader aboard. If your [Cloud City] objective on table, Executor deploys -8 here.",
+    "locationLightSideGameText": "You lose no more than 2 Force to Cloud City Occupation. May not be converted.",
     "deployCost": 0.0,
     "destiny": 0.0,
     "icons": [
@@ -78783,7 +78783,8 @@
         "icon": "PLANET",
         "count": 1
       }
-    ]
+    ],
+    "hasVirtualSuffix": true
   },
   {
     "cardId": "223_9",
@@ -80559,9 +80560,9 @@
     "rarity": "V",
     "cardCategory": "CHARACTER",
     "cardTypes": [
-      "IMPERIAL",
+      "DARK_JEDI_MASTER",
       "REPUBLIC",
-      "DARK_JEDI_MASTER"
+      "IMPERIAL"
     ],
     "lore": "Leader. Trade Federation.",
     "gameText": "While alone on Coruscant, your apprentice is immune to attrition. Once per game, may [upload] Hyperwave Scan, Unlimited Power! or Young Fool. During your move phase, if on Coruscant, may use 1 Force to relocate to your apprentice's site. Immune to attrition.",
@@ -82431,6 +82432,1209 @@
         "count": 1
       }
     ]
+  },
+  {
+    "cardId": "226_1",
+    "title": "Cloud City: Dining Room",
+    "slug": "cloud-city-dining-room-v",
+    "slugWithSetName": "cloud-city-dining-room-v-set-26",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "LOCATION",
+    "cardTypes": [
+      "LOCATION"
+    ],
+    "cardSubtype": "SITE",
+    "locationDarkSideGameText": "Vader, your Boba Fett, and your Lando deploy -1 here. May [download] Lando here.",
+    "locationLightSideGameText": "Chewie, Han, Leia, and your Lando move to here using landspeed for free.",
+    "deployCost": 0.0,
+    "destiny": 0.0,
+    "icons": [
+      {
+        "icon": "CLOUD_CITY",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "DARK_FORCE",
+        "count": 2
+      },
+      {
+        "icon": "INTERIOR_SITE",
+        "count": 1
+      },
+      {
+        "icon": "LIGHT_FORCE",
+        "count": 1
+      },
+      {
+        "icon": "MOBILE",
+        "count": 1
+      },
+      {
+        "icon": "SCOMP_LINK",
+        "count": 1
+      }
+    ],
+    "keywords": [
+      "CLOUD_CITY_LOCATION"
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
+    "cardId": "226_10",
+    "title": "Rystall",
+    "slug": "rystall-v",
+    "slugWithSetName": "rystall-v-set-26",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "CHARACTER",
+    "cardTypes": [
+      "ALIEN"
+    ],
+    "lore": "Musician. Raised by Ortolans. Grew up on the streets of Coruscant. Rescued from the Black Sun crime cartel by Lando Calrissian.",
+    "gameText": "Power and forfeit +2 at a Coruscant site. Once per turn, if you just deployed a Black Sun agent to same site, may retrieve 1 Force. If opponent's [Maintenance] card just deployed here, it may not battle for remainder of turn.",
+    "deployCost": 2.0,
+    "destiny": 3.0,
+    "power": 1.0,
+    "ability": 2.0,
+    "forfeit": 3.0,
+    "landspeed": 1.0,
+    "politics": 0.0,
+    "icons": [
+      {
+        "icon": "SPECIAL_EDITION",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "ALIEN",
+        "count": 1
+      }
+    ],
+    "keywords": [
+      "FEMALE",
+      "MUSICIAN"
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
+    "cardId": "226_11",
+    "title": "Salacious Crumb",
+    "slug": "salacious-crumb-v",
+    "slugWithSetName": "salacious-crumb-v-set-26",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "CHARACTER",
+    "cardTypes": [
+      "ALIEN"
+    ],
+    "lore": "Male Kowakian. Prankster. Humiliates others for Jabba's amusement. His life depends on making Jabba laugh at least once per day.",
+    "gameText": "When deployed, may reveal the top two cards of your Reserve Deck; take one into hand and place the other in Used Pile. Unless Crumb is 'hit', your leaders here may not be targeted by weapons. Undercover spies here are lost. ('AH-hahahaha!')",
+    "deployCost": 1.0,
+    "destiny": 3.0,
+    "power": 1.0,
+    "ability": 1.0,
+    "forfeit": 3.0,
+    "landspeed": 1.0,
+    "politics": 0.0,
+    "icons": [
+      {
+        "icon": "JABBAS_PALACE",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "ALIEN",
+        "count": 1
+      }
+    ],
+    "species": "KOWAKIAN",
+    "hasVirtualSuffix": true
+  },
+  {
+    "cardId": "226_12",
+    "title": "This Deal Is Getting Worse All The Time",
+    "slug": "this-deal-is-getting-worse-all-the-time-v",
+    "slugWithSetName": "this-deal-is-getting-worse-all-the-time-v-set-26",
+    "side": "DARK",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "OBJECTIVE",
+    "cardTypes": [
+      "OBJECTIVE"
+    ],
+    "gameText": "Deploy one Cloud City battleground site and [Cloud City] I'm Sorry. For remainder of game, you may not deploy Admiral's Orders. During your control phase, your Lando may make a regular move. While this side up, once per turn, may [upload] Cloud City Occupation, Dark Deal, Vader's Bounty, or [Special Edition] Bespin. Flip this card if you control 3 Bespin locations and opponent controls fewer than 3 Bespin locations.",
+    "destiny": 0.0,
+    "icons": [
+      {
+        "icon": "PREMIUM",
+        "count": 1
+      },
+      {
+        "icon": "CLOUD_CITY",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "OBJECTIVE",
+        "count": 1
+      }
+    ],
+    "isFrontOfDoubleSidedCard": true,
+    "hasVirtualSuffix": true
+  },
+  {
+    "cardId": "226_12_BACK",
+    "title": "Pray I Don't Alter It Any Further",
+    "slug": "pray-i-dont-alter-it-any-further-v",
+    "slugWithSetName": "pray-i-dont-alter-it-any-further-v-set-26",
+    "side": "DARK",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "OBJECTIVE",
+    "cardTypes": [
+      "OBJECTIVE"
+    ],
+    "gameText": "While this side up, Sense and Alter may not be played. Force drain bonuses at same site as your Lando or your Lobot may not be canceled. While Vader at a Bespin location, game text of Admiral's Orders is canceled and opponent loses 3 Force if a character was just frozen. If your alien/Imperial pair in battle, your total battle destiny is +2. If your Lando in battle, may target a character present with him; target is forfeit = 0. Flip this card if opponent controls more Bespin locations than you.",
+    "destiny": 7.0,
+    "icons": [
+      {
+        "icon": "PREMIUM",
+        "count": 1
+      },
+      {
+        "icon": "CLOUD_CITY",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "OBJECTIVE",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
+    "cardId": "226_13",
+    "title": "Welcome Home, Lord Tyranus",
+    "slug": "welcome-home-lord-tyranus",
+    "slugWithSetName": "welcome-home-lord-tyranus-set-26",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "INTERRUPT",
+    "cardTypes": [
+      "INTERRUPT"
+    ],
+    "cardSubtype": "LOST",
+    "lore": "",
+    "gameText": "If Dooku is your apprentice, choose: [Upload] Petranaki Arena or The Works. OR If Dooku and Sidious on table, cancel Sense. OR Once per game, if Darth Tyranus in battle at a site and you are about to draw a card for battle destiny, instead use his ability number.",
+    "destiny": 6.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "INTERRUPT",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "226_14",
+    "title": "Fallen Order",
+    "slug": "fallen-order",
+    "slugWithSetName": "fallen-order-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "EPIC_EVENT",
+    "cardTypes": [
+      "EPIC_EVENT"
+    ],
+    "gameText": "If The Hidden Path on table, deploy on table. When deployed, stack three Jedi survivors from Reserve Deck here. During your deploy phase, Jedi survivors here may deploy as if from hand. The Light Will Fade: While The Hidden Path on table, Jedi survivors are deploy = 2, power = 3, forfeit = 3, deploy only to Safehouse, move using landspeed for free, and their game text is canceled. But It Is Never Forgotten: If your Jedi survivor was just lost, may stack it here. (Immune to Cold Feet.)",
+    "deployCost": 0.0,
+    "destiny": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "EPIC_EVENT",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "226_15",
+    "title": "Jabiim: Path Operations Center",
+    "slug": "jabiim-path-operations-center",
+    "slugWithSetName": "jabiim-path-operations-center-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "LOCATION",
+    "cardTypes": [
+      "LOCATION"
+    ],
+    "cardSubtype": "SITE",
+    "locationDarkSideGameText": "",
+    "locationLightSideGameText": "Once per turn, may [download] a lightsaber on your character here.",
+    "deployCost": 0.0,
+    "destiny": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "INTERIOR_SITE",
+        "count": 1
+      },
+      {
+        "icon": "LIGHT_FORCE",
+        "count": 2
+      },
+      {
+        "icon": "PLANET",
+        "count": 1
+      },
+      {
+        "icon": "SCOMP_LINK",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "226_16",
+    "title": "Jabiim: Starship Hangar",
+    "slug": "jabiim-starship-hangar",
+    "slugWithSetName": "jabiim-starship-hangar-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "LOCATION",
+    "cardTypes": [
+      "LOCATION"
+    ],
+    "cardSubtype": "SITE",
+    "locationDarkSideGameText": "Once per game, may [download] (or deploy from Lost Pile) Grand Inquisitor here.",
+    "locationLightSideGameText": "While a Jedi Survivor present, you lose no Force to Visage Of The Emperor.",
+    "deployCost": 0.0,
+    "destiny": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "DARK_FORCE",
+        "count": 1
+      },
+      {
+        "icon": "EXTERIOR_SITE",
+        "count": 1
+      },
+      {
+        "icon": "INTERIOR_SITE",
+        "count": 1
+      },
+      {
+        "icon": "LIGHT_FORCE",
+        "count": 2
+      },
+      {
+        "icon": "PLANET",
+        "count": 1
+      },
+      {
+        "icon": "SCOMP_LINK",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "226_17",
+    "title": "Kashyyyk: Chewie's Hut",
+    "slug": "kashyyyk-chewies-hut",
+    "slugWithSetName": "kashyyyk-chewies-hut-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "LOCATION",
+    "cardTypes": [
+      "LOCATION"
+    ],
+    "cardSubtype": "SITE",
+    "locationDarkSideGameText": "",
+    "locationLightSideGameText": "Deploys only as a starting location. Once per game, may [upload] a Wookiee. While Wookiee Homestead on table, no Force Drains here.",
+    "deployCost": 0.0,
+    "destiny": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "INTERIOR_SITE",
+        "count": 1
+      },
+      {
+        "icon": "LIGHT_FORCE",
+        "count": 2
+      },
+      {
+        "icon": "PLANET",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "226_18",
+    "title": "Kelleran Beq",
+    "slug": "kelleran-beq",
+    "slugWithSetName": "kelleran-beq-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "CHARACTER",
+    "cardTypes": [
+      "REPUBLIC",
+      "JEDI_MASTER"
+    ],
+    "lore": "Jedi survivor.",
+    "gameText": "[Pilot] 2. Adds one battle destiny with Grogu or a Padawan. Any lightsaber may deploy on Beq. Once per game, may deploy a lightsaber on Beq from Lost Pile. Your other characters here are defense value +1 for each lightsaber on Beq. Immune to attrition < 6.",
+    "deployCost": 8.0,
+    "destiny": 1.0,
+    "power": 6.0,
+    "ability": 7.0,
+    "forfeit": 8.0,
+    "landspeed": 1.0,
+    "politics": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "JEDI_MASTER",
+        "count": 1
+      },
+      {
+        "icon": "REPUBLIC",
+        "count": 1
+      },
+      {
+        "icon": "PILOT",
+        "count": 1
+      },
+      {
+        "icon": "WARRIOR",
+        "count": 2
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ],
+    "keywords": [
+      "JEDI_SURVIVOR"
+    ],
+    "personas": [
+      "BEQ"
+    ]
+  },
+  {
+    "cardId": "226_19",
+    "title": "Kelnacca",
+    "slug": "kelnacca",
+    "slugWithSetName": "kelnacca-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "CHARACTER",
+    "cardTypes": [
+      "JEDI_MASTER"
+    ],
+    "lore": "Wookiee.",
+    "gameText": "Once per turn, if Wookiee Homestead on table, may place a card from hand on top of Force Pile to draw bottom card from Force Pile. Once per game, may [download] a unique (•) Forest. Immune to Wookiee Strangle and You Are Beaten.",
+    "deployCost": 5.0,
+    "destiny": 2.0,
+    "power": 5.0,
+    "ability": 7.0,
+    "forfeit": 7.0,
+    "landspeed": 1.0,
+    "politics": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "JEDI_MASTER",
+        "count": 1
+      },
+      {
+        "icon": "WARRIOR",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ],
+    "species": "WOOKIEE"
+  },
+  {
+    "cardId": "226_2",
+    "title": "Coruscant",
+    "slug": "coruscant-v",
+    "slugWithSetName": "coruscant-v-set-26",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "LOCATION",
+    "cardTypes": [
+      "LOCATION"
+    ],
+    "cardSubtype": "SYSTEM",
+    "locationDarkSideGameText": "Invisible Hand is hyperspeed +3 when moving to or from here. Your [Episode I] pilots deploy -1 here.",
+    "locationLightSideGameText": "If Invisible Hand controls this system, Menace Fades is suspended.",
+    "deployCost": 0.0,
+    "destiny": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "DARK_FORCE",
+        "count": 2
+      },
+      {
+        "icon": "LIGHT_FORCE",
+        "count": 1
+      },
+      {
+        "icon": "PLANET",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
+    "cardId": "226_20",
+    "title": "Launching The Assault",
+    "slug": "launching-the-assault-v",
+    "slugWithSetName": "launching-the-assault-v-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "EFFECT",
+    "cardTypes": [
+      "EFFECT"
+    ],
+    "cardSubtype": "NORMAL",
+    "lore": "By recruiting the Mon Calamari, a race of master shipwrights, the Rebel starfleet gained capital starships rivaling the dreaded Imperial Star Destroyers.",
+    "gameText": "If your Endor (or Rebel Base) location on table, deploy on table. May [download] Home One or Sullust. Home One is deploy = 8 to an [Endor] or [Death Star II] system and its power may not be reduced. Once per game, Home One may move as a 'react' to [Death Star II] Falcon's location (or vice versa). [Immune to Alter.]",
+    "destiny": 4.0,
+    "icons": [
+      {
+        "icon": "DEATH_STAR_II",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "EFFECT",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
+    "cardId": "226_21",
+    "title": "Mapuzo: Mining Village",
+    "slug": "mapuzo-mining-village",
+    "slugWithSetName": "mapuzo-mining-village-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "LOCATION",
+    "cardTypes": [
+      "LOCATION"
+    ],
+    "cardSubtype": "SITE",
+    "locationDarkSideGameText": "While Vader or an Inquisitor present, your Force drains here may not be modified.",
+    "locationLightSideGameText": "Your miners are power +1 here. Once per game, may [download] Tala Durith here.",
+    "deployCost": 0.0,
+    "destiny": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "DARK_FORCE",
+        "count": 1
+      },
+      {
+        "icon": "EXTERIOR_SITE",
+        "count": 1
+      },
+      {
+        "icon": "LIGHT_FORCE",
+        "count": 2
+      },
+      {
+        "icon": "PLANET",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "226_22",
+    "title": "Mapuzo: Safehouse",
+    "slug": "mapuzo-safehouse",
+    "slugWithSetName": "mapuzo-safehouse-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "LOCATION",
+    "cardTypes": [
+      "LOCATION"
+    ],
+    "cardSubtype": "SITE",
+    "locationDarkSideGameText": "Unless Third Sister here, Force drain -1 here.",
+    "locationLightSideGameText": "The first Jedi you deploy here each turn is immune to Imperial Barrier.",
+    "deployCost": 0.0,
+    "destiny": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "DARK_FORCE",
+        "count": 1
+      },
+      {
+        "icon": "INTERIOR_SITE",
+        "count": 1
+      },
+      {
+        "icon": "LIGHT_FORCE",
+        "count": 2
+      },
+      {
+        "icon": "PLANET",
+        "count": 1
+      },
+      {
+        "icon": "SCOMP_LINK",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "226_23",
+    "title": "Mapuzo: Underground Corridor",
+    "slug": "mapuzo-underground-corridor",
+    "slugWithSetName": "mapuzo-underground-corridor-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "LOCATION",
+    "cardTypes": [
+      "LOCATION"
+    ],
+    "cardSubtype": "SITE",
+    "locationDarkSideGameText": "",
+    "locationLightSideGameText": "During your move phase, Jedi survivors may move from here to a Jabiim site (or to opponent's battleground site).",
+    "deployCost": 0.0,
+    "destiny": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "INTERIOR_SITE",
+        "count": 1
+      },
+      {
+        "icon": "LIGHT_FORCE",
+        "count": 1
+      },
+      {
+        "icon": "PLANET",
+        "count": 1
+      },
+      {
+        "icon": "UNDERGROUND",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "226_24",
+    "title": "Obi-Wan Kenobi, Jedi In Exile",
+    "slug": "obi-wan-kenobi-jedi-in-exile",
+    "slugWithSetName": "obi-wan-kenobi-jedi-in-exile-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "CHARACTER",
+    "cardTypes": [
+      "REBEL"
+    ],
+    "lore": "Jedi survivor.",
+    "gameText": "Adds one battle destiny with Maul, Sidious, or Vader. Opponent's characters here are power and forfeit -1. Once per game, may [upload] (or retrieve into hand) Glancing Blow or Help Me Obi-Wan Kenobi. Immune to You Are Beaten and attrition < 6.",
+    "deployCost": 8.0,
+    "destiny": 1.0,
+    "power": 6.0,
+    "ability": 6.0,
+    "forfeit": 8.0,
+    "landspeed": 1.0,
+    "politics": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "REBEL",
+        "count": 1
+      },
+      {
+        "icon": "PILOT",
+        "count": 1
+      },
+      {
+        "icon": "WARRIOR",
+        "count": 1
+      }
+    ],
+    "keywords": [
+      "JEDI_SURVIVOR"
+    ],
+    "personas": [
+      "OBIWAN"
+    ]
+  },
+  {
+    "cardId": "226_25",
+    "title": "Peli Motto",
+    "slug": "peli-motto",
+    "slugWithSetName": "peli-motto-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "CHARACTER",
+    "cardTypes": [
+      "ALIEN"
+    ],
+    "lore": "Female mechanic and scavenger.",
+    "gameText": "While at Starship Graveyard, a docking bay, or on Tatooine, power +3 and may cancel I’ve Lost Artoo! or Lateral Damage (or Restraining Bolt here). During your control phase, if at a battleground with a Jawa, landed starfighter or Grogu, may retrieve 1 Force.",
+    "deployCost": 2.0,
+    "destiny": 2.0,
+    "power": 1.0,
+    "ability": 3.0,
+    "forfeit": 4.0,
+    "landspeed": 1.0,
+    "politics": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "ALIEN",
+        "count": 1
+      }
+    ],
+    "keywords": [
+      "FEMALE",
+      "SCAVENGER"
+    ]
+  },
+  {
+    "cardId": "226_26",
+    "title": "Quinlan Vos",
+    "slug": "quinlan-vos",
+    "slugWithSetName": "quinlan-vos-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "CHARACTER",
+    "cardTypes": [
+      "JEDI_MASTER"
+    ],
+    "lore": "Jedi survivor.",
+    "gameText": "[Pilot] 2. Adds one battle destiny with Dooku, Grievous, or Ventress. Once per turn, may peek at the top card of any Reserve Deck or subtract 1 from a just drawn weapon destiny here. Dark Approach is a Used interrupt. Immune to Sniper and attrition < 6 (< 8 if alone).",
+    "deployCost": 8.0,
+    "destiny": 1.0,
+    "power": 7.0,
+    "ability": 7.0,
+    "forfeit": 8.0,
+    "landspeed": 1.0,
+    "politics": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "JEDI_MASTER",
+        "count": 1
+      },
+      {
+        "icon": "PILOT",
+        "count": 1
+      },
+      {
+        "icon": "WARRIOR",
+        "count": 1
+      }
+    ],
+    "keywords": [
+      "JEDI_SURVIVOR"
+    ]
+  },
+  {
+    "cardId": "226_27",
+    "title": "Something About This Boy",
+    "slug": "something-about-this-boy",
+    "slugWithSetName": "something-about-this-boy-set-26",
+    "side": "LIGHT",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "INTERRUPT",
+    "cardTypes": [
+      "INTERRUPT"
+    ],
+    "cardSubtype": "LOST_OR_STARTING",
+    "lore": "'What'd he mean by that?' 'I'll tell you later.'",
+    "gameText": "LOST: Relocate Prophecy Of The Force to a site. STARTING: If your starting location was Skywalker Hut, deploy Prophecy Of The Force there, Do, Or Do Not and Jedi Business. Light Side goes first. Place Interrupt in Reserve Deck.",
+    "destiny": 3.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "INTERRUPT",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "226_28",
+    "title": "The Hidden Path",
+    "slug": "the-hidden-path",
+    "slugWithSetName": "the-hidden-path-set-26",
+    "side": "LIGHT",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "OBJECTIVE",
+    "cardTypes": [
+      "OBJECTIVE"
+    ],
+    "gameText": "Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations or Jedi (except Jedi survivors). Once per turn, may [download] a Jabiim site or a battleground (except a Kamino, Tatooine, or [Reflections III] location). While this side up, you may not play Nabrun Leids. Your Force drains at Mapuzo sites are -1. Once per turn, may [download] a holocron. Flip this card if Jedi occupy two non-Mapuzo sites.",
+    "destiny": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "OBJECTIVE",
+        "count": 1
+      }
+    ],
+    "isFrontOfDoubleSidedCard": true
+  },
+  {
+    "cardId": "226_28_BACK",
+    "title": "Gather Allies And Train",
+    "slug": "gather-allies-and-train",
+    "slugWithSetName": "gather-allies-and-train-set-26",
+    "side": "LIGHT",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "OBJECTIVE",
+    "cardTypes": [
+      "OBJECTIVE"
+    ],
+    "gameText": "While this side up, if your holocron is about to leave table, place it in Used Pile. Your lightsaber Force drain bonuses may not be canceled. Opponent's total battle destiny where they have a character of ability > 4 is -1. During your move phase, may relocate a Jedi between a Jabiim site and a battleground site as a regular move for free. At the end of your turn, opponent loses 1 Force. Flip this card if you do not occupy two sites with Jedi.",
+    "destiny": 7.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "OBJECTIVE",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "226_3",
+    "title": "Endless Legions",
+    "slug": "endless-legions",
+    "slugWithSetName": "endless-legions-set-26",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "INTERRUPT",
+    "cardTypes": [
+      "INTERRUPT"
+    ],
+    "cardSubtype": "USED",
+    "lore": "",
+    "gameText": "If your stormtroopers occupy three battleground and/or Rebel Base locations, choose: Draw three cards from Force Pile, then place two cards from hand on Force Pile. OR Once per game, if you just lost a non-[Maintenance] stormtrooper, take it into hand.",
+    "destiny": 4.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "INTERRUPT",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "226_4",
+    "title": "Garindan, Imperial Spy",
+    "slug": "garindan-imperial-spy",
+    "slugWithSetName": "garindan-imperial-spy-set-26",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "CHARACTER",
+    "cardTypes": [
+      "IMPERIAL",
+      "ALIEN"
+    ],
+    "lore": "Long-nosed, male Kubaz from Kubindi. Spy. Squealed on Obi-Wan and Luke outside Docking Bay 94. Works for Jabba the Hutt or the highest bidder. Not particularly brave.",
+    "gameText": "Imperials move to here for free using landspeed. If present at a site and not 'hit,' may place Garindan in Used Pile to cancel a just drawn weapon destiny targeting your other character here (or to make an Undercover spy here lost).",
+    "deployCost": 2.0,
+    "destiny": 4.0,
+    "power": 1.0,
+    "ability": 1.0,
+    "forfeit": 3.0,
+    "landspeed": 1.0,
+    "politics": 0.0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "ALIEN",
+        "count": 1
+      },
+      {
+        "icon": "IMPERIAL",
+        "count": 1
+      }
+    ],
+    "keywords": [
+      "SPY"
+    ],
+    "personas": [
+      "GARINDAN"
+    ],
+    "species": "KUBAZ"
+  },
+  {
+    "cardId": "226_5",
+    "title": "Guri",
+    "slug": "guri-v",
+    "slugWithSetName": "guri-v-set-26",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "CHARACTER",
+    "cardTypes": [
+      "DROID"
+    ],
+    "lore": "Human-replica droid. Programmed to function as Xizor's personal bodyguard and assassin. Black Sun agent. Cost 9 million credits. Worth every decicred.",
+    "gameText": "[Pilot] 2. While Guri and Xizor present at same site, Force drain +1 here and Xizor may not be targeted by weapons (unless Guri 'hit'). While your [Reflections II] objective on table, draws one battle destiny if unable to otherwise and immune to attrition < 5",
+    "deployCost": 4.0,
+    "destiny": 2.0,
+    "power": 6.0,
+    "ability": 0.0,
+    "forfeit": 6.0,
+    "armor": 5.0,
+    "landspeed": 1.0,
+    "politics": 0.0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_II",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "DROID",
+        "count": 1
+      },
+      {
+        "icon": "PILOT",
+        "count": 1
+      },
+      {
+        "icon": "PRESENCE",
+        "count": 1
+      },
+      {
+        "icon": "WARRIOR",
+        "count": 1
+      }
+    ],
+    "keywords": [
+      "ASSASSIN",
+      "BODYGUARD",
+      "BLACK_SUN_AGENT",
+      "FEMALE"
+    ],
+    "modelTypes": [
+      "ASSASSIN"
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
+    "cardId": "226_6",
+    "title": "I'm Sorry",
+    "slug": "im-sorry-v",
+    "slugWithSetName": "im-sorry-v-set-26",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "EFFECT",
+    "cardTypes": [
+      "EFFECT"
+    ],
+    "cardSubtype": "NORMAL",
+    "lore": "'I'm sorry, too.'",
+    "gameText": "If your [Cloud City] objective on table, deploy on table. Elis Helrot, Stunning Leader, and Surreptitious Glance may not be played. Once per turn, may [download] an interior Cloud City site. Your unique (•) characters with printed forfeit < 5 are forfeit +2 (limit +2). [Immune to Alter.]",
+    "destiny": 5.0,
+    "icons": [
+      {
+        "icon": "CLOUD_CITY",
+        "count": 1
+      },
+      {
+        "icon": "TATOOINE",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "EFFECT",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
+    "cardId": "226_7",
+    "title": "Information Exchange",
+    "slug": "information-exchange-v",
+    "slugWithSetName": "information-exchange-v-set-26",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "EFFECT",
+    "cardTypes": [
+      "EFFECT"
+    ],
+    "cardSubtype": "NORMAL",
+    "lore": "'Chisa nyooda ishaley. Kun Jabba neguda len malta.' 'Ikkit ui! Yobbit, yobbit. Nelan tui ke bada.'",
+    "gameText": "Deploy on table. Black Sun agents are defense value +1 and forfeit +1. Once per turn, if you just deployed an information broker, may exchange the top card of Force Pile with any one card in hand. [Reflections II] Emperor deploys -1 and moves for free. [Immune to Alter.]",
+    "destiny": 5.0,
+    "icons": [
+      {
+        "icon": "JABBAS_PALACE",
+        "count": 1
+      },
+      {
+        "icon": "REFLECTIONS_II",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "EFFECT",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
+    "cardId": "226_8",
+    "title": "Mara Jade, The Emperor's Hand",
+    "slug": "mara-jade-the-emperors-hand-v",
+    "slugWithSetName": "mara-jade-the-emperors-hand-v-set-26",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "CHARACTER",
+    "cardTypes": [
+      "IMPERIAL",
+      "ALIEN"
+    ],
+    "lore": "Spy. Ordered to kill Luke Skywalker. Assumed the identity of a dancer named 'Arica' in order to sneak into Jabba's palace.",
+    "gameText": "Functions as your apprentice. Battle destiny draws may not be added here. May [download] Mara Jade's Lightsaber here. If you just won a battle here, may retrieve a card with 'Mara' in game text. Immune to Rebel Barrier and attrition < 4 (< 5 if Luke on table).",
+    "deployCost": 5.0,
+    "destiny": 1.0,
+    "power": 4.0,
+    "ability": 5.0,
+    "forfeit": 7.0,
+    "landspeed": 1.0,
+    "politics": 0.0,
+    "icons": [
+      {
+        "icon": "PREMIUM",
+        "count": 1
+      },
+      {
+        "icon": "DEATH_STAR_II",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "ALIEN",
+        "count": 1
+      },
+      {
+        "icon": "IMPERIAL",
+        "count": 1
+      },
+      {
+        "icon": "PILOT",
+        "count": 1
+      },
+      {
+        "icon": "WARRIOR",
+        "count": 1
+      }
+    ],
+    "keywords": [
+      "FEMALE",
+      "SITH_APPRENTICE",
+      "SPY"
+    ],
+    "personas": [
+      "MARA_JADE"
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
+    "cardId": "226_9",
+    "title": "Ommni Box & It's Worse",
+    "slug": "ommni-box-its-worse-v",
+    "slugWithSetName": "ommni-box-its-worse-v-set-26",
+    "side": "DARK",
+    "uniqueness": "UNRESTRICTED",
+    "expansionSet": "SET_26",
+    "rarity": "V",
+    "cardCategory": "INTERRUPT",
+    "cardTypes": [
+      "INTERRUPT"
+    ],
+    "cardSubtype": "USED_OR_LOST",
+    "gameText": "USED: For remainder of turn, you lose no Force to the following cards on table (if any): A Good Blaster At Your Side, No Disintegrations!, Stardust, and They Will Be Lost And Confused. OR Cancel Blast The Door, Kid! or It Could Be Worse. (Immune to It's A Hit!) OR Shuffle any player's Reserve Deck or Lost Pile. LOST: If opponent just lost a battle, they lose 2 Force.",
+    "destiny": 5.0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_II",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_26",
+        "count": 1
+      },
+      {
+        "icon": "INTERRUPT",
+        "count": 1
+      }
+    ],
+    "isComboCard": true,
+    "hasVirtualSuffix": true
   },
   {
     "cardId": "2_1",
@@ -99327,3869 +100531,6 @@
         "count": 1
       }
     ]
-  },
-  {
-    "cardId": "501_1",
-    "title": "This Is The Way",
-    "slug": "this-is-the-way",
-    "slugWithSetName": "this-is-the-way-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_STARTING",
-    "lore": "",
-    "gameText": "Used: Take a unique Mandalorian into hand from Reserve Deck, reshuffle.Starting: Take Din, Weapons Are Part Of My Religion, The Razor Crest, and Mandalorian Covert into hand. Draw 6 cards instead of 8. Place Interrupt in Reserve Deck.",
-    "testingText": "This Is The Way",
-    "destiny": 4.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_10",
-    "title": "Beskar Armor",
-    "slug": "beskar-armor",
-    "slugWithSetName": "beskar-armor-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "DEVICE",
-    "cardTypes": [
-      "DEVICE"
-    ],
-    "gameText": "Deploy on your Mandalorian. Character is defense value +2 and immunity to attrition +2. Once per game, may [upload] Beskar Deflection. Character's game text may not be cancelled.",
-    "testingText": "Beskar Armor",
-    "destiny": 4.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "DEVICE",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_11",
-    "title": "Bounty Hunting Is A Dangerous Profession",
-    "slug": "bounty-hunting-is-a-dangerous-profession",
-    "slugWithSetName": "bounty-hunting-is-a-dangerous-profession-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EPIC_EVENT",
-    "cardTypes": [
-      "EPIC_EVENT"
-    ],
-    "gameText": "Deploy on table if your [Mudhorn] objective on table. Your Boba, Cara Dune, and Grogu are deploy -1. At the end of opponent's deploy phase, opponent loses 1 Force unless 'The Asset' present at a battleground site.Your total force generation and battle destiny is +1 for each card stacked here. During your move phase, may take Din (and Grogu if with Din) into hand from a location.",
-    "testingText": "Bounty Hunting Is A Dangerous Profession",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "EPIC_EVENT",
-        "count": 1
-      },
-      {
-        "icon": "MUDHORN",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_116",
-    "title": "Razor Crest",
-    "slug": "razor-crest",
-    "slugWithSetName": "razor-crest-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "STARFIGHTER",
-    "gameText": "May add 1 pilot and 2 passengers. Once per game, may [download] an alien of ability = 4 aboard. Characters aboard apply their ability towards drawing battle destiny. Immune to attrition < 5 (<6 if Din aboard.)",
-    "testingText": "Razor Crest",
-    "deployCost": 4.0,
-    "destiny": 3.0,
-    "power": 5.0,
-    "forfeit": 6.0,
-    "armor": 5.0,
-    "hyperspeed": 5.0,
-    "pilotCapacity": 1,
-    "passengerCapacity": 2,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "INDEPENDENT",
-        "count": 1
-      },
-      {
-        "icon": "MUDHORN",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "personas": [
-      "RAZOR_CREST"
-    ],
-    "modelTypes": [
-      "ST_70_CLASS_RAZOR_CREST_M_111_ASSAULT_SHIP"
-    ]
-  },
-  {
-    "cardId": "501_117",
-    "title": "Gangster's Paradise",
-    "slug": "gangsters-paradise",
-    "slugWithSetName": "gangsters-paradise-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "LOST_OR_STARTING",
-    "lore": "Jabba's Palace is considered a safe haven to many on the run. It is also widely known to provide luxurious accommodations to its welcomed guests.",
-    "gameText": "LOST: Deploy an interior Jabba's Palace site from Reserve Deck; reshuffle. STARTING: If you have deployed a Jabba's Palace site, deploy Jabba's Haven and up to two Effects that deploy on table and are always immune to Alter. Place Interrupt in hand.",
-    "testingText": "Gangster's Paradise",
-    "destiny": 4.0,
-    "icons": [
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_12",
-    "title": "Order 66",
-    "slug": "order-66",
-    "slugWithSetName": "order-66-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Hologram.",
-    "gameText": "Deploy on table. Once per game, may 'execute Order 66' (relocate this Effect to a site). Whenever this Effect relocates to a site, immunity to attrition of Jedi here is canceled for remainder of turn. May not be canceled. [Immune to Alter].",
-    "testingText": "Order 66",
-    "destiny": 6.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "HOLOGRAM"
-    ]
-  },
-  {
-    "cardId": "501_13",
-    "title": "Nevarro City: Bounty Hunter's Guild",
-    "slug": "nevarro-city-bounty-hunters-guild",
-    "slugWithSetName": "nevarro-city-bounty-hunters-guild-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Nevarro City: Bounty Hunter's Guild",
-    "locationDarkSideGameText": "Whenever Holopuck relocates here, lose 1 force and stack it face up on opponent's [Mudhorn] Epic Event.",
-    "locationLightSideGameText": "If Holopuck about to leave table (for any reason, even if inactive), relocate it here.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "MUDHORN",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "NEVARRO_CITY_SITE"
-    ]
-  },
-  {
-    "cardId": "501_138",
-    "title": "Imperial Blockade",
-    "slug": "imperial-blockade",
-    "slugWithSetName": "imperial-blockade-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_14",
-    "title": "I Can Bring You In Warm",
-    "slug": "i-can-bring-you-in-warm",
-    "slugWithSetName": "i-can-bring-you-in-warm-playtesting",
-    "side": "LIGHT",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "Deploy Bounty Hunter's Guild (with Holopuck there), Cold Storage and Bounty Hunting Is A Dangerous Profession. For remainder of game you may not deploy Jedi (except Ahsoka and Luke), or [EPI] or [EPVII] characters. Once per turn, may [download] a [Mudhorn] location from Reserve Deck; reshuffle. 'The Asset' may not move away from same location as Din.If a battle just initiated involving Din and 'The Asset', opponent chooses:Lose the 'The Asset' to exclude Din from battle (you may [upload] any card; reshuffle)OR Flip this card.",
-    "testingText": "I Can Bring You In Warm",
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      },
-      {
-        "icon": "MUDHORN",
-        "count": 1
-      }
-    ],
-    "isFrontOfDoubleSidedCard": true
-  },
-  {
-    "cardId": "501_14_BACK",
-    "title": "Or I Can Bring You In Cold",
-    "slug": "or-i-can-bring-you-in-cold",
-    "slugWithSetName": "or-i-can-bring-you-in-cold-playtesting",
-    "side": "LIGHT",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "May immediately re-circulate and shuffle your Reserve Deck. While this side up, during battles involving 'The Asset', opponent may not cancel your non-lightsaber weapon destiny draws and if 'The Asset' just lost, place that character out of play. The gametext of the 'The Asset' is cancelled.Flip this card at the start of any move phase.",
-    "testingText": "...Or I Can Bring You In Cold",
-    "destiny": 7.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      },
-      {
-        "icon": "MUDHORN",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_15",
-    "title": "Holopuck",
-    "slug": "holopuck",
-    "slugWithSetName": "holopuck-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "gameText": "Deploy on Bounty Hunter's Guild. Unless on a character, if opponent just deployed a non-Dark Jedi character of ability > 2 (or a leader) to a site, relocate Bounty Puck to that character. That character is 'The Asset' for as long as that character remains on table.",
-    "testingText": "Holopuck",
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "DEPLOYS_ON_SITE"
-    ]
-  },
-  {
-    "cardId": "501_164",
-    "title": "Coruscant: Jedi Council Chamber",
-    "slug": "coruscant-jedi-council-chamber",
-    "slugWithSetName": "coruscant-jedi-council-chamber-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Coruscant: Jedi Council Chamber (V)",
-    "locationDarkSideGameText": "[Episode I] Vader may deploy here regardless of presence or Force icons.",
-    "locationLightSideGameText": "Deploys only if you have deployed a battleground or if a Jedi 'communing.'",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "A_NEW_HOPE",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_166",
-    "title": "Jedi Into Exile",
-    "slug": "jedi-into-exile",
-    "slugWithSetName": "jedi-into-exile-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_LOST",
-    "lore": "",
-    "gameText": "USED: [Upload] [A New Hope] Jedi Council Chamber or Lars' Moisture Farm. OR Subtract 1 from a just drawn Force Lightning, 'choke,' or [Permanent Weapon] blaster weapon destiny. LOST: If you are about to draw battle destiny, instead use the ability number of your Padawan (or Leia) at same site.",
-    "testingText": "Jedi Into Exile",
-    "destiny": 5.0,
-    "icons": [
-      {
-        "icon": "A_NEW_HOPE",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_167",
-    "title": "Medal Ceremony",
-    "slug": "medal-ceremony",
-    "slugWithSetName": "medal-ceremony-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "With the destruction of the Death Star, the Rebel Alliance received new-found support throughout the galaxy.",
-    "gameText": "If Massassi Throne Room on table, deploy on table. Non-Jedi Rebels are defense value +1. Once per game, may [download] a Yavin 4 battleground. Once per game, may retrieve a non-[Maintenance], non-[Permanent Weapon] Rebel of ability < 5. [Immune to Alter.]",
-    "testingText": "Medal Ceremony",
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "A_NEW_HOPE",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_168",
-    "title": "Amban Sniper Rifle",
-    "slug": "amban-sniper-rifle",
-    "slugWithSetName": "amban-sniper-rifle-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "WEAPON",
-    "cardTypes": [
-      "WEAPON"
-    ],
-    "cardSubtype": "CHARACTER",
-    "destiny": 4.0,
-    "icons": [
-      {
-        "icon": "WEAPON",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_169",
-    "title": "Whistling Birds",
-    "slug": "whistling-birds",
-    "slugWithSetName": "whistling-birds-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "WEAPON",
-    "cardTypes": [
-      "WEAPON"
-    ],
-    "cardSubtype": "CHARACTER",
-    "destiny": 5.0,
-    "icons": [
-      {
-        "icon": "WEAPON",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_17",
-    "title": "Salacious Crumb",
-    "slug": "salacious-crumb",
-    "slugWithSetName": "salacious-crumb-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Male Kowakian. Prankster. Humiliates others for Jabba's amusement. His life depends on making Jabba laugh at least once per day.",
-    "gameText": "When deployed, may reveal the top two cards of your Reserve Deck; take one into hand and place the other in Used Pile. Unless Crumb is 'hit', your leaders here may not be targeted by weapons. Undercover spies here are lost. ('AH-hahahaha!')",
-    "testingText": "Salacious Crumb (V)",
-    "deployCost": 1.0,
-    "destiny": 3.0,
-    "power": 1.0,
-    "ability": 1.0,
-    "forfeit": 3.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      }
-    ],
-    "species": "KOWAKIAN",
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_170",
-    "title": "Greef Karga, Disgraced Magistrate",
-    "slug": "greef-karga-disgraced-magistrate",
-    "slugWithSetName": "greef-karga-disgraced-magistrate-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Leader. Information broker.",
-    "gameText": "Opponent must first use 1 Force to deploy a character to same location as Holopuck.Draws one battle destiny if unable to otherwise. Immune to attrition < 3.",
-    "testingText": "Greef Karga, Disgraced Magistrate",
-    "deployCost": 3.0,
-    "destiny": 3.0,
-    "power": 3.0,
-    "ability": 3.0,
-    "forfeit": 5.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "INFORMATION_BROKER",
-      "LEADER"
-    ],
-    "personas": [
-      "GREEF"
-    ]
-  },
-  {
-    "cardId": "501_171",
-    "title": "Nevarro City: Sewers",
-    "slug": "nevarro-city-sewers",
-    "slugWithSetName": "nevarro-city-sewers-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Nevarro City: Sewers",
-    "locationDarkSideGameText": "Force drain -1 here.",
-    "locationLightSideGameText": "During your move phase, your characters may move between here and any Nevarro City site.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "UNDERGROUND",
-        "count": 1
-      },
-      {
-        "icon": "MUDHORN",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "NEVARRO_CITY_SITE"
-    ]
-  },
-  {
-    "cardId": "501_19",
-    "title": "More Systems Will Rally To Our Cause",
-    "slug": "more-systems-will-rally-to-our-cause",
-    "slugWithSetName": "more-systems-will-rally-to-our-cause-playtesting",
-    "side": "DARK",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "Deploy [Separatist] Geonosis system, two [Clone Army] systems, and Droid Racks.For remainder of game, you may not deploy non-[Episode I] characters, non-[Episode I] starships, or non-[Episode I] vehicles. If your [Episode I] system was just converted, raise it to the top. Once per turn, may deploy a battleground site related to your [Clone Army] or [Separatist] system from Reserve Deck; reshuffle. Flip this card if two [Separatist] systems on table.",
-    "testingText": "More Systems Will Rally To Our Cause",
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "isFrontOfDoubleSidedCard": true
-  },
-  {
-    "cardId": "501_196",
-    "title": "Neck And Neck",
-    "slug": "neck-and-neck",
-    "slugWithSetName": "neck-and-neck-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED",
-    "lore": "When Anakin had finally caught up with Sebulba, he knew he needed to make some kind of a move to break away from the Dug to win the race.",
-    "gameText": "If [Set 21] Anakin in battle, he is power +1 for each 'credit' card (if any) and opponent may not draw more than one battle destiny. OR If [Set 21] Anakin just won a battle (or Force drained at a battleground), opponent loses 1 Force and stacks lost card under Credits Will Do Fine.",
-    "testingText": "Neck And Neck (V)",
-    "destiny": 4.0,
-    "icons": [
-      {
-        "icon": "TATOOINE",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_19_BACK",
-    "title": "The Galaxy Torn Apart",
-    "slug": "the-galaxy-torn-apart",
-    "slugWithSetName": "the-galaxy-torn-apart-playtesting",
-    "side": "DARK",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "While this side up, during your control phase, opponent loses X Force, where X = number of systems you occupy where you also occupy a related site. At systems related to sites you occupy, opponent's Force drains are -1 and your [Separatist] starships are immune to attrition. Flip this card if fewer than two [Separatist] systems on table.",
-    "testingText": "The Galaxy Torn Apart",
-    "destiny": 7.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_2",
-    "title": "Din's IB-94 Blaster Pistol",
-    "slug": "dins-ib-94-blaster-pistol",
-    "slugWithSetName": "dins-ib-94-blaster-pistol-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "WEAPON",
-    "cardTypes": [
-      "WEAPON"
-    ],
-    "cardSubtype": "CHARACTER",
-    "lore": "",
-    "gameText": "Deploy on Din. May target a character or creature for free. Draw destiny. Add 1 if targeting 'The Asset' If destiny +1 > defense value, target hit and forfeit = 0. If fired by Din in battle, he is power +1 for remainder of battle.",
-    "testingText": "Din's IB-94 Blaster Pistol",
-    "destiny": 2.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "WEAPON",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BLASTER"
-    ]
-  },
-  {
-    "cardId": "501_20",
-    "title": "Geonosis",
-    "slug": "geonosis",
-    "slugWithSetName": "geonosis-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SYSTEM",
-    "testingText": "Geonosis (Separatist controlled)",
-    "locationDarkSideGameText": "If opponent just initiated a Force drain (or won a battle) here and no Geonosis sites on table, they 'conquer' (flip) Geonosis.",
-    "locationLightSideGameText": "If you just initiated a Force drain (or won a battle) at a Geonosis site, 'conquer' (flip) Geonosis.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "SEPARATIST",
-        "count": 1
-      }
-    ],
-    "isFrontOfDoubleSidedCard": true,
-    "mayNotBePlacedInReserveDeck": true
-  },
-  {
-    "cardId": "501_201",
-    "title": "The Hidden Path",
-    "slug": "the-hidden-path",
-    "slugWithSetName": "the-hidden-path-playtesting",
-    "side": "LIGHT",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations or Jedi (except Jedi survivors). Once per turn, may [download] a Jabiim site or a battleground (except a Kamino, Tatooine, or [Reflections III] location). While this side up, you may not play Nabrun Leids. Your Force drains at Mapuzo sites are -1. Once per turn, may [download] a holocron. Flip this card if Jedi occupy two non-Mapuzo sites.",
-    "testingText": "The Hidden Path",
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ],
-    "isFrontOfDoubleSidedCard": true
-  },
-  {
-    "cardId": "501_201_BACK",
-    "title": "Gather Allies And Train",
-    "slug": "gather-allies-and-train",
-    "slugWithSetName": "gather-allies-and-train-playtesting",
-    "side": "LIGHT",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "While this side up, if your holocron is about to leave table, place it in Used Pile. Your lightsaber Force drain bonuses may not be canceled. Opponent's total battle destiny where they have a character of ability > 4 is -1. During your move phase, may relocate a Jedi between a Jabiim site and a battleground site as a regular move for free. At the end of your turn, opponent loses 1 Force. Flip this card if you do not occupy two sites with Jedi.",
-    "testingText": "Gather Allies And Train",
-    "destiny": 7.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_202",
-    "title": "Fallen Order",
-    "slug": "fallen-order",
-    "slugWithSetName": "fallen-order-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EPIC_EVENT",
-    "cardTypes": [
-      "EPIC_EVENT"
-    ],
-    "gameText": "If The Hidden Path on table, deploy on table. When deployed, stack three Jedi survivors from Reserve Deck here. During your deploy phase, Jedi survivors here may deploy as if from hand. The Light Will Fade: While The Hidden Path on table, Jedi survivors are deploy = 2, power = 3, forfeit = 3, deploy only to Safehouse, move using landspeed for free, and their game text is canceled. But It Is Never Forgotten: If your Jedi survivor was just lost, may stack it here. (Immune to Cold Feet.)",
-    "testingText": "Fallen Order",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "EPIC_EVENT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_203",
-    "title": "Mapuzo: Mining Village",
-    "slug": "mapuzo-mining-village",
-    "slugWithSetName": "mapuzo-mining-village-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Mapuzo: Mining Village",
-    "locationDarkSideGameText": "While Vader or an Inquisitor present, your Force drains here may not be modified.",
-    "locationLightSideGameText": "Your miners are power +1 here. Once per game, may [download] Tala Durith here.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_204",
-    "title": "Mapuzo: Safehouse",
-    "slug": "mapuzo-safehouse",
-    "slugWithSetName": "mapuzo-safehouse-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Mapuzo: Safehouse",
-    "locationDarkSideGameText": "Unless Third Sister here, Force drain -1 here.",
-    "locationLightSideGameText": "The first Jedi you deploy here each turn is immune to Imperial Barrier.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_205",
-    "title": "Mapuzo: Underground Corridor",
-    "slug": "mapuzo-underground-corridor",
-    "slugWithSetName": "mapuzo-underground-corridor-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Mapuzo: Underground Corridor",
-    "locationDarkSideGameText": "",
-    "locationLightSideGameText": "During your move phase, Jedi survivors may move from here to a Jabiim site (or to opponent's battleground site).",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "UNDERGROUND",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_206",
-    "title": "Jabiim: Path Operations Center",
-    "slug": "jabiim-path-operations-center",
-    "slugWithSetName": "jabiim-path-operations-center-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Jabiim: Path Operations Center",
-    "locationDarkSideGameText": "",
-    "locationLightSideGameText": "Once per turn, may [download] a lightsaber on your character here.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_207",
-    "title": "Jabiim: Starship Hangar",
-    "slug": "jabiim-starship-hangar",
-    "slugWithSetName": "jabiim-starship-hangar-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Jabiim: Starship Hangar",
-    "locationDarkSideGameText": "Once per game, may [download] (or deploy from Lost Pile) Grand Inquisitor here.",
-    "locationLightSideGameText": "While a Jedi Survivor present, you lose no Force to Visage Of The Emperor.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_208",
-    "title": "Quinlan Vos",
-    "slug": "quinlan-vos",
-    "slugWithSetName": "quinlan-vos-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "JEDI_MASTER"
-    ],
-    "lore": "Jedi survivor.",
-    "gameText": "[Pilot] 2. Adds one battle destiny with Dooku, Grievous, or Ventress. Once per turn, may peek at the top card of any Reserve Deck or subtract 1 from a just drawn weapon destiny here. Dark Approach is a Used interrupt. Immune to Sniper and attrition < 6 (< 8 if alone).",
-    "testingText": "Quinlan Vos",
-    "deployCost": 8.0,
-    "destiny": 1.0,
-    "power": 7.0,
-    "ability": 7.0,
-    "forfeit": 8.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "JEDI_MASTER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "JEDI_SURVIVOR"
-    ]
-  },
-  {
-    "cardId": "501_209",
-    "title": "Obi-Wan Kenobi, Jedi In Exile",
-    "slug": "obi-wan-kenobi-jedi-in-exile",
-    "slugWithSetName": "obi-wan-kenobi-jedi-in-exile-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "REBEL"
-    ],
-    "lore": "Jedi survivor.",
-    "gameText": "Adds one battle destiny with Maul, Sidious, or Vader. Opponent's characters here are power and forfeit -1. Once per game, may [upload] (or retrieve into hand) Glancing Blow or Help Me Obi-Wan Kenobi. Immune to You Are Beaten and attrition < 6.",
-    "testingText": "Obi-Wan Kenobi, Jedi In Exile",
-    "deployCost": 8.0,
-    "destiny": 1.0,
-    "power": 6.0,
-    "ability": 6.0,
-    "forfeit": 8.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "REBEL",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "JEDI_SURVIVOR"
-    ],
-    "personas": [
-      "OBIWAN"
-    ]
-  },
-  {
-    "cardId": "501_20_BACK",
-    "title": "Geonosis",
-    "slug": "geonosis",
-    "slugWithSetName": "geonosis-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SYSTEM",
-    "testingText": "Geonosis (Republic controlled)",
-    "locationDarkSideGameText": "If you just initiated a Force drain (or won a battle) at a Geonosis site, 'conquer' (flip) Geonosis.",
-    "locationLightSideGameText": "While you occupy with a [Republic] starship, your Jedi and clones at Geonosis sites are power +1.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "CLONE_ARMY",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_21",
-    "title": "Geonosis: Petranaki Arena",
-    "slug": "geonosis-petranaki-arena",
-    "slugWithSetName": "geonosis-petranaki-arena-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Geonosis: Petranaki Arena",
-    "locationDarkSideGameText": "Your total power here is +1 for each opponent's character here.",
-    "locationLightSideGameText": "Your characters are defense value -1 here.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_210",
-    "title": "Kelleran Beq",
-    "slug": "kelleran-beq",
-    "slugWithSetName": "kelleran-beq-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "JEDI_MASTER",
-      "REPUBLIC"
-    ],
-    "lore": "Jedi survivor.",
-    "gameText": "[Pilot] 2. Adds one battle destiny with Grogu or a Padawan. Any lightsaber may deploy on Beq. Once per game, may deploy a lightsaber on Beq from Lost Pile. Your other characters here are defense value +1 for each lightsaber on Beq. Immune to attrition < 6.",
-    "testingText": "Kelleran Beq",
-    "deployCost": 8.0,
-    "destiny": 1.0,
-    "power": 6.0,
-    "ability": 7.0,
-    "forfeit": 8.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "JEDI_MASTER",
-        "count": 1
-      },
-      {
-        "icon": "REPUBLIC",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 2
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "JEDI_SURVIVOR"
-    ],
-    "personas": [
-      "BEQ"
-    ]
-  },
-  {
-    "cardId": "501_211",
-    "title": "Peli Motto",
-    "slug": "peli-motto",
-    "slugWithSetName": "peli-motto-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Female mechanic and scavenger.",
-    "gameText": "While at Starship Graveyard, a docking bay, or on Tatooine, power +3 and may cancel I’ve Lost Artoo! or Lateral Damage (or Restraining Bolt here). During your control phase, if at a battleground with a Jawa, landed starfighter or Grogu, may retrieve 1 Force.",
-    "testingText": "Peli Motto",
-    "deployCost": 2.0,
-    "destiny": 2.0,
-    "power": 1.0,
-    "ability": 3.0,
-    "forfeit": 4.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "FEMALE",
-      "SCAVENGER"
-    ]
-  },
-  {
-    "cardId": "501_212",
-    "title": "Launching The Assault",
-    "slug": "launching-the-assault",
-    "slugWithSetName": "launching-the-assault-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "By recruiting the Mon Calamari, a race of master shipwrights, the Rebel starfleet gained capital starships rivaling the dreaded Imperial Star Destroyers.",
-    "gameText": "If your Endor (or Rebel Base) location on table, deploy on table. May [download] Home One or Sullust. Home One is deploy = 8 to an [Endor] or [Death Star II] system and its power may not be reduced. Once per game, Home One may move as a 'react' to [Death Star II] Falcon's location (or vice versa). [Immune to Alter.]",
-    "testingText": "Launching The Assault (V)",
-    "destiny": 4.0,
-    "icons": [
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_213",
-    "title": "Kashyyyk: Chewie's Hut",
-    "slug": "kashyyyk-chewies-hut",
-    "slugWithSetName": "kashyyyk-chewies-hut-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Kashyyyk: Chewie's Hut",
-    "locationDarkSideGameText": "",
-    "locationLightSideGameText": "Deploys only as a starting location. Once per game, may [upload] a Wookiee. While Wookiee Homestead on table, no Force Drains here.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_214",
-    "title": "See-Threepio",
-    "slug": "see-threepio",
-    "slugWithSetName": "see-threepio-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "DROID"
-    ],
-    "lore": "C-3PO was Jabba's 'khan chita,' or translator. Survived more battles than most members of the Alliance. Wasn't informed of R2-D2's role in the rescue of Han.",
-    "gameText": "While at a Jabba's Palace site: once per turn may place a card from hand in Used Pile to draw top card of Reserve Deck or activate 1 Force. If you control two Jabba's Palace sites, during your control phase retrieve 1 Force (into hand if [Jabba's Palace] R2-D2 here).",
-    "testingText": "See-Threepio (V)",
-    "deployCost": 3.0,
-    "destiny": 2.0,
-    "power": 1.0,
-    "ability": 0.0,
-    "forfeit": 4.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "PREMIUM",
-        "count": 1
-      },
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "DROID",
-        "count": 1
-      }
-    ],
-    "personas": [
-      "C3PO"
-    ],
-    "modelTypes": [
-      "PROTOCOL"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_215",
-    "title": "Kelnacca",
-    "slug": "kelnacca",
-    "slugWithSetName": "kelnacca-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "JEDI_MASTER"
-    ],
-    "lore": "Wookiee.",
-    "gameText": "Once per turn, if Wookiee Homestead on table, may place a card from hand on top of Force Pile to draw bottom card from Force Pile. Once per game, may [download] a unique (•) Forest. Immune to Wookiee Strangle and You Are Beaten.",
-    "testingText": "Kelnacca",
-    "deployCost": 5.0,
-    "destiny": 2.0,
-    "power": 5.0,
-    "ability": 7.0,
-    "forfeit": 7.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "JEDI_MASTER",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "species": "WOOKIEE"
-  },
-  {
-    "cardId": "501_216",
-    "title": "Something About This Boy",
-    "slug": "something-about-this-boy",
-    "slugWithSetName": "something-about-this-boy-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "LOST_OR_STARTING",
-    "lore": "'What'd he mean by that?' 'I'll tell you later.'",
-    "gameText": "LOST: Relocate Prophecy Of The Force to a site. STARTING: If your starting location was Skywalker Hut, deploy Prophecy Of The Force there, Do, Or Do Not and Jedi Business. Light Side goes first. Place Interrupt in Reserve Deck.",
-    "testingText": "Something About This Boy",
-    "destiny": 3.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_22",
-    "title": "Poggle The Lesser",
-    "slug": "poggle-the-lesser",
-    "slugWithSetName": "poggle-the-lesser-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "REPUBLIC"
-    ],
-    "lore": "Geonosian leader.",
-    "gameText": "While with a battle droid, opponent may not draw more than one battle destiny here. Once per game, may deploy Dooku here from Reserve Deck; reshuffle. While on Geonosis and The Galaxy Torn Apart on table, you initiate battles for free.",
-    "testingText": "Poggle The Lesser",
-    "deployCost": 3.0,
-    "destiny": 2.0,
-    "power": 4.0,
-    "ability": 2.0,
-    "forfeit": 5.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "REPUBLIC",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "SEPARATIST",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "LEADER"
-    ],
-    "species": "GEONOSIAN"
-  },
-  {
-    "cardId": "501_23",
-    "title": "Utapau",
-    "slug": "utapau",
-    "slugWithSetName": "utapau-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SYSTEM",
-    "testingText": "Utapau (Republic controlled)",
-    "locationDarkSideGameText": "If you just initiated a Force drain (or won a battle) at an Utapau site, 'conquer' (flip) Utapau.",
-    "locationLightSideGameText": "If you control, Jedi are deploy -1 to Utapau sites.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "CLONE_ARMY",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "isFrontOfDoubleSidedCard": true,
-    "mayNotBePlacedInReserveDeck": true
-  },
-  {
-    "cardId": "501_23_BACK",
-    "title": "Utapau",
-    "slug": "utapau",
-    "slugWithSetName": "utapau-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SYSTEM",
-    "testingText": "Utapau (Separatist controlled)",
-    "locationDarkSideGameText": "If you control, Jedi are deploy +1 to Utapau sites.",
-    "locationLightSideGameText": "If you just initiated a Force drain (or won a battle) at an Utapau site, 'conquer' (flip) Utapau.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "SEPARATIST",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_24",
-    "title": "Utapau: Pau City",
-    "slug": "utapau-pau-city",
-    "slugWithSetName": "utapau-pau-city-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Utapau: Pau City",
-    "locationDarkSideGameText": "If you control with a [Separatist] leader, Force drain + 1 here.",
-    "locationLightSideGameText": "You must first use 1 Force to fire a weapon here.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_25",
-    "title": "San Hill",
-    "slug": "san-hill",
-    "slugWithSetName": "san-hill-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "REPUBLIC"
-    ],
-    "lore": "Muun leader. Banking Clan.",
-    "gameText": "At same site, your battle droids deploy -1 and are forfeit +1. Once per game, may deploy Grievous here from Reserve Deck; reshuffle. While on Utapau and The Galaxy Torn Apart on table, opponent's Force retrieval is canceled.",
-    "testingText": "San Hill",
-    "deployCost": 3.0,
-    "destiny": 2.0,
-    "power": 3.0,
-    "ability": 3.0,
-    "forfeit": 5.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "REPUBLIC",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "SEPARATIST",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "LEADER"
-    ],
-    "species": "MUUN"
-  },
-  {
-    "cardId": "501_26",
-    "title": "Christophsis",
-    "slug": "christophsis",
-    "slugWithSetName": "christophsis-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SYSTEM",
-    "testingText": "Christophsis (Republic controlled)",
-    "locationDarkSideGameText": "If you just initiated a Force drain (or won a battle) at a Christophsis site, 'conquer' (flip) Christophsis.",
-    "locationLightSideGameText": "Starships piloted by Anakin or Obi-Wan here are immune to attrition.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "CLONE_ARMY",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "isFrontOfDoubleSidedCard": true,
-    "mayNotBePlacedInReserveDeck": true
-  },
-  {
-    "cardId": "501_26_BACK",
-    "title": "Christophsis",
-    "slug": "christophsis",
-    "slugWithSetName": "christophsis-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SYSTEM",
-    "testingText": "Christophsis (Separatist controlled)",
-    "locationDarkSideGameText": "Force drain +1 here.",
-    "locationLightSideGameText": "If you just initiated a Force drain (or won a battle) at a Christophsis site, 'conquer' (flip) Christophsis.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "SEPARATIST",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_27",
-    "title": "Christophsis: Separatist Encampment",
-    "slug": "christophsis-separatist-encampment",
-    "slugWithSetName": "christophsis-separatist-encampment-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Christophsis: Separatist Encampment",
-    "locationDarkSideGameText": "Your battle droids (and [Separatist] characters) here may not be targeted by Rebel Barrier or Sorry About The Mess.",
-    "locationLightSideGameText": "Your battle destiny draws are -1 here.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_28",
-    "title": "General Whorm Loathsom",
-    "slug": "general-whorm-loathsom",
-    "slugWithSetName": "general-whorm-loathsom-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "REPUBLIC"
-    ],
-    "lore": "Kerkoiden leader.",
-    "gameText": "While with a battle droid, adds one battle destiny. Once per game, may deploy Ventress here from Reserve Deck; reshuffle. While on Christophsis and The Galaxy Torn Apart on table, your Force drains (and Force drain bonuses) may not be canceled or reduced.",
-    "testingText": "General Whorm Loathsom",
-    "deployCost": 3.0,
-    "destiny": 2.0,
-    "power": 3.0,
-    "ability": 3.0,
-    "forfeit": 5.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "REPUBLIC",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "SEPARATIST",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "GENERAL",
-      "LEADER"
-    ],
-    "species": "KERKOIDEN"
-  },
-  {
-    "cardId": "501_29",
-    "title": "Separatist Command Center",
-    "slug": "separatist-command-center",
-    "slugWithSetName": "separatist-command-center-playtesting",
-    "side": "DARK",
-    "uniqueness": "DIAMOND_1",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Separatist Command Center",
-    "locationDarkSideGameText": "Your battle droids are power +1 here.",
-    "locationLightSideGameText": "Deploys only to a [Clone Army] or [Separatist] system. Immune to Ounee Ta.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      },
-      {
-        "icon": "SEPARATIST",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_3",
-    "title": "The Armorer",
-    "slug": "the-armorer",
-    "slugWithSetName": "the-armorer-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Female Mandalorian leader.",
-    "gameText": "Only deploys to non-battleground sites (-1 if [underground]). Once per game, may retrieve a non-lightsaber character weapon into hand. Your other Mandalorians are power and defense value +1. Immune to Attrition < 4.",
-    "testingText": "The Armorer",
-    "deployCost": 3.0,
-    "destiny": 2.0,
-    "power": 4.0,
-    "ability": 4.0,
-    "forfeit": 5.0,
-    "armor": 5.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 2
-      }
-    ],
-    "keywords": [
-      "FEMALE",
-      "LEADER"
-    ],
-    "personas": [
-      "ARMORER"
-    ],
-    "species": "MANDALORIAN"
-  },
-  {
-    "cardId": "501_30",
-    "title": "Munificent-Class Star Frigate",
-    "slug": "munificent-class-star-frigate",
-    "slugWithSetName": "munificent-class-star-frigate-playtesting",
-    "side": "DARK",
-    "uniqueness": "RESTRICTED_2",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "CAPITAL",
-    "lore": "Banking Clan.",
-    "gameText": "May add 2 pilots, 5 passengers, and 1 shuttle. Permanent pilot provides ability of 2. While at a [Clone Army] or [Separatist] system, immune to attrition < 6 and, if you control, opponent's Force drains at related sites are -1.",
-    "testingText": "Munificent-Class Star Frigate",
-    "deployCost": 4.0,
-    "destiny": 4.0,
-    "power": 6.0,
-    "forfeit": 6.0,
-    "armor": 5.0,
-    "hyperspeed": 4.0,
-    "pilotCapacity": 2,
-    "passengerCapacity": 5,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      },
-      {
-        "icon": "SEPARATIST",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SHIP_DOCKING_CAPABILITY"
-    ],
-    "modelTypes": [
-      "MUNIFICENT_CLASS_STAR_FRIGATE"
-    ]
-  },
-  {
-    "cardId": "501_31",
-    "title": "Battle Droid Reinforcements",
-    "slug": "battle-droid-reinforcements",
-    "slugWithSetName": "battle-droid-reinforcements-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "gameText": "If Geonosis on table, use 2 Force to deploy on table. When deployed, stack two B-1 Clankers face up here from outside your deck. B-1 Clankers may deploy from here as if from hand (for -2 Force). [Immune to Alter.]",
-    "testingText": "Battle Droid Reinforcements",
-    "destiny": 4.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_32",
-    "title": "B-1 Clanker",
-    "slug": "b-1-clanker",
-    "slugWithSetName": "b-1-clanker-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "DROID"
-    ],
-    "lore": "Infantry battle droid.",
-    "gameText": "While with your Republic leader (or another battle droid), draws one battle destiny if unable to otherwise.",
-    "testingText": "B-1 Clanker",
-    "deployCost": 2.0,
-    "destiny": 2.0,
-    "power": 1.0,
-    "ability": 0.0,
-    "forfeit": 2.0,
-    "armor": 3.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "DROID",
-        "count": 1
-      },
-      {
-        "icon": "PRESENCE",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "SEPARATIST",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "INFANTRY_BATTLE_DROID"
-    ],
-    "modelTypes": [
-      "BATTLE"
-    ]
-  },
-  {
-    "cardId": "501_33",
-    "title": "CIS Transport Shuttle",
-    "slug": "cis-transport-shuttle",
-    "slugWithSetName": "cis-transport-shuttle-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "STARFIGHTER",
-    "gameText": "May add 1 pilot and 2 passengers. Permanent pilot provides ability of 2. May deploy to exterior sites. Twice per turn,  may land or take off as an unlimited move for free.",
-    "testingText": "CIS Transport Shuttle",
-    "deployCost": 2.0,
-    "destiny": 4.0,
-    "power": 3.0,
-    "forfeit": 4.0,
-    "maneuver": 5.0,
-    "hyperspeed": 4.0,
-    "pilotCapacity": 1,
-    "passengerCapacity": 2,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      },
-      {
-        "icon": "SEPARATIST",
-        "count": 1
-      }
-    ],
-    "modelTypes": [
-      "SHEATHIPEDE_CLASS_SHUTTLE"
-    ]
-  },
-  {
-    "cardId": "501_36",
-    "title": "Scarif: Ocean Shallows",
-    "slug": "scarif-ocean-shallows",
-    "slugWithSetName": "scarif-ocean-shallows-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Scarif: Ocean Shallows",
-    "locationDarkSideGameText": "Once per game, may download An Inkling Of Its Destructive Potential here.",
-    "locationLightSideGameText": "",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_38",
-    "title": "Scarif: Command Center",
-    "slug": "scarif-command-center",
-    "slugWithSetName": "scarif-command-center-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Scarif: Command Center (ERRATA)",
-    "locationDarkSideGameText": "If you occupy, with X leaders here, your total power is +X in battles at Scarif locations.",
-    "locationLightSideGameText": "If you initiate a battle with a Rebel leader here, add one battle destiny.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_16",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_39",
-    "title": "Scarif: Citadel Tower",
-    "slug": "scarif-citadel-tower",
-    "slugWithSetName": "scarif-citadel-tower-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Scarif: Citadel Tower (ERRATA)",
-    "locationDarkSideGameText": "If a player just Force drained here, they may raise a converted Scarif location to the top.",
-    "locationLightSideGameText": "Jyn, Cassian and K2-SO are power +1 here.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_16",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_40",
-    "title": "Scarif",
-    "slug": "scarif",
-    "slugWithSetName": "scarif-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SYSTEM",
-    "testingText": "Scarif (DS) (ERRATA)",
-    "locationDarkSideGameText": "For remainder of game, while Shield Gate here, opponent's non-spy characters are deploy +1 to Scarif sites.",
-    "locationLightSideGameText": "For remainder of game, add 2 to attempts to 'blow away' Shield Gate for each Profundity or Lightmaker here.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_16",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_41",
-    "title": "I'm Sending My Apprentice",
-    "slug": "im-sending-my-apprentice",
-    "slugWithSetName": "im-sending-my-apprentice-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Maul channeled his rage within himself, thus drawing on the dark side of the Force in his confrontation with the Jedi.",
-    "gameText": "If a Naboo site on table, deploy on table. Maul deploys -2 to [Coruscant] sites. If Maul in battle alone, your total battle destiny is +1 for each character in battle. Once per turn, may deploy Sidious' Lightsaber or a [Coruscant] Naboo site from Reserve Deck; reshuffle. [Immune to Alter.]",
-    "testingText": "I'm Sending My Apprentice",
-    "destiny": 4.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_44",
-    "title": "An Inkling Of Its Destructive Potential",
-    "slug": "an-inkling-of-its-destructive-potential",
-    "slugWithSetName": "an-inkling-of-its-destructive-potential-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "gameText": "Deploy on table. Once per game, may [upload] a [Set 9] Epic Event. During your deploy phase, if Krennic on Death Star, may flip Set Your Course For Alderaan (flip back at end of turn). (Immune to Alter.)",
-    "testingText": "An Inkling Of Its Destructive Power (ERRATA)",
-    "destiny": 4.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_9",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_45",
-    "title": "Shield Gate",
-    "slug": "shield-gate",
-    "slugWithSetName": "shield-gate-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "DEVICE",
-    "cardTypes": [
-      "DEVICE"
-    ],
-    "lore": "",
-    "gameText": "Deploy on Scarif system. If a starship was just lost from here or opponent just Force drained here, opponent may draw destiny. Add 1 for each Scarif location opponent occupies. If total destiny > 8, Shield Gate 'blown away' (place out of play).",
-    "testingText": "Shield Gate (ERRATA)",
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_16",
-        "count": 1
-      },
-      {
-        "icon": "DEVICE",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_46",
-    "title": "On The Verge Of Greatness",
-    "slug": "on-the-verge-of-greatness",
-    "slugWithSetName": "on-the-verge-of-greatness-playtesting",
-    "side": "DARK",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, Commence Primary Ignition, and Shield Gate. \nFor remainder of game, you may not deploy characters of ability > 4 (except Vader). Vader is power +2 and he (or a Star Destroyer he is piloting) may make a regular move to a battle just initiated. \nWhile this side up, once per turn, may [download] a site (or Imperial trooper) to Scarif. \nFlip this card if Krennic or Tarkin on Scarif and Death Star orbiting Scarif.",
-    "testingText": "On The Verge Of Greatness (ERRATA)",
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_16",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ],
-    "isFrontOfDoubleSidedCard": true
-  },
-  {
-    "cardId": "501_46_BACK",
-    "title": "Taking Control Of The Weapon",
-    "slug": "taking-control-of-the-weapon",
-    "slugWithSetName": "taking-control-of-the-weapon-playtesting",
-    "side": "DARK",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "While this side up, your Force generation is +2 for each 'blown away' Scarif site. Tarkin Doctrine is immune to Alter and, when it initiates Force loss, may take any one card into hand from Force Pile. Once per turn, if opponent's character just lost from your site, may place it out of play unless opponent loses 1 Force. Tarkin adds 3 to total of Commence Primary Ignition. \nFlip this card if you have no leaders on Scarif. \nPlace this card out of play if Shield Gate not on table or if Death Star has been 'blown away.'",
-    "testingText": "Taking Control Of The Weapon (ERRATA)",
-    "destiny": 7.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_16",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_48",
-    "title": "There They Are!",
-    "slug": "there-they-are",
-    "slugWithSetName": "there-they-are-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_LOST",
-    "lore": "When unexplained droid losses are detected, a Droid Control Ship can call in reinforcements in seconds.",
-    "gameText": "USED: Take a non-unique battle droid, non-unique droid starfighter, or Battle Droid Reinforcements into hand from Reserve Deck; reshuffle.LOST: Break cover of and capture opponent's Undercover spy at same site as your battle droid. [Immune to Sense]",
-    "testingText": "There They Are! (V)",
-    "destiny": 5.0,
-    "icons": [
-      {
-        "icon": "THEED_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_5",
-    "title": "Nevarro",
-    "slug": "nevarro",
-    "slugWithSetName": "nevarro-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SYSTEM",
-    "testingText": "Nevarro",
-    "locationDarkSideGameText": "Your non-[Independent] starships deploy +1 here.",
-    "locationLightSideGameText": "Your [Independent] starships deploy -1 here.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "MUDHORN",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_52",
-    "title": "A Jedi",
-    "slug": "a-jedi",
-    "slugWithSetName": "a-jedi-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "RESTRICTED_2",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED",
-    "gameText": "Once per game, if Luke is on table when you play this Interrupt, may return it to hand. Take Grogu or R2-D2 into hand from Reserve Deck; reshuffle. OR If a battle just initiated at same site as Grogu, move Luke there from an adjacent site. OR If Grogu and Luke in battle, add one battle destiny.",
-    "testingText": "A Jedi",
-    "destiny": 5.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_59",
-    "title": "Luke With Lightsaber",
-    "slug": "luke-with-lightsaber",
-    "slugWithSetName": "luke-with-lightsaber-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "REBEL"
-    ],
-    "lore": "'I've taken care of everything.'",
-    "gameText": "Permanent weapon is •Luke's Lightsaber (may target a character or creature for free; draw two destiny; target 'hit,' and its forfeit = 0, if total destiny > defense value). If Luke has not fired a weapon this turn, he is immune to attrition.",
-    "testingText": "Luke With Lightsaber (V)",
-    "deployCost": 6.0,
-    "destiny": 1.0,
-    "power": 6.0,
-    "ability": 6.0,
-    "forfeit": 8.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "PREMIUM",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "REBEL",
-        "count": 1
-      },
-      {
-        "icon": "PERMANENT_WEAPON",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "personas": [
-      "LUKE"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_6",
-    "title": "Nevarro: Nevarro City",
-    "slug": "nevarro-nevarro-city",
-    "slugWithSetName": "nevarro-nevarro-city-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Nevarro: Nevarro City",
-    "locationDarkSideGameText": "Moff Gideon deploys -1 here.",
-    "locationLightSideGameText": "Din, Grogu, Cara Dune, Greef and IG-11 are power and forfeit +1 here.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "MUDHORN",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "NEVARRO_CITY_SITE"
-    ]
-  },
-  {
-    "cardId": "501_60",
-    "title": "Guri",
-    "slug": "guri",
-    "slugWithSetName": "guri-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "DROID"
-    ],
-    "lore": "Human-replica droid. Programmed to function as Xizor's personal bodyguard and assassin. Black Sun agent. Cost 9 million credits. Worth every decicred.",
-    "gameText": "[Pilot] 2. While Guri and Xizor present at same site, Force drain +1 here and Xizor may not be targeted by weapons (unless Guri 'hit'). While your [Reflections II] objective on table, draws one battle destiny if unable to otherwise and immune to attrition < 5",
-    "testingText": "Guri (V)",
-    "deployCost": 4.0,
-    "destiny": 2.0,
-    "power": 6.0,
-    "ability": 0.0,
-    "forfeit": 6.0,
-    "armor": 5.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "REFLECTIONS_II",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "DROID",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "PRESENCE",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "ASSASSIN",
-      "BODYGUARD",
-      "BLACK_SUN_AGENT",
-      "FEMALE"
-    ],
-    "modelTypes": [
-      "ASSASSIN"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_61",
-    "title": "Information Exchange",
-    "slug": "information-exchange",
-    "slugWithSetName": "information-exchange-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "'Chisa nyooda ishaley. Kun Jabba neguda len malta.' 'Ikkit ui! Yobbit, yobbit. Nelan tui ke bada.'",
-    "gameText": "Deploy on table. Black Sun agents are defense value +1 and forfeit +1. Once per turn, if you just deployed an information broker, may exchange the top card of Force Pile with any one card in hand. [Reflections II] Emperor deploys -1 and moves for free. [Immune to Alter.]",
-    "testingText": "Information Exchange (V)",
-    "destiny": 5.0,
-    "icons": [
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "REFLECTIONS_II",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_62",
-    "title": "Rystall",
-    "slug": "rystall",
-    "slugWithSetName": "rystall-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Musician. Raised by Ortolans. Grew up on the streets of Coruscant. Rescued from the Black Sun crime cartel by Lando Calrissian.",
-    "gameText": "Power and forfeit +2 at a Coruscant site. Once per turn, if you just deployed a Black Sun agent to same site, may retrieve 1 Force. If opponent's [Maintenance] card just deployed here, it may not battle for remainder of turn.",
-    "testingText": "Rystall (V)",
-    "deployCost": 2.0,
-    "destiny": 3.0,
-    "power": 1.0,
-    "ability": 2.0,
-    "forfeit": 3.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "FEMALE",
-      "MUSICIAN"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_63",
-    "title": "Endless Legions",
-    "slug": "endless-legions",
-    "slugWithSetName": "endless-legions-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED",
-    "lore": "",
-    "gameText": "If your stormtroopers occupy three battleground and/or Rebel Base locations, choose: Draw three cards from Force Pile, then place two cards from hand on Force Pile. OR Once per game, if you just lost a non-[Maintenance] stormtrooper, take it into hand.",
-    "testingText": "Endless Legions",
-    "destiny": 4.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_64",
-    "title": "Welcome Home, Lord Tyranus",
-    "slug": "welcome-home-lord-tyranus",
-    "slugWithSetName": "welcome-home-lord-tyranus-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "LOST",
-    "lore": "",
-    "gameText": "If Dooku is your apprentice, choose: [Upload] Petranaki Arena or The Works. OR If Dooku and Sidious on table, cancel Sense. OR Once per game, if Darth Tyranus in battle at a site and you are about to draw a card for battle destiny, instead use his ability number.",
-    "testingText": "Welcome Home, Lord Tyranus",
-    "destiny": 6.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_65",
-    "title": "Coruscant",
-    "slug": "coruscant",
-    "slugWithSetName": "coruscant-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SYSTEM",
-    "testingText": "Coruscant (V)",
-    "locationDarkSideGameText": "Invisible Hand is hyperspeed +3 when moving to or from here. Your [Episode I] pilots deploy -1 here.",
-    "locationLightSideGameText": "If Invisible Hand controls this system, Menace Fades is suspended.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_66",
-    "title": "This Deal Is Getting Worse All The Time",
-    "slug": "this-deal-is-getting-worse-all-the-time",
-    "slugWithSetName": "this-deal-is-getting-worse-all-the-time-playtesting",
-    "side": "DARK",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "Deploy one Cloud City battleground site and [Cloud City] I'm Sorry. For remainder of game, you may not deploy Admiral's Orders. During your control phase, your Lando may make a regular move. While this side up, once per turn, may [upload] Cloud City Occupation, Dark Deal, Vader's Bounty, or [Special Edition] Bespin. Flip this card if you control 3 Bespin locations and opponent controls fewer than 3 Bespin locations.",
-    "testingText": "This Deal Is Getting Worse All The Time (V)",
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "PREMIUM",
-        "count": 1
-      },
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ],
-    "isFrontOfDoubleSidedCard": true,
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_66_BACK",
-    "title": "Pray I Don't Alter It Any Further",
-    "slug": "pray-i-dont-alter-it-any-further",
-    "slugWithSetName": "pray-i-dont-alter-it-any-further-playtesting",
-    "side": "DARK",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "While this side up, Sense and Alter may not be played. Force drain bonuses at same site as your Lando or your Lobot may not be canceled. While Vader at a Bespin location, game text of Admiral's Orders is canceled and opponent loses 3 Force if a character was just frozen. If your alien/Imperial pair in battle, your total battle destiny is +2. If your Lando in battle, may target a character present with him; target is forfeit = 0. Flip this card if opponent controls more Bespin locations than you.",
-    "testingText": "Pray I Don't Alter It Any Further (V)",
-    "destiny": 7.0,
-    "icons": [
-      {
-        "icon": "PREMIUM",
-        "count": 1
-      },
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_67",
-    "title": "I'm Sorry",
-    "slug": "im-sorry",
-    "slugWithSetName": "im-sorry-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "'I'm sorry, too.'",
-    "gameText": "If your [Cloud City] objective on table, deploy on table. Elis Helrot, Stunning Leader, and Surreptitious Glance may not be played. Once per turn, may [download] an interior Cloud City site. Your unique (•) characters with printed forfeit < 5 are forfeit +2 (limit +2). [Immune to Alter.]",
-    "testingText": "I'm Sorry (V)",
-    "destiny": 5.0,
-    "icons": [
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "TATOOINE",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_68",
-    "title": "Garindan, Imperial Spy",
-    "slug": "garindan-imperial-spy",
-    "slugWithSetName": "garindan-imperial-spy-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "IMPERIAL",
-      "ALIEN"
-    ],
-    "lore": "Long-nosed, male Kubaz from Kubindi. Spy. Squealed on Obi-Wan and Luke outside Docking Bay 94. Works for Jabba the Hutt or the highest bidder. Not particularly brave.",
-    "gameText": "Imperials move to here for free using landspeed. If present at a site and not 'hit,' may place Garindan in Used Pile to cancel a just drawn weapon destiny targeting your other character here (or to make an Undercover spy here lost).",
-    "testingText": "Garindan, Imperial Spy",
-    "deployCost": 2.0,
-    "destiny": 4.0,
-    "power": 1.0,
-    "ability": 1.0,
-    "forfeit": 3.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "IMPERIAL",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SPY"
-    ],
-    "personas": [
-      "GARINDAN"
-    ],
-    "species": "KUBAZ"
-  },
-  {
-    "cardId": "501_69",
-    "title": "Cloud City: Dining Room",
-    "slug": "cloud-city-dining-room",
-    "slugWithSetName": "cloud-city-dining-room-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Cloud City: Dining Room (V)",
-    "locationDarkSideGameText": "Vader, your Boba Fett, and your Lando deploy -1 here. May [download] Lando here.",
-    "locationLightSideGameText": "Chewie, Han, Leia, and your Lando move to here using landspeed for free.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "MOBILE",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "CLOUD_CITY_LOCATION"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_7",
-    "title": "Razor Crest: Cold Storage",
-    "slug": "razor-crest-cold-storage",
-    "slugWithSetName": "razor-crest-cold-storage-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Razor Crest: Cold Storage",
-    "locationDarkSideGameText": "You must first use 3 Force to deploy a character here.",
-    "locationLightSideGameText": "Once per game, may retrieve Din into hand.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "MOBILE",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP_SITE",
-        "count": 1
-      },
-      {
-        "icon": "MUDHORN",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_70",
-    "title": "Mara Jade, The Emperor's Hand",
-    "slug": "mara-jade-the-emperors-hand",
-    "slugWithSetName": "mara-jade-the-emperors-hand-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "IMPERIAL",
-      "ALIEN"
-    ],
-    "lore": "Spy. Ordered to kill Luke Skywalker. Assumed the identity of a dancer named 'Arica' in order to sneak into Jabba's palace.",
-    "gameText": "Functions as your apprentice. Battle destiny draws may not be added here. May [download] Mara Jade's Lightsaber here. If you just won a battle here, may retrieve a card with 'Mara' in game text. Immune to Rebel Barrier and attrition < 4 (< 5 if Luke on table).",
-    "testingText": "Mara Jade, The Emperor's Hand (V)",
-    "deployCost": 5.0,
-    "destiny": 1.0,
-    "power": 4.0,
-    "ability": 5.0,
-    "forfeit": 7.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "PREMIUM",
-        "count": 1
-      },
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "IMPERIAL",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "FEMALE",
-      "SITH_APPRENTICE",
-      "SPY"
-    ],
-    "personas": [
-      "MARA_JADE"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_71",
-    "title": "Ommni Box & It's Worse",
-    "slug": "ommni-box-its-worse",
-    "slugWithSetName": "ommni-box-its-worse-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_LOST",
-    "gameText": "USED: For remainder of turn, you lose no Force to the following cards on table (if any): A Good Blaster At Your Side, No Disintegrations!, Stardust, and They Will Be Lost And Confused. OR Cancel Blast The Door, Kid! or It Could Be Worse. (Immune to It's A Hit!) OR Shuffle any player's Reserve Deck or Lost Pile. LOST: If opponent just lost a battle, they lose 2 Force.",
-    "testingText": "Ommni Box & It's Worse (V)",
-    "destiny": 5.0,
-    "icons": [
-      {
-        "icon": "REFLECTIONS_II",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_26",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "isComboCard": true,
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_72",
-    "title": "Bespin",
-    "slug": "bespin",
-    "slugWithSetName": "bespin-playtesting",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SYSTEM",
-    "testingText": "Bespin (V)",
-    "locationDarkSideGameText": "Executor may not move from here unless Vader aboard. If your [Cloud City] objective on table, Executor deploys -8 here.",
-    "locationLightSideGameText": "You lose no more than 2 Force to Cloud City Occupation. May not be converted.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_23",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_73",
-    "title": "Lieutenant Dopheld Mitaka",
-    "slug": "lieutenant-dopheld-mitaka",
-    "slugWithSetName": "lieutenant-dopheld-mitaka-set-8",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "SET_8",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "FIRST_ORDER"
-    ],
-    "gameText": "[Pilot] 2. Deploys -2 to (and forfeit -2 at) same location as Kylo. During your deploy phase, may relocate Kylo from here to same site as a Resistance Agent.",
-    "testingText": "Lieutenant Dopheld Mitaka (ERRATA)",
-    "deployCost": 2.0,
-    "destiny": 2.0,
-    "power": 2.0,
-    "ability": 2.0,
-    "forfeit": 5.0,
-    "landspeed": 1.0,
-    "politics": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_8",
-        "count": 1
-      },
-      {
-        "icon": "FIRST_ORDER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_VII",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_8",
-    "title": "Mandalorian Covert",
-    "slug": "mandalorian-covert",
-    "slugWithSetName": "mandalorian-covert-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "DIAMOND_1",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "testingText": "Mandalorian Covert",
-    "locationDarkSideGameText": "You may not deploy characters here (except Jango, Boba, and Jodo Kast). Immune to No Escape.",
-    "locationLightSideGameText": "You may not deploy characters here (except Mandalorians). May not be deployed to Ahch_To, Bespin, Dagobah, Endor, Hoth, Jakku, or Tatooine.",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "UNDERGROUND",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_9",
-    "title": "Weapons Are Part Of My Religion",
-    "slug": "weapons-are-part-of-my-religion",
-    "slugWithSetName": "weapons-are-part-of-my-religion-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "gameText": "Deploy on table. While armed, Din draws one battle destiny if unable to otherwise, and is immune to Disarmed and attrition <4. Once per turn, may [download] one unique character weapon or device on your Mandalorian; reshuffle. If Din about to leave table, your cards on him go to Used Pile. [Immune to Alter.]",
-    "testingText": "Weapons Are Part Of My Religion",
-    "destiny": 2.0,
-    "icons": [
-      {
-        "icon": "VIRTUAL_SET_24",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_90",
-    "title": "Battle Station Plans",
-    "slug": "battle-station-plans",
-    "slugWithSetName": "battle-station-plans-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "501_91",
-    "title": "Massassi Base Operations",
-    "slug": "massassi-base-operations",
-    "slugWithSetName": "massassi-base-operations-playtesting",
-    "side": "LIGHT",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "testingText": "Massassi Base Operations (V)",
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_91_BACK",
-    "title": "One In A Million",
-    "slug": "one-in-a-million",
-    "slugWithSetName": "one-in-a-million-playtesting",
-    "side": "LIGHT",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "testingText": "One In A Million (V)",
-    "destiny": 7.0,
-    "icons": [
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_92",
-    "title": "Death Star",
-    "slug": "death-star",
-    "slugWithSetName": "death-star-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SYSTEM",
-    "testingText": "Death Star (V)",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "hyperspeed": 1.0,
-    "icons": [
-      {
-        "icon": "MOBILE",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_93",
-    "title": "Attack Run",
-    "slug": "attack-run",
-    "slugWithSetName": "attack-run-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EPIC_EVENT",
-    "cardTypes": [
-      "EPIC_EVENT"
-    ],
-    "testingText": "Attack Run (V)",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "EPIC_EVENT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_94",
-    "title": "Rebel Strike Team",
-    "slug": "rebel-strike-team",
-    "slugWithSetName": "rebel-strike-team-playtesting",
-    "side": "LIGHT",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "Deploy Endor system and Rebel Landing Site.For remainder of game, opponent activates no Force at your Endor system (unless their [En] objective on table).You may not deploy cards with ability except for Rebels, Ewoks, and Rebel starships.While this side up, once per turn may deploy one Explosive Charge or [Endor] Epic Event to Bunker; reshuffle. You may not Force drain on Endor unless your Ewok or [En] Han present.Flip this card if bunker 'blown away.'",
-    "testingText": "Rebel Strike Team (V)",
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "ENDOR",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ],
-    "isFrontOfDoubleSidedCard": true,
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_94_BACK",
-    "title": "Garrison Destroyed",
-    "slug": "garrison-destroyed",
-    "slugWithSetName": "garrison-destroyed-playtesting",
-    "side": "LIGHT",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "While this side up, Force drains where you have a scout or Ewok may not be modified or canceled by opponent. Scouts are immune to attrition < 4. If bunker \"blown away:\" during your control phase, opponent loses 1 Force for each Endor site you occupy with [Endor] Chewie, [Endor] Han, or [Endor] Leia and, once during each of your draw phases, may retrieve an [Endor] RebelFlip this card if opponent controls Bunker.",
-    "testingText": "Garrison Destroyed (V)",
-    "destiny": 7.0,
-    "icons": [
-      {
-        "icon": "ENDOR",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "501_95",
-    "title": "Deactivate The Shield Generator",
-    "slug": "deactivate-the-shield-generator",
-    "slugWithSetName": "deactivate-the-shield-generator-playtesting",
-    "side": "LIGHT",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "PLAYTESTING",
-    "rarity": "V",
-    "cardCategory": "EPIC_EVENT",
-    "cardTypes": [
-      "EPIC_EVENT"
-    ],
-    "gameText": "Deploy on Bunker if your [V25] objective on table. Once during your control phase, if you control Bunker (or have at least 5 more power than opponent there), may attempt to 'blow away' Bunker:Charges! Come On, Come On!: Draw destiny. Add 3 to total for each Explosive Charge on Bunker.Move! Move! Move!: If total destiny > 8, your characters here may relocate to Back Door for free. Bunker is 'blown away,' opponent loses 4 Force (may not be reduced).",
-    "testingText": "Deactivate The Shield Generator (V)",
-    "deployCost": 0.0,
-    "destiny": 0.0,
-    "icons": [
-      {
-        "icon": "ENDOR",
-        "count": 1
-      },
-      {
-        "icon": "VIRTUAL_SET_25",
-        "count": 1
-      },
-      {
-        "icon": "EPIC_EVENT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
   },
   {
     "cardId": "5_1",
@@ -132995,9 +130336,9 @@
       "NO_HYPERDRIVE"
     ],
     "personas": [
-      "VADERS_CUSTOM_TIE",
+      "BLACK_2",
       "BLACK_3",
-      "BLACK_2"
+      "VADERS_CUSTOM_TIE"
     ],
     "modelTypes": [
       "TIE_ADVANCED_X1",
@@ -142992,8 +140333,8 @@
     "rarity": "UR",
     "cardCategory": "CHARACTER",
     "cardTypes": [
-      "IMPERIAL",
-      "DARK_JEDI_MASTER"
+      "DARK_JEDI_MASTER",
+      "IMPERIAL"
     ],
     "lore": "Sith Master and leader of Galactic Empire. Dark side mentor to Darth Vader. Controls the Empire by instilling fear in its subjects and greed in its governors.",
     "gameText": "Never deploys or moves (even aboard a starship or vehicle) to a site opponent occupies. Where present, subtracts 3 from attempts to cross Vader over. Once per turn, you may take Force Lightning into hand from Reserve Deck; reshuffle. Immune to attrition.",
