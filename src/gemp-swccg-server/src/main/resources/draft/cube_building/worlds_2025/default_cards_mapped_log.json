@@ -1,11 +1,11 @@
 {
-  "input_file": "cube_building/worlds_2025/default_cards.csv",
-  "timestamp": "2025-12-14T15:20:46.452773",
+  "input_file": "src/gemp-swccg-server/src/main/resources/draft/cube_building/worlds_2025/default_cards.csv",
+  "timestamp": "2025-12-15T09:57:25.917410",
   "total_rows": 180,
   "total_cells": 180,
   "non_empty_cells": 180,
   "successful_matches": 171,
-  "multiple_matches": 61,
+  "multiple_matches": 60,
   "missing_cards": [
     {
       "row": 13,
@@ -75,9 +75,8 @@
     {
       "row": 1,
       "card_name": "Bespin",
-      "message": "Multiple cards found, using first match: 501_72",
+      "message": "Multiple cards found, using first match: 5_164",
       "alternatives": [
-        "501_72",
         "5_164",
         "5_76"
       ]
@@ -89,15 +88,6 @@
       "alternatives": [
         "14_111",
         "14_48"
-      ]
-    },
-    {
-      "row": 6,
-      "card_name": "Cloud City: Dining Room",
-      "message": "Multiple cards found, using first match: 501_69",
-      "alternatives": [
-        "501_69",
-        "5_168"
       ]
     },
     {
@@ -142,7 +132,6 @@
       "message": "Multiple cards found, using first match: 2_143",
       "alternatives": [
         "2_143",
-        "501_92",
         "7_117"
       ]
     },
@@ -372,15 +361,6 @@
       ]
     },
     {
-      "row": 99,
-      "card_name": "Coruscant: Jedi Council Chamber",
-      "message": "Multiple cards found, using first match: 12_76",
-      "alternatives": [
-        "12_76",
-        "501_164"
-      ]
-    },
-    {
       "row": 105,
       "card_name": "Dantooine",
       "message": "Multiple cards found, using first match: 1_122",
@@ -549,6 +529,15 @@
       "alternatives": [
         "13_32",
         "13_77"
+      ]
+    },
+    {
+      "row": 157,
+      "card_name": "Scarif",
+      "message": "Multiple cards found, using first match: 209_23",
+      "alternatives": [
+        "209_23",
+        "216_13"
       ]
     },
     {
