@@ -174,6 +174,8 @@ public class CardDataExporter {
             cardIds = paths
                 .filter(Files::isRegularFile)
                 .filter(p -> p.toString().endsWith(".java"))
+                // Exclude playtesting set (set501)
+                .filter(p -> !p.toString().contains("/set501/") && !p.toString().contains("\\set501\\"))
                 .map(p -> p.getFileName().toString())
                 .map(this::extractCardId)
                 .filter(Objects::nonNull)

@@ -7,7 +7,7 @@ card IDs using the card_blueprint_database.json file. It handles both single
 and multi-column CSV files.
 
 Usage:
-    ./bin/map_card_names_to_ids <input.csv> [output.json]
+    ./bin/map_card_names_to_ids <input.csv> [output.json] [database.json]
 
 Output:
     - Single column CSV: Array of card IDs
@@ -255,9 +255,13 @@ def process_csv(csv_path, slug_to_id, slug_with_set_to_id):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: ./bin/map_card_names_to_ids <input.csv> [output.json]")
+        print("Usage: ./bin/map_card_names_to_ids <input.csv> [output.json] [database.json]")
         print("\nMaps card names from a CSV file to GEMP-SWCCG card IDs.")
-        print("\nThe script will look for card_blueprint_database.json in:")
+        print("\nArguments:")
+        print("  input.csv     - CSV file with card names")
+        print("  output.json   - (Optional) Output file path")
+        print("  database.json - (Optional) Custom card database path")
+        print("\nIf no database is specified, the script will look for card_blueprint_database.json in:")
         print("  - src/gemp-swccg-cards/src/main/resources/")
         print("\nOutputs:")
         print("  - <output>.json - Array of card IDs (or array of arrays for multi-column)")
@@ -271,22 +275,38 @@ def main():
         sys.exit(1)
 
     # Determine output path
-    if len(sys.argv) >= 3:
+    if len(sys.argv) >= 3 and not sys.argv[2].endswith('.json'):
         output_path = Path(sys.argv[2])
-    else:
+    elif len(sys.argv) >= 3 and Path(sys.argv[2]).exists():
+        # sys.argv[2] is a path to an existing file, assume it's database if it exists
         output_path = csv_path.parent / f"{csv_path.stem}_mapped.json"
+    else:
+        if len(sys.argv) >= 3:
+            output_path = Path(sys.argv[2])
+        else:
+            output_path = csv_path.parent / f"{csv_path.stem}_mapped.json"
 
     # Determine log path
     log_path = output_path.parent / f"{output_path.stem}_log.json"
 
-    # Find card database
-    script_dir = Path(__file__).parent
-    project_root = script_dir.parent
-    database_path = project_root / "src" / "gemp-swccg-cards" / "src" / "main" / "resources" / "card_blueprint_database.json"
+    # Determine database path
+    if len(sys.argv) >= 4:
+        # Third parameter is database path
+        database_path = Path(sys.argv[3])
+    elif len(sys.argv) >= 3 and sys.argv[2].endswith('.json') and 'card_blueprint_database' in sys.argv[2]:
+        # Second parameter looks like a database path
+        database_path = Path(sys.argv[2])
+        output_path = csv_path.parent / f"{csv_path.stem}_mapped.json"
+    else:
+        # Use default database path
+        script_dir = Path(__file__).parent
+        project_root = script_dir.parent
+        database_path = project_root / "src" / "gemp-swccg-cards" / "src" / "main" / "resources" / "card_blueprint_database.json"
 
     if not database_path.exists():
         print(f"Error: Card database not found at: {database_path}")
         print("\nPlease run: ./bin/gemp export-cards src/gemp-swccg-cards/src/main/resources/card_blueprint_database.json")
+        print("Or specify a custom database path as the third argument.")
         sys.exit(1)
 
     print(f"Loading card database from: {database_path}")
