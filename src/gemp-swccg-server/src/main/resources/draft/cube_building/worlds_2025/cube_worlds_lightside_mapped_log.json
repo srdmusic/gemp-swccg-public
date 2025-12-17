@@ -1,11 +1,11 @@
 {
   "input_file": "src/gemp-swccg-server/src/main/resources/draft/cube_building/worlds_2025/cube_worlds_lightside.csv",
-  "timestamp": "2025-12-15T11:27:38.467783",
+  "timestamp": "2025-12-17T16:37:59.190125",
   "total_rows": 300,
   "total_cells": 1800,
   "non_empty_cells": 328,
   "successful_matches": 313,
-  "multiple_matches": 11,
+  "multiple_matches": 7,
   "missing_cards": [
     {
       "row": 11,
@@ -135,26 +135,6 @@
       ]
     },
     {
-      "row": 40,
-      "column": 1,
-      "card_name": "Dash Rendar",
-      "message": "Multiple cards found, using first match: 10_6",
-      "alternatives": [
-        "10_6",
-        "601_42"
-      ]
-    },
-    {
-      "row": 56,
-      "column": 1,
-      "card_name": "Harc Seff",
-      "message": "Multiple cards found, using first match: 601_262",
-      "alternatives": [
-        "601_262",
-        "7_20"
-      ]
-    },
-    {
       "row": 73,
       "column": 1,
       "card_name": "Mace Windu (V)",
@@ -185,16 +165,6 @@
       ]
     },
     {
-      "row": 146,
-      "column": 1,
-      "card_name": "Millennium Falcon",
-      "message": "Multiple cards found, using first match: 1_143",
-      "alternatives": [
-        "1_143",
-        "601_142"
-      ]
-    },
-    {
       "row": 228,
       "column": 1,
       "card_name": "Alter (V)",
@@ -212,16 +182,6 @@
       "alternatives": [
         "12_57",
         "4_48"
-      ]
-    },
-    {
-      "row": 281,
-      "column": 1,
-      "card_name": "Run Luke, Run!",
-      "message": "Multiple cards found, using first match: 101_3",
-      "alternatives": [
-        "101_3",
-        "601_57"
       ]
     }
   ],

@@ -8731,6 +8731,102 @@
     "species": "KLATOOINIAN"
   },
   {
+    "cardId": "13_100",
+    "title": "You've Never Won A Race?",
+    "slug": "youve-never-won-a-race",
+    "slugWithSetName": "youve-never-won-a-race-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "'Not even finished?'",
+    "gameText": "Plays on table. Unless opponent occupies three battlegrounds, I Did It! is suspended. If Sebulba's Podracer on table, your Force loss from Boonta Eve Podrace is reduced by X, where X = number of battlegrounds you occupy.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "13_51",
+    "title": "A Useless Gesture",
+    "slug": "a-useless-gesture",
+    "slugWithSetName": "a-useless-gesture-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "Imperial officers aboard the Death Star considered the Rebellion a minor threat.",
+    "gameText": "Plays on table. Cancels Don't Underestimate Our Chances. When opponent plays an Interrupt and has 3 smugglers on table, if that Interrupt is place in Lost Pile, place it out of play. Ketwol may exchange a docking bay only once per game.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "13_52",
+    "title": "Allegations Of Corruption",
+    "slug": "allegations-of-corruption",
+    "slugWithSetName": "allegations-of-corruption-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "With the Republic groaning under the weight of its own bureaucracy, senators accuse, bicker, and fight to further their own agendas.",
+    "gameText": "Plays on table. Once per game, may use 1 Force to stack one Interrupt just played here. To play any new Interrupt of the same name, player must first stack it here and use +1 Force for each Interrupt in stack, even if Interrupt is normally free.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      },
+      {
+        "icon": "GRABBER",
+        "count": 1
+      }
+    ]
+  },
+  {
     "cardId": "13_53",
     "title": "Aurra Sing's Blaster Rifle",
     "slug": "aurra-sings-blaster-rifle",
@@ -8766,6 +8862,34 @@
     ],
     "personas": [
       "AURRAS_BLASTER_RIFLE"
+    ]
+  },
+  {
+    "cardId": "13_54",
+    "title": "Battle Order",
+    "slug": "battle-order",
+    "slugWithSetName": "battle-order-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "Administration of the Imperial installation on Endor includes coordination of troops on the ground and tight security provided by the Empire's space fleet.",
+    "gameText": "Plays on table. Unless Battle Plan on table, for either player to initiate a Force drain, that player must first use 3 Force unless that player occupies a battleground site and a battleground system.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      }
     ]
   },
   {
@@ -9027,6 +9151,34 @@
     ]
   },
   {
+    "cardId": "13_61",
+    "title": "Come Here You Big Coward",
+    "slug": "come-here-you-big-coward",
+    "slugWithSetName": "come-here-you-big-coward-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "'Chewie! Come here!'",
+    "gameText": "Plays on table. While you occupy a battleground and opponent occupies less than two battlegrounds, cancel: Asteroid Sanctuary, opponent's Force drains at non-battleground locations, and opponent's Force retrieval.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      }
+    ]
+  },
+  {
     "cardId": "13_62",
     "title": "Conduct Your Search",
     "slug": "conduct-your-search",
@@ -9050,6 +9202,34 @@
       },
       {
         "icon": "EFFECT",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "13_63",
+    "title": "Crossfire",
+    "slug": "crossfire",
+    "slugWithSetName": "crossfire-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "Scout walker pilots are trained to set up a deadly heavy fire zone. This tactic can be disrupted by enemy weapons fire.",
+    "gameText": "Plays on table. S-foils and Maneuvering Flaps are suspended where you have either a weapon present or a starship (or vehicle) with maneuver > 3 present.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
         "count": 1
       }
     ]
@@ -9118,6 +9298,38 @@
     ]
   },
   {
+    "cardId": "13_66",
+    "title": "Do They Have A Code Clearance?",
+    "slug": "do-they-have-a-code-clearance",
+    "slugWithSetName": "do-they-have-a-code-clearance-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "Imperial officers are always on the lookout for Rebel espionage.",
+    "gameText": "Plays on table. If opponent just retrieved Force using an Interrupt or Utinni Effect, you may place that card here. Opponent's Force retrieval is reduced by X, where X = number of cards here.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "GRABBER",
+        "count": 1
+      }
+    ]
+  },
+  {
     "cardId": "13_67",
     "title": "Energy Walls",
     "slug": "energy-walls",
@@ -9141,6 +9353,38 @@
       },
       {
         "icon": "EFFECT",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "13_68",
+    "title": "Fanfare",
+    "slug": "fanfare",
+    "slugWithSetName": "fanfare-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "The Boonta Eve crowds are always looking for new and exciting developments at every Podrace.",
+    "gameText": "Plays on table. Cancels Order To Engage and Scramble. Once per game you may take any Immediate Effect into hand from Reserve Deck; reshuffle. While opponent occupies no battleground systems, Staging Areas is suspended.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
         "count": 1
       },
       {
@@ -9225,6 +9469,34 @@
       "JABBA"
     ],
     "species": "HUTT"
+  },
+  {
+    "cardId": "13_72",
+    "title": "Leave Them To Me",
+    "slug": "leave-them-to-me",
+    "slugWithSetName": "leave-them-to-me-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "'I will deal with them myself.'",
+    "gameText": "Plays on table. While you occupy a Subjugated planet location, operatives are forfeit = 0, operatives do not add to Force drains, and your Force drains may not be reduced. (Subjugated planet is defined on the Objective card Local Uprising.)",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      }
+    ]
   },
   {
     "cardId": "13_73",
@@ -9468,6 +9740,34 @@
     ]
   },
   {
+    "cardId": "13_78",
+    "title": "No Escape",
+    "slug": "no-escape",
+    "slugWithSetName": "no-escape-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "Jabba's influence is not easily ignored. Neither are his voracious and vile appetites. Even Jedi soon learn this lesson.",
+    "gameText": "Plays on table. At opponent's ◇ site where opponent's creature present, you may deploy without presence or Force icons, and your Force generation there is +1.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      }
+    ]
+  },
+  {
     "cardId": "13_79",
     "title": "No Match For A Sith",
     "slug": "no-match-for-a-sith",
@@ -9527,6 +9827,34 @@
       },
       {
         "icon": "EPISODE_I",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "13_81",
+    "title": "Oppressive Enforcement",
+    "slug": "oppressive-enforcement",
+    "slugWithSetName": "oppressive-enforcement-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "The Imperial fleet keeps a tight grip on the systems under its control. Abuses and excesses by local citizens are not tolerated.",
+    "gameText": "Plays on table. Your Immediate Effects may play for free. Whenever opponent cancels your card with Sense or Alter, place that canceled card in Used Pile.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
         "count": 1
       }
     ]
@@ -9592,6 +9920,34 @@
     ]
   },
   {
+    "cardId": "13_84",
+    "title": "Resistance",
+    "slug": "resistance",
+    "slugWithSetName": "resistance-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "Oola had to choose between giving in to Jabba's constant advances or resisting him and inciting his wrath.",
+    "gameText": "Plays on table. While you occupy at least 3 battlegrounds or opponent occupies no battlegrounds, you lose no more than 2 Force from each Force drain or 'insert' card.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      }
+    ]
+  },
+  {
     "cardId": "13_85",
     "title": "Sando Aqua Monster",
     "slug": "sando-aqua-monster",
@@ -9619,6 +9975,34 @@
       },
       {
         "icon": "EPISODE_I",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "13_86",
+    "title": "Secret Plans",
+    "slug": "secret-plans",
+    "slugWithSetName": "secret-plans-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "Imperial computer systems are equipped with complex algorithms designed to prevent access by unauthorized users.",
+    "gameText": "Plays on table. If opponent is about to retrieve X Force, opponent must first use X Force or that retrieval is canceled. (X is equal to the full amount of Force allowed to be retrieved, regardless of the number of cards in opponent's Lost Pile.)",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
         "count": 1
       }
     ]
@@ -9696,6 +10080,34 @@
       },
       {
         "icon": "EPISODE_I",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "13_90",
+    "title": "There Is No Try",
+    "slug": "there-is-no-try",
+    "slugWithSetName": "there-is-no-try-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "'Always with you what cannot be done.'",
+    "gameText": "Plays on table. Sense and Alter are now Lost Interrupts. When any player makes a destiny draw for Sense or Alter, and that destiny draw is successful, that player loses 2 Force.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
         "count": 1
       }
     ]
@@ -9836,6 +10248,70 @@
     ]
   },
   {
+    "cardId": "13_95",
+    "title": "Weapon Of A Sith",
+    "slug": "weapon-of-a-sith",
+    "slugWithSetName": "weapon-of-a-sith-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "In order to use his double-bladed weapon Maul trained under Darth Sidious for years.",
+    "gameText": "Plays on table. For opponent to steal a weapon from target character using a non-[Episode I] card, must first draw destiny. If destiny +1 > target's ability, weapon stolen. Otherwise, attempt fails and stealing card is placed out of play.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "13_96",
+    "title": "We'll Let Fate-a Decide, Huh?",
+    "slug": "well-let-fate-a-decide-huh",
+    "slugWithSetName": "well-let-fate-a-decide-huh-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "Qui-Gon was not one to leave the success of an elaborate plan to chance.",
+    "gameText": "Plays on table. Cancels Frozen Assets and Beggar. Each player may play only one card with 'sabacc' in title each turn. You may cancel an opponent's card with 'sabacc' in title by losing 1 Force from hand.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ]
+  },
+  {
     "cardId": "13_97",
     "title": "Where Are Those Droidekas?!",
     "slug": "where-are-those-droidekas",
@@ -9863,6 +10339,66 @@
       },
       {
         "icon": "EPISODE_I",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "13_98",
+    "title": "Wipe Them Out, All Of Them",
+    "slug": "wipe-them-out-all-of-them",
+    "slugWithSetName": "wipe-them-out-all-of-them-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "Darth Sidious' command was merciless and direct. He left no room for misinterpretation.",
+    "gameText": "Plays on table. While opponent has a non-unique alien or non-unique starfighter in battle, opponent may not draw more than two battle destiny.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ]
+  },
+  {
+    "cardId": "13_99",
+    "title": "You Cannot Hide Forever",
+    "slug": "you-cannot-hide-forever",
+    "slugWithSetName": "you-cannot-hide-forever-reflections-iii",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "REFLECTIONS_III",
+    "rarity": "PM",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "'Give yourself to the dark side. It is the only way you can save your friends.'",
+    "gameText": "Plays on table. If an 'insert' card was just inserted or revealed, it is canceled.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
         "count": 1
       }
     ]
@@ -17249,6 +17785,39 @@
     ]
   },
   {
+    "cardId": "200_100",
+    "title": "You Cannot Hide Forever",
+    "slug": "you-cannot-hide-forever-v",
+    "slugWithSetName": "you-cannot-hide-forever-v-set-0",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_0",
+    "rarity": "V",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "'Give yourself to the dark side. It is the only way you can save your friends.'",
+    "gameText": "Plays on table. Cancels 'insert' cards just revealed. We'll Handle This may target only Undercover spies and 5D6-RA-7. Unless Deep Hatred on table, opponent may use only one combat card per turn.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
     "cardId": "200_101",
     "title": "A Day Long Remembered",
     "slug": "a-day-long-remembered-v",
@@ -20052,6 +20621,70 @@
       "FEMALE",
       "LEADER",
       "SPY"
+    ]
+  },
+  {
+    "cardId": "200_95",
+    "title": "Fanfare",
+    "slug": "fanfare-v",
+    "slugWithSetName": "fanfare-v-set-0",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_0",
+    "rarity": "V",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "The Boonta Eve crowds are always looking for new and exciting developments at every Podrace.",
+    "gameText": "Plays on table. Ice Storm, Lost In The Wilderness, Order To Engage, Sandwhirl and Scramble are canceled. Once per game, may take an Immediate Effect into hand from Reserve Deck; reshuffle. While opponent occupies no battleground systems, Staging Areas is suspended.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
+    "cardId": "200_99",
+    "title": "Vote Of No Confidence",
+    "slug": "vote-of-no-confidence",
+    "slugWithSetName": "vote-of-no-confidence-set-0",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_0",
+    "rarity": "V",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "gameText": "Plays on table. While you have 14 or fewer cards in hand, opponent may not remove cards from your hand. Once per turn (even at start of turn), may suspend a [Coruscant] Political Effect for remainder of turn. If Grimtaash just played, may place a card from hand in Used Pile.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
     ]
   },
   {
@@ -28480,6 +29113,35 @@
     "species": "MIRIALAN"
   },
   {
+    "cardId": "213_13",
+    "title": "Failure At The Cave",
+    "slug": "failure-at-the-cave-v",
+    "slugWithSetName": "failure-at-the-cave-v-set-13",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_13",
+    "rarity": "V",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "'That place is strong with the dark side of the Force. A domain of evil it is. In you must go.'",
+    "gameText": "Plays on table. Stone Pile is canceled. While a Jedi Test on table, opponent may not reduce your Force drains. Unless opponent has deployed a battleground, Domain Of Evil may not modify destiny draws more than once per battle.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
     "cardId": "213_14",
     "title": "Planetary Rings",
     "slug": "planetary-rings",
@@ -31013,6 +31675,39 @@
         "count": 1
       }
     ]
+  },
+  {
+    "cardId": "216_5",
+    "title": "Crossfire",
+    "slug": "crossfire-v",
+    "slugWithSetName": "crossfire-v-set-16",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_16",
+    "rarity": "V",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "Scout walker pilots are trained to set up a deadly heavy fire zone. This tactic can be disrupted by enemy weapons fire.",
+    "gameText": "Plays on table. S-foils and Maneuvering Flaps are suspended where you have either a weapon present or a starship (or vehicle) with maneuver > 3 present. Your Force generation at opponent's Endor system may not be canceled unless opponent's [Endor] objective on table.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_16",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
   },
   {
     "cardId": "216_6",
@@ -33716,6 +34411,38 @@
       "BIB"
     ],
     "species": "TWILEK"
+  },
+  {
+    "cardId": "220_2",
+    "title": "Drop!",
+    "slug": "drop-v",
+    "slugWithSetName": "drop-v-set-20",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_20",
+    "rarity": "V",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "gameText": "Plays on table. At end of a turn, if opponent has 15 or more cards in hand, may use 3 Force to shuffle all but 9 (random selection) into Used Pile. If Grimtaash or Thrown Back just targeted your hand, may reveal 3 cards from hand; they cannot be removed or checked for duplicates.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
   },
   {
     "cardId": "220_3",
@@ -36892,6 +37619,43 @@
     "hasVirtualSuffix": true
   },
   {
+    "cardId": "223_26",
+    "title": "We'll Let Fate-a Decide, Huh?",
+    "slug": "well-let-fate-a-decide-huh-v",
+    "slugWithSetName": "well-let-fate-a-decide-huh-v-set-23",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_23",
+    "rarity": "V",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "Qui-Gon was not one to leave the success of an elaborate plan to chance.",
+    "gameText": "Plays on table. Cancels Beggar, Colo Claw Fish, Frozen Assets, Goo Nee Tay, and Revolution. Each player may only play one card with 'sabacc' in title each turn. You may lose 1 Force to cancel a card with 'sabacc' in title.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
     "cardId": "223_27",
     "title": "Young Fool",
     "slug": "young-fool-v",
@@ -36953,6 +37717,43 @@
     "hasVirtualSuffix": true
   },
   {
+    "cardId": "223_29",
+    "title": "You've Never Won A Race?",
+    "slug": "youve-never-won-a-race-v",
+    "slugWithSetName": "youve-never-won-a-race-v-set-23",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_23",
+    "rarity": "V",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "'Not even finished?'",
+    "gameText": "Plays on table. You lose no Force to Boonta Eve Podrace. Unless opponent occupies three battlegrounds, I Did It! is suspended. Double Agent may not target opponent's Undercover spies. If an Undercover spy is about to be lost, place it out of play instead.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "EPISODE_I",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
+  },
+  {
     "cardId": "223_3",
     "title": "Zuckuss With Snare Rifle",
     "slug": "zuckuss-with-snare-rifle",
@@ -37008,6 +37809,38 @@
       "ZUCKUSS"
     ],
     "species": "GAND"
+  },
+  {
+    "cardId": "223_7",
+    "title": "A Useless Gesture & Death Star Sentry",
+    "slug": "a-useless-gesture-death-star-sentry",
+    "slugWithSetName": "a-useless-gesture-death-star-sentry-set-23",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_23",
+    "rarity": "V",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "gameText": "Plays on table. In order to play an Interrupt from Lost Pile, opponent must first stack it here (if possible) and use +1 Force for each card here, even if Interrupt is normally free. For opponent to deploy a character, starship, or vehicle for free (except by that card's own game text), opponent must first use 2 Force. Opponent must first use X Force to deploy a non-unique card (except a Jawa) to a location, where X = the number of copies of that card at that location.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "VIRTUAL_DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      },
+      {
+        "icon": "GRABBER",
+        "count": 1
+      }
+    ],
+    "isComboCard": true
   },
   {
     "cardId": "223_8",
@@ -38352,6 +39185,39 @@
         "count": 1
       }
     ]
+  },
+  {
+    "cardId": "225_3",
+    "title": "Come Here You Big Coward",
+    "slug": "come-here-you-big-coward-v",
+    "slugWithSetName": "come-here-you-big-coward-v-set-25",
+    "side": "DARK",
+    "uniqueness": "UNIQUE",
+    "expansionSet": "SET_25",
+    "rarity": "V",
+    "cardCategory": "DEFENSIVE_SHIELD",
+    "cardTypes": [
+      "DEFENSIVE_SHIELD"
+    ],
+    "lore": "'Chewie! Come here!'",
+    "gameText": "Plays on table. Sectors are not battlegrounds. While you occupy a battleground and opponent occupies less than two battlegrounds, cancels: Asteroid Sanctuary, opponent's Force drains at non-battleground locations, and opponent's Force retrieval.",
+    "deployCost": 0,
+    "destiny": 0,
+    "icons": [
+      {
+        "icon": "REFLECTIONS_III",
+        "count": 1
+      },
+      {
+        "icon": "VIRTUAL_SET_25",
+        "count": 1
+      },
+      {
+        "icon": "DEFENSIVE_SHIELD",
+        "count": 1
+      }
+    ],
+    "hasVirtualSuffix": true
   },
   {
     "cardId": "225_30",
@@ -50781,5011 +51647,6 @@
     "personas": [
       "LANDO"
     ]
-  },
-  {
-    "cardId": "601_1",
-    "title": "Knowledge And Defense",
-    "slug": "knowledge-and-defense",
-    "slugWithSetName": "knowledge-and-defense-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "STARTING",
-    "lore": "'A Jedi uses the Force for knowledge and defense, never for attack.'",
-    "gameText": "Deploy on table with up to 15 cards from outside your deck face-down under here. Four times per game, may play a card from here (as if from hand). Unless canceling your Interrupt, opponent may not play Recoil In Fear until the end of your first turn.",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "DAGOBAH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_10",
-    "title": "Jabba's Haven",
-    "slug": "jabbas-haven",
-    "slugWithSetName": "jabbas-haven-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Jabba has won the service of many of his guards and other henchbeings through games of chance.",
-    "gameText": "Deploy on table. May deploy Nal Hutta from Reserve Deck; reshuffle. Once per game, may retrieve an alien or [Independent] starship into hand. While Fearless And Inventive on table, once per battle, may lose 1 force; your battle destiny modifiers affect your total battle destiny instead. [Immune to Alter.]",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "601_11",
-    "title": "Jabba's Sail Barge",
-    "slug": "jabbas-sail-barge",
-    "slugWithSetName": "jabbas-sail-barge-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "VEHICLE",
-    "cardTypes": [
-      "VEHICLE"
-    ],
-    "cardSubtype": "TRANSPORT",
-    "lore": "Ubrikkian sail barge. Custom built for Jabba with an armored hull and weaponry. Top speed of 100 kph. Used by the Hutt crimelord on his many trips to Mos Eisley.",
-    "gameText": "Deploys only on Tatooine. May add 1 driver and 8 passengers. Scum And Villainy may deploy aboard. During your deploy phase, may deploy one Jabba, Pote, or Passenger Deck aboard from Reserve Deck; reshuffle. Immune to attrition < 6.",
-    "deployCost": 3,
-    "destiny": 3,
-    "power": 4,
-    "forfeit": 5,
-    "armor": 5,
-    "landspeed": 2,
-    "pilotCapacity": 1,
-    "passengerCapacity": 8,
-    "icons": [
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_3",
-        "count": 1
-      },
-      {
-        "icon": "VEHICLE",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BARGE"
-    ],
-    "personas": [
-      "JABBAS_SAIL_BARGE"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_117",
-    "title": "Information Exchange",
-    "slug": "information-exchange",
-    "slugWithSetName": "information-exchange-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Chisa nyooda ishaley. Kun Jabba neguda len Malta.' 'Ikkit ui! Yobbit, yobbiy. Nelan tui ke bada.'",
-    "gameText": "Deploy on Imperial City.  While your [Reflections II] Objective on table, Scum And Villainy may deploy here and, if a Black Sun agent present, may not be canceled.  Once per turn, may use 1 Force to deploy a non-weapon card with 'Black Sun' or 'Xizor' in lore (except Emperor) from Reserve Deck; reshuffle.",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "DEPLOYS_ON_SITE"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_12",
-    "title": "Jabba's Space Cruiser",
-    "slug": "jabbas-space-cruiser",
-    "slugWithSetName": "jabbas-space-cruiser-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "CAPITAL",
-    "lore": "Flying fortress of Jabba Desilijic Tiure. Reaches speeds of 800 kph in atmosphere. The crime lord installed hidden gunports as an unpleasant surprise for would-be pirates.",
-    "gameText": "Deploys and moves like a starfighter. Permanent pilot provides ability of 2. May add 1 alien pilot and 6 passengers. Your [Independent] starships may deploy here as a 'react'. If Jabba here, immune to attrition.",
-    "deployCost": 4,
-    "destiny": 2,
-    "power": 5,
-    "forfeit": 6,
-    "armor": 5,
-    "hyperspeed": 4,
-    "pilotCapacity": 1,
-    "passengerCapacity": 6,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_3",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "INDEPENDENT",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "CRUISER",
-      "SHIP_DOCKING_CAPABILITY"
-    ],
-    "modelTypes": [
-      "UBRIKKIAN_LUXURY_SPACE_YACHT"
-    ],
-    "hasVirtualSuffix": true,
-    "deploysLikeStarfighter": true,
-    "movesLikeStarfighter": true
-  },
-  {
-    "cardId": "601_121",
-    "title": "Twi'lek Advisor",
-    "slug": "twilek-advisor",
-    "slugWithSetName": "twilek-advisor-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_STARTING",
-    "lore": "'He's no Jedi.'",
-    "gameText": "USED: Use 3 Force to deploy a unique (•) alien (for free) from hand or Used Pile; reshuffle. STARTING: Take into hand and/or deploy from Reserve Deck up to three Effects of any kind with 'Jabba' in lore or game text on table from Reserve Deck; reshuffle. Place this Interrupt in Reserve Deck.",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_3",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_13",
-    "title": "Jango Fett, The Assassin",
-    "slug": "jango-fett-the-assassin",
-    "slugWithSetName": "jango-fett-the-assassin-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Trade Federation. Scout.",
-    "gameText": "Adds 3 to the power of anything he pilots. Adds one battle destiny. SD-17 Homing Missile may deploy on (and is a matching weapon for) him, fires for free, and when fired may go to Lost Pile instead. While piloted by two Fetts (unless your [Block 4] objective on table), Slave I is immune to attrition < 9.",
-    "deployCost": 4,
-    "destiny": 1,
-    "power": 4,
-    "ability": 3,
-    "forfeit": 6,
-    "armor": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "DAGOBAH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "ASSASSIN",
-      "SCOUT"
-    ],
-    "personas": [
-      "JANGO_FETT"
-    ]
-  },
-  {
-    "cardId": "601_14",
-    "title": "Kashyyyk: Skyhook Platform",
-    "slug": "kashyyyk-skyhook-platform",
-    "slugWithSetName": "kashyyyk-skyhook-platform-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "locationDarkSideGameText": "May place a card stacked here in owner's Lost Pile to draw two cards from Reserve Deck.",
-    "locationLightSideGameText": "Opponent's Kashyyyk locations are immune to Revolution and Expand The Empire.",
-    "deployCost": 0,
-    "destiny": 0,
-    "icons": [
-      {
-        "icon": "ENDOR",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "601_148",
-    "title": "Shada",
-    "slug": "shada",
-    "slugWithSetName": "shada-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Female spy and thief.",
-    "gameText": "May deploy Shada and [Block 4] No Bargain instead of Xizor with your [Reflections II] Objective.  While that Effect on table, Force loss from your [Reflections II] Objective is +1 and, once per turn, may lose 1 Force to add a battle destiny anywhere.  Immune to attrition < 4.",
-    "deployCost": 4,
-    "destiny": 2,
-    "power": 4,
-    "ability": 4,
-    "forfeit": 6,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 2
-      }
-    ],
-    "keywords": [
-      "FEMALE",
-      "SPY",
-      "THIEF"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_149",
-    "title": "No Bargain",
-    "slug": "no-bargain",
-    "slugWithSetName": "no-bargain-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "'Zeet tu seet. Jabba no tuzindy honkabee.'",
-    "gameText": "Deploy on your [Reflections II] Objective; 'Xizor' on it (and on Guri) is treated as 'Shada'. Non-[Permanent Weapon] alien females are Mistryl and Black Sun agents. You may not deploy cards with ability except Mistryl and [Independent Starship] starships. Mistryl (except Kitik) are power +1 (+2 if unique (*)), and, while Scum And Villainy on table, deploy +1. (Immune to Alter.)",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_15",
-    "title": "Kashyyyk: Slaving Camp Headquarters",
-    "slug": "kashyyyk-slaving-camp-headquarters",
-    "slugWithSetName": "kashyyyk-slaving-camp-headquarters-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "locationDarkSideGameText": "Once per turn, may use 1 Force to deploy a battleground site to Kashyyyk and/or a card with 'Hunting' in title.",
-    "locationLightSideGameText": "Force drain +1 here. If you control with a Wookiee, Trandoshans are deploy +1 to Kashyyyk.",
-    "deployCost": 0,
-    "destiny": 0,
-    "icons": [
-      {
-        "icon": "ENDOR",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "601_150",
-    "title": "Coruscant: Private Platform (Docking Bay)",
-    "slug": "coruscant-private-platform-docking-bay",
-    "slugWithSetName": "coruscant-private-platform-docking-bay-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "locationDarkSideGameText": "If deployed by your [Block 7] objective, may not be separated from Palpatine's Quarters. Your docking bay transit to or from here is free.",
-    "locationLightSideGameText": "All docking bay transit from same site as Insidious Prisoner is free. Your docking bay transit to or from here requires 2 Force.",
-    "deployCost": 0,
-    "destiny": 0,
-    "icons": [
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "DOCKING_BAY"
-    ]
-  },
-  {
-    "cardId": "601_151",
-    "title": "Gardulla The Hutt",
-    "slug": "gardulla-the-hutt",
-    "slugWithSetName": "gardulla-the-hutt-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Well-known as a gambler and a gangster. Gardulla was the former owner of Shmi and Anakin Skywalker before she lost them in a bet to the Toydarian junk dealer, Watto.",
-    "gameText": "During battle, if [Block 4] No Bargain on table, may lose 2 force to cancel a non-[Immune To Sense] interrupt. Once per game during your move phase, may relocate any of your characters here to any site you occupy as a regular move (or vice versa). Immune to attrition < 3.",
-    "deployCost": 3,
-    "destiny": 2,
-    "power": 3,
-    "ability": 3,
-    "forfeit": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "CORUSCANT",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "FEMALE",
-      "GAMBLER",
-      "GANGSTER"
-    ],
-    "species": "HUTT",
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_152",
-    "title": "Prophetess",
-    "slug": "prophetess",
-    "slugWithSetName": "prophetess-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Renowned female psychic. Predictor of doom. Agent for Governor Aryon of Tatooine. Tailed Jabba and his thugs to Docking Bay 94 when they confronted Han Solo.",
-    "gameText": "Deploy -1 and forfeit +3 at a site. Once per turn, may peek at top card of opponent's Reserve Deck or Used Pile; may then shuffle that Reserve Deck or Used Pile. Immune to attrition < 3.",
-    "deployCost": 3,
-    "destiny": 2,
-    "power": 1,
-    "ability": 4,
-    "forfeit": 2,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_1",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "FEMALE"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_153",
-    "title": "Sy Snootles",
-    "slug": "sy-snootles",
-    "slugWithSetName": "sy-snootles-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Pa'lowick Musician. Manager of The Max Rebo Band. Reports on Jabba to Lady Valarian. Bib Fortuna uses her as a double agent, feeding her false information.",
-    "gameText": "Once per turn, may use 1 force to 'court' a male present. That character is power -3 and requires +2 Force to use landspeed for remainder of turn. Once per game, may take Set For Stun, They're Still Coming Through!, or You Want This, Don't You? into hand from reserve deck; reshuffle.",
-    "deployCost": 1,
-    "destiny": 3,
-    "power": 1,
-    "ability": 1,
-    "forfeit": 3,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "FEMALE",
-      "MUSICIAN"
-    ],
-    "species": "PALOWICK",
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_154",
-    "title": "Dark Jedi Lightsaber",
-    "slug": "dark-jedi-lightsaber",
-    "slugWithSetName": "dark-jedi-lightsaber-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "WEAPON",
-    "cardTypes": [
-      "WEAPON"
-    ],
-    "cardSubtype": "CHARACTER",
-    "lore": "Multifaceted jewels focus light into a deadly blade. Projects a meterlong beam of pure energy. A lightsaber is constructed personally by a Jedi as a part of training.",
-    "gameText": "Deploy on Aurra Sing or Sidious. May add 1 to Force drain at an [Episode I] site where present. May target a character or creature for free. Draw two destiny. Add number of Jedi present. Target hit, and its forfeit = 0, if total destiny > defense value.",
-    "destiny": 2,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_5",
-        "count": 1
-      },
-      {
-        "icon": "WEAPON",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "LIGHTSABER"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_155",
-    "title": "Trophy Of A Kill",
-    "slug": "trophy-of-a-kill",
-    "slugWithSetName": "trophy-of-a-kill-legacy",
-    "side": "DARK",
-    "uniqueness": "RESTRICTED_2",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "DEVICE",
-    "cardTypes": [
-      "DEVICE"
-    ],
-    "gameText": "Deploy on Galen, Grievous or your female of ability > 3. Character is immunity to attrition +2 (and power +2 if female). May add 1 to Force drain where present. This device lost if character Disarmed.",
-    "destiny": 6,
-    "icons": [
-      {
-        "icon": "PREMIUM",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "DEVICE",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "DEPLOYS_ON_CHARACTERS"
-    ]
-  },
-  {
-    "cardId": "601_156",
-    "title": "Establish Control",
-    "slug": "establish-control",
-    "slugWithSetName": "establish-control-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Keeping supply routes clear allows rapid distribution of resources to where they are most required.",
-    "gameText": "Deploy on table. Your Force generation is +1 at docking bays you occupy. Your docking bays controlled by opponent are battlegrounds. Once per game, may [download] Corulag or Fondor. If Mobilization Points on table, this Effect lost. [Immune to Alter]",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "CORUSCANT",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_5",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_157",
-    "title": "I've Lost Artoo!",
-    "slug": "ive-lost-artoo",
-    "slugWithSetName": "ive-lost-artoo-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "'WHAAAAAAAAAOOOOW!'",
-    "gameText": "Deploy on table.  If A Sith's Plans not on table, may deploy it from Reserve Deck; reshuffle.  Once per game, may take a device that deploys on a character and/or an Effect with 'skill' in game text into hand from Reserve Deck; reshuffle. Whenever your character leaves table, may place all your devices and Effects on them in Used Pile. (Immune to Alter.)",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_1",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_159",
-    "title": "Ket Maliss",
-    "slug": "ket-maliss",
-    "slugWithSetName": "ket-maliss-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Assassins are highly valued by Jabba the Hutt and other gangsters. Prince Xizor's 'shadow killer,' has unknown but undoubtably lethal business in Mos Eisley.",
-    "gameText": "Deploy on table.  Unless Emperor Palpatine on table, Black Sun agents are defense value +1 and forfeit +2.  Once per turn, may use 1 Force to deploy one Beedo, Dannik Jerriko, Greedo, Hem Dazon, Reegesk, or a docking bay from Reserve Deck; reshuffle. (Immune to Alter.)",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_1",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_16",
-    "title": "Kashyyyk: Wookiee Slaving Camp",
-    "slug": "kashyyyk-wookiee-slaving-camp",
-    "slugWithSetName": "kashyyyk-wookiee-slaving-camp-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "locationDarkSideGameText": "Jabba's Sail Barge may deploy here.  If your Trandoshan present, Force Drain +1 here.",
-    "locationLightSideGameText": "While a Trandoshan present and you have no Wookiees on Kashyyyk, you may not modify or cancel opponent's force drains here.",
-    "deployCost": 0,
-    "destiny": 0,
-    "icons": [
-      {
-        "icon": "ENDOR",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "601_160",
-    "title": "Stunning Leader",
-    "slug": "stunning-leader",
-    "slugWithSetName": "stunning-leader-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED",
-    "lore": "Stormtroopers are trained to stun, not kill, priority targets in order to split enemy forces and hold the leaders for interrogation. Stun effects wear off, requiring efficient action.",
-    "gameText": "Use 1 Force to deploy (or retrieve) a Mistryl from Reserve Deck; reshuffle. OR If your Mistryl present during battle, use 1 Force to reveal the top three cards of opponent's Reserve Deck. Add the destiny number of the highest-destiny male revealed (if any) to your total power. Replace revealed cards.",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "A_NEW_HOPE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_17",
-    "title": "Ket Maliss, Shadow Killer",
-    "slug": "ket-maliss-shadow-killer",
-    "slugWithSetName": "ket-maliss-shadow-killer-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Assassins are highly valued by Jabba the Hutt and other gangsters. Ket Maliss, Prince Xizor's 'shadow killer,' has unknown but undoubtedly lethal business in Mos Eisley. Assassin.",
-    "gameText": "Adds 2 to power of anything he pilots. While with opponent's character of ability > 2, Ket Maliss is power +1 and defense value + 2 and draws one battle destiny if unable to otherwise. Whenever opponent's character was lost from same site, opponent loses 1 Force.",
-    "deployCost": 3,
-    "destiny": 3,
-    "power": 4,
-    "ability": 2,
-    "forfeit": 4,
-    "landspeed": 1,
-    "politics": 0,
-    "defenseValue": 3,
-    "icons": [
-      {
-        "icon": "A_NEW_HOPE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "ASSASSIN"
-    ]
-  },
-  {
-    "cardId": "601_177",
-    "title": "4-LOM With Concussion Rifle",
-    "slug": "4-lom-with-concussion-rifle",
-    "slugWithSetName": "4-lom-with-concussion-rifle-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "DROID"
-    ],
-    "lore": "Accomplished thief and information broker. Modified by Jabba to be an effective bounty hunter. The Hutt often teams 4-LOM with other hired killers.",
-    "gameText": "Permanent weapon is •4-LOM's Concussion Rifle (may target a character for free; target is power -1 until end of turn). Once per turn, may place a card from hand on bottom of Used Pile to draw top card from Reserve Deck.",
-    "deployCost": 3,
-    "destiny": 3,
-    "power": 2,
-    "ability": 0,
-    "forfeit": 3,
-    "armor": 3,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "PREMIUM",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "DROID",
-        "count": 1
-      },
-      {
-        "icon": "PERMANENT_WEAPON",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BOUNTY_HUNTER",
-      "INFORMATION_BROKER",
-      "THIEF"
-    ],
-    "personas": [
-      "_4_LOM"
-    ],
-    "modelTypes": [
-      "PROTOCOL"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_178",
-    "title": "5D6-RA-7 (Fivedesix)",
-    "slug": "5d6-ra-7-fivedesix",
-    "slugWithSetName": "5d6-ra-7-fivedesix-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "DROID"
-    ],
-    "lore": "Aide to Admiral Motti's staff. Foul-tempered and vindictive. Feared by other droids. A spy for the ISB. Secretly investigates Imperial officers whose loyalties are in question.",
-    "gameText": "[Pilot] 2. Power +1 while with your leader. If at a Scomp link when opponent draws destiny of: 1-3, you may activate 1 Force; 4-6, you may draw top card of your Reserve Deck; 0 or 7, you may retrieve 1 Force.",
-    "deployCost": 4,
-    "destiny": 2,
-    "power": 2,
-    "ability": 0,
-    "forfeit": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "DROID",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SPY"
-    ],
-    "modelTypes": [
-      "SERVANT"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_179",
-    "title": "Admiral Motti",
-    "slug": "admiral-motti",
-    "slugWithSetName": "admiral-motti-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "IMPERIAL"
-    ],
-    "lore": "Senior Navy Commander of Death Star. Believes in technology. Ridiculed the Force. Ambitious leader. Promoted due to support of New Order, not military skills. Hates Vader.",
-    "gameText": "[Pilot] 2. Chiraneau may not modify your Force drains. Kuat Drive Yards is immune to Alter. Unless your Senate on table, unique (•) Star Destroyers are power +2 and immunity to attrition +1. Once per game, may [download] non-[Set 0] Kuat Drive Yards.",
-    "deployCost": 3,
-    "destiny": 1,
-    "power": 3,
-    "ability": 3,
-    "forfeit": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_1",
-        "count": 1
-      },
-      {
-        "icon": "IMPERIAL",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "ADMIRAL",
-      "COMMANDER",
-      "LEADER"
-    ],
-    "personas": [
-      "MOTTI"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_18",
-    "title": "Lightsaber Deficiency",
-    "slug": "lightsaber-deficiency",
-    "slugWithSetName": "lightsaber-deficiency-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED",
-    "lore": "'Ah... Uh...'",
-    "gameText": "Take Ghhhk or Molator into hand from Reserve Deck; reshuffle. OR Cancel Corellian Retort, Gift Of The Mentor, or Jedi Presence. OR Retrieve Protocol Failure into hand. OR If a lightsaber was just 'swung' during battle, it may not target again this battle.",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "HOTH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_180",
-    "title": "Arica",
-    "slug": "arica",
-    "slugWithSetName": "arica-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "IMPERIAL",
-      "ALIEN"
-    ],
-    "lore": "Mara Jade posed as a dancer at Jabba's Palace in an attempt to complete her master's task and kill Luke. Musician. Spy. Unable to convince Jabba to take her on his skiff.",
-    "gameText": "Power +1 on Tatooine. Once per game, during your move phase, may relocate Arica to Luke's location. During your control phase, if present at a battleground (and Luke is not), may retrieve 1 Force. Immune to Undercover and attrition < 4.",
-    "deployCost": 5,
-    "destiny": 1,
-    "power": 4,
-    "ability": 5,
-    "forfeit": 7,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "REFLECTIONS_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "IMPERIAL",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "FEMALE",
-      "MUSICIAN",
-      "SPY"
-    ],
-    "personas": [
-      "MARA_JADE"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_181",
-    "title": "Count Dooku",
-    "slug": "count-dooku",
-    "slugWithSetName": "count-dooku-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "DARK_JEDI_MASTER"
-    ],
-    "lore": "Serennoian leader. Trade Federation.",
-    "gameText": "Deploys -1 if Sidious (or Insidious Prisoner) on table. Power +1 for each Jedi here. May be targeted by Force Lightning. Once per game, if opponent just initiated battle here, may [upload] Force Lightning or Force Push. Immune to attrition < 6 (<8 if with a Jedi).",
-    "deployCost": 6,
-    "destiny": 1,
-    "power": 5,
-    "ability": 7,
-    "forfeit": 8,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_9",
-        "count": 1
-      },
-      {
-        "icon": "DARK_JEDI_MASTER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "SEPARATIST",
-        "count": 1
-      }
-    ],
-    "personas": [
-      "DOOKU"
-    ]
-  },
-  {
-    "cardId": "601_182",
-    "title": "DS-61-5",
-    "slug": "ds-61-5",
-    "slugWithSetName": "ds-61-5-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "IMPERIAL"
-    ],
-    "gameText": "[Pilot] 2, 3: Black 5. While piloting Black 5, it is maneuver +1 and he draws one battle destiny if not able to otherwise. If at opponent's system, instead of Force draining here, may take any one card into hand from Force Pile; reshuffle.",
-    "deployCost": 2,
-    "destiny": 2,
-    "power": 2,
-    "ability": 2,
-    "forfeit": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "IMPERIAL",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BLACK_SQUADRON"
-    ]
-  },
-  {
-    "cardId": "601_183",
-    "title": "Droideka",
-    "slug": "droideka",
-    "slugWithSetName": "droideka-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "DROID"
-    ],
-    "gameText": "Permanent weapon is Twin Blaster Cannons (may target a character or vehicle; draw destiny; add 2 if targeting a vehicle; if destiny > defense value, target hit and you may activate 1 Force). While with another destroyer droid at a site, adds one battle destiny.",
-    "deployCost": 3,
-    "destiny": 2,
-    "power": 3,
-    "ability": 0,
-    "forfeit": 3,
-    "armor": 3,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_9",
-        "count": 1
-      },
-      {
-        "icon": "DROID",
-        "count": 1
-      },
-      {
-        "icon": "PERMANENT_WEAPON",
-        "count": 1
-      },
-      {
-        "icon": "PRESENCE",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "SEPARATIST",
-        "count": 1
-      }
-    ],
-    "modelTypes": [
-      "DESTROYER"
-    ]
-  },
-  {
-    "cardId": "601_184",
-    "title": "General Veers",
-    "slug": "general-veers",
-    "slugWithSetName": "general-veers-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "IMPERIAL"
-    ],
-    "lore": "General Maximillian Veers is the model of Imperial Army officer. Cunning, loyal and ruthlessly efficient leader. In charge of the ground assault troops in Vader's forces.",
-    "gameText": "[Pilot] 3. While piloting an AT-AT, draws two battle destiny if unable to otherwise. While piloting a combat vehicle, its immunity to attrition is +2.",
-    "deployCost": 3,
-    "destiny": 1,
-    "power": 3,
-    "ability": 3,
-    "forfeit": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "HOTH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_2",
-        "count": 1
-      },
-      {
-        "icon": "IMPERIAL",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "GENERAL",
-      "LEADER"
-    ],
-    "personas": [
-      "VEERS"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_185",
-    "title": "IG-88",
-    "slug": "ig-88",
-    "slugWithSetName": "ig-88-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "DROID"
-    ],
-    "lore": "Bounty hunter. Went berserk upon activation. Murdered all designers at Holowan Mechanicals. IG-88's outstanding 'dismantle on sight' warrant ignored by Darth Vader.",
-    "gameText": "[Pilot] 2. May use two weapons. Once per turn, if escorting a captive, may take any one card from Force Pile into hand; reshuffle. May lose 1 Force to cancel a just drawn weapon destiny targeting IG-88. Immune to attrition < 5.",
-    "deployCost": 4,
-    "destiny": 1,
-    "power": 4,
-    "ability": 0,
-    "forfeit": 5,
-    "armor": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "DAGOBAH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_2",
-        "count": 1
-      },
-      {
-        "icon": "DROID",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "PRESENCE",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 2
-      }
-    ],
-    "keywords": [
-      "BOUNTY_HUNTER"
-    ],
-    "personas": [
-      "IG88"
-    ],
-    "modelTypes": [
-      "ASSASSIN"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_186",
-    "title": "Maarek Stele, The Emperor's Reach",
-    "slug": "maarek-stele-the-emperors-reach",
-    "slugWithSetName": "maarek-stele-the-emperors-reach-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "IMPERIAL"
-    ],
-    "lore": "Leader",
-    "gameText": "[Pilot] 3. Once per game may [upload] a TIE Defender. While piloting, opponent may not cancel or substitute battle destiny draws here. While piloting an Imperial starfighter, it is maneuver +2 and he draws on battle destiny if unable to otherwise.",
-    "deployCost": 3,
-    "destiny": 1,
-    "power": 3,
-    "ability": 3,
-    "forfeit": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "IMPERIAL",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "LEADER"
-    ],
-    "personas": [
-      "MAAREK_STELE"
-    ]
-  },
-  {
-    "cardId": "601_187",
-    "title": "Sith Probe Droid",
-    "slug": "sith-probe-droid",
-    "slugWithSetName": "sith-probe-droid-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "DROID"
-    ],
-    "lore": "Patrol droids utilized by the Sith. Each droid has several multispectral imaging devices and a communications package. Used by Maul to track down Amidala.",
-    "gameText": "When drawn for destiny during a battle or duel involving a Dark Jedi, destiny +2. During your move phase, may use 2 Force to relocate a Dark Jedi (with any captives they are escorting) to same site; place this droid in Used Pile.",
-    "deployCost": 1,
-    "destiny": 3,
-    "power": 1,
-    "ability": 0,
-    "forfeit": 2,
-    "maneuver": 3,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "TATOOINE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_5",
-        "count": 1
-      },
-      {
-        "icon": "DROID",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "modelTypes": [
-      "PROBE",
-      "RECON"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_188",
-    "title": "Vigo",
-    "slug": "vigo",
-    "slugWithSetName": "vigo-legacy",
-    "side": "DARK",
-    "uniqueness": "RESTRICTED_3",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "One of Xizor's hand-picked lieutenants. Ascended as Black Sun agent from gangster to manager. Earned title of Vigo from old Tionese for 'nephew'.",
-    "gameText": "Deploys -1 to Coruscant. While present with Xizor, forfeit +2 and opponents spies may not deploy to same non-battleground site. Once per game, may use 1 Force to [download] a non-war room battleground planet site (or system) not already on table.",
-    "deployCost": 3,
-    "destiny": 3,
-    "power": 3,
-    "ability": 2,
-    "forfeit": 4,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "REFLECTIONS_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BLACK_SUN_AGENT",
-      "GANGSTER"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_189",
-    "title": "Ysanne Isard",
-    "slug": "ysanne-isard",
-    "slugWithSetName": "ysanne-isard-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "IMPERIAL"
-    ],
-    "lore": "Female ISB leader. Spy.",
-    "gameText": "Power +3 while defending a battle with a spy. While with a non-frozen captive, attrition against opponent everywhere is +2. During your move phase, may use 1 Force to 'break cover' of an Undercover spy here. Immune to attrition < 3.",
-    "deployCost": 4,
-    "destiny": 3,
-    "power": 2,
-    "ability": 4,
-    "forfeit": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "A_NEW_HOPE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "IMPERIAL",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "FEMALE",
-      "LEADER",
-      "SPY"
-    ]
-  },
-  {
-    "cardId": "601_19",
-    "title": "Mercenary Pilot",
-    "slug": "mercenary-pilot",
-    "slugWithSetName": "mercenary-pilot-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Smugglers. Candidates who resent authority often abandon Imperial academies to sell their piloting skills to criminals. Will work for any high paying crime syndicate.",
-    "gameText": "[Pilot] 2. Adds 2 to power of anything he drives. When driving a transport vehicle, adds one battle destiny. Once per turn, while piloting at a cloud sector, adds one battle destiny during battle at a related exterior site. [Reflection III] Another Pathetic Lifeform ignores your non-unique aliens.",
-    "deployCost": 2,
-    "destiny": 2,
-    "power": 2,
-    "ability": 1,
-    "forfeit": 3,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "PREMIUM",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SMUGGLER"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_190",
-    "title": "A Day Long Remembered",
-    "slug": "a-day-long-remembered",
-    "slugWithSetName": "a-day-long-remembered-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "'It has seen the end of Kenobi and will soon see the end of the Rebellion.'",
-    "gameText": "Deploy on table. All immunity to attrition is -3. You may not fire [Permanent Weapon] weapons. If opponent just lost a Jedi or a battle, they lose 1 Force. During your draw phase, lose 1 Force or place this Effect in Used Pile.",
-    "destiny": 6,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_191",
-    "title": "Aratech Corporation",
-    "slug": "aratech-corporation",
-    "slugWithSetName": "aratech-corporation-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Aratech Corporation sent support staff to various Imperial outposts and garrisons. Gave advanced briefings and training to biker scout personnel.",
-    "gameText": "Deploy on table. AT-STs and speeder bikes are power and forfeit +1. During your deploy phase, may reveal an AT-ST or Speeder Bike from hand to [upload] a unique (•) [Endor] Imperial pilot of ability < 3 (or vice versa) and deploy both simultaneously. (Immune to Alter.)",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "ENDOR",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_3",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_192",
-    "title": "Image Of The Dark Lord",
-    "slug": "image-of-the-dark-lord",
-    "slugWithSetName": "image-of-the-dark-lord-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Vader's hologram exacts loyalty from his legions.",
-    "gameText": "Deploy on a planet site. Opponent's Force drains are -1 here (-2 if Vader controls an adjacent site).",
-    "destiny": 6,
-    "icons": [
-      {
-        "icon": "HOTH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_2",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "DEPLOYS_ON_SITE",
-      "HOLOGRAM"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_193",
-    "title": "Kuat Drive Yards",
-    "slug": "kuat-drive-yards",
-    "slugWithSetName": "kuat-drive-yards-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Company that produces current generation of Star Destroyers, as well as Nebulon-B Frigates. Ship yards are extremely well defended.",
-    "gameText": "Deploy on table. Unique (•) Imperial-class Star Destroyers draw one battle destiny if unable to otherwise and are immune to attrition < 4. During your deploy phase, may use 2 Force to [download] a battleground system. We're In Attack Position Now is canceled. Immune to Alter.",
-    "destiny": 3,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_194",
-    "title": "You'll Be Dead!",
-    "slug": "youll-be-dead",
-    "slugWithSetName": "youll-be-dead-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "gameText": "Deploy on table. Non-lightsaber weapons carried by your non-Dark Jedi characters may not be stolen. During your control phase, opponent loses 1 Force for each battleground site you control with a non-[Permanent Weapon] blaster present. Imperial Artillery is a Lost Interrupt. Immune to Alter.",
-    "destiny": 3,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "601_195",
-    "title": "Alter",
-    "slug": "alter",
-    "slugWithSetName": "alter-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_LOST",
-    "lore": "Those who can use the Force are able to manipulate the objects around them to their advantage.",
-    "gameText": "USED: Cancel Sense. LOST: Target an Effect, Political Effect, or Utinni Effect, and one of your characters on table. Draw destiny. If destiny < character's ability, target Effect is canceled (you lose no Force to Do, Or Do Not). (Immune to opponent's Objective.)",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "CORUSCANT",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_196",
-    "title": "Alter",
-    "slug": "alter",
-    "slugWithSetName": "alter-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_LOST",
-    "lore": "A user of the Force can subjugate the will of others or alter the environment at a distance, as when Vader 'disciplines' those whose lack of faith disturbs him.",
-    "gameText": "USED: Cancel Sense. LOST: Target an Effect, Political Effect, or Utinni Effect, and one of your characters on table. Draw destiny. If destiny < character's ability, target Effect is canceled (you lose no Force to Do, Or Do Not). (Immune to opponent's Objective.)",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_197",
-    "title": "Combat Readiness",
-    "slug": "combat-readiness",
-    "slugWithSetName": "combat-readiness-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "STARTING",
-    "lore": "Imperial troops prepared for quick deployment to seize valuable terrain.",
-    "gameText": "If your starting location was a system, [download] a related site (must be a battleground if the system is a non-battleground or Endor) with < 3 [Dark Side Force] icons and up to three Effects that are always immune to Alter. Place this Interrupt in Lost Pile.",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "ENDOR",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_198",
-    "title": "Defensive Fire",
-    "slug": "defensive-fire",
-    "slugWithSetName": "defensive-fire-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED",
-    "lore": "275 gunners manning 60 turbolaser batteries provide a wide firing arc. Even so, asteroids are a challenge due to the sluggish recharge rates of the high-powered blasters.",
-    "gameText": "If opponent just initiated battle, immediately fire a non-lightsaber, non-[Permanent Weapon] weapon present (for free and each weapon destiny is +2). That weapon may fire again this battle.",
-    "destiny": 3,
-    "icons": [
-      {
-        "icon": "DAGOBAH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_2",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_199",
-    "title": "I Can't Shake Him!",
-    "slug": "i-cant-shake-him",
-    "slugWithSetName": "i-cant-shake-him-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED",
-    "lore": "'You've picked one up... watch it!'",
-    "gameText": "For remainder of turn, opponent must first use 1 Force to fire a weapon and opponent's starship weapon destiny draws are -1. OR During opponent's deploy phase, [download] an Imperial of ability < 3 (except an admiral) aboard your starship.",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_1",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_2",
-    "title": "Boba Fett, Prepared Hunter",
-    "slug": "boba-fett-prepared-hunter",
-    "slugWithSetName": "boba-fett-prepared-hunter-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Boba Fett's Mandalorian armor was so versatile that his opponents never knew what to expect. Bounty hunter. Assassin.",
-    "gameText": "Adds 3 to power of anything he pilots. May be revealed from hand to take Slave I from Reserve Deck; reshuffle;  and deploy both simultaneously. While piloting Slave 1, it is maneuver +3 and hyperspeed + 1. Draws one battle destiny if unable to otherwise (if present at a site may add a destiny to total power instead).",
-    "deployCost": 4,
-    "destiny": 2,
-    "power": 4,
-    "ability": 3,
-    "forfeit": 7,
-    "armor": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "ASSASSIN",
-      "BOUNTY_HUNTER"
-    ],
-    "personas": [
-      "BOBA_FETT"
-    ]
-  },
-  {
-    "cardId": "601_20",
-    "title": "Mercenary Slavers",
-    "slug": "mercenary-slavers",
-    "slugWithSetName": "mercenary-slavers-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Hunters who track down escaped Wookiee slaves and report on their location. The Empire and Trandoshans pay a high price for that kind of information.",
-    "gameText": "Unless your [Reflections II] objective on table, deploy on a site. Your smugglers and gangsters are slavers. Slavers are forfeit +2 and weapon destinies targeting them (or starships they pilot) are -1. 'Trandoshan' on your sites may be treated as 'slaver.' [Immune to Alter.]",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "DEPLOYS_ON_SITE"
-    ]
-  },
-  {
-    "cardId": "601_200",
-    "title": "Imbalance & Kintan Strider",
-    "slug": "imbalance-kintan-strider",
-    "slugWithSetName": "imbalance-kintan-strider-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED",
-    "gameText": "Cancel Blaster Proficiency. [Immune to Sense] OR If opponent just retrieved Force, opponent must lose X Force, where X = one-half the number of cards retrieved (round down) to a minimum of 1. OR If opponent's character just lost, lose 1 Force to retrieve the topmost character of ability < 6 (except a [Maintenance] or [Permanent Weapon] card) in your Lost Pile into hand.",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "DAGOBAH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "isComboCard": true
-  },
-  {
-    "cardId": "601_201",
-    "title": "Surface Defense",
-    "slug": "surface-defense",
-    "slugWithSetName": "surface-defense-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_STARTING",
-    "lore": "'The battle station is heavily shielded and carries a firepower greater than half the starfleet.'",
-    "gameText": "USED: Use 1 Force to [download] an Effect that deploys for free on table (or your side of table) and is always immune to Alter. STARTING: When drawing your starting hand, draw up to 12 cards instead of 8. Place this Interrupt in Reserve Deck.",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_1",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_202",
-    "title": "Cloud City: Security Tower",
-    "slug": "cloud-city-security-tower",
-    "slugWithSetName": "cloud-city-security-tower-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "locationDarkSideGameText": "If Any Methods Necessary just played, may [upload] Despair. Aiiii! Aaa! Agggggggggg! is canceled.",
-    "locationLightSideGameText": "If you control, may use 3 Force to release one captive here. Captive Pursuit is canceled.",
-    "deployCost": 0,
-    "destiny": 0,
-    "icons": [
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 2
-      },
-      {
-        "icon": "INTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "MOBILE",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "CLOUD_CITY_LOCATION",
-      "PRISON"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_203",
-    "title": "Black 5",
-    "slug": "black-5",
-    "slugWithSetName": "black-5-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "STARFIGHTER",
-    "gameText": "May add DS-61-5 as pilot. During battle, if about to be lost before the damage segment, is instead 'hit'. If targeted by Watch Your Back!, it is a Used Interrupt. Immune to Don't Get Cocky and attrition < 4.",
-    "deployCost": 2,
-    "destiny": 3,
-    "power": 2,
-    "forfeit": 5,
-    "maneuver": 4,
-    "pilotCapacity": 1,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BLACK_SQUADRON",
-      "NO_HYPERDRIVE"
-    ],
-    "modelTypes": [
-      "TIE_LN"
-    ]
-  },
-  {
-    "cardId": "601_204",
-    "title": "Blockade Support Ship",
-    "slug": "blockade-support-ship",
-    "slugWithSetName": "blockade-support-ship-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "CAPITAL",
-    "lore": "These heavily modified battleships are used to control and direct the Trade Federation's automated army. Easily identified by its array of sensors and antennae.",
-    "gameText": "Unless Fondor on table, may deploy -3 as a 'react'. May add 3 pilots and 4 passengers. Permanent pilot provides ability of 2.",
-    "deployCost": 5,
-    "destiny": 2,
-    "power": 5,
-    "forfeit": 7,
-    "armor": 5,
-    "hyperspeed": 3,
-    "pilotCapacity": 3,
-    "passengerCapacity": 4,
-    "icons": [
-      {
-        "icon": "CORUSCANT",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      },
-      {
-        "icon": "TRADE_FEDERATION",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SHIP_DOCKING_CAPABILITY"
-    ],
-    "modelTypes": [
-      "TRADE_FEDERATION_BATTLESHIP"
-    ]
-  },
-  {
-    "cardId": "601_205",
-    "title": "Boba Fett In Slave I",
-    "slug": "boba-fett-in-slave-i",
-    "slugWithSetName": "boba-fett-in-slave-i-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "STARFIGHTER",
-    "lore": "Dangerous and deadly starfighter piloted by its notorious owner. Uses combat-grade shields and sensors. Hidden weapons provide lethal surprises for Fett's victims.",
-    "gameText": "Permanent pilot is •Boba Fett, who provides ability of 3. Draws one battle destiny if unable to otherwise. Slave I's power may not be reduced by opponent. Immune to Eject! Eject! and attrition < 5.",
-    "deployCost": 6,
-    "destiny": 1,
-    "power": 7,
-    "forfeit": 7,
-    "maneuver": 6,
-    "hyperspeed": 4,
-    "icons": [
-      {
-        "icon": "PREMIUM",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "INDEPENDENT",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "personas": [
-      "SLAVE_I"
-    ],
-    "modelTypes": [
-      "FIRESPRAY_CLASS_ATTACK_SHIP"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_206",
-    "title": "Bossk In Hound's Tooth",
-    "slug": "bossk-in-hounds-tooth",
-    "slugWithSetName": "bossk-in-hounds-tooth-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "CAPITAL",
-    "lore": "Bossk once said of his ship, 'Greeezeg uut nikek!'",
-    "gameText": "Permanent pilot is •Bossk, who provides ability of 2. During battle with opponent's [Independent] starship (or Falcon), may add one destiny to total power or attrition. Immune to attrition < 4.",
-    "deployCost": 4,
-    "destiny": 1,
-    "power": 6,
-    "forfeit": 6,
-    "armor": 4,
-    "hyperspeed": 4,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "INDEPENDENT",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SHIP_DOCKING_CAPABILITY"
-    ],
-    "personas": [
-      "HOUNDS_TOOTH"
-    ],
-    "modelTypes": [
-      "MODIFIED_CORELLIAN_FREIGHTER"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_207",
-    "title": "Colonel Jendon In Onyx 1",
-    "slug": "colonel-jendon-in-onyx-1",
-    "slugWithSetName": "colonel-jendon-in-onyx-1-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "STARFIGHTER",
-    "lore": "Designed to emulate Rebel starfighter advantages. Production began shortly before the Battle of Endor. Armed with laser cannons, ion cannons and missile launchers.",
-    "gameText": "May deploy as a 'react'. Permanent pilot is •Jendon, who provides ability of 2. When deployed, may [download] a weapon on Onyx 1. Adds one battle destiny if with Onyx 2. Immune to attrition < 4.",
-    "deployCost": 4,
-    "destiny": 2,
-    "power": 5,
-    "forfeit": 6,
-    "maneuver": 5,
-    "hyperspeed": 3,
-    "icons": [
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "ONYX_SQUADRON"
-    ],
-    "personas": [
-      "ONYX_1"
-    ],
-    "modelTypes": [
-      "TIE_DEFENDER"
-    ]
-  },
-  {
-    "cardId": "601_208",
-    "title": "Conquest",
-    "slug": "conquest",
-    "slugWithSetName": "conquest-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "CAPITAL",
-    "lore": "One of the Imperial cruisers that chased the Millennium Falcon from Tatooine. It scanned the Falcon just before Han punched his starship to lightspeed.",
-    "gameText": "May add 6 pilots, 8 passengers, 2 vehicles, and 4 TIEs. Permanent pilot provides ability of 2. During battle, may lose 1 Force to cancel a non-[Immune to Sense] interrupt.",
-    "deployCost": 8,
-    "destiny": 1,
-    "power": 8,
-    "forfeit": 8,
-    "armor": 5,
-    "hyperspeed": 3,
-    "pilotCapacity": 6,
-    "passengerCapacity": 8,
-    "vehicleCapacity": 2,
-    "icons": [
-      {
-        "icon": "A_NEW_HOPE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_1",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SHIP_DOCKING_CAPABILITY"
-    ],
-    "modelTypes": [
-      "IMPERIAL_CLASS_STAR_DESTROYER"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_209",
-    "title": "Hound's Tooth",
-    "slug": "hounds-tooth",
-    "slugWithSetName": "hounds-tooth-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "CAPITAL",
-    "lore": "Controlled by state-of-the-art-voice-activated X10-D computers. Internal sensors and security systems monitor prisoner activity. Modified for Bossk's Trandoshan physiology.",
-    "gameText": "May add 1 pilot (must be smuggler or bounty hunter), 6 passengers and 1 vehicle. Immune to attrition < 4 if Bossk piloting. Deploys and moves like a starfighter. Has ship-docking capability.",
-    "deployCost": 3,
-    "destiny": 2,
-    "power": 5,
-    "forfeit": 6,
-    "armor": 4,
-    "hyperspeed": 4,
-    "pilotCapacity": 1,
-    "passengerCapacity": 6,
-    "vehicleCapacity": 1,
-    "icons": [
-      {
-        "icon": "DAGOBAH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_2",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "INDEPENDENT",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SHIP_DOCKING_CAPABILITY"
-    ],
-    "personas": [
-      "HOUNDS_TOOTH"
-    ],
-    "modelTypes": [
-      "MODIFIED_CORELLIAN_FREIGHTER"
-    ],
-    "hasVirtualSuffix": true,
-    "deploysLikeStarfighter": true,
-    "movesLikeStarfighter": true
-  },
-  {
-    "cardId": "601_21",
-    "title": "OOM-9",
-    "slug": "oom-9",
-    "slugWithSetName": "oom-9-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "DROID"
-    ],
-    "lore": "Officer battle droid who acted as a unit leader in the attack against the Gungans. Required advice from the Droid Control Ship in order to defeat the Gungan energy shield.",
-    "gameText": "Adds 2 to power of anything he pilots. Draws one battle destiny if unable to otherwise. While at a battleground, you lose no force to Amidala and your force generation is +1 for each of opponent's non-battlegrounds on table (and cards stacked on their Epic Events).",
-    "deployCost": 2,
-    "destiny": 3,
-    "power": 2,
-    "ability": 0,
-    "forfeit": 4,
-    "armor": 4,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "THEED_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "DROID",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "PRESENCE",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "LEADER",
-      "OFFICER_BATTLE_DROID"
-    ],
-    "modelTypes": [
-      "BATTLE"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_210",
-    "title": "Onyx 2",
-    "slug": "onyx-2",
-    "slugWithSetName": "onyx-2-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "STARFIGHTER",
-    "lore": "Part of limited production run of TIE defenders. Testing of the prototype defender indicated the need for a more powerful hyperdrive, which was added for this production model.",
-    "gameText": "May deploy as a 'react'. Permanent pilot provides ability of 2. When deployed (except as a 'react'), may play a Defensive Shield from under your Starting Effect (as if from hand).",
-    "deployCost": 2,
-    "destiny": 2,
-    "power": 3,
-    "forfeit": 3,
-    "maneuver": 4,
-    "hyperspeed": 4,
-    "icons": [
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "ONYX_SQUADRON"
-    ],
-    "modelTypes": [
-      "TIE_DEFENDER"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_211",
-    "title": "Stinger",
-    "slug": "stinger",
-    "slugWithSetName": "stinger-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "STARFIGHTER",
-    "lore": "Constructed by a secretive Surronian hive craftguild. Equipped with H2-1 hyperdrive system and emergency braking jets. Guri's personal starship. Gift from Prince Xizor.",
-    "gameText": "May add 1 pilot. Guri deploys -3 aboard. While Guri piloting, during any control phase may draw top card of Reserve Deck (if Chewie or Leia on table, Force Pile instead) and immune to attrition < 5.",
-    "deployCost": 2,
-    "destiny": 3,
-    "power": 3,
-    "forfeit": 4,
-    "maneuver": 4,
-    "hyperspeed": 5,
-    "pilotCapacity": 1,
-    "icons": [
-      {
-        "icon": "REFLECTIONS_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "INDEPENDENT",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "modelTypes": [
-      "SURRONIAN_CONQUEROR"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_212",
-    "title": "Vader's Personal Shuttle",
-    "slug": "vaders-personal-shuttle",
-    "slugWithSetName": "vaders-personal-shuttle-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "STARFIGHTER",
-    "lore": "Customized transport of Lord Vader. Employs advanced sensor jamming gear. Modified with enhanced tactical displays constructed to the Dark Lord's specifications.",
-    "gameText": "May add 2 pilots and 4 passengers. Vader deploys -3 aboard. While Vader piloting at a battleground, maneuver +2 and you lose no Force to Uncontrollable Fury or You Must Confront Vader.",
-    "deployCost": 2,
-    "destiny": 3,
-    "power": 2,
-    "forfeit": 4,
-    "maneuver": 3,
-    "hyperspeed": 5,
-    "pilotCapacity": 2,
-    "passengerCapacity": 4,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_2",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "personas": [
-      "VADERS_PERSONAL_SHUTTLE"
-    ],
-    "modelTypes": [
-      "LAMBDA_CLASS_SHUTTLE"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_213",
-    "title": "Blizzard 2",
-    "slug": "blizzard-2",
-    "slugWithSetName": "blizzard-2-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "VEHICLE",
-    "cardTypes": [
-      "VEHICLE"
-    ],
-    "cardSubtype": "COMBAT",
-    "lore": "AT-AT commanded by the treacherous General Nevar before he was assassinated. Fortified with an extra layer of armor by the paranoid general. Enclosed.",
-    "gameText": "May add 1 pilot and 8 passengers. Permanent pilot aboard provides ability of 2. During your control phase, may [upload] one Trample or Walker Barrage. Walker Barrage total is +2. Immune to attrition < 4.",
-    "deployCost": 6,
-    "destiny": 2,
-    "power": 6,
-    "forfeit": 6,
-    "armor": 8,
-    "landspeed": 1,
-    "pilotCapacity": 1,
-    "passengerCapacity": 8,
-    "icons": [
-      {
-        "icon": "HOTH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_2",
-        "count": 1
-      },
-      {
-        "icon": "VEHICLE",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "ENCLOSED"
-    ],
-    "modelTypes": [
-      "AT_AT"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_214",
-    "title": "Blizzard Scout 1",
-    "slug": "blizzard-scout-1",
-    "slugWithSetName": "blizzard-scout-1-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "VEHICLE",
-    "cardTypes": [
-      "VEHICLE"
-    ],
-    "cardSubtype": "COMBAT",
-    "lore": "Enclosed All Terrain Scout Transport (AT-ST). Provides flanking support to the AT-ATs of Blizzard Force. Modified for cold weather combat.",
-    "gameText": "May add 1 pilot or passenger. Permanent pilot provides ability of 2. May move as a 'react'. During battle, if with your piloted AT-AT, may cancel game text of an opponent's character present.",
-    "deployCost": 3,
-    "destiny": 4,
-    "power": 3,
-    "forfeit": 5,
-    "armor": 4,
-    "landspeed": 3,
-    "icons": [
-      {
-        "icon": "HOTH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_2",
-        "count": 1
-      },
-      {
-        "icon": "VEHICLE",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "ENCLOSED"
-    ],
-    "modelTypes": [
-      "AT_ST"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_215",
-    "title": "Blaster Rifle",
-    "slug": "blaster-rifle",
-    "slugWithSetName": "blaster-rifle-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "WEAPON",
-    "cardTypes": [
-      "WEAPON"
-    ],
-    "cardSubtype": "CHARACTER",
-    "lore": "Stormtrooper BlasTech E-11 blaster rifle. Can convert from a pistol to a rifle configuration by using extendable stock. Carries 100 shots. Military issue only.",
-    "gameText": "Deploy on your Imperial warrior; warrior is power +1. May target a character, creature, or vehicle for free. Draw destiny; add 1 if targeting a character, 2 if a vehicle. Target hit, and may not be used to satisfy attrition, if total destiny > defense value.",
-    "destiny": 3,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "WEAPON",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BLASTER_RIFLE"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_216",
-    "title": "Dooku's Lightsaber",
-    "slug": "dookus-lightsaber",
-    "slugWithSetName": "dookus-lightsaber-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "WEAPON",
-    "cardTypes": [
-      "WEAPON"
-    ],
-    "cardSubtype": "CHARACTER",
-    "gameText": "Deploy on Dooku or a [Separatist] character of ability > 4. Adds 1 to this character's duel and lightsaber combat totals. May add 1 to Force drain where present. May target a character for free. Draw two destiny. Target hit, and its forfeit = 0, if total destiny > defense value.",
-    "destiny": 1,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_9",
-        "count": 1
-      },
-      {
-        "icon": "WEAPON",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "LIGHTSABER"
-    ]
-  },
-  {
-    "cardId": "601_22",
-    "title": "Ponda Baba",
-    "slug": "ponda-baba",
-    "slugWithSetName": "ponda-baba-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "A male Quara (or fingered Aqualish). Thug, smuggler and partner of Dr. Evazan. Has a poor quality cybernetic arm replacement.",
-    "gameText": "[Pilot] 2. Game text of non-Jedi Luke (or a lightsaber he is using) may not target aliens here. During battle, if with a smuggler, may add a destiny to attrition (+2 if with your smuggler) or make that smuggler forfeit = 0.",
-    "deployCost": 2,
-    "destiny": 3,
-    "power": 2,
-    "ability": 2,
-    "forfeit": 3,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SMUGGLER"
-    ],
-    "species": "AQUALISH",
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_23",
-    "title": "Probot",
-    "slug": "probot",
-    "slugWithSetName": "probot-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "DROID"
-    ],
-    "lore": "Spy.",
-    "gameText": "Draws one battle destiny if not able to otherwise. Power +2 if with opponent's smuggler or Wookiee. During your move phase, may use 1 Force to 'break cover' of opponent's Undercover spy at same site. Immune to attrition < 3.",
-    "deployCost": 4,
-    "destiny": 2,
-    "power": 3,
-    "ability": 0,
-    "forfeit": 5,
-    "armor": 3,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "HOTH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "DROID",
-        "count": 1
-      },
-      {
-        "icon": "PRESENCE",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SPY"
-    ],
-    "modelTypes": [
-      "PROBE"
-    ]
-  },
-  {
-    "cardId": "601_24",
-    "title": "Slave I, Symbol Of Fear",
-    "slug": "slave-i-symbol-of-fear",
-    "slugWithSetName": "slave-i-symbol-of-fear-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "STARFIGHTER",
-    "lore": "Originally designed as a planetary defense craft. Uses restricted jamming technology, allowing it to appear out of nowhere. Contains many hidden armaments.",
-    "gameText": "May reveal from hand to take a [Block 8] Fett from Reserve Deck; reshuffle; and deploy both simultaneously. May add 2 pilots and 2 passengers. [Block 8] Fetts deploy -2 aboard. Immune to attrition < 5.",
-    "deployCost": 4,
-    "destiny": 2,
-    "power": 4,
-    "forfeit": 6,
-    "maneuver": 4,
-    "hyperspeed": 4,
-    "pilotCapacity": 2,
-    "passengerCapacity": 2,
-    "icons": [
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "INDEPENDENT",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "personas": [
-      "SLAVE_I"
-    ],
-    "modelTypes": [
-      "FIRESPRAY_CLASS_ATTACK_SHIP"
-    ]
-  },
-  {
-    "cardId": "601_25",
-    "title": "Sneak Attack",
-    "slug": "sneak-attack",
-    "slugWithSetName": "sneak-attack-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_LOST",
-    "lore": "Imperial training allows scouts to use speed and stealth to their advantage. On Endor, they were also backed up by Commander Igar's ATSTs.",
-    "gameText": "USED: If opponent just initiated a battle, place a card from hand on top of Reserve Deck. LOST: Add one battle destiny where you have an AT-ST, scout, or lone Imperial of ability < 4.",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "ENDOR",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_3",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_26",
-    "title": "Something Special Planned For Them",
-    "slug": "something-special-planned-for-them",
-    "slugWithSetName": "something-special-planned-for-them-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "The high command of the Emperor's fleet is selected as much for loyalty and obedience as for martial skills. A wise admiral knows better than to question Palpatine.",
-    "gameText": "Deploy on table. Once per game, if opponent just played an Interrupt, may stack it here. To play any new Interrupt of same name, players must first stack it here. May place this Effect in Lost Pile (place cards here in owners' Used Pile) to retrieve a starship. Immune to Alter.",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_3",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      },
-      {
-        "icon": "GRABBER",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_260",
-    "title": "Establish Secret Base",
-    "slug": "establish-secret-base",
-    "slugWithSetName": "establish-secret-base-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "The Empire's remote bases develop new technology and hide sensitive projects from potential Rebel saboteurs.",
-    "gameText": "If you control Bunker, deploy on Endor system. At each Endor site you control with an AT-ST or Biker Scout, opponent's Force generation is canceled. During your deploy phase, may deploy one Aratech Corporation or an Effect with 'Endor' in the lore or game text from Reserve Deck; reshuffle. (Immune to Alter.)",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "ENDOR",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_3",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "DEPLOYS_ON_LOCATION"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_261",
-    "title": "Ominous Rumors",
-    "slug": "ominous-rumors",
-    "slugWithSetName": "ominous-rumors-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Rumors of a new 'technological terror' filled the galaxy with dread.",
-    "gameText": "Deploy on Bunker. Your scouts aboard speeder bikes are defense value = 5 and immune to Clash of Sabers. Once per turn, if you control Bunker, may deploy an [Endor] Imperial here (except Fenson or Grond) or a forest from Reserve Deck; reshuffle. Canceled if opponent controls at least three Endor Sites. (Immune to Alter.)",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "ENDOR",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_9",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "DEPLOYS_ON_SITE"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_268",
-    "title": "You Overestimate Their Chances",
-    "slug": "you-overestimate-their-chances",
-    "slugWithSetName": "you-overestimate-their-chances-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_STARTING",
-    "lore": "'Evacuate? In our moment of triumph?'",
-    "gameText": "USED: Initiate a battle for free. STARTING: If Ralltiir Operations on table, deploy from Reserve Deck Supply Route, [Virtual] Insignificant Rebellion, and up to two Effects that are always (Immune to Alter), have no deploy cost, and do not deploy on locations.  Place Interrupt in Lost Pile.",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_269",
-    "title": "Insignificant Rebellion",
-    "slug": "insignificant-rebellion",
-    "slugWithSetName": "insignificant-rebellion-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "'Your fleet is lost. And your friends on the Endor moon will not survive. There is no escape, my young apprentice.'",
-    "gameText": "If Ralltiir Operations on table, deploy on table. Ounee Ta is canceled. Your troopers are power = 2. Your Force generation at Ralltiir system is +1. Whenever you draw battle destiny, may exchange a card in hand with a card of the same card type in Lost Pile. (Immune to Alter.)",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_27",
-    "title": "Sonic Bombardment",
-    "slug": "sonic-bombardment",
-    "slugWithSetName": "sonic-bombardment-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED",
-    "lore": "Oouioouioouioouioouioouioouioouioouioouioouioouioouioouioouioouioouioouioouioouioouioouioo-",
-    "gameText": "Once per game, may take into hand a prison from Reserve Deck; reshuffle. OR Use 1 Force to take into hand a non-droid assassin (or slaver) of ability < 5 from Reserve Deck; reshuffle. OR During battle involving an assassin, each of opponent's battle destiny draws is -1. OR Cancel opponent's attempt to modify the power of a starship piloted by your alien.",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_270",
-    "title": "Ralltiir: Supply Route",
-    "slug": "ralltiir-supply-route",
-    "slugWithSetName": "ralltiir-supply-route-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "locationDarkSideGameText": "Your combat vehicles and Imperial troopers deploy -1 here.",
-    "locationLightSideGameText": "May add 1 to the forfeit of your warriors here.",
-    "deployCost": 0,
-    "destiny": 0,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "601_271",
-    "title": "Ralltiir: Spaceport Financial District",
-    "slug": "ralltiir-spaceport-financial-district",
-    "slugWithSetName": "ralltiir-spaceport-financial-district-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "LOCATION",
-    "cardTypes": [
-      "LOCATION"
-    ],
-    "cardSubtype": "SITE",
-    "locationDarkSideGameText": "Same and related spaceport sites opponent does not control gain one [Dark Side] icon.",
-    "locationLightSideGameText": "Immune to Expand the Empire and Revolution.",
-    "deployCost": 0,
-    "destiny": 0,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "DARK_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "EXTERIOR_SITE",
-        "count": 1
-      },
-      {
-        "icon": "LIGHT_FORCE",
-        "count": 1
-      },
-      {
-        "icon": "PLANET",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SPACEPORT_SITE"
-    ]
-  },
-  {
-    "cardId": "601_28",
-    "title": "Tarkin's Bounty",
-    "slug": "tarkins-bounty",
-    "slugWithSetName": "tarkins-bounty-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "'You don't know how hard I found it signing the order to terminate your life.'",
-    "gameText": "Deploy on table.  Each Amidala stacked on a Political Effect is a senator.  While you have < 13 cards in hand, opponent may not peek at or remove them (except with Grimtaash).  Once per turn, may take one [Virtual] Astromech Shortage into hand from Reserve Deck; reshuffle, or lose 2 Force to cancel a Political Effect. (Immune to Alter.)",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BOUNTY"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_29",
-    "title": "Wookiee Slaving Operation",
-    "slug": "wookiee-slaving-operation",
-    "slugWithSetName": "wookiee-slaving-operation-legacy",
-    "side": "DARK",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "Deploy Kashyyyk system, Slaving Camp Headquarters, and [Block 8] Special Delivery.\nFor remainder of game, your Trandoshans are slavers. Scum And Villainy may deploy on Slaving Camp Headquarters and may not be canceled while you occupy that site. While you have < 13 cards in hand, your non-unique slavers are immune to Grimtaash.\nFlip this card if your slavers control two Kashyyyk battlegrounds and opponent controls no Kashyyyk locations.",
-    "destiny": 0,
-    "icons": [
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ],
-    "isFrontOfDoubleSidedCard": true
-  },
-  {
-    "cardId": "601_29_BACK",
-    "title": "Indentured To The Empire",
-    "slug": "indentured-to-the-empire",
-    "slugWithSetName": "indentured-to-the-empire-legacy",
-    "side": "DARK",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "While this side up, whenever you 'enslave' a character, opponent must choose to use 2 Force or lose 1 Force. Once per turn, during battle may add or subtract up to X from your just drawn destiny, where X = the number of Kashyyyk locations you control with a slaver. Once per turn, if you just retrieved Force during battle, may take a slaver, starship, or vehicle retrieved into hand.\nFlip this card if opponent controls two Kashyyyk battlegrounds.",
-    "destiny": 7,
-    "icons": [
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "601_3",
-    "title": "Bossk",
-    "slug": "bossk",
-    "slugWithSetName": "bossk-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Male Trandoshan bounty hunter. Strong but clumsy. Extremely proud and arrogant. Suffered a humiliating defeat at the hands of Chewbacca and his partner Han Solo.",
-    "gameText": "[Pilot] 2. While at same site as a smuggler, power +3. While with opponent's smuggler or Wookiee, opponent may not draw more than one battle destiny here. Immune to attrition < number of opponent's smugglers on table.",
-    "deployCost": 3,
-    "destiny": 1,
-    "power": 4,
-    "ability": 2,
-    "forfeit": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "DAGOBAH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_2",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BOUNTY_HUNTER"
-    ],
-    "personas": [
-      "BOSSK"
-    ],
-    "species": "TRANDOSHAN",
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_30",
-    "title": "Wookiee Subjugation",
-    "slug": "wookiee-subjugation",
-    "slugWithSetName": "wookiee-subjugation-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_STARTING",
-    "lore": "'Rrraaaarrr!'",
-    "gameText": "USED: If you just 'enslaved' a character, play a Defensive Shield from under your Starting Effect. STARTING: If Slaving Camp Headquarters on table, deploy from Reserve Deck Mercenary Slavers and up to two Effects that deploy on table for free and are always [Immune to Alter.]. Place Interrupt in Reserve Deck.",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "DAGOBAH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "601_4",
-    "title": "Cold Feet",
-    "slug": "cold-feet",
-    "slugWithSetName": "cold-feet-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED",
-    "lore": "Wampas pack snow around the appendages of captured prey, making use of Hoth's cold environment to immobilize them.",
-    "gameText": "Take a 'grabber' into hand from Reserve Deck; reshuffle. (Immune to Sense.)  OR  Play a Defensive Shield from under your Starting Effect.  OR  Cancel Don't Forget The Droids, It Can Wait, or Surprise Assault.  OR  Suspend Bacta Tank ('patient' remains on Effect), Bo Shuda, Goo Nee Tay, or Mantellian Savrip for remainder of turn.",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "HOTH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_5",
-    "title": "Den Of Thieves & Special Delivery",
-    "slug": "den-of-thieves-special-delivery",
-    "slugWithSetName": "den-of-thieves-special-delivery-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "gameText": "Deploy on table. Once per turn, if Skyhook Platform on table and opponent just forfeited a character present with your slaver, may 'enslave' that character (stack character face down under Skyhook Platform). May place an 'enslaved' character in owner's Lost Pile to activate up to 3 Force. Once per turn, while Indentured To The Empire on table, may cancel a Force drain by placing here from hand any non-unique slaver. Slavers may deploy from here as if from hand. May not be canceled. (Immune to Alter.)",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_8",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "isComboCard": true
-  },
-  {
-    "cardId": "601_6",
-    "title": "Dengar With Blaster Carbine",
-    "slug": "dengar-with-blaster-carbine",
-    "slugWithSetName": "dengar-with-blaster-carbine-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Corellian bounty hunter. Skilled athlete. Expert shot. Has worked many times for Jabba the Hutt. Carries a long-standing grudge against Han Solo.",
-    "gameText": "While opponent's [Reflection II icon] objective on table, adds one battle destiny. Permanent weapon is •Dengar's Blaster Carbine (may target a character, creature or vehicle for free; draw destiny; target hit, and its forfeit = 0, if destiny +1 > defense value; may be fired twice per battle).",
-    "deployCost": 4,
-    "destiny": 2,
-    "power": 3,
-    "ability": 2,
-    "forfeit": 4,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "PREMIUM",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "PERMANENT_WEAPON",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BOUNTY_HUNTER"
-    ],
-    "personas": [
-      "DENGAR"
-    ],
-    "species": "CORELLIAN",
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_7",
-    "title": "Hutt Bounty",
-    "slug": "hutt-bounty",
-    "slugWithSetName": "hutt-bounty-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "'Chissaa, picha gawanki Chewbacca. Yupon cogorato kama walpa kyess kashung kawa Wookiee.'",
-    "gameText": "Deploy on Jabba. Your battle destiny draws are +1. At related sites you control, your Force generation is +1. During battle here, may make a non-Jedi character present with Jabba power = 0.",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_3",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BOUNTY",
-      "DEPLOYS_ON_CHARACTERS"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_72",
-    "title": "Velken Tezeri",
-    "slug": "velken-tezeri",
-    "slugWithSetName": "velken-tezeri-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Assigned by Jabba to work with Hermi Odle. Former technician for the Empire. Developed a method to remotely control seekers. Plotting to kill Jabba.",
-    "gameText": "[Pilot] 2. Smuggler. May not be attacked. Velken may not target Luke with weapons. Once per game, when deployed to a battleground, opponent must use or lose 2 Force. While present at a pit, may add 1 to Force drains here, and Sarlacc is ferocity +1.",
-    "deployCost": 2,
-    "destiny": 3,
-    "power": 2,
-    "ability": 2,
-    "forfeit": 4,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SMUGGLER"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_73",
-    "title": "A Sith's Plans",
-    "slug": "a-siths-plans",
-    "slugWithSetName": "a-siths-plans-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "The Imperial fleet keeps a tight grip on the systems under its control. Abuses and excesses by local citizens are not tolerated.",
-    "gameText": "Deploy on a site. Sunsdown is canceled. While you have 8 or fewer cards in hand, non-unique characters (except clones), vehicles, starships, weapons, and devices are immune to Grimtaash. Once per turn, may use 2 Force to deploy a non-war room battleground planet location (except a sector) not on table from Reserve Deck; reshuffle. [Immune to Alter.]",
-    "destiny": 3,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_5",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "601_74",
-    "title": "Blaster Rack",
-    "slug": "blaster-rack",
-    "slugWithSetName": "blaster-rack-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Imperial facilities like the Death Star and garrison bases have blaster racks at key locations to equip soldiers with weapons like blaster rifles and thermal detonators.",
-    "gameText": "Deploy on table. During your deploy phase, if you just deployed a unique (•) character, may [download] a matching weapon on that character. (Immune to Alter.)",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_1",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_75",
-    "title": "Close Call",
-    "slug": "close-call",
-    "slugWithSetName": "close-call-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_LOST",
-    "lore": "If this little one doesn't pulverize you, the next one just might.",
-    "gameText": "USED: During battle, cancel and redraw a just drawn destiny. LOST: A just drawn battle or weapon destiny is -3",
-    "destiny": 2,
-    "icons": [
-      {
-        "icon": "DAGOBAH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_2",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_76",
-    "title": "Combat Response",
-    "slug": "combat-response",
-    "slugWithSetName": "combat-response-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Being stationed at Endor during the construction of the second Death Star allows Imperial pilots time to train in the latest starfighter combat techniques.",
-    "gameText": "Deploy on table. Tallon Roll is canceled. Once per turn, may reveal an unpiloted starfighter from hand to [upload] its matching pilot character (or vice versa) and deploy both simultaneously. Your unique (•) TIEs (except Scythe Squadron TIEs) at systems may use 1 Force to relocate (as a regular move) to system within 3 parsecs. [Immune to Alter]",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_77",
-    "title": "Emperor's Power",
-    "slug": "emperors-power",
-    "slugWithSetName": "emperors-power-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "From his throne room aboard the second Death Star, Emperor Palpatine monitors activity throughout the galaxy.",
-    "gameText": "Deploy on Emperor. Jedi are power -1 and deploy +1. During your control phase, if Emperor present at a battleground site with Vader (or two Imperial Council Members), opponent loses 1 Force.",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_3",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "DEPLOYS_ON_CHARACTERS"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_78",
-    "title": "Endor Shield",
-    "slug": "endor-shield",
-    "slugWithSetName": "endor-shield-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "Planetary scale shield projected from surface of Endor moon. Protected second Death Star during construction. Only another superlaser could penetrate it while operational.",
-    "gameText": "Deploy on table.  Unless Rebel Strike Team on table, cancel opponent's Force generation at Endor system.  Twice per game, may take an admiral (except Piett) or general into hand from Reserve Deck; reshuffle.  Whenever opponent's Endor on table, raise your converted Endor system to the top (if possible). (Immune to Alter.)",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_3",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_79",
-    "title": "Force Field",
-    "slug": "force-field",
-    "slugWithSetName": "force-field-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_LOST",
-    "lore": "Han was fast. Vader was faster.",
-    "gameText": "USED: Cancel an attempt to use a character weapon to target your character of ability > 4. LOST: Use 2 Force to cancel an attempt to use a [Permanent Weapon] weapon to target your character.",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_8",
-    "title": "IG-88, Renegade Droid",
-    "slug": "ig-88-renegade-droid",
-    "slugWithSetName": "ig-88-renegade-droid-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "DROID"
-    ],
-    "lore": "Bounty hunter droid equipped with proprietary stealth technology. Archived several of its enhancement subroutines in favor of sophisticated tracking and capture programming.",
-    "gameText": "Adds 2 to power of anything he pilots (3 if IG-2000).  Deploys -3 aboard IG-2000.  Adds one battle destiny if alone or with a smuggler.  During battle, if piloting a starship, may draw destiny.  Starship is immune to attrition < X, or its immunity is +X (limit +2), where X = destiny.",
-    "deployCost": 4,
-    "destiny": 1,
-    "power": 4,
-    "ability": 0,
-    "forfeit": 5,
-    "armor": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "PREMIUM",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "DROID",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "PRESENCE",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BOUNTY_HUNTER"
-    ],
-    "personas": [
-      "IG88"
-    ],
-    "modelTypes": [
-      "ASSASSIN"
-    ]
-  },
-  {
-    "cardId": "601_80",
-    "title": "Force Push",
-    "slug": "force-push",
-    "slugWithSetName": "force-push-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "LOST",
-    "lore": "A fully-trained Sith warrior has more weapons at his disposal than just a lightsaber.",
-    "gameText": "Once per game, choose: During battle, use 2 Force to target your Dark Jedi and opponent's character or equal or lesser ability present. Both targets are excluded from battle. OR Exchange two cards from hand with any one card from Force Pile; reshuffle.",
-    "destiny": 5,
-    "icons": [
-      {
-        "icon": "REFLECTIONS_III",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_5",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_81",
-    "title": "Galen Marek, Starkiller",
-    "slug": "galen-marek-starkiller",
-    "slugWithSetName": "galen-marek-starkiller-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "SITH"
-    ],
-    "lore": "",
-    "gameText": "Galen's forfeit may not be reduced. Power and defense value +2 while with Mariss Brood. If defending a battle alone (or defending with Juno Eclipse), may be targeted by Force Lightning. Immune to Clash Of Sabers and attrition < 4.",
-    "deployCost": 5,
-    "destiny": 1,
-    "power": 6,
-    "ability": 5,
-    "forfeit": 7,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "SITH",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "personas": [
-      "GALEN"
-    ]
-  },
-  {
-    "cardId": "601_82",
-    "title": "Galen's Lightsaber, Vader's Gift",
-    "slug": "galens-lightsaber-vaders-gift",
-    "slugWithSetName": "galens-lightsaber-vaders-gift-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "WEAPON",
-    "cardTypes": [
-      "WEAPON"
-    ],
-    "cardSubtype": "CHARACTER",
-    "lore": "Custom-built by Darth Vader. After the Clone Wars, he wielded this weapon while hunting down the last of the Jedi. Cuts through almost anything except another lightsaber blade.",
-    "gameText": "Deploy on Galen.  Galen may add one destiny to total power or attrition.  May target a character or creature for free.  Draw two destiny.  Target hit, and may not be used to satisfy attrition, if total destiny > defense value.",
-    "destiny": 1,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "WEAPON",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "LIGHTSABER"
-    ],
-    "personas": [
-      "GALENS_LIGHTSABER"
-    ]
-  },
-  {
-    "cardId": "601_83",
-    "title": "Garindan",
-    "slug": "garindan",
-    "slugWithSetName": "garindan-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Long-nosed, male Kubaz from Kubindi. Spy. Squealed on Obi-Wan and Luke outside Docking Bay 94. Works for Jabba the Hutt or the highest bidder. Not particularly brave.",
-    "gameText": "Adds one to the power of anything he pilots. May deploy -1 as a 'react'; shuffle any Reserve Deck. Ignores Objective deployment restrictions. Unless alone, may place Garindan in Used Pile to cancel a just drawn weapon destiny here. [Virtual Block 2] Imperial Domination ignores Garindan.",
-    "deployCost": 3,
-    "destiny": 4,
-    "power": 1,
-    "ability": 2,
-    "forfeit": 3,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SPY"
-    ],
-    "species": "KUBAZ",
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_84",
-    "title": "General Nevar",
-    "slug": "general-nevar",
-    "slugWithSetName": "general-nevar-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "IMPERIAL"
-    ],
-    "lore": "Leader.",
-    "gameText": "[Pilot] 2, 3: Blizzard 2. Deploys -1 on Hoth. Once per game, may deploy a marker site with < 2 [Dark Side] or a battleground (except Endor system or a war room). Once per game, if piloting at a site where no characters present, may peek at opponent's hand.",
-    "deployCost": 3,
-    "destiny": 2,
-    "power": 3,
-    "ability": 2,
-    "forfeit": 4,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "DAGOBAH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "IMPERIAL",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "GENERAL",
-      "LEADER"
-    ]
-  },
-  {
-    "cardId": "601_85",
-    "title": "Gift Of The Master",
-    "slug": "gift-of-the-master",
-    "slugWithSetName": "gift-of-the-master-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "'Give yourself to the dark side. It is the only way you can save your friends.'",
-    "gameText": "Unless Deep Hatred on table, deploy on table.  Once per turn, may deploy Blaster Rack or The Force Unleashed from Reserve Deck; reshuffle.  Once per turn, may lose 1 Force to deploy a character weapon (except Thermal Detonator) from Lost Pile.  'Vader' on The Empire's Back may be treated as 'Galen.' (Immune to Alter.)",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "601_86",
-    "title": "Grand Moff Tarkin",
-    "slug": "grand-moff-tarkin",
-    "slugWithSetName": "grand-moff-tarkin-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "IMPERIAL"
-    ],
-    "lore": "Leader. Governor of Outer Rim Territories. Commanded Death Star. Helped disband Imperial Senate. Defined doctrine of rule by fear. Plotted to use Death Star against Emperor.",
-    "gameText": "[Pilot] 2. Destiny +2 when drawn for destiny. Draws one battle destiny if unable to otherwise (if with Vader or an Imperial leader, may add one instead). During battle, if you just drew a destiny < number of Imperials here, may cancel and redraw that destiny.",
-    "deployCost": 4,
-    "destiny": 1,
-    "power": 4,
-    "ability": 3,
-    "forfeit": 6,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "IMPERIAL",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "LEADER",
-      "MOFF"
-    ],
-    "personas": [
-      "TARKIN"
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_87",
-    "title": "Hunt Down And Destroy The Jedi",
-    "slug": "hunt-down-and-destroy-the-jedi",
-    "slugWithSetName": "hunt-down-and-destroy-the-jedi-legacy",
-    "side": "DARK",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "Deploy Coruscant system, Imperial City, and A Sith's Plans.  May deploy If The Trace Was Correct.\nFor remainder of game, you may not deploy [Episode I] Dark Jedi.  Whenever a character hit by Galen's Lightsaber or Vader's Lightsaber leaves table, opponent loses 2 Force.\nWhile this side up, may take Rogue Shadow into hand from Reserve Deck; reshuffle.  Galen's immunity to attrition is +2 for each Jedi present.\nFlip this card if Galen or Vader at a battleground site and opponent does not have a unique (•) character of ability > 3 present at a battleground site.",
-    "destiny": 0,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ],
-    "isFrontOfDoubleSidedCard": true,
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_87_BACK",
-    "title": "Their Fire Has Gone Out Of The Universe",
-    "slug": "their-fire-has-gone-out-of-the-universe",
-    "slugWithSetName": "their-fire-has-gone-out-of-the-universe-legacy",
-    "side": "DARK",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "OBJECTIVE",
-    "cardTypes": [
-      "OBJECTIVE"
-    ],
-    "gameText": "While this side up, opponent's Force drain bonuses are canceled and your Force drains at battlegrounds may not be canceled.  During your control phase, may retrieve 1 Force.  During your control phase, may use 2 Force to take any one card without ability into hand from Reserve Deck; reshuffle.  If targeting a vehicle or starship with Lightsaber Parry, Tarkin's Orders, or There Is No Conflict, that destiny draw is +2.\nFlip this card if opponent has a unique (•) character of ability > 3 present at a battleground site.",
-    "destiny": 7,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "OBJECTIVE",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_88",
-    "title": "Imperial Propaganda",
-    "slug": "imperial-propaganda",
-    "slugWithSetName": "imperial-propaganda-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "IMMEDIATE",
-    "lore": "Imperial data transmissions depict Rebel incursions as terrorist acts. The Alliance is portrayed as a danger to civilians of the Empire.",
-    "gameText": "If you are about to lose Force during opponent's control phase, deploy on table to reduce loss by 2. Whenever you lose Force during opponent's control phase (except from a Force drain at a battleground or your card) that loss is cumulatively -1 (to a minimum of 1). Non-[Virtual Block 4] Imperial Propaganda is canceled.",
-    "destiny": 6,
-    "icons": [
-      {
-        "icon": "SPECIAL_EDITION",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_89",
-    "title": "Juno Eclipse, Black Leader",
-    "slug": "juno-eclipse-black-leader",
-    "slugWithSetName": "juno-eclipse-black-leader-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "IMPERIAL"
-    ],
-    "lore": "",
-    "gameText": "Adds 3 to power of anything she pilots.  Deploys -1 to starships.  Naboo Blaster is a matching weapon for her.  While with Galen at a site, adds one battle destiny.  During your control phase, may use 2 Force to retrieve a card with 'back' in title.  Immune to attrition < 3.",
-    "deployCost": 3,
-    "destiny": 3,
-    "power": 3,
-    "ability": 3,
-    "forfeit": 5,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "IMPERIAL",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "BLACK_SQUADRON",
-      "FEMALE"
-    ],
-    "personas": [
-      "JUNO"
-    ]
-  },
-  {
-    "cardId": "601_9",
-    "title": "Jabba The Hutt",
-    "slug": "jabba-the-hutt",
-    "slugWithSetName": "jabba-the-hutt-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "ALIEN"
-    ],
-    "lore": "Jabba Desilijic Tiure. Male heir to Zorba the Hutt. Gangster. Leader of one of the largest criminal organizations in the galaxy. Over six hundred years old.",
-    "gameText": "While with your alien leader, Jabba is immune to attrition any may not be targeted by Interrupts or weapons. May [download] one Scum And Villainy. During battle may use 1 Force to double the power of one other non-[Maintenance] alien present.",
-    "deployCost": 4,
-    "destiny": 1,
-    "power": 3,
-    "ability": 4,
-    "forfeit": 7,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "JABBAS_PALACE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_3",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "GANGSTER",
-      "LEADER"
-    ],
-    "personas": [
-      "JABBA"
-    ],
-    "species": "HUTT",
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_90",
-    "title": "Mara Jade With Lightsaber",
-    "slug": "mara-jade-with-lightsaber",
-    "slugWithSetName": "mara-jade-with-lightsaber-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "CHARACTER",
-    "cardTypes": [
-      "IMPERIAL",
-      "ALIEN"
-    ],
-    "lore": "Ordered to kill Luke Skywalker. Assumed the identity of a dancer named 'Arica' in order to sneak into Jabba's Palace.",
-    "gameText": "With Luke or Emperor on table, power +1 and she moves for free. Permanent weapon is •Mara Jade's Lightsaber (may target a character or creature for free; draw two destiny; target hit, and its forfeit = 0, if total destiny > defense value).",
-    "deployCost": 5,
-    "destiny": 1,
-    "power": 4,
-    "ability": 5,
-    "forfeit": 7,
-    "landspeed": 1,
-    "politics": 0,
-    "icons": [
-      {
-        "icon": "PREMIUM",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "ALIEN",
-        "count": 1
-      },
-      {
-        "icon": "IMPERIAL",
-        "count": 1
-      },
-      {
-        "icon": "PERMANENT_WEAPON",
-        "count": 1
-      },
-      {
-        "icon": "WARRIOR",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "FEMALE"
-    ],
-    "personas": [
-      "MARA_JADE"
-    ]
-  },
-  {
-    "cardId": "601_91",
-    "title": "Ni Chuba Na??",
-    "slug": "ni-chuba-na",
-    "slugWithSetName": "ni-chuba-na-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "'Your buddy here was about to be turned into orange goo. He picked a fight with a Dug. An especially dangerous Dug called Sebulba.'",
-    "gameText": "Deploy on table.  Your Force generation is +1.  Once per game, may relocate this Effect to a site.  At same and related locations, Revolution is canceled and your cards may not have their deploy costs modified by Goo Nee Tay.  Security Precautions is canceled. (Immune to Alter.)",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "TATOOINE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      },
-      {
-        "icon": "EPISODE_I",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_92",
-    "title": "One Beautiful Thing",
-    "slug": "one-beautiful-thing",
-    "slugWithSetName": "one-beautiful-thing-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "LOST",
-    "lore": "'I don't know how we're gonna get out of this one.'",
-    "gameText": "Lose 1 Force to take Juno Eclipse into hand from Reserve Deck (or retrieve); reshuffle. OR During battle where you have no Dark Jedi or droids and only two participating cards with ability (a male and a female), add one destiny to total power (and attrition against you = 0).",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "DAGOBAH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ]
-  },
-  {
-    "cardId": "601_93",
-    "title": "Prepared Defenses",
-    "slug": "prepared-defenses",
-    "slugWithSetName": "prepared-defenses-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_STARTING",
-    "lore": "Since the debacle at Yavin, the Emperor places a premium on the security of his costly war machine.",
-    "gameText": "USED: Take one Death Squadron Star Destroyer, a Dreadnaught, or a Victory-class Star Destroyer into hand from Reserve Deck; reshuffle. STARTING: Deploy from Reserve Deck up to three cards that have the [Setup] icon or are Effects that deploy for free, are always [Immune to Alter], and deploy on table.  Place Interrupt in Lost Pile.",
-    "destiny": 3,
-    "icons": [
-      {
-        "icon": "DEATH_STAR_II",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_94",
-    "title": "Revenge Of The Sith",
-    "slug": "revenge-of-the-sith",
-    "slugWithSetName": "revenge-of-the-sith-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "EFFECT",
-    "cardTypes": [
-      "EFFECT"
-    ],
-    "cardSubtype": "NORMAL",
-    "lore": "A symbol of the Dark Lord of the Sith, and of the seductive power of the dark side. Hologram.",
-    "gameText": "Deploy on Vader. [Coruscant] holograms are lost. Opponent may not add destiny draws to total power or attrition here. While with a Skywalker or Jedi, Vader's defense value is +2 (to a maximum of 8) and his immunity to attrition is +2.  When Vader leaves table, place Effect in Used Pile. (Immune to Alter.)",
-    "destiny": 6,
-    "icons": [
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "EFFECT",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "DEPLOYS_ON_CHARACTERS",
-      "HOLOGRAM"
-    ]
-  },
-  {
-    "cardId": "601_95",
-    "title": "Rogue Shadow",
-    "slug": "rogue-shadow",
-    "slugWithSetName": "rogue-shadow-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "STARFIGHTER",
-    "lore": "",
-    "gameText": "May add 2 pilots and 2 passengers. If Juno Eclipse piloting, adds one battle destiny. If it just took off, may use its hyperspeed and land. Immune to attrition < 7 if Galen on table, even while landed.",
-    "deployCost": 3,
-    "destiny": 2,
-    "power": 3,
-    "forfeit": 6,
-    "maneuver": 4,
-    "hyperspeed": 5,
-    "pilotCapacity": 2,
-    "passengerCapacity": 2,
-    "icons": [
-      {
-        "icon": "DAGOBAH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_4",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "modelTypes": [
-      "TRANSPORT"
-    ]
-  },
-  {
-    "cardId": "601_96",
-    "title": "Stop Motion",
-    "slug": "stop-motion",
-    "slugWithSetName": "stop-motion-legacy",
-    "side": "DARK",
-    "uniqueness": "UNRESTRICTED",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED",
-    "lore": "'Your tauntaun'll freeze before you reach the first marker.'",
-    "gameText": "Take Cold Feet, He Hasn't Come Back Yet, or Ice Storm into hand from Reserve Deck; reshuffle. OR Cancel Dodge. OR Cancel opponent's 'react' away from battle. OR Cancel opponent's attempt to randomly remove one or more cards from your hand (except with Grimtaash).",
-    "destiny": 6,
-    "icons": [
-      {
-        "icon": "HOTH",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_2",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "hasVirtualSuffix": true
-  },
-  {
-    "cardId": "601_97",
-    "title": "Victory",
-    "slug": "victory",
-    "slugWithSetName": "victory-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "STARSHIP",
-    "cardTypes": [
-      "STARSHIP"
-    ],
-    "cardSubtype": "CAPITAL",
-    "lore": "Commissioned by the Old Republic at end of the Clone Wars, Rendili StarDrive's Victory-class starship is atmosphere-capable but has a low sublight speed.",
-    "gameText": "May add 4 pilots and 6 passengers.  Permanent pilot provides ability of 4.  Opponent's starships may not add [Light Side] or add to Force drains.  While opponent's [Reflections II] objective on table, immune to attrition.",
-    "deployCost": 6,
-    "destiny": 3,
-    "power": 5,
-    "forfeit": 6,
-    "armor": 5,
-    "hyperspeed": 4,
-    "pilotCapacity": 4,
-    "passengerCapacity": 6,
-    "icons": [
-      {
-        "icon": "A_NEW_HOPE",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_7",
-        "count": 1
-      },
-      {
-        "icon": "STARSHIP",
-        "count": 1
-      },
-      {
-        "icon": "NAV_COMPUTER",
-        "count": 1
-      },
-      {
-        "icon": "PILOT",
-        "count": 1
-      },
-      {
-        "icon": "SCOMP_LINK",
-        "count": 1
-      }
-    ],
-    "keywords": [
-      "SHIP_DOCKING_CAPABILITY"
-    ],
-    "modelTypes": [
-      "VICTORY_CLASS_STAR_DESTROYER"
-    ]
-  },
-  {
-    "cardId": "601_98",
-    "title": "Weapon Levitation & The Empire's Back",
-    "slug": "weapon-levitation-the-empires-back",
-    "slugWithSetName": "weapon-levitation-the-empires-back-legacy",
-    "side": "DARK",
-    "uniqueness": "UNIQUE",
-    "expansionSet": "LEGACY",
-    "rarity": "V",
-    "cardCategory": "INTERRUPT",
-    "cardTypes": [
-      "INTERRUPT"
-    ],
-    "cardSubtype": "USED_OR_LOST",
-    "gameText": "USED: Cancel Disarmed or Wookie Strangle. OR Once per battle involving Vader, reveal a device or character weapon from Used Pile and add its printed destiny number to your total power; reshuffle. \nLOST: Use 1 Force to deploy (or retrieve) Vader from Reserve Deck; reshuffle. OR If opponent just initiated a battle against Vader defending alone at a site, his forfeit cannot be reduced.",
-    "destiny": 4,
-    "icons": [
-      {
-        "icon": "CLOUD_CITY",
-        "count": 1
-      },
-      {
-        "icon": "LEGACY_BLOCK_6",
-        "count": 1
-      },
-      {
-        "icon": "INTERRUPT",
-        "count": 1
-      }
-    ],
-    "isComboCard": true
   },
   {
     "cardId": "6_101",

@@ -1,11 +1,11 @@
 {
   "input_file": "src/gemp-swccg-server/src/main/resources/draft/cube_building/worlds_2025/cube_worlds_darkside.csv",
-  "timestamp": "2025-12-15T11:27:49.189919",
+  "timestamp": "2025-12-17T16:37:59.270620",
   "total_rows": 300,
   "total_cells": 1800,
   "non_empty_cells": 329,
   "successful_matches": 319,
-  "multiple_matches": 13,
+  "multiple_matches": 9,
   "missing_cards": [
     {
       "row": 5,
@@ -90,16 +90,6 @@
       ]
     },
     {
-      "row": 6,
-      "column": 1,
-      "card_name": "4-LOM With Concussion Rifle",
-      "message": "Multiple cards found, using first match: 109_6",
-      "alternatives": [
-        "109_6",
-        "601_177"
-      ]
-    },
-    {
       "row": 33,
       "column": 1,
       "card_name": "Darth Maul",
@@ -120,16 +110,6 @@
       ]
     },
     {
-      "row": 54,
-      "column": 2,
-      "card_name": "Emperor's Power",
-      "message": "Multiple cards found, using first match: 601_77",
-      "alternatives": [
-        "601_77",
-        "9_123"
-      ]
-    },
-    {
       "row": 61,
       "column": 1,
       "card_name": "Grand Admiral Thrawn (V)",
@@ -147,26 +127,6 @@
       "alternatives": [
         "12_182",
         "12_183"
-      ]
-    },
-    {
-      "row": 183,
-      "column": 2,
-      "card_name": "Ominous Rumors",
-      "message": "Multiple cards found, using first match: 601_261",
-      "alternatives": [
-        "601_261",
-        "8_127"
-      ]
-    },
-    {
-      "row": 197,
-      "column": 1,
-      "card_name": "I've Lost Artoo!",
-      "message": "Multiple cards found, using first match: 1_218",
-      "alternatives": [
-        "1_218",
-        "601_157"
       ]
     },
     {

@@ -119,6 +119,15 @@ def find_card_id(card_name, slug_to_id, slug_with_set_to_id):
     if slug in slug_with_set_to_id:
         return slug_with_set_to_id[slug], "exact_with_set", None
 
+    # Try slug with -v suffix (for virtual cards when LEGACY versions are removed)
+    slug_v = slug + "-v"
+    if slug_v in slug_to_id:
+        result = slug_to_id[slug_v]
+        if isinstance(result, list):
+            return result[0], "virtual_fallback", result
+        else:
+            return result, "virtual_fallback", None
+
     return None, "not_found", None
 
 
