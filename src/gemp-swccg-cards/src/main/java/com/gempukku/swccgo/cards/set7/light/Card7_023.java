@@ -52,32 +52,29 @@ public class Card7_023 extends AbstractAlien {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
-
-        Condition onEndor = new OnCondition(self, Title.Endor);
-        Condition presentWithYourMusician = new PresentWithCondition(self, Filters.and(Filters.your(self), Filters.musician));
-        modifiers.add(new PowerModifier(self, new OrCondition(onEndor, presentWithYourMusician), 2));
-//        modifiers.add(new PowerModifier(self, new OrCondition(new OnCondition(self, Title.Endor),new PresentWithCondition(self, Filters.and(Filters.your(self), Filters.musician))), 2));
+        modifiers.add(new PowerModifier(self, new OrCondition(new OnCondition(self, Title.Endor),new PresentWithCondition(self, Filters.and(Filters.your(self), Filters.musician))), 2));
         return modifiers;
     }
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         final String opponent = game.getOpponent(playerId);
+        PhysicalCard firstJoh = Filters.findFirstActive(game, self, Filters.Joh_Yowza); //for Bane Malar mindscan interactions
 
         // Check condition(s)
         if (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, opponent)
-                && !GameConditions.hasStackedCards(game, self, Filters.jamCard) //'jam' capacity is limited to 1
-                && GameConditions.canStackDestinyCard(game)) {
+                && !GameConditions.hasStackedCards(game, firstJoh, Filters.jamCard) //'jam' capacity is limited to 1
+                && GameConditions.canTarget(game, self, Filters.Joh_Yowza) //for Bane Malar mindscan
+                && GameConditions.canStackDestinyCard(game) ) {
+
             final PhysicalCard destinyToJam = game.getGameState().getTopOfUnresolvedDestinyDraws(opponent);
 
-            ///may need to change some of these parameters for Bane Malar copying (use Filters.Joh_Yowza to get card instead of 'self'?)
-
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("'Jam' (stack) destiny");
-            action.setActionMsg("'Jam' (stack) just-drawn destiny on " + GameUtils.getCardLink(self));
+            action.setText("'Jam' (stack destiny)");
+            action.setActionMsg("'Jam' (stack just-drawn destiny on " + GameUtils.getCardLink(firstJoh) + " )");
             // Perform result(s)
             action.appendEffect(
-                    new StackDestinyCardEffect(action, self, true));
+                    new StackDestinyCardEffect(action, firstJoh, true));
             action.appendEffect(
                     new PassthruEffect(action) {
                         @Override
@@ -91,18 +88,14 @@ public class Card7_023 extends AbstractAlien {
         return null;
     }
 
-    /// normally, use getGameTextRequiredAfterTriggers but this only works when active
-
     /// could try using getGameTextLeavesTableRequiredTriggers instead - probably too late and need to use isAboutToLeaveTable instead?
 
-    /// handles if inactive or game text canceled when going off table (handle 'jam' stacked card)
+    /// handles if inactive or game text canceled when leaving table
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggersAlwaysWhenInPlay(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         final String opponent = game.getOpponent(self.getOwner());
-        //Collection<PhysicalCard> jamCard = Filters.filterStacked(game,Filters.jamCard);
+        //Collection<PhysicalCard> jamCard = Filters.filterStacked(game,Filters.and(Filters.stackedOn(firstJoh),Filters.jamCard));
         Collection<PhysicalCard> jamCard = Filters.filterStacked(game,Filters.and(Filters.stackedOn(self),Filters.jamCard));
-
-        /// add handling incase stacked card is owned by self! (due to using with Bane Malar)
 
         // Check condition(s)
         if (TriggerConditions.isAboutToLeaveTable(game, effectResult, self)
@@ -111,6 +104,11 @@ public class Card7_023 extends AbstractAlien {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Return stacked 'jam' card to Used Pile");
             // Perform result(s)
+            /// may need to add handling incase stacked card is owned by self! (due to Bane Malar using mindscanned text)
+            /// this effect sends the card to owner's used pile (should go to self lost pile after failing to go to opponent's used pile)
+            /// implementing that logic here is possible, but would be nicer to rely on rules enforcement of AR:
+            ///     “If an action would result in you placing an opponent's card into your own hand,
+            ///      Lost Pile or Life Force without actually 'stealing' the card, that action simply fails.” (and card should be lost)
             action.appendEffect(
                     new PutStackedCardsInUsedPileEffect(action, opponent, jamCard, true));
             return Collections.singletonList(action);

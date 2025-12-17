@@ -9,7 +9,6 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
 import org.junit.Ignore;
@@ -20,6 +19,7 @@ import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -563,11 +563,12 @@ public class Card_7_023_Tests {
         assertFalse(scn.LSCardActionAvailable(joh));
     }
 
-    /// need to carefully review how mindscan works with Joh
     @Test @Ignore
     public void JohYowzaMindscanAllowsJamOwnJustDrawnDestiny() {
-        //Test1: Bane Malar mindscanning Joh (adding Joh's gametext to Bane's) allows LS an optional
-        // response action on Bane Malar to stack LS just drawn destiny
+        //Test1: Bane Malar mindscanning Joh (adding Joh's gametext to Bane's) allows DS an optional
+        // response action on Bane Malar to stack LS just drawn destiny on Joh - 'self-jam'
+        //Test2: Joh leaving table with 'self-jam' stacked card causes that card to go to LS lost pile
+        // (cannot go to DS used pile because it is not 'stolen')
         var scn = GetScenario();
 
         var joh = scn.GetLSCard("joh");
@@ -586,8 +587,6 @@ public class Card_7_023_Tests {
         scn.MoveCardsToLSHand(jamDestiny,sense);
         scn.MoveCardsToDSHand(assault);
 
-        scn.MoveCardsToTopOfLSReserveDeck(jamDestiny);
-
         scn.SkipToPhase(Phase.BATTLE);
         scn.DSInitiateBattle(site);
         scn.DSUseCardAction(bane,"Mindscan");
@@ -605,6 +604,7 @@ public class Card_7_023_Tests {
         scn.DSPlayCard(assault);
 
         //Playing Trooper Assault - Optional responses
+        scn.MoveCardsToTopOfLSReserveDeck(jamDestiny); //to be drawn for Sense destiny
         scn.LSPlayCard(sense);
         scn.LSChooseCard(joh);
 
@@ -617,16 +617,26 @@ public class Card_7_023_Tests {
         scn.DSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
         scn.LSPass();
 
-        /// currently, DS has optional response on Bane Malar to attempt to stack a 'jam' card on Bane Malar
         //Just drew (card) for destiny - Optional responses
+        assertTrue(scn.DSDecisionAvailable("Just drew")); // would be DESTINY_DRAWN if no response available
         assertFalse(scn.DSCardActionAvailable(joh));
-        assertFalse(scn.DSCardActionAvailable(bane));
+        assertTrue(scn.DSCardActionAvailable(bane));
         scn.DSUseCardAction(bane,"'Jam'");
-        //scn.DSPass();
 
-        //DESTINY_DRAWN - Optional responses
-        assertFalse(scn.LSDecisionAvailable("Just drew")); //"Just drew (card) - optional response" would be available if could stack
-        assertFalse(scn.LSCardActionAvailable(joh));
+        assertTrue(scn.IsStackedOn(joh,jamDestiny)); //test1
+        assertTrue(jamDestiny.isJamCard());
+        assertTrue(jamDestiny.isStackedAsInactive());
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.AwaitingDSWeaponsSegmentActions());
+
+        scn.SkipToDamageSegment(false);
+        scn.LSPayBattleDamageFromCardInPlay(joh);
+
+        assertTrue(scn.AwaitingLSBattleDamagePayment());
+        assertFalse(jamDestiny.isJamCard());
+        assertNotSame(jamDestiny,scn.GetTopOfLSUsedPile()); //test2: fails here - should go to LS Lost Pile after failing to be returned to DS Used Pile (has not been stolen)
 
     }
 
@@ -634,5 +644,10 @@ public class Card_7_023_Tests {
     //cannot play optional action on substituted destiny
     //going inactive (missing) retains jam card
     //going active again (found) retains jam card
-    //self-jam card goes to (lost pile?) when joh leaves table
+    //no conflict between stacked hatred card and stacked jam card
+
+    //more bane malar mindscan scenarios:
+    //if mindscans joh and then joh is excluded, bane cannot stack
+    //if mindscans joh, joh (or bane) jam a card on joh, then bane leaves table - confirm joh keeps jam card
+
 }
