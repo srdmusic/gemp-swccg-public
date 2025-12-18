@@ -19,6 +19,13 @@ Use this skill when:
 
 ## Workflow
 
+**CRITICAL REQUIREMENT:** Unless explicitly told otherwise, you MUST use side-specific databases with defensive shields filtered out when mapping light/dark side cards. This prevents:
+1. Defensive shield versions being mapped instead of effect versions (e.g., "Battle Plan" as shield vs effect)
+2. Wrong-side cards appearing in drafts (e.g., DARK "Control" in LIGHT side packs)
+3. Slug collision errors
+
+See Step 3 for detailed instructions on creating filtered databases.
+
 ### Step 1: Prepare CSV Files
 
 Create three CSV files in the cube source directory:
@@ -153,10 +160,10 @@ CUBE_DIR="src/gemp-swccg-server/src/main/resources/draft/cube_building/<cube_nam
 **Script Behavior:**
 - Detects single vs multi-column by checking for non-empty columns
 - Slugifies card names (lowercase, special chars → `-`)
-- Tries exact slug match, then slug + set name
+- Tries exact slug match, then slug + set name, then slug with `-v` suffix (virtual fallback)
 - Logs all issues for review
 
-### Step 4: Generate Cube Configuration
+### Step 5: Generate Cube Configuration
 
 Use `create_cube` to build the final configuration:
 
@@ -209,7 +216,7 @@ python3 bin/create_cube \
 }
 ```
 
-### Step 5: Register Draft Format
+### Step 6: Register Draft Format
 
 Add the cube to the draft registry:
 
@@ -232,7 +239,7 @@ Add the cube to the draft registry:
 - `type` - Format identifier (used in code and database)
 - `location` - Path relative to resources directory
 
-### Step 6: Update Frontend
+### Step 7: Update Frontend
 
 Add the cube to the league admin dropdown:
 
@@ -250,7 +257,7 @@ Add the cube to the league admin dropdown:
 
 **Critical:** The `value` attribute MUST match the `type` field in swccgDrafts.json
 
-### Step 7: Deploy and Verify
+### Step 8: Deploy and Verify
 
 ```bash
 # Rebuild server module (contains cube config)
@@ -408,26 +415,77 @@ mkdir -p src/gemp-swccg-server/src/main/resources/draft/cube_building/my_cube
 # 3. Update card database
 ./bin/gemp export-cards src/gemp-swccg-cards/src/main/resources/card_blueprint_database.json
 
-# 4. Map all cards
-CUBE_DIR="src/gemp-swccg-server/src/main/resources/draft/cube_building/my_cube"
-./bin/map_card_names_to_ids $CUBE_DIR/default_cards.csv $CUBE_DIR/default_cards_mapped.json
-./bin/map_card_names_to_ids $CUBE_DIR/cube_worlds_lightside.csv $CUBE_DIR/cube_worlds_lightside_mapped.json
-./bin/map_card_names_to_ids $CUBE_DIR/cube_worlds_darkside.csv $CUBE_DIR/cube_worlds_darkside_mapped.json
+# 4. Create side-specific databases WITHOUT defensive shields
+bash <<'BASH'
+cd src/gemp-swccg-cards/src/main/resources
 
-# 5. Generate config
+# Light side without defensive shields
+jq '[.[] | select(.side == "LIGHT" and .cardCategory != "DEFENSIVE_SHIELD")]' \
+  card_blueprint_database.json > /tmp/card_blueprint_database_light_no_shields.json
+
+# Dark side without defensive shields
+jq '[.[] | select(.side == "DARK" and .cardCategory != "DEFENSIVE_SHIELD")]' \
+  card_blueprint_database.json > /tmp/card_blueprint_database_dark_no_shields.json
+
+# Verify filtering
+echo "Light side shields (should be 0):"
+jq '[.[] | select(.cardCategory == "DEFENSIVE_SHIELD")] | length' \
+  /tmp/card_blueprint_database_light_no_shields.json
+
+echo "Dark side shields (should be 0):"
+jq '[.[] | select(.cardCategory == "DEFENSIVE_SHIELD")] | length' \
+  /tmp/card_blueprint_database_dark_no_shields.json
+BASH
+
+# 5. Map all cards with side-specific databases
+CUBE_DIR="src/gemp-swccg-server/src/main/resources/draft/cube_building/my_cube"
+
+# Default cards - use main database
+./bin/map_card_names_to_ids \
+  $CUBE_DIR/default_cards.csv \
+  $CUBE_DIR/default_cards_mapped.json \
+  src/gemp-swccg-cards/src/main/resources/card_blueprint_database.json
+
+# Light side - use filtered light-only database
+./bin/map_card_names_to_ids \
+  $CUBE_DIR/cube_worlds_lightside.csv \
+  $CUBE_DIR/cube_worlds_lightside_mapped.json \
+  /tmp/card_blueprint_database_light_no_shields.json
+
+# Dark side - use filtered dark-only database
+./bin/map_card_names_to_ids \
+  $CUBE_DIR/cube_worlds_darkside.csv \
+  $CUBE_DIR/cube_worlds_darkside_mapped.json \
+  /tmp/card_blueprint_database_dark_no_shields.json
+
+# 6. Generate config
 python3 bin/create_cube $CUBE_DIR src/gemp-swccg-server/src/main/resources/draft/cubeMyCube.json
 
-# 6. Verify no playtesting
-grep '"501_' src/gemp-swccg-server/src/main/resources/draft/cubeMyCube.json
-# Should return nothing
+# 7. Verify no playtesting or defensive shields
+echo "Playtesting cards (should be 0):"
+grep -c '"501_' src/gemp-swccg-server/src/main/resources/draft/cubeMyCube.json || echo "0"
 
-# 7. Register in swccgDrafts.json
+echo "Checking defensive shields are not in cube..."
+# This checks a sample defensive shield - expand as needed
+bash <<'BASH'
+CUBE_FILE="src/gemp-swccg-server/src/main/resources/draft/cubeMyCube.json"
+SHIELD_COUNT=0
+for id in $(jq -r '.[] | select(.cardCategory == "DEFENSIVE_SHIELD") | .cardId' \
+  src/gemp-swccg-cards/src/main/resources/card_blueprint_database.json | head -10); do
+  if grep -q "\"$id\"" "$CUBE_FILE"; then
+    SHIELD_COUNT=$((SHIELD_COUNT + 1))
+  fi
+done
+echo "Defensive shields found: $SHIELD_COUNT (should be 0)"
+BASH
+
+# 8. Register in swccgDrafts.json
 # Add: {"type": "my_cube_draft", "location": "/draft/cubeMyCube.json"}
 
-# 8. Add to leagueAdmin.html
+# 9. Add to leagueAdmin.html
 # Add: <option value="my_cube_draft">My Cube Draft</option>
 
-# 9. Deploy
+# 10. Deploy
 ./bin/gemp reload-fast
 ```
 
