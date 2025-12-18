@@ -76,21 +76,69 @@ grep -c '"cardId": "501_' src/gemp-swccg-cards/src/main/resources/card_blueprint
 # Must output: 0
 ```
 
-### Step 3: Map Card Names to IDs
+### Step 3: Create Side-Specific Databases (CRITICAL)
 
-Map each CSV file to card IDs using the `map_card_names_to_ids` script:
+**IMPORTANT:** Unless explicitly told otherwise, you MUST filter out defensive shields from the side-specific databases to prevent slug collisions. Cards like "Battle Plan" exist as both Effect and Defensive Shield with the same slug - without filtering, the defensive shield version will be incorrectly mapped instead of the effect.
+
+**Create filtered databases excluding defensive shields:**
+
+```bash
+bash <<'BASH'
+cd src/gemp-swccg-cards/src/main/resources
+
+# Create light side database without defensive shields
+jq '[.[] | select(.side == "LIGHT" and .cardCategory != "DEFENSIVE_SHIELD")]' \
+  card_blueprint_database.json > /tmp/card_blueprint_database_light_no_shields.json
+
+# Create dark side database without defensive shields
+jq '[.[] | select(.side == "DARK" and .cardCategory != "DEFENSIVE_SHIELD")]' \
+  card_blueprint_database.json > /tmp/card_blueprint_database_dark_no_shields.json
+BASH
+```
+
+**Verify filtering worked:**
+
+```bash
+bash <<'BASH'
+echo "Light side defensive shields (should be 0):"
+jq '[.[] | select(.cardCategory == "DEFENSIVE_SHIELD")] | length' \
+  /tmp/card_blueprint_database_light_no_shields.json
+
+echo "Dark side defensive shields (should be 0):"
+jq '[.[] | select(.cardCategory == "DEFENSIVE_SHIELD")] | length' \
+  /tmp/card_blueprint_database_dark_no_shields.json
+BASH
+```
+
+**Why this matters:**
+- Prevents defensive shields from being mapped when effect versions exist
+- Prevents side-mixing (e.g., DARK "Control" appearing in LIGHT side packs)
+- Resolves slug collisions for cards with same names on both sides
+
+### Step 4: Map Card Names to IDs
+
+Map each CSV file to card IDs using the `map_card_names_to_ids` script with **side-specific, defensive-shield-filtered databases**:
 
 ```bash
 CUBE_DIR="src/gemp-swccg-server/src/main/resources/draft/cube_building/<cube_name>"
 
-# Map default/core cards
-./bin/map_card_names_to_ids $CUBE_DIR/default_cards.csv $CUBE_DIR/default_cards_mapped.json
+# Map default/core cards (use main database)
+./bin/map_card_names_to_ids \
+  $CUBE_DIR/default_cards.csv \
+  $CUBE_DIR/default_cards_mapped.json \
+  src/gemp-swccg-cards/src/main/resources/card_blueprint_database.json
 
-# Map light side packs
-./bin/map_card_names_to_ids $CUBE_DIR/cube_worlds_lightside.csv $CUBE_DIR/cube_worlds_lightside_mapped.json
+# Map light side packs (use light-only, no shields)
+./bin/map_card_names_to_ids \
+  $CUBE_DIR/cube_worlds_lightside.csv \
+  $CUBE_DIR/cube_worlds_lightside_mapped.json \
+  /tmp/card_blueprint_database_light_no_shields.json
 
-# Map dark side packs
-./bin/map_card_names_to_ids $CUBE_DIR/cube_worlds_darkside.csv $CUBE_DIR/cube_worlds_darkside_mapped.json
+# Map dark side packs (use dark-only, no shields)
+./bin/map_card_names_to_ids \
+  $CUBE_DIR/cube_worlds_darkside.csv \
+  $CUBE_DIR/cube_worlds_darkside_mapped.json \
+  /tmp/card_blueprint_database_dark_no_shields.json
 ```
 
 **Output Files:**
