@@ -39,7 +39,7 @@ public class StackDestinyCardEffect extends AbstractSubActionEffect {
         super(action);
         _stackOn = stackOn;
         _faceDown = faceDown;
-        _asInactive = faceDown;
+        _asInactive = false;
     }
 
     @Override
