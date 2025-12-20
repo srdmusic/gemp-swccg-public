@@ -10,6 +10,7 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Species;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
 import org.junit.Ignore;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
@@ -74,9 +76,12 @@ public class Card_7_023_Tests {
          * Keywords: Musician, Thief
          * Species: Yuzzum
 		 * Persona:
-		 * Game Text: Power +2 on Endor or when present with your musician. When opponent draws destiny, Joh may 'jam'
+		 * (OLD) Game Text: Power +2 on Endor or when present with your musician. When opponent draws destiny, Joh may 'jam'
          *      (place that card face down under Joh). Holds one card at a time. If Joh leaves table,
          *      place card under Joh in opponent's Used Pile.
+         * (NEW) Game Text: Power +2 on Endor or when present with your musician. When opponent draws destiny, may 'jam'
+         *      (place that card face down under Joh). Holds one 'jammed' card at a time. If Joh about to leave table,
+         *      place 'jammed' card under Joh in owner's Used Pile
 		 * Lore: Yuzzum musician and thief. Singer for The Max Rebo Band. Stage name given to him by Sy Snootles.
          *      Jabba likes his performance, even though the Hutt despises Yuzzum.
 		 * Set: Special Edition
@@ -333,17 +338,22 @@ public class Card_7_023_Tests {
         scn.LSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
         scn.DSPass();
 
-        scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+        assertTrue(scn.LSDecisionAvailable("ABOUT_TO_DRAW_DESTINY_CARD - Optional responses"));
+        assertFalse(scn.LSCardActionAvailable(joh,"'Jam'"));
+        scn.LSPass();
+        assertTrue(scn.DSDecisionAvailable("ABOUT_TO_DRAW_DESTINY_CARD - Optional responses"));
         scn.DSPass();
 
-        //DESTINY_DRAWN - Optional responses
-        assertFalse(scn.LSDecisionAvailable("Just drew")); //"Just drew (card) - optional response" would be available if could stack
+        //if Joh could stack a destiny, it would be here with a "Just drew (card) for destiny - Optional responses"
+
         assertFalse(scn.LSCardActionAvailable(joh,"'Jam'"));
+        assertTrue(scn.LSDecisionAvailable("DESTINY_DRAWN - Optional responses")); //test1: past window to jam
     }
 
     @Test
     public void JohYowzaRetainsJamCardIfGametextCanceled() {
         //Test1: Joh keeps a stacked 'jam' card if his game text is canceled
+        //  jam a destiny and then play e chu ta to cancel Joh's destiny
         var scn = GetScenario();
 
         var joh = scn.GetLSCard("joh");
@@ -393,28 +403,27 @@ public class Card_7_023_Tests {
     }
 
     @Test
-    public void JohYowzaJamCardSentToUsedPileIfJohLeavesTableWhileGametextCanceled() {
-        //Test1: Joh's text conditions for sending stacked 'jam' card to opponent's used pile
-        //  still applies if his game text is canceled when leaving table
+    public void JohYowzaRetainsJamCardWhenMissingAndFound() {
+        //Test1: After stacking 1 'jam' card, if Joh goes missing (becomes inactive), the 'jam' card remains
+        //Test2: After finding Joh (becomes active), the 'jam' card remains
         var scn = GetScenario();
 
         var joh = scn.GetLSCard("joh");
+        var rebelTrooper = scn.GetLSFiller(1);
 
         var bok = scn.GetDSCard("bok");
-        var lom = scn.GetDSCard("lom");
-        var echuta = scn.GetDSCard("echuta");
-        var setForStun = scn.GetDSCard("setForStun");
         var jamDestiny = scn.GetDSFiller(1);
+        var comeback = scn.GetDSCard("comeback");
 
-        var site = scn.GetLSStartingLocation();
+        var site = scn.GetDSStartingLocation(); //exterior planet site to allow playing comeback
 
         scn.StartGame();
 
-        scn.MoveCardsToLocation(site, joh, bok, lom);
-        scn.MoveCardsToDSHand(jamDestiny,echuta,setForStun);
+        scn.MoveCardsToLocation(site, joh, bok);
+        scn.MoveCardsToDSHand(jamDestiny,comeback);
+        scn.MoveCardsToLSHand(rebelTrooper);
 
         scn.SkipToPhase(Phase.DEPLOY);
-        assertTrue(scn.DSCardActionAvailable(bok,"Draw destiny"));
         scn.DSUseCardAction(bok,"Draw destiny");
 
         scn.MoveCardsToTopOfDSReserveDeck(jamDestiny);
@@ -426,36 +435,41 @@ public class Card_7_023_Tests {
         scn.DSPass();
 
         //Just drew (card) for destiny - Optional responses
-        assertTrue(scn.LSCardActionAvailable(joh,"'Jam'"));
         scn.LSUseCardAction(joh,"'Jam'");
-        scn.PassAllResponses();
-
-        assertTrue(scn.AwaitingLSDeployPhaseActions());
-        assertTrue(scn.IsStackedOn(joh,jamDestiny));
-        scn.LSPass();
-
-        assertTrue(scn.DSCardPlayAvailable(echuta));
-        scn.DSUseCardAction(echuta);
-        scn.DSChooseCard(lom);
-        scn.DSChooseCard(joh);
 
         scn.PassAllResponses();
 
         assertTrue(scn.AwaitingLSDeployPhaseActions());
         assertTrue(scn.IsStackedOn(joh,jamDestiny));
-        scn.LSPass();
 
-        scn.PrepareDSDestiny(7);
-        assertTrue(scn.AwaitingDSDeployPhaseActions());
-        assertTrue(scn.DSCardPlayAvailable(setForStun));
-        scn.DSPlayCard(setForStun);
+        scn.SkipToLSTurn();
+
+        scn.SkipToDSTurn(Phase.CONTROL);
+        scn.DSPlayCard(comeback);
         scn.DSChooseCard(joh);
-
         scn.PassAllResponses();
 
-        assertTrue(scn.AwaitingLSDeployPhaseActions());
-        assertSame(jamDestiny,scn.GetTopOfDSUsedPile()); //test1
-        assertFalse(jamDestiny.isJamCard());
+        assertTrue(joh.isMissing());
+        assertTrue(scn.IsStackedOn(joh,jamDestiny)); //test1
+        assertTrue(jamDestiny.isJamCard());
+        assertFalse(scn.IsCardActive(jamDestiny));
+        assertFalse(jamDestiny.isStackedAsInactive());
+
+        scn.MoveCardsToLocation(site,rebelTrooper);
+        scn.SkipToLSTurn(Phase.CONTROL);
+        scn.PrepareLSDestiny(7);
+
+        scn.LSUseCardAction(site,"Form search party");
+        scn.LSChooseCard(rebelTrooper);
+        //search party destiny total: 7 + 1 character = 8, succeeds
+        scn.PassAllResponses();
+        assertTrue(scn.AwaitingDSControlPhaseActions());
+        assertFalse(joh.isMissing());
+
+        assertTrue(scn.IsStackedOn(joh,jamDestiny)); //test2
+        assertTrue(jamDestiny.isJamCard());
+        assertFalse(scn.IsCardActive(jamDestiny));
+        assertFalse(jamDestiny.isStackedAsInactive());
     }
 
     @Test
@@ -515,7 +529,190 @@ public class Card_7_023_Tests {
     }
 
     @Test
-    public void JohYowzaJamCardSentToUsedPileWhenJohLeavesTable() {
+    public void JohYowzaJamCardSentToUsedPileWhenJohLeavesTableLost() {
+        //Test1: Joh leaving table (lost during battle) causes a jam card to be sent to owner's Used Pile
+        var scn = GetScenario();
+
+        var joh = scn.GetLSCard("joh");
+
+        var bok = scn.GetDSCard("bok");
+        var trooper1 = scn.GetDSFiller(1);
+        var trooper2 = scn.GetDSFiller(2);
+        var jamDestiny = scn.GetDSFiller(3);
+        var setForStun = scn.GetDSCard("setForStun");
+
+        var site = scn.GetLSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToLocation(site, joh, bok, trooper1, trooper2);
+        scn.MoveCardsToDSHand(jamDestiny,setForStun);
+
+        scn.SkipToPhase(Phase.DEPLOY);
+        scn.DSUseCardAction(bok,"Draw destiny");
+
+        scn.MoveCardsToTopOfDSReserveDeck(jamDestiny);
+
+        scn.LSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
+        scn.DSPass();
+
+        scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+        scn.DSPass();
+
+        //Just drew (card) for destiny - Optional responses
+        scn.LSUseCardAction(joh,"'Jam'");
+        scn.PassAllResponses();
+
+        assertTrue(scn.IsStackedOn(joh,jamDestiny));
+        scn.LSPass();
+
+        scn.SkipToPhase(Phase.BATTLE);
+        scn.DSInitiateBattle(site);
+
+        scn.SkipToDamageSegment(false);
+
+        assertTrue(scn.AwaitingLSBattleDamagePayment());
+        scn.LSChooseCard(joh);
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.AwaitingLSBattlePhaseActions());
+
+        assertSame(jamDestiny,scn.GetTopOfDSUsedPile()); //test1
+        assertFalse(jamDestiny.isJamCard());
+    }
+
+    @Test
+    public void JohYowzaJamCardSentToLostPileIfJohGameTextCanceledWhenJohLeavesTableLost() {
+        //Test1: Joh leaving table (lost during battle) but with game text canceled causes jam card to go to lost pile
+        var scn = GetScenario();
+
+        var joh = scn.GetLSCard("joh");
+
+        var bok = scn.GetDSCard("bok");
+        var lom = scn.GetDSCard("lom");
+        var echuta = scn.GetDSCard("echuta");
+        var jamDestiny = scn.GetDSFiller(3);
+        var setForStun = scn.GetDSCard("setForStun");
+
+        var site = scn.GetLSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToLocation(site, joh, bok, lom);
+        scn.MoveCardsToDSHand(jamDestiny, setForStun, echuta);
+
+        scn.SkipToPhase(Phase.DEPLOY);
+        scn.DSUseCardAction(bok,"Draw destiny");
+
+        scn.MoveCardsToTopOfDSReserveDeck(jamDestiny);
+
+        scn.LSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
+        scn.DSPass();
+
+        scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+        scn.DSPass();
+
+        //Just drew (card) for destiny - Optional responses
+        scn.LSUseCardAction(joh,"'Jam'");
+        scn.PassAllResponses();
+
+        assertTrue(scn.IsStackedOn(joh,jamDestiny));
+        scn.LSPass();
+
+        assertTrue(scn.DSCardPlayAvailable(echuta));
+        scn.DSUseCardAction(echuta);
+        scn.DSChooseCard(lom);
+        scn.DSChooseCard(joh);
+        scn.PassAllResponses();
+
+        scn.SkipToPhase(Phase.BATTLE);
+        scn.DSInitiateBattle(site);
+
+        scn.SkipToDamageSegment(false);
+
+        assertTrue(scn.AwaitingLSBattleDamagePayment());
+        scn.LSChooseCard(joh);
+
+        scn.DSPass(); //Optional responses
+        scn.LSPass();
+
+        assertTrue(scn.AwaitingLSBattlePhaseActions());
+
+        assertNotSame(jamDestiny,scn.GetTopOfDSUsedPile());
+        assertSame(jamDestiny,scn.GetTopOfDSLostPile()); //test1
+        assertFalse(jamDestiny.isJamCard());
+    }
+
+    @Test
+    public void JohYowzaJamCardSentToHandIfJohGameTextCanceledWhenJohLeavesTableToHand() {
+        //Test1: Joh's text conditions for sending stacked 'jam' card to opponent's used pile
+        //  does not apply if his game text is canceled when leaving table
+        var scn = GetScenario();
+
+        var joh = scn.GetLSCard("joh");
+
+        var bok = scn.GetDSCard("bok");
+        var lom = scn.GetDSCard("lom");
+        var echuta = scn.GetDSCard("echuta");
+        var setForStun = scn.GetDSCard("setForStun");
+        var jamDestiny = scn.GetDSFiller(1);
+
+        var site = scn.GetLSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToLocation(site, joh, bok, lom);
+        scn.MoveCardsToDSHand(jamDestiny,echuta,setForStun);
+
+        scn.SkipToPhase(Phase.DEPLOY);
+        assertTrue(scn.DSCardActionAvailable(bok,"Draw destiny"));
+        scn.DSUseCardAction(bok,"Draw destiny");
+
+        scn.MoveCardsToTopOfDSReserveDeck(jamDestiny);
+
+        scn.LSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
+        scn.DSPass();
+
+        scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+        scn.DSPass();
+
+        //Just drew (card) for destiny - Optional responses
+        assertTrue(scn.LSCardActionAvailable(joh,"'Jam'"));
+        scn.LSUseCardAction(joh,"'Jam'");
+        scn.PassAllResponses();
+
+        assertTrue(scn.AwaitingLSDeployPhaseActions());
+        assertTrue(scn.IsStackedOn(joh,jamDestiny));
+        scn.LSPass();
+
+        assertTrue(scn.DSCardPlayAvailable(echuta));
+        scn.DSUseCardAction(echuta);
+        scn.DSChooseCard(lom);
+        scn.DSChooseCard(joh);
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.AwaitingLSDeployPhaseActions());
+        assertTrue(scn.IsStackedOn(joh,jamDestiny));
+        scn.LSPass();
+
+        scn.PrepareDSDestiny(7);
+        assertTrue(scn.AwaitingDSDeployPhaseActions());
+        assertTrue(scn.DSCardPlayAvailable(setForStun));
+        scn.DSPlayCard(setForStun);
+        scn.DSChooseCard(joh);
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.AwaitingLSDeployPhaseActions());
+        assertSame(Zone.HAND,joh.getZone());
+        assertSame(Zone.HAND,jamDestiny.getZone()); //test1 (returned to hand by setForStun)
+        assertFalse(jamDestiny.isJamCard());
+    }
+
+    @Test
+    public void JohYowzaJamCardSentToUsedPileWhenJohLeavesTableToHand() {
         //Test1: Joh leaving table causes a jam card to be sent to owner's Used Pile
         var scn = GetScenario();
 
@@ -556,40 +753,12 @@ public class Card_7_023_Tests {
         scn.DSPlayCard(setForStun);
         scn.DSChooseCard(joh);
 
-        scn.LSPass(); //Use 2 Force - Optional responses
-        scn.DSPass();
-
-        scn.LSPass(); //Playing Set For Stun - Optional responses
-        scn.DSPass();
-
-        scn.LSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
-        scn.DSPass();
-
-        scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
-        scn.DSPass();
-
-        scn.LSPass(); //DESTINY_DRAWN - Optional responses
-        scn.DSPass();
-
-        scn.LSPass(); //COMPLETE_DESTINY_DRAW - Optional responses
-        scn.DSPass();
-
-        scn.LSPass(); //DRAWING_DESTINY_COMPLETE - Optional responses
-        scn.DSPass();
-
-        scn.DSPass(); //REMOVED_FROM_STACKED - Optional responses
-        scn.LSPass();
-
-        scn.LSPass(); //ABOUT_TO_BE_RETURNED_TO_HAND_FROM_TABLE - Optional responses
-        scn.DSPass(); //
-
-        scn.LSPass(); //RETURNED_TO_HAND_FROM_TABLE - Optional responses
-        scn.DSPass();
-
-        scn.LSPass(); //PUT_IN_CARD_PILE_FROM_OFF_TABLE - Optional responses
-        scn.DSPass();
+        scn.PassAllResponses();
 
         assertTrue(scn.AwaitingLSDeployPhaseActions());
+
+        assertSame(Zone.HAND,joh.getZone());
+        assertNotSame(Zone.HAND,jamDestiny.getZone());
         assertSame(jamDestiny,scn.GetTopOfDSUsedPile()); //test1
         assertFalse(jamDestiny.isJamCard());
     }
@@ -633,12 +802,18 @@ public class Card_7_023_Tests {
         scn.DSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
         scn.LSPass();
 
-        scn.DSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+        assertTrue(scn.DSDecisionAvailable("ABOUT_TO_DRAW_DESTINY_CARD - Optional responses"));
+        scn.DSPass();
+        assertTrue(scn.LSDecisionAvailable("ABOUT_TO_DRAW_DESTINY_CARD - Optional responses"));
+        assertFalse(scn.LSCardActionAvailable(joh,"'Jam'"));
         scn.LSPass();
 
-        scn.DSPass(); //DESTINY_DRAWN - Optional responses
-        assertFalse(scn.LSDecisionAvailable("Just drew")); //"Just drew (card) - optional response" would be available if could stack
-        assertFalse(scn.LSCardActionAvailable(joh));
+        //if Joh could stack a destiny, it would be here with a "Just drew (card) for destiny - Optional responses"
+
+        assertTrue(scn.DSDecisionAvailable("DESTINY_DRAWN - Optional responses"));
+        scn.DSPass();
+        assertFalse(scn.LSCardActionAvailable(joh,"'Jam'"));
+        assertTrue(scn.LSDecisionAvailable("DESTINY_DRAWN - Optional responses")); //test1: past window to jam
     }
 
     @Test
@@ -717,75 +892,6 @@ public class Card_7_023_Tests {
 
     }
 
-    @Test
-    public void JohYowzaRetainsJamCardWhenMissingAndFound() {
-        //Test1: After stacking 1 'jam' card, if Joh goes missing (becomes inactive), the 'jam' card remains
-        //Test2: After finding Joh (becomes active), the 'jam' card remains
-        var scn = GetScenario();
-
-        var joh = scn.GetLSCard("joh");
-        var rebelTrooper = scn.GetLSFiller(1);
-
-        var bok = scn.GetDSCard("bok");
-        var jamDestiny = scn.GetDSFiller(1);
-        var comeback = scn.GetDSCard("comeback");
-
-        var site = scn.GetDSStartingLocation(); //exterior planet site to allow playing comeback
-
-        scn.StartGame();
-
-        scn.MoveCardsToLocation(site, joh, bok);
-        scn.MoveCardsToDSHand(jamDestiny,comeback);
-        scn.MoveCardsToLSHand(rebelTrooper);
-
-        scn.SkipToPhase(Phase.DEPLOY);
-        scn.DSUseCardAction(bok,"Draw destiny");
-
-        scn.MoveCardsToTopOfDSReserveDeck(jamDestiny);
-
-        scn.LSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
-        scn.DSPass();
-
-        scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
-        scn.DSPass();
-
-        //Just drew (card) for destiny - Optional responses
-        scn.LSUseCardAction(joh,"'Jam'");
-
-        scn.PassAllResponses();
-
-        assertTrue(scn.AwaitingLSDeployPhaseActions());
-        assertTrue(scn.IsStackedOn(joh,jamDestiny));
-
-        scn.SkipToLSTurn();
-
-        scn.SkipToDSTurn(Phase.CONTROL);
-        scn.DSPlayCard(comeback);
-        scn.DSChooseCard(joh);
-        scn.PassAllResponses();
-
-        assertTrue(joh.isMissing());
-        assertTrue(scn.IsStackedOn(joh,jamDestiny)); //test1
-        assertTrue(jamDestiny.isJamCard());
-        assertFalse(scn.IsCardActive(jamDestiny));
-        assertFalse(jamDestiny.isStackedAsInactive());
-
-        scn.MoveCardsToLocation(site,rebelTrooper);
-        scn.SkipToLSTurn(Phase.CONTROL);
-        scn.PrepareLSDestiny(7);
-
-        scn.LSUseCardAction(site,"Form search party");
-        scn.LSChooseCard(rebelTrooper);
-        //search party destiny total: 7 + 1 character = 8, succeeds
-        scn.PassAllResponses();
-        assertTrue(scn.AwaitingDSControlPhaseActions());
-        assertFalse(joh.isMissing());
-
-        assertTrue(scn.IsStackedOn(joh,jamDestiny)); //test2
-        assertTrue(jamDestiny.isJamCard());
-        assertFalse(scn.IsCardActive(jamDestiny));
-        assertFalse(jamDestiny.isStackedAsInactive());
-    }
 
     //tests to add:
     //no conflict between stacked hatred card and stacked jam card

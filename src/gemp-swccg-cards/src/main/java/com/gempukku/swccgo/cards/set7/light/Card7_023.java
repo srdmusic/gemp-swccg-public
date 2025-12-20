@@ -19,7 +19,6 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
-import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.OrCondition;
 import com.gempukku.swccgo.logic.effects.PutStackedCardsInUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.choose.StackDestinyCardEffect;
@@ -43,7 +42,8 @@ public class Card7_023 extends AbstractAlien {
     public Card7_023() {
         super(Side.LIGHT, 3, 2, 2, 1, 3, Title.Joh_Yowza, Uniqueness.UNIQUE, ExpansionSet.SPECIAL_EDITION, Rarity.R);
         setLore("Yuzzum musician and thief. Singer for The Max Rebo Band. Stage name given to him by Sy Snootles. Jabba likes his performance, even though the Hutt despises Yuzzum.");
-        setGameText("Power +2 on Endor or when present with your musician. When opponent draws destiny, Joh may 'jam' (place that card face down under Joh). Holds one card at a time. If Joh leaves table, place card under Joh in opponent's Used Pile.");
+/*orig  setGameText("Power +2 on Endor or when present with your musician. When opponent draws destiny, Joh may 'jam' (place that card face down under Joh). Holds one card at a time. If Joh leaves table, place card under Joh in opponent's Used Pile."); */
+        setGameText("Power +2 on Endor or when present with your musician. When opponent draws destiny, may 'jam' (place that card face down under Joh). Holds one 'jammed' card at a time. If Joh about to leave table, place 'jammed' card under Joh in owner's Used Pile");
         addIcons(Icon.SPECIAL_EDITION);
         addKeywords(Keyword.MUSICIAN,Keyword.THIEF);
         setSpecies(Species.YUZZUM);
@@ -88,11 +88,8 @@ public class Card7_023 extends AbstractAlien {
         return null;
     }
 
-    /// could try using getGameTextLeavesTableRequiredTriggers instead - probably too late and need to use isAboutToLeaveTable instead?
-
-    /// handles if inactive or game text canceled when leaving table
     @Override
-    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggersAlwaysWhenInPlay(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+    protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         final String opponent = game.getOpponent(self.getOwner());
         //Collection<PhysicalCard> jamCard = Filters.filterStacked(game,Filters.and(Filters.stackedOn(firstJoh),Filters.jamCard));
         Collection<PhysicalCard> jamCard = Filters.filterStacked(game,Filters.and(Filters.stackedOn(self),Filters.jamCard));
@@ -104,11 +101,6 @@ public class Card7_023 extends AbstractAlien {
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Return stacked 'jam' card to Used Pile");
             // Perform result(s)
-            /// may need to add handling incase stacked card is owned by self! (due to Bane Malar using mindscanned text)
-            /// this effect sends the card to owner's used pile (should go to self lost pile after failing to go to opponent's used pile)
-            /// implementing that logic here is possible, but would be nicer to rely on rules enforcement of AR:
-            ///     “If an action would result in you placing an opponent's card into your own hand,
-            ///      Lost Pile or Life Force without actually 'stealing' the card, that action simply fails.” (and card should be lost)
             action.appendEffect(
                     new PutStackedCardsInUsedPileEffect(action, opponent, jamCard, true));
             return Collections.singletonList(action);
