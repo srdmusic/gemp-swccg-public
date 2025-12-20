@@ -64,7 +64,7 @@ public class Card7_023 extends AbstractAlien {
         // Check condition(s)
         if (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, opponent)
                 && !GameConditions.hasStackedCards(game, firstJoh, Filters.jamCard) //'jam' capacity is limited to 1
-                && GameConditions.canTarget(game, self, Filters.Joh_Yowza) //for Bane Malar mindscan
+                && GameConditions.canTarget(game, self, firstJoh) //for Bane Malar mindscan
                 && GameConditions.canStackDestinyCard(game) ) {
 
             final PhysicalCard destinyToJam = game.getGameState().getTopOfUnresolvedDestinyDraws(opponent);
