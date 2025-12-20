@@ -1,6 +1,5 @@
 package com.gempukku.swccgo.cards.set7.light;
 
-import com.gempukku.swccgo.common.CardState;
 import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -13,7 +12,6 @@ import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -76,10 +74,7 @@ public class Card_7_023_Tests {
          * Keywords: Musician, Thief
          * Species: Yuzzum
 		 * Persona:
-		 * (OLD) Game Text: Power +2 on Endor or when present with your musician. When opponent draws destiny, Joh may 'jam'
-         *      (place that card face down under Joh). Holds one card at a time. If Joh leaves table,
-         *      place card under Joh in opponent's Used Pile.
-         * (NEW) Game Text: Power +2 on Endor or when present with your musician. When opponent draws destiny, may 'jam'
+         * Game Text: Power +2 on Endor or when present with your musician. When opponent draws destiny, may 'jam'
          *      (place that card face down under Joh). Holds one 'jammed' card at a time. If Joh about to leave table,
          *      place 'jammed' card under Joh in owner's Used Pile
 		 * Lore: Yuzzum musician and thief. Singer for The Max Rebo Band. Stage name given to him by Sy Snootles.
@@ -180,6 +175,7 @@ public class Card_7_023_Tests {
     @Test
     public void JohYowzaMayJamOpponentsJustDrawnDestiny() {
         //Test1: Joh may stack opponent's just drawn destiny as a 'jam' card
+        //  use Bok to draw a (non-battle) destiny
         //Test2: 'Jam' card is stacked on Joh
         //Test3: 'Jam' card state is not active
         //Test4: 'Jam' card state is not inactive
@@ -209,7 +205,7 @@ public class Card_7_023_Tests {
         scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
         scn.DSPass();
 
-        //Just drew (card) for destiny - Optional responses
+        assertTrue(scn.LSDecisionAvailable("Just drew")); //Just drew (card) for destiny - Optional responses
         assertTrue(scn.LSCardActionAvailable(joh,"'Jam'"));
         scn.LSUseCardAction(joh,"'Jam'");
 
@@ -234,7 +230,6 @@ public class Card_7_023_Tests {
     public void JohYowzaMayNotJamOpponentsSubstitutedDestiny() {
         //Test1: Joh may not stack an opponent's substituted destiny as a 'jam' card
         //  use Sando Aqua Monster to substitute a battle destiny and confirm Joh never has an optional action to 'jam'
-
         var scn = GetScenario();
 
         var joh = scn.GetLSCard("joh");
@@ -297,15 +292,17 @@ public class Card_7_023_Tests {
         assertTrue(scn.DSDecisionAvailable("ABOUT_TO_DRAW_DESTINY_CARD - Optional responses"));
         scn.DSPass();
 
-        //if Joh could stack a destiny, it would be here with a "Just drew (card) for destiny - Optional responses"
+        //if Joh could stack a destiny, it would be here
+        assertFalse(scn.LSDecisionAvailable("Just drew")); //Just drew (card) for destiny - Optional responses
 
         assertFalse(scn.LSCardActionAvailable(joh,"'Jam'"));
         assertTrue(scn.LSDecisionAvailable("DESTINY_DRAWN - Optional responses")); //test1: past window to jam
     }
 
     @Test
-    public void JohYowzaMayNotJamOpponentsJustDrawnDestinyIfGametextCanceled() {
-        //Test1: Joh may not use game text to stack opponent's just drawn destiny as a 'jam' card if his game text is canceled
+    public void JohYowzaMayNotJamOpponentsJustDrawnDestinyIfGameTextCanceled() {
+        //Test1: Joh unable to stack opponent's just drawn destiny as a 'jam' card if his game text is canceled
+        //  use e chu ta to cancel Joh's game text
         var scn = GetScenario();
 
         var joh = scn.GetLSCard("joh");
@@ -344,16 +341,17 @@ public class Card_7_023_Tests {
         assertTrue(scn.DSDecisionAvailable("ABOUT_TO_DRAW_DESTINY_CARD - Optional responses"));
         scn.DSPass();
 
-        //if Joh could stack a destiny, it would be here with a "Just drew (card) for destiny - Optional responses"
+        //if Joh could stack a destiny, it would be here
+        assertFalse(scn.LSDecisionAvailable("Just drew")); //Just drew (card) for destiny - Optional responses
 
         assertFalse(scn.LSCardActionAvailable(joh,"'Jam'"));
         assertTrue(scn.LSDecisionAvailable("DESTINY_DRAWN - Optional responses")); //test1: past window to jam
     }
 
     @Test
-    public void JohYowzaRetainsJamCardIfGametextCanceled() {
+    public void JohYowzaRetainsJamCardIfGameTextCanceled() {
         //Test1: Joh keeps a stacked 'jam' card if his game text is canceled
-        //  jam a destiny and then play e chu ta to cancel Joh's destiny
+        //  jam a destiny and then play e chu ta to cancel Joh's game text
         var scn = GetScenario();
 
         var joh = scn.GetLSCard("joh");
@@ -382,7 +380,7 @@ public class Card_7_023_Tests {
         scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
         scn.DSPass();
 
-        //Just drew (card) for destiny - Optional responses
+        assertTrue(scn.LSDecisionAvailable("Just drew")); //Just drew (card) for destiny - Optional responses
         assertTrue(scn.LSCardActionAvailable(joh,"'Jam'"));
         scn.LSUseCardAction(joh,"'Jam'");
         scn.PassAllResponses();
@@ -399,7 +397,7 @@ public class Card_7_023_Tests {
         scn.PassAllResponses();
 
         assertTrue(scn.AwaitingLSDeployPhaseActions());
-        assertTrue(scn.IsStackedOn(joh,jamDestiny));
+        assertTrue(scn.IsStackedOn(joh,jamDestiny)); //test1
     }
 
     @Test
@@ -434,7 +432,7 @@ public class Card_7_023_Tests {
         scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
         scn.DSPass();
 
-        //Just drew (card) for destiny - Optional responses
+        assertTrue(scn.LSDecisionAvailable("Just drew")); //Just drew (card) for destiny - Optional responses
         scn.LSUseCardAction(joh,"'Jam'");
 
         scn.PassAllResponses();
@@ -457,11 +455,10 @@ public class Card_7_023_Tests {
 
         scn.MoveCardsToLocation(site,rebelTrooper);
         scn.SkipToLSTurn(Phase.CONTROL);
-        scn.PrepareLSDestiny(7);
 
+        scn.PrepareLSDestiny(7); //ensure joh will be found
         scn.LSUseCardAction(site,"Form search party");
         scn.LSChooseCard(rebelTrooper);
-        //search party destiny total: 7 + 1 character = 8, succeeds
         scn.PassAllResponses();
         assertTrue(scn.AwaitingDSControlPhaseActions());
         assertFalse(joh.isMissing());
@@ -501,7 +498,7 @@ public class Card_7_023_Tests {
         scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
         scn.DSPass();
 
-        //Just drew (card) for destiny - Optional responses
+        assertTrue(scn.LSDecisionAvailable("Just drew")); //Just drew (card) for destiny - Optional responses
         scn.LSUseCardAction(joh,"'Jam'");
 
         scn.PassAllResponses();
@@ -522,15 +519,17 @@ public class Card_7_023_Tests {
         scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
         scn.DSPass();
 
+        //if Joh could stack a destiny, it would be here
+        assertFalse(scn.LSDecisionAvailable("Just drew")); //Just drew (card) for destiny - Optional responses
+        assertFalse(scn.LSCardActionAvailable(joh,"'Jam'")); //test1
 
         assertTrue(scn.IsStackedOn(joh,jamDestiny1));
-        //Just drew (card) for destiny - Optional responses
-        assertFalse(scn.LSCardActionAvailable(joh,"'Jam'")); //test1
     }
 
     @Test
     public void JohYowzaJamCardSentToUsedPileWhenJohLeavesTableLost() {
-        //Test1: Joh leaving table (lost during battle) causes a jam card to be sent to owner's Used Pile
+        //Test1: Joh leaving table (lost) causes a jam card to be sent to owner's Used Pile
+        //  stack with Joh and then lose him to satisfy battle damage
         var scn = GetScenario();
 
         var joh = scn.GetLSCard("joh");
@@ -584,7 +583,7 @@ public class Card_7_023_Tests {
 
     @Test
     public void JohYowzaJamCardSentToLostPileIfJohGameTextCanceledWhenJohLeavesTableLost() {
-        //Test1: Joh leaving table (lost during battle) but with game text canceled causes jam card to go to lost pile
+        //Test1: Joh leaving table (lost) with game text canceled causes jam card to go to lost pile
         var scn = GetScenario();
 
         var joh = scn.GetLSCard("joh");
@@ -645,8 +644,60 @@ public class Card_7_023_Tests {
     }
 
     @Test
+    public void JohYowzaJamCardSentToUsedPileWhenJohLeavesTableToHand() {
+        //Test1: Joh leaving table causes a jam card to be sent to owner's Used Pile
+        var scn = GetScenario();
+
+        var joh = scn.GetLSCard("joh");
+
+        var bok = scn.GetDSCard("bok");
+        var setForStun = scn.GetDSCard("setForStun");
+        var jamDestiny = scn.GetDSFiller(1);
+
+        var site = scn.GetLSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToLocation(site, joh, bok);
+        scn.MoveCardsToDSHand(jamDestiny,setForStun);
+
+        scn.SkipToPhase(Phase.DEPLOY);
+        scn.DSUseCardAction(bok,"Draw destiny");
+
+        scn.MoveCardsToTopOfDSReserveDeck(jamDestiny);
+
+        scn.LSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
+        scn.DSPass();
+
+        scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
+        scn.DSPass();
+
+        //Just drew (card) for destiny - Optional responses
+        scn.LSUseCardAction(joh,"'Jam'");
+        scn.PassAllResponses();
+
+        assertTrue(scn.IsStackedOn(joh,jamDestiny));
+        scn.LSPass();
+
+        scn.PrepareDSDestiny(7);
+        assertTrue(scn.AwaitingDSDeployPhaseActions());
+        assertTrue(scn.DSCardPlayAvailable(setForStun));
+        scn.DSPlayCard(setForStun);
+        scn.DSChooseCard(joh);
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.AwaitingLSDeployPhaseActions());
+
+        assertSame(Zone.HAND,joh.getZone());
+        assertNotSame(Zone.HAND,jamDestiny.getZone());
+        assertSame(jamDestiny,scn.GetTopOfDSUsedPile()); //test1
+        assertFalse(jamDestiny.isJamCard());
+    }
+
+    @Test
     public void JohYowzaJamCardSentToHandIfJohGameTextCanceledWhenJohLeavesTableToHand() {
-        //Test1: Joh's text conditions for sending stacked 'jam' card to opponent's used pile
+        //Test1: Joh's game text for sending stacked 'jam' card to owner's used pile
         //  does not apply if his game text is canceled when leaving table
         var scn = GetScenario();
 
@@ -712,58 +763,6 @@ public class Card_7_023_Tests {
     }
 
     @Test
-    public void JohYowzaJamCardSentToUsedPileWhenJohLeavesTableToHand() {
-        //Test1: Joh leaving table causes a jam card to be sent to owner's Used Pile
-        var scn = GetScenario();
-
-        var joh = scn.GetLSCard("joh");
-
-        var bok = scn.GetDSCard("bok");
-        var setForStun = scn.GetDSCard("setForStun");
-        var jamDestiny = scn.GetDSFiller(1);
-
-        var site = scn.GetLSStartingLocation();
-
-        scn.StartGame();
-
-        scn.MoveCardsToLocation(site, joh, bok);
-        scn.MoveCardsToDSHand(jamDestiny,setForStun);
-
-        scn.SkipToPhase(Phase.DEPLOY);
-        scn.DSUseCardAction(bok,"Draw destiny");
-
-        scn.MoveCardsToTopOfDSReserveDeck(jamDestiny);
-
-        scn.LSPass(); //COST_TO_DRAW_DESTINY_CARD - Optional responses
-        scn.DSPass();
-
-        scn.LSPass(); //ABOUT_TO_DRAW_DESTINY_CARD - Optional responses
-        scn.DSPass();
-
-        //Just drew (card) for destiny - Optional responses
-        scn.LSUseCardAction(joh,"'Jam'");
-        scn.PassAllResponses();
-
-        assertTrue(scn.IsStackedOn(joh,jamDestiny));
-        scn.LSPass();
-
-        scn.PrepareDSDestiny(7);
-        assertTrue(scn.AwaitingDSDeployPhaseActions());
-        assertTrue(scn.DSCardPlayAvailable(setForStun));
-        scn.DSPlayCard(setForStun);
-        scn.DSChooseCard(joh);
-
-        scn.PassAllResponses();
-
-        assertTrue(scn.AwaitingLSDeployPhaseActions());
-
-        assertSame(Zone.HAND,joh.getZone());
-        assertNotSame(Zone.HAND,jamDestiny.getZone());
-        assertSame(jamDestiny,scn.GetTopOfDSUsedPile()); //test1
-        assertFalse(jamDestiny.isJamCard());
-    }
-
-    @Test
     public void JohYowzaMayNotJamOwnJustDrawnDestiny() {
         //Test1: Joh unable to 'jam' own destiny draw for Sense
         var scn = GetScenario();
@@ -808,20 +807,20 @@ public class Card_7_023_Tests {
         assertFalse(scn.LSCardActionAvailable(joh,"'Jam'"));
         scn.LSPass();
 
-        //if Joh could stack a destiny, it would be here with a "Just drew (card) for destiny - Optional responses"
-
         assertTrue(scn.DSDecisionAvailable("DESTINY_DRAWN - Optional responses"));
         scn.DSPass();
+
+        //if Joh could stack a destiny, it would be here
+        assertFalse(scn.LSDecisionAvailable("Just drew")); //Just drew (card) for destiny - Optional responses
         assertFalse(scn.LSCardActionAvailable(joh,"'Jam'"));
         assertTrue(scn.LSDecisionAvailable("DESTINY_DRAWN - Optional responses")); //test1: past window to jam
     }
 
     @Test
     public void JohYowzaMindscanAllowsJamOwnJustDrawnDestiny() {
-        //Test1: Bane Malar mindscanning Joh (adding Joh's gametext to Bane's) allows DS an optional
+        //Test1: Bane Malar mindscanning Joh (adding Joh's game text to Bane's) allows DS an optional
         // response action on Bane Malar to stack LS just drawn destiny on Joh - 'self-jam'
         //Test2: Joh leaving table with 'self-jam' stacked card causes that card to go to LS used pile
-        // (using proposed errata gametext!)
         var scn = GetScenario();
 
         var joh = scn.GetLSCard("joh");
@@ -892,12 +891,10 @@ public class Card_7_023_Tests {
 
     }
 
-
     //tests to add:
     //no conflict between stacked hatred card and stacked jam card
 
     //more bane malar mindscan scenarios:
     //if mindscans joh and then joh is excluded, bane cannot stack
     //if mindscans joh, joh (or bane) jam a card on joh, then bane leaves table - confirm joh keeps jam card
-
 }

@@ -42,7 +42,6 @@ public class Card7_023 extends AbstractAlien {
     public Card7_023() {
         super(Side.LIGHT, 3, 2, 2, 1, 3, Title.Joh_Yowza, Uniqueness.UNIQUE, ExpansionSet.SPECIAL_EDITION, Rarity.R);
         setLore("Yuzzum musician and thief. Singer for The Max Rebo Band. Stage name given to him by Sy Snootles. Jabba likes his performance, even though the Hutt despises Yuzzum.");
-/*orig  setGameText("Power +2 on Endor or when present with your musician. When opponent draws destiny, Joh may 'jam' (place that card face down under Joh). Holds one card at a time. If Joh leaves table, place card under Joh in opponent's Used Pile."); */
         setGameText("Power +2 on Endor or when present with your musician. When opponent draws destiny, may 'jam' (place that card face down under Joh). Holds one 'jammed' card at a time. If Joh about to leave table, place 'jammed' card under Joh in owner's Used Pile");
         addIcons(Icon.SPECIAL_EDITION);
         addKeywords(Keyword.MUSICIAN,Keyword.THIEF);
@@ -60,6 +59,7 @@ public class Card7_023 extends AbstractAlien {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         final String opponent = game.getOpponent(playerId);
         PhysicalCard firstJoh = Filters.findFirstActive(game, self, Filters.Joh_Yowza); //for Bane Malar mindscan interactions
+        if(firstJoh == null) return null; //for Bane Malar
 
         // Check condition(s)
         if (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, opponent)
@@ -70,7 +70,7 @@ public class Card7_023 extends AbstractAlien {
             final PhysicalCard destinyToJam = game.getGameState().getTopOfUnresolvedDestinyDraws(opponent);
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("'Jam' (stack destiny)");
+            action.setText("'Jam' (stack destiny under Joh)");
             action.setActionMsg("'Jam' (stack just-drawn destiny on " + GameUtils.getCardLink(firstJoh) + " )");
             // Perform result(s)
             action.appendEffect(
@@ -91,14 +91,13 @@ public class Card7_023 extends AbstractAlien {
     @Override
     protected List<RequiredGameTextTriggerAction> getGameTextRequiredAfterTriggers(SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
         final String opponent = game.getOpponent(self.getOwner());
-        //Collection<PhysicalCard> jamCard = Filters.filterStacked(game,Filters.and(Filters.stackedOn(firstJoh),Filters.jamCard));
-        Collection<PhysicalCard> jamCard = Filters.filterStacked(game,Filters.and(Filters.stackedOn(self),Filters.jamCard));
 
         // Check condition(s)
         if (TriggerConditions.isAboutToLeaveTable(game, effectResult, self)
                 && GameConditions.hasStackedCards(game, self, Filters.jamCard)) {
 
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
+            final Collection<PhysicalCard> jamCard = Filters.filterStacked(game,Filters.and(Filters.stackedOn(self),Filters.jamCard));
+            final RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Return stacked 'jam' card to Used Pile");
             // Perform result(s)
             action.appendEffect(
