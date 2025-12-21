@@ -59,31 +59,32 @@ public class Card7_023 extends AbstractAlien {
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
         final String opponent = game.getOpponent(playerId);
         PhysicalCard firstJoh = Filters.findFirstActive(game, self, Filters.Joh_Yowza); //for Bane Malar mindscan interactions
-        if(firstJoh == null) return null; //for Bane Malar
 
-        // Check condition(s)
-        if (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, opponent)
-                && !GameConditions.hasStackedCards(game, firstJoh, Filters.jamCard) //'jam' capacity is limited to 1
-                && GameConditions.canTarget(game, self, firstJoh) //for Bane Malar mindscan
-                && GameConditions.canStackDestinyCard(game) ) {
+        if(firstJoh != null) {
+            // Check condition(s)
+            if (TriggerConditions.isDestinyJustDrawnBy(game, effectResult, opponent)
+                    && !GameConditions.hasStackedCards(game, firstJoh, Filters.jamCard) //'jam' capacity is limited to 1
+                    && GameConditions.canTarget(game, self, firstJoh) //for Bane Malar mindscan
+                    && GameConditions.canStackDestinyCard(game)) {
 
-            final PhysicalCard destinyToJam = game.getGameState().getTopOfUnresolvedDestinyDraws(opponent);
+                final PhysicalCard destinyToJam = game.getGameState().getTopOfUnresolvedDestinyDraws(opponent);
 
-            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
-            action.setText("'Jam' (stack destiny under Joh)");
-            action.setActionMsg("'Jam' (stack just-drawn destiny on " + GameUtils.getCardLink(firstJoh) + " )");
-            // Perform result(s)
-            action.appendEffect(
-                    new StackDestinyCardEffect(action, firstJoh, true));
-            action.appendEffect(
-                    new PassthruEffect(action) {
-                        @Override
-                        protected void doPlayEffect(SwccgGame game) {
-                            destinyToJam.setJamCard(true);
+                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+                action.setText("'Jam' (stack destiny under Joh)");
+                action.setActionMsg("'Jam' (stack just-drawn destiny on " + GameUtils.getCardLink(firstJoh) + " )");
+                // Perform result(s)
+                action.appendEffect(
+                        new StackDestinyCardEffect(action, firstJoh, true));
+                action.appendEffect(
+                        new PassthruEffect(action) {
+                            @Override
+                            protected void doPlayEffect(SwccgGame game) {
+                                destinyToJam.setJamCard(true);
+                            }
                         }
-                    }
-            );
-            return Collections.singletonList(action);
+                );
+                return Collections.singletonList(action);
+            }
         }
         return null;
     }
