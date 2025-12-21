@@ -68,13 +68,14 @@ def create_cube_config(default_cards, lightside_cards, darkside_cards):
     # Number of pack choices to show simultaneously (standard draft pack size)
     pack_choice_count = 9
 
-    # Fixed repeat count
-    repeat_count = 56
+    # Fixed repeat count (MUST be divisible by pack_choice_count for stage logic to work)
+    repeat_count = 54
 
     # Create the base configuration
+    # fixedCount = number of core cards given to each player at start
     cube_config = {
         "format": "cube",
-        "fixedCount": 0,
+        "fixedCount": len(default_cards),
         "objChoiceCountPerSide": 0,
         "choiceCountPerSide": repeat_count,
         "lightObjCards": [],
@@ -88,26 +89,54 @@ def create_cube_config(default_cards, lightside_cards, darkside_cards):
         "choices": []
     }
 
-    # Add light side choice - one choice containing all packs, repeated 56 times
+    # Add light side choice - one choice containing all cards, repeated 56 times
     if lightside_cards:
+        # Extract cards as flat list of card IDs and build addOnCards map
+        light_available_cards = []
+        light_add_ons = {}
+
+        for pack in lightside_cards:
+            if isinstance(pack, list) and len(pack) > 0:
+                main_card = pack[0]
+                light_available_cards.append(main_card)
+
+                # If pack has add-on cards, store them in the map
+                if len(pack) > 1:
+                    light_add_ons[main_card] = pack[1:]
+
         lightside_choice = {
-            "type": "cubePackObjPick",
+            "type": "cubePackPick",
             "repeat": repeat_count,
             "data": {
                 "count": pack_choice_count,
-                "packs": lightside_cards
+                "availableCards": light_available_cards,
+                "addOnCards": light_add_ons
             }
         }
         cube_config["choices"].append(lightside_choice)
 
-    # Add dark side choice - one choice containing all packs, repeated 56 times
+    # Add dark side choice - one choice containing all cards, repeated 56 times
     if darkside_cards:
+        # Extract cards as flat list of card IDs and build addOnCards map
+        dark_available_cards = []
+        dark_add_ons = {}
+
+        for pack in darkside_cards:
+            if isinstance(pack, list) and len(pack) > 0:
+                main_card = pack[0]
+                dark_available_cards.append(main_card)
+
+                # If pack has add-on cards, store them in the map
+                if len(pack) > 1:
+                    dark_add_ons[main_card] = pack[1:]
+
         darkside_choice = {
-            "type": "cubePackObjPick",
+            "type": "cubePackPick",
             "repeat": repeat_count,
             "data": {
                 "count": pack_choice_count,
-                "packs": darkside_cards
+                "availableCards": dark_available_cards,
+                "addOnCards": dark_add_ons
             }
         }
         cube_config["choices"].append(darkside_choice)
