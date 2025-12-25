@@ -109,16 +109,14 @@ public class Card226_028 extends AbstractObjective {
             
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
 
-            Filter battlegroundExceptTatooineKaminoOrRef3 = Filters.and(Filters.battleground, Filters.not(Filters.Kamino_location), Filters.not(Filters.Tatooine_location), Filters.not(Icon.REFLECTIONS_III));
-
-            action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy a Jabiim site or a battleground (except a Kamino, Tatooine, or [Reflections III] location) from Reserve Deck");
+            action.setText("Deploy a Jabiim location");
+            action.setActionMsg("Deploy a Jabiim location from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Jabiim_site, battlegroundExceptTatooineKaminoOrRef3), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.Jabiim_location, true));
             actions.add(action);
         }
 
