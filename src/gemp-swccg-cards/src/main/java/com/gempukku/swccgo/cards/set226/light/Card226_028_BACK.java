@@ -104,7 +104,9 @@ public class Card226_028_BACK extends AbstractObjective {
         }
 
         // Check condition(s)
-        if (TriggerConditions.isEndOfYourTurn(game, effectResult, playerId)) {
+        if (TriggerConditions.isEndOfYourTurn(game, effectResult, playerId)
+                && GameConditions.occupiesWith(game, self, playerId, 2, Filters.battleground_site, Filters.Jedi)) {
+
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
 
             // Perform result(s)
