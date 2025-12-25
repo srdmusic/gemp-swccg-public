@@ -25,6 +25,7 @@ import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployStackedCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.StackCardsFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
@@ -123,7 +124,9 @@ public class Card226_014 extends AbstractEpicEventDeployable {
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Stack " + GameUtils.getFullName(cardLost) + " here");
             action.setActionMsg("Stack " + GameUtils.getFullName(cardLost) + " on " + GameUtils.getCardLink(self));
-
+            // Pay cost(s)
+            action.appendCost(
+                    new LoseForceEffect(action, playerId, 1, true));
             // Perform result(s)
             action.appendEffect(
                     new StackOneCardFromLostPileEffect(action, cardLost, self, false, false, true));
