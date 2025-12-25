@@ -28,6 +28,8 @@ import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
+import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 
@@ -88,6 +90,7 @@ public class Card226_028 extends AbstractObjective {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         // For remainder of game
         modifiers.add(new MayNotDeployModifier(self, Filters.or(genericLocations, jediExceptJediSurvivors), playerId));
+        modifiers.add(new ModifyGameTextModifier(self, Filters.Weapon_Levitation, ModifyGameTextType.WEAPON_LEVITATION_MAY_NOT_STEAL_WEAPONS));
 
         // While this side up
         modifiers.add(new MayNotPlayModifier(self, Filters.Nabrun_Leids, playerId));
