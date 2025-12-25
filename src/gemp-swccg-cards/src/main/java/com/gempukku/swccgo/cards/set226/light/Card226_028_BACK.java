@@ -30,6 +30,7 @@ import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.PlaceCardInUsedPileFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.effects.UseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
@@ -164,13 +165,17 @@ public class Card226_028_BACK extends AbstractObjective {
 
         // Check condition(s)
         if (GameConditions.canSpot(game, self, jediValidToRelocate)
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)) {
+                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.MOVE)
+                && GameConditions.canUseForce(game, playerId, 2)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
             action.setText("Relocate a Jedi");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerPhaseEffect(action));
+            // Pay cost(s)
+            action.appendCost(
+                    new UseForceEffect(action, playerId, 2));
             // Perform result(s)
             action.appendTargeting(
                     new ChooseCardOnTableEffect(action, playerId, "Choose Jedi to relocate", jediValidToRelocate) {
