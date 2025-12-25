@@ -175,9 +175,6 @@ public class Card226_028_BACK extends AbstractObjective {
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerPhaseEffect(action));
-            // Pay cost(s)
-            action.appendCost(
-                    new UseForceEffect(action, playerId, 2));
             // Perform result(s)
             action.appendTargeting(
                     new ChooseCardOnTableEffect(action, playerId, "Choose Jedi to relocate", jediValidToRelocate) {
@@ -202,6 +199,9 @@ public class Card226_028_BACK extends AbstractObjective {
                                         protected void cardSelected(final PhysicalCard siteSelected) {
                                             action.addAnimationGroup(self);
                                             action.addAnimationGroup(jediSelected);
+                                            // Pay cost(s)
+                                            action.appendCost(
+                                                    new UseForceEffect(action, playerId, 2));
                                             // Allow response(s)
                                             action.allowResponses("Relocate " + GameUtils.getCardLink(jediSelected) + " to " + GameUtils.getCardLink(siteSelected),
                                                     new UnrespondableEffect(action) {
