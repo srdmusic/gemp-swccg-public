@@ -102,7 +102,7 @@ public class Card226_014 extends AbstractEpicEventDeployable {
 
         Condition hiddenPathOnTable = new OnTableCondition(self, Filters.The_Hidden_Path);
 
-        modifiers.add(new ResetDeployCostModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable, 2));
+        modifiers.add(new ResetDeployCostModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable, 3));
         modifiers.add(new ResetPowerModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable, 3));
         modifiers.add(new ResetForfeitModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable, 3));
         modifiers.add(new MayNotDeployToLocationModifier(self, Filters.Jedi_Survivor, hiddenPathOnTable, Filters.not(Filters.Safehouse)));
