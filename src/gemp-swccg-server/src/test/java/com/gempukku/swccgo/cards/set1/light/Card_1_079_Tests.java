@@ -4,7 +4,6 @@ import com.gempukku.swccgo.common.CardSubtype;
 import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
@@ -30,22 +29,23 @@ public class Card_1_079_Tests {
 				{{
 					put("escape", "1_079"); //escape pod
 					put("pilot", "1_027"); // rebel pilot
-                    //put("boushh", "110_001"); // undercover
                     put("rebelguard", "1_026"); // rebel guard (may not move)
 					put("transport", "3_065"); // medium transport (capital ship)
                     put("ywing", "1_147"); //
-                    //put("cloudcar", "5_088"); // (enclosed vehicle)
                     put("ronto", "7_155"); // ronto (non-enclosed creature vehicle)
                     put("ls_cantina","1_128"); //tatooine cantina (planet site)
                     put("ls_yavin_db","1_136"); //yavin docking bay (planet site)
                     put("ls_cc_db","5_083"); //cloud city docking bay (non-planet site)
                     put("ls_dag","4_085"); //dagobah: bog clearing (planet site)
+                    put("ls_homeone_db","9_057"); //home one: docking bay
+                    put("homeone", "9_074");
 				}},
 				new HashMap<>()
 				{{
                     put("ds_tat_db","1_291"); //tatooine docking bay (planet site)
                     put("executor","4_167"); //(capital ship)
-                    //put("gravity","102_008"); //gravity shadow
+                    put("barrier","1_249"); //imperial barrier
+                    put("surprise","5_156");
 				}},
 				10,
 				10,
@@ -63,7 +63,7 @@ public class Card_1_079_Tests {
 	public void EscapePodStatsAndKeywordsAreCorrect() {
 		/**
 		 * Title: Escape Pod
-		 * Uniqueness: Unique
+		 * Uniqueness: Unrestricted
 		 * Side: Light
 		 * Type: Interrupt
 		 * Subtype: Used
@@ -453,7 +453,204 @@ public class Card_1_079_Tests {
         assertFalse(scn.CardsAtLocation(ls_yavin_db,rebelTrooper)); //test2
     }
 
-    //additional tests:
-    //can be retargeted with Surprise
-    //does not relocate inactive characters (excluded from battle)
+    @Test
+    public void EscapePodDoesNotRelocateInactiveCharacters() {
+        //test1: will not relocate characters that are inactive (in this, excluded from battle)
+        var scn = GetScenario();
+
+        var escape = scn.GetLSCard("escape");
+        var ls_cantina = scn.GetLSCard("ls_cantina");
+        var transport = scn.GetLSCard("transport");
+        var pilot = scn.GetLSCard("pilot");
+        var rebelTrooper = scn.GetLSFiller(1);
+
+        var executor = scn.GetDSCard("executor");
+        var barrier = scn.GetDSCard("barrier");
+
+        var system = scn.GetDSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToLSHand(escape, rebelTrooper);
+        scn.MoveCardsToDSHand(barrier);
+
+        scn.MoveLocationToTable(ls_cantina);
+
+        scn.MoveCardsToLocation(system,executor,transport);
+        scn.BoardAsPilot(transport,pilot);
+
+        scn.SkipToLSTurn(Phase.DEPLOY);
+        scn.LSDeployCard(rebelTrooper);
+        scn.LSChooseCard(transport);
+
+        scn.DSPass(); //Use 1 Force - Optional responses
+        scn.LSPass();
+
+        //Rebel Trooper just deployed - Optional responses
+        scn.DSPlayCard(barrier);
+
+        scn.PassAllResponses();
+
+        scn.SkipToPhase(Phase.BATTLE);
+        assertTrue(pilot.isPilotOf());
+        assertTrue(rebelTrooper.isPassengerOf());
+
+        scn.LSInitiateBattle(system);
+        assertTrue(scn.LSDecisionAvailable("ABOUT_TO_BE_EXCLUDED"));
+        scn.LSPass();
+        scn.DSPass();
+
+        scn.LSPass(); //EXCLUDED_FROM_BATTLE - Optional responses
+        scn.DSPass();
+
+        scn.SkipToDamageSegment(false);
+
+        scn.LSPayBattleDamageFromCardInPlay(transport);
+
+        assertTrue(scn.LSDecisionAvailable("still want to forfeit"));
+        scn.LSChooseYes();
+
+        assertTrue(scn.LSDecisionAvailable("About to forfeit")); //About to forfeit Medium Transport - Optional responses
+        assertTrue(scn.LSCardPlayAvailable(escape)); //test1
+        scn.LSPlayCard(escape);
+        assertTrue(scn.LSDecisionAvailable("Choose planet site"));
+        assertTrue(scn.LSHasCardChoiceAvailable(ls_cantina));
+        scn.LSChooseCard(ls_cantina);
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.CardsAtLocation(ls_cantina,pilot));
+        assertFalse(scn.CardsAtLocation(ls_cantina,rebelTrooper));//test1 (excluded and could not be seen to relocate)
+        assertSame(Zone.TOP_OF_USED_PILE,escape.getZone());
+    }
+
+    @Test
+    public void EscapePodDestinationMayBeRetargetedBySurprise() {
+        //test1: escape pod planet site selected can be retargeted to a new, valid planet site
+        var scn = GetScenario();
+
+        var escape = scn.GetLSCard("escape");
+        var ls_cantina = scn.GetLSCard("ls_cantina");
+        var transport = scn.GetLSCard("transport");
+        var pilot = scn.GetLSCard("pilot");
+        var ls_yavin_db = scn.GetLSCard("ls_yavin_db");
+        var ls_cc_db = scn.GetLSCard("ls_cc_db");
+        var ls_dag = scn.GetLSCard("ls_dag");
+
+        var executor = scn.GetDSCard("executor");
+        var surprise = scn.GetDSCard("surprise");
+        var ds_tat_db = scn.GetDSCard("ds_tat_db");
+
+        var system = scn.GetDSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToLSHand(escape);
+        scn.MoveCardsToDSHand(surprise);
+
+        scn.MoveLocationToTable(ls_cantina);
+        scn.MoveLocationToTable(ls_yavin_db);
+        scn.MoveLocationToTable(ls_cc_db);
+        scn.MoveLocationToTable(ls_dag);
+        scn.MoveLocationToTable(ds_tat_db);
+
+        scn.MoveCardsToLocation(system,executor,transport);
+        scn.BoardAsPilot(transport,pilot);
+
+        scn.SkipToPhase(Phase.BATTLE);
+        assertTrue(pilot.isPilotOf());
+
+        scn.DSActivateForceCheat(4); //enough to battle and play surprise
+
+        scn.DSInitiateBattle(system);
+        scn.SkipToDamageSegment(false);
+
+        scn.LSPayBattleDamageFromCardInPlay(transport);
+
+        assertTrue(scn.LSDecisionAvailable("still want to forfeit"));
+        scn.LSChooseYes();
+
+        assertTrue(scn.LSDecisionAvailable("About to forfeit")); //About to forfeit Medium Transport - Optional responses
+        assertTrue(scn.LSCardPlayAvailable(escape)); //test1
+        scn.LSPlayCard(escape);
+        assertTrue(scn.LSDecisionAvailable("Choose planet site"));
+        assertTrue(scn.LSHasCardChoiceAvailable(ls_cantina));
+        scn.LSChooseCard(ls_cantina);
+
+        assertTrue(scn.DSDecisionAvailable("Optional responses"));
+        assertTrue(scn.DSCardPlayAvailable(surprise));
+        scn.DSPlayCard(surprise);
+
+        //Choose card (or card in group) to re-target from, or click 'Done' to cancel
+        assertTrue(scn.DSHasCardChoiceAvailable(ls_cantina)); //original selection
+        assertFalse(scn.DSHasCardChoicesAvailable(ls_yavin_db,ls_cc_db,ls_dag,ds_tat_db));
+        scn.DSChooseCard(ls_cantina);
+
+        //Choose card (or card in group) to re-target from, or click 'Done' to cancel
+        assertFalse(scn.DSHasCardChoiceAvailable(ls_cantina)); //must retarget somewhere different
+        assertFalse(scn.DSHasCardChoiceAvailable(ls_dag)); //not planet site
+        assertTrue(scn.DSHasCardChoiceAvailable(ls_yavin_db)); //LS site that meets criteria
+        assertFalse(scn.DSHasCardChoiceAvailable(ds_tat_db)); //can't retarget to DS site, since original was LS site and must be "on the same side of the force"
+        assertFalse(scn.DSHasCardChoiceAvailable(ls_dag)); //dagobah rules
+        scn.DSChooseCard(ls_yavin_db);
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.CardsAtLocation(ls_yavin_db,pilot)); //test1
+        assertSame(Zone.TOP_OF_USED_PILE,escape.getZone());
+    }
+
+    @Test
+    public void EscapePodRelocatesCharactersAtRelatedStarshipSites() {
+        //test1: escape pod relocates characters that are aboard due to being at a related starship site
+        var scn = GetScenario();
+
+        var escape = scn.GetLSCard("escape");
+        var ls_cantina = scn.GetLSCard("ls_cantina");
+        var homeone = scn.GetLSCard("homeone");
+        var pilot = scn.GetLSCard("pilot");
+        var rebelTrooper = scn.GetLSFiller(1);
+        var ls_homeone_db = scn.GetLSCard("ls_homeone_db");
+
+        var executor = scn.GetDSCard("executor");
+
+        var system = scn.GetDSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToLSHand(escape);
+
+        scn.MoveLocationToTable(ls_cantina);
+        scn.MoveLocationToTable(ls_homeone_db);
+
+        scn.MoveCardsToLocation(system,executor, homeone);
+        scn.BoardAsPilot(homeone,pilot);
+
+        scn.MoveCardsToLocation(ls_homeone_db,rebelTrooper);
+
+        scn.SkipToPhase(Phase.BATTLE);
+        assertTrue(pilot.isPilotOf());
+
+        scn.DSInitiateBattle(system);
+        scn.SkipToDamageSegment(false);
+
+        scn.LSPayBattleDamageFromCardInPlay(homeone);
+
+        assertTrue(scn.LSDecisionAvailable("still want to forfeit"));
+        scn.LSChooseYes();
+
+        assertTrue(scn.LSDecisionAvailable("About to forfeit")); //About to forfeit Medium Transport - Optional responses
+        assertTrue(scn.LSCardPlayAvailable(escape)); //test1
+        scn.LSPlayCard(escape);
+        assertTrue(scn.LSDecisionAvailable("Choose planet site"));
+        assertTrue(scn.LSHasCardChoiceAvailable(ls_cantina));
+        scn.LSChooseCard(ls_cantina);
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.CardsAtLocation(ls_cantina,pilot));
+        assertTrue(scn.CardsAtLocation(ls_cantina,rebelTrooper)); //test1
+        assertSame(Zone.TOP_OF_USED_PILE,escape.getZone());
+    }
+
 }
