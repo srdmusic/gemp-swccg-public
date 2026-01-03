@@ -8039,7 +8039,7 @@ public class Filters {
      * @return Filter
      */
     public static Filter canBeRelocatedToLocation(final Filter locationFilter, final float baseCost) {
-        return canBeRelocatedToLocation(locationFilter, false, false, false, baseCost, false);
+        return canBeRelocatedToLocation(locationFilter, false, false, false, baseCost, false, false);
     }
 
     /**
@@ -8051,7 +8051,7 @@ public class Filters {
      * @return Filter
      */
     public static Filter canBeRelocatedToLocation(final PhysicalCard location, final boolean forFree, final float baseCost) {
-        return canBeRelocatedToLocation(Filters.sameCardId(location), false, false, forFree, baseCost, false);
+        return canBeRelocatedToLocation(Filters.sameCardId(location), false, false, forFree, baseCost, false, false);
     }
 
     /**
@@ -8063,7 +8063,7 @@ public class Filters {
      * @return Filter
      */
     public static Filter canBeRelocatedToLocation(final Filter locationFilter, final boolean forFree, final float baseCost) {
-        return canBeRelocatedToLocation(locationFilter, false, false, forFree, baseCost, false);
+        return canBeRelocatedToLocation(locationFilter, false, false, forFree, baseCost, false, false);
     }
 
     /**
@@ -8074,10 +8074,27 @@ public class Filters {
      * @param allowEscort true if relocating captive escort is allowed, otherwise false
      * @param forFree true if the movement is to be free, otherwise false
      * @param baseCost the base cost (as defined by the card performing the relocation)
+     * @param allowAhchTo true if relocating from/to Ahch-To locations is allowed, otherwise false
      * @return Filter
      */
     public static Filter canBeRelocatedToLocation(PhysicalCard location, final boolean allowDagobah, final boolean allowEscort, final boolean forFree, final float baseCost, final boolean allowAhchTo) {
-        return canBeRelocatedToLocation(Filters.sameCardId(location), allowDagobah, allowEscort, forFree, baseCost, allowAhchTo);
+        return canBeRelocatedToLocation(Filters.sameCardId(location), allowDagobah, allowEscort, forFree, baseCost, allowAhchTo, false);
+    }
+
+    /**
+     * Filter that accepts cards that can be relocated to a location accepted by the specified location filter.
+     *
+     * @param location the location
+     * @param allowDagobah true if relocating from/to Dagobah locations is allowed, otherwise false
+     * @param allowEscort true if relocating captive escort is allowed, otherwise false
+     * @param forFree true if the movement is to be free, otherwise false
+     * @param baseCost the base cost (as defined by the card performing the relocation)
+     * @param allowAhchTo true if relocating from/to Ahch-To locations is allowed, otherwise false
+     * @param allowSameLocation true if relocating to same location is allowed (embarking or disembarking?), otherwise, false
+     * @return Filter
+     */
+    public static Filter canBeRelocatedToLocation(PhysicalCard location, final boolean allowDagobah, final boolean allowEscort, final boolean forFree, final float baseCost, final boolean allowAhchTo, final boolean allowSameLocation) {
+        return canBeRelocatedToLocation(Filters.sameCardId(location), allowDagobah, allowEscort, forFree, baseCost, allowAhchTo, allowSameLocation);
     }
 
     /**
@@ -8092,6 +8109,22 @@ public class Filters {
      * @return Filter
      */
     public static Filter canBeRelocatedToLocation(final Filter locationFilter, final boolean allowDagobah, final boolean allowEscort, final boolean forFree, final float baseCost, final boolean allowAhchTo) {
+        return canBeRelocatedToLocation(locationFilter, allowDagobah, allowEscort, forFree, baseCost, allowAhchTo, false);
+    }
+
+    /**
+     * Filter that accepts cards that can be relocated to a location accepted by the specified location filter.
+     *
+     * @param locationFilter the location filter
+     * @param allowDagobah true if relocating from/to Dagobah locations is allowed, otherwise false
+     * @param allowEscort true if relocating captive escort is allowed, otherwise false
+     * @param forFree true if the movement is to be free, otherwise false
+     * @param baseCost the base cost (as defined by the card performing the relocation)
+     * @param allowAhchTo true if relocating from/to Ahch-To locations is allowed, otherwise false
+     * @param allowSameLocation true if relocating to same location is allowed (embarking or disembarking?), otherwise, false
+     * @return Filter
+     */
+    public static Filter canBeRelocatedToLocation(final Filter locationFilter, final boolean allowDagobah, final boolean allowEscort, final boolean forFree, final float baseCost, final boolean allowAhchTo, final boolean allowSameLocation) {
         return new Filter() {
             @Override
             public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
@@ -8116,7 +8149,13 @@ public class Filters {
                 }
 
                 // Check locations accepted by filter
-                Collection<PhysicalCard> otherLocations = Filters.filterTopLocationsOnTable(gameState.getGame(), Filters.and(Filters.not(Filters.sameCardId(currentLocation)), locationFilter));
+                Collection<PhysicalCard> otherLocations;
+                if(allowSameLocation) {
+                    otherLocations = Filters.filterTopLocationsOnTable(gameState.getGame(), locationFilter);
+                }
+                else {
+                    otherLocations = Filters.filterTopLocationsOnTable(gameState.getGame(), Filters.and(Filters.not(Filters.sameCardId(currentLocation)), locationFilter));
+                }
                 for (PhysicalCard otherLocation : otherLocations) {
 
                     // 4) Check destination is valid for card to be relocated to
@@ -8175,7 +8214,7 @@ public class Filters {
      * @return Filter
      */
     public static Filter locationCanBeRelocatedTo(PhysicalCard cardToMove, final float baseCost) {
-        return locationCanBeRelocatedTo(cardToMove, false, false, false, baseCost, false);
+        return locationCanBeRelocatedTo(cardToMove, false, false, false, baseCost, false, false);
     }
 
     /**
@@ -8187,7 +8226,7 @@ public class Filters {
      * @return Filter
      */
     public static Filter locationCanBeRelocatedTo(PhysicalCard cardToMove, final boolean forFree, final float baseCost) {
-        return locationCanBeRelocatedTo(cardToMove, false, false, forFree, baseCost, false);
+        return locationCanBeRelocatedTo(cardToMove, false, false, forFree, baseCost, false, false);
     }
 
     /**
@@ -8201,7 +8240,23 @@ public class Filters {
      * @param allowAhchTo true if relocating from/to Ahch-To locations is allowed, otherwise false
      * @return Filter
      */
-    public static Filter locationCanBeRelocatedTo(PhysicalCard cardToMove, final boolean allowDagobah, final boolean allowEscort, final boolean forFree, final float baseCost, final boolean allowAhchTo) {
+    public static Filter locationCanBeRelocatedTo(PhysicalCard cardToMove, boolean allowDagobah, boolean allowEscort, boolean forFree, float baseCost, boolean allowAhchTo) {
+        return locationCanBeRelocatedTo(cardToMove, allowDagobah, allowEscort, forFree, baseCost, allowAhchTo, false);
+    }
+
+    /**
+     * Filter that accepts locations the specified card can be relocated to.
+     *
+     * @param cardToMove the card to be relocated
+     * @param allowDagobah true if relocating from/to Dagobah locations is allowed, otherwise false
+     * @param allowEscort true if relocating captive escort is allowed, otherwise false
+     * @param forFree true if the movement is to be free, otherwise false
+     * @param baseCost the base cost (as defined by the card performing the relocation)
+     * @param allowAhchTo true if relocating from/to Ahch-To locations is allowed, otherwise false
+     * @param allowSameLocation true if relocating to same location is allowed (embarking or disembarking?), otherwise, false
+     * @return Filter
+     */
+    public static Filter locationCanBeRelocatedTo(PhysicalCard cardToMove, final boolean allowDagobah, final boolean allowEscort, final boolean forFree, final float baseCost, final boolean allowAhchTo, final boolean allowSameLocation) {
         final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
         return new Filter() {
             @Override
@@ -8215,10 +8270,10 @@ public class Filters {
                         || physicalCard.getBlueprint().getCardCategory() != CardCategory.LOCATION)
                     return false;
 
-                // 1) Check if card is at a location (and the destination is a different location) or on Weather Vane
+                // 1) Check if card is at a location (and the destination is a different location) or on Weather Vane or allowed to relocate to same location
                 PhysicalCard currentLocation = modifiersQuerying.getLocationThatCardIsAt(gameState, cardToMove);
                 boolean isOnWeatherVane = cardToMove.getStackedOn() != null && Filters.Weather_Vane.accepts(gameState, modifiersQuerying, cardToMove.getStackedOn());
-                if (!isOnWeatherVane && (currentLocation == null || Filters.sameCardId(physicalCard).accepts(gameState, modifiersQuerying, currentLocation)))
+                if (!isOnWeatherVane && (currentLocation == null || Filters.sameCardId(physicalCard).accepts(gameState, modifiersQuerying, currentLocation)) && !allowSameLocation)
                     return false;
 
                 // 2) Check if card can move

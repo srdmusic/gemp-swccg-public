@@ -50,6 +50,7 @@ public class Card_1_245_Tests {
                     put("ronto","7_316"); //(creature vehicle)
                     put("barrier","1_249"); //imperial barrier
                     put("cruiser","7_304"); //jabba's space cruiser (req. alien pilots)
+                    put("bosskInBus","7_301"); //bossk in hound's tooth
                     put("pilot1", "1_180"); // imperial pilot
                     put("pilot2", "1_180"); // imperial pilot
                     put("pilot3", "1_180"); // imperial pilot
@@ -246,7 +247,7 @@ public class Card_1_245_Tests {
     }
 
     @Test
-    public void EvacuateRequiresAtLeast1Character() {
+    public void EvacuateMayNotBePlayedIfNoCharacterAboard() {
         //test1: evacuate cannot be played when your capital ship is about to be lost
         //  if no characters are aboard
         var scn = GetScenario();
@@ -276,6 +277,51 @@ public class Card_1_245_Tests {
 
         assertFalse(scn.DSDecisionAvailable("About to forfeit")); //About to forfeit - Optional responses
         assertTrue(scn.AwaitingLSBattlePhaseActions()); //test1: (past window to play Evacuate?)
+    }
+
+    @Test
+    public void EvacuateMayNotBePlayedIfNoCharacterAboardCanRelocate() {
+        //test1: evacuate cannot be played when your capital ship is about to be lost
+        //  if characters are aboard but none can relocate (escort cannot relocate)
+        var scn = GetScenario();
+
+        var ls_cantina = scn.GetLSCard("ls_cantina");
+        var homeone = scn.GetLSCard("homeone");
+        var rebelTrooper = scn.GetLSFiller(1);
+
+        var evac = scn.GetDSCard("evac");
+        var vcsd = scn.GetDSCard("vcsd");
+        var trooper = scn.GetDSFiller(1);
+
+        var system = scn.GetDSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToDSHand(evac);
+
+        scn.MoveLocationToTable(ls_cantina);
+
+        scn.MoveCardsToLocation(system,homeone,vcsd);
+        scn.BoardAsPassenger(vcsd,trooper);
+        scn.CaptureCardWith(trooper,rebelTrooper);
+
+        scn.PassAllResponses();
+
+        scn.SkipToPhase(Phase.BATTLE);
+        assertTrue(trooper.isPassengerOf());
+        assertTrue(rebelTrooper.isCaptive());
+        assertEquals(trooper,rebelTrooper.getEscort());
+
+        scn.DSInitiateBattle(system);
+        scn.SkipToDamageSegment(false);
+
+        scn.DSPayBattleDamageFromCardInPlay(vcsd);
+
+        assertTrue(scn.DSDecisionAvailable("still want to forfeit"));
+        scn.DSChooseYes();
+
+        assertFalse(scn.DSDecisionAvailable("About to forfeit")); //About to forfeit - Optional responses
+        assertTrue(scn.LSAnyDecisionsAvailable()); //test1: (past window to play Evacuate?)
     }
 
     @Test
@@ -407,51 +453,55 @@ public class Card_1_245_Tests {
         assertTrue(scn.LSAnyDecisionsAvailable()); //test1 (past window to play Evacuate?)
     }
 
-//    @Test
-//    public void EvacuateCannotTargetYourLandedShipSite() {
-//        /// fill in later with a capital ship that can land
-//
-//        //(locationCanBeRelocatedTo requires destination location to be different from current location)
-//        //test1: evacuate is playable if lost while landed at a site
-//        //test2: evacuate cannot relocate to the same site that your ship is currently landed at
-//        var scn = GetScenario();
-//
-//        var escape = scn.GetLSCard("escape");
-//        var ls_yavin_db = scn.GetLSCard("ls_yavin_db");
-//        var ls_cantina = scn.GetLSCard("ls_cantina");
-//        var transport = scn.GetLSCard("transport");
-//        var pilot = scn.GetLSCard("pilot");
-//
-//        var trooper = scn.GetDSFiller(1);
-//
-//        scn.StartGame();
-//
-//        scn.MoveCardsToLSHand(escape);
-//
-//        scn.MoveLocationToTable(ls_yavin_db);
-//        scn.MoveLocationToTable(ls_cantina);
-//
-//        scn.MoveCardsToLocation(ls_yavin_db,transport,trooper);
-//        scn.BoardAsPilot(transport,pilot);
-//
-//        scn.SkipToPhase(Phase.BATTLE);
-//        assertTrue(pilot.isPilotOf());
-//
-//        scn.DSInitiateBattle(ls_yavin_db);
-//        scn.SkipToDamageSegment(false);
-//
-//        scn.LSPayBattleDamageFromCardInPlay(transport);
-//
-//        assertTrue(scn.LSDecisionAvailable("still want to forfeit"));
-//        scn.LSChooseYes();
-//
-//        assertTrue(scn.LSDecisionAvailable("About to forfeit")); //About to forfeit Medium Transport - Optional responses
-//        assertTrue(scn.LSCardPlayAvailable(escape)); //test1
-//        scn.LSPlayCard(escape);
-//        assertTrue(scn.LSDecisionAvailable("Choose planet site"));
-//        assertTrue(scn.LSHasCardChoiceAvailable(ls_cantina));
-//        assertFalse(scn.LSHasCardChoiceAvailable(ls_yavin_db)); //test2
-//    }
+    @Test
+    public void EvacuateCanTargetYourLandedShipSite() {
+        //test1: evacuate is playable if lost while landed at a site
+        //test2: evacuate can relocate to the same site that your ship is currently landed at
+        //test3: relocate to same site succeeds
+        var scn = GetScenario();
+
+        var ls_yavin_db = scn.GetLSCard("ls_yavin_db");
+        var ls_cantina = scn.GetLSCard("ls_cantina");
+        var rebelTrooper = scn.GetLSFiller(1);
+
+        var evac = scn.GetDSCard("evac");
+        var cruiser = scn.GetDSCard("cruiser");
+        var alienpilot1 = scn.GetDSCard("alienpilot1");
+
+        scn.StartGame();
+
+        scn.MoveCardsToDSHand(evac);
+
+        scn.MoveLocationToTable(ls_yavin_db);
+        scn.MoveLocationToTable(ls_cantina);
+
+        scn.MoveCardsToLocation(ls_yavin_db,cruiser,rebelTrooper);
+        scn.BoardAsPilot(cruiser,alienpilot1);
+
+        scn.SkipToPhase(Phase.BATTLE);
+        assertTrue(alienpilot1.isPilotOf());
+
+        scn.DSInitiateBattle(ls_yavin_db);
+        scn.SkipToDamageSegment(false);
+
+        scn.DSPayBattleDamageFromCardInPlay(cruiser);
+
+        assertTrue(scn.DSDecisionAvailable("still want to forfeit"));
+        scn.DSChooseYes();
+
+        assertTrue(scn.DSDecisionAvailable("About to forfeit")); //About to forfeit - Optional responses
+        assertTrue(scn.DSCardPlayAvailable(evac)); //test1
+        scn.DSPlayCard(evac);
+        assertTrue(scn.DSDecisionAvailable("Choose planet site or ship"));
+        assertTrue(scn.DSHasCardChoiceAvailable(ls_cantina));
+        assertTrue(scn.DSHasCardChoiceAvailable(ls_yavin_db)); //test2
+        scn.DSChooseCard(ls_yavin_db);
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.CardsAtLocation(ls_yavin_db,alienpilot1)); //test3
+        assertFalse(scn.IsAttachedTo(cruiser,alienpilot1));
+    }
 
     @Test
     public void EvacuateDoesNotRelocateCharactersOnVehiclesAboard() {
@@ -582,42 +632,42 @@ public class Card_1_245_Tests {
     }
 
     @Test
-    public void EvacuateDestinationMayBeRetargetedByIHABFAT() {
-        //test1: evacuate planet site selected can be retargeted to a new, valid planet site
+    public void EvacuateDoesNotRelocateEscortCharacters() {
+        //test1: will not relocate characters that are escorting a captive
+        //test2: will not relocate captives that are being escorted
         var scn = GetScenario();
 
         var ls_cantina = scn.GetLSCard("ls_cantina");
         var homeone = scn.GetLSCard("homeone");
-        var ls_yavin_db = scn.GetLSCard("ls_yavin_db");
-        var ls_cc_db = scn.GetLSCard("ls_cc_db");
-        var ls_dag = scn.GetLSCard("ls_dag");
-        var badFeeling = scn.GetLSCard("badFeeling");
+        var barrier = scn.GetLSCard("barrier");
+        var rebelTrooper = scn.GetLSFiller(1);
 
         var evac = scn.GetDSCard("evac");
         var vcsd = scn.GetDSCard("vcsd");
         var pilot = scn.GetDSCard("pilot");
-        var ds_tat_db = scn.GetDSCard("ds_tat_db");
+        var trooper = scn.GetDSFiller(1);
 
         var system = scn.GetDSStartingLocation();
 
         scn.StartGame();
 
-        scn.MoveCardsToDSHand(evac);
-        scn.MoveCardsToLSHand(badFeeling);
+        scn.MoveCardsToDSHand(evac, trooper);
+        scn.MoveCardsToLSHand(barrier);
 
         scn.MoveLocationToTable(ls_cantina);
-        scn.MoveLocationToTable(ls_yavin_db);
-        scn.MoveLocationToTable(ls_cc_db);
-        scn.MoveLocationToTable(ls_dag);
-        scn.MoveLocationToTable(ds_tat_db);
 
         scn.MoveCardsToLocation(system,homeone,vcsd);
         scn.BoardAsPilot(vcsd,pilot);
+        scn.BoardAsPassenger(vcsd,trooper);
+        scn.CaptureCardWith(trooper,rebelTrooper);
+
+        scn.PassAllResponses();
 
         scn.SkipToPhase(Phase.BATTLE);
         assertTrue(pilot.isPilotOf());
-
-        scn.LSActivateForceCheat(4); //enough to battle and play IHABFAT
+        assertTrue(trooper.isPassengerOf());
+        assertTrue(rebelTrooper.isCaptive());
+        assertEquals(trooper,rebelTrooper.getEscort());
 
         scn.DSInitiateBattle(system);
         scn.SkipToDamageSegment(false);
@@ -627,34 +677,18 @@ public class Card_1_245_Tests {
         assertTrue(scn.DSDecisionAvailable("still want to forfeit"));
         scn.DSChooseYes();
 
-        assertTrue(scn.DSDecisionAvailable("About to forfeit")); //About to forfeit Medium Transport - Optional responses
+        assertTrue(scn.DSDecisionAvailable("About to forfeit")); //About to forfeit - Optional responses
         assertTrue(scn.DSCardPlayAvailable(evac)); //test1
         scn.DSPlayCard(evac);
         assertTrue(scn.DSDecisionAvailable("Choose planet site"));
         assertTrue(scn.DSHasCardChoiceAvailable(ls_cantina));
         scn.DSChooseCard(ls_cantina);
 
-        assertTrue(scn.LSDecisionAvailable("Optional responses"));
-        assertTrue(scn.LSCardPlayAvailable(badFeeling));
-        scn.LSPlayCard(badFeeling);
-
-        //Choose card (or card in group) to re-target from, or click 'Done' to cancel
-        assertTrue(scn.LSHasCardChoiceAvailable(ls_cantina)); //original selection
-        assertFalse(scn.LSHasCardChoicesAvailable(ls_yavin_db,ls_cc_db,ls_dag,ds_tat_db));
-        scn.LSChooseCard(ls_cantina);
-
-        //Choose card (or card in group) to re-target from, or click 'Done' to cancel
-        assertFalse(scn.LSHasCardChoiceAvailable(ls_cantina)); //must retarget somewhere different
-        assertFalse(scn.LSHasCardChoiceAvailable(ls_dag)); //not planet site
-        assertTrue(scn.LSHasCardChoiceAvailable(ls_yavin_db)); //LS site that meets criteria
-        assertFalse(scn.LSHasCardChoiceAvailable(ds_tat_db)); //can't retarget to DS site, since original was LS site and must be "on the same side of the force"
-        assertFalse(scn.LSHasCardChoiceAvailable(ls_dag)); //dagobah rules
-        scn.LSChooseCard(ls_yavin_db);
-
         scn.PassAllResponses();
 
-        assertTrue(scn.CardsAtLocation(ls_yavin_db,pilot)); //test1
-        assertSame(Zone.TOP_OF_USED_PILE,evac.getZone());
+        assertTrue(scn.CardsAtLocation(ls_cantina,pilot));
+        assertFalse(scn.CardsAtLocation(ls_cantina,trooper)); //test1
+        assertFalse(scn.CardsAtLocation(ls_cantina,rebelTrooper)); //test2
     }
 
     @Test
@@ -1098,9 +1132,315 @@ public class Card_1_245_Tests {
 
         assertTrue(scn.IsAttachedTo(cruiser,astromech));
     }
-    //show correctly relocates from ship and associated ship site
-    //landed starship to landed starship relocation? technically at same site, so may not be allowed?
+
+    @Test
+    public void EvacuateChecksCaptivesForPassengerCapacity() {
+        //test1: evacuate cannot be played if insufficient capacity due to captives consuming passenger slots
+        //  capacity 6 with 5 passengers, should fail when checking if enough room for escort + captive
+        //  even though escort + captive would fail to relocate later!
+        var scn = GetScenario();
+
+
+        var homeone = scn.GetLSCard("homeone");
+        var rebelTrooper = scn.GetLSFiller(1);
+
+        var evac = scn.GetDSCard("evac");
+        var vcsd = scn.GetDSCard("vcsd");
+        var cruiser = scn.GetDSCard("cruiser");
+        var alienpilot1 = scn.GetDSCard("alienpilot1");
+        var trooper = scn.GetDSFiller(1);
+        var passenger2 = scn.GetDSFiller(2);
+        var passenger3 = scn.GetDSFiller(3);
+        var passenger4 = scn.GetDSFiller(4);
+        var passenger5 = scn.GetDSFiller(5);
+        var passenger6 = scn.GetDSFiller(6);
+
+        var system = scn.GetDSStartingLocation();
+        var system2 = scn.GetLSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToDSHand(evac);
+
+        scn.MoveCardsToLocation(system,vcsd,homeone);
+        scn.BoardAsPassenger(vcsd,alienpilot1,trooper);
+        scn.CaptureCardWith(trooper,rebelTrooper);
+
+        scn.MoveCardsToLocation(system2,cruiser);
+        scn.BoardAsPassenger(cruiser,passenger2,passenger3,passenger4,passenger5,passenger6);
+
+        scn.PassAllResponses();
+
+        scn.SkipToPhase(Phase.BATTLE);
+        assertTrue(trooper.isPassengerOf());
+        assertTrue(rebelTrooper.isCaptive());
+        assertEquals(trooper,rebelTrooper.getEscort());
+
+        scn.DSInitiateBattle(system);
+        scn.SkipToDamageSegment(false);
+
+        scn.DSPayBattleDamageFromCardInPlay(vcsd);
+
+        assertTrue(scn.DSDecisionAvailable("still want to forfeit"));
+        scn.DSChooseYes();
+
+        assertFalse(scn.DSDecisionAvailable("About to forfeit")); //About to forfeit - Optional responses
+        assertTrue(scn.LSAnyDecisionsAvailable()); //test1: past window of opportunity to play Evacuate?
+    }
+
+    @Test
+    public void EvacuateCanRelocateLandedShipToLandedShip() {
+        //test1: evacuate can relocate from a landed ship to another landed ship at the same site
+        var scn = GetScenario();
+
+        var ls_cc_db = scn.GetLSCard("ls_cc_db");
+        var rebelTrooper = scn.GetLSFiller(1);
+
+        var evac = scn.GetDSCard("evac");
+        var cruiser = scn.GetDSCard("cruiser");
+        var bosskInBus = scn.GetDSCard("bosskInBus");
+        var alienpilot1 = scn.GetDSCard("alienpilot1");
+
+        scn.StartGame();
+
+        scn.MoveCardsToDSHand(evac);
+
+        scn.MoveLocationToTable(ls_cc_db);
+
+        scn.MoveCardsToLocation(ls_cc_db,cruiser,bosskInBus,rebelTrooper);
+        scn.BoardAsPilot(cruiser,alienpilot1);
+
+        scn.SkipToPhase(Phase.BATTLE);
+        assertTrue(alienpilot1.isPilotOf());
+
+        scn.DSInitiateBattle(ls_cc_db);
+        scn.SkipToDamageSegment(false);
+
+        scn.DSPayBattleDamageFromCardInPlay(cruiser);
+
+        assertTrue(scn.DSDecisionAvailable("still want to forfeit"));
+        scn.DSChooseYes();
+
+        assertTrue(scn.DSDecisionAvailable("About to forfeit")); //About to forfeit - Optional responses
+        assertTrue(scn.DSCardPlayAvailable(evac)); //test1
+        scn.DSPlayCard(evac);
+        assertTrue(scn.DSDecisionAvailable("Choose planet site or ship"));
+        assertFalse(scn.DSHasCardChoiceAvailable(ls_cc_db)); //(not planet site)
+        assertTrue(scn.DSHasCardChoiceAvailable(bosskInBus));
+        scn.DSChooseCard(bosskInBus);
+
+        scn.PassAllResponses();
+
+        assertFalse(scn.CardsAtLocation(ls_cc_db,alienpilot1));
+        assertFalse(scn.IsAttachedTo(cruiser,alienpilot1));
+        assertTrue(scn.IsAttachedTo(bosskInBus,alienpilot1)); //test1
+    }
+
+    @Test
+    public void EvacuateCanRelocateShipToShipAtSystem() {
+        //test1: evacuate can relocate from a ship at a system to another ship the same system
+        var scn = GetScenario();
+
+        var homeone = scn.GetLSCard("homeone");
+
+        var evac = scn.GetDSCard("evac");
+        var cruiser = scn.GetDSCard("cruiser");
+        var vcsd = scn.GetDSCard("vcsd");
+        var alienpilot1 = scn.GetDSCard("alienpilot1");
+
+        scn.StartGame();
+
+        scn.MoveCardsToDSHand(evac);
+
+        var system = scn.GetDSStartingLocation();
+
+        scn.MoveCardsToLocation(system,cruiser,vcsd,homeone);
+        scn.BoardAsPassenger(cruiser,alienpilot1);
+
+        scn.SkipToPhase(Phase.BATTLE);
+
+        scn.DSInitiateBattle(system);
+        scn.SkipToDamageSegment(false);
+
+        scn.DSPayBattleDamageFromCardInPlay(cruiser);
+
+        assertTrue(scn.DSDecisionAvailable("still want to forfeit"));
+        scn.DSChooseYes();
+
+        assertTrue(scn.DSDecisionAvailable("About to forfeit")); //About to forfeit - Optional responses
+        assertTrue(scn.DSCardPlayAvailable(evac)); //test1
+        scn.DSPlayCard(evac);
+        assertTrue(scn.DSDecisionAvailable("Choose planet site or ship"));
+        assertTrue(scn.DSHasCardChoiceAvailable(vcsd));
+        scn.DSChooseCard(vcsd);
+
+        scn.PassAllResponses();
+        assertTrue(scn.DSDecisionAvailable("Choose characters")); //to relocate as pilots
+
+        scn.DSPass();
+        scn.PassAllResponses();
+
+        assertFalse(scn.IsAttachedTo(cruiser,alienpilot1));
+        assertTrue(scn.IsAttachedTo(vcsd,alienpilot1)); //test1
+    }
+
+    @Test
+    public void EvacuateDestinationMayBeRetargetedByIHABFAT_1() {
+        //test1: evacuate planet site selected can be retargeted to a new, valid planet site
+        //test2: evacuate cannot retarget to DS ship with capacity if original site was LS
+        var scn = GetScenario();
+
+        var ls_cantina = scn.GetLSCard("ls_cantina");
+        var homeone = scn.GetLSCard("homeone");
+        var ls_yavin_db = scn.GetLSCard("ls_yavin_db");
+        var ls_cc_db = scn.GetLSCard("ls_cc_db");
+        var ls_dag = scn.GetLSCard("ls_dag");
+        var badFeeling = scn.GetLSCard("badFeeling");
+
+        var evac = scn.GetDSCard("evac");
+        var vcsd = scn.GetDSCard("vcsd");
+        var executor = scn.GetDSCard("executor");
+        var pilot = scn.GetDSCard("pilot");
+        var ds_tat_db = scn.GetDSCard("ds_tat_db");
+
+        var system = scn.GetDSStartingLocation();
+        var system2 = scn.GetLSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToDSHand(evac);
+        scn.MoveCardsToLSHand(badFeeling);
+
+        scn.MoveLocationToTable(ls_cantina);
+        scn.MoveLocationToTable(ls_yavin_db);
+        scn.MoveLocationToTable(ls_cc_db);
+        scn.MoveLocationToTable(ls_dag);
+        scn.MoveLocationToTable(ds_tat_db);
+
+        scn.MoveCardsToLocation(system,homeone,vcsd);
+        scn.BoardAsPilot(vcsd,pilot);
+
+        scn.MoveCardsToLocation(system2,executor);
+
+        scn.SkipToPhase(Phase.BATTLE);
+        assertTrue(pilot.isPilotOf());
+
+        scn.LSActivateForceCheat(4); //enough to battle and play IHABFAT
+
+        scn.DSInitiateBattle(system);
+        scn.SkipToDamageSegment(false);
+
+        scn.DSPayBattleDamageFromCardInPlay(vcsd);
+
+        assertTrue(scn.DSDecisionAvailable("still want to forfeit"));
+        scn.DSChooseYes();
+
+        assertTrue(scn.DSDecisionAvailable("About to forfeit")); //About to forfeit - Optional responses
+        assertTrue(scn.DSCardPlayAvailable(evac)); //test1
+        scn.DSPlayCard(evac);
+        assertTrue(scn.DSDecisionAvailable("Choose planet site"));
+        assertTrue(scn.DSHasCardChoiceAvailable(ls_cantina));
+        scn.DSChooseCard(ls_cantina);
+
+        assertTrue(scn.LSDecisionAvailable("Optional responses"));
+        assertTrue(scn.LSCardPlayAvailable(badFeeling));
+        scn.LSPlayCard(badFeeling);
+
+        //Choose card (or card in group) to re-target from, or click 'Done' to cancel
+        assertTrue(scn.LSHasCardChoiceAvailable(ls_cantina)); //original selection
+        assertFalse(scn.LSHasCardChoicesAvailable(ls_yavin_db,ls_cc_db,ls_dag,ds_tat_db));
+        scn.LSChooseCard(ls_cantina);
+
+        //Choose card (or card in group) to re-target from, or click 'Done' to cancel
+        assertFalse(scn.LSHasCardChoiceAvailable(ls_cantina)); //must retarget somewhere different
+        assertFalse(scn.LSHasCardChoiceAvailable(ls_dag)); //not planet site
+        assertTrue(scn.LSHasCardChoiceAvailable(ls_yavin_db)); //LS site that meets criteria
+        assertFalse(scn.LSHasCardChoiceAvailable(ds_tat_db)); //can't retarget to DS site, since original was LS site and must be "on the same side of the force"
+        assertFalse(scn.LSHasCardChoiceAvailable(ls_dag)); //dagobah rules
+        assertFalse(scn.LSHasCardChoiceAvailable(executor)); //can't retarget to DS ship, since original was LS site and must be "on the same side of the force"
+        scn.LSChooseCard(ls_yavin_db);
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.CardsAtLocation(ls_yavin_db,pilot)); //test1
+        assertSame(Zone.TOP_OF_USED_PILE,evac.getZone());
+    }
+
+    @Test
+    public void EvacuateDestinationMayBeRetargetedByIHABFAT_2() {
+        //test1: evacuate (DS) planet site selected can be retargeted to a (DS) eligible ship
+        var scn = GetScenario();
+
+        var ls_cantina = scn.GetLSCard("ls_cantina");
+        var homeone = scn.GetLSCard("homeone");
+        var badFeeling = scn.GetLSCard("badFeeling");
+
+        var evac = scn.GetDSCard("evac");
+        var vcsd = scn.GetDSCard("vcsd");
+        var executor = scn.GetDSCard("executor");
+        var pilot = scn.GetDSCard("pilot");
+        var ds_tat_db = scn.GetDSCard("ds_tat_db");
+
+        var system = scn.GetDSStartingLocation();
+        var system2 = scn.GetLSStartingLocation();
+
+        scn.StartGame();
+
+        scn.MoveCardsToDSHand(evac);
+        scn.MoveCardsToLSHand(badFeeling);
+
+        scn.MoveLocationToTable(ls_cantina);
+        scn.MoveLocationToTable(ds_tat_db);
+
+        scn.MoveCardsToLocation(system,homeone,vcsd);
+        scn.BoardAsPilot(vcsd,pilot);
+
+        scn.MoveCardsToLocation(system2,executor);
+
+        scn.SkipToPhase(Phase.BATTLE);
+        assertTrue(pilot.isPilotOf());
+
+        scn.LSActivateForceCheat(4); //enough to battle and play IHABFAT
+
+        scn.DSInitiateBattle(system);
+        scn.SkipToDamageSegment(false);
+
+        scn.DSPayBattleDamageFromCardInPlay(vcsd);
+
+        assertTrue(scn.DSDecisionAvailable("still want to forfeit"));
+        scn.DSChooseYes();
+
+        assertTrue(scn.DSDecisionAvailable("About to forfeit")); //About to forfeit - Optional responses
+        assertTrue(scn.DSCardPlayAvailable(evac)); //test1
+        scn.DSPlayCard(evac);
+        assertTrue(scn.DSDecisionAvailable("Choose planet site"));
+        assertTrue(scn.DSHasCardChoiceAvailable(ds_tat_db));
+        scn.DSChooseCard(ds_tat_db);
+
+        assertTrue(scn.LSDecisionAvailable("Optional responses"));
+        assertTrue(scn.LSCardPlayAvailable(badFeeling));
+        scn.LSPlayCard(badFeeling);
+
+        //Choose card (or card in group) to re-target from, or click 'Done' to cancel
+        assertTrue(scn.LSHasCardChoiceAvailable(ds_tat_db)); //original selection
+        assertFalse(scn.LSHasCardChoicesAvailable(ls_cantina));
+        scn.LSChooseCard(ds_tat_db);
+
+        //Choose card (or card in group) to re-target from, or click 'Done' to cancel
+        assertFalse(scn.LSHasCardChoiceAvailable(ls_cantina)); //can't retarget to LS site, since original was DS site and must be "on the same side of the force"
+        assertTrue(scn.LSHasCardChoiceAvailable(executor)); //DS ship that meets criteria
+        assertFalse(scn.LSHasCardChoiceAvailable(ds_tat_db)); //must be a different target than original target
+        scn.LSChooseCard(executor);
+
+        scn.PassAllResponses();
+        assertTrue(scn.DSDecisionAvailable("Choose characters to relocate as pilots"));
+        scn.DSPass();
+
+        scn.PassAllResponses();
+        assertTrue(scn.IsAttachedTo(executor,pilot)); //test1
+    }
+
+    //landed starship to landed starship relocation
     //check various pilot/passenger capacity combinations
     //cannot relocate to excluded ship (cannot spot) during battle
-    //check IHABFAT with ownership of the site/ship
 }

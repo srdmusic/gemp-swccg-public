@@ -62,9 +62,12 @@ public class Card1_245 extends AbstractUsedInterrupt {
                 final int charactersAboardCount = Filters.countActive(game, self, aboardFilter);
                 final int astromechsAboardCount = Filters.countActive(game, self, Filters.and(aboardFilter, Filters.astromech_droid));
 
+                final Filter captivesAboardFilter = Filters.and(Filters.captive, Filters.aboard(cardToBeLost), Filters.canBeTargetedBy(self));
+                final int captivesAboardCount = Filters.countAllOnTable(game,captivesAboardFilter); //change to only get captives that are escorted by characters in the aboardFilter?
+
                 Collection<PhysicalCard> possibleSites = new HashSet<>();
                 for (PhysicalCard card : Filters.filterActive(game, self, aboardFilter)) {
-                    possibleSites.addAll(Filters.filterTopLocationsOnTable(game, Filters.and(destinationSiteFilter, Filters.locationCanBeRelocatedTo(card, 0))));
+                    possibleSites.addAll(Filters.filterTopLocationsOnTable(game, Filters.and(destinationSiteFilter, Filters.locationCanBeRelocatedTo(card, false, false, false, 0, false, true))));
                 }
 
                 //potential ships must be able to hold everyone from the aboardFilter
@@ -88,7 +91,7 @@ public class Card1_245 extends AbstractUsedInterrupt {
                     int maxPilotCapacityToFill = Math.min(availablePilotCapacity,eligiblePilotsAboard);
                     int maxAstromechCapacityToFill = Math.min(availableAstromechCapacity,astromechsAboardCount);
                     //...check passenger capacity needed to hold the rest
-                    int mandatoryPassengersAboard = charactersAboardCount - maxPilotCapacityToFill - maxAstromechCapacityToFill;
+                    int mandatoryPassengersAboard = (charactersAboardCount + captivesAboardCount) - maxPilotCapacityToFill - maxAstromechCapacityToFill;
                     if(availablePassengerCapacity >= mandatoryPassengersAboard) {
                         possibleShips.add(potentialShip);
                     }
@@ -116,7 +119,7 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                             // Perform result(s)
                                             PhysicalCard destination = action.getPrimaryTargetCard(targetGroupId);
                                             if (possibleSites.contains(destination)) {
-                                                Collection<PhysicalCard> toRelocate = Filters.filterActive(game, self, Filters.and(aboardFilter, Filters.canBeRelocatedToLocation(destination, 0)));
+                                                Collection<PhysicalCard> toRelocate = Filters.filterActive(game, self, Filters.and(aboardFilter, Filters.canBeRelocatedToLocation(destination, false, false, false, 0, false, true)));
                                                 action.addAnimationGroup(toRelocate);
                                                 action.appendEffect(new RelocateBetweenLocationsEffect(action, toRelocate, destination));
                                             }
@@ -133,10 +136,11 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                                 final int maxAstromechCapacityToFill = Math.min(availableAstromechCapacity,astromechsAboardCount);
                                                 //final int mandatoryPassengersAboard = charactersAboardCount - maxPilotCapacityToFill - maxAstromechCapacityToFill;
 
+                                                /// (don't include captives in calc because they and their escorts will not be relocate?)
+
                                                 int minAboardThatMustBePilots = charactersAboardCount - availablePassengerCapacity - maxAstromechCapacityToFill;
                                                 if(minAboardThatMustBePilots < 0) minAboardThatMustBePilots = 0;
 
-                                                /// Figure out which characters can be relocated to ship as pilots
                                                 Collection<PhysicalCard> validCharactersToRelocateAsPilots = new LinkedList<PhysicalCard>();
                                                 Collection<PhysicalCard> validCharactersToRelocateAsPassengers = new LinkedList<PhysicalCard>();
                                                 for (PhysicalCard characterToRelocate : Filters.filterActive(game, self, aboardFilter)) {
@@ -149,7 +153,6 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                                 if((availablePilotCapacity > 0) && !validCharactersToRelocateAsPilots.isEmpty()) {
                                                     String choiceText = "Choose characters to relocate as pilots";
                                                     if(minAboardThatMustBePilots > 0) choiceText = choiceText + " (must choose at least " + minAboardThatMustBePilots + ")";
-                                                    /// could add text about maximum... rework as (min = x, max = y)?
                                                     action.appendTargeting(
                                                             new TargetCardsOnTableEffect(action, playerId, choiceText, minAboardThatMustBePilots, availablePilotCapacity, Filters.in(validCharactersToRelocateAsPilots)) {
                                                                 @Override
@@ -158,7 +161,7 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                                                     action.addAnimationGroup(cardsToRelocate);
                                                                     action.addAnimationGroup(destination);
                                                                     for (PhysicalCard cardToRelocate : cardsToRelocate) {
-                                                                        /// relocate each pilot selected pilot, one at a time
+                                                                        //relocate each pilot selected pilot, one at a time
                                                                         action.appendEffect(
                                                                                 new RelocateFromLocationToStarshipOrVehicle(action, cardToRelocate, destination, true, self));
                                                                     }
@@ -167,7 +170,7 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                                                     if(!validCharactersToRelocateAsPassengers.isEmpty()) {
                                                                         action.addAnimationGroup(validCharactersToRelocateAsPassengers);
                                                                         for(PhysicalCard cardToRelocate : validCharactersToRelocateAsPassengers) {
-                                                                            /// relocate all other characters as passengers, one at a time
+                                                                            //relocate all other characters as passengers, one at a time
                                                                             action.appendEffect(
                                                                                     new RelocateFromLocationToStarshipOrVehicle(action, cardToRelocate, destination, false, self));
                                                                         }
@@ -184,9 +187,6 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                                                 new RelocateFromLocationToStarshipOrVehicle(action, cardToRelocate, destination, false, self));
                                                     }
                                                 }
-
-                                            /// other things to investigate: paying relocation costs
-                                            /// recording regular move like in RelocateBetweenLocationsEffect?
                                             }
                                             else {
                                                 //crash message? should be impossible
