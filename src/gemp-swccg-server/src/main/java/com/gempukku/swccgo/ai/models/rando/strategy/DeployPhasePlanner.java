@@ -269,6 +269,7 @@ public class DeployPhasePlanner {
         // NOTE: Locations are ALWAYS deployed regardless of threshold!
         boolean holdBackGround = groundPower < groundThreshold;
         boolean holdBackSpace = spacePower < spaceThreshold;
+        boolean holdBackCharacters = holdBackGround && holdBackSpace;
 
         if (holdBackGround && holdBackSpace) {
             LOG.info("📋 Will hold back both domains: ground {} < {}, space {} < {}",
