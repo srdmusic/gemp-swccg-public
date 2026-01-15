@@ -501,7 +501,7 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         private final String keyword;
         private final int score;
 
-        protected KeywordWeight(String keyword, int score) {
+        public KeywordWeight(String keyword, int score) {
             this.keyword = keyword;
             this.score = score;
         }

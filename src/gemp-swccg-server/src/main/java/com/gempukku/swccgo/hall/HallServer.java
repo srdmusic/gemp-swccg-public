@@ -5,6 +5,7 @@ import com.gempukku.swccgo.ai.AiRegistry;
 import com.gempukku.swccgo.ai.SwccgAiController;
 import com.gempukku.swccgo.ai.models.AdvancedAi;
 import com.gempukku.swccgo.ai.models.BeginnerAi;
+import com.gempukku.swccgo.ai.models.rando.RandoCalAi;
 import com.gempukku.swccgo.chat.ChatCommandCallback;
 import com.gempukku.swccgo.chat.ChatCommandErrorException;
 import com.gempukku.swccgo.chat.ChatRoomMediator;
@@ -348,6 +349,9 @@ public class HallServer extends AbstractServer {
         String normalized = aiSkill.trim().toUpperCase(Locale.ROOT);
         if ("ADVANCED".equals(normalized)) {
             return new AdvancedAi();
+        }
+        if ("RANDO".equals(normalized)) {
+            return new RandoCalAi();
         }
         return new BeginnerAi();
     }

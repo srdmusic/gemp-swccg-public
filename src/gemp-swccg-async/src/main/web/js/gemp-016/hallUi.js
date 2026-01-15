@@ -122,6 +122,7 @@ var GempSwccgHallUI = Class.extend({
         this.aiSkillSelect = $("<select style='width: 120px'></select>");
         this.aiSkillSelect.append("<option value='BEGINNER'>Beginner</option>");
         this.aiSkillSelect.append("<option value='ADVANCED'>Advanced</option>");
+        this.aiSkillSelect.append("<option value='RANDO'>Rando Cal</option>");
 
         this.aiDeckSelect = $("<select style='width: 250px'></select>");
 
