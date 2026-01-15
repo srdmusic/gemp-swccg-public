@@ -1,5 +1,4 @@
-package com.gempukku.swccgo.ai;
-
+package com.gempukku.swccgo.ai.models;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.Phase;

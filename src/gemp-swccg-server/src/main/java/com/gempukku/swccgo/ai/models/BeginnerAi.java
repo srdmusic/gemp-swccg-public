@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.ai;
+package com.gempukku.swccgo.ai.models;
 
 // Beginner AI with light heuristics (keyword/phase scoring).
 public class BeginnerAi extends HeuristicAiBase {

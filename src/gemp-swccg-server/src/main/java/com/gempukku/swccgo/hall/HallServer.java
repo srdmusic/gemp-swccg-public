@@ -1,10 +1,10 @@
 package com.gempukku.swccgo.hall;
 
 import com.gempukku.swccgo.*;
-import com.gempukku.swccgo.ai.AdvancedAi;
 import com.gempukku.swccgo.ai.AiRegistry;
-import com.gempukku.swccgo.ai.BeginnerAi;
 import com.gempukku.swccgo.ai.SwccgAiController;
+import com.gempukku.swccgo.ai.models.AdvancedAi;
+import com.gempukku.swccgo.ai.models.BeginnerAi;
 import com.gempukku.swccgo.chat.ChatCommandCallback;
 import com.gempukku.swccgo.chat.ChatCommandErrorException;
 import com.gempukku.swccgo.chat.ChatRoomMediator;

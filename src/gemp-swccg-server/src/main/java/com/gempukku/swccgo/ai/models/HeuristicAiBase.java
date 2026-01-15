@@ -1,5 +1,5 @@
-package com.gempukku.swccgo.ai;
-
+package com.gempukku.swccgo.ai.models;
+import com.gempukku.swccgo.ai.SwccgAiController;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
