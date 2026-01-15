@@ -22,8 +22,7 @@ public class AwaitingTable {
 
     private int _capacity = 2;
 
-    public AwaitingTable(SwccgFormat swccgFormat, CollectionType collectionType, League league,
-            LeagueSeriesData leagueSeries, String tableDesc, boolean isPrivate) {
+    public AwaitingTable(SwccgFormat swccgFormat, CollectionType collectionType, League league, LeagueSeriesData leagueSeries, String tableDesc, boolean isPrivate) {
         _swccgFormat = swccgFormat;
         _collectionType = collectionType;
         _league = league;

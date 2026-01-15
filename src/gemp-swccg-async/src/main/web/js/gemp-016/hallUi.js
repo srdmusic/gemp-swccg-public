@@ -109,7 +109,6 @@ var GempSwccgHallUI = Class.extend({
 
         this.isPrivateCheckbox = $("<label><input type='checkbox' id='isPrivateCheckbox1'>Private game</input></label>");
 
-
         this.decksSelect = $("<select style='width: 300px'></select>");
         this.decksSelect.hide();
         this.decksSelect.change(function () { that.updateAiDecksForSelection(); });
@@ -523,7 +522,6 @@ var GempSwccgHallUI = Class.extend({
     },
 
        getSelectedDeckSide:function() {
-
 
         var opt = this.decksSelect.find(":selected");
         if (opt == null || opt.length == 0)
