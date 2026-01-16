@@ -46,6 +46,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
     private static final float GOOD_DELTA = 10.0f;
     private static final float BAD_DELTA = -10.0f;
     private static final float VERY_BAD_DELTA = -150.0f;
+    private static final SwccgCardBlueprintLibrary FALLBACK_LIBRARY = new SwccgCardBlueprintLibrary();
 
     private final Random random = new Random();
 
@@ -62,13 +63,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return null;
         }
 
-        SwccgGame game = context.getGame();
-        if (game == null) {
-            logger.warn("⚠️ Cannot look up blueprint '{}' - game is null", blueprintId);
-            return null;
-        }
-
-        SwccgCardBlueprintLibrary library = game.getBlueprintLibrary();
+        SwccgCardBlueprintLibrary library = FALLBACK_LIBRARY;
         if (library == null) {
             logger.warn("⚠️ Cannot look up blueprint '{}' - library is null", blueprintId);
             return null;
@@ -97,10 +92,7 @@ public class CardSelectionEvaluator extends ActionEvaluator {
             return null;
         }
 
-        SwccgGame game = context.getGame();
-        if (game == null) return null;
-
-        SwccgCardBlueprintLibrary library = game.getBlueprintLibrary();
+        SwccgCardBlueprintLibrary library = FALLBACK_LIBRARY;
         if (library == null) return null;
 
         try {
