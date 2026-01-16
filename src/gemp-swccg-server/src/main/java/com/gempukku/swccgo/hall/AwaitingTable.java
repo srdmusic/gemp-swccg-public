@@ -19,6 +19,7 @@ public class AwaitingTable {
     private boolean _isPrivate;
     private SwccgDeck _aiDeck;
     private String _aiPlayerId;
+    private String _aiSkill;
 
     private int _capacity = 2;
 
@@ -77,9 +78,10 @@ public class AwaitingTable {
         return _tableDesc;
     }
 
-    public void setAiPlayer(String aiPlayerId, SwccgDeck aiDeck) {
+    public void setAiPlayer(String aiPlayerId, SwccgDeck aiDeck, String aiSkill) {
         _aiPlayerId = aiPlayerId;
         _aiDeck = aiDeck;
+        _aiSkill = aiSkill;
     }
 
     public boolean hasAi() {
@@ -92,5 +94,9 @@ public class AwaitingTable {
 
     public SwccgDeck getAiDeck() {
         return _aiDeck;
+    }
+
+    public String getAiSkill() {
+        return _aiSkill;
     }
 }

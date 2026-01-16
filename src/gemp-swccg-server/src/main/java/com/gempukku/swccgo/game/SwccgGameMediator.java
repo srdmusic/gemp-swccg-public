@@ -190,7 +190,7 @@ public class SwccgGameMediator {
 
     private boolean isBotGame() {
         for (SwccgGameParticipant participant : _playersPlaying) {
-            if (AiRegistry.isAi(participant.getPlayerId())) {
+            if (AiRegistry.isAi(_gameId, participant.getPlayerId())) {
                 return true;
             }
         }
@@ -1256,7 +1256,7 @@ public class SwccgGameMediator {
 
     // Let registered AI users answer pending decisions; guards against runawayloops.
     private void maybeLetAiPlay(String playerId) {
-        if (!AiRegistry.isAi(playerId)) {
+        if (!AiRegistry.isAi(_gameId, playerId)) {
             aiChainCounter = 0; // Reset for human player
             return;
         }
@@ -1270,7 +1270,10 @@ public class SwccgGameMediator {
             return;
         }
 
-        SwccgAiController ai = AiRegistry.get(playerId);
+        SwccgAiController ai = AiRegistry.get(_gameId, playerId);
+        if (ai == null) {
+            return;
+        }
 
         try {
             String answer = ai.decide(playerId, decision, _swccgoGame.getGameState());

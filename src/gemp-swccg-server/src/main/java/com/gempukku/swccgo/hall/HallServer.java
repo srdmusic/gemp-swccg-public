@@ -39,6 +39,10 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class HallServer extends AbstractServer {
+    private static final String AI_BEGINNER_ID = "~OzzelBot";
+    private static final String AI_ADVANCED_ID = "~YodaBot";
+    private static final String AI_ELITE_ID = "~Rando_Cal";
+
     private final int _playerInactivityPeriod = 1000 * 60; // 60 seconds
     private final long _scheduledTournamentLoadTime = 1000 * 60 * 60 * 24 * 7; // Week
     private final long _repeatTournaments = 1000 * 60 * 60 * 24 * 2;
@@ -296,9 +300,7 @@ public class HallServer extends AbstractServer {
                     throw new HallException("AI deck must be selected");
                 }
 
-                if (aiSkill == null || aiSkill.isEmpty()) {
-                    aiSkill = "BEGINNER";
-                }
+                aiSkill = normalizeAiSkill(aiSkill);
 
                 aiDeck = validateUserAndDeck(
                         format,
@@ -327,12 +329,8 @@ public class HallServer extends AbstractServer {
             _awaitingTables.put(tableId, table);
 
             if (playVsAi) {
-                // Short, readable AI id: AI_<skill>_<4-char table suffix>
-                String aiPlayerId = "AI_" + aiSkill + "_" + tableId.substring(0, 4);
-
-                table.setAiPlayer(aiPlayerId, aiDeck);
-
-                AiRegistry.register(aiPlayerId, createAiForSkill(aiSkill));
+                String aiPlayerId = getAiPlayerIdForSkill(aiSkill);
+                table.setAiPlayer(aiPlayerId, aiDeck, aiSkill);
             }
 
             joinTableInternal(tableId, player.getName(), table, swccgDeck);
@@ -342,11 +340,30 @@ public class HallServer extends AbstractServer {
         }
     }
 
-    private SwccgAiController createAiForSkill(String aiSkill) {
+    private String normalizeAiSkill(String aiSkill) {
         if (aiSkill == null) {
-            return new BeginnerAi();
+            return "BEGINNER";
         }
         String normalized = aiSkill.trim().toUpperCase(Locale.ROOT);
+        if (normalized.isEmpty()) {
+            return "BEGINNER";
+        }
+        return normalized;
+    }
+
+    private String getAiPlayerIdForSkill(String aiSkill) {
+        String normalized = normalizeAiSkill(aiSkill);
+        if ("ADVANCED".equals(normalized)) {
+            return AI_ADVANCED_ID;
+        }
+        if ("RANDO".equals(normalized)) {
+            return AI_ELITE_ID;
+        }
+        return AI_BEGINNER_ID;
+    }
+
+    private SwccgAiController createAiForSkill(String aiSkill) {
+        String normalized = normalizeAiSkill(aiSkill);
         if ("ADVANCED".equals(normalized)) {
             return new AdvancedAi();
         }
@@ -1002,10 +1019,12 @@ public class HallServer extends AbstractServer {
             allowTimerExtensions = league.getAllowTimeExtensions();
             timePerPlayerMinutes = league.getTimePerPlayerMinutes();
         }
+        String aiPlayerId = awaitingTable.hasAi() ? awaitingTable.getAiPlayerId() : null;
+        String aiSkill = awaitingTable.hasAi() ? awaitingTable.getAiSkill() : null;
         createGame(league, leagueSerie, tableId, participants, listener, awaitingTable.getSwccgoFormat(),
                 getTournamentName(awaitingTable), league != null ? null : awaitingTable.getTableDesc(), allowSpectators,
                 true, !awaitingTable.isPrivate(), (league == null) && !awaitingTable.isPrivate(), allowTimerExtensions,
-                decisionTimeoutSeconds, timePerPlayerMinutes, awaitingTable.isPrivate());
+                decisionTimeoutSeconds, timePerPlayerMinutes, awaitingTable.isPrivate(), aiPlayerId, aiSkill);
         _awaitingTables.remove(tableId);
         removeWaitingTablesWithPlayers(players);
     }
@@ -1042,13 +1061,17 @@ public class HallServer extends AbstractServer {
             SwccgGameParticipant[] participants, GameResultListener listener, SwccgFormat swccgFormat,
             String tournamentName, String tableDesc, boolean allowSpectators, boolean allowCancelling,
             boolean allowSpectatorsToViewChat, boolean allowSpectatorsToChat, boolean allowExtendGameTimer,
-            int decisionTimeoutSeconds, int timePerPlayerMinutes, boolean isPrivate) {
+            int decisionTimeoutSeconds, int timePerPlayerMinutes, boolean isPrivate, String aiPlayerId,
+            String aiSkill) {
         SwccgGameMediator swccgGameMediator = _swccgoServer.createNewGame(swccgFormat, league, tournamentName,
                 participants, allowSpectators, league == null, allowCancelling, allowSpectatorsToViewChat,
                 allowSpectatorsToChat, allowExtendGameTimer, decisionTimeoutSeconds, timePerPlayerMinutes, isPrivate,
                 _inGameStatisticsEnabled, _bonusAbilitiesEnabled);
         if (listener != null) {
             swccgGameMediator.addGameResultListener(listener);
+        }
+        if (aiPlayerId != null) {
+            AiRegistry.register(swccgGameMediator.getGameId(), aiPlayerId, createAiForSkill(aiSkill));
         }
         swccgGameMediator.startGame();
         swccgGameMediator.addGameResultListener(_notifyHallListeners);
@@ -1256,7 +1279,7 @@ public class HallServer extends AbstractServer {
                                 }
                             }, _formatLibrary.getFormat(_tournament.getFormat()), _tournament.getTournamentName(), null,
                             allowSpectators, false, false, false, false, _decisionTimeoutSeconds, _timePerPlayerMinutes,
-                            false);
+                            false, null, null);
                 }
             } finally {
                 _hallDataAccessLock.writeLock().unlock();
