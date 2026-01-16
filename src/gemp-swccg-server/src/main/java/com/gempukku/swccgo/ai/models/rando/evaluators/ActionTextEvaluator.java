@@ -2,9 +2,10 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.common.CardCategory;
-import com.gempukku.swccgo.common.CardType;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 
@@ -136,7 +137,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Fire Weapons ==========
             else if (actionText.contains("Fire")) {
                 action.setActionType(ActionType.FIRE_WEAPON);
-                action.addReasoning("Firing weapons high priority", VERY_GOOD_DELTA);
+                // Check if there are valid (non-HIT) targets before firing
+                // Ported from Python action_text_evaluator.py - don't fire at already-hit targets
+                boolean hasValidTargets = checkForValidWeaponTargets(context);
+                if (hasValidTargets) {
+                    action.addReasoning("Firing weapons at valid targets", VERY_GOOD_DELTA);
+                } else {
+                    action.addReasoning("All targets already HIT - save weapon", BAD_DELTA);
+                    logger.debug("Skipping weapon fire - no valid (unhit) targets");
+                }
             }
 
             // ========== Add Battle Destiny ==========
@@ -459,11 +468,86 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
     private void evaluateForceDrain(EvaluatedAction action, DecisionContext context, String locationCardId) {
         // Force drains are generally good unless under Battle Order rules
-        // For now, give a baseline positive score
-        action.addReasoning("Force drain is good", VERY_GOOD_DELTA);
+        // Ported from Python action_text_evaluator.py lines 351-493
 
-        // TODO: Add Battle Order detection and drain amount analysis
-        // like in Python when we have access to strategy controller
+        GameState gameState = context.getGameState();
+        String playerId = context.getPlayerId();
+
+        // Check if we're under Battle Order rules (force drains cost +3 extra)
+        // Battle Order is typically triggered when opponent has mains + specific cards
+        boolean underBattleOrder = false;
+        com.gempukku.swccgo.ai.models.rando.strategy.StrategyController strategyController = context.getStrategyController();
+        if (strategyController != null) {
+            underBattleOrder = strategyController.isUnderBattleOrderRules();
+        }
+
+        // Get available force
+        int forceAvailable = 0;
+        if (gameState != null) {
+            forceAvailable = gameState.getForcePileSize(playerId);
+        }
+
+        // Check if we have any deployable cards in hand
+        boolean hasDeployableCard = false;
+        int cheapestDeployCost = Integer.MAX_VALUE;
+        if (gameState != null) {
+            List<PhysicalCard> hand = gameState.getHand(playerId);
+            if (hand != null) {
+                for (PhysicalCard card : hand) {
+                    if (card.getBlueprint() != null) {
+                        CardCategory category = card.getBlueprint().getCardCategory();
+                        if (category == CardCategory.CHARACTER || category == CardCategory.STARSHIP ||
+                            category == CardCategory.VEHICLE) {
+                            hasDeployableCard = true;
+                            Float deployCost = card.getBlueprint().getDeployCost();
+                            if (deployCost != null && deployCost < cheapestDeployCost) {
+                                cheapestDeployCost = deployCost.intValue();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (underBattleOrder) {
+            // Under Battle Order rules - force drains cost extra (+3)
+            int battleOrderCost = 3;
+
+            // If we can't afford the drain (need 3+ force), skip it
+            if (forceAvailable < battleOrderCost) {
+                action.addReasoning("Under Battle Order but can't afford drain (need " + battleOrderCost + ", have " + forceAvailable + ")", VERY_BAD_DELTA);
+                return;
+            }
+
+            // Check if we have deployable cards - if yes, save force for them
+            if (hasDeployableCard && cheapestDeployCost < Integer.MAX_VALUE) {
+                int forceAfterDrain = forceAvailable - battleOrderCost;
+                if (forceAfterDrain < cheapestDeployCost) {
+                    action.addReasoning("Under Battle Order - saving force for deploy (cost " + cheapestDeployCost + ")", VERY_BAD_DELTA);
+                    return;
+                }
+            }
+
+            // If NO deployable cards - drains are our only pressure! Boost them!
+            if (!hasDeployableCard) {
+                action.addReasoning("Under Battle Order but NO deployable cards - drain is our only pressure!", VERY_GOOD_DELTA + 20.0f);
+                logger.info("🔥 FORCE DRAIN BOOST: No deployable cards under Battle Order");
+                return;
+            }
+
+            // We can afford drain and have some force left - moderate score
+            action.addReasoning("Under Battle Order - drain costs extra but affordable", GOOD_DELTA);
+
+        } else {
+            // Not under Battle Order - drain is generally good
+            if (!hasDeployableCard) {
+                // NO deployable cards - drains are our only pressure!
+                action.addReasoning("Force drain (no deployable cards - our only pressure!)", VERY_GOOD_DELTA + 20.0f);
+                logger.info("🔥 FORCE DRAIN BOOST: No deployable cards");
+            } else {
+                action.addReasoning("Force drain is good", VERY_GOOD_DELTA);
+            }
+        }
     }
 
     private void evaluatePlayCard(EvaluatedAction action, DecisionContext context) {
@@ -546,6 +630,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
         }
     }
 
+    /**
+     * Evaluate barrier card (Imperial/Rebel Barrier) usage.
+     * Ported from Python action_text_evaluator.py lines 973-1055
+     *
+     * Use barriers when:
+     *   - Location IS contested (both players present)
+     *   - Target is a significant threat (high power)
+     *   - We're not already winning overwhelmingly
+     * Save barriers when:
+     *   - Location not contested (no point)
+     *   - We're already dominating the location
+     *   - Target already has a barrier on it this turn!
+     */
     private void evaluateBarrier(EvaluatedAction action, DecisionContext context, String actionText) {
         String targetCardName = extractCardNameFromPreventText(actionText);
         int currentTurn = context.getTurnNumber();
@@ -562,11 +659,98 @@ public class ActionTextEvaluator extends ActionEvaluator {
             return;
         }
 
-        // Barriers are generally good on contested locations
-        action.addReasoning("Barrier to prevent battling/moving", GOOD_DELTA);
+        // Try to analyze the target and location
+        GameState gameState = context.getGameState();
+        String playerId = context.getPlayerId();
+        float targetPower = 0;
+        float ourPower = 0;
+        float theirPower = 0;
+        boolean locationContested = false;
 
-        if (targetCardName != null) {
-            barrieredTargets.add(targetCardName.toLowerCase());
+        if (gameState != null && playerId != null && targetCardName != null) {
+            String opponentId = gameState.getOpponent(playerId);
+
+            // Find the target card and analyze location
+            for (PhysicalCard card : gameState.getAllPermanentCards()) {
+                if (card == null) continue;
+                String title = card.getTitle();
+                if (title == null) continue;
+
+                // Match by name
+                if (title.toLowerCase().contains(targetCardName.toLowerCase()) ||
+                    targetCardName.toLowerCase().contains(title.toLowerCase())) {
+
+                    // Found the target - check its power
+                    SwccgCardBlueprint blueprint = card.getBlueprint();
+                    if (blueprint != null && blueprint.hasPowerAttribute()) {
+                        Float power = blueprint.getPower();
+                        if (power != null) {
+                            targetPower = power;
+                        }
+                    }
+
+                    // Find location and calculate power
+                    PhysicalCard location = card.getAtLocation();
+                    if (location != null) {
+                        boolean hasOurPresence = false;
+                        boolean hasTheirPresence = false;
+
+                        for (PhysicalCard locCard : gameState.getCardsAtLocation(location)) {
+                            if (locCard == null) continue;
+                            String owner = locCard.getOwner();
+                            SwccgCardBlueprint bp = locCard.getBlueprint();
+                            if (bp == null) continue;
+
+                            // Check presence
+                            if (playerId.equals(owner)) {
+                                hasOurPresence = true;
+                                if (bp.hasPowerAttribute()) {
+                                    Float power = bp.getPower();
+                                    if (power != null) ourPower += power;
+                                }
+                            } else if (opponentId != null && opponentId.equals(owner)) {
+                                hasTheirPresence = true;
+                                if (bp.hasPowerAttribute()) {
+                                    Float power = bp.getPower();
+                                    if (power != null) theirPower += power;
+                                }
+                            }
+                        }
+                        locationContested = hasOurPresence && hasTheirPresence;
+                    }
+                    break;
+                }
+            }
+        }
+
+        logger.debug("🚧 Barrier analysis: {} (power {}) contested={}, our={}, their={}",
+            targetCardName, targetPower, locationContested, ourPower, theirPower);
+
+        // Apply scoring based on situation
+        if (!locationContested) {
+            // Location NOT contested - save barrier for when we need it
+            action.addReasoning("Save barrier - location not contested", BAD_DELTA);
+        } else if (ourPower >= theirPower + 8) {
+            // We're already dominating - don't waste the barrier
+            action.addReasoning("Save barrier - already dominating (" + (int)ourPower + " vs " + (int)theirPower + ")", BAD_DELTA);
+        } else if (targetPower >= 5) {
+            // High-power target at contested location - VERY valuable!
+            action.addReasoning("Barrier on HIGH POWER target (" + (int)targetPower + ")!", VERY_GOOD_DELTA);
+            if (targetCardName != null) {
+                barrieredTargets.add(targetCardName.toLowerCase());
+            }
+        } else if (theirPower >= ourPower) {
+            // They're winning or tied - barrier is valuable
+            action.addReasoning("Barrier to protect (losing " + (int)ourPower + " vs " + (int)theirPower + ")", GOOD_DELTA + 10.0f);
+            if (targetCardName != null) {
+                barrieredTargets.add(targetCardName.toLowerCase());
+            }
+        } else {
+            // We're ahead but not dominating - still useful
+            action.addReasoning("Barrier at contested location", GOOD_DELTA);
+            if (targetCardName != null) {
+                barrieredTargets.add(targetCardName.toLowerCase());
+            }
         }
     }
 
@@ -580,18 +764,81 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
     private void evaluateGrab(EvaluatedAction action, DecisionContext context, String actionText) {
         // Grabbing opponent's card is good, our own is VERY bad
-        // For now, be cautious if we can't determine the owner
-        String blueprintId = extractBlueprintFromText(actionText);
+        // CRITICAL: Grabbing own interrupts is a big player complaint - hard block it!
+        // Ported from Python action_text_evaluator.py lines 1169-1210
 
-        // TODO: Implement proper side detection via card lookup
-        // For now, slight penalty to be cautious
-        action.addReasoning("Grab card (be cautious about owner)", 0.0f);
+        Side mySide = context.getSide();
+
+        // Determine side from card name patterns in action text
+        // Look for known Light/Dark side indicator patterns
+        String textLower = actionText.toLowerCase();
+        boolean looksLightSide = textLower.contains("rebel") || textLower.contains("jedi") ||
+                                  textLower.contains("alliance") || textLower.contains("luke") ||
+                                  textLower.contains("leia") || textLower.contains("han solo") ||
+                                  textLower.contains("chewie") || textLower.contains("yoda") ||
+                                  textLower.contains("obi-wan") || textLower.contains("padme");
+        boolean looksDarkSide = textLower.contains("imperial") || textLower.contains("sith") ||
+                                 textLower.contains("vader") || textLower.contains("emperor") ||
+                                 textLower.contains("stormtrooper") || textLower.contains("death star") ||
+                                 textLower.contains("maul") || textLower.contains("dooku") ||
+                                 textLower.contains("boba fett") || textLower.contains("jango");
+
+        if (mySide == Side.DARK && looksLightSide) {
+            action.addReasoning("Grab Light side card (we are Dark)", GOOD_DELTA);
+        } else if (mySide == Side.LIGHT && looksDarkSide) {
+            action.addReasoning("Grab Dark side card (we are Light)", GOOD_DELTA);
+        } else if (mySide == Side.DARK && looksDarkSide) {
+            // Same side - likely our card! HARD BLOCK!
+            action.setScore(-500.0f);
+            action.addReasoning("🚫 BLOCKED: Likely grabbing own Dark card!", -500.0f);
+            logger.warn("🚫 BLOCKED GRAB of likely own Dark card: {}", actionText);
+        } else if (mySide == Side.LIGHT && looksLightSide) {
+            // Same side - likely our card! HARD BLOCK!
+            action.setScore(-500.0f);
+            action.addReasoning("🚫 BLOCKED: Likely grabbing own Light card!", -500.0f);
+            logger.warn("🚫 BLOCKED GRAB of likely own Light card: {}", actionText);
+        } else {
+            // Truly unknown - be cautious, don't grab
+            action.addReasoning("Grab card (owner unknown - avoiding)", BAD_DELTA);
+            logger.info("⚠️ Grab owner unknown, avoiding: {}", actionText);
+        }
     }
 
     private void evaluateBreakCover(EvaluatedAction action, DecisionContext context, String actionText) {
         // Breaking opponent's spy is good, our own is VERY bad
-        // For now, be cautious
-        action.addReasoning("Break cover (be cautious about target)", 0.0f);
+        // CRITICAL: Breaking own spy cover is a big player complaint - hard block it!
+        // Ported from Python action_text_evaluator.py lines 1212-1246
+
+        Side mySide = context.getSide();
+
+        // Determine side from card name patterns in action text
+        String textLower = actionText.toLowerCase();
+        boolean looksLightSide = textLower.contains("rebel") || textLower.contains("bothan") ||
+                                  textLower.contains("alliance") || textLower.contains("leia") ||
+                                  textLower.contains("mon mothma") || textLower.contains("orrimaarko");
+        boolean looksDarkSide = textLower.contains("imperial") || textLower.contains("ism-agent") ||
+                                 textLower.contains("empire") || textLower.contains("probe droid") ||
+                                 textLower.contains("mara jade");
+
+        if (mySide == Side.DARK && looksLightSide) {
+            action.addReasoning("Break Light side spy cover (we are Dark)", GOOD_DELTA);
+        } else if (mySide == Side.LIGHT && looksDarkSide) {
+            action.addReasoning("Break Dark side spy cover (we are Light)", GOOD_DELTA);
+        } else if (mySide == Side.DARK && looksDarkSide) {
+            // Same side - our spy! HARD BLOCK!
+            action.setScore(-500.0f);
+            action.addReasoning("🚫 BLOCKED: Likely breaking own Dark spy cover!", -500.0f);
+            logger.warn("🚫 BLOCKED break cover of likely own Dark spy: {}", actionText);
+        } else if (mySide == Side.LIGHT && looksLightSide) {
+            // Same side - our spy! HARD BLOCK!
+            action.setScore(-500.0f);
+            action.addReasoning("🚫 BLOCKED: Likely breaking own Light spy cover!", -500.0f);
+            logger.warn("🚫 BLOCKED break cover of likely own Light spy: {}", actionText);
+        } else {
+            // Unknown spy - be cautious, default to not doing it
+            action.addReasoning("Break cover (spy owner unknown - cautious)", BAD_DELTA);
+            logger.info("⚠️ Break cover owner unknown, avoiding: {}", actionText);
+        }
     }
 
     // ========== Utility Methods ==========
@@ -616,5 +863,74 @@ public class ActionTextEvaluator extends ActionEvaluator {
             }
         }
         return null;
+    }
+
+    /**
+     * Check if there are valid (non-HIT) weapon targets at the battle location.
+     *
+     * In SWCCG, firing at already-hit targets is wasteful since they're
+     * already damaged. This method returns true only if there are unhit
+     * enemy cards at the battle location.
+     *
+     * Ported from Python action_text_evaluator.py valid target check.
+     */
+    private boolean checkForValidWeaponTargets(DecisionContext context) {
+        GameState gameState = context.getGameState();
+        if (gameState == null) {
+            return true;  // Default to allowing fire if we can't check
+        }
+
+        try {
+            // Get the battle location
+            PhysicalCard battleLocation = gameState.getBattleLocation();
+            if (battleLocation == null) {
+                return true;  // Not in battle, allow fire
+            }
+
+            // Find enemy cards at battle location
+            String playerId = context.getPlayerId();
+            String opponentId = gameState.getOpponent(playerId);
+            if (opponentId == null) {
+                return true;  // Can't determine opponent
+            }
+
+            // Check all enemy cards at battle location
+            boolean foundUnhitEnemy = false;
+            for (PhysicalCard card : gameState.getAllPermanentCards()) {
+                if (card == null) continue;
+
+                // Must be enemy card
+                if (!opponentId.equals(card.getOwner())) continue;
+
+                // Must be at battle location
+                PhysicalCard cardLocation = card.getAtLocation();
+                if (cardLocation == null || !cardLocation.equals(battleLocation)) continue;
+
+                // Must be a valid weapon target (character, starship, vehicle)
+                SwccgCardBlueprint bp = card.getBlueprint();
+                if (bp == null) continue;
+                CardCategory cat = bp.getCardCategory();
+                if (cat != CardCategory.CHARACTER && cat != CardCategory.STARSHIP && cat != CardCategory.VEHICLE) {
+                    continue;
+                }
+
+                // Check if this card is NOT hit
+                if (!card.isHit()) {
+                    foundUnhitEnemy = true;
+                    logger.debug("Found unhit enemy target: {}", card.getTitle());
+                    break;  // Found at least one valid target
+                }
+            }
+
+            if (!foundUnhitEnemy) {
+                logger.info("🎯 All enemy targets at battle location are HIT - no valid weapon targets");
+            }
+
+            return foundUnhitEnemy;
+
+        } catch (Exception e) {
+            logger.debug("Error checking weapon targets: {}", e.getMessage());
+            return true;  // Default to allowing fire on error
+        }
     }
 }

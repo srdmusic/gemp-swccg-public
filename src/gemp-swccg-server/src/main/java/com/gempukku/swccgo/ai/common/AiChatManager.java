@@ -39,6 +39,9 @@ public class AiChatManager {
     private String gameId;
     private int currentTurn = 0;
 
+    // Critical message flag - bypasses rate limiting
+    private boolean hasCriticalMessage = false;
+
     /**
      * Create a new chat manager.
      */
@@ -98,6 +101,7 @@ public class AiChatManager {
      * Get the next message to send, respecting rate limiting.
      *
      * Call this after each AI decision to check if there's a message to send.
+     * Critical messages (game end) bypass rate limiting.
      *
      * @return the message to send, or null if none available or rate limited
      */
@@ -108,20 +112,24 @@ public class AiChatManager {
 
         long now = System.currentTimeMillis();
 
-        // Check rate limit
-        if (now - lastMessageTime < MIN_MESSAGE_INTERVAL_MS) {
-            return null;
-        }
+        // Critical messages bypass rate limiting (game end, etc.)
+        if (!hasCriticalMessage) {
+            // Check rate limit
+            if (now - lastMessageTime < MIN_MESSAGE_INTERVAL_MS) {
+                return null;
+            }
 
-        // Check one-per-turn limit
-        if (limitOnePerTurn && lastMessageTurn == currentTurn) {
-            return null;
+            // Check one-per-turn limit
+            if (limitOnePerTurn && lastMessageTurn == currentTurn) {
+                return null;
+            }
         }
 
         String message = pendingMessages.poll();
         if (message != null) {
             lastMessageTime = now;
             lastMessageTurn = currentTurn;
+            hasCriticalMessage = false;  // Reset after delivering
             LOG.debug("Returning chat message: {}...", message.substring(0, Math.min(50, message.length())));
         }
         return message;
@@ -180,7 +188,7 @@ public class AiChatManager {
 
     /**
      * Queue a game end message.
-     * This bypasses the one-per-turn limit since the game is ending.
+     * This bypasses ALL rate limiting since the game is ending.
      *
      * @param message the end game message
      */
@@ -194,8 +202,10 @@ public class AiChatManager {
         temp.addAll(pendingMessages);
         pendingMessages.clear();
         pendingMessages.addAll(temp);
-        // Also reset turn tracking so it can send immediately
+        // Mark as critical to bypass ALL rate limiting
+        hasCriticalMessage = true;
         lastMessageTurn = -1;
+        LOG.info("Queued critical game end message - will bypass rate limiting");
     }
 
     /**

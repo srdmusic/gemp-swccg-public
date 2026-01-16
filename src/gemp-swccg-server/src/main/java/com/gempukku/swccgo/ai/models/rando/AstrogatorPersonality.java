@@ -215,6 +215,38 @@ public class AstrogatorPersonality {
     );
 
     // =========================================================================
+    // Battle Damage Messages (by severity)
+    // =========================================================================
+
+    private static final List<String> DAMAGE_HIGH = Arrays.asList(
+        "That's going to leave a mark.",
+        "Impressive. Most impressive.",
+        "I felt a great disturbance in the Force.",
+        "Well, that escalated quickly.",
+        "Your route just got significantly more profitable.",
+        "I should have stayed in the cargo hold.",
+        "Calculating insurance premium... insufficient funds."
+    );
+
+    private static final List<String> DAMAGE_MEDIUM = Arrays.asList(
+        "Acceptable damage.",
+        "The odds were... accurate.",
+        "As expected.",
+        "Noted for the log.",
+        "This will affect my performance review.",
+        "I've had worse. Actually, I'm not sure."
+    );
+
+    private static final List<String> DAMAGE_LOW = Arrays.asList(
+        "Barely a scratch.",
+        "Is that all?",
+        "I've seen worse from malfunctioning airlocks.",
+        "Minimal turbulence.",
+        "My sensors registered that. Barely.",
+        "The traders won't even notice."
+    );
+
+    // =========================================================================
     // Public Methods
     // =========================================================================
 
@@ -277,33 +309,52 @@ public class AstrogatorPersonality {
     /**
      * Get a turn commentary message based on route score.
      *
+     * Route Score Formula: (opponent_lifeforce - my_lifeforce) - turn_number
+     *
      * @param turn the current turn number
-     * @param context game context with life force info (can be null)
-     * @return turn message, or null if no message this turn
+     * @param myLifeForce bot's life force
+     * @param opponentLifeForce opponent's life force
+     * @return turn message with route score, or null if turn is too early
+     */
+    public String getTurnMessage(int turn, int myLifeForce, int opponentLifeForce) {
+        // Only message every 2-3 turns to avoid spam
+        if (turn < 3) {
+            return null;  // Too early for meaningful commentary
+        }
+        if (turn % 2 != 0 && random.nextInt(100) < 30) {
+            return null;  // 30% chance to skip on odd turns
+        }
+
+        // Calculate route score: (opponent - mine) - turns
+        // Higher is better for opponent (they're beating the bot more)
+        int routeScore = (opponentLifeForce - myLifeForce) - turn;
+
+        // Build message with score
+        String commentary;
+        if (routeScore >= 30) {
+            commentary = pickMessage(SCORE_PROFITABLE);
+        } else if (routeScore >= 20) {
+            commentary = pickMessage(SCORE_PROMISING);
+        } else if (routeScore >= 10) {
+            commentary = pickMessage(SCORE_WEAK);
+        } else if (routeScore >= 0) {
+            commentary = pickMessage(SCORE_EVEN);
+        } else if (routeScore >= -10) {
+            commentary = pickMessage(SCORE_BEHIND);
+        } else {
+            commentary = pickMessage(SCORE_VERY_BEHIND);
+        }
+
+        // Include route score in message
+        return String.format("Turn %d. Route score: %d. %s", turn, routeScore, commentary);
+    }
+
+    /**
+     * Legacy overload for compatibility.
      */
     public String getTurnMessage(int turn, Object context) {
-        // Only message every 2-3 turns to avoid spam
-        if (turn % 2 != 0 && random.nextInt(100) < 50) {
-            return null;
-        }
-
-        // Calculate a pseudo-route score if we have context
-        int routeScore = 0;  // Would calculate from context if available
-
-        // Pick message based on score tier
-        if (routeScore >= 30) {
-            return pickMessage(SCORE_PROFITABLE);
-        } else if (routeScore >= 20) {
-            return pickMessage(SCORE_PROMISING);
-        } else if (routeScore >= 10) {
-            return pickMessage(SCORE_WEAK);
-        } else if (routeScore >= 0) {
-            return pickMessage(SCORE_EVEN);
-        } else if (routeScore >= -10) {
-            return pickMessage(SCORE_BEHIND);
-        } else {
-            return pickMessage(SCORE_VERY_BEHIND);
-        }
+        // If context is provided but we can't extract life force, use defaults
+        return getTurnMessage(turn, 0, 0);
     }
 
     /**
@@ -329,6 +380,46 @@ public class AstrogatorPersonality {
         }
 
         return null;  // No comment for normal battles
+    }
+
+    /**
+     * Get a battle damage message.
+     *
+     * Called when battle damage/attrition is dealt.
+     * Only generates messages for significant damage amounts.
+     *
+     * @param damage the amount of damage dealt
+     * @param isToBot true if damage is to the bot, false if to opponent
+     * @return damage message, or null for low damage
+     */
+    public String getDamageMessage(int damage, boolean isToBot) {
+        // Only comment on significant damage
+        if (damage <= 2) {
+            return null;  // Too small to comment
+        }
+
+        String prefix;
+        String commentary;
+
+        if (damage > 15) {
+            // High damage
+            prefix = String.format("Battle damage: %d!", damage);
+            commentary = pickMessage(DAMAGE_HIGH);
+        } else if (damage > 7) {
+            // Medium damage
+            prefix = String.format("Battle damage: %d.", damage);
+            commentary = pickMessage(DAMAGE_MEDIUM);
+        } else {
+            // Low-medium damage (3-7) - only sometimes comment
+            if (random.nextInt(100) < 40) {
+                prefix = String.format("Battle damage: %d...", damage);
+                commentary = pickMessage(DAMAGE_LOW);
+            } else {
+                return null;
+            }
+        }
+
+        return prefix + " " + commentary;
     }
 
     /**

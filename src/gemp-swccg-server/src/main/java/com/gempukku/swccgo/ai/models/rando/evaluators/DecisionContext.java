@@ -46,6 +46,7 @@ public class DecisionContext {
     private List<String> cardIds = new ArrayList<>();
     private List<String> blueprints = new ArrayList<>();
     private List<Boolean> selectable = new ArrayList<>();
+    private List<String> testingTexts = new ArrayList<>();  // Card titles from GEMP
 
     // Parameters from decision XML
     private boolean noPass = true;  // Can we pass/cancel?
@@ -168,6 +169,34 @@ public class DecisionContext {
 
     public void setSelectable(List<Boolean> selectable) {
         this.selectable = selectable;
+    }
+
+    public List<String> getTestingTexts() {
+        return testingTexts;
+    }
+
+    public void setTestingTexts(List<String> testingTexts) {
+        this.testingTexts = testingTexts;
+    }
+
+    /**
+     * Get the card title for a given index from testingTexts.
+     * This is the card name GEMP provides, which is more reliable than parsing action text.
+     */
+    public String getCardTitleAt(int index) {
+        if (testingTexts == null || index < 0 || index >= testingTexts.size()) {
+            return null;
+        }
+        String title = testingTexts.get(index);
+        // testingText may have format like "•Card Name" - strip leading •
+        if (title != null && title.startsWith("•")) {
+            title = title.substring(1);
+        }
+        // May also have "(V)" virtual marker
+        if (title != null && title.contains("(V)")) {
+            title = title.replace("(V)", "").trim();
+        }
+        return title;
     }
 
     public boolean isNoPass() {

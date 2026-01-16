@@ -57,6 +57,33 @@ public final class RandoConfig {
     /** Minimum power floor for establish/early game (weak char buddy) */
     public static final int MIN_ESTABLISH_POWER = 4;
 
+    /** Maximum establish locations per plan (don't spread too thin) */
+    public static final int MAX_ESTABLISH_LOCATIONS = 2;
+
+    /** Target power at reinforced locations */
+    public static final int REINFORCE_TARGET_POWER = 10;
+
+    /** Low enemy power threshold for presence-only plans (stop bleeding) */
+    public static final int LOW_ENEMY_THRESHOLD = 4;
+
+    /** Weak character power threshold (needs buddy to deploy) */
+    public static final int WEAK_CHARACTER_POWER = 3;
+
+    /** Power advantage beyond which we're safe (uncontested fortified) */
+    public static final int UNCONTESTED_FORTIFIED_THRESHOLD = 6;
+
+    /** Minimum force to consider deploying weapons */
+    public static final int MIN_FORCE_FOR_WEAPONS = 3;
+
+    /** Matching pilot power bonus */
+    public static final int MATCHING_PILOT_BONUS = 3;
+
+    /** Ability threshold for drawing battle destiny */
+    public static final int ABILITY_THRESHOLD = 4;
+
+    /** Extra power needed to compensate for no destiny draw */
+    public static final int ABILITY_POWER_COMPENSATION = 3;
+
     // =========================================================================
     // Force Economy
     // =========================================================================

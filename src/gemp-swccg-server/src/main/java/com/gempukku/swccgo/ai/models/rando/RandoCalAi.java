@@ -82,6 +82,9 @@ public class RandoCalAi extends HeuristicAiBase {
     // State tracking
     private String currentGameId;
     private int lastTurn = -1;
+    private Phase lastPhase;  // Track phase for battle message detection
+    private boolean battleMessageSentThisBattle = false;  // Track if we already sent a battle message
+    private boolean gameEndMessageSent = false;  // Track if game end message was sent
     private Side mySide;
     private String opponentName;
 
@@ -479,7 +482,11 @@ public class RandoCalAi extends HeuristicAiBase {
             String[] cardIds = params != null ? params.get("cardId") : null;
 
             // Maybe apply chaos (random action)
-            if (shouldApplyChaos()) {
+            // CRITICAL: Never use chaos mode during DEPLOY phase - deploy decisions are strategic
+            // and random deploys can waste resources or violate the deployment plan
+            Phase currentPhase = gameState != null ? gameState.getCurrentPhase() : null;
+            boolean isSafeForChaos = currentPhase != Phase.DEPLOY && currentPhase != Phase.BATTLE;
+            if (isSafeForChaos && shouldApplyChaos()) {
                 RandoLogger.debug("Chaos mode: selecting random action");
                 result = super.decide(playerId, decision, gameState);
             } else {
@@ -675,18 +682,23 @@ public class RandoCalAi extends HeuristicAiBase {
             }
 
             // CRITICAL: Parse selectable array - GEMP rejects selection of non-selectable cards!
+            // Parse selectable array (for CARD_SELECTION decisions)
             String[] selectableArr = params.get("selectable");
             if (selectableArr != null && selectableArr.length > 0) {
                 List<Boolean> selectableList = new java.util.ArrayList<>();
+                int selectableCount = 0;
                 for (String sel : selectableArr) {
-                    selectableList.add("true".equalsIgnoreCase(sel));
+                    boolean isSelectable = "true".equalsIgnoreCase(sel);
+                    selectableList.add(isSelectable);
+                    if (isSelectable) selectableCount++;
                 }
                 evalContext.setSelectable(selectableList);
-                int selectableCount = 0;
-                for (Boolean s : selectableList) {
-                    if (s) selectableCount++;
+                LOG.debug("📋 Selectable: {} of {} cards selectable", selectableCount, selectableList.size());
+
+                // Only warn if ALL are non-selectable (unusual case)
+                if (selectableCount == 0 && selectableList.size() > 0) {
+                    LOG.warn("⚠️ ALL {} CARDS NON-SELECTABLE (verify decision?)", selectableList.size());
                 }
-                LOG.debug("Parsed {} selectable flags ({} selectable)", selectableList.size(), selectableCount);
             }
 
             // Parse action IDs for CARD_ACTION_CHOICE
@@ -715,26 +727,44 @@ public class RandoCalAi extends HeuristicAiBase {
             // For CARD_ACTION_CHOICE: parse per-action cardId and blueprintId arrays
             // These tell us which card each action is associated with
             if ("CARD_ACTION_CHOICE".equals(decisionType.name())) {
-                // cardId array - each action's associated card ID
+                // cardId array - each action's associated card ID (gempId)
                 String[] actionCardIds = params.get("cardId");
+                // blueprintId array - "inPlay" or actual blueprint for virtual actions
+                String[] actionBlueprintIds = params.get("blueprintId");
+
+                LOG.warn("📋 CARD_ACTION_CHOICE: cardId={} items, blueprintId={} items",
+                    actionCardIds != null ? actionCardIds.length : "null",
+                    actionBlueprintIds != null ? actionBlueprintIds.length : "null");
+
                 if (actionCardIds != null && actionCardIds.length > 0) {
                     List<String> cardIdList = new java.util.ArrayList<>();
                     for (String cid : actionCardIds) {
                         cardIdList.add(cid != null ? cid : "");
                     }
                     evalContext.setCardIds(cardIdList);
-                    LOG.debug("Parsed {} action-associated card IDs", cardIdList.size());
+                    LOG.warn("📋 cardIds (gempIds): {}", cardIdList.size() <= 10 ? cardIdList : cardIdList.subList(0, 10) + "...");
                 }
 
-                // blueprintId array - "inPlay" or actual blueprint for virtual actions
-                String[] actionBlueprintIds = params.get("blueprintId");
                 if (actionBlueprintIds != null && actionBlueprintIds.length > 0) {
                     List<String> bpList = new java.util.ArrayList<>();
                     for (String bp : actionBlueprintIds) {
                         bpList.add(bp != null ? bp : "");
                     }
                     evalContext.setBlueprints(bpList);
-                    LOG.debug("Parsed {} action-associated blueprint IDs", bpList.size());
+                    LOG.warn("📋 blueprintIds: {}", bpList.size() <= 10 ? bpList : bpList.subList(0, 10) + "...");
+                }
+
+                // Log action details with cardId and blueprintId for each action
+                String[] logActionTexts = params.get("actionText");
+                if (logActionTexts != null) {
+                    LOG.warn("📋 {} actions to evaluate:", logActionTexts.length);
+                    for (int i = 0; i < Math.min(logActionTexts.length, 10); i++) {
+                        String cardId = (actionCardIds != null && i < actionCardIds.length) ? actionCardIds[i] : "n/a";
+                        String bpId = (actionBlueprintIds != null && i < actionBlueprintIds.length) ? actionBlueprintIds[i] : "n/a";
+                        String actionText = logActionTexts[i] != null ? logActionTexts[i] : "";
+                        LOG.warn("   [{}] cardId={}, bp={}, action='{}'", i, cardId, bpId,
+                            actionText.length() > 50 ? actionText.substring(0, 50) + "..." : actionText);
+                    }
                 }
             }
         }
@@ -774,7 +804,11 @@ public class RandoCalAi extends HeuristicAiBase {
      * @return message to send, or null
      */
     public String getChatMessage() {
-        return chatManager.getNextMessage();
+        String msg = chatManager.getNextMessage();
+        if (msg != null) {
+            LOG.info("🗨️ getChatMessage returning: '{}'", msg.length() > 50 ? msg.substring(0, 50) + "..." : msg);
+        }
+        return msg;
     }
 
     // =========================================================================
@@ -1117,7 +1151,15 @@ public class RandoCalAi extends HeuristicAiBase {
     // =========================================================================
 
     private void trackGameState(String playerId, GameState gameState) {
-        if (gameState == null) return;
+        if (gameState == null) {
+            LOG.warn("🔴 trackGameState: gameState is NULL!");
+            return;
+        }
+
+        // Log every call to understand tracking flow
+        int rawTurn = gameState.getPlayersLatestTurnNumber(playerId);
+        LOG.info("🔵 trackGameState called: playerId={}, rawTurn={}, lastTurn={}, lastPhase={}",
+            playerId, rawTurn, lastTurn, lastPhase);
 
         // Detect new game by checking if side/opponent changed
         Side newSide = gameState.getSide(playerId);
@@ -1126,6 +1168,9 @@ public class RandoCalAi extends HeuristicAiBase {
         // New game started (opponent or side changed)
         if (mySide == null || !newOpponent.equals(opponentName)) {
             lastTurn = -1;
+            lastPhase = null;  // Reset phase tracking for new game
+            battleMessageSentThisBattle = false;  // Reset battle message tracking
+            gameEndMessageSent = false;  // Reset game end message tracking
             mySide = newSide;
             opponentName = newOpponent;
             currentGameId = playerId + "_" + System.currentTimeMillis();
@@ -1164,16 +1209,30 @@ public class RandoCalAi extends HeuristicAiBase {
             lastTurn = currentTurn;
             chatManager.setCurrentTurn(currentTurn);
             strategyController.startNewTurn(currentTurn);
-            LOG.debug("[StrategyController] Starting turn {}, phase={}", currentTurn, strategyController.getPhase());
+            LOG.info("🎲 Turn changed to {} (was {})", currentTurn, lastTurn - 1);
 
-            // Queue turn message (on opponent's turn, when it's not our turn to act)
-            String currentPlayer = gameState.getCurrentPlayerId();
-            boolean isOpponentsTurn = currentPlayer != null && !currentPlayer.equals(playerId);
-            if (personality != null && RandoConfig.CHAT_ENABLED
-                    && currentTurn >= 2 && isOpponentsTurn) {
-                String turnMessage = personality.getTurnMessage(currentTurn, context);
+            // Queue turn message with route score
+            LOG.info("🗨️ Turn message check: personality={}, CHAT_ENABLED={}, turn={}",
+                personality != null, RandoConfig.CHAT_ENABLED, currentTurn);
+            if (personality != null && RandoConfig.CHAT_ENABLED && currentTurn >= 2) {
+                // Get life force for route score calculation
+                int myLifeForce = 0;
+                int opponentLifeForce = 0;
+                try {
+                    myLifeForce = gameState.getPlayerLifeForce(playerId);
+                    opponentLifeForce = gameState.getPlayerLifeForce(newOpponent);
+                } catch (Exception e) {
+                    LOG.warn("Could not get life force for turn message: {}", e.getMessage());
+                }
+
+                LOG.info("🗨️ Getting turn message: turn={}, myLF={}, theirLF={}",
+                    currentTurn, myLifeForce, opponentLifeForce);
+                String turnMessage = personality.getTurnMessage(currentTurn, myLifeForce, opponentLifeForce);
                 if (turnMessage != null) {
                     chatManager.queueTurnMessage(turnMessage);
+                    LOG.info("🗨️ Queued turn message: {}", turnMessage);
+                } else {
+                    LOG.info("🗨️ getTurnMessage returned null (random skip or turn < 3)");
                 }
             }
 
@@ -1186,6 +1245,42 @@ public class RandoCalAi extends HeuristicAiBase {
 
         // Track opponent cards for situational shield decisions
         trackOpponentCards(gameState, newOpponent);
+
+        // Check for Battle Order/Plan cards in play and update strategy
+        // This enables proper force drain cost calculation (+3 when under Battle Order rules)
+        strategyController.updateBattleOrderFromGameState(gameState);
+
+        // Track phase changes for battle message
+        Phase currentPhase = gameState.getCurrentPhase();
+
+        // Reset battle message flag when exiting battle phase
+        if (lastPhase == Phase.BATTLE && currentPhase != Phase.BATTLE) {
+            LOG.info("🗨️ Exiting BATTLE phase, resetting battle message flag");
+            battleMessageSentThisBattle = false;
+        }
+
+        // Try to send battle message when in BATTLE phase (BattleState might not exist on phase entry)
+        if (currentPhase == Phase.BATTLE) {
+            PhysicalCard battleLoc = gameState.getBattleLocation();
+            LOG.info("🗨️ BATTLE phase check: alreadySent={}, battleLocation={}",
+                battleMessageSentThisBattle, battleLoc != null ? battleLoc.getTitle() : "NULL");
+
+            if (!battleMessageSentThisBattle && battleLoc != null) {
+                sendBattleMessage(playerId, gameState);
+                battleMessageSentThisBattle = true;
+            }
+        }
+
+        // Check for game end and send message
+        if (!gameEndMessageSent && currentGame != null) {
+            String winner = currentGame.getWinner();
+            if (winner != null || currentGame.isFinished()) {
+                sendGameEndMessage(playerId, gameState, winner);
+                gameEndMessageSent = true;
+            }
+        }
+
+        lastPhase = currentPhase;
     }
 
     /**
@@ -1234,6 +1329,125 @@ public class RandoCalAi extends HeuristicAiBase {
     }
 
     /**
+     * Send a battle commentary message when battle phase is entered.
+     * Uses power totals to generate appropriate commentary.
+     */
+    private void sendBattleMessage(String playerId, GameState gameState) {
+        if (personality == null || !RandoConfig.CHAT_ENABLED) {
+            return;
+        }
+
+        try {
+            // Get the battle location (caller should have verified this exists)
+            PhysicalCard battleLocation = gameState.getBattleLocation();
+            if (battleLocation == null) {
+                return;
+            }
+
+            LOG.info("🗨️ Sending battle message for battle at {}", battleLocation.getTitle());
+
+            // Get power totals at battle location
+            String opponentId = gameState.getOpponent(playerId);
+            float ourPower = 0;
+            float theirPower = 0;
+
+            if (currentGame != null) {
+                // Use modifiers querying to get accurate power totals
+                try {
+                    ourPower = currentGame.getModifiersQuerying().getTotalPowerAtLocation(
+                        gameState, battleLocation, playerId, false, false);
+                    theirPower = currentGame.getModifiersQuerying().getTotalPowerAtLocation(
+                        gameState, battleLocation, opponentId, false, false);
+                } catch (Exception e) {
+                    // Fallback to simple card counting
+                    LOG.debug("Could not get power totals, using card count fallback: {}", e.getMessage());
+                    for (PhysicalCard card : gameState.getAllPermanentCards()) {
+                        if (card == null) continue;
+                        Zone zone = card.getZone();
+                        if (zone == null || !zone.isInPlay()) continue;
+
+                        PhysicalCard cardLocation = card.getAtLocation();
+                        if (cardLocation == null || !cardLocation.equals(battleLocation)) continue;
+
+                        SwccgCardBlueprint bp = card.getBlueprint();
+                        if (bp == null) continue;
+                        CardCategory cat = bp.getCardCategory();
+                        if (cat != CardCategory.CHARACTER && cat != CardCategory.STARSHIP && cat != CardCategory.VEHICLE) continue;
+
+                        Float power = bp.getPower();
+                        if (power == null) power = 0f;
+
+                        if (playerId.equals(card.getOwner())) {
+                            ourPower += power;
+                        } else if (opponentId != null && opponentId.equals(card.getOwner())) {
+                            theirPower += power;
+                        }
+                    }
+                }
+            }
+
+            LOG.debug("Battle at {}: our power={}, their power={}",
+                battleLocation.getTitle(), ourPower, theirPower);
+
+            // Get battle message from personality
+            String message = personality.getBattleMessage(ourPower, theirPower);
+            if (message != null) {
+                chatManager.queueBattleMessage(message);
+                LOG.debug("Queued battle message: {}", message);
+            }
+        } catch (Exception e) {
+            LOG.debug("Error sending battle message: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Send a game end message when the game finishes.
+     * Calculates route score and sends personality-based message.
+     */
+    private void sendGameEndMessage(String playerId, GameState gameState, String winner) {
+        if (personality == null || !RandoConfig.CHAT_ENABLED) {
+            return;
+        }
+
+        try {
+            // Determine if bot won
+            boolean botWon = playerId.equals(winner);
+
+            // Calculate route score: (opponent_lifeforce - my_lifeforce) - turns
+            // Higher is better for opponent (they beat the bot more decisively)
+            int myLifeForce = 0;
+            int opponentLifeForce = 0;
+            int turns = gameState != null ? gameState.getPlayersLatestTurnNumber(playerId) : 0;
+
+            if (gameState != null) {
+                try {
+                    myLifeForce = gameState.getPlayerLifeForce(playerId);
+                    String opponentId = gameState.getOpponent(playerId);
+                    if (opponentId != null) {
+                        opponentLifeForce = gameState.getPlayerLifeForce(opponentId);
+                    }
+                } catch (Exception e) {
+                    LOG.debug("Could not get life force for game end message: {}", e.getMessage());
+                }
+            }
+
+            int routeScore = (opponentLifeForce - myLifeForce) - turns;
+
+            LOG.info("🏁 Game ended: winner={}, botWon={}, routeScore={} (oppLF={}, myLF={}, turns={})",
+                winner, botWon, routeScore, opponentLifeForce, myLifeForce, turns);
+
+            // Get game end message from personality
+            String message = personality.getGameEndMessage(botWon, routeScore);
+            if (message != null) {
+                chatManager.queueGameEndMessage(message);
+                LOG.info("🗨️ Queued game end message: {}", message);
+            }
+        } catch (Exception e) {
+            LOG.warn("Error sending game end message: {}", e.getMessage());
+        }
+    }
+
+    /**
      * Track strategic events from decisions for strategy learning.
      * - Deploy decisions: Track for focus confidence
      * - Battle results: Track wins/losses
@@ -1260,7 +1474,7 @@ public class RandoCalAi extends HeuristicAiBase {
         }
 
         // Track battle results from decision text
-        // Battle result prompts typically contain "won" or "lost" or "battle damage"
+        // Battle result prompts typically contain "won" or "lost"
         if (textLower.contains("battle")) {
             if (textLower.contains("you won") || textLower.contains("you have won")) {
                 strategyController.onBattleResult(true);

@@ -4,6 +4,9 @@ import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Zone;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.state.GameState;
 
 import org.apache.logging.log4j.Logger;
 
@@ -27,6 +30,32 @@ public class StrategyController {
     // =========================================================================
     // Constants
     // =========================================================================
+
+    // Battle Order / Battle Plan card IDs (from Python board_state.py)
+    // When either is in play, force drains cost +3 unless draining player
+    // occupies both a battleground site AND a battleground system.
+
+    // Dark Side Battle Order cards
+    private static final Set<String> BATTLE_ORDER_DARK = new HashSet<>(Arrays.asList(
+        "8_118",   // Battle Order (Effect - Endor)
+        "13_54",   // Battle Order (Defensive Shield - Reflections 3)
+        "12_129"   // Battle Order & First Strike (Effect - Coruscant)
+    ));
+
+    // Light Side Battle Plan cards (same effect as Dark's Battle Order)
+    private static final Set<String> BATTLE_PLAN_LIGHT = new HashSet<>(Arrays.asList(
+        "8_35",    // Battle Plan (Effect - Endor)
+        "13_8",    // Battle Plan (Defensive Shield - Reflections 3)
+        "12_41"    // Battle Plan & Draw Their Fire (Effect - Coruscant)
+    ));
+
+    // All cards that trigger Battle Order rules
+    private static final Set<String> ALL_BATTLE_ORDER_CARDS;
+    static {
+        ALL_BATTLE_ORDER_CARDS = new HashSet<>();
+        ALL_BATTLE_ORDER_CARDS.addAll(BATTLE_ORDER_DARK);
+        ALL_BATTLE_ORDER_CARDS.addAll(BATTLE_PLAN_LIGHT);
+    }
 
     private static final int EARLY_GAME_TURNS = 3;
     private static final int MID_GAME_TURNS = 8;
@@ -241,6 +270,68 @@ public class StrategyController {
 
     public boolean isUnderBattleOrderRules() {
         return underBattleOrderRules;
+    }
+
+    /**
+     * Scan the game state for Battle Order or Battle Plan cards in play.
+     * Updates the underBattleOrderRules flag accordingly.
+     *
+     * This mirrors Python's board_state.is_under_battle_order() which checks
+     * for specific blueprint IDs in the SIDE_OF_TABLE zone.
+     *
+     * @param gameState the current game state
+     */
+    public void updateBattleOrderFromGameState(GameState gameState) {
+        if (gameState == null) {
+            return;
+        }
+
+        boolean foundBattleOrder = false;
+        String foundCard = null;
+        String foundOwner = null;
+
+        try {
+            for (PhysicalCard card : gameState.getAllPermanentCards()) {
+                if (card == null) continue;
+
+                Zone zone = card.getZone();
+                // Battle Order/Plan cards live in SIDE_OF_TABLE zone
+                // (matches Python board_state.is_under_battle_order())
+                if (zone != Zone.SIDE_OF_TABLE) {
+                    continue;
+                }
+
+                // Get blueprint ID
+                String blueprintId = card.getBlueprintId(true);
+                if (blueprintId == null) continue;
+
+                // Check if this is a Battle Order/Plan card
+                if (ALL_BATTLE_ORDER_CARDS.contains(blueprintId)) {
+                    foundBattleOrder = true;
+                    foundCard = card.getTitle();
+                    foundOwner = card.getOwner();
+                    break;  // Found one, that's enough
+                }
+            }
+        } catch (Exception e) {
+            LOG.warn("Error scanning for Battle Order cards: {}", e.getMessage());
+        }
+
+        // Update flag
+        boolean wasUnder = underBattleOrderRules;
+        if (foundBattleOrder && !wasUnder) {
+            LOG.info("⚔️ Battle Order detected: {} (owner: {}) - force drains now cost +3!",
+                foundCard, foundOwner);
+        }
+        setUnderBattleOrderRules(foundBattleOrder);
+    }
+
+    /**
+     * Check if a specific blueprint ID is a Battle Order/Plan card.
+     * Useful for evaluators that need to know before the card is in play.
+     */
+    public static boolean isBattleOrderCard(String blueprintId) {
+        return blueprintId != null && ALL_BATTLE_ORDER_CARDS.contains(blueprintId);
     }
 
     // =========================================================================

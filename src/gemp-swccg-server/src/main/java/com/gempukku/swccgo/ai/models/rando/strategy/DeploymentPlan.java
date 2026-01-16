@@ -37,6 +37,10 @@ public class DeploymentPlan {
     // Flag set by evaluator when planned cards aren't available
     private boolean forceAllowExtras = false;
 
+    // Flag set when planned cards are in hand but not deployable (e.g., can't afford)
+    // This indicates we should PASS and save force rather than deploying random stuff
+    private boolean waitingForPlannedCards = false;
+
     // Original plan cost (before any deployments)
     private int originalPlanCost = 0;
 
@@ -137,6 +141,9 @@ public class DeploymentPlan {
 
     public boolean isForceAllowExtras() { return forceAllowExtras; }
     public void setForceAllowExtras(boolean forceAllowExtras) { this.forceAllowExtras = forceAllowExtras; }
+
+    public boolean isWaitingForPlannedCards() { return waitingForPlannedCards; }
+    public void setWaitingForPlannedCards(boolean waitingForPlannedCards) { this.waitingForPlannedCards = waitingForPlannedCards; }
 
     public int getOriginalPlanCost() { return originalPlanCost; }
     public void setOriginalPlanCost(int originalPlanCost) { this.originalPlanCost = originalPlanCost; }

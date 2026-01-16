@@ -6,6 +6,7 @@ import com.gempukku.swccgo.ai.models.rando.RandoLogger;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentInstruction;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeploymentPlan;
+import com.gempukku.swccgo.ai.models.rando.strategy.DeployStrategy;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -103,6 +104,54 @@ public class DeployEvaluator extends ActionEvaluator {
         List<EvaluatedAction> actions = new ArrayList<>();
         GameState gameState = context.getGameState();
 
+        // ========== CRITICAL DEBUG LOGGING ==========
+        // This MUST show to verify JAR is deployed correctly
+        LOG.warn("🚀🚀🚀 [DeployEvaluator.evaluate] ENTRY POINT - JAR VERSION 2026-01-15-A 🚀🚀🚀");
+        LOG.warn("🔍 Decision type: {}", context.getDecisionType());
+        LOG.warn("🔍 Decision text: {}", context.getDecisionText());
+
+        // Log ALL context data we have access to
+        List<String> ctxCardIds = context.getCardIds();
+        List<String> ctxBlueprints = context.getBlueprints();
+        List<String> ctxActionIds = context.getActionIds();
+        List<String> ctxActionTexts = context.getActionTexts();
+        List<Boolean> ctxSelectable = context.getSelectable();
+
+        LOG.warn("🔍 Context cardIds: {} items -> {}",
+            ctxCardIds != null ? ctxCardIds.size() : "null",
+            ctxCardIds != null ? ctxCardIds : "null");
+        LOG.warn("🔍 Context blueprints: {} items -> {}",
+            ctxBlueprints != null ? ctxBlueprints.size() : "null",
+            ctxBlueprints != null ? ctxBlueprints : "null");
+        LOG.warn("🔍 Context actionIds: {} items -> {}",
+            ctxActionIds != null ? ctxActionIds.size() : "null",
+            ctxActionIds != null ? ctxActionIds : "null");
+        LOG.warn("🔍 Context actionTexts: {} items -> {}",
+            ctxActionTexts != null ? ctxActionTexts.size() : "null",
+            ctxActionTexts != null ? ctxActionTexts : "null");
+        LOG.warn("🔍 Context selectable: {} items -> {}",
+            ctxSelectable != null ? ctxSelectable.size() : "null",
+            ctxSelectable != null ? ctxSelectable : "null");
+        List<String> ctxTestingTexts = context.getTestingTexts();
+        LOG.warn("🔍 Context testingTexts (CARD TITLES): {} items -> {}",
+            ctxTestingTexts != null ? ctxTestingTexts.size() : "null",
+            ctxTestingTexts != null ? ctxTestingTexts : "null");
+
+        // Log hand cards
+        List<PhysicalCard> debugHand = context.getHand();
+        LOG.warn("🔍 Hand size: {}", debugHand != null ? debugHand.size() : "null");
+        if (debugHand != null) {
+            StringBuilder handStr = new StringBuilder();
+            for (PhysicalCard card : debugHand) {
+                if (card != null) {
+                    handStr.append(card.getTitle()).append(" (id=").append(card.getCardId())
+                           .append(", bp=").append(card.getBlueprintId(true)).append("), ");
+                }
+            }
+            LOG.warn("🔍 Hand cards: {}", handStr);
+        }
+        // ========== END CRITICAL DEBUG LOGGING ==========
+
         LOG.info("[DeployEvaluator] Evaluating deploy phase decision");
 
         // Reset pending deploy tracking at the start of each turn
@@ -199,35 +248,100 @@ public class DeployEvaluator extends ActionEvaluator {
 
         // === STALE PLAN DETECTION ===
         // Check if available deploy actions match the plan
-        // If none match and we have deploy actions, the plan is stale
+        // If none match and we have deploy actions, check WHY before marking stale
         if (plan != null && !plan.getInstructions().isEmpty() && !plan.isPlanComplete()) {
             boolean planCardsAvailable = false;
+            boolean planCardsStillInHand = false;
+            List<String> cardIdList = context.getCardIds();
+            List<String> blueprintList = context.getBlueprints();
+
+            // First, check if any planned cards are still in hand
+            Set<String> handBlueprintIds = new HashSet<>();
+            if (hand != null) {
+                for (PhysicalCard handCard : hand) {
+                    if (handCard != null) {
+                        String bpId = handCard.getBlueprintId(true);
+                        if (bpId != null) {
+                            handBlueprintIds.add(bpId);
+                        }
+                    }
+                }
+            }
+
+            StringBuilder planInHandCards = new StringBuilder();
+            StringBuilder planNotInHandCards = new StringBuilder();
+            for (DeploymentInstruction inst : plan.getInstructions()) {
+                if (handBlueprintIds.contains(inst.getCardBlueprintId())) {
+                    planCardsStillInHand = true;
+                    planInHandCards.append(inst.getCardName()).append(" (").append(inst.getCardBlueprintId()).append("), ");
+                } else {
+                    planNotInHandCards.append(inst.getCardName()).append(" (").append(inst.getCardBlueprintId()).append("), ");
+                }
+            }
+            if (planCardsStillInHand) {
+                LOG.warn("📋 Plan cards IN HAND but not deployable: {}", planInHandCards);
+            }
+            if (planNotInHandCards.length() > 0) {
+                LOG.warn("📋 Plan cards NOT in hand (already deployed?): {}", planNotInHandCards);
+            }
+
             for (int i = 0; i < actionTexts.size(); i++) {
                 String actionText = actionTexts.get(i);
                 if (actionText == null || !actionText.toLowerCase(Locale.ROOT).contains("deploy")) {
                     continue;
                 }
-                // Try to match action to a plan instruction
-                PhysicalCard matchedCard = findCardInHand(hand, actionText);
-                if (matchedCard != null) {
-                    String bpId = matchedCard.getBlueprintId(true);
-                    if (bpId != null && plan.getInstructionForCard(bpId) != null) {
-                        planCardsAvailable = true;
-                        break;
+
+                // Get blueprint ID using cardId lookup (most reliable)
+                String bpId = null;
+                String cardIdStr = (cardIdList != null && i < cardIdList.size()) ? cardIdList.get(i) : null;
+
+                // Method 1: Look up card by cardId in game state to get its blueprint
+                if (cardIdStr != null && !cardIdStr.isEmpty() && gameState != null) {
+                    try {
+                        int cardIdNum = Integer.parseInt(cardIdStr);
+                        PhysicalCard card = gameState.findCardById(cardIdNum);
+                        if (card != null) {
+                            bpId = card.getBlueprintId(true);
+                        }
+                    } catch (NumberFormatException e) {
+                        // Not a number - ignore
                     }
+                }
+
+                // Method 2: Use blueprint from params (for virtual/off-table actions)
+                if (bpId == null && blueprintList != null && i < blueprintList.size()) {
+                    String paramBp = blueprintList.get(i);
+                    if (paramBp != null && !paramBp.isEmpty() && !"inPlay".equals(paramBp)) {
+                        bpId = paramBp;
+                    }
+                }
+
+                // Check if this blueprint is in the plan
+                if (bpId != null && plan.getInstructionForCard(bpId) != null) {
+                    planCardsAvailable = true;
+                    LOG.debug("   Found plan card {} in action: {}", bpId, actionText.substring(0, Math.min(60, actionText.length())));
+                    break;
                 }
             }
 
             if (!planCardsAvailable) {
-                LOG.warn("⚠️ STALE PLAN: Plan has {} cards but NONE are in available deploy actions!",
-                    plan.getInstructions().size());
-                StringBuilder planCards = new StringBuilder();
-                for (DeploymentInstruction inst : plan.getInstructions()) {
-                    planCards.append(inst.getCardName()).append(", ");
+                if (planCardsStillInHand) {
+                    // Plan cards are in hand but not deployable - probably can't afford them
+                    // Set flag so we apply HUGE penalty to non-plan deploys
+                    LOG.warn("📋 Plan cards in hand but not affordable - will heavily penalize off-plan deploys");
+                    plan.setWaitingForPlannedCards(true);
+                } else {
+                    // Plan cards are NOT in hand at all - plan is truly stale
+                    LOG.warn("⚠️ STALE PLAN: Plan has {} cards but NONE are in hand or deploy actions!",
+                        plan.getInstructions().size());
+                    StringBuilder planCards = new StringBuilder();
+                    for (DeploymentInstruction inst : plan.getInstructions()) {
+                        planCards.append(inst.getCardName()).append(", ");
+                    }
+                    LOG.warn("   Plan cards: {}", planCards);
+                    // Mark plan as allowing extra actions since planned cards are truly gone
+                    plan.setForceAllowExtras(true);
                 }
-                LOG.warn("   Plan cards: {}", planCards);
-                // Mark plan as allowing extra actions since planned cards aren't available
-                plan.setForceAllowExtras(true);
             }
         }
 
@@ -266,6 +380,16 @@ public class DeployEvaluator extends ActionEvaluator {
                 actionText
             );
 
+            // === APPLY PHASE-LEVEL PLAN ===
+            // If the planner decided to HOLD BACK, penalize ALL deploy actions
+            // This ensures we don't deploy piecemeal when we should save up
+            // (ported from Python deploy_evaluator.py)
+            if (plan != null && plan.getStrategy() == DeployStrategy.HOLD_BACK) {
+                action.addReasoning("HOLD BACK: " + plan.getReason(), -150.0f);
+                actions.add(action);
+                continue;  // Skip individual card evaluation - plan says don't deploy
+            }
+
             // === Get card ID from decision parameters ===
             // For CARD_ACTION_CHOICE, each action has an associated cardId at the same index
             List<String> cardIdList = context.getCardIds();
@@ -273,15 +397,15 @@ public class DeployEvaluator extends ActionEvaluator {
             String cardIdStr = (cardIdList != null && i < cardIdList.size()) ? cardIdList.get(i) : null;
             String blueprintIdFromParam = (blueprintList != null && i < blueprintList.size()) ? blueprintList.get(i) : null;
 
-            LOG.debug("[DeployEvaluator] Action[{}]: cardId='{}', blueprintId='{}', text='{}'",
-                i, cardIdStr, blueprintIdFromParam, actionText);
+            // Get card title from testingText (MOST RELIABLE - directly from GEMP)
+            String cardTitleFromGemp = context.getCardTitleAt(i);
+            LOG.info("[DeployEvaluator] Action[{}]: cardId='{}', blueprintId='{}', CARD_TITLE='{}', actionText='{}'",
+                i, cardIdStr, blueprintIdFromParam, cardTitleFromGemp, actionText);
 
-            // Check if we already tried deploying this card (avoid loops)
-            if (cardIdStr != null && !cardIdStr.isEmpty() && pendingDeployCardIds.contains(cardIdStr)) {
-                action.addReasoning("Already tried deploying this card", -100.0f);
-                actions.add(action);
-                continue;
-            }
+            // NOTE: We used to check pendingDeployCardIds here to avoid loops,
+            // but the tracking was broken (added during evaluation, not after selection).
+            // Loop detection is now handled by DecisionTracker at a higher level.
+            // If loops become an issue, we need to track selected actions in CombinedEvaluator.
 
             // === LOCATION DEPLOYMENT - Highest Priority ===
             // Deploying locations opens up deployment options
@@ -291,25 +415,92 @@ public class DeployEvaluator extends ActionEvaluator {
                 continue;
             }
 
-            // === Look up the card using cardId from parameters ===
+            // === Look up the card using multiple methods (like Python) ===
             PhysicalCard card = null;
+            String blueprintIdFromHtml = null;
 
-            // First try to find card by cardId in game state
-            if (cardIdStr != null && !cardIdStr.isEmpty() && gameState != null) {
-                try {
-                    int cardIdNum = Integer.parseInt(cardIdStr);
-                    card = gameState.findCardById(cardIdNum);
-                    if (card != null) {
-                        LOG.debug("[DeployEvaluator] Found card by ID {}: {}", cardIdNum, card.getTitle());
+            LOG.warn("🔎 [Method 1] Trying extractBlueprintFromActionHtml for: '{}'", actionText);
+
+            // Method 1: Extract blueprint from action text HTML (most reliable)
+            // GEMP includes card hints like: <div class='cardHint' value='7_305'>•Card Name</div>
+            blueprintIdFromHtml = extractBlueprintFromActionHtml(actionText);
+            LOG.warn("🔎 [Method 1] Result: blueprintIdFromHtml = '{}'", blueprintIdFromHtml);
+
+            if (blueprintIdFromHtml != null && hand != null) {
+                LOG.warn("🔎 [Method 1] Searching hand ({} cards) for blueprint '{}'", hand.size(), blueprintIdFromHtml);
+                // Find card in hand by blueprint ID
+                for (PhysicalCard handCard : hand) {
+                    if (handCard != null && blueprintIdFromHtml.equals(handCard.getBlueprintId(true))) {
+                        card = handCard;
+                        LOG.warn("🔎 [Method 1] ✅ Found card by HTML blueprint {}: {}", blueprintIdFromHtml, card.getTitle());
+                        break;
                     }
-                } catch (NumberFormatException e) {
-                    LOG.debug("[DeployEvaluator] Could not parse cardId: {}", cardIdStr);
                 }
+                if (card == null) {
+                    LOG.warn("🔎 [Method 1] ❌ No card in hand matches blueprint '{}'", blueprintIdFromHtml);
+                }
+            } else {
+                LOG.warn("🔎 [Method 1] Skipped: blueprintIdFromHtml={}, hand={}", blueprintIdFromHtml, hand != null ? "exists" : "null");
             }
 
-            // Fallback: try to match by title in action text
+            // Method 2: Try to find card by cardId in game state
+            LOG.warn("🔎 [Method 2] Trying gameState.findCardById for cardIdStr='{}' (card still null={})", cardIdStr, card == null);
+            if (card == null && cardIdStr != null && !cardIdStr.isEmpty() && gameState != null) {
+                try {
+                    int cardIdNum = Integer.parseInt(cardIdStr);
+                    LOG.warn("🔎 [Method 2] Parsed cardId as int: {}", cardIdNum);
+                    card = gameState.findCardById(cardIdNum);
+                    if (card != null) {
+                        LOG.warn("🔎 [Method 2] ✅ Found card by ID {}: {}", cardIdNum, card.getTitle());
+                    } else {
+                        LOG.warn("🔎 [Method 2] ❌ gameState.findCardById({}) returned null", cardIdNum);
+                    }
+                } catch (NumberFormatException e) {
+                    LOG.warn("🔎 [Method 2] ❌ Could not parse cardId '{}' as integer", cardIdStr);
+                }
+            } else {
+                LOG.warn("🔎 [Method 2] Skipped: card={}, cardIdStr='{}', gameState={}",
+                    card != null ? "found" : "null", cardIdStr, gameState != null ? "exists" : "null");
+            }
+
+            // Method 3: Try to use blueprintId from decision params
+            LOG.warn("🔎 [Method 3] Trying blueprintIdFromParam='{}' (card still null={})", blueprintIdFromParam, card == null);
+            if (card == null && blueprintIdFromParam != null && !blueprintIdFromParam.isEmpty() &&
+                !"inPlay".equals(blueprintIdFromParam) && hand != null) {
+                LOG.warn("🔎 [Method 3] Searching hand for blueprint '{}'", blueprintIdFromParam);
+                // Find card in hand by blueprint ID from params
+                for (PhysicalCard handCard : hand) {
+                    if (handCard != null && blueprintIdFromParam.equals(handCard.getBlueprintId(true))) {
+                        card = handCard;
+                        LOG.warn("🔎 [Method 3] ✅ Found card by param blueprint {}: {}", blueprintIdFromParam, card.getTitle());
+                        break;
+                    }
+                }
+                if (card == null) {
+                    LOG.warn("🔎 [Method 3] ❌ No card in hand matches blueprint '{}'", blueprintIdFromParam);
+                }
+            } else {
+                LOG.warn("🔎 [Method 3] Skipped: card={}, blueprintIdFromParam='{}', hand={}",
+                    card != null ? "found" : "null", blueprintIdFromParam, hand != null ? "exists" : "null");
+            }
+
+            // Method 4: Fallback - try to match by title in action text (rarely needed)
             if (card == null) {
                 card = findCardInHand(hand, actionText);
+                if (card != null) {
+                    LOG.info("🔎 [Method 4] ✅ Found card by title match: {}", card.getTitle());
+                }
+                // Don't log failure - findCardInHand already logs at debug level
+            }
+
+            // Final result
+            if (card == null) {
+                LOG.warn("❌❌❌ CARD LOOKUP FAILED for action '{}' - ALL 4 METHODS FAILED ❌❌❌",
+                    actionText.length() > 80 ? actionText.substring(0, 80) + "..." : actionText);
+                LOG.warn("    cardIdStr='{}', blueprintFromHtml='{}', blueprintFromParam='{}'",
+                    cardIdStr, blueprintIdFromHtml, blueprintIdFromParam);
+            } else {
+                LOG.warn("✅✅✅ CARD LOOKUP SUCCESS: {} (bp={}) ✅✅✅", card.getTitle(), card.getBlueprintId(true));
             }
             if (card != null) {
                 SwccgCardBlueprint blueprint = card.getBlueprint();
@@ -337,14 +528,45 @@ public class DeployEvaluator extends ActionEvaluator {
                                     action.addReasoning("High priority deployment", 25.0f);
                                 }
                             } else if (!plan.isForceAllowExtras()) {
-                                // Card is NOT in plan and we're not allowing extras - penalty
-                                action.addReasoning("NOT in deployment plan", -50.0f);
+                                // Card is NOT in plan and we're not allowing extras
+                                // CRITICAL: If plan is DEPLOY_LOCATIONS, this is an ABSOLUTE BLOCK
+                                // -1000 penalty makes it impossible to overcome with other bonuses
+                                if (plan.getStrategy() == DeployStrategy.DEPLOY_LOCATIONS) {
+                                    LOG.warn("🚫 BLOCKING non-location deploy during DEPLOY_LOCATIONS plan: {}", card.getTitle());
+                                    action.addReasoning("BLOCKED: Plan is DEPLOY_LOCATIONS ONLY - no characters/ships!", -1000.0f);
+                                    actions.add(action);
+                                    continue;  // Skip all other scoring - this action is blocked
+                                } else if (plan.isWaitingForPlannedCards()) {
+                                    // Plan cards are in hand but not affordable - HARD BLOCK non-plan deploys
+                                    // We want to PASS and save force for the planned cards!
+                                    LOG.warn("🚫 BLOCKING off-plan deploy - saving force for planned cards: {}", card.getTitle());
+                                    action.addReasoning("BLOCKED: Saving force for planned cards!", -200.0f);
+                                    actions.add(action);
+                                    continue;  // Skip all other scoring
+                                } else {
+                                    action.addReasoning("NOT in deployment plan", -50.0f);
+                                }
                             } else {
-                                // Plan allows extras (stale plan) - neutral score for non-plan cards
+                                // Plan allows extras (stale plan) - but still respect DEPLOY_LOCATIONS
+                                if (plan.getStrategy() == DeployStrategy.DEPLOY_LOCATIONS) {
+                                    LOG.warn("🚫 BLOCKING non-location deploy - stale plan but DEPLOY_LOCATIONS means locations only!");
+                                    action.addReasoning("BLOCKED: Stale plan but DEPLOY_LOCATIONS - no character/ship deploys!", -1000.0f);
+                                    actions.add(action);
+                                    continue;  // Skip all other scoring
+                                }
                                 action.addReasoning("Extra deploy (plan stale)", 0.0f);
                             }
                         } else if (plan.isPlanComplete()) {
-                            // Plan is complete! Allow extra deploys with moderate bonus
+                            // Plan is complete! All planned deployments are done.
+                            // CRITICAL FIX: DEPLOY_LOCATIONS means "deploy locations FIRST", not "ONLY locations"
+                            // Once locations are deployed, we should allow character/ship deploys normally.
+                            // The strategy was just to ensure locations came first to open deployment options.
+                            if (plan.getStrategy() == DeployStrategy.DEPLOY_LOCATIONS) {
+                                LOG.info("✅ DEPLOY_LOCATIONS plan complete - now allowing character/ship deploys");
+                                action.addReasoning("DEPLOY_LOCATIONS complete - extra deploy allowed", 25.0f);
+                            }
+
+                            // For all strategies (DEPLOY_LOCATIONS, ESTABLISH, REINFORCE), allow extra deploys
                             int extraBudget = plan.getExtraForceBudget(availableForce);
                             if (extraBudget > 0) {
                                 action.addReasoning("Plan COMPLETE - extra deploy allowed", 25.0f);
@@ -459,14 +681,23 @@ public class DeployEvaluator extends ActionEvaluator {
                     }
                 }
             } else {
-                // Unknown card - modest penalty
+                // Unknown card - check if we should block it
+                if (plan != null && plan.getStrategy() == DeployStrategy.DEPLOY_LOCATIONS && !plan.isForceAllowExtras()) {
+                    // During DEPLOY_LOCATIONS, block unknown non-location actions
+                    // (locations were already handled above with +200 bonus)
+                    LOG.warn("🚫 BLOCKING unknown card deploy during DEPLOY_LOCATIONS plan");
+                    action.addReasoning("BLOCKED: Unknown card during DEPLOY_LOCATIONS plan", -1000.0f);
+                    actions.add(action);
+                    continue;
+                }
                 action.addReasoning("Unknown card", -10.0f);
             }
 
-            // Track that we're considering this card (use cardIdStr from params)
-            if (cardIdStr != null && !cardIdStr.isEmpty()) {
-                pendingDeployCardIds.add(cardIdStr);
-            }
+            // NOTE: Don't add cardIds to pendingDeployCardIds here during evaluation!
+            // We used to do: pendingDeployCardIds.add(cardIdStr);
+            // But that caused ALL evaluated cards to be marked as "already tried"
+            // which broke deployment plans. We now only track when the action is actually chosen.
+            // See line ~630 where we track the selected action's cardId.
 
             LOG.debug("[DeployEvaluator] Scored '{}' -> {} ({})",
                 actionText.length() > 50 ? actionText.substring(0, 50) + "..." : actionText,
@@ -497,19 +728,37 @@ public class DeployEvaluator extends ActionEvaluator {
     }
 
     /**
+     * Extract blueprint ID from action text HTML.
+     * GEMP includes card hints in HTML like: <div class='cardHint' value='7_305'>•Card Name</div>
+     *
+     * Ported from Python deploy_evaluator.py _extract_blueprint_from_action
+     */
+    private String extractBlueprintFromActionHtml(String actionText) {
+        if (actionText == null) return null;
+
+        // Look for value='blueprint_id' pattern in HTML
+        // Example: <div class='cardHint' value='7_305'>•OS-72-1</div>
+        Pattern pattern = Pattern.compile("value=['\"]([^'\"]+)['\"]");
+        Matcher matcher = pattern.matcher(actionText);
+        if (matcher.find()) {
+            String blueprintId = matcher.group(1);
+            LOG.debug("[extractBlueprintFromActionHtml] Found blueprint '{}' in action text", blueprintId);
+            return blueprintId;
+        }
+
+        return null;
+    }
+
+    /**
      * Try to find a card in hand that matches the action text.
+     * NOTE: This is a fallback method - prefer using cardId lookup via gameState.findCardById()
      */
     private PhysicalCard findCardInHand(List<PhysicalCard> hand, String actionText) {
         if (hand == null || actionText == null) {
-            LOG.debug("[findCardInHand] Null input: hand={}, actionText={}", hand != null, actionText != null);
             return null;
         }
 
         String actionLower = actionText.toLowerCase(Locale.ROOT);
-
-        // Log what we're searching for
-        LOG.debug("[findCardInHand] Searching for card in action: '{}'",
-            actionText.length() > 100 ? actionText.substring(0, 100) + "..." : actionText);
 
         for (PhysicalCard card : hand) {
             if (card == null) continue;
@@ -525,16 +774,9 @@ public class DeployEvaluator extends ActionEvaluator {
             }
         }
 
-        // No match - log all card titles we checked
-        if (LOG.isDebugEnabled()) {
-            StringBuilder sb = new StringBuilder("[findCardInHand] ❌ No match. Hand cards: ");
-            for (PhysicalCard card : hand) {
-                if (card != null && card.getTitle() != null) {
-                    sb.append("'").append(card.getTitle()).append("', ");
-                }
-            }
-            LOG.debug(sb.toString());
-        }
+        // Only log failure at debug level - this method is a fallback and often won't find anything
+        LOG.debug("[findCardInHand] No title match for action: '{}'",
+            actionText.length() > 50 ? actionText.substring(0, 50) + "..." : actionText);
 
         return null;
     }
