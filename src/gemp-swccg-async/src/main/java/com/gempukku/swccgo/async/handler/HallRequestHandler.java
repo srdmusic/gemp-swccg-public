@@ -330,8 +330,10 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
             }
 
             Player resourceOwner = getResourceOwnerSafely(request, participantId);
-            Player librarian = sampleDeck ? getLibrarian() : null;
 
+            // Librarian is needed for sample decks AND for AI decks (AI decks come from librarian)
+            Player librarian = (sampleDeck || playVsAi) ? getLibrarian() : null;
+            
             try {
                 _hallServer.createNewTable(format, resourceOwner, deckName, sampleDeck, tableDesc, isPrivate, librarian, playVsAi, aiSkill, aiDeckName);
                 responseWriter.writeXmlResponse(null);
