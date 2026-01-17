@@ -93,9 +93,10 @@ var GempSwccgHallUI = Class.extend({
                 var playVsAi = that.opponentSelect.val() === "ai";
                 var aiSkill = that.aiSkillSelect.val();
                 var aiDeckName = that.aiDeckSelect.val();
+                var aiDeckSample = that.aiDeckSelect.find(":selected").attr("data-sample-deck");
                 if (deck != null) {
                     $(that.createTableButton).button("disable");
-                    that.comm.createTable(format, deck, sampleDeck, tableDesc, isPrivate, playVsAi, aiSkill, aiDeckName, function (xml) {
+                    that.comm.createTable(format, deck, sampleDeck, tableDesc, isPrivate, playVsAi, aiSkill, aiDeckName, aiDeckSample, function (xml) {
                         that.processResponse(xml);
                         // Re-enable the button after a short delay to prevent accidental double-clicks
                         setTimeout(function() {
@@ -515,7 +516,7 @@ var GempSwccgHallUI = Class.extend({
             deckElem.text(prefix + deckName);
             this.decksSelect.append(deckElem);
 
-            // Track for AI selection (especially sample decks)
+            // Track for AI selection (player and sample decks)
             this.deckOptions.push({name: deckName, sample: sampleDeck === "true", side: side, label: prefix + deckName});
         }
     },
@@ -546,8 +547,6 @@ var GempSwccgHallUI = Class.extend({
         var added = false;
         for (var i = 0; i < this.deckOptions.length; i++) {
             var opt = this.deckOptions[i];
-            if (!opt.sample)
-                continue;
             if (playerSide != null) {
                 if (opt.side === "dark" && playerSide === "dark")
                     continue;
@@ -557,13 +556,14 @@ var GempSwccgHallUI = Class.extend({
             var option = $("<option></option>");
             option.attr("value", opt.name);
             option.attr("data-side", opt.side);
+            option.attr("data-sample-deck", opt.sample ? "true" : "false");
             option.text(opt.label);
             this.aiDeckSelect.append(option);
             added = true;
         }
 
         if (!added) {
-            var placeholder = $("<option disabled selected>No opposite-side sample decks found</option>");
+            var placeholder = $("<option disabled selected>No opposite-side decks found</option>");
             this.aiDeckSelect.append(placeholder);
         }
     },

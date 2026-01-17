@@ -692,7 +692,7 @@ var GempSwccgCommunication = Class.extend({
             dataType:"xml"
         });
     },
-    createTable:function (format, deckName, sampleDeck, tableDesc, isPrivate, playVsAi, aiSkill, aiDeckName, callback, errorMap) {
+    createTable:function (format, deckName, sampleDeck, tableDesc, isPrivate, playVsAi, aiSkill, aiDeckName, aiDeckSample, callback, errorMap) {
         $.ajax({
             type:"POST",
             url:this.url + "/hall",
@@ -706,6 +706,7 @@ var GempSwccgCommunication = Class.extend({
                 playVsAi:playVsAi,
                 aiSkill:aiSkill,
                 aiDeckName:aiDeckName,
+                aiDeckSample:aiDeckSample,
                 participantId:getUrlParam("participantId")},
             success:this.deliveryCheck(callback),
             error:this.errorCheck(errorMap),

@@ -236,7 +236,7 @@ public class HallServer extends AbstractServer {
      *         is sitting at a table or playing).
      */
     public void createNewTable(String type, Player player, String deckName, boolean sampleDeck, String tableDesc,
-            boolean isPrivate, Player librarian, boolean playVsAi, String aiSkill, String aiDeckName)
+            boolean isPrivate, Player librarian, boolean playVsAi, String aiSkill, String aiDeckName, boolean aiDeckSample)
             throws HallException {
         if (_shutdown)
             throw new HallException(
@@ -302,12 +302,13 @@ public class HallServer extends AbstractServer {
 
                 aiSkill = normalizeAiSkill(aiSkill);
 
+                Player aiDeckOwner = aiDeckSample ? librarian : player;
                 aiDeck = validateUserAndDeck(
                         format,
-                        librarian, // AI decks come from librarian
+                        aiDeckOwner,
                         aiDeckName,
                         collectionType,
-                        true, // AI decks are always sample decks
+                        aiDeckSample,
                         librarian);
 
                 Side aiSide = aiDeck.getSide(_library);
