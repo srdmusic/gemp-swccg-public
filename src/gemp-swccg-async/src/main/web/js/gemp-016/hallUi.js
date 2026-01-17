@@ -83,12 +83,6 @@ var GempSwccgHallUI = Class.extend({
         this.createTableButton = $("<button>Create table</button>");
         $(this.createTableButton).button().click(
             function () {
-                that.supportedFormatsSelect.hide();
-                that.decksSelect.hide();
-                that.opponentSelect.hide();
-                that.aiControlsDiv.hide();
-                that.createTableButton.hide();
-                that.isPrivateCheckbox.hide();
                 var format = that.supportedFormatsSelect.val();
                 var deck = that.decksSelect.val();
                 var sampleDeck = that.decksSelect[0][that.decksSelect[0].selectedIndex].getAttribute("data-sample-deck")
@@ -100,8 +94,13 @@ var GempSwccgHallUI = Class.extend({
                 var aiSkill = that.aiSkillSelect.val();
                 var aiDeckName = that.aiDeckSelect.val();
                 if (deck != null) {
+                    $(that.createTableButton).button("disable");
                     that.comm.createTable(format, deck, sampleDeck, tableDesc, isPrivate, playVsAi, aiSkill, aiDeckName, function (xml) {
                         that.processResponse(xml);
+                        // Re-enable the button after a short delay to prevent accidental double-clicks
+                        setTimeout(function() {
+                            $(that.createTableButton).button("enable");
+                        }, 2000);
                     });
                 }
             });
