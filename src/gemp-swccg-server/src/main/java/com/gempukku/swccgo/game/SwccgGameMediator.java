@@ -1276,10 +1276,19 @@ public class SwccgGameMediator {
         }
 
         try {
+            // Provide the full game reference for advanced AI features (e.g., deploy planning)
+            ai.setGame(_swccgoGame);
             String answer = ai.decide(playerId, decision, _swccgoGame.getGameState());
 
             _userFeedback.participantDecided(playerId);
             decision.decisionMade(answer);
+
+            // Check if AI has any chat messages to send
+            String chatMessage = ai.getChatMessage();
+            if (chatMessage != null && !chatMessage.isEmpty()) {
+                // Format as a player message: "PlayerName: message"
+                _swccgoGame.getGameState().sendMessage(playerId + ": " + chatMessage);
+            }
 
             _swccgoGame.carryOutPendingActionsUntilDecisionNeeded();
             startClocksForUsersPendingDecision();

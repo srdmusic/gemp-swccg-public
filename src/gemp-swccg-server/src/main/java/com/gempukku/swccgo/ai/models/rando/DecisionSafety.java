@@ -57,17 +57,37 @@ public class DecisionSafety {
      * True if there's only one valid option, or decision indicates required choice.
      */
     public static boolean mustChoose(AwaitingDecision decision) {
+        // First check the noPass parameter - this is the authoritative source
+        Map<String, String[]> params = decision.getDecisionParameters();
+        if (params != null) {
+            String[] noPassArr = params.get("noPass");
+            if (noPassArr != null && noPassArr.length > 0) {
+                return Boolean.parseBoolean(noPassArr[0]);
+            }
+        }
+
         // For most GEMP decisions, we check the available options
-        String[] results = decision.getDecisionParameters().get("results");
+        String[] results = params != null ? params.get("results") : null;
         if (results != null && results.length == 1) {
             return true;  // Only one option means we must choose it
         }
 
-        // Check for typical required decision indicators
+        // Check for typical required decision indicators in the PROMPT text
+        // IMPORTANT: Strip out card names (in HTML divs) to avoid false positives
+        // e.g., "Playing •We Must Accelerate Our Plans" shouldn't trigger on "must"
         String text = decision.getText();
         if (text != null) {
-            String lowerText = text.toLowerCase(Locale.ROOT);
-            if (lowerText.contains("must") || lowerText.contains("required")) {
+            // Remove HTML card hints which contain card names
+            String cleanText = text.replaceAll("<div[^>]*>.*?</div>", "")
+                                   .replaceAll("<[^>]+>", "");
+            String lowerText = cleanText.toLowerCase(Locale.ROOT);
+
+            // Only match "must" at the start of a decision prompt like "You must choose..."
+            // or explicit "required" indicators
+            if (lowerText.startsWith("you must") ||
+                lowerText.startsWith("must ") ||
+                lowerText.contains(" must choose") ||
+                lowerText.contains("required")) {
                 return true;
             }
         }

@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.rando.strategy;
 
 import com.gempukku.swccgo.ai.common.AiBoardAnalyzer;
+import com.gempukku.swccgo.ai.common.AiCardHelper;
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.models.rando.RandoLogger;
 import com.gempukku.swccgo.common.CardCategory;
@@ -124,11 +125,20 @@ public class DeployPhasePlanner {
         List<CardInfo> characters = new ArrayList<>();
         List<CardInfo> starships = new ArrayList<>();
         List<CardInfo> vehicles = new ArrayList<>();
+        List<CardInfo> deadCards = new ArrayList<>();
 
         for (PhysicalCard card : hand) {
             if (card == null || card.getBlueprint() == null) continue;
             CardInfo info = new CardInfo(card);
             allCards.add(info);
+
+            // === PERSONA CHECK: Skip dead cards (persona already deployed) ===
+            if (AiCardHelper.isDeadCard(card, game, playerId)) {
+                deadCards.add(info);
+                LOG.info("☠️ DEAD CARD: {} - persona already on table, skipping deployment planning",
+                    info.name);
+                continue;  // Don't add to deployable categories
+            }
 
             if (info.isLocation) locations.add(info);
             else if (info.isCharacter) characters.add(info);
@@ -136,8 +146,12 @@ public class DeployPhasePlanner {
             else if (info.isVehicle) vehicles.add(info);
         }
 
-        LOG.info("📋 Hand: {} locations, {} characters, {} starships, {} vehicles",
-            locations.size(), characters.size(), starships.size(), vehicles.size());
+        LOG.info("📋 Hand: {} locations, {} characters, {} starships, {} vehicles, {} dead cards",
+            locations.size(), characters.size(), starships.size(), vehicles.size(), deadCards.size());
+        if (!deadCards.isEmpty()) {
+            LOG.info("☠️ Dead cards (persona in play): {}", deadCards.stream()
+                .map(c -> c.name).collect(Collectors.joining(", ")));
+        }
 
         // Log hand details
         logHandDetails(characters, starships, vehicles);
@@ -1439,6 +1453,36 @@ public class DeployPhasePlanner {
 
         LOG.debug("📋 Checking deploy restriction for {}: '{}' vs location '{}'",
             card.getTitle(), restrictionPart, locationTitle);
+
+        // =======================================================
+        // SPECIAL CASE: Cards that deploy ON characters/ships, not TO locations
+        // These cards (like Elom, weapons, devices) deploy on other cards,
+        // not directly to locations. Allow them - the game engine will present
+        // the correct deployment options (e.g., deploy on a character at location).
+        // =======================================================
+        if (restrictionPart.contains("deploys only on")) {
+            String afterOn = restrictionPart.substring(restrictionPart.indexOf("deploys only on") + 15).trim();
+            // Check if it's deploying on a character/ship type rather than a location
+            // Character types: rebel, alien, imperial, droid, jedi, sith, warrior, pilot, etc.
+            // Ship types: starship, capital, squadron, etc.
+            boolean deploysOnCard = afterOn.startsWith("a ") || afterOn.startsWith("an ") ||
+                afterOn.startsWith("your ") || afterOn.startsWith("opponent") ||
+                afterOn.contains("rebel") || afterOn.contains("alien") ||
+                afterOn.contains("imperial") || afterOn.contains("droid") ||
+                afterOn.contains("jedi") || afterOn.contains("sith") ||
+                afterOn.contains("character") || afterOn.contains("warrior") ||
+                afterOn.contains("pilot") || afterOn.contains("smuggler") ||
+                afterOn.contains("starship") || afterOn.contains("vehicle") ||
+                afterOn.contains("capital") || afterOn.contains("squadron");
+
+            if (deploysOnCard) {
+                // This card deploys on another card, not directly to a location
+                // Return true to allow it - game engine will handle the actual deployment
+                LOG.debug("📋 {} deploys ON a card - allowing (game engine will handle)",
+                    card.getTitle());
+                return true;
+            }
+        }
 
         // Check common location types
         if (restrictionPart.contains("hoth") && !locationLower.contains("hoth")) {

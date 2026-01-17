@@ -2,6 +2,7 @@ package com.gempukku.swccgo.ai.common;
 
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
@@ -10,6 +11,9 @@ import com.gempukku.swccgo.game.SwccgCardBlueprint;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.modifiers.querying.ModifiersQuerying;
+
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * Utility class providing convenient access to card properties for AI decision-making.
@@ -384,5 +388,85 @@ public class AiCardHelper {
         if (blueprint == null) return false;
         return blueprint.getUniqueness() != null &&
                blueprint.getUniqueness().isPerSystem() == false;
+    }
+
+    // =========================================================================
+    // Persona Checking (for "dead card" detection)
+    // =========================================================================
+
+    /**
+     * Checks if a card's persona is already deployed on the table.
+     * In SWCCG, only one version of a persona can be on the table at a time.
+     * For example, if "Luke Skywalker, Jedi Knight" is already deployed,
+     * "Luke Skywalker, Rebel Scout" cannot be deployed (they share the Luke persona).
+     *
+     * @param card the card to check
+     * @param game the current game
+     * @param playerId the player to check for (only checks their cards)
+     * @return true if any persona on this card is already deployed
+     */
+    public static boolean isPersonaAlreadyDeployed(PhysicalCard card, SwccgGame game, String playerId) {
+        if (card == null || game == null || playerId == null) return false;
+        SwccgCardBlueprint blueprint = card.getBlueprint();
+        if (blueprint == null) return false;
+
+        // Get personas from the card
+        Set<Persona> cardPersonas = blueprint.getPersonas();
+        if (cardPersonas == null || cardPersonas.isEmpty()) return false;
+
+        // Use Filters to check if any card with matching persona is on table
+        // Filter for: owner matches AND has persona AND not the same card
+        for (Persona cardPersona : cardPersonas) {
+            // Find cards on table with this persona belonging to this player
+            Collection<PhysicalCard> cardsWithPersona = Filters.filterAllOnTable(game,
+                Filters.and(Filters.owner(playerId), Filters.persona(cardPersona)));
+
+            // Check if we found any (excluding the card itself)
+            for (PhysicalCard foundCard : cardsWithPersona) {
+                if (foundCard.getCardId() != card.getCardId()) {
+                    return true;
+                }
+            }
+
+            // Also check crossed-over personas (e.g., Luke <-> Son Of Vader)
+            Persona crossedOver = cardPersona.getCrossedOverPersona();
+            if (crossedOver != null && !crossedOver.equals(cardPersona)) {
+                Collection<PhysicalCard> crossedOverCards = Filters.filterAllOnTable(game,
+                    Filters.and(Filters.owner(playerId), Filters.persona(crossedOver)));
+                for (PhysicalCard foundCard : crossedOverCards) {
+                    if (foundCard.getCardId() != card.getCardId()) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Checks if a card is a "dead card" - cannot be deployed due to persona rule.
+     * This is a convenience wrapper around isPersonaAlreadyDeployed that also
+     * checks if the card is deployable (character, starship, vehicle).
+     *
+     * @param card the card to check
+     * @param game the current game
+     * @param playerId the player to check for
+     * @return true if the card is a dead card (persona already deployed)
+     */
+    public static boolean isDeadCard(PhysicalCard card, SwccgGame game, String playerId) {
+        if (card == null) return false;
+        SwccgCardBlueprint blueprint = card.getBlueprint();
+        if (blueprint == null) return false;
+
+        // Only check deployable cards with personas
+        CardCategory category = blueprint.getCardCategory();
+        if (category != CardCategory.CHARACTER &&
+            category != CardCategory.STARSHIP &&
+            category != CardCategory.VEHICLE) {
+            return false;
+        }
+
+        return isPersonaAlreadyDeployed(card, game, playerId);
     }
 }

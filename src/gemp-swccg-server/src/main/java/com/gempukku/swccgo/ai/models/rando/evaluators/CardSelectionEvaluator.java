@@ -628,6 +628,18 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         }
 
                         // =======================================================
+                        // CRITICAL: Dead cards (persona already deployed) should
+                        // be forfeited - they can never be played anyway!
+                        // =======================================================
+                        SwccgGame game = context.getGame();
+                        String playerId = context.getPlayerId();
+                        if (game != null && playerId != null &&
+                            AiCardHelper.isDeadCard(card, game, playerId)) {
+                            action.addReasoning("☠️ DEAD CARD (persona on table) - forfeit!", 140.0f);
+                            logger.info("☠️ {} is a DEAD CARD - prioritizing for forfeit", title);
+                        }
+
+                        // =======================================================
                         // Check if this is a pilot attached to a ship
                         // Pilots on ships should be forfeited BEFORE the ship!
                         // =======================================================
@@ -740,24 +752,34 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
         logger.info("🎯 Force loss OR forfeit: attrition={}, damage={}", attritionRemaining, damageRemaining);
 
-        // Track if we have any hit cards available for forfeit
+        // Track if we have any hit cards or dead cards available for forfeit
         boolean hasHitCards = false;
+        boolean hasDeadCards = false;
         PhysicalCard bestHitCard = null;
         float bestHitForfeit = Float.MAX_VALUE;
+        SwccgGame game = context.getGame();
+        String playerId = context.getPlayerId();
 
-        // First pass: identify hit cards
+        // First pass: identify hit cards and dead cards
         for (String cardId : context.getCardIds()) {
             if (gameState != null) {
                 try {
                     PhysicalCard card = gameState.findCardById(Integer.parseInt(cardId));
-                    if (card != null && card.isHit()) {
-                        hasHitCards = true;
-                        SwccgCardBlueprint bp = card.getBlueprint();
-                        // CRITICAL: Check hasForfeitAttribute() first - weapons throw exception!
-                        float forfeit = bp != null && bp.hasForfeitAttribute() && bp.getForfeit() != null ? bp.getForfeit() : 0;
-                        if (forfeit < bestHitForfeit) {
-                            bestHitForfeit = forfeit;
-                            bestHitCard = card;
+                    if (card != null) {
+                        if (card.isHit()) {
+                            hasHitCards = true;
+                            SwccgCardBlueprint bp = card.getBlueprint();
+                            // CRITICAL: Check hasForfeitAttribute() first - weapons throw exception!
+                            float forfeit = bp != null && bp.hasForfeitAttribute() && bp.getForfeit() != null ? bp.getForfeit() : 0;
+                            if (forfeit < bestHitForfeit) {
+                                bestHitForfeit = forfeit;
+                                bestHitCard = card;
+                            }
+                        }
+                        // Check for dead cards (persona already deployed)
+                        if (game != null && playerId != null &&
+                            AiCardHelper.isDeadCard(card, game, playerId)) {
+                            hasDeadCards = true;
                         }
                     }
                 } catch (NumberFormatException e) {
@@ -787,8 +809,11 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                     if (hasHitCards) {
                         // But if we have hit cards, might as well forfeit them first
                         action.addReasoning("Have hit cards to forfeit first", -20.0f);
+                    } else if (hasDeadCards) {
+                        // We have dead cards (persona on table) - forfeit those instead!
+                        action.addReasoning("Have dead cards (persona in play) to forfeit first", -30.0f);
                     } else {
-                        // No hit cards - prefer Force loss to save cards
+                        // No hit or dead cards - prefer Force loss to save cards
                         action.addReasoning("Lose Force to save cards", 30.0f);
                     }
                 }
@@ -805,6 +830,14 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             if (card.isHit()) {
                                 action.addReasoning("ALREADY HIT - forfeit immediately!", 200.0f);
                                 logger.info("🎯 Prioritizing HIT card for forfeit: {}", title);
+                            }
+
+                            // Dead cards (persona already deployed) - high priority to forfeit!
+                            // Note: 'game' and 'playerId' are already defined at the start of the method
+                            if (game != null && playerId != null &&
+                                AiCardHelper.isDeadCard(card, game, playerId)) {
+                                action.addReasoning("☠️ DEAD CARD - persona on table, forfeit!", 180.0f);
+                                logger.info("☠️ Prioritizing DEAD CARD for forfeit: {}", title);
                             }
 
                             // If attrition remaining, forfeiting is REQUIRED

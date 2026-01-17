@@ -54,6 +54,33 @@ public class EvaluatedAction {
         addReasoning(reason, 0.0f);
     }
 
+    /**
+     * Merge another action's score and reasoning into this one.
+     * Used when multiple evaluators score the same action ID.
+     *
+     * @param other the other action to merge from
+     */
+    public void mergeFrom(EvaluatedAction other) {
+        if (other == null) return;
+
+        // Add the other action's score to this one
+        this.score += other.score;
+
+        // Merge reasoning lists
+        this.reasoning.addAll(other.reasoning);
+
+        // Keep the more specific action type if this one is UNKNOWN
+        if (this.actionType == ActionType.UNKNOWN && other.actionType != ActionType.UNKNOWN) {
+            this.actionType = other.actionType;
+        }
+
+        // Use the more descriptive display text if this one is empty
+        if ((this.displayText == null || this.displayText.isEmpty()) &&
+            other.displayText != null && !other.displayText.isEmpty()) {
+            this.displayText = other.displayText;
+        }
+    }
+
     // Getters and setters
     public String getActionId() {
         return actionId;

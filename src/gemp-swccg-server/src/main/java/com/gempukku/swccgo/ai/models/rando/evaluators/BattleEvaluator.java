@@ -2,6 +2,9 @@ package com.gempukku.swccgo.ai.models.rando.evaluators;
 
 import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.common.Phase;
+import com.gempukku.swccgo.game.PhysicalCard;
+import com.gempukku.swccgo.game.SwccgGame;
+import com.gempukku.swccgo.game.state.BattleState;
 import com.gempukku.swccgo.game.state.GameState;
 
 import java.util.ArrayList;
@@ -132,6 +135,57 @@ public class BattleEvaluator extends ActionEvaluator {
 
             // === INITIATE BATTLE SCORING ===
             if (actionLower.contains("initiate battle")) {
+                // When deciding to initiate battle, we don't know the location yet
+                // (battle location is only set after initiation)
+                // So we need to be conservative and check overall board position
+
+                SwccgGame game = context.getGame();
+                boolean foundFavorableBattle = false;
+                boolean foundAnyContestedLocation = false;
+
+                if (game != null && gameState != null) {
+                    String playerId = context.getPlayerId();
+                    String opponentId = gameState.getOpponent(playerId);
+
+                    if (opponentId != null) {
+                        // Check all locations to see if we have any favorable battles
+                        try {
+                            for (PhysicalCard location : gameState.getTopLocations()) {
+                                float ourPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    gameState, location, playerId, false, false);
+                                float theirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    gameState, location, opponentId, false, false);
+
+                                // Only consider locations where both sides have presence
+                                if (ourPower > 0 && theirPower > 0) {
+                                    foundAnyContestedLocation = true;
+                                    float powerDiff = ourPower - theirPower;
+
+                                    logger.info("[BattleEvaluator] Checking {}: ours={}, theirs={}, diff={}",
+                                        location.getTitle(), ourPower, theirPower, powerDiff);
+
+                                    if (powerDiff >= MARGINAL_THRESHOLD) {
+                                        foundFavorableBattle = true;
+                                        action.addReasoning(String.format("Favorable battle available at %s (%.0f vs %.0f)",
+                                            location.getTitle(), ourPower, theirPower), 40.0f);
+                                        break; // Found at least one good option
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            logger.warn("[BattleEvaluator] Could not check locations: {}", e.getMessage());
+                        }
+                    }
+                }
+
+                if (!foundFavorableBattle && foundAnyContestedLocation) {
+                    // We have contested locations but no favorable power - discourage initiation
+                    action.addReasoning("No favorable battles available - don't initiate", -60.0f);
+                } else if (!foundAnyContestedLocation) {
+                    // No contested locations - can't really battle
+                    action.addReasoning("No contested locations", -20.0f);
+                }
+
                 // Check if we have enough reserve for destiny draws
                 if (reserveDeck < MIN_RESERVE_FOR_BATTLE) {
                     action.addReasoning(
@@ -140,22 +194,19 @@ public class BattleEvaluator extends ActionEvaluator {
                     );
                 }
 
-                // Strategic position adjustments
+                // Strategic position adjustments (reduced impact - power diff is more important)
                 if (isBehindOnLifeForce) {
-                    // When behind, need to battle to catch up
-                    action.addReasoning("Behind on life force - must be aggressive!", 40.0f);
+                    // When behind, slight encouragement but power still matters most
+                    action.addReasoning("Behind on life force - slightly more aggressive", 15.0f);
                 } else if (isAheadOnLifeForce) {
                     // When ahead, be more conservative
                     action.addReasoning("Ahead on life force - can afford to wait", -20.0f);
                 }
 
-                // Life force critical - must battle
+                // Life force critical - more aggressive but still check power
                 if (lifeForce <= RandoConfig.CRITICAL_LIFE_FORCE) {
-                    action.addReasoning("CRITICAL life force - must battle!", 60.0f);
+                    action.addReasoning("Low life force - need to act", 30.0f);
                 }
-
-                // Default encouragement to battle (we're here to fight!)
-                action.addReasoning("Battle opportunity", 30.0f);
             }
 
             // === WEAPON FIRING ===
@@ -168,6 +219,53 @@ public class BattleEvaluator extends ActionEvaluator {
                 }
                 if (actionLower.contains("unique") || actionLower.contains("•")) {
                     action.addReasoning("Target unique card", 20.0f);
+                }
+            }
+
+            // === CANCEL BATTLE (It's A Trap, etc.) ===
+            if (actionLower.contains("cancel battle") || actionLower.contains("cancel the battle")) {
+                SwccgGame game = context.getGame();
+                if (game != null && gameState != null) {
+                    BattleState battleState = gameState.getBattleState();
+                    String playerId = context.getPlayerId();
+
+                    if (battleState != null) {
+                        String initiator = battleState.getPlayerInitiatedBattle();
+                        boolean weInitiated = playerId != null && playerId.equals(initiator);
+
+                        if (weInitiated) {
+                            // NEVER cancel a battle we started - that's wasteful
+                            action.addReasoning("DO NOT cancel our own battle! Waste of interrupt.", -150.0f);
+                            logger.info("[BattleEvaluator] Penalizing cancel - WE initiated this battle");
+                        } else {
+                            // Opponent initiated - check if we should cancel
+                            String opponentId = gameState.getOpponent(playerId);
+                            PhysicalCard battleLocation = battleState.getBattleLocation();
+
+                            if (battleLocation != null && opponentId != null) {
+                                try {
+                                    float ourPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, battleLocation, playerId, false, false);
+                                    float theirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, battleLocation, opponentId, false, false);
+                                    float powerDiff = ourPower - theirPower;
+
+                                    if (powerDiff < -FAVORABLE_THRESHOLD) {
+                                        // We're badly losing - cancel is valuable
+                                        action.addReasoning(String.format("Cancel losing battle (%.0f vs %.0f)", ourPower, theirPower), 60.0f);
+                                    } else if (powerDiff < 0) {
+                                        // Slight disadvantage - cancel might be worth it
+                                        action.addReasoning(String.format("Cancel unfavorable battle (%.0f vs %.0f)", ourPower, theirPower), 20.0f);
+                                    } else {
+                                        // We're winning or even - don't waste the interrupt
+                                        action.addReasoning(String.format("Don't cancel - we're not losing (%.0f vs %.0f)", ourPower, theirPower), -60.0f);
+                                    }
+                                } catch (Exception e) {
+                                    logger.warn("[BattleEvaluator] Could not get power for cancel decision: {}", e.getMessage());
+                                }
+                            }
+                        }
+                    }
                 }
             }
 

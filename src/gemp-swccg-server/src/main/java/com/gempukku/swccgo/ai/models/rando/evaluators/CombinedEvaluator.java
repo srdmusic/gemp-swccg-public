@@ -5,7 +5,9 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -53,7 +55,9 @@ public class CombinedEvaluator {
      * @return Best evaluated action, or null if no evaluators apply
      */
     public EvaluatedAction evaluateDecision(DecisionContext context) {
-        List<EvaluatedAction> allActions = new ArrayList<>();
+        // Use a map to merge scores for actions with the same ID
+        // This prevents a generic evaluator from overriding a specific evaluator's score
+        Map<String, EvaluatedAction> actionMap = new HashMap<>();
 
         for (ActionEvaluator evaluator : evaluators) {
             if (!evaluator.isEnabled()) {
@@ -63,21 +67,34 @@ public class CombinedEvaluator {
             if (evaluator.canEvaluate(context)) {
                 LOG.debug("Running evaluator: {}", evaluator.getName());
                 List<EvaluatedAction> actions = evaluator.evaluate(context);
-                allActions.addAll(actions);
 
-                // Log all actions from this evaluator
                 for (EvaluatedAction action : actions) {
+                    String actionId = action.getActionId();
+
+                    // Merge with existing action if same ID, otherwise add new
+                    if (actionMap.containsKey(actionId)) {
+                        EvaluatedAction existing = actionMap.get(actionId);
+                        // Merge: add the scores together and combine reasoning
+                        existing.mergeFrom(action);
+                        LOG.debug("Merged scores for '{}': now {}", actionId, existing.getScore());
+                    } else {
+                        actionMap.put(actionId, action);
+                    }
+
+                    // Log this evaluator's contribution
                     evaluator.logEvaluation(action);
                 }
             }
         }
+
+        List<EvaluatedAction> allActions = new ArrayList<>(actionMap.values());
 
         if (allActions.isEmpty()) {
             LOG.warn("No evaluators produced actions for decision: {}", context.getDecisionText());
             return null;
         }
 
-        // Pick the best action (highest score)
+        // Pick the best action (highest merged score)
         EvaluatedAction bestAction = allActions.stream()
             .max(Comparator.comparing(EvaluatedAction::getScore))
             .orElse(null);

@@ -800,6 +800,15 @@ public class RandoCalAi extends HeuristicAiBase {
     }
 
     /**
+     * Implementation of SwccgAiController interface method.
+     * Delegates to setCurrentGame for backward compatibility.
+     */
+    @Override
+    public void setGame(SwccgGame game) {
+        setCurrentGame(game);
+    }
+
+    /**
      * Get pending chat message if available.
      * @return message to send, or null
      */
