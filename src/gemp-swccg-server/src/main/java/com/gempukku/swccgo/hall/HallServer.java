@@ -70,6 +70,7 @@ public class HallServer extends AbstractServer {
     private boolean _privateGamesEnabled;
     private boolean _inGameStatisticsEnabled;
     private boolean _bonusAbilitiesEnabled;
+    private boolean _aiTablesEnabled;
 
     private ReadWriteLock _hallDataAccessLock = new ReentrantReadWriteLock(false);
 
@@ -105,6 +106,7 @@ public class HallServer extends AbstractServer {
         _privateGamesEnabled = _gempSettingDAO.privateGamesEnabled();
         _inGameStatisticsEnabled = _gempSettingDAO.inGameStatisticsEnabled();
         _bonusAbilitiesEnabled = _gempSettingDAO.bonusAbilitiesEnabled();
+        _aiTablesEnabled = _gempSettingDAO.aiTablesEnabled();
         _adminService = adminService;
         _tournamentPrizeSchemeRegistry = tournamentPrizeSchemeRegistry;
         _pairingMechanismRegistry = pairingMechanismRegistry;
@@ -296,6 +298,9 @@ public class HallServer extends AbstractServer {
 
             // AI Logic
             if (playVsAi) {
+                if (!aiTablesEnabled()) {
+                    throw new HallException("Bot tables are currently disabled");
+                }
                 if (aiDeckName == null || aiDeckName.isEmpty()) {
                     throw new HallException("AI deck must be selected");
                 }
@@ -389,6 +394,11 @@ public class HallServer extends AbstractServer {
         _bonusAbilitiesEnabled = enabled;
     }
 
+    public void setAiTablesEnabled(boolean enabled) {
+        _gempSettingDAO.setAiTablesEnabled(enabled);
+        _aiTablesEnabled = enabled;
+    }
+
     public boolean privateGamesAllowed() {
         return _privateGamesEnabled;
     }
@@ -399,6 +409,10 @@ public class HallServer extends AbstractServer {
 
     public boolean bonusAbilitiesEnabled() {
         return _bonusAbilitiesEnabled;
+    }
+
+    public boolean aiTablesEnabled() {
+        return _aiTablesEnabled;
     }
 
     public int removeInGameStatisticsListeners() {

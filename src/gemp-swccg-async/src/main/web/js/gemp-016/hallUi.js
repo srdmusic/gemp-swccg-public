@@ -9,6 +9,7 @@ var GempSwccgHallUI = Class.extend({
     aiSkillSelect:null,
     aiDeckSelect:null,
     aiControlsDiv:null,
+    aiTablesEnabled:true,
     deckOptions:[],
     tableDescInput:null,
     createTableButton:null,
@@ -531,6 +532,10 @@ var GempSwccgHallUI = Class.extend({
     },
 
     updateAiDecksForSelection:function() {
+        if (!this.aiTablesEnabled) {
+            this.aiControlsDiv.hide();
+            return;
+        }
         var playingVsAi = this.opponentSelect.val() === "ai";
         if (!playingVsAi) {
             this.aiControlsDiv.hide();
@@ -568,6 +573,31 @@ var GempSwccgHallUI = Class.extend({
         }
     },
 
+    setAiTablesEnabled:function(enabled) {
+        if (this.aiTablesEnabled === enabled) {
+            return;
+        }
+        this.aiTablesEnabled = enabled;
+
+        var aiOption = this.opponentSelect.find("option[value='ai']");
+        if (enabled) {
+            this.opponentSelect.show();
+            if (aiOption.length === 0) {
+                this.opponentSelect.append("<option value='ai'>vs Bot</option>");
+            }
+        } else {
+            if (aiOption.length > 0) {
+                aiOption.remove();
+            }
+            if (this.opponentSelect.val() === "ai") {
+                this.opponentSelect.val("human");
+            }
+            this.opponentSelect.hide();
+            this.aiControlsDiv.hide();
+        }
+        this.updateAiDecksForSelection();
+    },
+
     animateRowUpdate: function(rowSelector) {
         $(rowSelector, this.tablesDiv)
             .css({borderTopColor:"#000000", borderLeftColor:"#000000", borderBottomColor:"#000000", borderRightColor:"#000000"})
@@ -600,6 +630,11 @@ var GempSwccgHallUI = Class.extend({
                if(document.getElementById('isPrivateCheckbox1')!=null)
                    document.getElementById('isPrivateCheckbox1').checked = false;
                this.isPrivateCheckbox.hide();
+            }
+
+            var aiTablesEnabled = root.getAttribute("aiTablesEnabledBoolean");
+            if (aiTablesEnabled != null && aiTablesEnabled.length > 0) {
+                this.setAiTablesEnabled(aiTablesEnabled == "true");
             }
 
 

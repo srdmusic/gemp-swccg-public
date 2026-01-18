@@ -681,6 +681,7 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
             }
 
             hall.setAttribute("privateGamesEnabledBoolean", String.valueOf(_hallServer.privateGamesAllowed()));
+            hall.setAttribute("aiTablesEnabledBoolean", String.valueOf(_hallServer.aiTablesEnabled()));
             doc.appendChild(hall);
 
 
@@ -749,6 +750,7 @@ public class HallRequestHandler extends SwccgoServerRequestHandler implements Ur
                     hall.setAttribute("currency", String.valueOf(_collectionManager.getPlayerCollection(_resourceOwner, "permanent").getCurrency()));
 
                     hall.setAttribute("privateGamesEnabledBoolean", String.valueOf(_hallServer.privateGamesAllowed()));
+                    hall.setAttribute("aiTablesEnabledBoolean", String.valueOf(_hallServer.aiTablesEnabled()));
                     doc.appendChild(hall);
 
                     Map<String, String> headers = new HashMap<String, String>();

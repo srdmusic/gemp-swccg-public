@@ -751,6 +751,20 @@ var GempSwccgCommunication = Class.extend({
             dataType:"html"
         });
     },
+
+    setAiTablesEnabled:function (enabled, callback, errorMap) {
+        $.ajax({
+            type:"POST",
+            url:this.url + "/admin/settings/aitables",
+            cache:false,
+            data:{
+                enabled:enabled
+            },
+            success:this.deliveryCheck(callback),
+            error:this.errorCheck(errorMap),
+            dataType:"html"
+        });
+    },
     
     setNewAccountRegistration:function (enabled, callback, errorMap) {
         $.ajax({
