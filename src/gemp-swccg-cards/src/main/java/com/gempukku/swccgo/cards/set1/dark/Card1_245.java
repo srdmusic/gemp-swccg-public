@@ -6,13 +6,11 @@ import com.gempukku.swccgo.cards.effects.RelocateFromLocationToStarshipOrVehicle
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
-import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
 import com.gempukku.swccgo.logic.effects.RelocateBetweenLocationsEffect;
@@ -54,7 +52,7 @@ public class Card1_245 extends AbstractUsedInterrupt {
             final PhysicalCard cardToBeLost = aboutToLeaveTableResult.getCardAboutToLeaveTable();
 
             final Filter destinationSiteFilter = Filters.planet_site;
-            final Filter destinationShipFilter = Filters.and(Filters.your(self), Filters.capital_starship, Filters.not(cardToBeLost)); //change to only allow eligible
+            final Filter destinationShipFilter = Filters.and(Filters.your(self), Filters.capital_starship, Filters.not(cardToBeLost), Filters.canBeTargetedBy(self));
             final Filter destinationFilter = Filters.or(destinationSiteFilter, destinationShipFilter);
 
             if(GameConditions.canSpot(game, self, destinationFilter)) {
@@ -63,40 +61,44 @@ public class Card1_245 extends AbstractUsedInterrupt {
                 final int astromechsAboardCount = Filters.countActive(game, self, Filters.and(aboardFilter, Filters.astromech_droid));
 
                 final Filter captivesAboardFilter = Filters.and(Filters.captive, Filters.aboard(cardToBeLost), Filters.canBeTargetedBy(self));
-                final int captivesAboardCount = Filters.countAllOnTable(game,captivesAboardFilter); //change to only get captives that are escorted by characters in the aboardFilter?
+                final int captivesAboardCount = Filters.countAllOnTable(game,captivesAboardFilter);
+                final int captiveAstromechsAboardCount = Filters.countAllOnTable(game,Filters.and(captivesAboardFilter,Filters.astromech_droid));
 
                 Collection<PhysicalCard> possibleSites = new HashSet<>();
                 for (PhysicalCard card : Filters.filterActive(game, self, aboardFilter)) {
                     possibleSites.addAll(Filters.filterTopLocationsOnTable(game, Filters.and(destinationSiteFilter, Filters.locationCanBeRelocatedTo(card, false, false, false, 0, false, true))));
                 }
 
-                //potential ships must be able to hold everyone from the aboardFilter
+                //potential ships must be able to hold everyone from the aboardFilter (and any captives)
                 Collection<PhysicalCard> possibleShips = new HashSet<>();
                 for (PhysicalCard potentialShip : Filters.filterActive(game, self, destinationShipFilter)) {
-                    /// consider reworking with a separate method that accepts: Collection<PhysicalCard> cardsAboard and PhysicalCard targetShip
-
                     //a few key assumptions are made:
                     // - astromechs cannot be pilots
                     // - pilot limitations (ex: must be alien) apply to all pilot capacity
-                    // - no passenger limitations (ex: must be alien)
+                    // - any ship with "pilots and passengers" slots (ex: Binder) does not also have dedicated pilot capacity
+                    //      Eject! Eject! could break this (adding 1 dedicated pilot capacity) but it can't be played on capital ships
 
                     //record capacity on the potential ship
-                    int availablePilotCapacity = game.getGameState().getAvailablePilotCapacity(game.getModifiersQuerying(), potentialShip, self);
+                    int availablePilotOnlyCapacity = game.getGameState().getAvailablePilotCapacity(game.getModifiersQuerying(), potentialShip, self);
+                    if(potentialShip.getBlueprint().getPilotOrPassengerCapacity() > 0) availablePilotOnlyCapacity = 0; //avoid double counting (this capacity is in availablePassengerCapacity)
                     int availablePassengerCapacity = game.getGameState().getAvailablePassengerCapacity(game.getModifiersQuerying(), potentialShip, self);
-                    int availableAstromechCapacity = game.getGameState().getAvailablePassengerCapacityForAstromech(game.getModifiersQuerying(), potentialShip, self);
+                    int availableAstromechOnlyCapacity = game.getGameState().getAvailablePassengerCapacityForAstromech(game.getModifiersQuerying(), potentialShip, self) - availablePassengerCapacity;
 
                     int eligiblePilotsAboard = Filters.countActive(game, self, Filters.and(aboardFilter, potentialShip.getBlueprint().getValidPilotFilter(playerId, game, potentialShip, false)));
 
                     //with optimal usage of pilot and astromech capacity...
-                    int maxPilotCapacityToFill = Math.min(availablePilotCapacity,eligiblePilotsAboard);
-                    int maxAstromechCapacityToFill = Math.min(availableAstromechCapacity,astromechsAboardCount);
+                    int maxPilotOnlyCapacityToFill = Math.min(availablePilotOnlyCapacity,eligiblePilotsAboard);
+                    int maxAstromechCapacityToFill = Math.min(availableAstromechOnlyCapacity,astromechsAboardCount + captiveAstromechsAboardCount);
                     //...check passenger capacity needed to hold the rest
-                    int mandatoryPassengersAboard = (charactersAboardCount + captivesAboardCount) - maxPilotCapacityToFill - maxAstromechCapacityToFill;
+                    int mandatoryPassengersAboard = (charactersAboardCount + captivesAboardCount) - maxPilotOnlyCapacityToFill - maxAstromechCapacityToFill;
                     if(availablePassengerCapacity >= mandatoryPassengersAboard) {
-                        possibleShips.add(potentialShip);
+                        for (PhysicalCard card : Filters.filterActive(game, self, aboardFilter)) {
+                            if (Filters.vehicleOrShipCanBeRelocatedTo(card, false, false, false, 0, false, true).accepts(game, potentialShip)) {
+                                possibleShips.add(potentialShip); //enough room and at least 1 character can relocate
+                                break; //avoid adding more than once
+                            }
+                        }
                     }
-                    /// may need to somehow use Filters.canBeRelocated (maybe a new/modified version?)
-                    /// may need to somehow use getValidPassengerFilter ?
                 }
 
                 Collection<PhysicalCard> possibleSitesAndShips = new HashSet<>();
@@ -124,19 +126,12 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                                 action.appendEffect(new RelocateBetweenLocationsEffect(action, toRelocate, destination));
                                             }
                                             else if(possibleShips.contains(destination)) {
-                                                /// collect capacity stats again, here
+                                                // collect capacity stats again, here
                                                 final int availablePilotCapacity = game.getGameState().getAvailablePilotCapacity(game.getModifiersQuerying(), destination, self);
                                                 final int availablePassengerCapacity = game.getGameState().getAvailablePassengerCapacity(game.getModifiersQuerying(), destination, self);
                                                 final int availableAstromechCapacity = game.getGameState().getAvailablePassengerCapacityForAstromech(game.getModifiersQuerying(), destination, self);
 
-                                                //final int eligiblePilotsAboard = Filters.countActive(game, self, Filters.and(aboardFilter, destination.getBlueprint().getValidPilotFilter(playerId, game, destination, false)));
-
-                                                //with optimal usage of pilot and astromech capacity, check passenger capacity needed to hold the rest
-                                                //final int maxPilotCapacityToFill = Math.min(availablePilotCapacity,eligiblePilotsAboard);
-                                                final int maxAstromechCapacityToFill = Math.min(availableAstromechCapacity,astromechsAboardCount);
-                                                //final int mandatoryPassengersAboard = charactersAboardCount - maxPilotCapacityToFill - maxAstromechCapacityToFill;
-
-                                                /// (don't include captives in calc because they and their escorts will not be relocate?)
+                                                final int maxAstromechCapacityToFill = Math.min(availableAstromechCapacity,astromechsAboardCount + captiveAstromechsAboardCount);
 
                                                 int minAboardThatMustBePilots = charactersAboardCount - availablePassengerCapacity - maxAstromechCapacityToFill;
                                                 if(minAboardThatMustBePilots < 0) minAboardThatMustBePilots = 0;
@@ -157,13 +152,14 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                                             new TargetCardsOnTableEffect(action, playerId, choiceText, minAboardThatMustBePilots, availablePilotCapacity, Filters.in(validCharactersToRelocateAsPilots)) {
                                                                 @Override
                                                                 protected void cardsTargeted(final int targetGroupId, final Collection<PhysicalCard> cardsToRelocate) {
-                                                                    final GameState gameState = game.getGameState();
                                                                     action.addAnimationGroup(cardsToRelocate);
                                                                     action.addAnimationGroup(destination);
                                                                     for (PhysicalCard cardToRelocate : cardsToRelocate) {
-                                                                        //relocate each pilot selected pilot, one at a time
-                                                                        action.appendEffect(
-                                                                                new RelocateFromLocationToStarshipOrVehicle(action, cardToRelocate, destination, true, self));
+                                                                        //relocate each selected pilot, one at a time
+                                                                        if(Filters.canBeRelocated(false).accepts(game,cardToRelocate)) { //technically,
+                                                                            action.appendEffect(
+                                                                                    new RelocateFromLocationToStarshipOrVehicle(action, cardToRelocate, destination, true, self));
+                                                                        }
                                                                     }
                                                                     validCharactersToRelocateAsPassengers.removeAll(cardsToRelocate);
 
@@ -171,8 +167,10 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                                                         action.addAnimationGroup(validCharactersToRelocateAsPassengers);
                                                                         for(PhysicalCard cardToRelocate : validCharactersToRelocateAsPassengers) {
                                                                             //relocate all other characters as passengers, one at a time
-                                                                            action.appendEffect(
-                                                                                    new RelocateFromLocationToStarshipOrVehicle(action, cardToRelocate, destination, false, self));
+                                                                            if(Filters.canBeRelocated(false).accepts(game,cardToRelocate)) {
+                                                                                action.appendEffect(
+                                                                                        new RelocateFromLocationToStarshipOrVehicle(action, cardToRelocate, destination, false, self));
+                                                                            }
                                                                         }
                                                                     }
 
@@ -183,8 +181,10 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                                 else if(!validCharactersToRelocateAsPassengers.isEmpty()) {
                                                     action.addAnimationGroup(validCharactersToRelocateAsPassengers);
                                                     for(PhysicalCard cardToRelocate : validCharactersToRelocateAsPassengers) {
-                                                        action.appendEffect(
-                                                                new RelocateFromLocationToStarshipOrVehicle(action, cardToRelocate, destination, false, self));
+                                                        if(Filters.canBeRelocated(false).accepts(game,cardToRelocate)) {
+                                                            action.appendEffect(
+                                                                    new RelocateFromLocationToStarshipOrVehicle(action, cardToRelocate, destination, false, self));
+                                                        }
                                                     }
                                                 }
                                             }

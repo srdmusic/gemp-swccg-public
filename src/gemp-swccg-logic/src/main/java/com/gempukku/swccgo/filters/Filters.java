@@ -8273,7 +8273,7 @@ public class Filters {
                 // 1) Check if card is at a location (and the destination is a different location) or on Weather Vane or allowed to relocate to same location
                 PhysicalCard currentLocation = modifiersQuerying.getLocationThatCardIsAt(gameState, cardToMove);
                 boolean isOnWeatherVane = cardToMove.getStackedOn() != null && Filters.Weather_Vane.accepts(gameState, modifiersQuerying, cardToMove.getStackedOn());
-                if (!isOnWeatherVane && (currentLocation == null || Filters.sameCardId(physicalCard).accepts(gameState, modifiersQuerying, currentLocation)) && !allowSameLocation)
+                if (!isOnWeatherVane && (currentLocation == null || (Filters.sameCardId(physicalCard).accepts(gameState, modifiersQuerying, currentLocation) && !allowSameLocation)))
                     return false;
 
                 // 2) Check if card can move
@@ -8291,6 +8291,136 @@ public class Filters {
                     if (isOnWeatherVane || !modifiersQuerying.mayNotRelocateFromLocationToLocation(gameState, cardToMove, currentLocation, physicalCard, allowDagobah, allowAhchTo)) {
 
                         // 5) Check that there is enough Force available to use for this move
+                        if (forFree
+                                || isOnWeatherVane
+                                || (modifiersQuerying.getForceAvailableToUse(gameState, cardToMove.getOwner())
+                                >= modifiersQuerying.getRelocateBetweenLocationsCost(gameState, cardToMove, currentLocation, physicalCard, baseCost))) {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+        };
+    }
+
+    /**
+     * Filter that accepts vehicles and ships the specified card can be relocated to.
+     * (has not been thoroughly tested when cardToMove is a vehicle or starship)
+     *
+     * @param cardToMove the card to be relocated
+     * @param allowDagobah true if relocating from/to Dagobah locations is allowed, otherwise false
+     * @param allowEscort true if relocating captive escort is allowed, otherwise false
+     * @param forFree true if the movement is to be free, otherwise false
+     * @param baseCost the base cost (as defined by the card performing the relocation)
+     * @param allowAhchTo true if relocating from/to Ahch-To locations is allowed, otherwise false
+     * @param allowSameLocation true if relocating to same location is allowed (embarking or disembarking?), otherwise, false
+     * @return Filter
+     */
+    public static Filter vehicleOrShipCanBeRelocatedTo(PhysicalCard cardToMove, final boolean allowDagobah, final boolean allowEscort, final boolean forFree, final float baseCost, final boolean allowAhchTo, final boolean allowSameLocation) {
+        final Integer permCardToMoveCardId = cardToMove.getPermanentCardId();
+        return new Filter() {
+            @Override
+            public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+                PhysicalCard cardToMove = gameState.findCardByPermanentId(permCardToMoveCardId);
+
+                if ((cardToMove.getBlueprint().getCardCategory() != CardCategory.CHARACTER
+                        && cardToMove.getBlueprint().getCardCategory() != CardCategory.VEHICLE
+                        && cardToMove.getBlueprint().getCardCategory() != CardCategory.STARSHIP)
+                        || (physicalCard.getBlueprint().getCardCategory() != CardCategory.VEHICLE
+                        && physicalCard.getBlueprint().getCardCategory() != CardCategory.STARSHIP))
+                    return false;
+
+                // 1) Check if destination vehicle or starship is at a location
+                PhysicalCard destinationLocation = modifiersQuerying.getLocationThatCardIsAt(gameState, physicalCard);
+                if(destinationLocation == null)
+                    return false;
+
+                // 2) Check if card is at a location (and the destination is a different location) or on Weather Vane or allowed to relocate to same location
+                PhysicalCard currentLocation = modifiersQuerying.getLocationThatCardIsAt(gameState, cardToMove);
+                boolean isOnWeatherVane = cardToMove.getStackedOn() != null && Filters.Weather_Vane.accepts(gameState, modifiersQuerying, cardToMove.getStackedOn());
+                if (!isOnWeatherVane && (currentLocation == null || (Filters.sameCardId(physicalCard.getAtLocation()).accepts(gameState, modifiersQuerying, currentLocation) && !allowSameLocation)))
+                    return false;
+
+                // 3) Check if card is already aboard
+                if(cardToMove.getAttachedTo() == physicalCard)
+                    return false;
+
+                // 4) Check if card can move
+                if (modifiersQuerying.mayNotMove(gameState, cardToMove)) {
+                    return false;
+                }
+
+                // 5) Check if escorting a captive
+                if (!allowEscort && Filters.escort.accepts(gameState, modifiersQuerying, cardToMove)) {
+                    return false;
+                }
+
+                // 6) Check if capacity available
+                if(cardToMove.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                    int numCaptives = Filters.countAllOnTable(gameState.getGame(),Filters.escortedBy(cardToMove));
+                    int numAstromechs = Filters.countAllOnTable(gameState.getGame(),Filters.and(Filters.astromech_droid,Filters.escortedBy(cardToMove)));
+                    if(Filters.astromech_droid.accepts(gameState.getGame(),cardToMove)) numAstromechs++;
+
+                    int availablePilotOnlyCapacity = gameState.getAvailablePilotCapacity(gameState.getGame().getModifiersQuerying(), physicalCard, null);
+                    if(physicalCard.getBlueprint().getPilotOrPassengerCapacity() > 0) availablePilotOnlyCapacity = 0; //avoid double counting (this capacity is in availablePassengerCapacity)
+                    // assumes any ship with "pilots and passengers" slots (ex: Binder) does not also have dedicated pilot capacity
+                    // this assumption fails with (for example) a Y-wing with Eject! Eject! ... (has 1 dedicated pilot slot and 1 pilot or passenger slot)
+                    // not sure of an elegant way to detect this
+
+                    int availablePassengerCapacity = gameState.getAvailablePassengerCapacity(gameState.getGame().getModifiersQuerying(), physicalCard, null);
+                    int availableAstromechOnlyCapacity = gameState.getAvailablePassengerCapacityForAstromech(gameState.getGame().getModifiersQuerying(), physicalCard, null) - availablePassengerCapacity;
+                    int usableAstromechOnlyCapacity = Math.min(numAstromechs,availableAstromechOnlyCapacity);
+
+                    //if ((validPilot && hasRoomForSelfAndCaptives) || (validPassenger && hasRoomForCaptives)) //do nothing
+                    //else return false
+                    if((physicalCard.getBlueprint().getValidPilotFilter(physicalCard.getOwner(), gameState.getGame(),physicalCard,false).accepts(gameState, modifiersQuerying, cardToMove) &&
+                            (availablePilotOnlyCapacity > 0) && //Filters.hasAvailablePilotCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard) &&
+                            (availablePassengerCapacity + usableAstromechOnlyCapacity >= numCaptives) ) ||
+                        (physicalCard.getBlueprint().getValidPassengerFilter(physicalCard.getOwner(), gameState.getGame(),physicalCard,false).accepts(gameState, modifiersQuerying, cardToMove) &&
+                            //Filters.hasAvailablePassengerCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard) &&
+                            (availablePassengerCapacity + usableAstromechOnlyCapacity >= 1 + numCaptives))) {
+                        //do nothing
+                    }
+                    else { //couldn't fit self (plus any captives)
+                        return false;
+                    }
+                }
+                if(cardToMove.getBlueprint().getCardCategory() == CardCategory.VEHICLE) {
+                    if(!Filters.hasAvailableVehicleCapacity(physicalCard).accepts(gameState, modifiersQuerying, cardToMove))
+                        return false;
+                }
+                if(cardToMove.getBlueprint().getCardCategory() == CardCategory.STARSHIP) {
+                    if (Filters.or(Filters.starfighter, Filters.squadron, Filters.TIE).accepts(gameState, modifiersQuerying, cardToMove)) {
+                        if (!Filters.hasAvailableStarfighterOrTIECapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
+                            return false;
+                        }
+                    }
+                    if (Filters.capital_starship.accepts(gameState, modifiersQuerying, cardToMove)) {
+                        if (!Filters.hasAvailableCapitalStarshipCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard)) {
+                            return false;
+                        }
+                    }
+                }
+
+                // 7) Check destination is valid for card to be relocated to
+                // Check for "Dagobah"
+                if (!allowDagobah && Filters.at(Filters.Dagobah_location).accepts(gameState, modifiersQuerying, physicalCard))
+                    return false;
+
+                if (!allowAhchTo && Filters.at(Filters.AhchTo_location).accepts(gameState, modifiersQuerying, physicalCard))
+                    return false;
+
+                // Check for "Hoth Energy Shield"
+                if (physicalCard.getOwner().equals(gameState.getDarkPlayer())
+                        && modifiersQuerying.isLocationUnderHothEnergyShield(gameState, modifiersQuerying.getLocationThatCardIsAt(gameState, physicalCard)))
+                    return false;
+
+                if (cardToMove.getBlueprint().getValidMoveTargetFilter(cardToMove.getOwner(), gameState.getGame(), cardToMove, false).accepts(gameState, modifiersQuerying, physicalCard)) {
+                    if (isOnWeatherVane || !modifiersQuerying.mayNotRelocateFromLocationToLocation(gameState, cardToMove, currentLocation, physicalCard, allowDagobah, allowAhchTo)) {
+
+                        // 8) Check that there is enough Force available to use for this move
                         if (forFree
                                 || isOnWeatherVane
                                 || (modifiersQuerying.getForceAvailableToUse(gameState, cardToMove.getOwner())
