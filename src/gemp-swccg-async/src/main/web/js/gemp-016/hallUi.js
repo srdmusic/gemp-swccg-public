@@ -10,6 +10,7 @@ var GempSwccgHallUI = Class.extend({
     aiDeckSelect:null,
     aiControlsDiv:null,
     aiTablesEnabled:true,
+    lastAiDeckPlayerSide:null,
     deckOptions:[],
     tableDescInput:null,
     createTableButton:null,
@@ -547,7 +548,22 @@ var GempSwccgHallUI = Class.extend({
         this.aiControlsDiv.show();
 
         var playerSide = this.getSelectedDeckSide();
+        var shouldRebuild = false;
+
+        if (this.aiDeckSelect.children().length === 0) {
+            shouldRebuild = true;
+        }
+        if (this.lastAiDeckPlayerSide !== playerSide) {
+            shouldRebuild = true;
+        }
+        if (!shouldRebuild) {
+            return;
+        }
+
+        var previousSelection = this.aiDeckSelect.val();
+        var previousSample = this.aiDeckSelect.find(":selected").attr("data-sample-deck");
         this.aiDeckSelect.html("");
+        this.lastAiDeckPlayerSide = playerSide;
 
         var added = false;
         for (var i = 0; i < this.deckOptions.length; i++) {
@@ -570,6 +586,20 @@ var GempSwccgHallUI = Class.extend({
         if (!added) {
             var placeholder = $("<option disabled selected>No opposite-side decks found</option>");
             this.aiDeckSelect.append(placeholder);
+        } else if (previousSelection != null) {
+            var restored = false;
+            this.aiDeckSelect.find("option").each(function() {
+                var option = $(this);
+                if (option.attr("value") === previousSelection &&
+                        option.attr("data-sample-deck") === previousSample) {
+                    option.prop("selected", true);
+                    restored = true;
+                    return false;
+                }
+            });
+            if (!restored) {
+                this.aiDeckSelect.val(previousSelection);
+            }
         }
     },
 
