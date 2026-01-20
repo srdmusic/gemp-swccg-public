@@ -62,7 +62,6 @@ public class Card1_245 extends AbstractUsedInterrupt {
 
                 final Filter captivesAboardFilter = Filters.and(Filters.captive, Filters.aboard(cardToBeLost), Filters.canBeTargetedBy(self));
                 final int captivesAboardCount = Filters.countAllOnTable(game,captivesAboardFilter);
-                final int captiveAstromechsAboardCount = Filters.countAllOnTable(game,Filters.and(captivesAboardFilter,Filters.astromech_droid));
 
                 Collection<PhysicalCard> possibleSites = new HashSet<>();
                 for (PhysicalCard card : Filters.filterActive(game, self, aboardFilter)) {
@@ -88,7 +87,7 @@ public class Card1_245 extends AbstractUsedInterrupt {
 
                     //with optimal usage of pilot and astromech capacity...
                     int maxPilotOnlyCapacityToFill = Math.min(availablePilotOnlyCapacity,eligiblePilotsAboard);
-                    int maxAstromechCapacityToFill = Math.min(availableAstromechOnlyCapacity,astromechsAboardCount + captiveAstromechsAboardCount);
+                    int maxAstromechCapacityToFill = Math.min(availableAstromechOnlyCapacity,astromechsAboardCount);
                     //...check passenger capacity needed to hold the rest
                     int mandatoryPassengersAboard = (charactersAboardCount + captivesAboardCount) - maxPilotOnlyCapacityToFill - maxAstromechCapacityToFill;
                     if(availablePassengerCapacity >= mandatoryPassengersAboard) {
@@ -131,7 +130,7 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                                 final int availablePassengerCapacity = game.getGameState().getAvailablePassengerCapacity(game.getModifiersQuerying(), destination, self);
                                                 final int availableAstromechCapacity = game.getGameState().getAvailablePassengerCapacityForAstromech(game.getModifiersQuerying(), destination, self);
 
-                                                final int maxAstromechCapacityToFill = Math.min(availableAstromechCapacity,astromechsAboardCount + captiveAstromechsAboardCount);
+                                                final int maxAstromechCapacityToFill = Math.min(availableAstromechCapacity,astromechsAboardCount);
 
                                                 int minAboardThatMustBePilots = charactersAboardCount - availablePassengerCapacity - maxAstromechCapacityToFill;
                                                 if(minAboardThatMustBePilots < 0) minAboardThatMustBePilots = 0;
@@ -156,7 +155,7 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                                                     action.addAnimationGroup(destination);
                                                                     for (PhysicalCard cardToRelocate : cardsToRelocate) {
                                                                         //relocate each selected pilot, one at a time
-                                                                        if(Filters.canBeRelocated(false).accepts(game,cardToRelocate)) { //technically,
+                                                                        if(Filters.canBeRelocated(false).accepts(game,cardToRelocate)) { //would be better to use a canBeRelocatedToVehicleOrShip, eventually?
                                                                             action.appendEffect(
                                                                                     new RelocateFromLocationToStarshipOrVehicle(action, cardToRelocate, destination, true, self));
                                                                         }
@@ -167,7 +166,7 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                                                         action.addAnimationGroup(validCharactersToRelocateAsPassengers);
                                                                         for(PhysicalCard cardToRelocate : validCharactersToRelocateAsPassengers) {
                                                                             //relocate all other characters as passengers, one at a time
-                                                                            if(Filters.canBeRelocated(false).accepts(game,cardToRelocate)) {
+                                                                            if(Filters.canBeRelocated(false).accepts(game,cardToRelocate)) { //would be better to use a canBeRelocatedToVehicleOrShip, eventually?
                                                                                 action.appendEffect(
                                                                                         new RelocateFromLocationToStarshipOrVehicle(action, cardToRelocate, destination, false, self));
                                                                             }
@@ -190,6 +189,7 @@ public class Card1_245 extends AbstractUsedInterrupt {
                                             }
                                             else {
                                                 //crash message? should be impossible
+                                                game.getGameState().sendMessage("Card1_245 destination was not in sites or ships group. Please report this error.");
                                             }
                                         }
                                     }

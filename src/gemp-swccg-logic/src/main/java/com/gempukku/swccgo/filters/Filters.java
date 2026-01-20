@@ -8360,7 +8360,7 @@ public class Filters {
                 // 6) Check if capacity available
                 if(cardToMove.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
                     int numCaptives = Filters.countAllOnTable(gameState.getGame(),Filters.escortedBy(cardToMove));
-                    int numAstromechs = Filters.countAllOnTable(gameState.getGame(),Filters.and(Filters.astromech_droid,Filters.escortedBy(cardToMove)));
+                    int numAstromechs = 0;
                     if(Filters.astromech_droid.accepts(gameState.getGame(),cardToMove)) numAstromechs++;
 
                     int availablePilotOnlyCapacity = gameState.getAvailablePilotCapacity(gameState.getGame().getModifiersQuerying(), physicalCard, null);
@@ -8376,10 +8376,9 @@ public class Filters {
                     //if ((validPilot && hasRoomForSelfAndCaptives) || (validPassenger && hasRoomForCaptives)) //do nothing
                     //else return false
                     if((physicalCard.getBlueprint().getValidPilotFilter(physicalCard.getOwner(), gameState.getGame(),physicalCard,false).accepts(gameState, modifiersQuerying, cardToMove) &&
-                            (availablePilotOnlyCapacity > 0) && //Filters.hasAvailablePilotCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard) &&
+                            (availablePilotOnlyCapacity > 0) &&
                             (availablePassengerCapacity + usableAstromechOnlyCapacity >= numCaptives) ) ||
                         (physicalCard.getBlueprint().getValidPassengerFilter(physicalCard.getOwner(), gameState.getGame(),physicalCard,false).accepts(gameState, modifiersQuerying, cardToMove) &&
-                            //Filters.hasAvailablePassengerCapacity(cardToMove).accepts(gameState, modifiersQuerying, physicalCard) &&
                             (availablePassengerCapacity + usableAstromechOnlyCapacity >= 1 + numCaptives))) {
                         //do nothing
                     }
