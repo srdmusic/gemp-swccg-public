@@ -114,10 +114,11 @@ public abstract class HeuristicAiBase implements SwccgAiController {
 
         updateLastActionChoiceText(decisionType, result, params);
         handleFailedSearchVerification(decision, params, gameState, playerId);
-        updateSingleDecisionLoop(decision, params, result);
+        String trackingResponse = getTrackingResponse(decision, params, result);
+        updateSingleDecisionLoop(decision, params, result, trackingResponse);
 
         decisionTracker.recordDecision(decisionType, decisionText,
-            String.valueOf(decision.getAwaitingDecisionId()), result != null ? result : "");
+            String.valueOf(decision.getAwaitingDecisionId()), trackingResponse != null ? trackingResponse : "");
         return result;
     }
 
@@ -554,15 +555,24 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         return lower.equals("pass") || lower.equals("cancel") || lower.equals("no");
     }
 
-    private void updateSingleDecisionLoop(AwaitingDecision decision, Map<String, String[]> params, String response) {
+    private void updateSingleDecisionLoop(AwaitingDecision decision, Map<String, String[]> params,
+                                          String response, String trackingResponse) {
         if (decision == null || response == null || currentStateHash.isEmpty()) {
+            return;
+        }
+        String responseKey = trackingResponse != null ? trackingResponse : response;
+        if (responseKey == null || responseKey.isEmpty()) {
+            lastDecisionRepeatCount = 0;
+            lastDecisionKey = "";
+            lastDecisionResponse = "";
+            lastDecisionStateHash = "";
             return;
         }
         String decisionTypeName = decision.getDecisionType() != null ? decision.getDecisionType().name() : "UNKNOWN";
         String decisionText = decision.getText() != null ? decision.getText() : "";
         String key = buildDecisionKey(decisionTypeName, decisionText);
         boolean sameDecision = key.equals(lastDecisionKey)
-                && response.equals(lastDecisionResponse)
+                && responseKey.equals(lastDecisionResponse)
                 && currentStateHash.equals(lastDecisionStateHash);
 
         if (sameDecision) {
@@ -572,7 +582,7 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         }
 
         lastDecisionKey = key;
-        lastDecisionResponse = response;
+        lastDecisionResponse = responseKey;
         lastDecisionStateHash = currentStateHash;
 
         if (lastDecisionRepeatCount >= SINGLE_DECISION_LOOP_THRESHOLD
@@ -585,7 +595,7 @@ public abstract class HeuristicAiBase implements SwccgAiController {
             AwaitingDecisionType decisionType = decision.getDecisionType();
             if (decisionType == AwaitingDecisionType.CARD_SELECTION
                     || decisionType == AwaitingDecisionType.ARBITRARY_CARDS) {
-                String[] parts = response.split(",");
+                String[] parts = responseKey.split(",");
                 for (String part : parts) {
                     String trimmed = part.trim();
                     if (!trimmed.isEmpty()) {
@@ -593,9 +603,77 @@ public abstract class HeuristicAiBase implements SwccgAiController {
                     }
                 }
             } else {
-                blocked.add(response);
+                blocked.add(responseKey);
+                if (!response.equals(responseKey)) {
+                    blocked.add(response);
+                }
             }
         }
+    }
+
+    private String getTrackingResponse(AwaitingDecision decision, Map<String, String[]> params, String response) {
+        if (response == null) {
+            return "";
+        }
+        if (decision == null || decision.getDecisionType() == null || params == null) {
+            return response;
+        }
+        AwaitingDecisionType decisionType = decision.getDecisionType();
+        int index = parseResponseIndex(response);
+        String text = "";
+        switch (decisionType) {
+            case ACTION_CHOICE:
+            case CARD_ACTION_CHOICE:
+                text = lower(getAtIndex(params.get("actionText"), index));
+                if (text.isEmpty()) {
+                    text = lower(getAtIndex(params.get("cardId"), index));
+                }
+                if (text.isEmpty()) {
+                    text = lower(getAtIndex(params.get("blueprintId"), index));
+                }
+                if (isPassLike(text)) {
+                    return "";
+                }
+                return !text.isEmpty() ? text : response;
+            case MULTIPLE_CHOICE:
+                String[] choices = firstNonNull(params, "index", "choice", "results");
+                text = lower(getAtIndex(choices, index));
+                if (isPassLike(text)) {
+                    return "";
+                }
+                return !text.isEmpty() ? text : response;
+            case CARD_SELECTION:
+            case ARBITRARY_CARDS:
+                return normalizeSelectionResponse(response);
+            default:
+                return response;
+        }
+    }
+
+    private int parseResponseIndex(String response) {
+        if (response == null) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(response);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    private String normalizeSelectionResponse(String response) {
+        if (response == null || response.isEmpty()) {
+            return "";
+        }
+        String[] parts = response.split(",");
+        List<String> cleaned = new ArrayList<String>();
+        for (String part : parts) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) {
+                cleaned.add(trimmed);
+            }
+        }
+        return String.join(",", cleaned);
     }
 
     private boolean isPassResponse(AwaitingDecision decision, Map<String, String[]> params, String response) {
