@@ -67,7 +67,7 @@ public class Card3_042 extends AbstractLostInterrupt {
 //                            }
 
                             @Override
-                            protected void cardTargeted(final int targetGroupId1, PhysicalCard adjacentSite) {
+                            protected void cardTargeted(final int siteTargetGroupId, PhysicalCard adjacentSite) {
                                 //action.addAnimationGroup(charactersToMove); //need to build this collection from yourCharactersPresentInBattle?
                                 action.addAnimationGroup(adjacentSite);
                                 // Pay cost(s)
@@ -79,14 +79,9 @@ public class Card3_042 extends AbstractLostInterrupt {
                                             @Override
                                             protected void performActionResults(Action targetingAction) {
                                                 // Perform result(s)
+                                                PhysicalCard finalSite = action.getPrimaryTargetCard(siteTargetGroupId);
                                                 action.appendEffect(
-                                                        new MoveCardsAwayEffect(action, playerId,
-                                                                yourCharactersPresentInBattle,//Filters.and(Filters.your(self), Filters.character, Filters.participatingInBattle, Filters.canBeTargetedBy(self)),
-                                                                adjacentSite,//Filters.and(Filters.adjacentSite(game.getGameState().getBattleLocation()),Filters.not(Filters.occupies(opponent)),Filters.canBeTargetedBy(self)), //change to filter that returns only adjacentSite
-                                                                true,
-                                                                true,
-                                                                false
-                                                        ));
+                                                        new MoveCardsAwayEffect(action, playerId, yourCharactersPresentInBattle, finalSite,true,true, false));
                                                 action.appendEffect(
                                                         new CancelBattleEffect(action));
                                             }
