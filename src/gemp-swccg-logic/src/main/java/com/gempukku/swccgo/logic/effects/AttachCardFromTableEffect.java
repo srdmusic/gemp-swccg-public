@@ -43,7 +43,7 @@ public class AttachCardFromTableEffect extends AbstractSuccessfulEffect {
             game.getActionsEnvironment().emitEffectResult(new AttachedCardFromTableResult(_action.getPerformingPlayer(), _cardToAttach, _attachToCard));
         }
         else {
-            gameState.sendMessage(GameUtils.getCardLink(_cardToAttach) + "could not be placed on " + GameUtils.getCardLink(_attachToCard));
+            gameState.sendMessage(GameUtils.getCardLink(_cardToAttach) + " could not be placed on " + GameUtils.getCardLink(_attachToCard));
         }
     }
 }
