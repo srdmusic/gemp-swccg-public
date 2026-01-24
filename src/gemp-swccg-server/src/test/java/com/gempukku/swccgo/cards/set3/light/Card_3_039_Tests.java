@@ -91,7 +91,7 @@ public class Card_3_039_Tests {
 	}
 
 	@Test
-	public void TTheFirstTransportIsAwayRetrievesXForce() {
+	public void TheFirstTransportIsAwayRetrievesXForce() {
 		var scn = GetScenario();
 
 		var first = scn.GetLSCard("first");
@@ -160,7 +160,7 @@ public class Card_3_039_Tests {
 	}
 
 	@Test
-	public void TTheFirstTransportIsAwayDoesNotRelocateToHothIfPlacedOutOfPlay() {
+	public void TheFirstTransportIsAwayDoesNotRelocateToHothIfPlacedOutOfPlay() {
 		var scn = GetScenario();
 
 		var first = scn.GetLSCard("first");
