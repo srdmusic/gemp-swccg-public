@@ -13,6 +13,7 @@ import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecision;
 import com.gempukku.swccgo.logic.decisions.AwaitingDecisionType;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +30,11 @@ public abstract class HeuristicAiBase implements SwccgAiController {
     private static final int FAILED_SEARCH_PENALTY = 650;
     private static final int MISSING_RESERVE_DECK_TITLE_PENALTY = 900;
     private static final int SINGLE_DECISION_LOOP_THRESHOLD = 2;
+    private static final int RECENT_DECISION_RESPONSE_WINDOW = 6;
+    private static final int REASSIGNMENT_BASE_PENALTY = 300;
+    private static final int REASSIGNMENT_REPEAT_PENALTY = 800;
+    private static final int RECENT_REASSIGNMENT_PENALTY = 700;
+    private static final int RECENT_REASSIGNMENT_TURN_MEMORY = 1;
     private static final String[] RESERVE_DECK_ACTION_VERBS = new String[] {
             "deploy ", "take ", "retrieve ", "download ", "play ", "put ", "search ", "find ", "choose ", "pull "
     };
@@ -47,12 +53,16 @@ public abstract class HeuristicAiBase implements SwccgAiController {
     private String lastActionChoiceCardId = "";
     private String lastActionChoiceBlueprintId = "";
     private final Map<String, Set<String>> localBlockedResponses = new HashMap<String, Set<String>>();
+    private final Map<String, ArrayDeque<String>> recentDecisionResponses = new HashMap<String, ArrayDeque<String>>();
+    private final Map<String, Integer> recentReassignmentTurns = new HashMap<String, Integer>();
+    private final Map<String, Integer> reassignmentCounts = new HashMap<String, Integer>();
     private String currentStateHash = "";
     private String blockStateHash = "";
     private String lastDecisionStateHash = "";
     private String lastDecisionKey = "";
     private String lastDecisionResponse = "";
     private int lastDecisionRepeatCount = 0;
+    private int currentTurnNumber = 0;
 
     @Override
     public String decide(String playerId, AwaitingDecision decision, GameState gameState) {
@@ -116,6 +126,8 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         handleFailedSearchVerification(decision, params, gameState, playerId);
         String trackingResponse = getTrackingResponse(decision, params, result);
         updateSingleDecisionLoop(decision, params, result, trackingResponse);
+        recordRecentDecisionResponse(decision, trackingResponse);
+        recordRecentReassignment(decision, params, result);
 
         decisionTracker.recordDecision(decisionType, decisionText,
             String.valueOf(decision.getAwaitingDecisionId()), trackingResponse != null ? trackingResponse : "");
@@ -162,6 +174,10 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         int defaultIdx = parseInt(params.get("defaultIndex"), 0);
         String decisionText = lower(decision.getText());
         Set<String> blocked = getBlockedResponses(decision);
+        Set<String> recentLoopBlocked = getRecentLoopBlockedResponses(decision);
+        if (!recentLoopBlocked.isEmpty()) {
+            blocked.addAll(recentLoopBlocked);
+        }
         boolean forceDifferent = decisionTracker.shouldForceDifferentChoice();
 
         int passIdx = findPassIndex(results, false);
@@ -230,6 +246,10 @@ public abstract class HeuristicAiBase implements SwccgAiController {
 
         String decisionText = lower(decision.getText());
         Set<String> blocked = getBlockedResponses(decision);
+        Set<String> recentLoopBlocked = getRecentLoopBlockedResponses(decision);
+        if (!recentLoopBlocked.isEmpty()) {
+            blocked.addAll(recentLoopBlocked);
+        }
         boolean forceDifferent = decisionTracker.shouldForceDifferentChoice();
         if (decisionText.contains("optional responses") && shouldSkipOptionalResponses()) {
             // Skip spamming optional responses; let the stack clear
@@ -270,9 +290,44 @@ public abstract class HeuristicAiBase implements SwccgAiController {
             return "";
         }
 
-        Phase phase = gameState != null ? gameState.getCurrentPhase() : null;
         String[] actionCardIds = params.get("cardId");
         String[] actionBlueprintIds = params.get("blueprintId");
+        boolean hasPreferredAction = false;
+        for (int i = 0; i < actions.length; i++) {
+            String actionText = lower(getAtIndex(actionTexts, i));
+            String actionCardId = lower(getAtIndex(actionCardIds, i));
+            String actionBlueprintId = lower(getAtIndex(actionBlueprintIds, i));
+            String blockText = actionText;
+            if (blockText.isEmpty()) {
+                blockText = actionCardId;
+            }
+            if (blockText.isEmpty()) {
+                blockText = actionBlueprintId;
+            }
+            if (isPassLike(blockText)) {
+                continue;
+            }
+            if (isBlockedResponse(blocked, String.valueOf(i), blockText)) {
+                continue;
+            }
+            boolean recentReassignment = isRecentlyReassignedAction(actionText, actionCardId, actionBlueprintId);
+            boolean priorReassignment = hasPriorReassignment(actionText, actionCardId, actionBlueprintId);
+            if (recentReassignment || priorReassignment) {
+                continue;
+            }
+            if (!blockText.isEmpty()) {
+                hasPreferredAction = true;
+                break;
+            }
+        }
+        if (!hasPreferredAction && !DecisionSafety.mustChoose(decision)) {
+            if (passIdx >= 0) {
+                return String.valueOf(passIdx);
+            }
+            return "";
+        }
+
+        Phase phase = gameState != null ? gameState.getCurrentPhase() : null;
         ReserveDeckKnowledge reserveDeck = buildReserveDeckKnowledge(gameState, playerId);
         int bestIdx = -1;
         int bestScore = Integer.MIN_VALUE;
@@ -280,30 +335,52 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         int bestBlockedScore = Integer.MIN_VALUE;
         for (int i = 0; i < actions.length; i++) {
             String actionText = lower(getAtIndex(actionTexts, i));
+            String actionCardId = lower(getAtIndex(actionCardIds, i));
+            String actionBlueprintId = lower(getAtIndex(actionBlueprintIds, i));
+            String blockText = actionText;
+            if (blockText.isEmpty()) {
+                blockText = actionCardId;
+            }
+            if (blockText.isEmpty()) {
+                blockText = actionBlueprintId;
+            }
+            boolean recentReassignment = isRecentlyReassignedAction(actionText, actionCardId, actionBlueprintId);
+            boolean priorReassignment = hasPriorReassignment(actionText, actionCardId, actionBlueprintId);
+            boolean avoidReassignment = recentReassignment || priorReassignment;
             int score = scoreAction(actionText, decisionText, phase)
                     + scoreActionContext(playerId, gameState, decisionText, actionText, phase, params);
             if (i == passIdx) {
                 score -= getPassPenalty();
             }
-            boolean isBlocked = isBlockedResponse(blocked, String.valueOf(i), actionText);
+            boolean isBlocked = isBlockedResponse(blocked, String.valueOf(i), blockText);
             if (isBlocked) {
                 score -= BLOCKED_RESPONSE_PENALTY;
                 if (score > bestBlockedScore) {
                     bestBlockedScore = score;
                     bestBlockedIdx = i;
                 }
-                if (forceDifferent) {
+                if (forceDifferent || hasPreferredAction) {
                     continue;
                 }
+            }
+            if (avoidReassignment && hasPreferredAction) {
+                continue;
+            }
+            if (isReassignmentAction(actionText)) {
+                score -= REASSIGNMENT_BASE_PENALTY;
+            }
+            if (priorReassignment) {
+                score -= REASSIGNMENT_REPEAT_PENALTY;
+            }
+            if (recentReassignment) {
+                score -= RECENT_REASSIGNMENT_PENALTY;
             }
             if (!actionText.isEmpty() && failedSearchActionTexts.contains(actionText)) {
                 score -= FAILED_SEARCH_PENALTY;
             }
-            String actionCardId = lower(getAtIndex(actionCardIds, i));
             if (!actionCardId.isEmpty() && failedSearchCardIds.contains(actionCardId)) {
                 score -= FAILED_SEARCH_PENALTY;
             }
-            String actionBlueprintId = lower(getAtIndex(actionBlueprintIds, i));
             if (!actionBlueprintId.isEmpty()
                     && !"inplay".equals(actionBlueprintId)
                     && !"rules".equals(actionBlueprintId)
@@ -555,6 +632,163 @@ public abstract class HeuristicAiBase implements SwccgAiController {
         return lower.equals("pass") || lower.equals("cancel") || lower.equals("no");
     }
 
+    private Set<String> getRecentLoopBlockedResponses(AwaitingDecision decision) {
+        if (decision == null || decision.getDecisionType() == null || currentStateHash.isEmpty()) {
+            return Collections.emptySet();
+        }
+        AwaitingDecisionType decisionType = decision.getDecisionType();
+        if (decisionType != AwaitingDecisionType.ACTION_CHOICE
+                && decisionType != AwaitingDecisionType.CARD_ACTION_CHOICE) {
+            return Collections.emptySet();
+        }
+        String key = buildDecisionKey(decisionType.name(), decision.getText());
+        ArrayDeque<String> history = recentDecisionResponses.get(key);
+        if (history == null || history.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return new HashSet<String>(history);
+    }
+
+    private void recordRecentDecisionResponse(AwaitingDecision decision, String trackingResponse) {
+        if (decision == null || trackingResponse == null || trackingResponse.isEmpty() || currentStateHash.isEmpty()) {
+            return;
+        }
+        AwaitingDecisionType decisionType = decision.getDecisionType();
+        if (decisionType != AwaitingDecisionType.ACTION_CHOICE
+                && decisionType != AwaitingDecisionType.CARD_ACTION_CHOICE) {
+            return;
+        }
+        String key = buildDecisionKey(decisionType.name(), decision.getText());
+        ArrayDeque<String> history = recentDecisionResponses.get(key);
+        if (history == null) {
+            history = new ArrayDeque<String>();
+            recentDecisionResponses.put(key, history);
+        }
+        history.addLast(trackingResponse);
+        while (history.size() > RECENT_DECISION_RESPONSE_WINDOW) {
+            history.removeFirst();
+        }
+    }
+
+    private void recordRecentReassignment(AwaitingDecision decision, Map<String, String[]> params, String response) {
+        if (decision == null || params == null || response == null || response.isEmpty() || currentTurnNumber <= 0) {
+            return;
+        }
+        AwaitingDecisionType decisionType = decision.getDecisionType();
+        if (decisionType != AwaitingDecisionType.ACTION_CHOICE
+                && decisionType != AwaitingDecisionType.CARD_ACTION_CHOICE) {
+            return;
+        }
+        if (isPassResponse(decision, params, response)) {
+            return;
+        }
+        int index = parseResponseIndex(response);
+        if (index < 0) {
+            return;
+        }
+        String actionText = lower(getAtIndex(params.get("actionText"), index));
+        if (!isReassignmentAction(actionText)) {
+            return;
+        }
+        String actionCardId = lower(getAtIndex(params.get("cardId"), index));
+        String actionBlueprintId = lower(getAtIndex(params.get("blueprintId"), index));
+        String key = buildReassignmentKey(actionCardId, actionBlueprintId, actionText);
+        if (!key.isEmpty()) {
+            recentReassignmentTurns.put(key, currentTurnNumber);
+            incrementReassignmentCount(key);
+        }
+    }
+
+    private boolean isRecentlyReassignedAction(String actionText, String actionCardId, String actionBlueprintId) {
+        if (!isReassignmentAction(actionText) || currentTurnNumber <= 0) {
+            return false;
+        }
+        String key = buildReassignmentKey(actionCardId, actionBlueprintId, actionText);
+        if (key.isEmpty()) {
+            return false;
+        }
+        Integer lastTurn = recentReassignmentTurns.get(key);
+        if (lastTurn == null) {
+            return false;
+        }
+        return currentTurnNumber - lastTurn <= RECENT_REASSIGNMENT_TURN_MEMORY;
+    }
+
+    private boolean hasPriorReassignment(String actionText, String actionCardId, String actionBlueprintId) {
+        if (!isReassignmentAction(actionText)) {
+            return false;
+        }
+        String key = buildReassignmentKey(actionCardId, actionBlueprintId, actionText);
+        if (key.isEmpty()) {
+            return false;
+        }
+        Integer count = reassignmentCounts.get(key);
+        return count != null && count > 0;
+    }
+
+    private void incrementReassignmentCount(String key) {
+        if (key == null || key.isEmpty()) {
+            return;
+        }
+        Integer count = reassignmentCounts.get(key);
+        reassignmentCounts.put(key, count == null ? 1 : count + 1);
+    }
+
+    private boolean isReassignmentAction(String actionText) {
+        if (actionText == null || actionText.isEmpty()) {
+            return false;
+        }
+        return actionText.contains("transfer")
+                || actionText.contains("relocate")
+                || actionText.contains("reassign");
+    }
+
+    private String buildReassignmentKey(String actionCardId, String actionBlueprintId, String actionText) {
+        if (actionCardId != null && !actionCardId.isEmpty()) {
+            return "card:" + actionCardId;
+        }
+        if (actionBlueprintId != null && !actionBlueprintId.isEmpty()
+                && !"inplay".equals(actionBlueprintId)
+                && !"rules".equals(actionBlueprintId)) {
+            return "blueprint:" + actionBlueprintId;
+        }
+        String subject = extractReassignmentSubject(actionText);
+        if (!subject.isEmpty()) {
+            return "text:" + subject;
+        }
+        return "";
+    }
+
+    private String extractReassignmentSubject(String actionText) {
+        if (actionText == null || actionText.isEmpty()) {
+            return "";
+        }
+        String text = actionText.toLowerCase(Locale.ROOT);
+        int start = -1;
+        int startLen = 0;
+        String[] verbs = new String[] {"transfer ", "relocate ", "reassign "};
+        for (String verb : verbs) {
+            int idx = text.indexOf(verb);
+            if (idx >= 0) {
+                start = idx + verb.length();
+                startLen = verb.length();
+                break;
+            }
+        }
+        if (start <= 0 || startLen == 0) {
+            return normalizeText(text);
+        }
+        int cutTo = text.indexOf(" to ", start);
+        int cutFrom = text.indexOf(" from ", start);
+        int cut = cutTo;
+        if (cut < 0 || (cutFrom >= 0 && cutFrom < cut)) {
+            cut = cutFrom;
+        }
+        String subject = cut > start ? text.substring(start, cut) : text.substring(start);
+        subject = subject.trim();
+        return normalizeText(subject);
+    }
+
     private void updateSingleDecisionLoop(AwaitingDecision decision, Map<String, String[]> params,
                                           String response, String trackingResponse) {
         if (decision == null || response == null || currentStateHash.isEmpty()) {
@@ -782,12 +1016,38 @@ public abstract class HeuristicAiBase implements SwccgAiController {
             return;
         }
 
+        int previousTurn = currentTurnNumber;
+        currentTurnNumber = turn;
+        if (turn < previousTurn) {
+            recentReassignmentTurns.clear();
+            reassignmentCounts.clear();
+        }
+        pruneReassignmentHistory(turn);
+
         decisionTracker.updateState(handSize, forcePile, reserveDeck, turn, cardsInPlay);
         currentStateHash = handSize + ":" + forcePile + ":" + reserveDeck + ":" + turn + ":" + cardsInPlay;
         if (!currentStateHash.equals(blockStateHash)) {
             localBlockedResponses.clear();
+            recentDecisionResponses.clear();
             lastDecisionRepeatCount = 0;
             blockStateHash = currentStateHash;
+        }
+    }
+
+    private void pruneReassignmentHistory(int turn) {
+        if (turn <= 0 || recentReassignmentTurns.isEmpty()) {
+            return;
+        }
+        int cutoff = turn - RECENT_REASSIGNMENT_TURN_MEMORY;
+        List<String> expired = new ArrayList<String>();
+        for (Map.Entry<String, Integer> entry : recentReassignmentTurns.entrySet()) {
+            Integer lastTurn = entry.getValue();
+            if (lastTurn == null || lastTurn < cutoff) {
+                expired.add(entry.getKey());
+            }
+        }
+        for (String key : expired) {
+            recentReassignmentTurns.remove(key);
         }
     }
 
