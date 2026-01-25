@@ -63,7 +63,6 @@ public class Card3_042 extends AbstractLostInterrupt {
                             new TargetCardOnTableEffect(action, playerId, "Choose an adjacent site", validSitesAdjacentToBattle) {
                                 @Override
                                 protected void cardTargeted(final int siteTargetGroupId, PhysicalCard adjacentSite) {
-                                    //action.addAnimationGroup(charactersToMove); //need to build this collection from yourCharactersPresentInBattle?
                                     action.addAnimationGroup(adjacentSite);
                                     // Pay cost(s)
                                     action.appendCost(
