@@ -234,8 +234,8 @@ public class VirtualAlternateImageBoosterPack extends BasePackagedCardProduct {
                 possibleCards.add("221_71^"); //Resolute
                 possibleCards.add("221_33^"); //Tatooine: Cantina (DARK) (V)
                 possibleCards.add("203_15^"); //The Shield Is Down! (V)
-                possibleCards.add("206_6^"); //What Chance Do We Have?
                 possibleCards.add("219_26^"); //Vader (V)
+                possibleCards.add("206_6^"); //What Chance Do We Have?
                 break;
         }
 
