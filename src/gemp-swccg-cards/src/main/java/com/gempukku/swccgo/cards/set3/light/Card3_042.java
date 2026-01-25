@@ -43,54 +43,50 @@ public class Card3_042 extends AbstractLostInterrupt {
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
         String opponent = game.getOpponent(playerId);
 
+        final Filter yourCharactersPresentInBattle = Filters.and(Filters.your(self), Filters.character, Filters.presentInBattle, Filters.canBeTargetedBy(self));
+
         // Check condition(s)
         if (TriggerConditions.battleInitiatedAt(game, effectResult, opponent, Filters.and(Filters.exterior_site,
-                Filters.wherePresent(self, Filters.and(Filters.your(self), Filters.character, Filters.presentInBattle, Filters.canBeTargetedBy(self))), Filters.canBeTargetedBy(self)))
-                && GameConditions.canSpotLocation(game, Filters.and(Filters.adjacentSite(game.getGameState().getBattleLocation()),Filters.not(Filters.occupies(opponent)),Filters.canBeTargetedBy(self)))
+                Filters.wherePresent(self, yourCharactersPresentInBattle), Filters.canBeTargetedBy(self)))
                 && GameConditions.canUseForceToPlayInterrupt(game, playerId, self, 1)) {
 
-            float playersPower = GameConditions.getBattlePower(game, playerId);
-            float opponentsPower = GameConditions.getBattlePower(game, opponent);
-            if ((2 * playersPower) < opponentsPower) {
+            final Filter validSitesAdjacentToBattle = Filters.and(Filters.adjacentSite(game.getGameState().getBattleLocation()),Filters.not(Filters.occupies(opponent)),Filters.canBeTargetedBy(self));
 
-                final Filter yourCharactersPresentInBattle = Filters.and(Filters.your(self), Filters.character, Filters.presentInBattle, Filters.canBeTargetedBy(self));
-                //final Filter validAdjacentSites = Filters.and(Filters.adjacentSite(game.getGameState().getBattleLocation()),Filters.not(Filters.occupies(opponent)),Filters.canBeTargetedBy(self));
-
-                final PlayInterruptAction action = new PlayInterruptAction(game, self);
-                action.setText("Fall back to adjacent site");
-                // Choose target(s)
-                action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Choose an adjacent site", Filters.and(Filters.adjacentSite(game.getGameState().getBattleLocation()),Filters.not(Filters.occupies(opponent)),Filters.canBeTargetedBy(self))) {
-//                            @Override
-//                            protected boolean getUseShortcut() {
-//                                return true;
-//                            }
-
-                            @Override
-                            protected void cardTargeted(final int siteTargetGroupId, PhysicalCard adjacentSite) {
-                                //action.addAnimationGroup(charactersToMove); //need to build this collection from yourCharactersPresentInBattle?
-                                action.addAnimationGroup(adjacentSite);
-                                // Pay cost(s)
-                                action.appendCost(
-                                        new UseForceEffect(action, playerId, 1));
-                                // Allow response(s)
-                                action.allowResponses("Move characters away to " + GameUtils.getCardLink(adjacentSite),
-                                        new RespondablePlayCardEffect(action) {
-                                            @Override
-                                            protected void performActionResults(Action targetingAction) {
-                                                // Perform result(s)
-                                                PhysicalCard finalSite = action.getPrimaryTargetCard(siteTargetGroupId);
-                                                action.appendEffect(
-                                                        new MoveCardsAwayEffect(action, playerId, yourCharactersPresentInBattle, finalSite,true,true, false));
-                                                action.appendEffect(
-                                                        new CancelBattleEffect(action));
+            if (GameConditions.canSpotLocation(game, validSitesAdjacentToBattle)) {
+                float playersPower = GameConditions.getBattlePower(game, playerId);
+                float opponentsPower = GameConditions.getBattlePower(game, opponent);
+                if ((2 * playersPower) < opponentsPower) {
+                    final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                    action.setText("Fall back to adjacent site");
+                    // Choose target(s)
+                    action.appendTargeting(
+                            new TargetCardOnTableEffect(action, playerId, "Choose an adjacent site", validSitesAdjacentToBattle) {
+                                @Override
+                                protected void cardTargeted(final int siteTargetGroupId, PhysicalCard adjacentSite) {
+                                    //action.addAnimationGroup(charactersToMove); //need to build this collection from yourCharactersPresentInBattle?
+                                    action.addAnimationGroup(adjacentSite);
+                                    // Pay cost(s)
+                                    action.appendCost(
+                                            new UseForceEffect(action, playerId, 1));
+                                    // Allow response(s)
+                                    action.allowResponses("Move characters away to " + GameUtils.getCardLink(adjacentSite),
+                                            new RespondablePlayCardEffect(action) {
+                                                @Override
+                                                protected void performActionResults(Action targetingAction) {
+                                                    // Perform result(s)
+                                                    PhysicalCard finalSite = action.getPrimaryTargetCard(siteTargetGroupId);
+                                                    action.appendEffect(
+                                                            new MoveCardsAwayEffect(action, playerId, yourCharactersPresentInBattle, finalSite, true, true, false));
+                                                    action.appendEffect(
+                                                            new CancelBattleEffect(action));
+                                                }
                                             }
-                                        }
-                                );
+                                    );
+                                }
                             }
-                        }
-                );
-                return Collections.singletonList(action);
+                    );
+                    return Collections.singletonList(action);
+                }
             }
         }
         return null;
