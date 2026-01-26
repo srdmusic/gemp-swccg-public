@@ -98,17 +98,19 @@ public class Card9_151 extends AbstractObjective {
                         new MayNotPlayModifier(self, Filters.Scanning_Crew), null));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new MayNotTargetToBePlacedOutOfPlayModifier(self, Filters.Luke, Filters.not(Filters.title(Title.We_Need_Luke_Skywalker))), null));
-        final int permCardId = self.getPermanentCardId();
+                        new MayNotTargetToBePlacedOutOfPlayModifier(self, Filters.Luke, Filters.and(Filters.opponents(self),Filters.not(Filters.title(Title.We_Need_Luke_Skywalker))), targetsLukeCondition), null));
+        action.appendEffect(
+                new AddUntilEndOfGameModifierEffect(action,
+                        new MayNotTargetToBePlacedOutOfPlayModifier(self, Filters.Leia, Filters.opponents(self), targetsLeiaInsteadOfLukeCondition), null));
+        action.appendEffect(
+                new AddUntilEndOfGameModifierEffect(action,
+                        new MayNotTargetToBePlacedOutOfPlayModifier(self, Filters.Kanan, Filters.opponents(self), targetsKananInsteadOfLukeCondition), null));
         action.appendEffect(
                 new AddUntilEndOfGameActionProxyEffect(action,
                         new AbstractActionProxy() {
                             @Override
                             public List<TriggerAction> getRequiredAfterTriggers(SwccgGame game, EffectResult effectResult) {
                                 List<TriggerAction> actions = new LinkedList<TriggerAction>();
-                                PhysicalCard self = game.findCardByPermanentId(permCardId);
-                                boolean targetsLeiaInsteadOfLuke = GameConditions.hasGameTextModification(game, self, ModifyGameTextType.BRING_HIM_BEFORE_ME__TARGETS_LEIA_INSTEAD_OF_LUKE);
-                                boolean targetsKananInsteadOfLuke = GameConditions.hasGameTextModification(game, self, ModifyGameTextType.BRING_HIM_BEFORE_ME__TARGETS_KANAN_INSTEAD_OF_LUKE);
 
                                 GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
