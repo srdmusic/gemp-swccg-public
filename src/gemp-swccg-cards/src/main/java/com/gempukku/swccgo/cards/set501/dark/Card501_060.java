@@ -37,6 +37,7 @@ public class Card501_060 extends AbstractNormalEffect {
         setGameText("If Visage Of The Emperor on table, deploy on table. At Mustafar, Devastator is deploy -3 and immune to attrition < 6. Once per turn, may [download] Devastator, Mustafar, or a private platform. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
+        setTestingText("Crush The Rebellion (V)");
         hideFromDeckBuilder();
     }
 

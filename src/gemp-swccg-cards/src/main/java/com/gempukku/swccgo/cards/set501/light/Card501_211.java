@@ -51,6 +51,7 @@ public class Card501_211 extends AbstractObjective {
                 "While this side up, once per turn, may use 1 Force to [download] an Ahch-To location or [Episode VII] battleground.\n" +
                 "May flip this card if Luke on Ahch-To and a battle was just initiated involving a Resistance character.");
         addIcons(Icon.VIRTUAL_SET_11, Icon.EPISODE_VII);
+        setTestingText("The Galaxy May Need A Legend");
         hideFromDeckBuilder();
     }
 

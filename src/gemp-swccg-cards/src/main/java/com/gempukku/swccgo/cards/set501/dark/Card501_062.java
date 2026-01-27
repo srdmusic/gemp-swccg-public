@@ -48,6 +48,7 @@ public class Card501_062 extends AbstractEpicEventDeployable {
                 "The Alliance Will Die...: Flagship Operations does not require any Executor sites on table to deploy." +
                 "...As Will Your Friends: At battleground systems where you have a piloted capital starship and a piloted TIE, your Force drains = 2. At sites related to systems you control, during battle may add one destiny to total power. If just lost, lose 3 Force.");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_15);
+        setTestingText("Emperor's Orders");
         hideFromDeckBuilder();
     }
 

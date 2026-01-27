@@ -41,6 +41,7 @@ public class Card501_202 extends AbstractEpicEventDeployable {
                 "Feel The Force Flowing Through You: [Set 14] Rey and characters with her may not add battle destiny draws. " +
                 "Rey, The Force Will Be With You, Always: [Set 14] Rey ignores your [Episode VII] objective deployment restrictions.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
+        setTestingText("Be With Me");
         hideFromDeckBuilder();
     }
 

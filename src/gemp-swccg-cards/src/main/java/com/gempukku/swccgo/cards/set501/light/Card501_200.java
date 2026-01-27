@@ -45,6 +45,7 @@ public class Card501_200 extends AbstractNormalEffect {
                 "Strike Planning is canceled. [Immune to Alter].");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_9);
         addImmuneToCardTitle(Title.Alter);
+        setTestingText("A Brave Resistance");
         hideFromDeckBuilder();
     }
 

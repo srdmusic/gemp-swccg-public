@@ -49,6 +49,7 @@ public class Card501_067 extends AbstractDarkJediMasterImperial {
         addPersona(Persona.SIDIOUS);
         addIcons(Icon.REFLECTIONS_II, Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_19);
         addKeywords(Keyword.LEADER);
+        setTestingText("The Emperor (V)");
         hideFromDeckBuilder();
     }
 

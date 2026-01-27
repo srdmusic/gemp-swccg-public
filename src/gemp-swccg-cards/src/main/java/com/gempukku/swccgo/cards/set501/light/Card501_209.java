@@ -37,6 +37,7 @@ public class Card501_209 extends AbstractUsedInterrupt {
         setLore("'He's my brother.'");
         setGameText("During a battle involving Rebel Leia, the number of battle destiny draws may not be limited. OR Subtract 1 from a just drawn Force Lightning or 'choke' destiny (unless targeting an Undercover spy). OR If a [Skywalker] Effect on table, [upload] Chief Chirpa's Hut or Guest Quarters.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_25);
+        setTestingText("My Sister Has It");
         hideFromDeckBuilder();
     }
 

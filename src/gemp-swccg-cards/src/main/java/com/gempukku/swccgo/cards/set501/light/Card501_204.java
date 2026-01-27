@@ -40,6 +40,7 @@ public class Card501_204 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.CLOUD_CITY, Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
+        setTestingText("Death Star: Central Core");
         hideFromDeckBuilder();
     }
 

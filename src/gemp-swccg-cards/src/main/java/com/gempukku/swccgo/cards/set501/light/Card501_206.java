@@ -37,6 +37,7 @@ public class Card501_206 extends AbstractUsedOrLostInterrupt {
         setLore("In the end, Watto finally came to understand the agony of defeat.");
         setGameText("USED: If The Hyperdrive Generator's Gone on table, [upload] Skywalker Hut or Jar Jar. LOST: If opponent's card was just stacked on Credits Will Do Fine, for remainder of turn, your Force drains may not be reduced.");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        setTestingText("Eventually You'll Lose");
         hideFromDeckBuilder();
     }
 

@@ -45,6 +45,7 @@ public class Card501_201 extends AbstractUsedOrLostInterrupt {
                 "LOST: Steal Luke's Lightsaber into hand (immune to Weapon Of A Sith). " +
                 "OR If His Destiny on table, cancel game text of a Dark Jedi with Luke for remainder of turn.");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
+        setTestingText("A Jedi's Fury");
         hideFromDeckBuilder();
     }
 

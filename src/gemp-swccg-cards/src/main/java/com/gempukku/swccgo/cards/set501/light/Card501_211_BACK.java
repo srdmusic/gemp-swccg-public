@@ -45,6 +45,7 @@ public class Card501_211_BACK extends AbstractObjective {
         setGameText("Immediately place Luke out of play (ignore [Death Star II] objective restrictions, if any). For remainder of battle, weapons may not be fired. " +
                 "While this side up, opponent's immunity to attrition is limited to < 6. Once during your turn, may peek at the top card of your Force Pile and Reserve Deck; place both cards (in any order) on top of one of those piles. Where you have two unique (•) Resistance characters, your Force drains are +1 and, once per turn during battle, may cancel an opponent's just drawn destiny to cause a redraw.");
         addIcons(Icon.VIRTUAL_SET_11, Icon.EPISODE_VII);
+        setTestingText("We Need Luke Skywalker");
         hideFromDeckBuilder();
     }
 

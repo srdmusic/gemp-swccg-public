@@ -38,6 +38,7 @@ public class Card501_061 extends AbstractSystem {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.PLANET, Icon.EPISODE_VII, Icon.VIRTUAL_SET_11);
+        setTestingText("D'Qar");
         hideFromDeckBuilder();
     }
 

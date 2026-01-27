@@ -43,6 +43,7 @@ public class Card501_065 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.PLANET, Icon.INTERIOR_SITE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_16);
+        setTestingText("Scarif: Citadel Tower");
         hideFromDeckBuilder();
     }
 

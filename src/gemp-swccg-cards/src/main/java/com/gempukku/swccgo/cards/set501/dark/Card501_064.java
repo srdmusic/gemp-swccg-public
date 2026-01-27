@@ -52,6 +52,7 @@ public class Card501_064 extends AbstractObjective {
                 "While this side up, once per turn, may [download] a site (or Imperial trooper) to Scarif. \n" +
                 "Flip this card if Krennic or Tarkin on Scarif and Death Star orbiting Scarif.");
         addIcons(Icon.VIRTUAL_SET_16);
+        setTestingText("On The Verge Of Greatness");
         hideFromDeckBuilder();
     }
 

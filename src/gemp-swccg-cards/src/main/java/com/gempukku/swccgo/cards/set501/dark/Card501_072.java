@@ -45,6 +45,7 @@ public class Card501_072 extends AbstractUsedOrLostInterrupt {
         setGameText("USED: Target a character in battle. Target and opponent's cards that share any characteristic(s) with it are power and forfeit -1. " +
                     "LOST: Once per game, if your [Set 19] objective just 'studied' a character, add one battle destiny (two if a character of same species is in battle).");
         addIcons(Icon.VIRTUAL_SET_19);
+        setTestingText("Understand Art, Understand A Species");
         hideFromDeckBuilder();
     }
 

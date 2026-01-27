@@ -38,6 +38,7 @@ public class Card501_213 extends AbstractNormalEffect {
         setGameText("Deploy on table. Once per game, may stack top card of Lost Pile beneath Credits Will Do Fine. May examine cards stacked beneath Credits Will Do Fine and place any two in owner's Lost Pile to [upload] (or retrieve into hand) a starship. [Immune to Alter]");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_4);
         addImmuneToCardTitle(Title.Alter);
+        setTestingText("We're Leaving (V)");
         hideFromDeckBuilder();
     }
 

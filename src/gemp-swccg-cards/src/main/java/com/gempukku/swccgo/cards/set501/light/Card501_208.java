@@ -36,6 +36,7 @@ public class Card501_208 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcons(Icon.VIRTUAL_SET_15, Icon.EXTERIOR_SITE, Icon.PLANET, Icon.EPISODE_I);
+        setTestingText("Kashyyyk: Kachirho");
         hideFromDeckBuilder();
     }
 

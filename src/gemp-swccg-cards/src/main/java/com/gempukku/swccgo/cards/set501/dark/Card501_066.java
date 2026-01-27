@@ -34,6 +34,7 @@ public class Card501_066 extends AbstractSite {
         addIcon(Icon.DARK_FORCE, 2);
         addIcon(Icon.LIGHT_FORCE, 1);
         addIcons(Icon.VIRTUAL_SET_16, Icon.INTERIOR_SITE, Icon.PLANET, Icon.SCOMP_LINK);
+        setTestingText("Scarif: Command Center");
         hideFromDeckBuilder();
     }
 

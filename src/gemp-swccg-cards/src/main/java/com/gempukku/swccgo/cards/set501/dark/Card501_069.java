@@ -41,6 +41,7 @@ public class Card501_069 extends AbstractObjective {
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Crait and D'Qar systems, Supremacy: Bridge, and Tracked Fleet. For remainder of game, you may not deploy cards with ability except [Episode VII] cards. Your [Episode VII] characters and starships are power +1. Supremacy is deploy -9 to [Episode VII] systems. Once per turn, may [download] an [Episode VII] battleground. While this side up, neither player loses more than 1 Force to Force drains at systems (unless Tracked Fleet there). Flip this card if Tracked Fleet is 'annihilated.'");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
+        setTestingText("The First Order Reigns");
         hideFromDeckBuilder();
     }
 

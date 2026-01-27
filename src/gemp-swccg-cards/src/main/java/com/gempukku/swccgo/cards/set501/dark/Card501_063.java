@@ -48,6 +48,7 @@ public class Card501_063 extends AbstractNormalEffect {
         addIcons(Icon.ENDOR, Icon.VIRTUAL_SET_23);
         addKeywords(Keyword.DEPLOYS_ON_LOCATION);
         addImmuneToCardTitle(Title.Alter);
+        setTestingText("Ominous Rumors (V)");
         hideFromDeckBuilder();
     }
 

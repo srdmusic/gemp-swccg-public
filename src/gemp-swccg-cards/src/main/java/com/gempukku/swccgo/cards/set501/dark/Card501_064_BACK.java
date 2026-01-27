@@ -53,6 +53,7 @@ public class Card501_064_BACK extends AbstractObjective {
                 "Flip this card if you have no leaders on Scarif. \n" +
                 "Place this card out of play if Shield Gate not on table or if Death Star has been 'blown away.'");
         addIcons(Icon.VIRTUAL_SET_16);
+        setTestingText("Taking Control Of The Weapon");
         hideFromDeckBuilder();
     }
 

@@ -42,6 +42,7 @@ public class Card501_074 extends AbstractLostInterrupt {
                 "add one battle destiny; characters may not be 'revived' this turn. " +
                 "OR Cancel Clash Of Sabers targeting your Dark Jedi.");
         addIcon(Icon.VIRTUAL_SET_22);
+        setTestingText("Your Powers Are Weak, Old Man (V)");
         hideFromDeckBuilder();
     }
 

@@ -46,6 +46,7 @@ public class Card501_210 extends AbstractLostOrStartingInterrupt {
         setLore("Advanced preparation in Podracing is usually the key to winning. A little extra work at the start can mean a lot in the long run.");
         setGameText("LOST: Instead of drawing race destiny, use a card from hand. STARTING: Deploy Podrace Arena (with a Podracer, opponent may also deploy a Podracer there), Boonta Eve Podrace and any Effect that deploys for free. Place Interrupt in Reserve Deck.");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I);
+        setTestingText("Podrace Prep (V)");
         hideFromDeckBuilder();
     }
 

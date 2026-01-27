@@ -41,6 +41,7 @@ public class Card501_205 extends AbstractUsedInterrupt {
         setLore("'Deal!'");
         setGameText("If [Tatooine] or [Coruscant] Qui-Gon in battle, he is power +1 for each 'credit.' OR Once per game, if a battle just initiated at Watto's Junkyard involving Qui-Gon, target a character. Lightsabers may not be fired this battle. Unless target is Watto or a Dark Jedi, cancel target's game text.");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
+        setTestingText("Either Way, You Win (V)");
         hideFromDeckBuilder();
     }
 

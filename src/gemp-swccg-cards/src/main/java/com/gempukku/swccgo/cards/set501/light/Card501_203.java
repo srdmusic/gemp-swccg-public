@@ -42,6 +42,7 @@ public class Card501_203 extends AbstractLostInterrupt {
         setGameText("If a [Skywalker] Effect on table, destiny +2 when drawn for destiny. Take a lightsaber into hand from Force Pile; reshuffle. OR Retrieve Anakin's Lightsaber. OR Once per game, during a battle or duel involving a Skywalker and a Dark Jedi, make a just drawn destiny = 2.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
+        setTestingText("Courage Of A Skywalker (V)");
         hideFromDeckBuilder();
     }
 
