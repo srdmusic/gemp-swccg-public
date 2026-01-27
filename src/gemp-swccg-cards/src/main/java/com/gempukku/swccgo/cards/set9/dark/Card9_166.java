@@ -10,6 +10,7 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -57,6 +58,13 @@ public class Card9_166 extends AbstractStarfighter {
 
         // Check condition(s)
         if (TriggerConditions.siteCollapsedBy(game, effectResult, Filters.and(Filters.proton_bombs, Filters.attachedTo(self)))) {
+
+            /// temporary debug code
+            Collection<PhysicalCard> test1Col = Filters.filterAllOnTable(game,Filters.attachedTo(self)); //contains: pilot,proton
+            Collection<PhysicalCard> test2Col = Filters.filterAllOnTable(game,Filters.aboard(self)); //contains: pilot
+            Collection<PhysicalCard> test3Col = Filters.filterAllOnTable(game,Filters.aboardExceptRelatedSites(self)); //contains: pilot
+            /// end of temporary debug code
+
             Collection<PhysicalCard> cardsLost = ((CollapsedSiteResult) effectResult).getCardsLost();
             int numForce = Filters.filter(cardsLost, game, Filters.Rebel).size();
             if (numForce > 0) {

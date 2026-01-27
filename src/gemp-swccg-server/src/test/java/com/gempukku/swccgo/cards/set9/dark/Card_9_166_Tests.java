@@ -129,12 +129,17 @@ public class Card_9_166_Tests {
 
 		scn.MoveCardsToLocation(tat, scimitar1);
 		scn.MoveCardsToLocation(tat_db,rebelTrooper1,rebelTrooper2,talz); //2 rebels, 1 alien
-		scn.AttachCardsTo(scimitar1,proton);
 
-		scn.MoveCardsToDSHand(pilot);
+		scn.MoveCardsToDSHand(pilot,proton);
 
         scn.SkipToPhase(Phase.DEPLOY);
 		scn.DSDeployCard(pilot);
+		scn.DSChooseCard(scimitar1);
+		scn.PassAllResponses();
+
+		scn.LSPass();
+
+		scn.DSDeployCard(proton);
 		scn.DSChooseCard(scimitar1);
 		scn.PassAllResponses();
 
