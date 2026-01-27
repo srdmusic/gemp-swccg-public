@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class Card501_202 extends AbstractEpicEventDeployable {
     public Card501_202() {
-        super(Side.LIGHT, PlayCardZoneOption.ATTACHED, Title.Be_With_Me, Uniqueness.UNIQUE, ExpansionSet.SET_17, Rarity.V);
+        super(Side.LIGHT, PlayCardZoneOption.ATTACHED, Title.Be_With_Me, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on an Ahch-To location. Opponent generates no Force here. " +
                 "A Thousand Generations Live In You Now: Rey is power and forfeit +1 for each Jedi out of play. " +
                 "Bring Back The Balance, Rey, As I Did: While [Set 14] Rey in battle, your battle destiny draws and Rey's weapon destiny draws are +1. " +

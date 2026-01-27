@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class Card501_067 extends AbstractDarkJediMasterImperial {
     public Card501_067() {
-        super(Side.DARK, 1, 5, 4, 7, 9, "The Emperor", Uniqueness.UNIQUE, ExpansionSet.SET_19, Rarity.V);
+        super(Side.DARK, 1, 5, 4, 7, 9, "The Emperor", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Leader. Secretive manipulator of the galaxy. Played Darth Vader and Prince Xizor off against one another in his relentless pursuit of 'young Skywalker'.");
         setGameText("Destiny +1 for each Black Sun agent or Jedi on table (limit +5) when drawn for destiny. " +

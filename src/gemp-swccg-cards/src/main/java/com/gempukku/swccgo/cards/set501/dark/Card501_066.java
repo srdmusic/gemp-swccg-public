@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class Card501_066 extends AbstractSite {
     public Card501_066() {
-        super(Side.DARK, "Scarif: Command Center", Title.Scarif, Uniqueness.UNIQUE, ExpansionSet.SET_16, Rarity.V);
+        super(Side.DARK, "Scarif: Command Center", Title.Scarif, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("If an Imperial leader here, add one destiny to your [Set 9] Epic Event total targeting a Scarif site.");
         setLocationLightSideGameText("If Shield Gate on table, opponent's Force drains here are +1.");
         addIcon(Icon.DARK_FORCE, 2);

@@ -44,7 +44,7 @@ import java.util.List;
  */
 public class Card501_211 extends AbstractObjective {
     public Card501_211() {
-        super(Side.LIGHT, 0, Title.The_Galaxy_May_Need_A_Legend, ExpansionSet.SET_11, Rarity.V);
+        super(Side.LIGHT, 0, Title.The_Galaxy_May_Need_A_Legend, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Ahch-To system and any [Episode VII] battleground.\n" +
                 "For remainder of game, Luke deploys only to Ahch-To. You may not Force drain on Ahch-To. You may not deploy Jedi while a Jedi on table. You may not deploy [Episode I] locations or non-[Episode VII] Luke. Once per game, may take any one card into hand from Force Pile; reshuffle.\n" +

@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class Card501_204 extends AbstractSite {
     public Card501_204() {
-        super(Side.LIGHT, Title.Death_Star_Central_Core, Title.Death_Star, Uniqueness.UNIQUE, ExpansionSet.SET_15, Rarity.V);
+        super(Side.LIGHT, Title.Death_Star_Central_Core, Title.Death_Star, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("If you occupy, opponent must first use 1 Force to move a character from here.");
         setLocationLightSideGameText("If A Power Loss 'shut down' this game, Force drain +1 here and Death Star Tractor Beam lost.");
         addIcon(Icon.LIGHT_FORCE, 2);

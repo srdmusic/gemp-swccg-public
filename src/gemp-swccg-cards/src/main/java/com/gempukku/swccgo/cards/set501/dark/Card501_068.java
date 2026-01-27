@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class Card501_068 extends AbstractUsedOrLostInterrupt {
     public Card501_068() {
-        super(Side.DARK, 3, "The Empire's Back", Uniqueness.UNRESTRICTED, ExpansionSet.SET_23, Rarity.V);
+        super(Side.DARK, 3, "The Empire's Back", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("No star system will dare oppose the Emperor now.");
         setGameText("USED: Deploy Empire's New Order or Overseeing It Personally from Reserve Deck; reshuffle. LOST: Once per game, choose: if two Imperial leaders (or Xizor) in battle, recirculate. OR Place opponent's just-played Interrupt out of play.");
         addIcons(Icon.VIRTUAL_SET_23);

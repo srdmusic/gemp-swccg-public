@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class Card501_074 extends AbstractLostInterrupt {
     public Card501_074() {
-        super(Side.DARK, 5, "Your Powers Are Weak, Old Man", Uniqueness.UNRESTRICTED, ExpansionSet.SET_22, Rarity.V);
+        super(Side.DARK, 5, "Your Powers Are Weak, Old Man", Uniqueness.UNRESTRICTED, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("'You should not have come back.'");
         setGameText("If opponent just lost a battle, they lose 2 Force. " +

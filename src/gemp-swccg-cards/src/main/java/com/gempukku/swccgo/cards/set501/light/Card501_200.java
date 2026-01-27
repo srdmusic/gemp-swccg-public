@@ -37,7 +37,7 @@ import java.util.List;
  */
 public class Card501_200 extends AbstractNormalEffect {
     public Card501_200() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Brave Resistance", Uniqueness.UNIQUE, ExpansionSet.SET_9, Rarity.V);
+        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Brave Resistance", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
         setGameText("If Jakku on table, deploy on table (only at start of game). " +
                 "Twice per game, may [upload] a Resistance leader. Resistance characters with printed forfeit < 6 are forfeit +1. " +

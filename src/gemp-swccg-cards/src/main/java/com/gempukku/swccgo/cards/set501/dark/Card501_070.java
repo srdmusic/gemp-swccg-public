@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class Card501_070 extends AbstractNormalEffect {
     public Card501_070() {
-        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "The First Order Was Just The Beginning", Uniqueness.UNIQUE, ExpansionSet.SET_14, Rarity.V);
+        super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "The First Order Was Just The Beginning", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("Deploy on table. Your [Episode VII] troopers are forfeit +1. If [Episode VII] Emperor on table, once per turn may deploy Kijimi from Reserve Deck (reshuffle) or place any three cards out of play from your Lost Pile to deploy a non-unique [Episode VII] trooper from Lost Pile. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_14);
         addImmuneToCardTitle(Title.Alter);

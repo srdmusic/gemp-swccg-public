@@ -39,7 +39,7 @@ import java.util.List;
  */
 public class Card501_201 extends AbstractUsedOrLostInterrupt {
     public Card501_201() {
-        super(Side.LIGHT, 5, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
+        super(Side.LIGHT, 5, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("It had been decades since Vader had felt the sting of an enemy's blade.");
         setGameText("USED: Peek at the bottom card of your Force Pile; may move it to the top of that pile. " +
                 "LOST: Steal Luke's Lightsaber into hand (immune to Weapon Of A Sith). " +

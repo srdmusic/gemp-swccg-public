@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class Card501_206 extends AbstractUsedOrLostInterrupt {
     public Card501_206() {
-        super(Side.LIGHT, 4, "Eventually You'll Lose", Uniqueness.UNIQUE, ExpansionSet.SET_21, Rarity.V);
+        super(Side.LIGHT, 4, "Eventually You'll Lose", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("In the end, Watto finally came to understand the agony of defeat.");
         setGameText("USED: If The Hyperdrive Generator's Gone on table, [upload] Skywalker Hut or Jar Jar. LOST: If opponent's card was just stacked on Credits Will Do Fine, for remainder of turn, your Force drains may not be reduced.");

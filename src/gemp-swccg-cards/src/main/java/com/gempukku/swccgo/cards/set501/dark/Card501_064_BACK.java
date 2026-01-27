@@ -48,7 +48,7 @@ import java.util.List;
  */
 public class Card501_064_BACK extends AbstractObjective {
     public Card501_064_BACK() {
-        super(Side.DARK, 7, Title.Taking_Control_Of_The_Weapon, ExpansionSet.SET_16, Rarity.V);
+        super(Side.DARK, 7, Title.Taking_Control_Of_The_Weapon, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("While this side up, your Force generation is +2 for each 'blown away' Scarif site. Tarkin Doctrine is immune to Alter and, when it initiates Force loss, may take any one card into hand from Force Pile. Once per turn, if opponent's character just lost from your site, may place it out of play unless opponent loses 1 Force. Tarkin adds 3 to total of Commence Primary Ignition. \n" +
                 "Flip this card if you have no leaders on Scarif. \n" +
                 "Place this card out of play if Shield Gate not on table or if Death Star has been 'blown away.'");

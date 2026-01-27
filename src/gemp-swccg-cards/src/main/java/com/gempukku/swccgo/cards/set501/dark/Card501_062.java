@@ -42,7 +42,7 @@ import java.util.List;
  */
 public class Card501_062 extends AbstractEpicEventDeployable {
     public Card501_062() {
-        super(Side.DARK, PlayCardZoneOption.ATTACHED, Title.Emperors_Orders, Uniqueness.UNIQUE, ExpansionSet.SET_15, Rarity.V);
+        super(Side.DARK, PlayCardZoneOption.ATTACHED, Title.Emperors_Orders, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("If you did not deploy an Objective, deploy on Executor." +
                 "We're Not Going To Attack?: Your squadrons are destiny = 0. You may not deploy squadrons or non-Imperial starships. Unless you occupy a battleground site, Dreaded Imperial Starfleet is suspended." +
                 "The Alliance Will Die...: Flagship Operations does not require any Executor sites on table to deploy." +

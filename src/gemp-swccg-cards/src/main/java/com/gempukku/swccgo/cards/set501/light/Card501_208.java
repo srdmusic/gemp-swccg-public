@@ -30,7 +30,7 @@ import java.util.List;
  */
 public class Card501_208 extends AbstractSite {
     public Card501_208() {
-        super(Side.LIGHT, Title.Kachirho, Title.Kashyyyk, Uniqueness.UNIQUE, ExpansionSet.SET_15, Rarity.V);
+        super(Side.LIGHT, Title.Kachirho, Title.Kashyyyk, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Total ability of 6 or more required for you to draw battle destiny here.");
         setLocationLightSideGameText("Once per turn, if you occupy with a Wookiee, may [download]▼ a Kashyyyk location.");
         addIcon(Icon.DARK_FORCE, 1);

@@ -41,7 +41,7 @@ import java.util.List;
  */
 public class Card501_063 extends AbstractNormalEffect {
     public Card501_063() {
-        super(Side.DARK, 5, PlayCardZoneOption.ATTACHED, Title.Ominous_Rumors, Uniqueness.UNIQUE, ExpansionSet.SET_23, Rarity.V);
+        super(Side.DARK, 5, PlayCardZoneOption.ATTACHED, Title.Ominous_Rumors, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Rumors of a new 'technological terror' filled the galaxy with dread.");
         setGameText("Deploy on Bunker; may immediately take any one [Endor] or [Death Star II] card into hand from Force Pile; reshuffle. While an Imperial leader here, your total Force generation is +1. Perimeter Patrol is suspended. If opponent controls Bunker, place Effect in Used Pile. [Immune to Alter]");

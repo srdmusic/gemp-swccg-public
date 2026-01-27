@@ -45,7 +45,7 @@ import java.util.List;
  */
 public class Card501_064 extends AbstractObjective {
     public Card501_064() {
-        super(Side.DARK, 0, Title.On_The_Verge_Of_Greatness, ExpansionSet.SET_16, Rarity.V);
+        super(Side.DARK, 0, Title.On_The_Verge_Of_Greatness, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, Commence Primary Ignition, and Shield Gate. \n" +
                 "For remainder of game, you may not deploy characters of ability > 4 (except Vader). Vader is power +2 and he (or a Star Destroyer he is piloting) may make a regular move to a battle just initiated. \n" +

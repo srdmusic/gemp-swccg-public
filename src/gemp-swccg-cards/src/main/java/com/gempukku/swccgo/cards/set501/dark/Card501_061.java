@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class Card501_061 extends AbstractSystem {
     public Card501_061() {
-        super(Side.DARK, Title.Dqar, 5, ExpansionSet.SET_11, Rarity.V);
+        super(Side.DARK, Title.Dqar, 5, ExpansionSet.PLAYTESTING, Rarity.V);
         setLocationDarkSideGameText("Once per turn, if you just moved a [First Order] starship to here, may activate 2 Force.");
         setLocationLightSideGameText("Unless your Resistance leader here, Force drain -1 here.");
         addIcon(Icon.DARK_FORCE, 2);

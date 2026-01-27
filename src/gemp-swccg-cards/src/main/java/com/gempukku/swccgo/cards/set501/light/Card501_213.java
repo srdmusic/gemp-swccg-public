@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class Card501_213 extends AbstractNormalEffect {
     public Card501_213() {
-        super(Side.LIGHT, 2, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "We're Leaving", Uniqueness.UNIQUE, ExpansionSet.SET_4, Rarity.V);
+        super(Side.LIGHT, 2, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "We're Leaving", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Qui-Gon realized that sometimes it's best to just leave, before any more damage is done.");
         setGameText("Deploy on table. Once per game, may stack top card of Lost Pile beneath Credits Will Do Fine. May examine cards stacked beneath Credits Will Do Fine and place any two in owner's Lost Pile to [upload] (or retrieve into hand) a starship. [Immune to Alter]");

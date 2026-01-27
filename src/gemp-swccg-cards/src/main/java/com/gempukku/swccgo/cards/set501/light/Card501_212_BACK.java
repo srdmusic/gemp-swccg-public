@@ -51,7 +51,7 @@ import com.gempukku.swccgo.logic.timing.Action;
  */
 public class Card501_212_BACK extends AbstractObjective {
     public Card501_212_BACK() {
-        super(Side.LIGHT, 7, Title.Gather_Allies_And_Train, ExpansionSet.SET_26, Rarity.V);
+        super(Side.LIGHT, 7, Title.Gather_Allies_And_Train, ExpansionSet.PLAYTESTING, Rarity.V);
         setGameText("While this side up, Jedi survivors are deploy -1. if your holocron is about to leave table, place it in Used Pile. Opponent's total battle destiny where they have a character of ability > 4 is -1. During your move phase, may use 2 Force to relocate a Jedi between a Jabiim site and a battleground site as a regular move. At the end of your turn, if Jedi occupy two battleground sites, opponent loses 1 Force. Flip this card if Jedi do not occupy two sites.");
         addIcons(Icon.VIRTUAL_SET_26);
         hideFromDeckBuilder();
