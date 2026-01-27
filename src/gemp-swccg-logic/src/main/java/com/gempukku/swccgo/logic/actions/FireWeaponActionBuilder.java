@@ -3368,7 +3368,7 @@ public class FireWeaponActionBuilder {
 
                                                     @Override
                                                     protected List<OptionalGameTextTriggerAction> getGameTextOptionalTotalDestinyTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
-                                                        final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+                                                        final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(_weaponOrCardWithPermanentWeapon, gameTextSourceCardId);
                                                         action.setText("Subtract 1 from total weapon destiny");
                                                         // Perform result(s)
                                                         action.appendEffect(
