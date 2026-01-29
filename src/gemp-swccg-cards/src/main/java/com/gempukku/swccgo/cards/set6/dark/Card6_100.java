@@ -43,7 +43,7 @@ public class Card6_100 extends AbstractDroid {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        String opponent = game.getOpponent(self.getOwner());
+        final String opponent = game.getOpponent(self.getOwner());
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new MayNotReactToLocationModifier(self, Filters.sameSite(self), opponent));
         modifiers.add(new MayNotReactFromLocationModifier(self, Filters.sameSite(self), opponent));
@@ -52,31 +52,23 @@ public class Card6_100 extends AbstractDroid {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        String opponent = game.getOpponent(playerId);
+        final String opponent = game.getOpponent(playerId);
 
-        GameTextActionId gameTextActionId = GameTextActionId.CZ_4__DOWNLOAD_NON_UNIQUE_ALIEN_AS_REACT;//LOBOT__DOWNLOAD_ALIEN_AS_REACT;
+        GameTextActionId gameTextActionId = GameTextActionId.CZ_4__DOWNLOAD_NON_UNIQUE_ALIEN_AS_REACT;
+        final Filter validSites = Filters.and(Filters.sameOrAdjacentSite(self), Filters.Jabbas_Palace_site, Filters.or(Filters.battleLocation, Filters.forceDrainLocation));
 
         // Check condition(s)
-        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, true)) {
-            final Filter validSites = Filters.and(Filters.sameOrAdjacentSite(self),Filters.Jabbas_Palace_site);
-            Filter battleOrForceDrainLocation;
+        if((TriggerConditions.battleInitiatedAt(game, effectResult, opponent, validSites)
+                || TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent, validSites))
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, true)) {
 
-            if(TriggerConditions.battleInitiatedAt(game, effectResult, opponent, validSites))
-                battleOrForceDrainLocation = Filters.battleLocation;
-            else if(TriggerConditions.forceDrainInitiatedBy(game, effectResult, opponent, validSites))
-                battleOrForceDrainLocation = Filters.forceDrainLocation;
-            else
-                battleOrForceDrainLocation = null;
-
-            if(battleOrForceDrainLocation != null) {
-                final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-                action.setText("Deploy alien as a 'react' from Reserve Deck"); //if room, add: non-unique
-                action.setActionMsg("Deploy an alien as a 'react' from Reserve Deck"); //if room, add: non-unique
-                // Perform result(s)
-                action.appendEffect(
-                        new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Filters.non_unique, Filters.alien), battleOrForceDrainLocation, false, true, true));
-                return Collections.singletonList(action);
-            }
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy non-unique alien from Reserve Deck");
+            action.setActionMsg("Deploy non-unique alien as a 'react' from Reserve Deck");
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardToLocationFromReserveDeckEffect(action, Filters.and(Filters.non_unique, Filters.alien), validSites, false, true, true));
+            return Collections.singletonList(action);
         }
         return null;
     }

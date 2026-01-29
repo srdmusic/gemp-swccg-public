@@ -277,8 +277,8 @@ public class Card_6_100_Tests {
 		assertTrue(scn.LSForceDrainAvailable(jp_ac));
 		scn.LSForceDrainAt(jp_ac);
 		assertTrue(scn.DSDecisionAvailable("Force drain initiated"));
-		assertTrue(scn.DSCardActionAvailable(cz4_2,"react")); //test2
-		scn.DSUseCardAction(cz4_2,"react");
+		assertTrue(scn.DSCardActionAvailable(cz4_2,"Deploy")); //test2
+		scn.DSUseCardAction(cz4_2,"Deploy");
 
 		assertTrue(scn.DSHasCardChoicesAvailable(abyssin,lobel));
 		scn.DSChooseCard(abyssin);
@@ -356,8 +356,8 @@ public class Card_6_100_Tests {
 		assertTrue(scn.LSForceDrainAvailable(jp_cavern));
 		scn.LSForceDrainAt(jp_cavern);
 		assertTrue(scn.DSDecisionAvailable("Force drain initiated"));
-		assertTrue(scn.DSCardActionAvailable(cz4,"react")); //test2
-		scn.DSUseCardAction(cz4,"react");
+		assertTrue(scn.DSCardActionAvailable(cz4,"Deploy")); //test2
+		scn.DSUseCardAction(cz4,"Deploy");
 
 		assertTrue(scn.DSHasCardChoicesAvailable(abyssin,lobel));
 		scn.DSChooseCard(abyssin);
@@ -437,8 +437,8 @@ public class Card_6_100_Tests {
 		assertTrue(scn.LSCanInitiateBattle(jp_ac));
 		scn.LSInitiateBattle(jp_ac);
 		assertTrue(scn.DSDecisionAvailable("Battle just initiated"));
-		assertTrue(scn.DSCardActionAvailable(cz4_2,"react")); //test2
-		scn.DSUseCardAction(cz4_2,"react");
+		assertTrue(scn.DSCardActionAvailable(cz4_2,"Deploy")); //test2
+		scn.DSUseCardAction(cz4_2,"Deploy");
 
 		assertTrue(scn.DSHasCardChoicesAvailable(abyssin,lobel));
 		scn.DSChooseCard(abyssin);
@@ -514,8 +514,8 @@ public class Card_6_100_Tests {
 		assertTrue(scn.LSCanInitiateBattle(jp_cavern));
 		scn.LSInitiateBattle(jp_cavern);
 		assertTrue(scn.DSDecisionAvailable("Battle just initiated"));
-		assertTrue(scn.DSCardActionAvailable(cz4,"react")); //test2
-		scn.DSUseCardAction(cz4,"react");
+		assertTrue(scn.DSCardActionAvailable(cz4,"Deploy")); //test2
+		scn.DSUseCardAction(cz4,"Deploy");
 
 		assertTrue(scn.DSHasCardChoicesAvailable(abyssin,lobel));
 		scn.DSChooseCard(abyssin);
@@ -541,7 +541,7 @@ public class Card_6_100_Tests {
 	}
 
 	/// manually confirmed - need replace test2-4 checks for DSHasCardChoiceAvailable with some other function?
-	/// Currently when deploying from reserve deck, all cards in reserve deck return true (shown in the
+	/// Currently, when deploying from reserve deck, all cards in reserve deck return true (shown in the
 	/// card selection box?) even though only some of them can actually be selected...
 	@Test @Ignore
 	public void CZ_4MayOnlyDeployNonUniqueAlienFromReserve() {
@@ -585,8 +585,8 @@ public class Card_6_100_Tests {
 		assertTrue(scn.LSCanInitiateBattle(jp_ac));
 		scn.LSInitiateBattle(jp_ac);
 		assertTrue(scn.DSDecisionAvailable("Battle just initiated"));
-		assertTrue(scn.DSCardActionAvailable(cz4,"react")); //test2
-		scn.DSUseCardAction(cz4,"react");
+		assertTrue(scn.DSCardActionAvailable(cz4,"Deploy")); //test2
+		scn.DSUseCardAction(cz4,"Deploy");
 
 		///FAILS HERE - reporting 13 (all cards in reserve) instead of 2 (valid choices)
 		assertEquals(2,scn.DSGetCardChoiceCount());
