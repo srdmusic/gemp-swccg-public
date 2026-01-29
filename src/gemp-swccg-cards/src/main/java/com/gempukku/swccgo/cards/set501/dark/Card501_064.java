@@ -39,12 +39,12 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Set: Playtesting
+ * Set: Set 16
  * Type: Objective
  * Title: On The Verge Of Greatness / Taking Control Of The Weapon
  */
-public class Card501_046 extends AbstractObjective {
-    public Card501_046() {
+public class Card501_064 extends AbstractObjective {
+    public Card501_064() {
         super(Side.DARK, 0, Title.On_The_Verge_Of_Greatness, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, Commence Primary Ignition, and Shield Gate. \n" +
@@ -52,7 +52,7 @@ public class Card501_046 extends AbstractObjective {
                 "While this side up, once per turn, may [download] a site (or Imperial trooper) to Scarif. \n" +
                 "Flip this card if Krennic or Tarkin on Scarif and Death Star orbiting Scarif.");
         addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("On The Verge Of Greatness (ERRATA)");
+        setTestingText("On The Verge Of Greatness");
         hideFromDeckBuilder();
     }
 
