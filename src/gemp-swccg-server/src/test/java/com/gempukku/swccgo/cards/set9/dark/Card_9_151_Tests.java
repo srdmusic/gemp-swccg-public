@@ -7,7 +7,6 @@ import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Zone;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -213,12 +212,11 @@ public class Card_9_151_Tests {
 		assertEquals(Zone.OUT_OF_PLAY,luke.getZone());
 	}
 
-	//unclear why LS is allowed to play Noble Sacrifice
-	@Test @Ignore
+	@Test
 	public void BHBMPreventsLSPlacingLukeOOP() {
 		var scn = GetScenario();
 
-		var luke = scn.GetLSCard("leia");
+		var luke = scn.GetLSCard("luke");
 		var leia = scn.GetLSCard("leia");
 		var nobleSac = scn.GetLSCard("nobleSac");
 
