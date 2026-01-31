@@ -85,8 +85,6 @@ public class Card9_151 extends AbstractObjective {
 
     @Override
     protected RequiredGameTextTriggerAction getGameTextAfterDeploymentCompletedAction(String playerId, SwccgGame game, final PhysicalCard self, final int gameTextSourceCardId) {
-        boolean targetsLeiaInsteadOfLuke = GameConditions.hasGameTextModification(game, self, ModifyGameTextType.BRING_HIM_BEFORE_ME__TARGETS_LEIA_INSTEAD_OF_LUKE);
-        boolean targetsKananInsteadOfLuke = GameConditions.hasGameTextModification(game, self, ModifyGameTextType.BRING_HIM_BEFORE_ME__TARGETS_KANAN_INSTEAD_OF_LUKE);
         final Condition targetsLeiaInsteadOfLukeCondition = new GameTextModificationCondition(self, ModifyGameTextType.BRING_HIM_BEFORE_ME__TARGETS_LEIA_INSTEAD_OF_LUKE);
         final Condition targetsKananInsteadOfLukeCondition = new GameTextModificationCondition(self, ModifyGameTextType.BRING_HIM_BEFORE_ME__TARGETS_KANAN_INSTEAD_OF_LUKE);
         final Condition targetsLukeCondition = new AndCondition(new NotCondition(targetsLeiaInsteadOfLukeCondition), new NotCondition(targetsKananInsteadOfLukeCondition));
@@ -105,12 +103,16 @@ public class Card9_151 extends AbstractObjective {
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
                         new MayNotTargetToBePlacedOutOfPlayModifier(self, Filters.Kanan, Filters.opponents(self), targetsKananInsteadOfLukeCondition), null));
+        final int permCardId = self.getPermanentCardId();
         action.appendEffect(
                 new AddUntilEndOfGameActionProxyEffect(action,
                         new AbstractActionProxy() {
                             @Override
                             public List<TriggerAction> getRequiredAfterTriggers(SwccgGame game, EffectResult effectResult) {
                                 List<TriggerAction> actions = new LinkedList<TriggerAction>();
+                                PhysicalCard self = game.findCardByPermanentId(permCardId);
+                                boolean targetsLeiaInsteadOfLuke = GameConditions.hasGameTextModification(game, self, ModifyGameTextType.BRING_HIM_BEFORE_ME__TARGETS_LEIA_INSTEAD_OF_LUKE);
+                                boolean targetsKananInsteadOfLuke = GameConditions.hasGameTextModification(game, self, ModifyGameTextType.BRING_HIM_BEFORE_ME__TARGETS_KANAN_INSTEAD_OF_LUKE);
 
                                 GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
 
