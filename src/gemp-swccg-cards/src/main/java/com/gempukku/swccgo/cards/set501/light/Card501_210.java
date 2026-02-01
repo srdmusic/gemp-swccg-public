@@ -13,10 +13,12 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.actions.SubAction;
 import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.PutCardFromVoidInLostPileEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
+import com.gempukku.swccgo.logic.effects.StackActionEffect;
 import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardsFromReserveDeckEffect;
@@ -74,25 +76,25 @@ public class Card501_210 extends AbstractStartingInterrupt {
                                                     @Override
                                                     protected void validDecisionMade(int index, String result) {
                                                         if (index == 0) {
+
                                                             game.getGameState().sendMessage(opponent + " chooses to play a Defensive Shield from under their Starting Effect");
                                                             PhysicalCard startingEffect = Filters.findFirstActive(game, self, Filters.and(Filters.opponents(playerId), Filters.Starting_Effect));
                                                             if (startingEffect != null) {
                                                                 Filter filter = Filters.and(Filters.Defensive_Shield, Filters.playable(self));
                                                                 if (GameConditions.hasStackedCards(game, startingEffect, filter)) {
 
-                                                                    action.appendEffect(
-                                                                            new PlayStackedDefensiveShieldEffect(action, startingEffect));
-
-                                                                    action.appendEffect(
+                                                                    final SubAction subAction = new SubAction(action, opponent);
+                                                                    subAction.appendTargeting(
                                                                             new ChooseStackedCardEffect(action, opponent, startingEffect, filter) {
                                                                                 @Override
                                                                                 protected void cardSelected(PhysicalCard selectedCard) {
                                                                                     // Perform result(s)
-                                                                                    action.appendEffect(
+                                                                                    subAction.appendEffect(
                                                                                             new PlayStackedDefensiveShieldEffect(action, startingEffect, selectedCard));
                                                                                 }
                                                                             }
                                                                     );
+                                                                    action.appendEffect(new StackActionEffect(action, subAction));
                                                                 }
                                                             }
                                                         } else if (index == 1) {
