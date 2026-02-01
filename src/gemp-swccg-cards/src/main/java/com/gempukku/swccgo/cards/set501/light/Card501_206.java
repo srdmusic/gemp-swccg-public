@@ -35,7 +35,6 @@ public class Card501_206 extends AbstractUsedOrLostInterrupt {
         super(Side.LIGHT, 4, "Eventually You'll Lose", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("In the end, Watto finally came to understand the agony of defeat.");
-        //setGameText("USED: If The Hyperdrive Generator's Gone on table, [upload] Skywalker Hut or Jar Jar. LOST: If opponent's card was just stacked on Credits Will Do Fine, for remainder of turn, your Force drains may not be reduced.");
         setGameText("USED: If The Hyperdrive Generator's Gone or We'll Need A New One on table, [upload] Jar Jar or Skywalker Hut. LOST: If you have won a Podrace, target a character (except Vader) in battle with [Tatooine] Anakin. Target is power = 0.");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("Eventually You'll Lose");
