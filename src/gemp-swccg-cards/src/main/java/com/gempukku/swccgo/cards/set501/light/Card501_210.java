@@ -68,13 +68,34 @@ public class Card501_210 extends AbstractStartingInterrupt {
                                 action.appendEffect(
                                         new DeployCardsFromReserveDeckEffect(action, Filters.and(Filters.Effect, Filters.deploysForFree, Filters.always_immune_to_Alter), 3, 3, true, false));
 
-
                                 action.appendEffect(
                                         new PlayoutDecisionEffect(action, opponent,
-                                                new MultipleChoiceAwaitingDecision("Choose an option", new String[]{"Deploy a Podracer", "Play a Defensive Shield from under Starting Effect", "Do nothing"}) {
+                                                new MultipleChoiceAwaitingDecision("Choose an option", new String[]{"Play a Defensive Shield from under Starting Effect", "Deploy a Podracer (from Reserve Deck)", "Do nothing"}) {
                                                     @Override
                                                     protected void validDecisionMade(int index, String result) {
                                                         if (index == 0) {
+                                                            game.getGameState().sendMessage(opponent + " chooses to play a Defensive Shield from under their Starting Effect");
+                                                            PhysicalCard startingEffect = Filters.findFirstActive(game, self, Filters.and(Filters.opponents(playerId), Filters.Starting_Effect));
+                                                            if (startingEffect != null) {
+                                                                Filter filter = Filters.and(Filters.Defensive_Shield, Filters.playable(self));
+                                                                if (GameConditions.hasStackedCards(game, startingEffect, filter)) {
+
+                                                                    action.appendEffect(
+                                                                            new PlayStackedDefensiveShieldEffect(action, startingEffect));
+
+                                                                    action.appendEffect(
+                                                                            new ChooseStackedCardEffect(action, opponent, startingEffect, filter) {
+                                                                                @Override
+                                                                                protected void cardSelected(PhysicalCard selectedCard) {
+                                                                                    // Perform result(s)
+                                                                                    action.appendEffect(
+                                                                                            new PlayStackedDefensiveShieldEffect(action, startingEffect, selectedCard));
+                                                                                }
+                                                                            }
+                                                                    );
+                                                                }
+                                                            }
+                                                        } else if (index == 1) {
                                                             game.getGameState().sendMessage(opponent + " chooses to deploy a Podracer");
                                                             action.appendEffect(
                                                                     new DeployCardsToTargetFromReserveDeckEffect(action, opponent, Filters.Podracer, 0, 1, Filters.Podrace_Arena, true, false) {
@@ -83,24 +104,6 @@ public class Card501_210 extends AbstractStartingInterrupt {
                                                                             return "Choose Podracer to deploy";
                                                                         }
                                                                     });
-                                                        } else if (index == 1) {
-                                                            game.getGameState().sendMessage(opponent + " chooses to play a Defensive Shield from under their Starting Effect");
-                                                            PhysicalCard startingEffect = Filters.findFirstActive(game, self, Filters.and(Filters.opponents(playerId), Filters.Starting_Effect));
-                                                            if (startingEffect != null) {
-                                                                Filter filter = Filters.and(Filters.Defensive_Shield, Filters.playable(self));
-                                                                if (GameConditions.hasStackedCards(game, startingEffect, filter)) {
-                                                                    action.appendTargeting(
-                                                                            new ChooseStackedCardEffect(action, opponent, startingEffect, filter) {
-                                                                                @Override
-                                                                                protected void cardSelected(PhysicalCard selectedCard) {
-                                                                                    // Perform result(s)
-                                                                                    action.appendEffect(
-                                                                                            new PlayStackedDefensiveShieldEffect(action, self, selectedCard));
-                                                                                }
-                                                                            }
-                                                                    );
-                                                                }
-                                                            }
                                                         } else {
                                                             game.getGameState().sendMessage(opponent + " chooses not to deploy a Podracer or play a Defensive Shield");
                                                         }
