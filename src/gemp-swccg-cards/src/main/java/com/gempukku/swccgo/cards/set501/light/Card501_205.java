@@ -2,13 +2,14 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
+import com.gempukku.swccgo.cards.effects.DrawsNoMoreThanBattleDestinyEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
@@ -19,12 +20,12 @@ import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
 import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfBattleEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.MayNotBeFiredModifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotFireWeaponsModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -39,76 +40,56 @@ public class Card501_205 extends AbstractUsedInterrupt {
         super(Side.LIGHT, 4, "Either Way, You Win", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("'Deal!'");
-        setGameText("If [Tatooine] or [Coruscant] Qui-Gon in battle, he is power +1 for each 'credit.' OR Once per game, if a battle just initiated at Watto's Junkyard involving Qui-Gon, target a character. Lightsabers may not be fired this battle. Unless target is Watto or a Dark Jedi, cancel target's game text.");
+        //setGameText("If [Tatooine] or [Coruscant] Qui-Gon in battle, he is power +1 for each 'credit.' OR Once per game, if a battle just initiated at Watto's Junkyard involving Qui-Gon, target a character. Lightsabers may not be fired this battle. Unless target is Watto or a Dark Jedi, cancel target's game text.");
+        setGameText("If [Tatooine] Anakin in battle, opponent may not draw more than one battle destiny. OR If a battle just initiated at a site, target an opponent's character with your [Tatooine] or [Coruscant] Qui-Gon. Target's game text canceled and neither character may fire weapons.");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("Either Way, You Win (V)");
-        hideFromDeckBuilder();
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
+        List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
-        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.or(Icon.TATOOINE, Icon.CORUSCANT), Filters.QuiGon))) {
+        // Check condition(s)
+        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Icon.TATOOINE, Filters.Anakin))) {
 
-            int creditCount = Filters.countStacked(game, Filters.creditCard);
+            GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
+            final String opponent = game.getOpponent(playerId);
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setText("Make Qui-Gon power +"+creditCount);
-
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Target Qui-Gon", Filters.and(Filters.or(Icon.TATOOINE, Icon.CORUSCANT), Filters.QuiGon)) {
+            action.setText("Limit opponent to one battle destiny");
+            // Allow response(s)
+            action.allowResponses("Prevent opponent from drawing more than one battle destiny",
+                    new RespondablePlayCardEffect(action) {
                         @Override
-                        protected void cardTargeted(final int targetGroupId, final PhysicalCard character) {
-                            action.addAnimationGroup(character);
-                            // Allow response(s)
-
-                            action.allowResponses(
-                                    new RespondablePlayCardEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            PhysicalCard finalQuiGon = action.getPrimaryTargetCard(targetGroupId);
-                                            int finalCreditCount = Filters.countStacked(game, Filters.creditCard);
-
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new AddUntilEndOfBattleModifierEffect(action, new PowerModifier(self, finalQuiGon, finalCreditCount), "Makes " + GameUtils.getCardLink(finalQuiGon) + " power +" + finalCreditCount));
-                                        }
-                                    }
-                            );
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new DrawsNoMoreThanBattleDestinyEffect(action, opponent, 1));
                         }
-
-                        @Override
-                        protected boolean getUseShortcut() {
-                            return true;
-                        }
-                    });
-
-            return Collections.singletonList(action);
+                    }
+            );
+            actions.add(action);
         }
-        return null;
+        return actions;
     }
-
 
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
         GameTextActionId gameTextActionId = GameTextActionId.EITHER_WAY_YOU_WIN_V__TARGET_CHARACTER;
 
+        Filter quigonFilter = Filters.and(Filters.or(Icon.TATOOINE, Icon.CORUSCANT), Filters.QuiGon, Filters.participatingInBattle);
+        Filter targetFilter = Filters.and(Filters.opponents(playerId), Filters.character, Filters.with(self, quigonFilter), Filters.participatingInBattle);
         // Check condition(s)
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.Wattos_Junkyard)
-                && GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.QuiGon)
-                && GameConditions.canTarget(game, self, Filters.and(Filters.character, Filters.participatingInBattle))) {
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.site)
+                && GameConditions.canTarget(game, self, targetFilter)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Target character");
+            action.setText("Target character with Qui-Gon");
 
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerGameEffect(action));
             // Choose target(s)
             action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Target character", Filters.and(Filters.character, Filters.participatingInBattle)) {
+                    new TargetCardOnTableEffect(action, playerId, "Target character with Qui-Gon", targetFilter) {
                         @Override
                         protected void cardTargeted(final int targetGroupId, final PhysicalCard character) {
                             action.addAnimationGroup(character);
@@ -122,18 +103,14 @@ public class Card501_205 extends AbstractUsedInterrupt {
 
                                             // Perform result(s)
                                             action.appendEffect(
-                                                    new AddUntilEndOfBattleModifierEffect(action, new MayNotBeFiredModifier(self, Filters.lightsaber), "Prevents lightsabers from being fired"));
-
-                                            if (!Filters.or(Filters.Watto, Filters.Dark_Jedi).accepts(game, finalTarget)) {
-                                                action.appendEffect(
-                                                        new CancelGameTextUntilEndOfBattleEffect(action, finalTarget));
-                                            }
+                                                    new CancelGameTextUntilEndOfBattleEffect(action, finalTarget));
+                                            action.appendEffect(
+                                                    new AddUntilEndOfBattleModifierEffect(action, new MayNotFireWeaponsModifier(self, Filters.or(quigonFilter, finalTarget)), "Prevents Qui-Gon and " + GameUtils.getCardLink(finalTarget) + " from firing weapons"));
                                         }
                                     }
                             );
                         }
                     });
-
             return Collections.singletonList(action);
         }
         return null;
