@@ -18651,6 +18651,7 @@ public class Filters {
     public static final Filter Kian = Filters.title(Title.Kian);
     public static final Filter Keir_Santage = Filters.title(Title.Keir_Santage);
     public static final Filter Kiffex_site = Filters.and(Filters.partOfSystem(Title.Kiffex), CardSubtype.SITE);
+    public static final Filter Kijimi_location = Filters.partOfSystem(Title.Kijimi);
     public static final Filter Kirdo_III_site = Filters.and(Filters.partOfSystem(Title.Kirdo_III), CardSubtype.SITE);
     public static final Filter Kitonak = Filters.species(Species.KITONAK);
     public static final Filter Klaatu = Filters.title(Title.Klaatu);
