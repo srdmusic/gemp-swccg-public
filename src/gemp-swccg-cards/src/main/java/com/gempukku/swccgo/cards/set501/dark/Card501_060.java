@@ -12,13 +12,15 @@ import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
+import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
+import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
+import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -34,23 +36,24 @@ public class Card501_060 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Crush The Rebellion", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("After dueling his son and seizing control of a city in the clouds, Vader resumed his quest to destroy the Alliance.");
-        setGameText("If Visage Of The Emperor on table, deploy on table. At Mustafar, Devastator is deploy -3 and immune to attrition < 6. Once per turn, may [download] Devastator, Mustafar, or a private platform. [Immune to Alter.]");
+        setGameText("If Shield Gate or Visage Of The Emperor on table, deploy on table. Devastator is deploy -3 and immune to attrition < 6. Once per turn, may [download] Devastator, Mustafar, or a docking bay. Where Vader is present, characters are immune to Clash Of Sabers. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Crush The Rebellion (V)");
-        hideFromDeckBuilder();
     }
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.Visage_Of_The_Emperor);
+        return Filters.canSpot(game, self, Filters.or(Filters.Shield_Gate, Filters.Visage_Of_The_Emperor));
     }
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
+        Filter charactersWhereVaderIsPresent = Filters.and(Filters.character, Filters.at(Filters.wherePresent(self, Filters.Vader)));
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new DeployCostToLocationModifier(self, Filters.Devastator, -3, Filters.Mustafar_system));
-        modifiers.add(new ImmuneToAttritionLessThanModifier(self, Filters.and(Filters.Devastator, Filters.at(Filters.Mustafar_system)), 6));
+        modifiers.add(new DeployCostModifier(self, Filters.Devastator, -3));
+        modifiers.add(new ImmuneToAttritionLessThanModifier(self, Filters.Devastator, 6));
+        modifiers.add(new ImmuneToTitleModifier(self, charactersWhereVaderIsPresent, Title.Clash_Of_Sabers));
         return modifiers;
     }
 
@@ -66,13 +69,13 @@ public class Card501_060 extends AbstractNormalEffect {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
             action.setText("Deploy card from Reserve Deck");
-            action.setActionMsg("Deploy Devastator, Mustafar, or a private platform from Reserve Deck");
+            action.setActionMsg("Deploy Devastator, Mustafar, or a docking bay from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Devastator, Filters.Mustafar_system, Filters.titleContains("Private Platform")), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Devastator, Filters.Mustafar_system, Filters.docking_bay), true));
             actions.add(action);
         }
 
