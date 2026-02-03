@@ -68,7 +68,7 @@ public class Card207_024 extends AbstractAlien {
             final PhysicalCard lostCard = ((LostFromTableResult) effectResult).getCard();
             final int numForceToLose = (GameConditions.hasRep(game, playerId, Filters.pirate) || GameConditions.didNotDeployAnObjective(game, playerId)) ? 2 : 1;
 
-            if(game.getModifiersQuerying().canBeTargetedBy(game.getGameState(), lostCard, self, Collections.singleton(TargetingReason.TO_BE_PLACED_OUT_OF_PLAY))) {
+            if(GameConditions.canTarget(game, self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY, lostCard)) {
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Place " + GameUtils.getFullName(lostCard) + " out of play");
                 action.setActionMsg("Place " + GameUtils.getCardLink(lostCard) + " out of play");

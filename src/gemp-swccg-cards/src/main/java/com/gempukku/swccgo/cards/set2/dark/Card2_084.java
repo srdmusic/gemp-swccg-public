@@ -64,7 +64,7 @@ public class Card2_084 extends AbstractAlien {
                 && GameConditions.canUseForce(game, playerId, 1)) {
             final PhysicalCard lostCard = ((LostFromTableResult) effectResult).getCard();
 
-            if(game.getModifiersQuerying().canBeTargetedBy(game.getGameState(), lostCard, self, Collections.singleton(TargetingReason.TO_BE_PLACED_OUT_OF_PLAY))) {
+            if(GameConditions.canTarget(game, self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY, lostCard)) {
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("'Eat the soup' of " + GameUtils.getFullName(lostCard));
                 action.setActionMsg("'Eat the soup' of " + GameUtils.getCardLink(lostCard));
