@@ -17744,6 +17744,7 @@ public class Filters {
     public static final Filter accountant = Filters.keyword(Keyword.ACCOUNTANT);
     public static final Filter Ackbar = Filters.persona(Persona.ACKBAR);
     public static final Filter AhchTo_Jedi_Village = Filters.title(Title.AhchTo_Jedi_Village);
+    public static final Filter AhchTo_Saddle = Filters.title(Title.Saddle);
     public static final Filter AhchTo_site = Filters.and(Filters.partOfSystem(Title.Ahch_To), CardSubtype.SITE);
     public static final Filter Ahch_To_system = Filters.and(CardSubtype.SYSTEM, Filters.title(Title.Ahch_To));
     public static final Filter Activate_The_Droids = Filters.title(Title.Activate_The_Droids);
