@@ -124,6 +124,7 @@ public enum Persona implements Filterable {
     OS_72_1("OS-72-1"),
     OS_72_2("OS-72-2"),
     OZZEL("Ozzel"),
+    PAIGE("Paige"),
     PANAKA("Panaka"),
     PAPLOO("Paploo"),
     PEROSEI("Perosei"),
