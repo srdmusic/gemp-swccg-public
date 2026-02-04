@@ -6,21 +6,21 @@ import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
+import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
-import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardAboardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.ImmuneToAttritionLessThanModifier;
-import com.gempukku.swccgo.logic.modifiers.ImmuneToTitleModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -36,7 +36,7 @@ public class Card501_060 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Crush The Rebellion", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("After dueling his son and seizing control of a city in the clouds, Vader resumed his quest to destroy the Alliance.");
-        setGameText("If Shield Gate or Visage Of The Emperor on table, deploy on table. Devastator is deploy -3 and immune to attrition < 6. Once per turn, may [download] Devastator, Mustafar, or a docking bay. Where Vader is present, characters are immune to Clash Of Sabers. [Immune to Alter.]");
+        setGameText("If Shield Gate or Visage Of The Emperor on table, deploy on table. Devastator is deploy -3 and immune to attrition < 6. Once per turn, may [download] Devastator, Mustafar, or a docking bay. May [download] Praji aboard Devastator. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Crush The Rebellion (V)");
@@ -49,11 +49,9 @@ public class Card501_060 extends AbstractNormalEffect {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
-        Filter charactersWhereVaderIsPresent = Filters.and(Filters.character, Filters.at(Filters.wherePresent(self, Filters.Vader)));
         List<Modifier> modifiers = new LinkedList<>();
         modifiers.add(new DeployCostModifier(self, Filters.Devastator, -3));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, Filters.Devastator, 6));
-        modifiers.add(new ImmuneToTitleModifier(self, charactersWhereVaderIsPresent, Title.Clash_Of_Sabers));
         return modifiers;
     }
 
@@ -62,7 +60,6 @@ public class Card501_060 extends AbstractNormalEffect {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
         GameTextActionId gameTextActionId = GameTextActionId.CRUSH_THE_REBELLION_V__DOWNLOAD_CARD;
-
         // Check condition(s)
         if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
@@ -76,6 +73,20 @@ public class Card501_060 extends AbstractNormalEffect {
             // Perform result(s)
             action.appendEffect(
                     new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Devastator, Filters.Mustafar_system, Filters.docking_bay), true));
+            actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.CRUSH_THE_REBELLION_V__DOWNLOAD_PRAJI;
+        // Check condition(s)
+        if (GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.PRAJI)
+                && GameConditions.canSpot(game, self, Filters.or(Filters.Devastator, Filters.siteOfStarshipOrVehicle(Filters.Devastator)))) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy Praji aboard Devastator");
+            action.setActionMsg("Deploy Praji aboard Devastator from Reserve Deck");
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardAboardFromReserveDeckEffect(action, Filters.Praji, Filters.Devastator, true));
             actions.add(action);
         }
 
