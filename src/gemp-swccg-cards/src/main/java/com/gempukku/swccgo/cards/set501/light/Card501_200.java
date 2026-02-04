@@ -39,19 +39,15 @@ public class Card501_200 extends AbstractNormalEffect {
     public Card501_200() {
         super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Brave Resistance", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("");
-        setGameText("If Jakku on table, deploy on table (only at start of game). " +
-                "Twice per game, may [upload] a Resistance leader. Resistance characters with printed forfeit < 6 are forfeit +1. " +
-                "Where you have a Resistance Agent, your total power is +3. " +
-                "Strike Planning is canceled. [Immune to Alter].");
+        setGameText("If your [Episode VII] objective on table, deploy on table (only at start of game). Twice per game, may [upload] a Resistance leader. Resistance characters with printed forfeit < 6 are forfeit +1. Where you have a Resistance Agent, your total power is +3. Strike Planning is canceled. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_9);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("A Brave Resistance");
-        hideFromDeckBuilder();
     }
 
     @Override
     protected boolean checkGameTextDeployRequirements(String playerId, SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
-        return Filters.canSpot(game, self, Filters.Jakku_system) && GameConditions.isDuringStartOfGame(game);
+        return Filters.canSpot(game, self, Filters.and(Filters.your(playerId), Icon.EPISODE_VII, Filters.Objective)) && GameConditions.isDuringStartOfGame(game);
     }
 
     @Override
