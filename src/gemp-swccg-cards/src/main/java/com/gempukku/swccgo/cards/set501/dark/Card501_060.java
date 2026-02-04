@@ -65,7 +65,7 @@ public class Card501_060 extends AbstractNormalEffect {
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy card from Reserve Deck");
+            action.setText("Deploy Devastator, Mustafar, or docking bay");
             action.setActionMsg("Deploy Devastator, Mustafar, or a docking bay from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
