@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractLostInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.conditions.OnTableCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -15,17 +14,17 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
-import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.effects.ResetDestinyEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
-import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromForcePileEffect;
-import com.gempukku.swccgo.logic.modifiers.DestinyWhenDrawnForDestinyModifier;
-import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromForcePileEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardToTargetFromLostPileEffect;
 import com.gempukku.swccgo.logic.timing.Action;
+import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -39,65 +38,72 @@ public class Card501_203 extends AbstractLostInterrupt {
     public Card501_203() {
         super(Side.LIGHT, 2, Title.Courage_Of_A_Skywalker, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("Despite being alone, trapped and desperately outmatched, Luke continued his battle with the Dark Lord of the Sith.");
-        setGameText("If a [Skywalker] Effect on table, destiny +2 when drawn for destiny. Take a lightsaber into hand from Force Pile; reshuffle. OR Retrieve Anakin's Lightsaber. OR Once per game, during a battle or duel involving a Skywalker and a Dark Jedi, make a just drawn destiny = 2.");
+        setGameText("Cancel Imperial Barrier. OR Deploy a lightsaber on a Skywalker from Lost Pile (or Force Pile; reshuffle). OR Unless Inner Strength on table, once per game, during a battle, duel or lightsaber combat involving a Skywalker, make a just drawn destiny = 2.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
         setTestingText("Courage Of A Skywalker (V)");
-        hideFromDeckBuilder();
     }
 
     @Override
-    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
+    protected List<PlayInterruptAction> getGameTextOptionalBeforeActions(final String playerId, SwccgGame game, final Effect effect, final PhysicalCard self) {
+        // Check condition(s)
+        if (TriggerConditions.isPlayingCard(game, effect, Filters.Imperial_Barrier)
+                && GameConditions.canCancelCardBeingPlayed(game, self, effect)) {
 
-        Condition skywalkerEffectOnTable = new OnTableCondition(self, Filters.and(Icon.SKYWALKER, Filters.Effect));
-        modifiers.add(new DestinyWhenDrawnForDestinyModifier(self, skywalkerEffectOnTable, 2));
-        return modifiers;
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            // Build action using common utility
+            CancelCardActionBuilder.buildCancelCardBeingPlayedAction(action, effect);
+            return Collections.singletonList(action);
+        }
+        return null;
     }
 
     @Override
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.COURAGE_OF_A_SKYWALKER__UPLOAD_LIGHTSABER_FROM_FORCE_PILE;
+        GameTextActionId gameTextActionId = GameTextActionId.COURAGE_OF_A_SKYWALKER__DEPLOY_LIGHTSABER_FROM_LOST_PILE;
         // Check condition(s)
-        if (GameConditions.canTakeCardsIntoHandFromForcePile(game, playerId, self, gameTextActionId)) {
+        if (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)
+                && GameConditions.canTarget(game, self, Filters.Skywalker))   {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Take a lightsaber into hand from Force Pile");
+            action.setText("Deploy lightsaber from Lost Pile");
+            action.setActionMsg("Deploy a lightsaber on a Skywalker from Lost Pile");
             // Allow response(s)
-            action.allowResponses("Take a lightsaber into hand from Force Pile",
-                    new RespondablePlayCardEffect(action) {
+            action.allowResponses("Deploy a lightsaber on a Skywalker from Lost Pile",
+                new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new TakeCardIntoHandFromForcePileEffect(action, playerId, Filters.lightsaber, true));
+                                    new DeployCardToTargetFromLostPileEffect(action, Filters.lightsaber, Filters.Skywalker, false));
                         }
-                    }
+                }  
             );
-            actions.add(action);
+            actions.add(action);     
         }
 
-        gameTextActionId = GameTextActionId.COURAGE_OF_A_SKYWALKER__RETRIEVE_ANAKINS_LIGHTSABER;
+        gameTextActionId = GameTextActionId.COURAGE_OF_A_SKYWALKER__DEPLOY_LIGHTSABER_FROM_FORCE_PILE;
         // Check condition(s)
-        if (GameConditions.canSearchLostPile(game, playerId, self, gameTextActionId)) {
-            
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Retrieve Anakin's Lightsaber");
+        if (GameConditions.canDeployCardFromForcePile(game, playerId, self, gameTextActionId)
+                && GameConditions.canTarget(game, self, Filters.Skywalker))   {
 
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Deploy lightsaber from Force Pile");
+            action.setActionMsg("Deploy a lightsaber on a Skywalker from Force Pile");
             // Allow response(s)
-            action.allowResponses(
-                    new RespondablePlayCardEffect(action) {
+            action.allowResponses("Deploy a lightsaber on a Skywalker from Force Pile",
+                new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new RetrieveCardEffect(action, playerId, Filters.Anakins_Lightsaber));
+                                    new DeployCardToTargetFromForcePileEffect(action, Filters.lightsaber, Filters.Skywalker, true));
                         }
-                    }
+                }  
             );
-            actions.add(action);
+            actions.add(action);     
         }
 
         return actions;
@@ -108,12 +114,12 @@ public class Card501_203 extends AbstractLostInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
         GameTextActionId gameTextActionId = GameTextActionId.COURAGE_OF_A_SKYWALKER_V__DESTINY_EQUALS_2;
-        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
-                && (TriggerConditions.isDestinyJustDrawn(game, effectResult))
-                && (((GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker))
-                && (GameConditions.isDuringBattleWithParticipant(game, Filters.Dark_Jedi)))
-                || ((GameConditions.isDuringDuelWithParticipant(game, Filters.Skywalker))
-                && (GameConditions.isDuringDuelWithParticipant(game, Filters.Dark_Jedi))))) {
+        if (TriggerConditions.isDestinyJustDrawn(game, effectResult)
+                && GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && !GameConditions.canSpot(game, self, Filters.Inner_Strength)
+                && (GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker)
+                || GameConditions.isDuringDuelWithParticipant(game, Filters.Skywalker)
+                || GameConditions.isDuringLightsaberCombatWithParticipant(game, Filters.Skywalker))) {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setText("Set destiny to 2");
             action.appendUsage(new OncePerGameEffect(action));
