@@ -62,29 +62,7 @@ public class Card501_203 extends AbstractLostInterrupt {
     protected List<PlayInterruptAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self) {
         List<PlayInterruptAction> actions = new LinkedList<>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.COURAGE_OF_A_SKYWALKER__DEPLOY_LIGHTSABER_FROM_LOST_PILE;
-        // Check condition(s)
-        if (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)
-                && GameConditions.canTarget(game, self, Filters.Skywalker))   {
-
-            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Deploy lightsaber from Lost Pile");
-            action.setActionMsg("Deploy a lightsaber on a Skywalker from Lost Pile");
-            // Allow response(s)
-            action.allowResponses("Deploy a lightsaber on a Skywalker from Lost Pile",
-                new RespondablePlayCardEffect(action) {
-                        @Override
-                        protected void performActionResults(Action targetingAction) {
-                            // Perform result(s)
-                            action.appendEffect(
-                                    new DeployCardToTargetFromLostPileEffect(action, Filters.lightsaber, Filters.Skywalker, false));
-                        }
-                }  
-            );
-            actions.add(action);     
-        }
-
-        gameTextActionId = GameTextActionId.COURAGE_OF_A_SKYWALKER__DEPLOY_LIGHTSABER_FROM_FORCE_PILE;
+        GameTextActionId gameTextActionId = GameTextActionId.COURAGE_OF_A_SKYWALKER__DEPLOY_LIGHTSABER_FROM_FORCE_PILE;
         // Check condition(s)
         if (GameConditions.canDeployCardFromForcePile(game, playerId, self, gameTextActionId)
                 && GameConditions.canTarget(game, self, Filters.Skywalker))   {
@@ -100,6 +78,28 @@ public class Card501_203 extends AbstractLostInterrupt {
                             // Perform result(s)
                             action.appendEffect(
                                     new DeployCardToTargetFromForcePileEffect(action, Filters.lightsaber, Filters.Skywalker, true));
+                        }
+                }  
+            );
+            actions.add(action);     
+        }
+
+        gameTextActionId = GameTextActionId.COURAGE_OF_A_SKYWALKER__DEPLOY_LIGHTSABER_FROM_LOST_PILE;
+        // Check condition(s)
+        if (GameConditions.canDeployCardFromLostPile(game, playerId, self, gameTextActionId)
+                && GameConditions.canTarget(game, self, Filters.Skywalker))   {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
+            action.setText("Deploy lightsaber from Lost Pile");
+            action.setActionMsg("Deploy a lightsaber on a Skywalker from Lost Pile");
+            // Allow response(s)
+            action.allowResponses("Deploy a lightsaber on a Skywalker from Lost Pile",
+                new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new DeployCardToTargetFromLostPileEffect(action, Filters.lightsaber, Filters.Skywalker, false));
                         }
                 }  
             );
