@@ -19,6 +19,7 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.DrawDestinyState;
 import com.gempukku.swccgo.game.state.WhileInPlayData;
+import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
@@ -83,6 +84,7 @@ public class Card501_075 extends AbstractAlien {
 
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
                 action.setText("Reset destiny draw");
+                action.setActionMsg("Reset destiny draw to the printed destiny of the top card of opponent's Lost Pile");
                 action.appendUsage(
                         new OncePerBattleEffect(action)
                 );
@@ -90,7 +92,7 @@ public class Card501_075 extends AbstractAlien {
                     @Override
                     protected void refreshedPrintedDestinyValues() {
                         float printedDestinyValue = opponentTopLostCard.getDestinyValueToUse();
-                        action.appendEffect(new SendMessageEffect(action, "Printed destiny value: "+ printedDestinyValue));
+                        action.appendEffect(new SendMessageEffect(action, GameUtils.getCardLink(opponentTopLostCard) + " printed destiny value: "+ printedDestinyValue));
                         action.appendEffect(new ResetDestinyEffect(action, printedDestinyValue));
                     }
                 });
