@@ -54,10 +54,9 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 public class Card501_073 extends AbstractEpicEventDeployable {
     public Card501_073() {
         super(Side.DARK, PlayCardZoneOption.ATTACHED, Title.With_Thunderous_Applause, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("Deploy on Galactic Senate. [V17] Passel Argente's game text and your Political Effects are canceled. Twice per turn, may target your agenda here: Blockade: Cancel a 'react.' Taxation: Place a card with no printed destiny number > 4 from hand in Used Pile to activate 1 Force. Trade: During your draw phase, place a card from hand in Lost Pile, shuffle that pile, and take top card into hand. Wealth: Subtract 1 from attrition against you.");
+        setGameText("Deploy on Galactic Senate. [Set 17] Passel Argente's game text and your Political Effects are canceled. Twice per turn, may target your agenda here: Blockade: Cancel a 'react.' Taxation: Place a character with politics from hand in Used Pile to activate 1 Force. Trade: During your draw phase, place a card from hand in Lost Pile, shuffle that pile, and take top card into hand. Wealth: Subtract 1 from attrition against you.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
         setTestingText("With Thunderous Applause");
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -161,16 +160,15 @@ public class Card501_073 extends AbstractEpicEventDeployable {
 
         GameTextActionId gameTextActionId = GameTextActionId.WITH_THUNDEROUS_APPLAUSE__TARGET_AGENDA;
         Filter taxationAgendaFilter = Filters.and(Filters.your(playerId), Filters.taxation_agenda, Filters.here(self));
-        Filter lowDestinyCard = Filters.and(Filters.not(Filters.printedDestinyGreaterThan(4)), Filters.not(Filters.printedAlternateDestinyGreaterThan(4)));
 
         // Check condition(s)
         if (GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canTarget(game, self, taxationAgendaFilter)
-                && GameConditions.hasInHand(game, playerId, lowDestinyCard)) {
+                && GameConditions.hasInHand(game, playerId, Filters.character_with_politics)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Taxation: Place card in Used Pile");
-            action.setActionMsg("Place a card with no printed destiny number > 4 from hand in Used Pile to activate 1 Force");
+            action.setText("Taxation: Place character in Used Pile");
+            action.setActionMsg("Place a character with politics from hand in Used Pile to activate 1 Force");
 
             // Update usage limit(s)
             action.appendUsage(
@@ -183,7 +181,7 @@ public class Card501_073 extends AbstractEpicEventDeployable {
                             action.addAnimationGroup(cardTargeted);
                             // Pay cost(s)
                             action.appendCost(
-                                    new PutCardFromHandOnUsedPileEffect(action, playerId, lowDestinyCard, false));
+                                    new PutCardFromHandOnUsedPileEffect(action, playerId, Filters.character_with_politics, false));
                             // Allow response(s)
                             action.allowResponses("Target taxation agenda on " + GameUtils.getCardLink(cardTargeted) + " to activate 1 Force",
                                     new UnrespondableEffect(action) {

@@ -9,6 +9,7 @@ import com.gempukku.swccgo.cards.conditions.AtCondition;
 import com.gempukku.swccgo.cards.conditions.DuringBattleCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
@@ -34,6 +35,7 @@ import com.gempukku.swccgo.logic.effects.MoveCardAsRegularMoveEffect;
 import com.gempukku.swccgo.logic.effects.ResetForfeitEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainBonusesMayNotBeCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
@@ -55,7 +57,6 @@ public class Card501_071_BACK extends AbstractObjective {
         addIcons(Icon.CLOUD_CITY, Icon.PREMIUM, Icon.VIRTUAL_SET_26);
         setVirtualSuffix(true);
         setTestingText("Pray I Don't Alter it Any Further (V)");
-        hideFromDeckBuilder();
     }
     
     @Override
@@ -66,7 +67,7 @@ public class Card501_071_BACK extends AbstractObjective {
         Condition vaderAtBespin = new AtCondition(self, Filters.Vader, Filters.Bespin_location);
 
         //For remainder of game
-        modifiers.add(new MayNotDeployModifier(self, Filters.Admirals_Order, playerId));
+        modifiers.add(new MayNotDeployModifier(self, Filters.or(Filters.Admirals_Order, Filters.and(Icon.DEATH_STAR_II, Filters.Executor)), playerId));
 
         //While this side up
         modifiers.add(new MayNotPlayModifier(self, Filters.or(Filters.Sense, Filters.Alter)));
@@ -85,7 +86,6 @@ public class Card501_071_BACK extends AbstractObjective {
 
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
         Filter yourLandoFilter = Filters.and(Filters.your(playerId), Filters.Lando, Filters.movableAsRegularMove(playerId, false, 0, false, Filters.any));
-
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
                 && GameConditions.canSpot(game, self, yourLandoFilter)) {
@@ -106,12 +106,27 @@ public class Card501_071_BACK extends AbstractObjective {
             }
         }
 
+        gameTextActionId = GameTextActionId.THIS_DEAL_IS_GETTING_WORSE_ALL_THE_TIME_V__UPLOAD_CARD;
+        // Check condition(s)
+        if (GameConditions.isOnceDuringYourTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take card into hand from Reserve Deck");
+            action.setActionMsg("Take Dark Deal, Vader's Bounty, or [Special Edition] Bespin into hand from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.or(Filters.Dark_Deal, Filters.Vaders_Bounty, Filters.and(Icon.SPECIAL_EDITION, Filters.Bespin_system)), true));
+            actions.add(action);
+        }
+
         gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
         Filter yourLandoInBattleFilter = Filters.and(Filters.your(playerId), Filters.Lando, Filters.participatingInBattle);
         Filter targetFilter = Filters.and(Filters.character, Filters.presentWith(self, yourLandoInBattleFilter), Filters.participatingInBattle);
-
         Condition endOfBattlCondition = new NotCondition(new DuringBattleCondition());
-
         // Check condition(s)
         if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canSpot(game, self, yourLandoInBattleFilter)
