@@ -37,7 +37,7 @@ import java.util.List;
 public class Card2_016 extends AbstractDroid {
     public Card2_016() {
         super(Side.LIGHT, 4, 2, 1, 3, "RA-7 (Aray-Seven)", Uniqueness.UNRESTRICTED, ExpansionSet.A_NEW_HOPE, Rarity.C2);
-        setLore("The RA line of servant droids has fifth-degree primary programming. Low intelligence with capabilities for mental labor only. Common among nobles and high-ranking officials.");
+        setLore("The RA line of servant droids has fifth-degree primary programming: low intelligence with capabilities for mental labor only. Common among nobles and high-ranking officials.");
         setGameText("May transfer character weapons (for free) to or from your other characters present. May carry up to four such weapons at one time.");
         addModelType(ModelType.SERVANT);
         addIcons(Icon.A_NEW_HOPE);
@@ -65,7 +65,7 @@ public class Card2_016 extends AbstractDroid {
 
             if (!transferableWeaponsHeldCol.isEmpty()) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
-                action.setText("Transfer weapon (for free) from " + GameUtils.getCardLink(self));
+                action.setText("Transfer weapon (for free) from RA-7");
                 // Choose target(s)
                 action.appendTargeting(
                         new ChooseCardOnTableEffect(action, playerId, "Choose weapon to transfer (for free)", transferableWeaponsHeldCol) {
@@ -108,7 +108,7 @@ public class Card2_016 extends AbstractDroid {
 
             if (!transferableWeaponsCol.isEmpty() && numberOfWeaponsHeld < 4) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
-                action.setText("Transfer weapon (for free) to " + GameUtils.getCardLink(self));
+                action.setText("Transfer weapon (for free) to RA-7");
                 // Choose target(s)
                 action.appendTargeting(
                         new ChooseCardOnTableEffect(action, playerId, "Choose weapon to transfer (for free)", transferableWeaponsCol) {
@@ -121,7 +121,7 @@ public class Card2_016 extends AbstractDroid {
                                             protected void performActionResults(Action targetingAction) {
                                                 // Perform result(s)
                                                 action.appendEffect(
-                                                        new TransferDeviceOrWeaponEffect(action, weapon, self, true, true)); ///fails here - need to expand so we can ignore restrictions?
+                                                        new TransferDeviceOrWeaponEffect(action, weapon, self, true, true));
                                             }
                                         }
                                 );

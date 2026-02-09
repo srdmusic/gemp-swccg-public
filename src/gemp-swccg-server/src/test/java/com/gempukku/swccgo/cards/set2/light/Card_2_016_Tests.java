@@ -11,6 +11,7 @@ import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.framework.StartingSetup;
 import com.gempukku.swccgo.framework.VirtualTableScenario;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -132,9 +133,6 @@ public class Card_2_016_Tests {
         assertTrue(scn.LSHasCardChoiceAvailable(blaster1));
         scn.LSChooseCard(blaster1);
 
-		assertTrue(scn.LSHasCardChoiceAvailable(ra7));
-		scn.LSChooseCard(ra7);
-
         scn.DSPass(); //TRANSFERRED_DEVICE_OR_WEAPON - Optional responses
         scn.LSPass();
 
@@ -166,7 +164,6 @@ public class Card_2_016_Tests {
 		scn.SkipToLSTurn(Phase.DEPLOY);
 		scn.LSUseCardAction(ra7,"Transfer weapon (for free) to");
 		scn.LSChooseCard(blaster1);
-		scn.LSChooseCard(ra7);
 
 		scn.DSPass(); //TRANSFERRED_DEVICE_OR_WEAPON - Optional responses
 		scn.LSPass();
@@ -179,7 +176,6 @@ public class Card_2_016_Tests {
 		assertTrue(scn.LSCardActionAvailable(ra7,"Transfer weapon (for free) to"));
 		scn.LSUseCardAction(ra7,"Transfer weapon (for free) to");
 		scn.LSChooseCard(blaster2);
-		scn.LSChooseCard(ra7);
 
 		scn.DSPass(); //TRANSFERRED_DEVICE_OR_WEAPON - Optional responses
 		scn.LSPass();
@@ -214,7 +210,6 @@ public class Card_2_016_Tests {
 		scn.SkipToLSTurn(Phase.DEPLOY);
 		scn.LSUseCardAction(ra7,"Transfer weapon (for free) to");
 		scn.LSChooseCard(blaster1);
-		scn.LSChooseCard(ra7);
 
 		scn.DSPass(); //TRANSFERRED_DEVICE_OR_WEAPON - Optional responses
 		scn.LSPass();
@@ -225,6 +220,76 @@ public class Card_2_016_Tests {
 		scn.DSPass();
 
 		assertFalse(scn.LSCardActionAvailable(ra7,"Transfer weapon (for free) to"));
+	}
+
+	//this test can't really be performed to validate because there are no weapons that can deploy on RA-7
+	//(so there are also no weapons that can be transferred to RA-7 with the 'normal' top level action)
+	//manually confirmed NOT working correctly by temporarily allowing Blaster deploy filter to include droids
+	//transfer checking does not seem to account for MayNotDeployToTargetModifier
+	@Test @Ignore
+	public void RA7CannotBeTargetedForWeaponTransferIfHolding4Weapons() {
+		//test1: (regular) transfer weapon action cannot target ra7 if already holding 4 weapons
+		var scn = GetScenario();
+
+		var ra7 = scn.GetLSCard("ra7");
+		var blaster1 = scn.GetLSCard("blaster1"); ///replace with a hypothetical weapon that can be deployed on RA-7
+		var blaster2 = scn.GetLSCard("blaster2");
+		var blaster3 = scn.GetLSCard("blaster3");
+		var jawaIonGun = scn.GetLSCard("jawaIonGun");
+		var lightsaber = scn.GetLSCard("lightsaber");
+		var rebelTrooper1 = scn.GetLSFiller(1);
+		var rebelTrooper2 = scn.GetLSFiller(2);
+
+		scn.StartGame();
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.MoveCardsToLocation(site,ra7,rebelTrooper1,rebelTrooper2);
+		scn.AttachCardsTo(rebelTrooper1,blaster1);
+		scn.AttachCardsTo(ra7,blaster2,blaster3,jawaIonGun,lightsaber);
+
+		scn.SkipToLSTurn(Phase.DEPLOY);
+
+		assertTrue(scn.GetLSForcePileCount() >= 1); ///replace with hypothetical weapon's deploy cost
+		assertTrue(scn.LSCardActionAvailable(blaster1,"Transfer")); //this is the 'normal' transfer action
+		scn.LSUseCardAction(blaster1,"Transfer");
+		assertFalse(scn.LSHasCardChoiceAvailable(rebelTrooper1));
+		assertTrue(scn.LSHasCardChoiceAvailable(rebelTrooper2));
+		assertFalse(scn.LSHasCardChoiceAvailable(ra7));
+	}
+
+	//this test can't really be performed to validate because there are no weapons that can deploy on RA-7
+	//manually confirmed working by temporarily allowing Blaster deploy filter to include droids
+	@Test @Ignore
+	public void RA7CannotBeTargetedForWeaponDeployIfHolding4Weapons() {
+		//test1: deploy weapon action cannot target ra7 if already holding 4 weapons
+		var scn = GetScenario();
+
+		var ra7 = scn.GetLSCard("ra7");
+		var blaster1 = scn.GetLSCard("blaster1"); ///replace with a hypothetical weapon that can be deployed on RA-7
+		var blaster2 = scn.GetLSCard("blaster2");
+		var blaster3 = scn.GetLSCard("blaster3");
+		var jawaIonGun = scn.GetLSCard("jawaIonGun");
+		var lightsaber = scn.GetLSCard("lightsaber");
+		var rebelTrooper1 = scn.GetLSFiller(1);
+		var rebelTrooper2 = scn.GetLSFiller(2);
+
+		scn.StartGame();
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.MoveCardsToLocation(site,ra7,rebelTrooper1,rebelTrooper2);
+		scn.AttachCardsTo(ra7,blaster2,blaster3,jawaIonGun,lightsaber);
+		scn.MoveCardsToLSHand(blaster1);
+
+		scn.SkipToLSTurn(Phase.DEPLOY);
+
+		assertTrue(scn.GetLSForcePileCount() >= 1); ///replace with hypothetical weapon's deploy cost
+		assertTrue(scn.LSDeployAvailable(blaster1));
+		scn.LSDeployCard(blaster1);
+		assertTrue(scn.LSHasCardChoiceAvailable(rebelTrooper1));
+		assertTrue(scn.LSHasCardChoiceAvailable(rebelTrooper2));
+		assertFalse(scn.LSHasCardChoiceAvailable(ra7));
 	}
 
 	@Test
@@ -355,4 +420,7 @@ public class Card_2_016_Tests {
 		assertTrue(scn.AwaitingDSDeployPhaseActions());
 		assertTrue(scn.IsAttachedTo(rebelTrooper1,blaster1)); //test2
 	}
+
+	//add tests to confirm present with requirement
+
 }

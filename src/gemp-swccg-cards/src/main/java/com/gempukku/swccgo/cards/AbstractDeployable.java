@@ -243,7 +243,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
                     Map<InactiveReason, Boolean> spotOverrides = self.getBlueprint().getDeployTargetSpotOverride(playCardOption.getId());
 
                     Filter completeTargetFilter;
-                    if(ignoreDeployRestriction) completeTargetFilter = Filters.any; ///need to improve this?  Maybe pass ignoreDeployRestriction into getValidTransferDeviceOrWeaponTargetFilter, down the chain?
+                    if(ignoreDeployRestriction) completeTargetFilter = transferTargetFilter; ///could improve this?  Maybe pass ignoreDeployRestriction into getValidTransferDeviceOrWeaponTargetFilter, down the chain so things like cost checking work properly?
                     else completeTargetFilter = getValidTransferDeviceOrWeaponTargetFilter(playerId, game, self, playCardOption, forFree, transferTargetFilter);
 
                     // Check that a valid target to transfer to as attached can be found
