@@ -33,6 +33,7 @@ public class Card_2_016_Tests {
                     put("blaster2", "1_152");
                     put("blaster3", "1_152");
                     put("lightsaber", "1_155");
+					put("landspeeder","1_151"); //SoroSuub V-35 Landspeeder, enclosed vehicle
 				}},
 				new HashMap<>()
 				{{
@@ -421,6 +422,111 @@ public class Card_2_016_Tests {
 		assertTrue(scn.IsAttachedTo(rebelTrooper1,blaster1)); //test2
 	}
 
-	//add tests to confirm present with requirement
+	@Test
+	public void RA7TransferToRequiresPresentWith() {
+		//test1: transfer weapon to RA7 cannot target weapon carried by your character that is not present (in enclosed vehicle)
+		//test2: transfer weapon to RA7 can target weapon carried by your character that is present (both in enclosed vehicle)
+		var scn = GetScenario();
+
+		var ra7 = scn.GetLSCard("ra7");
+		var blaster1 = scn.GetLSCard("blaster1");
+		var rebelTrooper1 = scn.GetLSFiller(1);
+		var landspeeder = scn.GetLSCard("landspeeder");
+
+		scn.StartGame();
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.MoveCardsToLocation(site,ra7,rebelTrooper1,landspeeder);
+		scn.AttachCardsTo(rebelTrooper1,blaster1);
+
+		scn.SkipToLSTurn(Phase.MOVE);
+		scn.LSUseCardAction(rebelTrooper1,"Embark");
+		scn.LSChooseOption("Passenger");
+
+		scn.PassAllResponses();
+		assertTrue(scn.AwaitingDSMovePhaseActions());
+		assertTrue(scn.IsAboardAsPassenger(landspeeder,rebelTrooper1));
+
+		scn.SkipToDSTurn();
+		scn.SkipToLSTurn(Phase.DEPLOY);
+
+		assertFalse(scn.LSCardActionAvailable(ra7,"Transfer weapon (for free) to")); //test1
+
+		scn.SkipToPhase(Phase.MOVE);
+		scn.LSUseCardAction(ra7,"Embark");
+		//scn.LSChooseOption("Passenger"); //RA-7 auto-passenger
+
+		scn.PassAllResponses();
+		assertTrue(scn.AwaitingDSMovePhaseActions());
+		assertTrue(scn.IsAboardAsPassenger(landspeeder,ra7));
+
+		scn.SkipToDSTurn();
+		scn.SkipToLSTurn(Phase.DEPLOY);
+
+		assertTrue(scn.LSCardActionAvailable(ra7,"Transfer weapon (for free) to")); //test2
+		scn.LSUseCardAction(ra7,"Transfer weapon (for free) to");
+		scn.LSChooseCard(blaster1);
+
+		scn.PassAllResponses();
+
+		assertTrue(scn.AwaitingDSDeployPhaseActions());
+		assertFalse(scn.IsAttachedTo(rebelTrooper1,blaster1));
+		assertTrue(scn.IsAttachedTo(ra7,blaster1));
+	}
+
+	@Test
+	public void RA7TransferFromRequiresPresentWith() {
+		//test1: transfer weapon from RA7 cannot target a character that is not present (in enclosed vehicle)
+		//test2: transfer weapon from RA7 can target a character that is present (both in enclosed vehicle)
+		var scn = GetScenario();
+
+		var ra7 = scn.GetLSCard("ra7");
+		var blaster1 = scn.GetLSCard("blaster1");
+		var rebelTrooper1 = scn.GetLSFiller(1);
+		var landspeeder = scn.GetLSCard("landspeeder");
+
+		scn.StartGame();
+
+		var site = scn.GetLSStartingLocation();
+
+		scn.MoveCardsToLocation(site,ra7,rebelTrooper1,landspeeder);
+		scn.AttachCardsTo(ra7,blaster1);
+
+		scn.SkipToLSTurn(Phase.MOVE);
+		scn.LSUseCardAction(rebelTrooper1,"Embark");
+		scn.LSChooseOption("Passenger");
+
+		scn.PassAllResponses();
+		assertTrue(scn.AwaitingDSMovePhaseActions());
+		assertTrue(scn.IsAboardAsPassenger(landspeeder,rebelTrooper1));
+
+		scn.SkipToDSTurn();
+		scn.SkipToLSTurn(Phase.DEPLOY);
+
+		assertFalse(scn.LSCardActionAvailable(ra7,"Transfer weapon (for free) from")); //test1
+
+		scn.SkipToPhase(Phase.MOVE);
+		scn.LSUseCardAction(ra7,"Embark");
+		//scn.LSChooseOption("Passenger"); //RA-7 auto-passenger
+
+		scn.PassAllResponses();
+		assertTrue(scn.AwaitingDSMovePhaseActions());
+		assertTrue(scn.IsAboardAsPassenger(landspeeder,ra7));
+
+		scn.SkipToDSTurn();
+		scn.SkipToLSTurn(Phase.DEPLOY);
+
+		assertTrue(scn.LSCardActionAvailable(ra7,"Transfer weapon (for free) from")); //test2
+		scn.LSUseCardAction(ra7,"Transfer weapon (for free) from");
+		scn.LSChooseCard(blaster1);
+		scn.LSChooseCard(rebelTrooper1);
+
+		scn.PassAllResponses();
+
+		assertTrue(scn.AwaitingDSDeployPhaseActions());
+		assertTrue(scn.IsAttachedTo(rebelTrooper1,blaster1));
+		assertFalse(scn.IsAttachedTo(ra7,blaster1));
+	}
 
 }

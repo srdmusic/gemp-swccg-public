@@ -59,16 +59,15 @@ public class Card2_016 extends AbstractDroid {
         if (GameConditions.isDuringYourPhase(game, self, Phase.DEPLOY)) {
             final Filter yourCharactersPresent = Filters.and(Filters.your(self), Filters.character, Filters.presentWith(self));
             final Filter characterWeaponsHeld = Filters.and(Filters.character_weapon, Filters.attachedTo(self));
-            final Filter transferableWeaponsHeld = Filters.and(characterWeaponsHeld, Filters.deviceOrWeaponCanBeTransferredTo(true, yourCharactersPresent));
-            /// not clear if this would include stacked cards (Hatred cards stacked upside down that happen to be weapons...) - check if stacked cards are included in attachedTo filter...
-            Collection<PhysicalCard> transferableWeaponsHeldCol = Filters.filterAllOnTable(game, false, transferableWeaponsHeld);
+            final Collection<PhysicalCard> transferableWeaponsHeld = Filters.filterAllOnTable(game, false, Filters.and(characterWeaponsHeld, Filters.deviceOrWeaponCanBeTransferredTo(true, yourCharactersPresent)));
 
-            if (!transferableWeaponsHeldCol.isEmpty()) {
+            if (!transferableWeaponsHeld.isEmpty()) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
                 action.setText("Transfer weapon (for free) from RA-7");
+                action.setActionMsg("Transfer weapon (for free) from " + GameUtils.getCardLink(self));
                 // Choose target(s)
                 action.appendTargeting(
-                        new ChooseCardOnTableEffect(action, playerId, "Choose weapon to transfer (for free)", transferableWeaponsHeldCol) {
+                        new ChooseCardOnTableEffect(action, playerId, "Choose weapon to transfer (for free)", transferableWeaponsHeld) {
                             @Override
                             protected void cardSelected(final PhysicalCard weapon) {
                                 action.appendTargeting(
@@ -102,16 +101,15 @@ public class Card2_016 extends AbstractDroid {
         if (GameConditions.isDuringYourPhase(game, self, Phase.DEPLOY)) {
             final Filter yourCharactersPresent = Filters.and(Filters.your(self), Filters.character, Filters.presentWith(self));
             final int numberOfWeaponsHeld = Filters.countAllOnTable(game, Filters.and(Filters.character_weapon, Filters.attachedTo(self)));
-            final Filter transferableWeapons = Filters.and(Filters.character_weapon,Filters.attachedTo(yourCharactersPresent));
-            /// not clear if this would include stacked cards (Hatred cards stacked upside down that happen to be weapons...) - check if stacked cards are included in attachedTo filter...
-            Collection<PhysicalCard> transferableWeaponsCol = Filters.filterAllOnTable(game, false, transferableWeapons);
+            final Collection<PhysicalCard> transferableWeapons = Filters.filterAllOnTable(game, false, Filters.and(Filters.character_weapon, Filters.attachedTo(yourCharactersPresent)));
 
-            if (!transferableWeaponsCol.isEmpty() && numberOfWeaponsHeld < 4) {
+            if (!transferableWeapons.isEmpty() && numberOfWeaponsHeld < 4) {
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
                 action.setText("Transfer weapon (for free) to RA-7");
+                action.setActionMsg("Transfer weapon (for free) to " + GameUtils.getCardLink(self));
                 // Choose target(s)
                 action.appendTargeting(
-                        new ChooseCardOnTableEffect(action, playerId, "Choose weapon to transfer (for free)", transferableWeaponsCol) {
+                        new ChooseCardOnTableEffect(action, playerId, "Choose weapon to transfer (for free)", transferableWeapons) {
                             @Override
                             protected void cardSelected(final PhysicalCard weapon) {
                                 // Allow response(s)
