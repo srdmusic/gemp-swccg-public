@@ -42,6 +42,22 @@ public class ExchangeCardFromHandWithStackedCardEffect extends AbstractSubAction
         _stackedCardFilter = Filters.and(stackedCardFilter);
     }
 
+    /**
+     * Creates an effect that causes the player to exchange a card in hand accepted by the card in hand filter with a card
+     * accepted by the stacked card filter that is stacked on a card accepted by the stacked on filter.
+     * @param action the action performing this effect
+     * @param cardInHandFilter the card in hand filter
+     * @param stackedOnFilter the stacked on filter
+     * @param stackedCardFilter the stacked card filter
+     */
+    public ExchangeCardFromHandWithStackedCardEffect(Action action, String playerId, Filterable cardInHandFilter, Filterable stackedOnFilter, Filterable stackedCardFilter) {
+        super(action);
+        _playerId = playerId;
+        _cardInHandFilter = Filters.and(cardInHandFilter);
+        _stackedOnFilter = Filters.and(stackedOnFilter);
+        _stackedCardFilter = Filters.and(stackedCardFilter);
+    }    
+
     @Override
     public boolean isPlayableInFull(SwccgGame game) {
         return true;
