@@ -92,12 +92,19 @@ public class Card501_205 extends AbstractUsedInterrupt {
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
             action.setText("Prevent all weapons from being fired");
 
-            // Perform result(s)
-            action.appendEffect(
-                    new AddUntilEndOfBattleModifierEffect(action,
-                            new MayNotBeFiredModifier(self, Filters.weapon),
-                            "Prevents all weapons from being fired"));
-
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
+                        @Override
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new AddUntilEndOfBattleModifierEffect(action,
+                                            new MayNotBeFiredModifier(self, Filters.weapon),
+                                            "Prevents all weapons from being fired"));
+                        }
+                    }
+            );
             return Collections.singletonList(action);
         }
         return null;
