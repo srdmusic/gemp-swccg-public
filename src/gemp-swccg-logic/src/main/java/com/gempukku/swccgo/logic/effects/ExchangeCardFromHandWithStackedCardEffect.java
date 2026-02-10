@@ -95,7 +95,7 @@ public class ExchangeCardFromHandWithStackedCardEffect extends AbstractSubAction
                                         gameState.stackCard(cardFromHand, stackedOn, false, stackedAsInactive, false);
 
                                         if(_isRaceDestiny) {
-                                            cardFromHand.setRaceDestinyForPlayer(stackedOn.getOwner());
+                                            cardFromHand.setRaceDestinyForPlayer(_playerId);
                                         }
                                     }
                                 });
