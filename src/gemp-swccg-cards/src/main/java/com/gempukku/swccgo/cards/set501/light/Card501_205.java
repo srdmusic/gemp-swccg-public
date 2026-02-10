@@ -137,7 +137,7 @@ public class Card501_205 extends AbstractUsedInterrupt {
 
                                     final SubAction subAction = new SubAction(action, somePlayer);
                                     subAction.appendEffect(
-                                            new ExchangeCardFromHandWithStackedCardEffect(action, somePlayer, Filters.any, Filters.any, Filters.and(Filters.your(somePlayer), Filters.raceDestiny)));
+                                            new ExchangeCardFromHandWithStackedCardEffect(action, somePlayer, Filters.any, Filters.any, Filters.and(Filters.your(somePlayer), Filters.raceDestiny), true));
                                     action.appendEffect(new StackActionEffect(action, subAction));
                             }
                         } else {
