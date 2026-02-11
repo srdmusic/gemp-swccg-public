@@ -99,7 +99,7 @@ public class Card7_139_BACK extends AbstractObjective {
                 && GameConditions.isDuringBattle(game)) {
             PhysicalCard cardLost = ((LostFromTableResult) effectResult).getCard();
 
-            if(GameConditions.canTarget(game, self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY, cardLost)) {
+            if(Filters.canBeTargetedBy(self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY).accepts(game, cardLost)) {
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Place " + GameUtils.getFullName(cardLost) + " out of play");
                 action.setActionMsg("Place " + GameUtils.getCardLink(cardLost) + " out of play");

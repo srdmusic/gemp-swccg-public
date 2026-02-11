@@ -54,7 +54,7 @@ public class Card204_022 extends AbstractLostInterrupt {
                 final PhysicalCard topCardOfLostPile = gameState.getTopOfLostPile(playerId);
                 if (topCardOfLostPile != null) {
 
-                    if(GameConditions.canTarget(game, self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY, topCardOfLostPile)) {
+                    if(Filters.canBeTargetedBy(self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY).accepts(game, topCardOfLostPile)) {
                         final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
                         action.setText("Place top card of Lost Pile out of play");
                         // Update usage limit(s)

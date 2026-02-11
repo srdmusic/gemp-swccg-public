@@ -73,7 +73,7 @@ public class Card13_051 extends AbstractDefensiveShield {
                 && GameConditions.canSpot(game, self, 3, Filters.and(Filters.opponents(self), Filters.smuggler))) {
             PhysicalCard interrupt = ((PutCardInCardPileFromOffTableResult) effectResult).getCard();
 
-            if(GameConditions.canTarget(game, self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY, interrupt)) {
+            if(Filters.canBeTargetedBy(self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY).accepts(game, interrupt)) {
                 RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("Place " + GameUtils.getFullName(interrupt) + " out of play");
                 action.setActionMsg("Place " + GameUtils.getCardLink(interrupt) + " out of play");

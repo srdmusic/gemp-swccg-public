@@ -55,7 +55,7 @@ public class Card9_141 extends AbstractLostInterrupt {
         if (TriggerConditions.justLostWasPresentWith(game, effectResult, Filters.and(Filters.opponents(self), Filters.character), Filters.Emperor)) {
             final PhysicalCard justLostCard = ((LostFromTableResult) effectResult).getCard();
 
-            if(GameConditions.canTarget(game, self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY, justLostCard)) {
+            if(Filters.canBeTargetedBy(self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY).accepts(game, justLostCard)) {
                 final PlayInterruptAction action = new PlayInterruptAction(game, self);
                 action.setText("Place " + GameUtils.getFullName(justLostCard) + " out of play");
                 // Pay cost(s)

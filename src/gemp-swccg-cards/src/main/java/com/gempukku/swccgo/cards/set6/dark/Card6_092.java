@@ -52,7 +52,7 @@ public class Card6_092 extends AbstractAlien {
                 && GameConditions.canUseForce(game, playerId, 2)) {
             final PhysicalCard lostCard = ((LostFromTableResult) effectResult).getCard();
 
-            if(GameConditions.canTarget(game, self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY, lostCard)) {
+            if(Filters.canBeTargetedBy(self, TargetingReason.TO_BE_PLACED_OUT_OF_PLAY).accepts(game, lostCard)) {
                 final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
                 action.setText("'Behead' " + GameUtils.getFullName(lostCard));
                 action.setActionMsg("'Behead' " + GameUtils.getCardLink(lostCard));
