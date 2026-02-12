@@ -72,7 +72,7 @@ public class Card501_213 extends AbstractNormalEffect {
         if (credits != null
                 && bottomOfLostPile != null
                 && GameConditions.isOnceDuringOpponentsPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && (GameConditions.isLeadingPodrace(game, Filters.and(Filters.your(playerId), Filters.Podracer))
+                && (GameConditions.hasHigherRaceTotal(game, playerId)
                 || GameConditions.hasWonPodrace(game, playerId))) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
