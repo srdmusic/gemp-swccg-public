@@ -41,6 +41,7 @@ import com.gempukku.swccgo.logic.effects.PutCardFromHandOnUsedPileEffect;
 import com.gempukku.swccgo.logic.effects.ReduceAttritionEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 import com.gempukku.swccgo.logic.timing.EffectResult;
@@ -247,10 +248,11 @@ public class Card501_207 extends AbstractEpicEventDeployable {
         // Check condition(s)
         if (GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
                 && GameConditions.canTarget(game, self, taxationAgendaFilter)
-                && GameConditions.hasInHand(game, playerId, Filters.character_with_politics)) {
+                && GameConditions.hasInHand(game, playerId, Filters.character_with_politics)
+                && GameConditions.canActivateForce(game, playerId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Taxation: Place character in Used Pile");
+            action.setText("Taxation: Activate 1 Force");
             action.setActionMsg("Place a character with politics from hand in Used Pile to activate 1 Force");
 
             // Update usage limit(s)
@@ -278,7 +280,48 @@ public class Card501_207 extends AbstractEpicEventDeployable {
                             );
 
                         }
-                    });
+                    }
+            );
+            actions.add(action);
+        }
+
+        // Check condition(s)
+        if (GameConditions.isNumTimesPerTurn(game, self, playerId, 2, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canTarget(game, self, taxationAgendaFilter)
+                && GameConditions.hasInHand(game, playerId, Filters.character_with_politics)
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Title.Senate_Hovercam)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Taxation: Deploy Senate Hovercam");
+            action.setActionMsg("Place a character with politics from hand in Used Pile to deploy Senate Hovercam from Reserve Deck");
+
+            // Update usage limit(s)
+            action.appendUsage(
+                    new NumTimesPerTurnEffect(action, 2));
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Target taxation agenda", taxationAgendaFilter) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, final PhysicalCard cardTargeted) {
+                            action.addAnimationGroup(cardTargeted);
+                            // Pay cost(s)
+                            action.appendCost(
+                                    new PutCardFromHandOnUsedPileEffect(action, playerId, Filters.character_with_politics, false));
+                            // Allow response(s)
+                            action.allowResponses("Target taxation agenda on " + GameUtils.getCardLink(cardTargeted) + " to deploy Senate Hovercam from Reserve Deck",
+                                    new UnrespondableEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Perform result(s)
+                                            action.appendEffect(
+                                                    new DeployCardFromReserveDeckEffect(action, Filters.Senate_Hovercam, true));
+                                        }
+                                    }
+                            );
+
+                        }
+                    }
+            );
             actions.add(action);
         }
         return actions;
