@@ -12,6 +12,8 @@ import com.mysql.cj.util.StringUtils;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
+import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.util.CharsetUtil;
 
@@ -30,6 +32,12 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
             login(request, responseWriter, remoteIp);
         } else if ("/register".equals(uri) && request.method() == HttpMethod.POST) {
             register(request, responseWriter, remoteIp);
+        } else if ("/me".equals(uri) && request.method() == HttpMethod.GET) {
+            me(request, responseWriter);
+        } else if ("/refresh".equals(uri) && request.method() == HttpMethod.POST) {
+            refresh(request, responseWriter);
+        } else if ("/logout".equals(uri) && request.method() == HttpMethod.POST) {
+            logout(request, responseWriter);
         } else {
             responseWriter.writeError(404);
         }
@@ -155,5 +163,93 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
         headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
         headers.putAll(logUserReturningHeaders(remoteIp, player.getName()));
         responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
+    }
+
+    private void me(HttpRequest request, ResponseWriter responseWriter) throws Exception {
+        AuthResult auth = requireAuth(request);
+        assertAccountAllowed(auth.player);
+        writeAuthResponse(responseWriter, auth.token, auth.expiresAt, auth.player);
+    }
+
+    private void refresh(HttpRequest request, ResponseWriter responseWriter) throws Exception {
+        AuthResult auth = requireAuth(request);
+        assertAccountAllowed(auth.player);
+        String newToken = _jwtService.issueToken(auth.player.getName());
+        JwtService.JwtToken jwtToken = _jwtService.verifyToken(newToken);
+        long expiresAt = jwtToken != null ? jwtToken.getExpiresAt() : 0L;
+        writeAuthResponse(responseWriter, newToken, expiresAt, auth.player);
+    }
+
+    private void logout(HttpRequest request, ResponseWriter responseWriter) throws Exception {
+        AuthResult auth = requireAuth(request);
+        _loggedUserHolder.forceLogoutUser(auth.player.getName());
+
+        Map<String, Object> response = new LinkedHashMap<String, Object>();
+        response.put("status", "ok");
+
+        String payload = JSON.toJSONString(response);
+        Map<String, String> headers = new LinkedHashMap<String, String>();
+        headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
+
+        DefaultCookie cookie = new DefaultCookie("loggedUser", "");
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        headers.put(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+
+        responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
+    }
+
+    private AuthResult requireAuth(HttpRequest request) throws HttpProcessingException {
+        String token = getTokenFromRequest(request);
+        if (token == null || token.isEmpty()) {
+            throw new HttpProcessingException(401);
+        }
+        JwtService.JwtToken jwtToken = _jwtService.verifyToken(token);
+        if (jwtToken == null) {
+            throw new HttpProcessingException(401);
+        }
+        Player player = _playerDao.getPlayer(jwtToken.getSubject());
+        if (player == null) {
+            throw new HttpProcessingException(401);
+        }
+        return new AuthResult(player, token, jwtToken.getExpiresAt());
+    }
+
+    private void assertAccountAllowed(Player player) throws HttpProcessingException {
+        if (StringUtils.isNullOrEmpty(player.getPassword()))
+            throw new HttpProcessingException(202);
+
+        if (!player.hasType(Player.Type.UNBANNED)) {
+            Date bannedUntil = player.getBannedUntil();
+            if (bannedUntil == null)
+                throw new HttpProcessingException(403);
+            if (bannedUntil.after(new Date()))
+                throw new HttpProcessingException(409);
+        }
+    }
+
+    private void writeAuthResponse(ResponseWriter responseWriter, String token, long expiresAt, Player player) throws Exception {
+        Map<String, Object> response = new LinkedHashMap<String, Object>();
+        response.put("token", token);
+        response.put("tokenType", "Bearer");
+        response.put("expiresAt", expiresAt);
+        response.put("user", player.GetUserInfo());
+
+        String payload = JSON.toJSONString(response);
+        Map<String, String> headers = new LinkedHashMap<String, String>();
+        headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
+        responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
+    }
+
+    private static final class AuthResult {
+        private final Player player;
+        private final String token;
+        private final long expiresAt;
+
+        private AuthResult(Player player, String token, long expiresAt) {
+            this.player = player;
+            this.token = token;
+            this.expiresAt = expiresAt;
+        }
     }
 }

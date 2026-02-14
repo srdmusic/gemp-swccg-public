@@ -3,6 +3,8 @@ package com.gempukku.swccgo.async.auth;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.gempukku.swccgo.common.ApplicationConfiguration;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -14,18 +16,28 @@ import java.util.Map;
 
 public class JwtService {
     private static final JwtService INSTANCE = new JwtService();
+    private static final Logger _logger = LogManager.getLogger(JwtService.class);
 
     private final String _issuer;
     private final byte[] _secret;
     private final long _ttlSeconds;
+    private final long _clockSkewSeconds;
 
     private JwtService() {
         _issuer = ApplicationConfiguration.getProperty("jwt.issuer");
         String secretValue = ApplicationConfiguration.getProperty("jwt.secret");
         if (secretValue == null || secretValue.isEmpty())
             secretValue = "change-me";
+        if ("change-me".equals(secretValue)) {
+            _logger.warn("jwt.secret is using the default value; set JWT_SECRET in production.");
+        }
         _secret = secretValue.getBytes(StandardCharsets.UTF_8);
-        _ttlSeconds = parseLong(ApplicationConfiguration.getProperty("jwt.ttl.seconds"), 86400L);
+        long ttlSeconds = parseLong(ApplicationConfiguration.getProperty("jwt.ttl.seconds"), 86400L);
+        if (ttlSeconds <= 0) {
+            ttlSeconds = 86400L;
+        }
+        _ttlSeconds = ttlSeconds;
+        _clockSkewSeconds = parseLong(ApplicationConfiguration.getProperty("jwt.clockSkew.seconds"), 30L);
     }
 
     public static JwtService getInstance() {
@@ -91,7 +103,7 @@ public class JwtService {
             return null;
 
         long now = Instant.now().getEpochSecond();
-        if (exp < now)
+        if (exp + _clockSkewSeconds < now)
             return null;
 
         return new JwtToken(subject, exp);

@@ -10,7 +10,9 @@ import com.gempukku.swccgo.db.PlayerDAO;
 import com.gempukku.swccgo.game.ChatCommunicationChannel;
 import com.gempukku.swccgo.game.Player;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.channel.ChannelFutureListener;
 import org.apache.commons.text.StringEscapeUtils;
 import io.netty.util.concurrent.ScheduledFuture;
 
@@ -34,14 +36,18 @@ public class ChatWebSocketSession implements WebSocketSession {
     private final Object _sendLock = new Object();
     private final WebSocketChatChannel _channel;
     private ScheduledFuture<?> _keepAlive;
+    private ScheduledFuture<?> _expiryTimer;
+    private final long _tokenExpiresAtMs;
+    private long _lastUsersPushAt;
 
-    public ChatWebSocketSession(ChannelHandlerContext ctx, ChatRoomMediator chatRoom, Player player, PlayerDAO playerDao, String room) {
+    public ChatWebSocketSession(ChannelHandlerContext ctx, ChatRoomMediator chatRoom, Player player, PlayerDAO playerDao, String room, long tokenExpiresAt) {
         _ctx = ctx;
         _chatRoom = chatRoom;
         _player = player;
         _playerDao = playerDao;
         _room = room;
         _channel = new WebSocketChatChannel();
+        _tokenExpiresAtMs = tokenExpiresAt > 0 ? tokenExpiresAt * 1000L : 0L;
     }
 
     @Override
@@ -52,6 +58,7 @@ public class ChatWebSocketSession implements WebSocketSession {
             sendSnapshot(messages);
             _channel.enableForwarding();
             startKeepAlive();
+            scheduleTokenExpiry();
         } catch (PrivateInformationException exp) {
             sendError("Access denied.");
             _ctx.close();
@@ -62,6 +69,7 @@ public class ChatWebSocketSession implements WebSocketSession {
     public void onClose() {
         if (_closed.compareAndSet(false, true)) {
             stopKeepAlive();
+            stopExpiryTimer();
             _chatRoom.partUser(_player.getName());
         }
     }
@@ -90,6 +98,11 @@ public class ChatWebSocketSession implements WebSocketSession {
             try {
                 JSONObject json = JSON.parseObject(trimmed);
                 String type = json.getString("type");
+                if ("presence".equals(type)) {
+                    _chatRoom.markActive(_player.getName());
+                    sendUsersEvent();
+                    return null;
+                }
                 if (type == null || "message".equals(type)) {
                     String text = json.getString("text");
                     if (text == null) {
@@ -109,6 +122,7 @@ public class ChatWebSocketSession implements WebSocketSession {
         payload.put("room", _room);
         payload.put("messages", serializeMessages(messages));
         payload.put("users", buildUsers());
+        payload.put("userStatus", buildUserStatusMap());
         sendEvent("snapshot", payload);
     }
 
@@ -116,7 +130,15 @@ public class ChatWebSocketSession implements WebSocketSession {
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
         payload.put("message", serializeMessage(chatMessage));
         payload.put("users", buildUsers());
+        payload.put("userStatus", buildUserStatusMap());
         sendEvent("message", payload);
+    }
+
+    private void sendUsersEvent() {
+        Map<String, Object> payload = new LinkedHashMap<String, Object>();
+        payload.put("users", buildUsers());
+        payload.put("userStatus", buildUserStatusMap());
+        sendEvent("users", payload);
     }
 
     private void sendError(String message) {
@@ -152,6 +174,8 @@ public class ChatWebSocketSession implements WebSocketSession {
                 return;
             }
             _channel.touch();
+            _chatRoom.markSeen(_player.getName());
+            maybeSendUsers();
         }, 5, 10, TimeUnit.SECONDS);
     }
 
@@ -159,6 +183,42 @@ public class ChatWebSocketSession implements WebSocketSession {
         if (_keepAlive != null) {
             _keepAlive.cancel(false);
             _keepAlive = null;
+        }
+    }
+
+    private void scheduleTokenExpiry() {
+        if (_tokenExpiresAtMs <= 0) {
+            return;
+        }
+        long delay = _tokenExpiresAtMs - System.currentTimeMillis();
+        if (delay <= 0) {
+            closeForTokenExpiry();
+            return;
+        }
+        _expiryTimer = _ctx.executor().schedule(this::closeForTokenExpiry, delay, TimeUnit.MILLISECONDS);
+    }
+
+    private void stopExpiryTimer() {
+        if (_expiryTimer != null) {
+            _expiryTimer.cancel(false);
+            _expiryTimer = null;
+        }
+    }
+
+    private void closeForTokenExpiry() {
+        if (_closed.get()) {
+            return;
+        }
+        onClose();
+        _ctx.writeAndFlush(new CloseWebSocketFrame(4401, "token expired"))
+                .addListener(ChannelFutureListener.CLOSE);
+    }
+
+    private void maybeSendUsers() {
+        long now = System.currentTimeMillis();
+        if (now - _lastUsersPushAt >= 30000L) {
+            _lastUsersPushAt = now;
+            sendUsersEvent();
         }
     }
 
@@ -188,6 +248,20 @@ public class ChatWebSocketSession implements WebSocketSession {
             }
         }
         return new ArrayList<String>(users);
+    }
+
+    private Map<String, String> buildUserStatusMap() {
+        Map<String, String> statusMap = new LinkedHashMap<String, String>();
+        Map<String, String> rawStatuses = _chatRoom.getUserStatusMap();
+        for (String user : _chatRoom.getUsersInRoom()) {
+            String formatted = formatPlayerNameForChatList(user);
+            if (formatted.isEmpty()) {
+                continue;
+            }
+            String status = rawStatuses.get(user);
+            statusMap.put(formatted, status != null ? status : "online");
+        }
+        return statusMap;
     }
 
     private String formatPlayerNameForChatList(String userInRoom) {

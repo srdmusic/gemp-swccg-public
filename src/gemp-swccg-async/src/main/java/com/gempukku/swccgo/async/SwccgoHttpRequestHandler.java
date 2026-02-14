@@ -3,6 +3,7 @@ package com.gempukku.swccgo.async;
 import com.gempukku.swccgo.async.auth.JwtService;
 import com.gempukku.swccgo.async.handler.UriRequestHandler;
 import com.gempukku.swccgo.async.ws.ChatWebSocketSession;
+import com.gempukku.swccgo.async.ws.GameWebSocketSession;
 import com.gempukku.swccgo.async.ws.HallWebSocketSession;
 import com.gempukku.swccgo.async.ws.SwccgoWebSocketFrameHandler;
 import com.gempukku.swccgo.async.ws.WebSocketSession;
@@ -11,6 +12,7 @@ import com.gempukku.swccgo.chat.ChatServer;
 import com.gempukku.swccgo.db.IpBanDAO;
 import com.gempukku.swccgo.db.PlayerDAO;
 import com.gempukku.swccgo.game.Player;
+import com.gempukku.swccgo.game.SwccgoServer;
 import com.gempukku.swccgo.hall.HallServer;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
@@ -165,6 +167,7 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
             responseSender.writeError(401);
             return;
         }
+        long tokenExpiresAt = jwtToken.getExpiresAt();
 
         PlayerDAO playerDAO = (PlayerDAO) _objects.get(PlayerDAO.class);
         Player player = playerDAO.getPlayer(jwtToken.getSubject());
@@ -182,7 +185,7 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
         WebSocketSession session = null;
         if ("hall".equals(channel)) {
             HallServer hallServer = (HallServer) _objects.get(HallServer.class);
-            session = new HallWebSocketSession(ctx, hallServer, player);
+            session = new HallWebSocketSession(ctx, hallServer, player, tokenExpiresAt);
         } else if ("chat".equals(channel)) {
             String room = getQueryParameter(decoder, "room");
             if (room == null || room.isEmpty()) {
@@ -195,7 +198,30 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
                 responseSender.writeError(404);
                 return;
             }
-            session = new ChatWebSocketSession(ctx, chatRoom, player, playerDAO, room);
+            session = new ChatWebSocketSession(ctx, chatRoom, player, playerDAO, room, tokenExpiresAt);
+        } else if ("game".equals(channel)) {
+            String gameId = getQueryParameter(decoder, "gameId");
+            if (gameId == null || gameId.isEmpty()) {
+                responseSender.writeError(400);
+                return;
+            }
+            String participantId = getQueryParameter(decoder, "participantId");
+            String channelNumberParam = getQueryParameter(decoder, "channelNumber");
+            Integer channelNumber = null;
+            if (channelNumberParam != null && !channelNumberParam.isEmpty()) {
+                try {
+                    channelNumber = Integer.valueOf(channelNumberParam);
+                } catch (NumberFormatException exp) {
+                    responseSender.writeError(400);
+                    return;
+                }
+            }
+            SwccgoServer swccgoServer = (SwccgoServer) _objects.get(SwccgoServer.class);
+            if (swccgoServer == null) {
+                responseSender.writeError(500);
+                return;
+            }
+            session = new GameWebSocketSession(ctx, swccgoServer, playerDAO, player, gameId, participantId, channelNumber, tokenExpiresAt);
         }
 
         if (session == null) {

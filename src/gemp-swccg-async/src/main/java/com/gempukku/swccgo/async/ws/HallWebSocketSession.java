@@ -7,10 +7,14 @@ import com.gempukku.swccgo.hall.HallCommunicationChannel;
 import com.gempukku.swccgo.hall.HallServer;
 import com.gempukku.swccgo.hall.HallUpdateListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import io.netty.util.concurrent.ScheduledFuture;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class HallWebSocketSession implements WebSocketSession, HallUpdateListener, HallChannelVisitor {
@@ -20,23 +24,28 @@ public class HallWebSocketSession implements WebSocketSession, HallUpdateListene
     private final HallCommunicationChannel _hallChannel;
     private final AtomicBoolean _closed = new AtomicBoolean(false);
     private final Object _sendLock = new Object();
+    private final long _tokenExpiresAtMs;
+    private ScheduledFuture<?> _expiryTimer;
 
-    public HallWebSocketSession(ChannelHandlerContext ctx, HallServer hallServer, Player player) {
+    public HallWebSocketSession(ChannelHandlerContext ctx, HallServer hallServer, Player player, long tokenExpiresAt) {
         _ctx = ctx;
         _hallServer = hallServer;
         _player = player;
         _hallChannel = new HallCommunicationChannel(0);
+        _tokenExpiresAtMs = tokenExpiresAt > 0 ? tokenExpiresAt * 1000L : 0L;
     }
 
     @Override
     public void onOpen() {
         _hallServer.addHallUpdateListener(this);
         sendHallUpdate();
+        scheduleTokenExpiry();
     }
 
     @Override
     public void onClose() {
         if (_closed.compareAndSet(false, true)) {
+            stopExpiryTimer();
             _hallServer.removeHallUpdateListener(this);
         }
     }
@@ -73,6 +82,34 @@ public class HallWebSocketSession implements WebSocketSession, HallUpdateListene
             if (_ctx.channel().isActive())
                 _ctx.writeAndFlush(new TextWebSocketFrame(json));
         });
+    }
+
+    private void scheduleTokenExpiry() {
+        if (_tokenExpiresAtMs <= 0) {
+            return;
+        }
+        long delay = _tokenExpiresAtMs - System.currentTimeMillis();
+        if (delay <= 0) {
+            closeForTokenExpiry();
+            return;
+        }
+        _expiryTimer = _ctx.executor().schedule(this::closeForTokenExpiry, delay, TimeUnit.MILLISECONDS);
+    }
+
+    private void stopExpiryTimer() {
+        if (_expiryTimer != null) {
+            _expiryTimer.cancel(false);
+            _expiryTimer = null;
+        }
+    }
+
+    private void closeForTokenExpiry() {
+        if (_closed.get()) {
+            return;
+        }
+        onClose();
+        _ctx.writeAndFlush(new CloseWebSocketFrame(4401, "token expired"))
+                .addListener(ChannelFutureListener.CLOSE);
     }
 
     private Map<String, Object> buildEntry(String id, Map<String, String> props) {
