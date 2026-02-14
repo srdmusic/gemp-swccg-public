@@ -54,6 +54,14 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     private static final long SIX_MONTHS = 1000L*60L*60L*24L*30L*6L;
+    private static final String DEBUG_ERRORS_ENV = "DEBUG_ERRORS";
+    private static final String DEBUG_ERRORS_PROP = "debug.errors";
+    private static final String APP_ENV = "APP_ENV";
+    private static final String APP_ENV_PROP = "app.env";
+    private static final String GEMP_ENV = "GEMP_ENV";
+    private static final String GEMP_ENV_PROP = "gemp.env";
+    private static final String NODE_ENV = "NODE_ENV";
+    private static final int DEBUG_STACK_LIMIT = 10;
     private final Logger _log = LogManager.getLogger(SwccgoHttpRequestHandler.class);
     private static final Logger _accesslog = LogManager.getLogger("access");
     private final Map<String, CachedFile> _fileCache = Collections.synchronizedMap(new HashMap<>());
@@ -62,6 +70,7 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
 
     private final IpBanDAO _ipBanDAO;
     private final JwtService _jwtService = JwtService.getInstance();
+    private final boolean _debugErrors = resolveDebugErrors();
 
     public SwccgoHttpRequestHandler(Map<Type, Object> objects, UriRequestHandler uriRequestHandler) {
         _objects = objects;
@@ -129,16 +138,100 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
                 _log.error("HTTP code " + code + " response for " + requestInformation.remoteIp + ": " + requestInformation.uri, exp);
             }
 
-            if(exp.getMessage() != null) {
+            if (_debugErrors && exp.getMessage() != null) {
+                responseSender.writeErrorJson(exp.getStatus(), buildErrorPayload(exp.getStatus(), exp.getMessage(), requestInformation, null));
+            } else if (exp.getMessage() != null) {
                 responseSender.writeError(exp.getStatus(), Collections.singletonMap("message", exp.getMessage()));
-            }
-            else {
+            } else {
                 responseSender.writeError(exp.getStatus());
             }
         } catch (Exception exp) {
             _log.error("Error response for " + uri, exp);
-            responseSender.writeError(500);
+            if (_debugErrors) {
+                responseSender.writeErrorJson(500, buildErrorPayload(500, null, requestInformation, exp));
+            } else {
+                responseSender.writeError(500);
+            }
         }
+    }
+
+    private boolean resolveDebugErrors() {
+        String flag = firstNonEmpty(System.getProperty(DEBUG_ERRORS_PROP), System.getenv(DEBUG_ERRORS_ENV));
+        if (flag != null) {
+            return isTruthy(flag);
+        }
+        String env = firstNonEmpty(
+                System.getProperty(GEMP_ENV_PROP),
+                System.getenv(GEMP_ENV),
+                System.getProperty(APP_ENV_PROP),
+                System.getenv(APP_ENV),
+                System.getenv(NODE_ENV)
+        );
+        if (env == null) {
+            return false;
+        }
+        return !isProductionEnv(env);
+    }
+
+    private String firstNonEmpty(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String value : values) {
+            if (value != null) {
+                String trimmed = value.trim();
+                if (!trimmed.isEmpty()) {
+                    return trimmed;
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean isTruthy(String value) {
+        String normalized = value.trim().toLowerCase();
+        return "1".equals(normalized) || "true".equals(normalized) || "yes".equals(normalized) || "on".equals(normalized);
+    }
+
+    private boolean isProductionEnv(String value) {
+        String normalized = value.trim().toLowerCase();
+        return "prod".equals(normalized) || "production".equals(normalized) || "live".equals(normalized);
+    }
+
+    private JSONObject buildErrorPayload(int status, String message, RequestInformation requestInformation, Exception exp) {
+        JSONObject payload = new JSONObject();
+        payload.put("status", status);
+        payload.put("error", HttpResponseStatus.valueOf(status).reasonPhrase());
+        if (message != null) {
+            payload.put("message", message);
+        }
+        if (requestInformation != null) {
+            payload.put("path", requestInformation.uri);
+            payload.put("remoteIp", requestInformation.remoteIp);
+        }
+        payload.put("timestamp", System.currentTimeMillis());
+        if (exp != null) {
+            payload.put("exception", exp.getClass().getName());
+            payload.put("detail", exp.toString());
+            payload.put("trace", buildStackTrace(exp));
+        }
+        return payload;
+    }
+
+    private String buildStackTrace(Exception exp) {
+        StackTraceElement[] stack = exp.getStackTrace();
+        if (stack == null || stack.length == 0) {
+            return "";
+        }
+        int limit = Math.min(stack.length, DEBUG_STACK_LIMIT);
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < limit; i++) {
+            builder.append(stack[i].toString());
+            if (i < limit - 1) {
+                builder.append("\n");
+            }
+        }
+        return builder.toString();
     }
 
     private boolean isWebSocketRequest(HttpRequest request) {
@@ -476,6 +569,14 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
             }
             // Build the response object.
             FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.OK, Unpooled.wrappedBuffer(json.getBytes(CharsetUtil.UTF_8)), headers, EmptyHttpHeaders.INSTANCE);
+            sendResponse(ctx, request, response);
+        }
+
+        private void writeErrorJson(int status, JSONObject payload) {
+            HttpHeaders headers = new DefaultHttpHeaders();
+            headers.set(CONTENT_TYPE, "application/json; charset=UTF-8");
+            String json = payload != null ? payload.toString() : "{}";
+            FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, HttpResponseStatus.valueOf(status), Unpooled.wrappedBuffer(json.getBytes(CharsetUtil.UTF_8)), headers, EmptyHttpHeaders.INSTANCE);
             sendResponse(ctx, request, response);
         }
 
