@@ -22,9 +22,8 @@ import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
+import com.gempukku.swccgo.logic.modifiers.ForfeitModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
-import com.gempukku.swccgo.logic.modifiers.MayNotHaveGameTextCanceledModifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -39,11 +38,7 @@ public class Card501_064 extends AbstractObjective {
     public Card501_064() {
         super(Side.DARK, 0, Title.On_The_Verge_Of_Greatness, ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        /*setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, Commence Primary Ignition, and Shield Gate. \n" +
-                "For remainder of game, you may not deploy characters of ability > 4 (except Vader). Vader is power +2 and he (or a Star Destroyer he is piloting) may make a regular move to a battle just initiated. \n" +
-                "While this side up, once per turn, may [download] a site (or Imperial trooper) to Scarif. \n" +
-                "Flip this card if Krennic or Tarkin on Scarif and Death Star orbiting Scarif.");*/
-        setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, and Shield Gate. For remainder of game, you may not deploy non-Imperial characters or non-Imperial starships. Once per turn, may [download] a Scarif battleground. Your non-unique Imperials, vehicles, and capital starships are deploy -1 (-2 if a Star Destroyer). Vader is power +2 and his game text may not be canceled. Flip this card if Krennic or Tarkin on Scarif and Death Star orbiting Scarif.");
+        setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, and Shield Gate. For remainder of game, you may not deploy Endor Shield, non-Imperial characters, or non-Imperial starships. Once per turn, may [download] a Scarif battleground. Your non-unique Imperials, vehicles, and capital starships are deploy -1 (-2 if a Star Destroyer). Non-unique Imperials are forfeit +1. Flip this card if Krennic or Tarkin at a Scarif battleground site and Death Star orbiting Scarif.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("On The Verge Of Greatness");
     }
@@ -109,16 +104,13 @@ public class Card501_064 extends AbstractObjective {
         RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new MayNotDeployModifier(self, Filters.or(Filters.and(Filters.character, Filters.not(Filters.Imperial)), Filters.and(Filters.starship, Filters.not(Filters.Imperial_starship))), playerId), null));
+                        new MayNotDeployModifier(self, Filters.or(Filters.Endor_Shield, Filters.and(Filters.character, Filters.not(Filters.Imperial)), Filters.and(Filters.starship, Filters.not(Filters.Imperial_starship))), playerId), null));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
                         new DeployCostModifier(self, Filters.and(Filters.your(playerId), Filters.non_unique, Filters.or(Filters.Imperial, Filters.vehicle, Filters.capital_starship)), new CardMatchesEvaluator(-1, -2, Filters.Star_Destroyer)), null));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new PowerModifier(self, Filters.Vader, 2), null));
-        action.appendEffect(
-                new AddUntilEndOfGameModifierEffect(action,
-                        new MayNotHaveGameTextCanceledModifier(self, Filters.Vader), null));
+                        new ForfeitModifier(self, Filters.and(Filters.non_unique, Filters.Imperial), 1), null));
         return action;
     }
 
@@ -127,7 +119,7 @@ public class Card501_064 extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.on(Title.Scarif), Filters.or(Filters.Tarkin, Filters.Krennic)))
+                && GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.at(Filters.Scarif_battleground_site), Filters.or(Filters.Krennic, Filters.Tarkin)))
                 && GameConditions.canSpot(game, self, Filters.and(Filters.Death_Star_system, Filters.isOrbiting(Title.Scarif)))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);

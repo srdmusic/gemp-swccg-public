@@ -2,7 +2,6 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractSite;
 import com.gempukku.swccgo.cards.conditions.HereCondition;
-import com.gempukku.swccgo.cards.conditions.OnCondition;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
@@ -13,7 +12,6 @@ import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainModifier;
-import com.gempukku.swccgo.logic.modifiers.ForceGenerationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 
 import java.util.LinkedList;
@@ -28,7 +26,7 @@ import java.util.List;
 public class Card501_065 extends AbstractSite {
     public Card501_065() {
         super(Side.DARK, Title.Scarif_Citadel_Tower, Title.Scarif, Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
-        setLocationDarkSideGameText("If Krennic on Scarif, your Force generation is +1 here.");
+        setLocationDarkSideGameText("If Krennic or a Death Trooper here, Force drain +1 here.");
         setLocationLightSideGameText("If Cassian, Jyn, or K-2SO here, Force drain +1 here.");
         addIcon(Icon.DARK_FORCE, 1);
         addIcon(Icon.LIGHT_FORCE, 1);
@@ -39,7 +37,7 @@ public class Card501_065 extends AbstractSite {
     @Override
     protected List<Modifier> getGameTextDarkSideWhileActiveModifiers(String playerOnDarkSideOfLocation, SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new ForceGenerationModifier(self, new OnCondition(self, Filters.Krennic, Title.Scarif), 1, playerOnDarkSideOfLocation));
+        modifiers.add(new ForceDrainModifier(self, new HereCondition(self, Filters.or(Filters.Krennic, Filters.death_trooper)), 1, playerOnDarkSideOfLocation));
         return modifiers;
     }
 
