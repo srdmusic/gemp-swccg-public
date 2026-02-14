@@ -1,11 +1,18 @@
 package com.gempukku.swccgo.async;
 
+import com.gempukku.swccgo.async.auth.JwtService;
 import com.gempukku.swccgo.async.handler.UriRequestHandler;
-import com.gempukku.swccgo.common.ApplicationConfiguration;
-
+import com.gempukku.swccgo.async.ws.HallWebSocketSession;
+import com.gempukku.swccgo.async.ws.SwccgoWebSocketFrameHandler;
+import com.gempukku.swccgo.async.ws.WebSocketSession;
 import com.gempukku.swccgo.db.IpBanDAO;
+import com.gempukku.swccgo.db.PlayerDAO;
+import com.gempukku.swccgo.game.Player;
+import com.gempukku.swccgo.hall.HallServer;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import io.netty.channel.ChannelFutureListener;
@@ -46,6 +53,7 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
     private final UriRequestHandler _uriRequestHandler;
 
     private final IpBanDAO _ipBanDAO;
+    private final JwtService _jwtService = JwtService.getInstance();
 
     public SwccgoHttpRequestHandler(Map<Type, Object> objects, UriRequestHandler uriRequestHandler) {
         _objects = objects;
@@ -75,11 +83,6 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
         if (HttpUtil.is100ContinueExpected(httpRequest))
             send100Continue(ctx);
 
-        String uri = httpRequest.uri();
-
-        if (uri.contains("?"))
-            uri = uri.substring(0, uri.indexOf("?"));
-
         String ip = httpRequest.headers().get("X-Forwarded-For");
 
         if(ip == null)
@@ -91,13 +94,21 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
 
         ResponseSender responseSender = new ResponseSender(ctx, httpRequest);
 
+        String uri = null;
         try {
             if (isBanned(requestInformation.remoteIp)) {
                 responseSender.writeError(401);
                 _log.info("Denying entry to user from banned IP " + requestInformation.remoteIp);
             }
             else {
-                _uriRequestHandler.handleRequest(uri, httpRequest, _objects, responseSender, requestInformation.remoteIp);
+                if (isWebSocketRequest(httpRequest)) {
+                    handleWebSocketRequest(ctx, httpRequest, responseSender);
+                } else {
+                    uri = httpRequest.uri();
+                    if (uri.contains("?"))
+                        uri = uri.substring(0, uri.indexOf("?"));
+                    _uriRequestHandler.handleRequest(uri, httpRequest, _objects, responseSender, requestInformation.remoteIp);
+                }
             }
         } catch (HttpProcessingException exp) {
             int code = exp.getStatus();
@@ -120,6 +131,85 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
             _log.error("Error response for " + uri, exp);
             responseSender.writeError(500);
         }
+    }
+
+    private boolean isWebSocketRequest(HttpRequest request) {
+        String upgrade = request.headers().get(HttpHeaderNames.UPGRADE);
+        return upgrade != null && "websocket".equalsIgnoreCase(upgrade);
+    }
+
+    private void handleWebSocketRequest(ChannelHandlerContext ctx, FullHttpRequest request, ResponseSender responseSender) {
+        if (request.method() != HttpMethod.GET) {
+            responseSender.writeError(405);
+            return;
+        }
+
+        QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
+        String path = decoder.path();
+        if (!"/gemp-swccg-server/ws".equals(path)) {
+            responseSender.writeError(404);
+            return;
+        }
+
+        String token = getQueryParameter(decoder, "token");
+        if (token == null || token.isEmpty()) {
+            responseSender.writeError(401);
+            return;
+        }
+
+        JwtService.JwtToken jwtToken = _jwtService.verifyToken(token);
+        if (jwtToken == null) {
+            responseSender.writeError(401);
+            return;
+        }
+
+        PlayerDAO playerDAO = (PlayerDAO) _objects.get(PlayerDAO.class);
+        Player player = playerDAO.getPlayer(jwtToken.getSubject());
+        if (player == null) {
+            responseSender.writeError(401);
+            return;
+        }
+
+        String channel = getQueryParameter(decoder, "channel");
+        if (channel == null || channel.isEmpty()) {
+            responseSender.writeError(400);
+            return;
+        }
+
+        WebSocketSession session = null;
+        if ("hall".equals(channel)) {
+            HallServer hallServer = (HallServer) _objects.get(HallServer.class);
+            session = new HallWebSocketSession(ctx, hallServer, player);
+        }
+
+        if (session == null) {
+            responseSender.writeError(400);
+            return;
+        }
+
+        WebSocketServerHandshakerFactory wsFactory =
+                new WebSocketServerHandshakerFactory(getWebSocketLocation(request), null, true);
+        WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(request);
+        if (handshaker == null) {
+            WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
+            return;
+        }
+
+        handshaker.handshake(ctx.channel(), request);
+        ctx.pipeline().addLast(new SwccgoWebSocketFrameHandler(session, handshaker));
+        session.onOpen();
+    }
+
+    private String getWebSocketLocation(HttpRequest request) {
+        String host = request.headers().get(HttpHeaderNames.HOST);
+        return "ws://" + host + "/gemp-swccg-server/ws";
+    }
+
+    private String getQueryParameter(QueryStringDecoder decoder, String parameterName) {
+        java.util.List<String> values = decoder.parameters().get(parameterName);
+        if (values != null && !values.isEmpty())
+            return values.get(0);
+        return null;
     }
 
     private void sendResponse(ChannelHandlerContext ctx, HttpRequest request, FullHttpResponse response) {
