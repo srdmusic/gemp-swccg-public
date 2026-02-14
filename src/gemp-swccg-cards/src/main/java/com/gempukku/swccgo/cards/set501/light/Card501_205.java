@@ -2,25 +2,29 @@ package com.gempukku.swccgo.cards.set501.light;
 
 import com.gempukku.swccgo.cards.AbstractUsedInterrupt;
 import com.gempukku.swccgo.cards.GameConditions;
-import com.gempukku.swccgo.cards.effects.DrawsNoMoreThanBattleDestinyEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
 import com.gempukku.swccgo.common.Rarity;
 import com.gempukku.swccgo.common.Side;
+import com.gempukku.swccgo.common.Title;
 import com.gempukku.swccgo.common.Uniqueness;
 import com.gempukku.swccgo.filters.Filter;
 import com.gempukku.swccgo.filters.Filters;
 import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
-import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.actions.SubAction;
+import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfBattleModifierEffect;
-import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfBattleEffect;
+import com.gempukku.swccgo.logic.effects.ExchangeCardFromHandWithStackedCardEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.modifiers.MayNotFireWeaponsModifier;
+import com.gempukku.swccgo.logic.effects.StackActionEffect;
+import com.gempukku.swccgo.logic.effects.choose.ChooseStackedCardEffect;
+import com.gempukku.swccgo.logic.effects.choose.PlayStackedDefensiveShieldEffect;
+import com.gempukku.swccgo.logic.modifiers.MayNotBeFiredModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
@@ -40,8 +44,7 @@ public class Card501_205 extends AbstractUsedInterrupt {
         super(Side.LIGHT, 4, "Either Way, You Win", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("'Deal!'");
-        //setGameText("If [Tatooine] or [Coruscant] Qui-Gon in battle, he is power +1 for each 'credit.' OR Once per game, if a battle just initiated at Watto's Junkyard involving Qui-Gon, target a character. Lightsabers may not be fired this battle. Unless target is Watto or a Dark Jedi, cancel target's game text.");
-        setGameText("If [Tatooine] Anakin in battle, opponent may not draw more than one battle destiny. OR If a battle just initiated at a site, target an opponent's character with your [Tatooine] or [Coruscant] Qui-Gon. Target's game text canceled and neither character may fire weapons.");
+        setGameText("Each player may choose to play a Defensive Shield from under their Starting Effect or to exchange a card in hand with one of their race destinies. [Immune to Sense.] OR If a battle involving Qui-Gon was just initiated at a junkyard, weapons may not be fired this battle.");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
         setTestingText("Either Way, You Win (V)");
     }
@@ -51,21 +54,25 @@ public class Card501_205 extends AbstractUsedInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<PlayInterruptAction>();
 
         // Check condition(s)
-        if (GameConditions.isDuringBattleWithParticipant(game, Filters.and(Icon.TATOOINE, Filters.Anakin))) {
+        if (GameConditions.canSpot(game, self, Filters.Starting_Effect)
+                || GameConditions.canSpot(game, self, Filters.raceDestiny)) {
 
             GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_1;
             final String opponent = game.getOpponent(playerId);
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
 
-            action.setText("Limit opponent to one battle destiny");
+            action.setImmuneTo(Title.Sense);
+            action.setText("Allow each player to choose");
             // Allow response(s)
-            action.allowResponses("Prevent opponent from drawing more than one battle destiny",
+            action.allowResponses("Allow each player to choose to play a Defensive Shield from under their Starting Effect or to exchange a card in hand with one of their race destinies.",
                     new RespondablePlayCardEffect(action) {
                         @Override
                         protected void performActionResults(Action targetingAction) {
                             // Perform result(s)
                             action.appendEffect(
-                                    new DrawsNoMoreThanBattleDestinyEffect(action, opponent, 1));
+                                    getEitherWayYouWinPlayoutDecisionEffect(game, self, action, playerId));
+                            action.appendEffect(
+                                    getEitherWayYouWinPlayoutDecisionEffect(game, self, action, opponent));
                         }
                     }
             );
@@ -76,43 +83,75 @@ public class Card501_205 extends AbstractUsedInterrupt {
 
     @Override
     protected List<PlayInterruptAction> getGameTextOptionalAfterActions(final String playerId, final SwccgGame game, EffectResult effectResult, final PhysicalCard self) {
-        GameTextActionId gameTextActionId = GameTextActionId.EITHER_WAY_YOU_WIN_V__TARGET_CHARACTER;
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
 
-        Filter quigonFilter = Filters.and(Filters.or(Icon.TATOOINE, Icon.CORUSCANT), Filters.QuiGon, Filters.participatingInBattle);
-        Filter targetFilter = Filters.and(Filters.opponents(playerId), Filters.character, Filters.with(self, quigonFilter), Filters.participatingInBattle);
         // Check condition(s)
-        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.site)
-                && GameConditions.canTarget(game, self, targetFilter)) {
+        if (TriggerConditions.battleInitiatedAt(game, effectResult, Filters.titleContains("junkyard"))
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.QuiGon)) {
 
             final PlayInterruptAction action = new PlayInterruptAction(game, self, gameTextActionId);
-            action.setText("Target character with Qui-Gon");
+            action.setText("Prevent all weapons from being fired");
 
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Target character with Qui-Gon", targetFilter) {
+            // Allow response(s)
+            action.allowResponses(
+                    new RespondablePlayCardEffect(action) {
                         @Override
-                        protected void cardTargeted(final int targetGroupId, final PhysicalCard character) {
-                            action.addAnimationGroup(character);
-                            // Allow response(s)
-
-                            action.allowResponses(
-                                    new RespondablePlayCardEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
-
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new CancelGameTextUntilEndOfBattleEffect(action, finalTarget));
-                                            action.appendEffect(
-                                                    new AddUntilEndOfBattleModifierEffect(action, new MayNotFireWeaponsModifier(self, Filters.or(quigonFilter, finalTarget)), "Prevents Qui-Gon and " + GameUtils.getCardLink(finalTarget) + " from firing weapons"));
-                                        }
-                                    }
-                            );
+                        protected void performActionResults(Action targetingAction) {
+                            // Perform result(s)
+                            action.appendEffect(
+                                    new AddUntilEndOfBattleModifierEffect(action,
+                                            new MayNotBeFiredModifier(self, Filters.weapon),
+                                            "Prevents all weapons from being fired"));
                         }
-                    });
+                    }
+            );
             return Collections.singletonList(action);
         }
         return null;
+    }
+
+    protected PlayoutDecisionEffect getEitherWayYouWinPlayoutDecisionEffect(final SwccgGame game, PhysicalCard self, PlayInterruptAction action, String somePlayer) {
+        return new PlayoutDecisionEffect(action, somePlayer,
+                new MultipleChoiceAwaitingDecision("Choose an option", new String[]{"Play a Defensive Shield from under Starting Effect", "Exchange a card in hand with one of your race destinies", "Do nothing"}) {
+                    @Override
+                    protected void validDecisionMade(int index, String result) {
+                        if (index == 0) {
+
+                            game.getGameState().sendMessage(somePlayer + " chooses to play a Defensive Shield from under their Starting Effect");
+                            PhysicalCard startingEffect = Filters.findFirstActive(game, self, Filters.and(Filters.your(somePlayer), Filters.Starting_Effect));
+                            if (startingEffect != null) {
+                                Filter filter = Filters.and(Filters.Defensive_Shield, Filters.playable(self));
+                                if (GameConditions.hasStackedCards(game, startingEffect, filter)) {
+
+                                    final SubAction subAction = new SubAction(action, somePlayer);
+                                    subAction.appendTargeting(
+                                            new ChooseStackedCardEffect(action, somePlayer, startingEffect, filter) {
+                                                @Override
+                                                protected void cardSelected(PhysicalCard selectedCard) {
+                                                    // Perform result(s)
+                                                    subAction.appendEffect(
+                                                            new PlayStackedDefensiveShieldEffect(action, startingEffect, selectedCard));
+                                                }
+                                            }
+                                    );
+                                    action.appendEffect(new StackActionEffect(action, subAction));
+                                }
+                            }
+                        } else if (index == 1) {
+                            game.getGameState().sendMessage(somePlayer + " chooses to exchange a card in hand with one of their race destinies");
+                            if (GameConditions.hasHand(game, somePlayer)
+                                    && GameConditions.hasRaceDestiny(game, somePlayer)){
+
+                                    final SubAction subAction = new SubAction(action, somePlayer);
+                                    subAction.appendEffect(
+                                            new ExchangeCardFromHandWithStackedCardEffect(action, somePlayer, Filters.any, Filters.any, Filters.and(Filters.your(somePlayer), Filters.raceDestiny), true));
+                                    action.appendEffect(new StackActionEffect(action, subAction));
+                            }
+                        } else {
+                            game.getGameState().sendMessage(somePlayer + " chooses not to play a Defensive Shield or exchange a card with a race destiny");
+                        }
+                    }
+                }
+        );                            
     }
 }
