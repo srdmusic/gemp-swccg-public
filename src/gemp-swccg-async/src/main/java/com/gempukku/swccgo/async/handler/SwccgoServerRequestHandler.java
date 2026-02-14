@@ -13,9 +13,7 @@ import com.gempukku.swccgo.game.CardCollection;
 import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.packagedProduct.ProductName;
 import com.gempukku.swccgo.service.LoggedUserHolder;
-import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
-import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.*;
@@ -80,15 +78,18 @@ public class SwccgoServerRequestHandler {
     }
 
     private String getLoggedUser(HttpRequest request) {
-        ServerCookieDecoder cookieDecoder = ServerCookieDecoder.STRICT;
         String cookieHeader = request.headers().get(HttpHeaderNames.COOKIE);
         if (cookieHeader != null) {
-            Set<Cookie> cookies = cookieDecoder.decode(cookieHeader);
-            for (Cookie cookie : cookies) {
-                if (cookie.name().equals("loggedUser")) {
-                    String value = cookie.value();
-                    if (value != null) {
-                        return _loggedUserHolder.getLoggedUser(value);
+            String[] parts = cookieHeader.split(";");
+            for (int i = parts.length - 1; i >= 0; i--) {
+                String part = parts[i].trim();
+                if (part.startsWith("loggedUser=")) {
+                    String value = part.substring("loggedUser=".length());
+                    if (!value.isEmpty()) {
+                        String loggedUser = _loggedUserHolder.getLoggedUser(value);
+                        if (loggedUser != null) {
+                            return loggedUser;
+                        }
                     }
                 }
             }
@@ -191,7 +192,7 @@ public class SwccgoServerRequestHandler {
 
         String sessionId = _loggedUserHolder.logUser(login);
         DefaultCookie cookie = new DefaultCookie("loggedUser", sessionId);
-        cookie.setPath("/gemp-swccg-server/");
+        cookie.setPath("/");
         return Collections.singletonMap(
                 HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
     }

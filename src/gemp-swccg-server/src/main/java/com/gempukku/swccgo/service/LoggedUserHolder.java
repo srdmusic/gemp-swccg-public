@@ -8,8 +8,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class LoggedUserHolder {
-    private final long _loggedUserExpireLength = 1000 * 60 * 10; // 10 minutes session length
-    private final long _expireCheckInterval = 1000 * 60; // check every minute
+    private final long _loggedUserExpireLength = 1000L * 60 * 60 * 24; // 24 hours session length
+    private final long _expireCheckInterval = 1000L * 60; // check every minute
 
     private final Map<String, String> _sessionIdsToUsers = new HashMap<String, String>();
     private final Multimap<String, String> _usersToSessionIds = HashMultimap.create();
