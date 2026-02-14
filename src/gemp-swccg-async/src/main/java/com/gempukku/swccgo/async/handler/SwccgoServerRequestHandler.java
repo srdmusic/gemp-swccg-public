@@ -14,6 +14,7 @@ import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.packagedProduct.ProductName;
 import com.gempukku.swccgo.service.LoggedUserHolder;
 import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
@@ -189,7 +190,9 @@ public class SwccgoServerRequestHandler {
         _playerDao.updateLastLoginIp(login, remoteIp);
 
         String sessionId = _loggedUserHolder.logUser(login);
+        DefaultCookie cookie = new DefaultCookie("loggedUser", sessionId);
+        cookie.setPath("/gemp-swccg-server/");
         return Collections.singletonMap(
-                HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode("loggedUser", sessionId));
+                HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
     }
 }
