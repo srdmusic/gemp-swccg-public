@@ -2,10 +2,10 @@ package com.gempukku.swccgo.cards.set501.dark;
 
 import com.gempukku.swccgo.cards.AbstractNormalEffect;
 import com.gempukku.swccgo.cards.GameConditions;
+import com.gempukku.swccgo.cards.effects.usage.OncePerGameEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
 import com.gempukku.swccgo.common.Icon;
-import com.gempukku.swccgo.common.Keyword;
 import com.gempukku.swccgo.common.Persona;
 import com.gempukku.swccgo.common.PlayCardOptionId;
 import com.gempukku.swccgo.common.PlayCardZoneOption;
@@ -21,7 +21,7 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.LoseForceEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardToLocationFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.KeywordModifier;
+import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.MayNotHaveGameTextCanceledModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.MovesForFreeModifier;
@@ -42,7 +42,7 @@ public class Card501_060 extends AbstractNormalEffect {
         super(Side.DARK, 4, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "Crush The Rebellion", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("After dueling his son and seizing control of a city in the clouds, Vader resumed his quest to destroy the Alliance.");
-        setGameText("If Shield Gate on table, deploy on table. Star Destroyers gain Death Squadron. Death Star moves for free. May [download] Comm Chief or Praji to Scarif system. Vader is power +2 and his game text may not be canceled. If opponent just lost a battle, they lose 1 Force. [Immune to Alter.]");
+        setGameText("If Shield Gate on table, deploy on table. Once per game, may [upload] Devastator. May [download] Comm Chief or Praji to Scarif system. Vader is power +2 and his game text may not be canceled. If opponent just lost a battle, they lose 1 Force. Death Star moves for free. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("Crush The Rebellion (V)");
@@ -56,7 +56,6 @@ public class Card501_060 extends AbstractNormalEffect {
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new KeywordModifier(self, Filters.Star_Destroyer, Keyword.DEATH_SQUADRON));
         modifiers.add(new MovesForFreeModifier(self, Filters.Death_Star_system));
         modifiers.add(new PowerModifier(self, Filters.Vader, 2));
         modifiers.add(new MayNotHaveGameTextCanceledModifier(self, Filters.Vader));
@@ -67,7 +66,24 @@ public class Card501_060 extends AbstractNormalEffect {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, final SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.CRUSH_THE_REBELLION_V__DOWNLOAD_CARD;
+        GameTextActionId gameTextActionId = GameTextActionId.CRUSH_THE_REBELLION_V__UPLOAD_DEVASTATOR;
+        // Check condition(s)
+        if (GameConditions.isOncePerGame(game, self, gameTextActionId)
+                && GameConditions.canTakeCardsIntoHandFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Take Devastator into hand");
+            action.setActionMsg("Take Devastator into hand from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerGameEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new TakeCardIntoHandFromReserveDeckEffect(action, playerId, Filters.Devastator, true));
+            actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.CRUSH_THE_REBELLION_V__DOWNLOAD_CARD;
         // Check condition(s)
         if (GameConditions.canSpot(game, self, Filters.Scarif_system)
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId, Persona.PRAJI, Title.Comm_Chief)) {
