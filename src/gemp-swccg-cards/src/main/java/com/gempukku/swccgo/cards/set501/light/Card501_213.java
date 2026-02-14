@@ -20,7 +20,9 @@ import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.game.state.GameState;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
-import com.gempukku.swccgo.logic.conditions.UnlessCondition;
+import com.gempukku.swccgo.logic.conditions.AndCondition;
+import com.gempukku.swccgo.logic.conditions.Condition;
+import com.gempukku.swccgo.logic.conditions.NotCondition;
 import com.gempukku.swccgo.logic.effects.choose.StackOneCardFromLostPileEffect;
 import com.gempukku.swccgo.logic.modifiers.GenerateNoForceModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
@@ -38,7 +40,7 @@ public class Card501_213 extends AbstractNormalEffect {
         super(Side.LIGHT, 2, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "We're Leaving", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setVirtualSuffix(true);
         setLore("Qui-Gon realized that sometimes it's best to just leave, before any more damage is done.");
-        setGameText("Deploy on table. Unless Sebulba's Podracer on table, opponent generates no Force at Podrace Arena. Once during your control phase, if you are winning (or have won) a Podrace, may stack the bottom card of your Lost Pile on Credits Will Do Fine. [Immune to Alter.]");
+        setGameText("Deploy on table. If your Podracer is on table and opponent's is not, they generate no Force at Podrace Arena. Once during opponent's control phase, if you are winning (or have won) a Podrace, may stack the bottom card of your Lost Pile on Credits Will Do Fine. [Immune to Alter.]");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_4);
         addImmuneToCardTitle(Title.Alter);
         setTestingText("We're Leaving (V)");
@@ -46,10 +48,14 @@ public class Card501_213 extends AbstractNormalEffect {
 
     @Override
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        String opponent = game.getOpponent(self.getOwner());
+        String playerId = self.getOwner();
+        String opponent = game.getOpponent(playerId);
+
+        Condition yourPodracerOnTable = new OnTableCondition(self, Filters.and(Filters.your(playerId), Filters.Podracer));
+        Condition opponentsPodracerNotOnTable = new NotCondition(new OnTableCondition(self, Filters.and(Filters.your(opponent), Filters.Podracer)));
 
         List<Modifier> modifiers = new LinkedList<>();
-        modifiers.add(new GenerateNoForceModifier(self, Filters.Podrace_Arena, new UnlessCondition(new OnTableCondition(self, Filters.Sebulbas_Podracer)), opponent));
+        modifiers.add(new GenerateNoForceModifier(self, Filters.Podrace_Arena, new AndCondition(yourPodracerOnTable, opponentsPodracerNotOnTable), opponent));
         return modifiers;
     }
 
@@ -65,8 +71,8 @@ public class Card501_213 extends AbstractNormalEffect {
 
         if (credits != null
                 && bottomOfLostPile != null
-                && GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
-                && (GameConditions.isLeadingPodrace(game, Filters.and(Filters.your(playerId), Filters.Podracer))
+                && GameConditions.isOnceDuringOpponentsPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.CONTROL)
+                && (GameConditions.hasHigherRaceTotal(game, playerId)
                 || GameConditions.hasWonPodrace(game, playerId))) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
