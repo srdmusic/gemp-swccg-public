@@ -12,6 +12,7 @@ import com.gempukku.swccgo.game.Player;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.apache.commons.text.StringEscapeUtils;
+import io.netty.util.concurrent.ScheduledFuture;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ChatWebSocketSession implements WebSocketSession {
@@ -31,6 +33,7 @@ public class ChatWebSocketSession implements WebSocketSession {
     private final AtomicBoolean _closed = new AtomicBoolean(false);
     private final Object _sendLock = new Object();
     private final WebSocketChatChannel _channel;
+    private ScheduledFuture<?> _keepAlive;
 
     public ChatWebSocketSession(ChannelHandlerContext ctx, ChatRoomMediator chatRoom, Player player, PlayerDAO playerDao, String room) {
         _ctx = ctx;
@@ -48,6 +51,7 @@ public class ChatWebSocketSession implements WebSocketSession {
                     _player.hasType(Player.Type.PLAYTESTER), _channel);
             sendSnapshot(messages);
             _channel.enableForwarding();
+            startKeepAlive();
         } catch (PrivateInformationException exp) {
             sendError("Access denied.");
             _ctx.close();
@@ -57,6 +61,7 @@ public class ChatWebSocketSession implements WebSocketSession {
     @Override
     public void onClose() {
         if (_closed.compareAndSet(false, true)) {
+            stopKeepAlive();
             _chatRoom.partUser(_player.getName());
         }
     }
@@ -137,6 +142,23 @@ public class ChatWebSocketSession implements WebSocketSession {
                 if (_ctx.channel().isActive())
                     _ctx.writeAndFlush(new TextWebSocketFrame(json));
             });
+        }
+    }
+
+    private void startKeepAlive() {
+        stopKeepAlive();
+        _keepAlive = _ctx.executor().scheduleAtFixedRate(() -> {
+            if (_closed.get()) {
+                return;
+            }
+            _channel.touch();
+        }, 5, 10, TimeUnit.SECONDS);
+    }
+
+    private void stopKeepAlive() {
+        if (_keepAlive != null) {
+            _keepAlive.cancel(false);
+            _keepAlive = null;
         }
     }
 
@@ -231,12 +253,20 @@ public class ChatWebSocketSession implements WebSocketSession {
             forward = true;
         }
 
+        void touch() {
+            if (forward) {
+                consumeMessages(null);
+            }
+        }
+
         @Override
         public synchronized void messageReceived(ChatMessage message) {
             super.messageReceived(message);
-            if (forward) {
-                sendMessageEvent(message);
+            if (!forward) {
+                return;
             }
+            sendMessageEvent(message);
+            consumeMessages(null);
         }
     }
 }
