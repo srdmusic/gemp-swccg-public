@@ -5,6 +5,7 @@ import com.gempukku.swccgo.PlayerLock;
 import com.gempukku.swccgo.async.HttpProcessingException;
 import com.gempukku.swccgo.collection.CollectionsManager;
 import com.gempukku.swccgo.collection.TransferDAO;
+import com.gempukku.swccgo.common.ApplicationConfiguration;
 import com.gempukku.swccgo.db.DeckDAO;
 import com.gempukku.swccgo.db.GempSettingDAO;
 import com.gempukku.swccgo.db.PlayerDAO;
@@ -193,7 +194,37 @@ public class SwccgoServerRequestHandler {
         String sessionId = _loggedUserHolder.logUser(login);
         DefaultCookie cookie = new DefaultCookie("loggedUser", sessionId);
         cookie.setPath("/");
+        applyLegacyCookieAttributes(cookie);
         return Collections.singletonMap(
-                HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+                HttpHeaderNames.SET_COOKIE.toString(), encodeLegacyCookie(cookie));
+    }
+
+    private void applyLegacyCookieAttributes(DefaultCookie cookie) {
+        String domain = getCookieConfig("auth.cookie.domain", "AUTH_COOKIE_DOMAIN");
+        if (domain != null && !domain.isEmpty()) {
+            cookie.setDomain(domain);
+        }
+        String sameSite = getCookieConfig("auth.cookie.sameSite", "AUTH_COOKIE_SAMESITE");
+        boolean secure = "true".equalsIgnoreCase(getCookieConfig("auth.cookie.secure", "AUTH_COOKIE_SECURE"));
+        if ("none".equalsIgnoreCase(sameSite) || secure) {
+            cookie.setSecure(true);
+        }
+    }
+
+    private String encodeLegacyCookie(DefaultCookie cookie) {
+        String header = ServerCookieEncoder.STRICT.encode(cookie);
+        String sameSite = getCookieConfig("auth.cookie.sameSite", "AUTH_COOKIE_SAMESITE");
+        if (sameSite != null && !sameSite.isEmpty()) {
+            header = header + "; SameSite=" + sameSite;
+        }
+        return header;
+    }
+
+    private String getCookieConfig(String propertyName, String envName) {
+        String envValue = System.getenv(envName);
+        if (envValue != null && !envValue.isEmpty()) {
+            return envValue;
+        }
+        return ApplicationConfiguration.getProperty(propertyName);
     }
 }

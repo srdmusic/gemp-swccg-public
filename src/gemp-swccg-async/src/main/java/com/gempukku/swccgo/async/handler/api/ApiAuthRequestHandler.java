@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.gempukku.swccgo.async.HttpProcessingException;
 import com.gempukku.swccgo.async.ResponseWriter;
 import com.gempukku.swccgo.async.auth.JwtService;
+import com.gempukku.swccgo.common.ApplicationConfiguration;
 import com.gempukku.swccgo.db.LoginInvalidException;
 import com.gempukku.swccgo.db.RegisterNotAllowedException;
 import com.gempukku.swccgo.game.Player;
@@ -39,6 +40,10 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
             refresh(request, responseWriter);
         } else if ("/logout".equals(uri) && request.method() == HttpMethod.POST) {
             logout(request, responseWriter);
+        } else if ("/legacy-session".equals(uri) && request.method() == HttpMethod.POST) {
+            legacySession(request, responseWriter, remoteIp);
+        } else if ("/legacy-logout".equals(uri) && request.method() == HttpMethod.POST) {
+            legacyLogout(request, responseWriter);
         } else {
             responseWriter.writeError(404);
         }
@@ -190,6 +195,43 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
         responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
     }
 
+    private void legacySession(HttpRequest request, ResponseWriter responseWriter, String remoteIp) throws Exception {
+        AuthResult auth = requireAuth(request);
+        assertAccountAllowed(auth.player);
+
+        Map<String, Object> response = new LinkedHashMap<String, Object>();
+        response.put("status", "ok");
+
+        String payload = JSON.toJSONString(response);
+        Map<String, String> headers = new LinkedHashMap<String, String>();
+        headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
+        headers.putAll(logUserReturningHeaders(remoteIp, auth.player.getName()));
+
+        responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
+    }
+
+    private void legacyLogout(HttpRequest request, ResponseWriter responseWriter) throws Exception {
+        try {
+            AuthResult auth = requireAuth(request);
+            _loggedUserHolder.forceLogoutUser(auth.player.getName());
+        } catch (HttpProcessingException ignored) {
+        }
+
+        Map<String, Object> response = new LinkedHashMap<String, Object>();
+        response.put("status", "ok");
+
+        String payload = JSON.toJSONString(response);
+        Map<String, String> headers = new LinkedHashMap<String, String>();
+        headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
+
+        DefaultCookie cookie = new DefaultCookie("loggedUser", "");
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        headers.put(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+
+        responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
+    }
+
     private AuthResult requireAuth(HttpRequest request) throws HttpProcessingException {
         String token = getTokenFromRequest(request);
         if (token == null || token.isEmpty()) {
@@ -241,12 +283,10 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
         DefaultCookie cookie = new DefaultCookie(JwtService.JWT_COOKIE_NAME, token);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
+        applyCookieAttributes(cookie, request);
         long maxAge = Math.max(0L, expiresAt - Instant.now().getEpochSecond());
         cookie.setMaxAge(maxAge);
-        if (isSecureRequest(request)) {
-            cookie.setSecure(true);
-        }
-        headers.put(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+        headers.put(HttpHeaderNames.SET_COOKIE.toString(), encodeCookie(cookie));
     }
 
     private void addClearedJwtCookie(Map<String, String> headers, HttpRequest request) {
@@ -255,16 +295,44 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
         DefaultCookie cookie = new DefaultCookie(JwtService.JWT_COOKIE_NAME, "");
         cookie.setPath("/");
         cookie.setHttpOnly(true);
+        applyCookieAttributes(cookie, request);
         cookie.setMaxAge(0);
-        if (isSecureRequest(request)) {
-            cookie.setSecure(true);
-        }
-        headers.put(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+        headers.put(HttpHeaderNames.SET_COOKIE.toString(), encodeCookie(cookie));
     }
 
     private boolean isSecureRequest(HttpRequest request) {
         String forwardedProto = request.headers().get("X-Forwarded-Proto");
         return forwardedProto != null && forwardedProto.toLowerCase().contains("https");
+    }
+
+    private void applyCookieAttributes(DefaultCookie cookie, HttpRequest request) {
+        String domain = getCookieConfig("auth.cookie.domain", "AUTH_COOKIE_DOMAIN");
+        if (domain != null && !domain.isEmpty()) {
+            cookie.setDomain(domain);
+        }
+        String sameSite = getCookieConfig("auth.cookie.sameSite", "AUTH_COOKIE_SAMESITE");
+        if ("none".equalsIgnoreCase(sameSite)) {
+            cookie.setSecure(true);
+        } else if (isSecureRequest(request)) {
+            cookie.setSecure(true);
+        }
+    }
+
+    private String encodeCookie(DefaultCookie cookie) {
+        String header = ServerCookieEncoder.STRICT.encode(cookie);
+        String sameSite = getCookieConfig("auth.cookie.sameSite", "AUTH_COOKIE_SAMESITE");
+        if (sameSite != null && !sameSite.isEmpty()) {
+            header = header + "; SameSite=" + sameSite;
+        }
+        return header;
+    }
+
+    private String getCookieConfig(String propertyName, String envName) {
+        String envValue = System.getenv(envName);
+        if (envValue != null && !envValue.isEmpty()) {
+            return envValue;
+        }
+        return ApplicationConfiguration.getProperty(propertyName);
     }
 
     private static final class AuthResult {
