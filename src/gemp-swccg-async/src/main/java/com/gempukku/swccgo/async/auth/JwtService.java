@@ -16,6 +16,7 @@ import java.util.Map;
 
 public class JwtService {
     private static final JwtService INSTANCE = new JwtService();
+    public static final String JWT_COOKIE_NAME = "gemp.jwt";
 
     private final String _issuer;
     private final byte[] _secret;

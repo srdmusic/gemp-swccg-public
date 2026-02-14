@@ -18,6 +18,7 @@ import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.util.CharsetUtil;
 
 import java.lang.reflect.Type;
+import java.time.Instant;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -90,17 +91,12 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
         JwtService.JwtToken jwtToken = _jwtService.verifyToken(token);
         long expiresAt = jwtToken != null ? jwtToken.getExpiresAt() : 0L;
 
-        Map<String, Object> response = new LinkedHashMap<String, Object>();
-        response.put("token", token);
-        response.put("tokenType", "Bearer");
-        response.put("expiresAt", expiresAt);
-        response.put("user", player.GetUserInfo());
+        _playerDao.updateLastLoginIp(player.getName(), remoteIp);
 
-        String payload = JSON.toJSONString(response);
         Map<String, String> headers = new LinkedHashMap<String, String>();
         headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
-        headers.putAll(logUserReturningHeaders(remoteIp, player.getName()));
-        responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
+        addJwtCookie(headers, request, token, expiresAt);
+        writeAuthResponse(responseWriter, token, expiresAt, player, headers);
     }
 
     private void register(HttpRequest request, ResponseWriter responseWriter, String remoteIp) throws Exception {
@@ -152,23 +148,18 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
         JwtService.JwtToken jwtToken = _jwtService.verifyToken(token);
         long expiresAt = jwtToken != null ? jwtToken.getExpiresAt() : 0L;
 
-        Map<String, Object> response = new LinkedHashMap<String, Object>();
-        response.put("token", token);
-        response.put("tokenType", "Bearer");
-        response.put("expiresAt", expiresAt);
-        response.put("user", player.GetUserInfo());
+        _playerDao.updateLastLoginIp(player.getName(), remoteIp);
 
-        String payload = JSON.toJSONString(response);
         Map<String, String> headers = new LinkedHashMap<String, String>();
         headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
-        headers.putAll(logUserReturningHeaders(remoteIp, player.getName()));
-        responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
+        addJwtCookie(headers, request, token, expiresAt);
+        writeAuthResponse(responseWriter, token, expiresAt, player, headers);
     }
 
     private void me(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         AuthResult auth = requireAuth(request);
         assertAccountAllowed(auth.player);
-        writeAuthResponse(responseWriter, auth.token, auth.expiresAt, auth.player);
+        writeAuthResponse(responseWriter, auth.token, auth.expiresAt, auth.player, null);
     }
 
     private void refresh(HttpRequest request, ResponseWriter responseWriter) throws Exception {
@@ -177,7 +168,10 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
         String newToken = _jwtService.issueToken(auth.player.getName());
         JwtService.JwtToken jwtToken = _jwtService.verifyToken(newToken);
         long expiresAt = jwtToken != null ? jwtToken.getExpiresAt() : 0L;
-        writeAuthResponse(responseWriter, newToken, expiresAt, auth.player);
+        Map<String, String> headers = new LinkedHashMap<String, String>();
+        headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
+        addJwtCookie(headers, request, newToken, expiresAt);
+        writeAuthResponse(responseWriter, newToken, expiresAt, auth.player, headers);
     }
 
     private void logout(HttpRequest request, ResponseWriter responseWriter) throws Exception {
@@ -191,10 +185,7 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
         Map<String, String> headers = new LinkedHashMap<String, String>();
         headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
 
-        DefaultCookie cookie = new DefaultCookie("loggedUser", "");
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        headers.put(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+        addClearedJwtCookie(headers, request);
 
         responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
     }
@@ -228,7 +219,7 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
         }
     }
 
-    private void writeAuthResponse(ResponseWriter responseWriter, String token, long expiresAt, Player player) throws Exception {
+    private void writeAuthResponse(ResponseWriter responseWriter, String token, long expiresAt, Player player, Map<String, String> headers) throws Exception {
         Map<String, Object> response = new LinkedHashMap<String, Object>();
         response.put("token", token);
         response.put("tokenType", "Bearer");
@@ -236,9 +227,44 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
         response.put("user", player.GetUserInfo());
 
         String payload = JSON.toJSONString(response);
-        Map<String, String> headers = new LinkedHashMap<String, String>();
-        headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
-        responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
+        Map<String, String> responseHeaders = new LinkedHashMap<String, String>();
+        responseHeaders.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
+        if (headers != null) {
+            responseHeaders.putAll(headers);
+        }
+        responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), responseHeaders);
+    }
+
+    private void addJwtCookie(Map<String, String> headers, HttpRequest request, String token, long expiresAt) {
+        if (headers == null)
+            return;
+        DefaultCookie cookie = new DefaultCookie(JwtService.JWT_COOKIE_NAME, token);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        long maxAge = Math.max(0L, expiresAt - Instant.now().getEpochSecond());
+        cookie.setMaxAge(maxAge);
+        if (isSecureRequest(request)) {
+            cookie.setSecure(true);
+        }
+        headers.put(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+    }
+
+    private void addClearedJwtCookie(Map<String, String> headers, HttpRequest request) {
+        if (headers == null)
+            return;
+        DefaultCookie cookie = new DefaultCookie(JwtService.JWT_COOKIE_NAME, "");
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(0);
+        if (isSecureRequest(request)) {
+            cookie.setSecure(true);
+        }
+        headers.put(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
+    }
+
+    private boolean isSecureRequest(HttpRequest request) {
+        String forwardedProto = request.headers().get("X-Forwarded-Proto");
+        return forwardedProto != null && forwardedProto.toLowerCase().contains("https");
     }
 
     private static final class AuthResult {

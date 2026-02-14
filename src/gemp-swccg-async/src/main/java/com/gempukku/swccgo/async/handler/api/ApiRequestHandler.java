@@ -10,10 +10,13 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.util.CharsetUtil;
 
 import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.Set;
 
 public class ApiRequestHandler extends SwccgoServerRequestHandler {
     protected final JwtService _jwtService = JwtService.getInstance();
@@ -44,7 +47,28 @@ public class ApiRequestHandler extends SwccgoServerRequestHandler {
             return authHeader.substring("Bearer ".length()).trim();
 
         QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
-        return getQueryParameterSafely(decoder, "token");
+        String queryToken = getQueryParameterSafely(decoder, "token");
+        if (queryToken != null && !queryToken.isEmpty())
+            return queryToken;
+
+        String cookieToken = getTokenFromCookies(request);
+        if (cookieToken != null && !cookieToken.isEmpty())
+            return cookieToken;
+
+        return null;
+    }
+
+    private String getTokenFromCookies(HttpRequest request) {
+        String cookieHeader = request.headers().get(HttpHeaderNames.COOKIE);
+        if (cookieHeader == null || cookieHeader.isEmpty())
+            return null;
+
+        Set<Cookie> cookies = ServerCookieDecoder.STRICT.decode(cookieHeader);
+        for (Cookie cookie : cookies) {
+            if (JwtService.JWT_COOKIE_NAME.equals(cookie.name()))
+                return cookie.value();
+        }
+        return null;
     }
 
     protected JSONObject readJsonBody(HttpRequest request) throws HttpProcessingException {

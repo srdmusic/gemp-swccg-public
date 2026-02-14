@@ -16,6 +16,8 @@ import com.gempukku.swccgo.game.SwccgoServer;
 import com.gempukku.swccgo.hall.HallServer;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
 import org.apache.logging.log4j.LogManager;
@@ -40,6 +42,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
@@ -157,6 +160,8 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
         }
 
         String token = getQueryParameter(decoder, "token");
+        if (token == null || token.isEmpty())
+            token = getTokenFromCookies(request);
         if (token == null || token.isEmpty()) {
             responseSender.writeError(401);
             return;
@@ -251,6 +256,18 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
         java.util.List<String> values = decoder.parameters().get(parameterName);
         if (values != null && !values.isEmpty())
             return values.get(0);
+        return null;
+    }
+
+    private String getTokenFromCookies(HttpRequest request) {
+        String cookieHeader = request.headers().get(HttpHeaderNames.COOKIE);
+        if (cookieHeader == null || cookieHeader.isEmpty())
+            return null;
+        Set<Cookie> cookies = ServerCookieDecoder.STRICT.decode(cookieHeader);
+        for (Cookie cookie : cookies) {
+            if (JwtService.JWT_COOKIE_NAME.equals(cookie.name()))
+                return cookie.value();
+        }
         return null;
     }
 
