@@ -3,6 +3,7 @@ package com.gempukku.swccgo.cards.set501.dark;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
+import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.cards.evaluators.ConditionEvaluator;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.GameTextActionId;
@@ -28,6 +29,7 @@ import com.gempukku.swccgo.logic.effects.PlaceCardOutOfPlayFromTableEffect;
 import com.gempukku.swccgo.logic.effects.RespondableEffect;
 import com.gempukku.swccgo.logic.effects.RetrieveCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
@@ -47,7 +49,7 @@ import java.util.List;
 public class Card501_064_BACK extends AbstractObjective {
     public Card501_064_BACK() {
         super(Side.DARK, 7, Title.Taking_Control_Of_The_Weapon, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, A Bright Center To The Universe cancels opponent's Force drain modifiers everywhere. Vader may make a regular move to a battle just initiated. At Death Star, system it orbits, and sites related to either, your total battle destiny is +1 (+2 if your non-unique card with ability in battle). During your draw phase, may retrieve a non-unique card with ability. Flip this card if you have no leaders on Scarif. Place out of play if Death Star or Shield Gate not on table.");
+        setGameText("While this side up, A Bright Center To The Universe cancels opponent's Force drain modifiers everywhere. Vader may make a regular move to a battle just initiated. At Death Star, system it orbits, and sites related to either, your total battle destiny is +1 (+2 if your non-unique card with ability in battle). During your draw phase, may retrieve a non-unique card with ability. Flip this card if you do not have a leader at a Scarif battleground site. Place out of play if Death Star or Shield Gate not on table.");
         addIcons(Icon.VIRTUAL_SET_16);
         setTestingText("Taking Control Of The Weapon");
     }
@@ -114,7 +116,25 @@ public class Card501_064_BACK extends AbstractObjective {
     protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
         List<TopLevelGameTextAction> actions = new LinkedList<TopLevelGameTextAction>();
 
-        GameTextActionId gameTextActionId = GameTextActionId.TAKING_CONTROL_OF_THE_WEAPON__RETRIEVE_NON_UNIQUE_CARD_WITH_ABILITY;
+        GameTextActionId gameTextActionId = GameTextActionId.ON_THE_VERGE_OF_GREATNESS__DEPLOY_SCARIF_BATTLEGROUND;
+
+        // Check condition(s)
+        if (GameConditions.isOncePerTurn(game, self, playerId, gameTextSourceCardId, gameTextActionId)
+                && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
+
+            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+            action.setText("Deploy a Scarif battleground");
+            action.setActionMsg("Deploy a Scarif battleground from Reserve Deck");
+            // Update usage limit(s)
+            action.appendUsage(
+                    new OncePerTurnEffect(action));
+            // Perform result(s)
+            action.appendEffect(
+                    new DeployCardFromReserveDeckEffect(action, Filters.and(Filters.Scarif_location, Filters.battleground), true));
+            actions.add(action);
+        }
+
+        gameTextActionId = GameTextActionId.TAKING_CONTROL_OF_THE_WEAPON__RETRIEVE_NON_UNIQUE_CARD_WITH_ABILITY;
 
         // Check condition(s)
         if (GameConditions.isOnceDuringYourPhase(game, self, playerId, gameTextSourceCardId, gameTextActionId, Phase.DRAW)) {
@@ -151,7 +171,7 @@ public class Card501_064_BACK extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && !GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(self), Filters.leader, Filters.on(Title.Scarif)))) {
+                && !GameConditions.canSpot(game, self, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.and(Filters.your(self), Filters.leader, Filters.at(Filters.Scarif_battleground_site)))) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setSingletonTrigger(true);
