@@ -16,7 +16,6 @@ import java.util.Map;
 
 public class JwtService {
     private static final JwtService INSTANCE = new JwtService();
-    private static final Logger _logger = LogManager.getLogger(JwtService.class);
 
     private final String _issuer;
     private final byte[] _secret;
@@ -29,7 +28,8 @@ public class JwtService {
         if (secretValue == null || secretValue.isEmpty())
             secretValue = "change-me";
         if ("change-me".equals(secretValue)) {
-            _logger.warn("jwt.secret is using the default value; set JWT_SECRET in production.");
+            Logger logger = LogManager.getLogger(JwtService.class);
+            logger.warn("jwt.secret is using the default value; set JWT_SECRET in production.");
         }
         _secret = secretValue.getBytes(StandardCharsets.UTF_8);
         long ttlSeconds = parseLong(ApplicationConfiguration.getProperty("jwt.ttl.seconds"), 86400L);
