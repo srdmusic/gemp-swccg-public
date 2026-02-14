@@ -1,0 +1,242 @@
+package com.gempukku.swccgo.async.ws;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.gempukku.swccgo.PrivateInformationException;
+import com.gempukku.swccgo.chat.ChatCommandErrorException;
+import com.gempukku.swccgo.chat.ChatMessage;
+import com.gempukku.swccgo.chat.ChatRoomMediator;
+import com.gempukku.swccgo.db.PlayerDAO;
+import com.gempukku.swccgo.game.ChatCommunicationChannel;
+import com.gempukku.swccgo.game.Player;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
+import org.apache.commons.text.StringEscapeUtils;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public class ChatWebSocketSession implements WebSocketSession {
+    private final ChannelHandlerContext _ctx;
+    private final ChatRoomMediator _chatRoom;
+    private final Player _player;
+    private final PlayerDAO _playerDao;
+    private final String _room;
+    private final AtomicBoolean _closed = new AtomicBoolean(false);
+    private final Object _sendLock = new Object();
+    private final WebSocketChatChannel _channel;
+
+    public ChatWebSocketSession(ChannelHandlerContext ctx, ChatRoomMediator chatRoom, Player player, PlayerDAO playerDao, String room) {
+        _ctx = ctx;
+        _chatRoom = chatRoom;
+        _player = player;
+        _playerDao = playerDao;
+        _room = room;
+        _channel = new WebSocketChatChannel();
+    }
+
+    @Override
+    public void onOpen() {
+        try {
+            List<ChatMessage> messages = _chatRoom.joinUser(_player.getName(), _player.hasType(Player.Type.ADMIN),
+                    _player.hasType(Player.Type.PLAYTESTER), _channel);
+            sendSnapshot(messages);
+            _channel.enableForwarding();
+        } catch (PrivateInformationException exp) {
+            sendError("Access denied.");
+            _ctx.close();
+        }
+    }
+
+    @Override
+    public void onClose() {
+        if (_closed.compareAndSet(false, true)) {
+            _chatRoom.partUser(_player.getName());
+        }
+    }
+
+    @Override
+    public void onTextMessage(String message) {
+        String text = extractMessage(message);
+        if (text == null || text.trim().isEmpty()) {
+            return;
+        }
+        try {
+            _chatRoom.sendMessage(_player.getName(), StringEscapeUtils.escapeHtml3(text), _player.hasType(Player.Type.ADMIN));
+        } catch (PrivateInformationException exp) {
+            sendError("You do not have permission to post in this room.");
+        } catch (ChatCommandErrorException exp) {
+            sendError("Chat command failed.");
+        }
+    }
+
+    private String extractMessage(String payload) {
+        if (payload == null) {
+            return null;
+        }
+        String trimmed = payload.trim();
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            try {
+                JSONObject json = JSON.parseObject(trimmed);
+                String type = json.getString("type");
+                if (type == null || "message".equals(type)) {
+                    String text = json.getString("text");
+                    if (text == null) {
+                        text = json.getString("message");
+                    }
+                    return text;
+                }
+            } catch (Exception ignored) {
+                // fall through to raw
+            }
+        }
+        return payload;
+    }
+
+    private void sendSnapshot(List<ChatMessage> messages) {
+        Map<String, Object> payload = new LinkedHashMap<String, Object>();
+        payload.put("room", _room);
+        payload.put("messages", serializeMessages(messages));
+        payload.put("users", buildUsers());
+        sendEvent("snapshot", payload);
+    }
+
+    private void sendMessageEvent(ChatMessage chatMessage) {
+        Map<String, Object> payload = new LinkedHashMap<String, Object>();
+        payload.put("message", serializeMessage(chatMessage));
+        payload.put("users", buildUsers());
+        sendEvent("message", payload);
+    }
+
+    private void sendError(String message) {
+        Map<String, Object> payload = new LinkedHashMap<String, Object>();
+        payload.put("message", message);
+        sendEvent("error", payload);
+    }
+
+    private void sendEvent(String event, Map<String, Object> payload) {
+        Map<String, Object> message = new LinkedHashMap<String, Object>();
+        message.put("type", "chat");
+        message.put("event", event);
+        if (payload != null) {
+            message.putAll(payload);
+        }
+        sendJson(message);
+    }
+
+    private void sendJson(Map<String, Object> message) {
+        final String json = JSON.toJSONString(message);
+        synchronized (_sendLock) {
+            _ctx.executor().execute(() -> {
+                if (_ctx.channel().isActive())
+                    _ctx.writeAndFlush(new TextWebSocketFrame(json));
+            });
+        }
+    }
+
+    private List<Map<String, Object>> serializeMessages(List<ChatMessage> messages) {
+        List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
+        for (ChatMessage message : messages) {
+            result.add(serializeMessage(message));
+        }
+        return result;
+    }
+
+    private Map<String, Object> serializeMessage(ChatMessage message) {
+        Map<String, Object> entry = new LinkedHashMap<String, Object>();
+        entry.put("id", message.getMsgId());
+        entry.put("from", message.getFrom());
+        entry.put("date", message.getWhen().getTime());
+        entry.put("text", message.getMessage());
+        return entry;
+    }
+
+    private List<String> buildUsers() {
+        Set<String> users = new TreeSet<String>(new CaseInsensitiveStringComparator());
+        for (String user : _chatRoom.getUsersInRoom()) {
+            String formatted = formatPlayerNameForChatList(user);
+            if (!formatted.isEmpty()) {
+                users.add(formatted);
+            }
+        }
+        return new ArrayList<String>(users);
+    }
+
+    private String formatPlayerNameForChatList(String userInRoom) {
+        StringBuilder sb = new StringBuilder(userInRoom);
+        final Player player = _playerDao.getPlayer(userInRoom);
+        if (player != null) {
+            final List<Player.Type> playerTypes = Player.Type.getTypes(player.getType());
+            if (playerTypes.contains(Player.Type.ADMIN)) {
+                sb.insert(0, "* ");
+            } else {
+                if (playerTypes.contains(Player.Type.LEAGUE_ADMIN) || playerTypes.contains(Player.Type.PLAYTESTING_ADMIN)) {
+                    sb.insert(0, " ");
+                    if (playerTypes.contains(Player.Type.COMMENTATOR)) {
+                        sb.insert(0, "\u00e7");
+                    }
+                    if (playerTypes.contains(Player.Type.PLAYTESTER)) {
+                        sb.insert(0, "\u03b2");
+                    }
+                    sb.insert(0, "+");
+                } else {
+                    if (playerTypes.contains(Player.Type.PLAYTESTER) || playerTypes.contains(Player.Type.COMMENTATOR)) {
+                        sb.insert(0, " ");
+                        if (playerTypes.contains(Player.Type.COMMENTATOR)) {
+                            sb.insert(0, "\u00e7");
+                        }
+                        if (playerTypes.contains(Player.Type.PLAYTESTER)) {
+                            sb.insert(0, "\u03b2");
+                        }
+                    }
+                    sb.append(" ");
+                }
+            }
+        }
+        sb.setLength(Math.min(sb.length(), 40));
+        return sb.toString().trim();
+    }
+
+    private static class CaseInsensitiveStringComparator implements Comparator<String> {
+        @Override
+        public int compare(String o1, String o2) {
+            if (o1.contains(" ") && !o2.contains(" ")) {
+                return -1;
+            }
+            if (!o1.contains(" ") && o2.contains(" ")) {
+                return 1;
+            }
+
+            if (!o1.contains(" ") && !o2.contains(" ")) {
+                return o1.toLowerCase().compareTo(o2.toLowerCase());
+            }
+
+            String oneWithSubstitutions = o1.replace("*", "a").replace("+", "b").replace("\u03b2", "c").replace("\u00e7", "d").replace(" ", "z");
+            String twoWithSubstitutions = o2.replace("*", "a").replace("+", "b").replace("\u03b2", "c").replace("\u00e7", "d").replace(" ", "z");
+
+            return oneWithSubstitutions.toLowerCase().compareTo(twoWithSubstitutions.toLowerCase());
+        }
+    }
+
+    private class WebSocketChatChannel extends ChatCommunicationChannel {
+        private volatile boolean forward;
+
+        void enableForwarding() {
+            forward = true;
+        }
+
+        @Override
+        public synchronized void messageReceived(ChatMessage message) {
+            super.messageReceived(message);
+            if (forward) {
+                sendMessageEvent(message);
+            }
+        }
+    }
+}

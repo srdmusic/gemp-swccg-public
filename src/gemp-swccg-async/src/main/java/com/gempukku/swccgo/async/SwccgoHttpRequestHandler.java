@@ -2,9 +2,12 @@ package com.gempukku.swccgo.async;
 
 import com.gempukku.swccgo.async.auth.JwtService;
 import com.gempukku.swccgo.async.handler.UriRequestHandler;
+import com.gempukku.swccgo.async.ws.ChatWebSocketSession;
 import com.gempukku.swccgo.async.ws.HallWebSocketSession;
 import com.gempukku.swccgo.async.ws.SwccgoWebSocketFrameHandler;
 import com.gempukku.swccgo.async.ws.WebSocketSession;
+import com.gempukku.swccgo.chat.ChatRoomMediator;
+import com.gempukku.swccgo.chat.ChatServer;
 import com.gempukku.swccgo.db.IpBanDAO;
 import com.gempukku.swccgo.db.PlayerDAO;
 import com.gempukku.swccgo.game.Player;
@@ -180,6 +183,19 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
         if ("hall".equals(channel)) {
             HallServer hallServer = (HallServer) _objects.get(HallServer.class);
             session = new HallWebSocketSession(ctx, hallServer, player);
+        } else if ("chat".equals(channel)) {
+            String room = getQueryParameter(decoder, "room");
+            if (room == null || room.isEmpty()) {
+                responseSender.writeError(400);
+                return;
+            }
+            ChatServer chatServer = (ChatServer) _objects.get(ChatServer.class);
+            ChatRoomMediator chatRoom = chatServer != null ? chatServer.getChatRoom(room) : null;
+            if (chatRoom == null) {
+                responseSender.writeError(404);
+                return;
+            }
+            session = new ChatWebSocketSession(ctx, chatRoom, player, playerDAO, room);
         }
 
         if (session == null) {

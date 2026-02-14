@@ -41,6 +41,10 @@ public class ChatRoomMediator {
     }
 
     public List<ChatMessage> joinUser(String playerId, boolean admin, boolean playtester) throws PrivateInformationException {
+        return joinUser(playerId, admin, playtester, new ChatCommunicationChannel());
+    }
+
+    public List<ChatMessage> joinUser(String playerId, boolean admin, boolean playtester, ChatCommunicationChannel listener) throws PrivateInformationException {
         _lock.writeLock().lock();
         try {
             if(_allowedPlayers != null && !_allowedPlayers.contains(playerId) && _privateRoom)
@@ -48,10 +52,9 @@ public class ChatRoomMediator {
             if(_allowedPlayers != null && !_allowedPlayers.contains(playerId) && _playtesting && !admin && !playtester)
                 throw new PrivateInformationException();
 
-            ChatCommunicationChannel value = new ChatCommunicationChannel();
-            _listeners.put(playerId, value);
-            _chatRoom.joinChatRoom(playerId, _allowedPlayers != null && !_allowedPlayers.contains(playerId) && !_allowSpectatorsToChat, value);
-            return value.consumeMessages(0);
+            _listeners.put(playerId, listener);
+            _chatRoom.joinChatRoom(playerId, _allowedPlayers != null && !_allowedPlayers.contains(playerId) && !_allowSpectatorsToChat, listener);
+            return listener.consumeMessages(0);
         } finally {
             _lock.writeLock().unlock();
         }
