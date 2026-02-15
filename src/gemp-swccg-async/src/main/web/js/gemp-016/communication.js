@@ -15,6 +15,7 @@ var GempSwccgCommunication = Class.extend({
     _gameWsMaxDelayMs:null,
     _gameWsEnabled:null,
     _gameWsDisabled:null,
+    _gameWsFailureNotified:null,
     _chatSockets:null,
     _chatCallbacks:null,
     _chatErrorMaps:null,
@@ -22,6 +23,8 @@ var GempSwccgCommunication = Class.extend({
     _chatReconnectAttempts:null,
     _chatUsers:null,
     _chatWsEnabled:null,
+    _chatWsDisabled:null,
+    _chatWsFailureNotified:null,
     _hallSocket:null,
     _hallCallback:null,
     _hallErrorMap:null,
@@ -29,6 +32,7 @@ var GempSwccgCommunication = Class.extend({
     _hallReconnectAttempts:null,
     _hallWsEnabled:null,
     _hallWsDisabled:null,
+    _hallWsFailureNotified:null,
     _hallPendingUpdates:null,
     _hallState:null,
     _hallChannelNumber:null,
@@ -53,6 +57,7 @@ var GempSwccgCommunication = Class.extend({
         this._gameWsMaxDelayMs = 15000;
         this._gameWsEnabled = false;
         this._gameWsDisabled = false;
+        this._gameWsFailureNotified = false;
         this._chatSockets = {};
         this._chatCallbacks = {};
         this._chatErrorMaps = {};
@@ -60,6 +65,8 @@ var GempSwccgCommunication = Class.extend({
         this._chatReconnectAttempts = {};
         this._chatUsers = {};
         this._chatWsEnabled = {};
+        this._chatWsDisabled = {};
+        this._chatWsFailureNotified = {};
         this._hallSocket = null;
         this._hallCallback = null;
         this._hallErrorMap = null;
@@ -67,6 +74,7 @@ var GempSwccgCommunication = Class.extend({
         this._hallReconnectAttempts = 0;
         this._hallWsEnabled = false;
         this._hallWsDisabled = false;
+        this._hallWsFailureNotified = false;
         this._hallPendingUpdates = [];
         this._hallState = {};
         this._hallChannelNumber = null;
@@ -315,7 +323,9 @@ var GempSwccgCommunication = Class.extend({
         if (channelNumber != null && channelNumber !== "")
             this._gameChannelNumber = channelNumber;
 
-        if (this.supportsWebSockets() && !this._gameWsDisabled) {
+        if (this.supportsWebSockets()) {
+            if (this._gameWsDisabled)
+                return;
             this._gameWsEnabled = true;
             this._gameUpdateCallback = callback;
             this.flushPendingGameUpdate();
@@ -362,7 +372,9 @@ var GempSwccgCommunication = Class.extend({
         if (channelNumber != null && channelNumber !== "")
             this._gameChannelNumber = channelNumber;
 
-        if (this.supportsWebSockets() && !this._gameWsDisabled) {
+        if (this.supportsWebSockets()) {
+            if (this._gameWsDisabled)
+                return;
             this._gameWsEnabled = true;
             this.ensureGameSocket();
 
@@ -697,6 +709,8 @@ var GempSwccgCommunication = Class.extend({
         this._chatErrorMaps[room] = errorMap;
 
         if (this.supportsWebSockets()) {
+            if (this._chatWsDisabled[room])
+                return;
             this._chatWsEnabled[room] = true;
             this.ensureChatSocket(room);
             return;
@@ -738,7 +752,10 @@ var GempSwccgCommunication = Class.extend({
         this._chatCallbacks[room] = callback;
         this._chatErrorMaps[room] = errorMap;
 
-        if (this._chatWsEnabled[room]) {
+        if (this.supportsWebSockets()) {
+            if (this._chatWsDisabled[room])
+                return;
+            this._chatWsEnabled[room] = true;
             this.ensureChatSocket(room);
             return;
         }
@@ -935,11 +952,11 @@ var GempSwccgCommunication = Class.extend({
         }
         this._gameWs = null;
 
-        if (this._gameUpdateCallback != null) {
-            var callback = this._gameUpdateCallback;
-            this._gameUpdateCallback = null;
-            this.updateGameStateHttp(this._gameChannelNumber, callback, this._gameErrorMap);
-        }
+        if (this._gameWsFailureNotified)
+            return;
+
+        this._gameWsFailureNotified = true;
+        this.handleGameError("0");
     },
     handleGameWsMessage:function (data) {
         var payload = null;
@@ -1286,6 +1303,7 @@ var GempSwccgCommunication = Class.extend({
     },
     enableChatPollingFallback:function (room) {
         this._chatWsEnabled[room] = false;
+        this._chatWsDisabled[room] = true;
 
         var socket = this._chatSockets[room];
         if (socket != null) {
@@ -1301,10 +1319,11 @@ var GempSwccgCommunication = Class.extend({
             this._chatReconnectTimers[room] = null;
         }
 
-        var callback = this._chatCallbacks[room];
-        if (callback != null) {
-            this.startChatHttp(room, callback, this._chatErrorMaps[room]);
-        }
+        if (this._chatWsFailureNotified[room])
+            return;
+
+        this._chatWsFailureNotified[room] = true;
+        this.handleChatError(room, "0");
     },
     isAuthClose:function (event) {
         if (event == null)
@@ -1437,7 +1456,9 @@ var GempSwccgCommunication = Class.extend({
         this._hallErrorMap = errorMap;
         this._hallChannelNumber = channelNumber;
 
-        if (this.supportsWebSockets() && !this._hallWsDisabled) {
+        if (this.supportsWebSockets()) {
+            if (this._hallWsDisabled)
+                return;
             this._hallWsEnabled = true;
             this._hallCallback = callback;
             this.flushPendingHallUpdate();
@@ -1556,11 +1577,11 @@ var GempSwccgCommunication = Class.extend({
         }
         this._hallSocket = null;
 
-        if (this._hallCallback != null) {
-            var callback = this._hallCallback;
-            this._hallCallback = null;
-            this.updateHallHttp(callback, this._hallChannelNumber, this._hallErrorMap);
-        }
+        if (this._hallWsFailureNotified)
+            return;
+
+        this._hallWsFailureNotified = true;
+        this.handleHallError("0");
     },
     handleHallWsMessage:function (data) {
         var payload = null;
