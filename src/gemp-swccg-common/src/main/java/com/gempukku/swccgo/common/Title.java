@@ -11,6 +11,7 @@ public interface Title {
     String _500_Republica = "Coruscant: 500 Republica";
     String _5D6RA7 = "5D6-RA-7 (Fivedesix)";
     String _8D8 = "8D8";
+    String A_Bright_Center_To_The_Universe = "A Bright Center To The Universe";
     String A_Dangerous_Time = "A Dangerous Time";
     String A_Gift = "A Gift";
     String A_Good_Blaster_At_Your_Side = "A Good Blaster At Your Side";
@@ -221,6 +222,7 @@ public interface Title {
     String Come_Here_You_Big_Coward = "Come Here You Big Coward";
     String Come_With_Me = "Come With Me";
     String Comlink = "Comlink";
+    String Comm_Chief = "Comm Chief";
     String Commence_Primary_Ignition = "Commence Primary Ignition";
     String Commence_Recharging = "Commence Recharging";
     String Communing = "Communing";
@@ -432,6 +434,7 @@ public interface Title {
     String Floating_Refinery = "Floating Refinery";
     String Focused_Attack = "Focused Attack";
     String Fondor = "Fondor";
+    String Force_Field = "Force Field";
     String Force_Lightning = "Force Lightning";
     String Force_Projection = "Force Projection";
     String Force_Push = "Force Push";
@@ -1028,6 +1031,7 @@ public interface Title {
     String Seeking_An_Audience = "Seeking An Audience";
     String Seelos = "Seelos";
     String Sei_Taria = "Sei Taria";
+    String Senate_Hovercam = "Senate Hovercam";
     String Send_A_Detachment_Down = "Send A Detachment Down";
     String Sense = "Sense";
     String Set_For_Stun = "Set For Stun";
