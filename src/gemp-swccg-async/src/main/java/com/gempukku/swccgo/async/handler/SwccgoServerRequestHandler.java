@@ -3,6 +3,7 @@ package com.gempukku.swccgo.async.handler;
 import com.gempukku.swccgo.DateUtils;
 import com.gempukku.swccgo.PlayerLock;
 import com.gempukku.swccgo.async.HttpProcessingException;
+import com.gempukku.swccgo.async.auth.JwtService;
 import com.gempukku.swccgo.collection.CollectionsManager;
 import com.gempukku.swccgo.collection.TransferDAO;
 import com.gempukku.swccgo.common.ApplicationConfiguration;
@@ -15,7 +16,9 @@ import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.packagedProduct.ProductName;
 import com.gempukku.swccgo.service.LoggedUserHolder;
 import io.netty.handler.codec.http.cookie.DefaultCookie;
+import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
 import io.netty.handler.codec.http.multipart.HttpPostRequestDecoder;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.multipart.Attribute;
@@ -36,6 +39,7 @@ public class SwccgoServerRequestHandler {
     private final CollectionsManager _collectionManager;
     protected DeckDAO _deckDao;
     protected GempSettingDAO _gempSettingDAO;
+    protected final JwtService _jwtService = JwtService.getInstance();
 
     public SwccgoServerRequestHandler(Map<Type, Object> context) {
         _playerDao = extractObject(context, PlayerDAO.class);
@@ -93,6 +97,52 @@ public class SwccgoServerRequestHandler {
                         }
                     }
                 }
+            }
+        }
+
+        String jwtSubject = getJwtSubject(request);
+        if (jwtSubject != null && !jwtSubject.isEmpty()) {
+            return jwtSubject;
+        }
+        return null;
+    }
+
+    private String getJwtSubject(HttpRequest request) {
+        String token = getJwtTokenFromRequest(request);
+        if (token == null || token.isEmpty()) {
+            return null;
+        }
+        JwtService.JwtToken jwtToken = _jwtService.verifyToken(token);
+        if (jwtToken == null) {
+            return null;
+        }
+        return jwtToken.getSubject();
+    }
+
+    private String getJwtTokenFromRequest(HttpRequest request) {
+        String authHeader = request.headers().get(HttpHeaderNames.AUTHORIZATION);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring("Bearer ".length()).trim();
+        }
+
+        QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
+        String queryToken = getQueryParameterSafely(decoder, "token");
+        if (queryToken != null && !queryToken.isEmpty()) {
+            return queryToken;
+        }
+
+        return getJwtTokenFromCookies(request);
+    }
+
+    private String getJwtTokenFromCookies(HttpRequest request) {
+        String cookieHeader = request.headers().get(HttpHeaderNames.COOKIE);
+        if (cookieHeader == null || cookieHeader.isEmpty()) {
+            return null;
+        }
+        Set<Cookie> cookies = ServerCookieDecoder.STRICT.decode(cookieHeader);
+        for (Cookie cookie : cookies) {
+            if (JwtService.JWT_COOKIE_NAME.equals(cookie.name())) {
+                return cookie.value();
             }
         }
         return null;
