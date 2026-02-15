@@ -69,6 +69,7 @@ public class HallServer extends AbstractServer {
     private boolean _operational;
     private boolean _shutdown;
     private boolean _privateGamesEnabled;
+    private boolean _aiTablesEnabled;
     private boolean _inGameStatisticsEnabled;
     private boolean _bonusAbilitiesEnabled;
 
@@ -105,6 +106,7 @@ public class HallServer extends AbstractServer {
         _ipBanDAO = ipBanDAO;
         _gempSettingDAO = gempSettingDAO;
         _privateGamesEnabled = _gempSettingDAO.privateGamesEnabled();
+        _aiTablesEnabled = _gempSettingDAO.aiTablesEnabled();
         _inGameStatisticsEnabled = _gempSettingDAO.inGameStatisticsEnabled();
         _bonusAbilitiesEnabled = _gempSettingDAO.bonusAbilitiesEnabled();
         _adminService = adminService;
@@ -310,6 +312,9 @@ public class HallServer extends AbstractServer {
 
             // AI Logic
             if (playVsAi) {
+                if (!_aiTablesEnabled) {
+                    throw new HallException("Bot tables are currently disabled.");
+                }
                 if (aiDeckName == null || aiDeckName.isEmpty()) {
                     throw new HallException("AI deck must be selected");
                 }
@@ -354,6 +359,14 @@ public class HallServer extends AbstractServer {
         }
     }
 
+    // Backward-compatible overload for handlers that still pass aiDeckSample.
+    public void createNewTable(String type, Player player, String deckName, boolean sampleDeck, String tableDesc,
+            boolean isPrivate, Player librarian, boolean playVsAi, String aiSkill, String aiDeckName,
+            boolean aiDeckSample) throws HallException {
+        createNewTable(type, player, deckName, sampleDeck, tableDesc, isPrivate, librarian, playVsAi, aiSkill,
+                aiDeckName);
+    }
+
     private String normalizeAiSkill(String aiSkill) {
         if (aiSkill == null) {
             return "BEGINNER";
@@ -392,6 +405,11 @@ public class HallServer extends AbstractServer {
         _privateGamesEnabled = enabled;
     }
 
+    public void setAiTablesEnabled(boolean enabled) {
+        _gempSettingDAO.setAiTablesEnabled(enabled);
+        _aiTablesEnabled = enabled;
+    }
+
     public void setInGameStatisticsEnabled(boolean enabled) {
         _gempSettingDAO.setInGameStatisticsEnabled(enabled);
         _inGameStatisticsEnabled = enabled;
@@ -404,6 +422,10 @@ public class HallServer extends AbstractServer {
 
     public boolean privateGamesAllowed() {
         return _privateGamesEnabled;
+    }
+
+    public boolean aiTablesEnabled() {
+        return _aiTablesEnabled;
     }
 
     public boolean inGameStatisticsEnabled() {
