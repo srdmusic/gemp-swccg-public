@@ -54,14 +54,14 @@ public class Card501_069_BACK extends AbstractObjective {
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy a Supremacy site or an [Episode VII] battleground from Reserve Deck");
+            action.setText("Deploy Supremacy card or battleground");
+            action.setActionMsg("Deploy a card with 'Supremacy' in title or an [Episode VII] battleground from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Supremacy_site, Filters.and(Icon.EPISODE_VII, Filters.battleground)), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.titleContains("Supremacy"), Filters.and(Icon.EPISODE_VII, Filters.battleground)), true));
             actions.add(action);
         }
 

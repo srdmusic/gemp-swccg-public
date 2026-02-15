@@ -19,10 +19,10 @@ import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.effects.AddUntilEndOfGameModifierEffect;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
-import com.gempukku.swccgo.logic.modifiers.DeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.LimitForceLossFromForceDrainModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
+import com.gempukku.swccgo.logic.modifiers.ResetDeployCostToLocationModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
 
 import java.util.Collections;
@@ -38,7 +38,7 @@ public class Card501_069 extends AbstractObjective {
     public Card501_069() {
         super(Side.DARK, 0, "The First Order Reigns", ExpansionSet.PLAYTESTING, Rarity.V);
         setFrontOfDoubleSidedCard(true);
-        setGameText("Deploy Crait and D'Qar systems, a Crait (or Supremacy) battleground site, and Tracked Fleet. For remainder of game, you may not deploy cards with ability except [Episode VII] cards. Supremacy is deploy -9 to [Episode VII] systems. Once per turn, may [download] a Supremacy site or an [Episode VII] battleground. While this side up, neither player loses more than 1 Force to Force drains at systems (unless Tracked Fleet there). Flip this card if Tracked Fleet is 'annihilated.'");
+        setGameText("Deploy Crait and D'Qar systems, a Crait (or Supremacy) battleground site, and Tracked Fleet. For remainder of game, you may not deploy cards with ability except [Episode VII] cards. Supremacy is deploy = 7 to [Episode VII] systems. Once per turn, may [download] a card with 'Supremacy' in title or an [Episode VII] battleground. While this side up, neither player loses more than 1 Force to Force drains at systems (unless Tracked Fleet there). Flip this card if Tracked Fleet is 'annihilated.'");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_25);
         setTestingText("The First Order Reigns");
     }
@@ -86,7 +86,7 @@ public class Card501_069 extends AbstractObjective {
                         new MayNotDeployModifier(self, mayNotDeployRestrictionFilter, playerId), null));
         action.appendEffect(
                 new AddUntilEndOfGameModifierEffect(action,
-                        new DeployCostToLocationModifier(self, Filters.Supremacy, -9, Filters.and(Icon.EPISODE_VII, Filters.system)), null));
+                        new ResetDeployCostToLocationModifier(self, Filters.Supremacy, 7, Filters.and(Icon.EPISODE_VII, Filters.system)), null));
         return action;
     }
 
@@ -101,14 +101,14 @@ public class Card501_069 extends AbstractObjective {
                 && GameConditions.canDeployCardFromReserveDeck(game, playerId, self, gameTextActionId)) {
 
             final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Deploy location from Reserve Deck");
-            action.setActionMsg("Deploy a Supremacy site or an [Episode VII] battleground from Reserve Deck");
+            action.setText("Deploy Supremacy card or battleground");
+            action.setActionMsg("Deploy a card with 'Supremacy' in title or an [Episode VII] battleground from Reserve Deck");
             // Update usage limit(s)
             action.appendUsage(
                     new OncePerTurnEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.Supremacy_site, Filters.and(Icon.EPISODE_VII, Filters.battleground)), true));
+                    new DeployCardFromReserveDeckEffect(action, Filters.or(Filters.titleContains("Supremacy"), Filters.and(Icon.EPISODE_VII, Filters.battleground)), true));
             actions.add(action);
         }
         return actions;
