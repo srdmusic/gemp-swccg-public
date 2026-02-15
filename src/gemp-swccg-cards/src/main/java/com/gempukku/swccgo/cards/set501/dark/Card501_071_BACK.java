@@ -6,8 +6,7 @@ import java.util.List;
 import com.gempukku.swccgo.cards.AbstractObjective;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtCondition;
-import com.gempukku.swccgo.cards.conditions.DuringBattleCondition;
-import com.gempukku.swccgo.cards.effects.usage.OncePerBattleEffect;
+import com.gempukku.swccgo.cards.effects.usage.NumTimesPerBattleEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerPhaseEffect;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
@@ -24,17 +23,14 @@ import com.gempukku.swccgo.game.PhysicalCard;
 import com.gempukku.swccgo.game.SwccgGame;
 import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
+import com.gempukku.swccgo.logic.actions.OptionalGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
-import com.gempukku.swccgo.logic.conditions.NotCondition;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
-import com.gempukku.swccgo.logic.effects.LoseForceEffect;
+import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.MoveCardAsRegularMoveEffect;
-import com.gempukku.swccgo.logic.effects.ResetForfeitEffect;
-import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainBonusesMayNotBeCanceledModifier;
@@ -43,7 +39,6 @@ import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.TotalBattleDestinyModifier;
 import com.gempukku.swccgo.logic.timing.EffectResult;
-import com.gempukku.swccgo.logic.timing.Action;
 
 /**
  * Set: SET 26
@@ -53,7 +48,7 @@ import com.gempukku.swccgo.logic.timing.Action;
 public class Card501_071_BACK extends AbstractObjective {
     public Card501_071_BACK() {
         super(Side.DARK, 7, Title.Pray_I_Dont_Alter_It_Any_Further, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, Sense and Alter may not be played. Force drain bonuses at same site as your Lando or your Lobot may not be canceled. While Vader at a Bespin location, game text of Admiral's Orders is canceled and opponent loses 3 Force if a character was just frozen. If your alien/Imperial pair in battle, your total battle destiny is +2. If your Lando in battle, may target a character present with him; target is forfeit = 0. Flip this card if opponent controls more Bespin locations than you.");
+        setGameText("While this side up, Sense and Alter may not be played. Force drain bonuses at same site as your Lando or your Lobot may not be canceled. While Vader at a Bespin location, game text of Admiral's Orders is canceled. If your alien/Imperial pair in battle, your total battle destiny is +2. Once per battle involving your Lando (twice if any Lobot also there), may add or subtract 1 from a just drawn destiny. Flip this card if opponent controls more Bespin locations than you.");
         addIcons(Icon.CLOUD_CITY, Icon.PREMIUM, Icon.VIRTUAL_SET_26);
         setVirtualSuffix(true);
         setTestingText("Pray I Don't Alter it Any Further (V)");
@@ -123,42 +118,6 @@ public class Card501_071_BACK extends AbstractObjective {
             actions.add(action);
         }
 
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_2;
-        Filter yourLandoInBattleFilter = Filters.and(Filters.your(playerId), Filters.Lando, Filters.participatingInBattle);
-        Filter targetFilter = Filters.and(Filters.character, Filters.presentWith(self, yourLandoInBattleFilter), Filters.participatingInBattle);
-        Condition endOfBattlCondition = new NotCondition(new DuringBattleCondition());
-        // Check condition(s)
-        if (GameConditions.isOncePerBattle(game, self, playerId, gameTextSourceCardId, gameTextActionId)
-                && GameConditions.canSpot(game, self, yourLandoInBattleFilter)
-                && GameConditions.canSpot(game, self, targetFilter)) {
-
-            final TopLevelGameTextAction action = new TopLevelGameTextAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-            action.setText("Reset forfeit to 0");
-            // Update usage limit(s)
-            action.appendUsage(
-                    new OncePerBattleEffect(action));
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose character", targetFilter) {
-                        @Override
-                        protected void cardTargeted(int targetGroupId, final PhysicalCard targetedCard) {
-                            action.addAnimationGroup(targetedCard);
-                            // Allow response(s)
-                            action.allowResponses("Reset " + GameUtils.getCardLink(targetedCard) + "'s forfeit to 0",
-                                    new UnrespondableEffect(action) {
-                                        @Override
-                                        protected void performActionResults(final Action targetingAction) {
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new ResetForfeitEffect(action, targetedCard, 0, endOfBattlCondition));
-                                        }
-                                    }
-                            );
-                        }
-                    }
-            );
-            actions.add(action);
-        }
         return actions;
     }
 
@@ -169,21 +128,7 @@ public class Card501_071_BACK extends AbstractObjective {
         String playerId = self.getOwner();
         String opponent = game.getOpponent(playerId);
 
-        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
-        // Check condition(s)
-        if ((TriggerConditions.frozen(game, effectResult, Filters.character)
-                || TriggerConditions.frozenAndCaptured(game, effectResult, Filters.character))
-                && GameConditions.canSpot(game, self, Filters.and(Filters.Vader, Filters.at(Filters.Bespin_location)))) {
-
-            RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId, gameTextActionId);
-            action.setText("Make " + opponent + " lose 3 Force");
-            // Perform result(s)
-            action.appendEffect(
-                    new LoseForceEffect(action, opponent, 3));
-            actions.add(action);
-        }
-
-        gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_4;
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_4;
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
@@ -198,6 +143,48 @@ public class Card501_071_BACK extends AbstractObjective {
             action.appendEffect(
                     new FlipCardEffect(action, self));
             actions.add(action);
+        }
+        return actions;
+    }
+
+    @Override
+    protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
+
+        GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
+
+        // Check condition(s)
+        if ((TriggerConditions.isDestinyJustDrawn(game, effectResult))
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.and(Filters.your(playerId), Filters.Lando))) {
+
+            int numTimes = GameConditions.canSpot(game, self, Filters.and(Filters.Lobot, Filters.participatingInBattle)) ? 2 : 1;
+
+            if (GameConditions.isNumTimesPerBattle(game, self, playerId, numTimes, gameTextSourceCardId))
+            {
+                // Create both the "Add" and "Subtract" actions
+                // Because both actions share GameTextActionId.OTHER_CARD_ACTION_3, the NumTimesPerBattle counter is shared between them
+
+                // Add 1
+                OptionalGameTextTriggerAction action1 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action1.setText("Add 1 to destiny draw");
+                // Update usage limit(s)
+                action1.appendUsage(
+                        new NumTimesPerBattleEffect(action1, numTimes));
+                // Perform result(s)
+                action1.appendEffect(
+                        new ModifyDestinyEffect(action1, 1));
+                actions.add(action1);
+
+                // Subtract 1
+                OptionalGameTextTriggerAction action2 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action2.setText("Subtract 1 from destiny draw");
+                action2.appendUsage(
+                        new NumTimesPerBattleEffect(action2, numTimes));
+                // Perform result(s)
+                action2.appendEffect(
+                        new ModifyDestinyEffect(action2, -1));
+                actions.add(action2);
+            }
         }
         return actions;
     }
