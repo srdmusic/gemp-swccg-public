@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.cards.set501.dark;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,9 +29,11 @@ import com.gempukku.swccgo.logic.actions.RequiredGameTextTriggerAction;
 import com.gempukku.swccgo.logic.actions.TopLevelGameTextAction;
 import com.gempukku.swccgo.logic.conditions.Condition;
 import com.gempukku.swccgo.logic.conditions.InBattleCondition;
+import com.gempukku.swccgo.logic.decisions.MultipleChoiceAwaitingDecision;
 import com.gempukku.swccgo.logic.effects.FlipCardEffect;
 import com.gempukku.swccgo.logic.effects.ModifyDestinyEffect;
 import com.gempukku.swccgo.logic.effects.MoveCardAsRegularMoveEffect;
+import com.gempukku.swccgo.logic.effects.PlayoutDecisionEffect;
 import com.gempukku.swccgo.logic.effects.choose.TakeCardIntoHandFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.CancelsGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ForceDrainBonusesMayNotBeCanceledModifier;
@@ -149,8 +152,6 @@ public class Card501_071_BACK extends AbstractObjective {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(final String playerId, SwccgGame game, EffectResult effectResult, final PhysicalCard self, int gameTextSourceCardId) {
-        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
-
         GameTextActionId gameTextActionId = GameTextActionId.OTHER_CARD_ACTION_3;
 
         // Check condition(s)
@@ -159,33 +160,33 @@ public class Card501_071_BACK extends AbstractObjective {
 
             int numTimes = GameConditions.canSpot(game, self, Filters.and(Filters.Lobot, Filters.participatingInBattle)) ? 2 : 1;
 
-            if (GameConditions.isNumTimesPerBattle(game, self, playerId, numTimes, gameTextSourceCardId))
+            if (GameConditions.isNumTimesPerBattle(game, self, playerId, numTimes, gameTextSourceCardId, gameTextActionId))
             {
-                // Create both the "Add" and "Subtract" actions
-                // Because both actions share GameTextActionId.OTHER_CARD_ACTION_3, the NumTimesPerBattle counter is shared between them
-
-                // Add 1
-                OptionalGameTextTriggerAction action1 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action1.setText("Add 1 to destiny draw");
+                OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
+                action.setText("Add or subtract 1 from destiny draw");
                 // Update usage limit(s)
-                action1.appendUsage(
-                        new NumTimesPerBattleEffect(action1, numTimes));
+                action.appendUsage(
+                        new NumTimesPerBattleEffect(action, numTimes));
                 // Perform result(s)
-                action1.appendEffect(
-                        new ModifyDestinyEffect(action1, 1));
-                actions.add(action1);
-
-                // Subtract 1
-                OptionalGameTextTriggerAction action2 = new OptionalGameTextTriggerAction(self, playerId, gameTextSourceCardId, gameTextActionId);
-                action2.setText("Subtract 1 from destiny draw");
-                action2.appendUsage(
-                        new NumTimesPerBattleEffect(action2, numTimes));
-                // Perform result(s)
-                action2.appendEffect(
-                        new ModifyDestinyEffect(action2, -1));
-                actions.add(action2);
+                action.appendEffect(
+                        new PlayoutDecisionEffect(action, playerId,
+                                new MultipleChoiceAwaitingDecision("Choose an option", new String[]{"Add 1", "Subtract 1"}) {
+                                    @Override
+                                    protected void validDecisionMade(int index, String result) {
+                                        if (index == 0) {
+                                            action.appendEffect(
+                                                    new ModifyDestinyEffect(action, 1));
+                                        } else {
+                                            action.appendEffect(
+                                                    new ModifyDestinyEffect(action, -1));
+                                        }
+                                    }                                    
+                                }
+                        )
+                );
+                return Collections.singletonList(action);
             }
         }
-        return actions;
+        return null;
     }
 }
