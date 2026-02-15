@@ -9,6 +9,7 @@ import com.gempukku.swccgo.hall.HallUpdateListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.concurrent.ScheduledFuture;
 
@@ -26,6 +27,7 @@ public class HallWebSocketSession implements WebSocketSession, HallUpdateListene
     private final Object _sendLock = new Object();
     private final long _tokenExpiresAtMs;
     private ScheduledFuture<?> _expiryTimer;
+    private ScheduledFuture<?> _keepAliveTimer;
 
     public HallWebSocketSession(ChannelHandlerContext ctx, HallServer hallServer, Player player, long tokenExpiresAt) {
         _ctx = ctx;
@@ -39,6 +41,7 @@ public class HallWebSocketSession implements WebSocketSession, HallUpdateListene
     public void onOpen() {
         _hallServer.addHallUpdateListener(this);
         sendHallUpdate();
+        startKeepAlive();
         scheduleTokenExpiry();
     }
 
@@ -46,6 +49,7 @@ public class HallWebSocketSession implements WebSocketSession, HallUpdateListene
     public void onClose() {
         if (_closed.compareAndSet(false, true)) {
             stopExpiryTimer();
+            stopKeepAlive();
             _hallServer.removeHallUpdateListener(this);
         }
     }
@@ -94,6 +98,28 @@ public class HallWebSocketSession implements WebSocketSession, HallUpdateListene
             return;
         }
         _expiryTimer = _ctx.executor().schedule(this::closeForTokenExpiry, delay, TimeUnit.MILLISECONDS);
+    }
+
+    private void startKeepAlive() {
+        if (_keepAliveTimer != null) {
+            _keepAliveTimer.cancel(false);
+        }
+        // Keep websocket alive through reverse proxies that enforce idle timeouts.
+        _keepAliveTimer = _ctx.executor().scheduleAtFixedRate(() -> {
+            if (_closed.get()) {
+                return;
+            }
+            if (_ctx.channel().isActive()) {
+                _ctx.writeAndFlush(new PingWebSocketFrame());
+            }
+        }, 25, 25, TimeUnit.SECONDS);
+    }
+
+    private void stopKeepAlive() {
+        if (_keepAliveTimer != null) {
+            _keepAliveTimer.cancel(false);
+            _keepAliveTimer = null;
+        }
     }
 
     private void stopExpiryTimer() {
