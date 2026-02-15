@@ -52,14 +52,16 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
     private void login(HttpRequest request, ResponseWriter responseWriter, String remoteIp) throws Exception {
         String login = null;
         String password = null;
-        JSONObject json = readJsonBody(request);
-        if (json != null) {
-            login = json.getString("login");
-            password = json.getString("password");
+        String contentType = request.headers().get(HttpHeaderNames.CONTENT_TYPE);
+        if (contentType != null && contentType.toLowerCase().contains("application/json")) {
+            JSONObject json = readJsonBody(request);
+            if (json != null) {
+                login = json.getString("login");
+                password = json.getString("password");
+            }
         }
 
         if (login == null || password == null) {
-            String contentType = request.headers().get(io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE);
             if (contentType != null && (contentType.contains("application/x-www-form-urlencoded")
                     || contentType.contains("multipart/form-data"))) {
                 HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
@@ -107,14 +109,16 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
     private void register(HttpRequest request, ResponseWriter responseWriter, String remoteIp) throws Exception {
         String login = null;
         String password = null;
-        JSONObject json = readJsonBody(request);
-        if (json != null) {
-            login = json.getString("login");
-            password = json.getString("password");
+        String contentType = request.headers().get(HttpHeaderNames.CONTENT_TYPE);
+        if (contentType != null && contentType.toLowerCase().contains("application/json")) {
+            JSONObject json = readJsonBody(request);
+            if (json != null) {
+                login = json.getString("login");
+                password = json.getString("password");
+            }
         }
 
         if (login == null || password == null) {
-            String contentType = request.headers().get(io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE);
             if (contentType != null && (contentType.contains("application/x-www-form-urlencoded")
                     || contentType.contains("multipart/form-data"))) {
                 HttpPostRequestDecoder postDecoder = new HttpPostRequestDecoder(request);
