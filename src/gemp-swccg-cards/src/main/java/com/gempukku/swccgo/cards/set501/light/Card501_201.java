@@ -170,7 +170,7 @@ public class Card501_201 extends AbstractLostInterrupt {
                                             // Perform result(s)
                                             action.appendEffect(new AddUntilEndOfTurnModifierEffect(action,
                                                     new PowerModifier(self, finalTarget, 2)
-                                                    , "Makes " + GameUtils.getCardLink(finalTarget) + " power +2 for remainder of turn"));
+                                                    , "Makes " + GameUtils.getCardLink(finalTarget) + " power +2"));
                                         }
                                     }
                             );
