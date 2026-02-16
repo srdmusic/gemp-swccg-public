@@ -15,7 +15,6 @@ var GempSwccgCommunication = Class.extend({
     _gameWsMaxDelayMs:null,
     _gameWsEnabled:null,
     _gameWsDisabled:null,
-    _gameWsFailureNotified:null,
     _chatSockets:null,
     _chatCallbacks:null,
     _chatErrorMaps:null,
@@ -24,7 +23,6 @@ var GempSwccgCommunication = Class.extend({
     _chatUsers:null,
     _chatWsEnabled:null,
     _chatWsDisabled:null,
-    _chatWsFailureNotified:null,
     _hallSocket:null,
     _hallCallback:null,
     _hallErrorMap:null,
@@ -32,7 +30,6 @@ var GempSwccgCommunication = Class.extend({
     _hallReconnectAttempts:null,
     _hallWsEnabled:null,
     _hallWsDisabled:null,
-    _hallWsFailureNotified:null,
     _hallPendingUpdates:null,
     _hallState:null,
     _hallChannelNumber:null,
@@ -57,7 +54,6 @@ var GempSwccgCommunication = Class.extend({
         this._gameWsMaxDelayMs = 15000;
         this._gameWsEnabled = false;
         this._gameWsDisabled = false;
-        this._gameWsFailureNotified = false;
         this._chatSockets = {};
         this._chatCallbacks = {};
         this._chatErrorMaps = {};
@@ -66,7 +62,6 @@ var GempSwccgCommunication = Class.extend({
         this._chatUsers = {};
         this._chatWsEnabled = {};
         this._chatWsDisabled = {};
-        this._chatWsFailureNotified = {};
         this._hallSocket = null;
         this._hallCallback = null;
         this._hallErrorMap = null;
@@ -74,7 +69,6 @@ var GempSwccgCommunication = Class.extend({
         this._hallReconnectAttempts = 0;
         this._hallWsEnabled = false;
         this._hallWsDisabled = false;
-        this._hallWsFailureNotified = false;
         this._hallPendingUpdates = [];
         this._hallState = {};
         this._hallChannelNumber = null;
@@ -323,6 +317,7 @@ var GempSwccgCommunication = Class.extend({
         if (channelNumber != null && channelNumber !== "")
             this._gameChannelNumber = channelNumber;
 
+        // WS-first mode: modern clients stay on websocket transport and do not re-enter HTTP long polling.
         if (this.supportsWebSockets()) {
             if (this._gameWsDisabled)
                 return;
@@ -752,6 +747,7 @@ var GempSwccgCommunication = Class.extend({
         this._chatCallbacks[room] = callback;
         this._chatErrorMaps[room] = errorMap;
 
+        // WS-first mode: modern clients stay on websocket transport and do not re-enter HTTP long polling.
         if (this.supportsWebSockets()) {
             if (this._chatWsDisabled[room])
                 return;
@@ -805,6 +801,14 @@ var GempSwccgCommunication = Class.extend({
     },
     supportsWebSockets:function () {
         return window != null && typeof window.WebSocket != "undefined";
+    },
+    closeSocketSafely:function (socket) {
+        if (socket == null)
+            return;
+        try {
+            socket.close();
+        } catch (e) {
+        }
     },
     getAuthToken:function () {
         if (typeof localStorage == "undefined")
@@ -936,6 +940,9 @@ var GempSwccgCommunication = Class.extend({
         }, delay);
     },
     enableGamePollingFallback:function () {
+        if (this._gameWsDisabled)
+            return;
+
         this._gameWsEnabled = false;
         this._gameWsDisabled = true;
 
@@ -944,18 +951,10 @@ var GempSwccgCommunication = Class.extend({
             this._gameWsReconnectTimer = null;
         }
 
-        if (this._gameWs != null) {
-            try {
-                this._gameWs.close();
-            } catch (e) {
-            }
-        }
+        this.closeSocketSafely(this._gameWs);
         this._gameWs = null;
 
-        if (this._gameWsFailureNotified)
-            return;
-
-        this._gameWsFailureNotified = true;
+        // In WS-only mode we surface an error instead of switching back to HTTP polling.
         this.handleGameError("0");
     },
     handleGameWsMessage:function (data) {
@@ -1077,6 +1076,7 @@ var GempSwccgCommunication = Class.extend({
             payload.autoPassPhases = result;
     },
     buildGameXml:function (payload, rootName) {
+        // Keep legacy UI untouched: WS payloads are adapted back into the old XML shape.
         var doc = document.implementation.createDocument("", "", null);
         var root = doc.createElement(rootName || "update");
 
@@ -1302,16 +1302,14 @@ var GempSwccgCommunication = Class.extend({
         }, delay);
     },
     enableChatPollingFallback:function (room) {
+        if (this._chatWsDisabled[room])
+            return;
+
         this._chatWsEnabled[room] = false;
         this._chatWsDisabled[room] = true;
 
         var socket = this._chatSockets[room];
-        if (socket != null) {
-            try {
-                socket.close();
-            } catch (e) {
-            }
-        }
+        this.closeSocketSafely(socket);
         this._chatSockets[room] = null;
 
         if (this._chatReconnectTimers[room] != null) {
@@ -1319,10 +1317,7 @@ var GempSwccgCommunication = Class.extend({
             this._chatReconnectTimers[room] = null;
         }
 
-        if (this._chatWsFailureNotified[room])
-            return;
-
-        this._chatWsFailureNotified[room] = true;
+        // In WS-only mode we surface an error instead of switching back to HTTP polling.
         this.handleChatError(room, "0");
     },
     isAuthClose:function (event) {
@@ -1456,6 +1451,7 @@ var GempSwccgCommunication = Class.extend({
         this._hallErrorMap = errorMap;
         this._hallChannelNumber = channelNumber;
 
+        // WS-first mode: modern clients stay on websocket transport and do not re-enter HTTP long polling.
         if (this.supportsWebSockets()) {
             if (this._hallWsDisabled)
                 return;
@@ -1561,6 +1557,9 @@ var GempSwccgCommunication = Class.extend({
         }, delay);
     },
     enableHallPollingFallback:function () {
+        if (this._hallWsDisabled)
+            return;
+
         this._hallWsEnabled = false;
         this._hallWsDisabled = true;
 
@@ -1569,18 +1568,10 @@ var GempSwccgCommunication = Class.extend({
             this._hallReconnectTimer = null;
         }
 
-        if (this._hallSocket != null) {
-            try {
-                this._hallSocket.close();
-            } catch (e) {
-            }
-        }
+        this.closeSocketSafely(this._hallSocket);
         this._hallSocket = null;
 
-        if (this._hallWsFailureNotified)
-            return;
-
-        this._hallWsFailureNotified = true;
+        // In WS-only mode we surface an error instead of switching back to HTTP polling.
         this.handleHallError("0");
     },
     handleHallWsMessage:function (data) {
@@ -1670,6 +1661,7 @@ var GempSwccgCommunication = Class.extend({
         if (payload == null || payload.event == null)
             return null;
 
+        // Keep legacy hall renderer untouched: adapt incremental WS events into hall XML snapshots.
         if (payload.channelNumber != null)
             this._hallState.channelNumber = "" + payload.channelNumber;
         if (payload.motd != null)

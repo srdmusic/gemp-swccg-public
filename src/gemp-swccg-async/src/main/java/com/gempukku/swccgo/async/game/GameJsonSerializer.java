@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class GameJsonSerializer {
+    // Keep WS payloads close to legacy XML attribute names so the client adapter stays trivial.
     public Map<String, Object> buildPayload(GameJsonVisitor visitor) {
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
         payload.put("channelNumber", visitor.getChannelNumber());

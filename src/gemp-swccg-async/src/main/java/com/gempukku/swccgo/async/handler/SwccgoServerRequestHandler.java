@@ -83,6 +83,7 @@ public class SwccgoServerRequestHandler {
     }
 
     private String getLoggedUser(HttpRequest request) {
+        // Keep legacy session cookie lookup first so existing pages behave exactly as before.
         String cookieHeader = request.headers().get(HttpHeaderNames.COOKIE);
         if (cookieHeader != null) {
             String[] parts = cookieHeader.split(";");
@@ -100,6 +101,7 @@ public class SwccgoServerRequestHandler {
             }
         }
 
+        // JWT is a fallback for API/WS calls that do not carry the legacy loggedUser session.
         String jwtSubject = getJwtSubject(request);
         if (jwtSubject != null && !jwtSubject.isEmpty()) {
             return jwtSubject;
@@ -125,6 +127,7 @@ public class SwccgoServerRequestHandler {
             return authHeader.substring("Bearer ".length()).trim();
         }
 
+        // WS handshakes often pass token in query string.
         QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
         String queryToken = getQueryParameterSafely(decoder, "token");
         if (queryToken != null && !queryToken.isEmpty()) {

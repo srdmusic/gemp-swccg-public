@@ -340,6 +340,8 @@ public class GameWebSocketSession implements WebSocketSession {
 
     private void startTicker() {
         stopTicker();
+        // Safety net: poll the game channel periodically so clients still progress
+        // if a channel wake-up is missed by infrastructure/proxies.
         _tickTask = _ctx.executor().scheduleAtFixedRate(() -> {
             if (_closed.get()) {
                 return;
