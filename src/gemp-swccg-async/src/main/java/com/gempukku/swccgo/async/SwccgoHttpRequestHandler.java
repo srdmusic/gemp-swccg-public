@@ -145,45 +145,44 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
         return upgrade != null && "websocket".equalsIgnoreCase(upgrade);
     }
 
-    private void handleWebSocketRequest(ChannelHandlerContext ctx, FullHttpRequest request, ResponseSender responseSender) {
+    private boolean respondWithError(ResponseSender responseSender, int status) {
+        responseSender.writeError(status);
+        return false;
+    }
+
+    private boolean handleWebSocketRequest(ChannelHandlerContext ctx, FullHttpRequest request, ResponseSender responseSender) {
         if (request.method() != HttpMethod.GET) {
-            responseSender.writeError(405);
-            return;
+            return respondWithError(responseSender, 405);
         }
 
         QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
         String path = decoder.path();
         if (!"/gemp-swccg-server/ws".equals(path)) {
-            responseSender.writeError(404);
-            return;
+            return respondWithError(responseSender, 404);
         }
 
         String token = getQueryParameter(decoder, "token");
         if (token == null || token.isEmpty())
             token = getTokenFromCookies(request);
         if (token == null || token.isEmpty()) {
-            responseSender.writeError(401);
-            return;
+            return respondWithError(responseSender, 401);
         }
 
         JwtService.JwtToken jwtToken = _jwtService.verifyToken(token);
         if (jwtToken == null) {
-            responseSender.writeError(401);
-            return;
+            return respondWithError(responseSender, 401);
         }
         long tokenExpiresAt = jwtToken.getExpiresAt();
 
         PlayerDAO playerDAO = (PlayerDAO) _objects.get(PlayerDAO.class);
         Player player = playerDAO.getPlayer(jwtToken.getSubject());
         if (player == null) {
-            responseSender.writeError(401);
-            return;
+            return respondWithError(responseSender, 401);
         }
 
         String channel = getQueryParameter(decoder, "channel");
         if (channel == null || channel.isEmpty()) {
-            responseSender.writeError(400);
-            return;
+            return respondWithError(responseSender, 400);
         }
 
         WebSocketSession session = null;
@@ -193,21 +192,18 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
         } else if ("chat".equals(channel)) {
             String room = getQueryParameter(decoder, "room");
             if (room == null || room.isEmpty()) {
-                responseSender.writeError(400);
-                return;
+                return respondWithError(responseSender, 400);
             }
             ChatServer chatServer = (ChatServer) _objects.get(ChatServer.class);
             ChatRoomMediator chatRoom = chatServer != null ? chatServer.getChatRoom(room) : null;
             if (chatRoom == null) {
-                responseSender.writeError(404);
-                return;
+                return respondWithError(responseSender, 404);
             }
             session = new ChatWebSocketSession(ctx, chatRoom, player, playerDAO, room, tokenExpiresAt);
         } else if ("game".equals(channel)) {
             String gameId = getQueryParameter(decoder, "gameId");
             if (gameId == null || gameId.isEmpty()) {
-                responseSender.writeError(400);
-                return;
+                return respondWithError(responseSender, 400);
             }
             String participantId = getQueryParameter(decoder, "participantId");
             String channelNumberParam = getQueryParameter(decoder, "channelNumber");
@@ -216,21 +212,18 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
                 try {
                     channelNumber = Integer.valueOf(channelNumberParam);
                 } catch (NumberFormatException exp) {
-                    responseSender.writeError(400);
-                    return;
+                    return respondWithError(responseSender, 400);
                 }
             }
             SwccgoServer swccgoServer = (SwccgoServer) _objects.get(SwccgoServer.class);
             if (swccgoServer == null) {
-                responseSender.writeError(500);
-                return;
+                return respondWithError(responseSender, 500);
             }
             session = new GameWebSocketSession(ctx, swccgoServer, playerDAO, player, gameId, participantId, channelNumber, tokenExpiresAt);
         }
 
         if (session == null) {
-            responseSender.writeError(400);
-            return;
+            return respondWithError(responseSender, 400);
         }
 
         WebSocketServerHandshakerFactory wsFactory =
@@ -238,12 +231,13 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
         WebSocketServerHandshaker handshaker = wsFactory.newHandshaker(request);
         if (handshaker == null) {
             WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(ctx.channel());
-            return;
+            return false;
         }
 
         handshaker.handshake(ctx.channel(), request);
         ctx.pipeline().addLast(new SwccgoWebSocketFrameHandler(session, handshaker));
         session.onOpen();
+        return true;
     }
 
     private String getWebSocketLocation(HttpRequest request) {

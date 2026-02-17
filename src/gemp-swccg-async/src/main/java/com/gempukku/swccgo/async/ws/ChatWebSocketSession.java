@@ -3,6 +3,7 @@ package com.gempukku.swccgo.async.ws;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.gempukku.swccgo.PrivateInformationException;
+import com.gempukku.swccgo.async.util.ChatUserListFormatter;
 import com.gempukku.swccgo.chat.ChatCommandErrorException;
 import com.gempukku.swccgo.chat.ChatMessage;
 import com.gempukku.swccgo.chat.ChatRoomMediator;
@@ -14,12 +15,9 @@ import org.apache.commons.text.StringEscapeUtils;
 import io.netty.util.concurrent.ScheduledFuture;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -219,70 +217,7 @@ public class ChatWebSocketSession extends AbstractWebSocketSession {
     }
 
     private List<String> buildUsers() {
-        Set<String> users = new TreeSet<String>(new CaseInsensitiveStringComparator());
-        for (String user : _chatRoom.getUsersInRoom()) {
-            String formatted = formatPlayerNameForChatList(user);
-            if (!formatted.isEmpty()) {
-                users.add(formatted);
-            }
-        }
-        return new ArrayList<String>(users);
-    }
-
-    private String formatPlayerNameForChatList(String userInRoom) {
-        StringBuilder sb = new StringBuilder(userInRoom);
-        final Player player = _playerDao.getPlayer(userInRoom);
-        if (player != null) {
-            final List<Player.Type> playerTypes = Player.Type.getTypes(player.getType());
-            if (playerTypes.contains(Player.Type.ADMIN)) {
-                sb.insert(0, "* ");
-            } else {
-                if (playerTypes.contains(Player.Type.LEAGUE_ADMIN) || playerTypes.contains(Player.Type.PLAYTESTING_ADMIN)) {
-                    sb.insert(0, " ");
-                    if (playerTypes.contains(Player.Type.COMMENTATOR)) {
-                        sb.insert(0, "\u00e7");
-                    }
-                    if (playerTypes.contains(Player.Type.PLAYTESTER)) {
-                        sb.insert(0, "\u03b2");
-                    }
-                    sb.insert(0, "+");
-                } else {
-                    if (playerTypes.contains(Player.Type.PLAYTESTER) || playerTypes.contains(Player.Type.COMMENTATOR)) {
-                        sb.insert(0, " ");
-                        if (playerTypes.contains(Player.Type.COMMENTATOR)) {
-                            sb.insert(0, "\u00e7");
-                        }
-                        if (playerTypes.contains(Player.Type.PLAYTESTER)) {
-                            sb.insert(0, "\u03b2");
-                        }
-                    }
-                    sb.append(" ");
-                }
-            }
-        }
-        sb.setLength(Math.min(sb.length(), 40));
-        return sb.toString().trim();
-    }
-
-    private static class CaseInsensitiveStringComparator implements Comparator<String> {
-        @Override
-        public int compare(String o1, String o2) {
-            if (o1.contains(" ") && !o2.contains(" ")) {
-                return -1;
-            }
-            if (!o1.contains(" ") && o2.contains(" ")) {
-                return 1;
-            }
-
-            if (!o1.contains(" ") && !o2.contains(" ")) {
-                return o1.toLowerCase().compareTo(o2.toLowerCase());
-            }
-
-            String oneWithSubstitutions = o1.replace("*", "a").replace("+", "b").replace("\u03b2", "c").replace("\u00e7", "d").replace(" ", "z");
-            String twoWithSubstitutions = o2.replace("*", "a").replace("+", "b").replace("\u03b2", "c").replace("\u00e7", "d").replace(" ", "z");
-
-            return oneWithSubstitutions.toLowerCase().compareTo(twoWithSubstitutions.toLowerCase());
-        }
+        return ChatUserListFormatter.formatAndSortUsers(_chatRoom.getUsersInRoom(), _playerDao);
     }
 
     private class WebSocketChatChannel extends ChatCommunicationChannel {
