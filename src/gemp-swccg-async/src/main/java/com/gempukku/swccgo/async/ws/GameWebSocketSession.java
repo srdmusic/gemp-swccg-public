@@ -33,6 +33,7 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.StringWriter;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -48,13 +49,9 @@ public class GameWebSocketSession implements WebSocketSession {
     private final String _participantId;
     private final Integer _requestedChannelNumber;
     private final EventSerializer _eventSerializer = new EventSerializer();
-<<<<<<< HEAD
     private static final Set<Phase> AUTO_PASS_DEFAULT = Collections.unmodifiableSet(EnumSet.of(
             Phase.ACTIVATE, Phase.CONTROL, Phase.DEPLOY, Phase.BATTLE, Phase.MOVE, Phase.DRAW
     ));
-=======
-    private final Set<Phase> _autoPassDefault = new HashSet<Phase>();
->>>>>>> a3416ffbd8f332eff43e10708d27cd57a01decbc
     private final AtomicBoolean _closed = new AtomicBoolean(false);
     private final AtomicBoolean _sending = new AtomicBoolean(false);
     private final Object _sendLock = new Object();
