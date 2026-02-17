@@ -34,16 +34,8 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
             login(request, responseWriter, remoteIp);
         } else if ("/register".equals(uri) && request.method() == HttpMethod.POST) {
             register(request, responseWriter, remoteIp);
-        } else if ("/me".equals(uri) && request.method() == HttpMethod.GET) {
-            me(request, responseWriter);
-        } else if ("/refresh".equals(uri) && request.method() == HttpMethod.POST) {
-            refresh(request, responseWriter);
         } else if ("/logout".equals(uri) && request.method() == HttpMethod.POST) {
             logout(request, responseWriter);
-        } else if ("/legacy-session".equals(uri) && request.method() == HttpMethod.POST) {
-            legacySession(request, responseWriter, remoteIp);
-        } else if ("/legacy-logout".equals(uri) && request.method() == HttpMethod.POST) {
-            legacyLogout(request, responseWriter);
         } else {
             responseWriter.writeError(404);
         }
@@ -165,24 +157,6 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
         writeAuthResponse(responseWriter, token, expiresAt, player, headers);
     }
 
-    private void me(HttpRequest request, ResponseWriter responseWriter) throws Exception {
-        AuthResult auth = requireAuth(request);
-        assertAccountAllowed(auth.player);
-        writeAuthResponse(responseWriter, auth.token, auth.expiresAt, auth.player, null);
-    }
-
-    private void refresh(HttpRequest request, ResponseWriter responseWriter) throws Exception {
-        AuthResult auth = requireAuth(request);
-        assertAccountAllowed(auth.player);
-        String newToken = _jwtService.issueToken(auth.player.getName());
-        JwtService.JwtToken jwtToken = _jwtService.verifyToken(newToken);
-        long expiresAt = jwtToken != null ? jwtToken.getExpiresAt() : 0L;
-        Map<String, String> headers = new LinkedHashMap<String, String>();
-        headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
-        addJwtCookie(headers, request, newToken, expiresAt);
-        writeAuthResponse(responseWriter, newToken, expiresAt, auth.player, headers);
-    }
-
     private void logout(HttpRequest request, ResponseWriter responseWriter) throws Exception {
         AuthResult auth = requireAuth(request);
         _loggedUserHolder.forceLogoutUser(auth.player.getName());
@@ -195,43 +169,6 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
         headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
 
         addClearedJwtCookie(headers, request);
-
-        responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
-    }
-
-    private void legacySession(HttpRequest request, ResponseWriter responseWriter, String remoteIp) throws Exception {
-        AuthResult auth = requireAuth(request);
-        assertAccountAllowed(auth.player);
-
-        Map<String, Object> response = new LinkedHashMap<String, Object>();
-        response.put("status", "ok");
-
-        String payload = JSON.toJSONString(response);
-        Map<String, String> headers = new LinkedHashMap<String, String>();
-        headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
-        headers.putAll(logUserReturningHeaders(remoteIp, auth.player.getName()));
-
-        responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
-    }
-
-    private void legacyLogout(HttpRequest request, ResponseWriter responseWriter) throws Exception {
-        try {
-            AuthResult auth = requireAuth(request);
-            _loggedUserHolder.forceLogoutUser(auth.player.getName());
-        } catch (HttpProcessingException ignored) {
-        }
-
-        Map<String, Object> response = new LinkedHashMap<String, Object>();
-        response.put("status", "ok");
-
-        String payload = JSON.toJSONString(response);
-        Map<String, String> headers = new LinkedHashMap<String, String>();
-        headers.put(HttpHeaderNames.CONTENT_TYPE.toString(), "application/json; charset=UTF-8");
-
-        DefaultCookie cookie = new DefaultCookie("loggedUser", "");
-        cookie.setPath("/");
-        cookie.setMaxAge(0);
-        headers.put(HttpHeaderNames.SET_COOKIE.toString(), ServerCookieEncoder.STRICT.encode(cookie));
 
         responseWriter.writeByteResponse(payload.getBytes(CharsetUtil.UTF_8), headers);
     }
@@ -250,19 +187,6 @@ public class ApiAuthRequestHandler extends ApiRequestHandler {
             throw new HttpProcessingException(401);
         }
         return new AuthResult(player, token, jwtToken.getExpiresAt());
-    }
-
-    private void assertAccountAllowed(Player player) throws HttpProcessingException {
-        if (StringUtils.isNullOrEmpty(player.getPassword()))
-            throw new HttpProcessingException(202);
-
-        if (!player.hasType(Player.Type.UNBANNED)) {
-            Date bannedUntil = player.getBannedUntil();
-            if (bannedUntil == null)
-                throw new HttpProcessingException(403);
-            if (bannedUntil.after(new Date()))
-                throw new HttpProcessingException(409);
-        }
     }
 
     private void writeAuthResponse(ResponseWriter responseWriter, String token, long expiresAt, Player player, Map<String, String> headers) throws Exception {

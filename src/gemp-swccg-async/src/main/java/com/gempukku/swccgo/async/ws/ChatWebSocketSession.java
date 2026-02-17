@@ -10,9 +10,6 @@ import com.gempukku.swccgo.db.PlayerDAO;
 import com.gempukku.swccgo.game.ChatCommunicationChannel;
 import com.gempukku.swccgo.game.Player;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import io.netty.channel.ChannelFutureListener;
 import org.apache.commons.text.StringEscapeUtils;
 import io.netty.util.concurrent.ScheduledFuture;
 
@@ -26,14 +23,12 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ChatWebSocketSession implements WebSocketSession {
-    private final ChannelHandlerContext _ctx;
+public class ChatWebSocketSession extends AbstractWebSocketSession {
     private final ChatRoomMediator _chatRoom;
     private final Player _player;
     private final PlayerDAO _playerDao;
     private final String _room;
     private final AtomicBoolean _closed = new AtomicBoolean(false);
-    private final Object _sendLock = new Object();
     private final WebSocketChatChannel _channel;
     private ScheduledFuture<?> _keepAlive;
     private ScheduledFuture<?> _expiryTimer;
@@ -41,7 +36,7 @@ public class ChatWebSocketSession implements WebSocketSession {
     private long _lastUsersPushAt;
 
     public ChatWebSocketSession(ChannelHandlerContext ctx, ChatRoomMediator chatRoom, Player player, PlayerDAO playerDao, String room, long tokenExpiresAt) {
-        _ctx = ctx;
+        super(ctx);
         _chatRoom = chatRoom;
         _player = player;
         _playerDao = playerDao;
@@ -153,16 +148,6 @@ public class ChatWebSocketSession implements WebSocketSession {
         sendJson(message);
     }
 
-    private void sendJson(Map<String, Object> message) {
-        final String json = JSON.toJSONString(message);
-        synchronized (_sendLock) {
-            _ctx.executor().execute(() -> {
-                if (_ctx.channel().isActive())
-                    _ctx.writeAndFlush(new TextWebSocketFrame(json));
-            });
-        }
-    }
-
     private void startKeepAlive() {
         stopKeepAlive();
         _keepAlive = _ctx.executor().scheduleAtFixedRate(() -> {
@@ -205,8 +190,7 @@ public class ChatWebSocketSession implements WebSocketSession {
             return;
         }
         onClose();
-        _ctx.writeAndFlush(new CloseWebSocketFrame(4401, "token expired"))
-                .addListener(ChannelFutureListener.CLOSE);
+        closeWithReason(4401, "token expired");
     }
 
     private void maybeSendUsers() {

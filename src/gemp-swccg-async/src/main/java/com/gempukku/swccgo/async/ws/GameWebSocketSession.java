@@ -16,9 +16,6 @@ import com.gempukku.swccgo.game.state.EventSerializer;
 import com.gempukku.swccgo.game.state.GameCommunicationChannel;
 import com.gempukku.swccgo.game.state.GameEvent;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.concurrent.ScheduledFuture;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -40,8 +37,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class GameWebSocketSession implements WebSocketSession {
-    private final ChannelHandlerContext _ctx;
+public class GameWebSocketSession extends AbstractWebSocketSession {
     private final SwccgoServer _swccgoServer;
     private final PlayerDAO _playerDao;
     private final Player _viewer;
@@ -54,7 +50,6 @@ public class GameWebSocketSession implements WebSocketSession {
     ));
     private final AtomicBoolean _closed = new AtomicBoolean(false);
     private final AtomicBoolean _sending = new AtomicBoolean(false);
-    private final Object _sendLock = new Object();
     private final long _tokenExpiresAtMs;
 
     private SwccgGameMediator _gameMediator;
@@ -66,7 +61,7 @@ public class GameWebSocketSession implements WebSocketSession {
     private final WaitingRequest _waitingRequest = new GameWaitingRequest();
 
     public GameWebSocketSession(ChannelHandlerContext ctx, SwccgoServer swccgoServer, PlayerDAO playerDao, Player viewer, String gameId, String participantId, Integer channelNumber, long tokenExpiresAt) {
-        _ctx = ctx;
+        super(ctx);
         _swccgoServer = swccgoServer;
         _playerDao = playerDao;
         _viewer = viewer;
@@ -340,8 +335,7 @@ public class GameWebSocketSession implements WebSocketSession {
             return;
         }
         onClose();
-        _ctx.writeAndFlush(new CloseWebSocketFrame(4401, "token expired"))
-                .addListener(ChannelFutureListener.CLOSE);
+        closeWithReason(4401, "token expired");
     }
 
     private Document createGameDocument(String rootName) throws Exception {
@@ -372,13 +366,7 @@ public class GameWebSocketSession implements WebSocketSession {
             sendError("Failed to serialize game update.", 500);
             return;
         }
-        synchronized (_sendLock) {
-            _ctx.executor().execute(() -> {
-                if (_ctx.channel().isActive()) {
-                    _ctx.writeAndFlush(new TextWebSocketFrame(xml));
-                }
-            });
-        }
+        sendText(xml);
     }
 
     private String serializeXml(Document document) throws Exception {
@@ -423,17 +411,6 @@ public class GameWebSocketSession implements WebSocketSession {
             message.putAll(payload);
         }
         sendJson(message);
-    }
-
-    private void sendJson(Map<String, Object> message) {
-        final String json = JSON.toJSONString(message);
-        synchronized (_sendLock) {
-            _ctx.executor().execute(() -> {
-                if (_ctx.channel().isActive()) {
-                    _ctx.writeAndFlush(new TextWebSocketFrame(json));
-                }
-            });
-        }
     }
 
     private class XmlGameVisitor implements ParticipantCommunicationVisitor {

@@ -1,16 +1,12 @@
 package com.gempukku.swccgo.async.ws;
 
-import com.alibaba.fastjson.JSON;
 import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.hall.HallChannelVisitor;
 import com.gempukku.swccgo.hall.HallCommunicationChannel;
 import com.gempukku.swccgo.hall.HallServer;
 import com.gempukku.swccgo.hall.HallUpdateListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.PingWebSocketFrame;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.concurrent.ScheduledFuture;
 
 import java.util.LinkedHashMap;
@@ -18,19 +14,17 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class HallWebSocketSession implements WebSocketSession, HallUpdateListener, HallChannelVisitor {
-    private final ChannelHandlerContext _ctx;
+public class HallWebSocketSession extends AbstractWebSocketSession implements HallUpdateListener, HallChannelVisitor {
     private final HallServer _hallServer;
     private final Player _player;
     private final HallCommunicationChannel _hallChannel;
     private final AtomicBoolean _closed = new AtomicBoolean(false);
-    private final Object _sendLock = new Object();
     private final long _tokenExpiresAtMs;
     private ScheduledFuture<?> _expiryTimer;
     private ScheduledFuture<?> _keepAliveTimer;
 
     public HallWebSocketSession(ChannelHandlerContext ctx, HallServer hallServer, Player player, long tokenExpiresAt) {
-        _ctx = ctx;
+        super(ctx);
         _hallServer = hallServer;
         _player = player;
         _hallChannel = new HallCommunicationChannel(0);
@@ -80,14 +74,6 @@ public class HallWebSocketSession implements WebSocketSession, HallUpdateListene
         sendJson(message);
     }
 
-    private void sendJson(Map<String, Object> message) {
-        final String json = JSON.toJSONString(message);
-        _ctx.executor().execute(() -> {
-            if (_ctx.channel().isActive())
-                _ctx.writeAndFlush(new TextWebSocketFrame(json));
-        });
-    }
-
     private void scheduleTokenExpiry() {
         if (_tokenExpiresAtMs <= 0) {
             return;
@@ -134,8 +120,7 @@ public class HallWebSocketSession implements WebSocketSession, HallUpdateListene
             return;
         }
         onClose();
-        _ctx.writeAndFlush(new CloseWebSocketFrame(4401, "token expired"))
-                .addListener(ChannelFutureListener.CLOSE);
+        closeWithReason(4401, "token expired");
     }
 
     private Map<String, Object> buildEntry(String id, Map<String, String> props) {
