@@ -6,22 +6,33 @@ import com.gempukku.polling.WaitingRequest;
 import com.gempukku.swccgo.PrivateInformationException;
 import com.gempukku.swccgo.SubscriptionConflictException;
 import com.gempukku.swccgo.SubscriptionExpiredException;
-import com.gempukku.swccgo.async.game.GameJsonSerializer;
-import com.gempukku.swccgo.async.game.GameJsonVisitor;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.db.PlayerDAO;
+import com.gempukku.swccgo.game.ParticipantCommunicationVisitor;
 import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.game.SwccgGameMediator;
 import com.gempukku.swccgo.game.SwccgoServer;
+import com.gempukku.swccgo.game.state.EventSerializer;
 import com.gempukku.swccgo.game.state.GameCommunicationChannel;
+import com.gempukku.swccgo.game.state.GameEvent;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.concurrent.ScheduledFuture;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.StringWriter;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -36,8 +47,10 @@ public class GameWebSocketSession implements WebSocketSession {
     private final String _gameId;
     private final String _participantId;
     private final Integer _requestedChannelNumber;
-    private final GameJsonSerializer _serializer = new GameJsonSerializer();
-    private final Set<Phase> _autoPassDefault = new HashSet<Phase>();
+    private final EventSerializer _eventSerializer = new EventSerializer();
+    private static final Set<Phase> AUTO_PASS_DEFAULT = Collections.unmodifiableSet(EnumSet.of(
+            Phase.ACTIVATE, Phase.CONTROL, Phase.DEPLOY, Phase.BATTLE, Phase.MOVE, Phase.DRAW
+    ));
     private final AtomicBoolean _closed = new AtomicBoolean(false);
     private final AtomicBoolean _sending = new AtomicBoolean(false);
     private final Object _sendLock = new Object();
@@ -60,13 +73,6 @@ public class GameWebSocketSession implements WebSocketSession {
         _participantId = participantId;
         _requestedChannelNumber = channelNumber;
         _tokenExpiresAtMs = tokenExpiresAt > 0 ? tokenExpiresAt * 1000L : 0L;
-
-        _autoPassDefault.add(Phase.ACTIVATE);
-        _autoPassDefault.add(Phase.CONTROL);
-        _autoPassDefault.add(Phase.DEPLOY);
-        _autoPassDefault.add(Phase.BATTLE);
-        _autoPassDefault.add(Phase.MOVE);
-        _autoPassDefault.add(Phase.DRAW);
     }
 
     @Override
@@ -85,7 +91,6 @@ public class GameWebSocketSession implements WebSocketSession {
             return;
         }
 
-        GameJsonVisitor visitor = new GameJsonVisitor();
         boolean needsSignup = _requestedChannelNumber == null;
         if (!needsSignup) {
             try {
@@ -102,6 +107,20 @@ public class GameWebSocketSession implements WebSocketSession {
             } catch (SubscriptionExpiredException exp) {
                 needsSignup = true;
             }
+        }
+
+        Document snapshotDoc;
+        XmlGameVisitor visitor;
+        try {
+            snapshotDoc = createGameDocument(needsSignup ? "gameState" : "update");
+            visitor = new XmlGameVisitor(snapshotDoc, snapshotDoc.getDocumentElement());
+            if (_channelNumber >= 0) {
+                snapshotDoc.getDocumentElement().setAttribute("cn", String.valueOf(_channelNumber));
+            }
+        } catch (Exception exp) {
+            sendError("Failed to initialize game session.", 500);
+            _ctx.close();
+            return;
         }
 
         if (needsSignup) {
@@ -132,7 +151,7 @@ public class GameWebSocketSession implements WebSocketSession {
             _gameMediator.processVisitor(_gameChannel, _channelNumber, _resourceOwner.getName(), visitor);
         }
 
-        sendSnapshot(visitor);
+        sendSnapshot(snapshotDoc);
         registerForUpdates();
         startTicker();
         scheduleTokenExpiry();
@@ -162,35 +181,10 @@ public class GameWebSocketSession implements WebSocketSession {
         }
 
         String type = payload.getString("type");
-        if (type == null) {
-            type = payload.getString("action");
-        }
-        if (type == null) {
+        if (!"decision".equals(type)) {
             return;
         }
-
-        switch (type) {
-            case "decision":
-                handleDecision(payload);
-                break;
-            case "autopass":
-                handleAutoPass(payload);
-                break;
-            case "concede":
-                handleConcede();
-                break;
-            case "cancel":
-                handleCancel();
-                break;
-            case "extendGameTimer":
-                handleExtendGameTimer(payload);
-                break;
-            case "disableActionTimer":
-                handleDisableActionTimer();
-                break;
-            default:
-                break;
-        }
+        handleDecision(payload);
     }
 
     private Player resolveResourceOwner() {
@@ -237,40 +231,9 @@ public class GameWebSocketSession implements WebSocketSession {
         requestUpdate();
     }
 
-    private void handleAutoPass(JSONObject payload) {
-        Set<Phase> autoPassPhases = resolveAutoPassPhases(payload);
-        _gameMediator.setPlayerAutoPassSettings(_resourceOwner.getName(), autoPassPhases);
-        sendAck("autopass");
-    }
-
-    private void handleConcede() {
-        _gameMediator.concede(_resourceOwner);
-        sendAck("concede");
-    }
-
-    private void handleCancel() {
-        _gameMediator.cancel(_resourceOwner);
-        sendAck("cancel");
-    }
-
-    private void handleExtendGameTimer(JSONObject payload) {
-        Integer minutes = payload.getInteger("minutesToExtend");
-        if (minutes == null) {
-            sendError("Missing minutesToExtend.", 400);
-            return;
-        }
-        _gameMediator.extendGameTimer(_resourceOwner, minutes);
-        sendAck("extendGameTimer");
-    }
-
-    private void handleDisableActionTimer() {
-        _gameMediator.disableActionTimer(_resourceOwner);
-        sendAck("disableActionTimer");
-    }
-
     private Set<Phase> resolveAutoPassPhases(JSONObject payload) {
         if (payload == null) {
-            return _autoPassDefault;
+            return AUTO_PASS_DEFAULT;
         }
 
         Boolean enabled = payload.getBoolean("autoPassEnabled");
@@ -289,21 +252,17 @@ public class GameWebSocketSession implements WebSocketSession {
                     phases.add(Phase.valueOf(phaseObj.toString()));
                 } catch (IllegalArgumentException ignored) {
                     sendError("Invalid autoPassPhases.", 400);
-                    return _autoPassDefault;
+                    return AUTO_PASS_DEFAULT;
                 }
             }
             return phases;
         }
 
-        return _autoPassDefault;
+        return AUTO_PASS_DEFAULT;
     }
 
-    private void sendSnapshot(GameJsonVisitor visitor) {
-        Map<String, Object> payload = new LinkedHashMap<String, Object>();
-        payload.put("eventType", "gameState");
-        payload.put("gameId", _gameId);
-        payload.putAll(_serializer.buildPayload(visitor));
-        sendEvent("snapshot", payload);
+    private void sendSnapshot(Document snapshotDoc) {
+        sendXmlDocument(snapshotDoc);
     }
 
     private void requestUpdate() {
@@ -315,12 +274,11 @@ public class GameWebSocketSession implements WebSocketSession {
         }
         try {
             _gameChannel.unregisterRequest(_waitingRequest);
-            GameJsonVisitor visitor = new GameJsonVisitor();
+            Document updateDoc = createGameDocument("update");
+            updateDoc.getDocumentElement().setAttribute("cn", String.valueOf(_channelNumber));
+            XmlGameVisitor visitor = new XmlGameVisitor(updateDoc, updateDoc.getDocumentElement());
             _gameMediator.processVisitor(_gameChannel, _channelNumber, _resourceOwner.getName(), visitor);
-            Map<String, Object> payload = new LinkedHashMap<String, Object>();
-            payload.put("gameId", _gameId);
-            payload.putAll(_serializer.buildPayload(visitor));
-            sendEvent("update", payload);
+            sendXmlDocument(updateDoc);
         } catch (Exception exp) {
             sendError("Failed to process game update.", 500);
         } finally {
@@ -385,6 +343,50 @@ public class GameWebSocketSession implements WebSocketSession {
                 .addListener(ChannelFutureListener.CLOSE);
     }
 
+    private Document createGameDocument(String rootName) throws Exception {
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+        Document doc = documentBuilder.newDocument();
+        Element root = doc.createElement(rootName);
+        doc.appendChild(root);
+        return doc;
+    }
+
+    private Node serializeClocks(Document doc, Map<String, Integer> secondsLeft) {
+        Element clocks = doc.createElement("clocks");
+        for (Map.Entry<String, Integer> userClock : secondsLeft.entrySet()) {
+            Element clock = doc.createElement("clock");
+            clock.setAttribute("participantId", userClock.getKey());
+            clock.appendChild(doc.createTextNode(userClock.getValue().toString()));
+            clocks.appendChild(clock);
+        }
+        return clocks;
+    }
+
+    private void sendXmlDocument(Document document) {
+        final String xml;
+        try {
+            xml = serializeXml(document);
+        } catch (Exception exp) {
+            sendError("Failed to serialize game update.", 500);
+            return;
+        }
+        synchronized (_sendLock) {
+            _ctx.executor().execute(() -> {
+                if (_ctx.channel().isActive()) {
+                    _ctx.writeAndFlush(new TextWebSocketFrame(xml));
+                }
+            });
+        }
+    }
+
+    private String serializeXml(Document document) throws Exception {
+        StringWriter writer = new StringWriter();
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.transform(new DOMSource(document), new StreamResult(writer));
+        return writer.toString();
+    }
+
     private void sendAck(String action) {
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
         payload.put("action", action);
@@ -430,6 +432,37 @@ public class GameWebSocketSession implements WebSocketSession {
                     _ctx.writeAndFlush(new TextWebSocketFrame(json));
                 }
             });
+        }
+    }
+
+    private class XmlGameVisitor implements ParticipantCommunicationVisitor {
+        private final Document _doc;
+        private final Element _root;
+        private int _channelNumber = -1;
+
+        private XmlGameVisitor(Document doc, Element root) {
+            _doc = doc;
+            _root = root;
+        }
+
+        @Override
+        public void visitChannelNumber(int channelNumber) {
+            _channelNumber = channelNumber;
+            _root.setAttribute("cn", String.valueOf(channelNumber));
+        }
+
+        @Override
+        public void visitGameEvent(GameEvent gameEvent) {
+            _root.appendChild(_eventSerializer.serializeEvent(_doc, gameEvent));
+        }
+
+        @Override
+        public void visitClock(Map<String, Integer> secondsLeft) {
+            _root.appendChild(serializeClocks(_doc, secondsLeft));
+        }
+
+        private int getChannelNumber() {
+            return _channelNumber;
         }
     }
 

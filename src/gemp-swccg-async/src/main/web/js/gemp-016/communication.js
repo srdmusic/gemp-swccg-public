@@ -1,41 +1,6 @@
 var GempSwccgCommunication = Class.extend({
     url:null,
-    apiBase:null,
     failure:null,
-    _gameWs:null,
-    _gameUpdateCallback:null,
-    _gameErrorMap:null,
-    _pendingGameUpdate:null,
-    _gameChannelNumber:null,
-    _gameSnapshotReceived:null,
-    _gameWsReconnectTimer:null,
-    _gameWsReconnectAttempts:null,
-    _gameWsMaxReconnectAttempts:null,
-    _gameWsBaseDelayMs:null,
-    _gameWsMaxDelayMs:null,
-    _gameWsEnabled:null,
-    _gameWsDisabled:null,
-    _chatSockets:null,
-    _chatCallbacks:null,
-    _chatErrorMaps:null,
-    _chatReconnectTimers:null,
-    _chatReconnectAttempts:null,
-    _chatUsers:null,
-    _chatWsEnabled:null,
-    _chatWsDisabled:null,
-    _hallSocket:null,
-    _hallCallback:null,
-    _hallErrorMap:null,
-    _hallReconnectTimer:null,
-    _hallReconnectAttempts:null,
-    _hallWsEnabled:null,
-    _hallWsDisabled:null,
-    _hallPendingUpdates:null,
-    _hallState:null,
-    _hallChannelNumber:null,
-    _hallKnownQueues:null,
-    _hallKnownTournaments:null,
-    _hallKnownTables:null,
 
     init:function (url, failure) {
         this.url = url;
@@ -374,11 +339,7 @@ var GempSwccgCommunication = Class.extend({
             this.ensureGameSocket();
 
             if (this.sendGameDecisionWs(decisionId, response, channelNumber)) {
-                callback(this.buildGameXml({
-                    channelNumber:channelNumber,
-                    events:[],
-                    clocks:[]
-                }, "update"));
+                callback(this.createEmptyGameUpdateXml(channelNumber));
                 return;
             }
         }
@@ -852,6 +813,22 @@ var GempSwccgCommunication = Class.extend({
             return null;
         }
     },
+    parseXmlSafely:function (payload) {
+        if (payload == null || payload === "")
+            return null;
+        try {
+            if (typeof $ != "undefined" && $.parseXML)
+                return $.parseXML(payload);
+        } catch (e) {
+        }
+        if (typeof DOMParser == "undefined")
+            return null;
+        try {
+            return (new DOMParser()).parseFromString(payload, "text/xml");
+        } catch (e2) {
+            return null;
+        }
+    },
     buildWsBase:function () {
         var protocol = (window.location.protocol === "https:") ? "wss://" : "ws://";
         return protocol + window.location.host + "/gemp-swccg-server/ws";
@@ -862,7 +839,7 @@ var GempSwccgCommunication = Class.extend({
 
         var callback = this._gameUpdateCallback;
         this._gameUpdateCallback = null;
-        callback(this.buildGameXml(this._pendingGameUpdate, "update"));
+        callback(this._pendingGameUpdate);
         this._pendingGameUpdate = null;
     },
     ensureGameSocket:function () {
@@ -958,33 +935,28 @@ var GempSwccgCommunication = Class.extend({
         this.handleGameError("0");
     },
     handleGameWsMessage:function (data) {
-        var payload = null;
-        try {
-            payload = JSON.parse(data);
-        } catch (e) {
-            return;
+        var payload = this.parseJsonSafely(data);
+        if (payload != null && payload.type === "game") {
+            if (payload.event === "error") {
+                this.handleGameError("" + (payload.status || "0"));
+                return;
+            }
+            if (payload.event === "ack")
+                return;
         }
 
-        if (payload == null || payload.type !== "game")
+        var xml = this.parseXmlSafely(data);
+        if (xml == null || xml.documentElement == null)
             return;
 
-        if (payload.event === "error") {
-            this.handleGameError("" + (payload.status || "0"));
-            return;
-        }
-        if (payload.event === "ack")
-            return;
-        if (payload.event !== "snapshot" && payload.event !== "update")
+        var rootName = xml.documentElement.tagName;
+        if (rootName !== "gameState" && rootName !== "update")
             return;
 
-        if (payload.channelNumber != null)
-            this._gameChannelNumber = payload.channelNumber;
-
-        var rootName = (payload.event === "snapshot" && !this._gameSnapshotReceived) ? "gameState" : "update";
-        if (payload.event === "snapshot")
+        this.captureGameChannelFromXml(xml);
+        if (rootName === "gameState")
             this._gameSnapshotReceived = true;
 
-        var xml = this.buildGameXml(payload, rootName);
         if (this._gameUpdateCallback != null) {
             var callback = this._gameUpdateCallback;
             this._gameUpdateCallback = null;
@@ -992,27 +964,40 @@ var GempSwccgCommunication = Class.extend({
             return;
         }
 
-        this.queuePendingGameUpdate(payload);
+        this.queuePendingGameUpdate(xml);
     },
-    queuePendingGameUpdate:function (payload) {
-        if (payload == null)
+    queuePendingGameUpdate:function (xml) {
+        if (xml == null || xml.documentElement == null)
             return;
 
         if (this._pendingGameUpdate == null) {
-            this._pendingGameUpdate = {
-                channelNumber:payload.channelNumber,
-                events:(payload.events || []).slice(0),
-                clocks:(payload.clocks || []).slice(0)
-            };
+            this._pendingGameUpdate = xml;
             return;
         }
 
-        if (payload.events != null && payload.events.length > 0)
-            this._pendingGameUpdate.events = this._pendingGameUpdate.events.concat(payload.events);
-        if (payload.clocks != null)
-            this._pendingGameUpdate.clocks = payload.clocks.slice(0);
-        if (payload.channelNumber != null)
-            this._pendingGameUpdate.channelNumber = payload.channelNumber;
+        var pendingRoot = this._pendingGameUpdate.documentElement;
+        var incomingRoot = xml.documentElement;
+        if (pendingRoot == null || incomingRoot == null) {
+            this._pendingGameUpdate = xml;
+            return;
+        }
+
+        // Keep queue behavior from polling mode by appending incremental update nodes.
+        if (pendingRoot.tagName !== "update" || incomingRoot.tagName !== "update") {
+            this._pendingGameUpdate = xml;
+            return;
+        }
+
+        var incomingChannel = incomingRoot.getAttribute("cn");
+        if (incomingChannel != null && incomingChannel !== "")
+            pendingRoot.setAttribute("cn", incomingChannel);
+
+        for (var i = 0; i < incomingRoot.childNodes.length; i++) {
+            var child = incomingRoot.childNodes[i];
+            if (child == null || child.nodeType !== 1)
+                continue;
+            pendingRoot.appendChild(this._pendingGameUpdate.importNode(child, true));
+        }
     },
     handleGameError:function (status) {
         if (this._gameWs != null) {
@@ -1075,165 +1060,13 @@ var GempSwccgCommunication = Class.extend({
         if (result.length > 0)
             payload.autoPassPhases = result;
     },
-    buildGameXml:function (payload, rootName) {
-        // Keep legacy UI untouched: WS payloads are adapted back into the old XML shape.
+    createEmptyGameUpdateXml:function (channelNumber) {
         var doc = document.implementation.createDocument("", "", null);
-        var root = doc.createElement(rootName || "update");
-
-        if (payload != null && payload.channelNumber != null)
-            root.setAttribute("cn", "" + payload.channelNumber);
-
-        var events = (payload != null && payload.events != null) ? payload.events : [];
-        for (var i = 0; i < events.length; i++) {
-            root.appendChild(this.buildGameEventXml(doc, events[i]));
-        }
-
-        var clocks = (payload != null && payload.clocks != null) ? payload.clocks : [];
-        if (clocks.length > 0) {
-            var clocksElem = doc.createElement("clocks");
-            for (var j = 0; j < clocks.length; j++) {
-                var clock = clocks[j];
-                if (clock == null)
-                    continue;
-                var clockElem = doc.createElement("clock");
-                this.setAttr(clockElem, "participantId", clock.participantId);
-                clockElem.appendChild(doc.createTextNode("" + clock.secondsLeft));
-                clocksElem.appendChild(clockElem);
-            }
-            root.appendChild(clocksElem);
-        }
-
+        var root = doc.createElement("update");
+        if (channelNumber != null && channelNumber !== "")
+            root.setAttribute("cn", "" + channelNumber);
         doc.appendChild(root);
         return doc;
-    },
-    buildGameEventXml:function (doc, event) {
-        var elem = doc.createElement("ge");
-        if (event == null)
-            return elem;
-
-        this.setAttr(elem, "type", event.type);
-        this.setAttr(elem, "blueprintId", event.blueprintId);
-        this.setAttr(elem, "testingText", event.testingText);
-        this.setAttr(elem, "backSideTestingText", event.backSideTestingText);
-        this.setAttr(elem, "horizontal", event.horizontal);
-        this.setAttr(elem, "cardId", event.cardId);
-        this.setAttr(elem, "index", event.index);
-        this.setAttr(elem, "zoneOwnerId", event.zoneOwnerId);
-        this.setAttr(elem, "systemName", event.systemName);
-        this.setAttr(elem, "locationIndex", event.locationIndex);
-        this.setAttr(elem, "locationIndexes", this.joinValues(event.locationIndexes));
-        this.setAttr(elem, "participantId", event.participantId);
-        this.setAttr(elem, "allParticipantIds", this.joinValues(event.allParticipantIds));
-        this.setAttr(elem, "phase", event.phase);
-        this.setAttr(elem, "targetCardId", event.targetCardId);
-        this.setAttr(elem, "zone", event.zone);
-        this.setAttr(elem, "inverted", event.inverted);
-        this.setAttr(elem, "sideways", event.sideways);
-        this.setAttr(elem, "frozen", event.frozen);
-        this.setAttr(elem, "suspended", event.suspended);
-        this.setAttr(elem, "collapsed", event.collapsed);
-        this.setAttr(elem, "count", event.count);
-        this.setAttr(elem, "destinyText", event.destinyText);
-        this.setAttr(elem, "playerAttacking", event.playerAttacking);
-        this.setAttr(elem, "playerDefending", event.playerDefending);
-        this.setAttr(elem, "otherCardIds", this.joinValues(event.otherCardIds));
-        this.setAttr(elem, "otherCardIds2", this.joinValues(event.otherCardIds2));
-        this.setAttr(elem, "message", event.message);
-
-        if (event.gameStats != null)
-            this.applyGameStatsXml(doc, elem, event.gameStats);
-        if (event.awaitingDecision != null)
-            this.applyDecisionXml(doc, elem, event.awaitingDecision);
-
-        return elem;
-    },
-    applyGameStatsXml:function (doc, elem, stats) {
-        this.setAttr(elem, "darkForceGeneration", stats.darkForceGeneration);
-        this.setAttr(elem, "lightForceGeneration", stats.lightForceGeneration);
-        this.setAttr(elem, "darkBattlePower", stats.darkBattlePower);
-        this.setAttr(elem, "lightBattlePower", stats.lightBattlePower);
-        this.setAttr(elem, "darkBattleNumDestinyToPower", stats.darkBattleNumDestinyToPower);
-        this.setAttr(elem, "lightBattleNumDestinyToPower", stats.lightBattleNumDestinyToPower);
-        this.setAttr(elem, "darkBattleNumBattleDestiny", stats.darkBattleNumBattleDestiny);
-        this.setAttr(elem, "lightBattleNumBattleDestiny", stats.lightBattleNumBattleDestiny);
-        this.setAttr(elem, "darkBattleNumDestinyToAttrition", stats.darkBattleNumDestinyToAttrition);
-        this.setAttr(elem, "lightBattleNumDestinyToAttrition", stats.lightBattleNumDestinyToAttrition);
-        this.setAttr(elem, "darkBattleDamageRemaining", stats.darkBattleDamageRemaining);
-        this.setAttr(elem, "lightBattleDamageRemaining", stats.lightBattleDamageRemaining);
-        this.setAttr(elem, "darkBattleAttritionRemaining", stats.darkBattleAttritionRemaining);
-        this.setAttr(elem, "lightBattleAttritionRemaining", stats.lightBattleAttritionRemaining);
-        this.setAttr(elem, "darkImmuneToRemainingAttrition", stats.darkImmuneToRemainingAttrition);
-        this.setAttr(elem, "lightImmuneToRemainingAttrition", stats.lightImmuneToRemainingAttrition);
-        this.setAttr(elem, "darkSabaccTotal", stats.darkSabaccTotal);
-        this.setAttr(elem, "lightSabaccTotal", stats.lightSabaccTotal);
-        this.setAttr(elem, "darkDuelOrLightsaberCombatTotal", stats.darkDuelOrLightsaberCombatTotal);
-        this.setAttr(elem, "lightDuelOrLightsaberCombatTotal", stats.lightDuelOrLightsaberCombatTotal);
-        this.setAttr(elem, "darkDuelOrLightsaberCombatNumDestiny", stats.darkDuelOrLightsaberCombatNumDestiny);
-        this.setAttr(elem, "lightDuelOrLightsaberCombatNumDestiny", stats.lightDuelOrLightsaberCombatNumDestiny);
-        this.setAttr(elem, "attackingPowerOrFerocityInAttack", stats.attackingPowerOrFerocityInAttack);
-        this.setAttr(elem, "defendingPowerOrFerocityInAttack", stats.defendingPowerOrFerocityInAttack);
-        this.setAttr(elem, "attackingNumDestinyInAttack", stats.attackingNumDestinyInAttack);
-        this.setAttr(elem, "defendingNumDestinyInAttack", stats.defendingNumDestinyInAttack);
-        this.setAttr(elem, "darkRaceTotal", stats.darkRaceTotal);
-        this.setAttr(elem, "lightRaceTotal", stats.lightRaceTotal);
-        this.setAttr(elem, "darkPoliticsTotal", stats.darkPoliticsTotal);
-        this.setAttr(elem, "lightPoliticsTotal", stats.lightPoliticsTotal);
-
-        var playerZones = stats.playerZones || [];
-        for (var i = 0; i < playerZones.length; i++) {
-            var player = playerZones[i];
-            var playerElem = doc.createElement("playerZones");
-            this.setAttr(playerElem, "name", player.name);
-            var zones = player.zones || {};
-            for (var key in zones) {
-                if (zones.hasOwnProperty(key))
-                    this.setAttr(playerElem, key, zones[key]);
-            }
-            elem.appendChild(playerElem);
-        }
-
-        var darkPower = doc.createElement("darkPowerAtLocations");
-        var darkEntries = stats.darkPowerAtLocations || [];
-        for (var j = 0; j < darkEntries.length; j++) {
-            var darkEntry = darkEntries[j];
-            if (darkEntry != null)
-                this.setAttr(darkPower, "locationIndex" + darkEntry.locationIndex, darkEntry.value);
-        }
-        elem.appendChild(darkPower);
-
-        var lightPower = doc.createElement("lightPowerAtLocations");
-        var lightEntries = stats.lightPowerAtLocations || [];
-        for (var k = 0; k < lightEntries.length; k++) {
-            var lightEntry = lightEntries[k];
-            if (lightEntry != null)
-                this.setAttr(lightPower, "locationIndex" + lightEntry.locationIndex, lightEntry.value);
-        }
-        elem.appendChild(lightPower);
-    },
-    applyDecisionXml:function (doc, elem, decision) {
-        this.setAttr(elem, "id", decision.id);
-        this.setAttr(elem, "decisionType", decision.decisionType);
-        this.setAttr(elem, "text", decision.text);
-
-        var params = decision.parameters || [];
-        for (var i = 0; i < params.length; i++) {
-            var param = params[i];
-            if (param == null)
-                continue;
-            var paramElem = doc.createElement("parameter");
-            this.setAttr(paramElem, "name", param.name);
-            this.setAttr(paramElem, "value", param.value);
-            elem.appendChild(paramElem);
-        }
-    },
-    setAttr:function (elem, name, value) {
-        if (elem != null && name != null && value != null)
-            elem.setAttribute(name, "" + value);
-    },
-    joinValues:function (values) {
-        if (values == null || values.length === 0)
-            return null;
-        return values.join(",");
     },
     ensureChatSocket:function (room) {
         if (!this._chatWsEnabled[room])

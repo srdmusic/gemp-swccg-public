@@ -15,11 +15,8 @@ public class ChatRoomMediator {
     private ChatRoom _chatRoom;
 
     private Map<String, ChatCommunicationChannel> _listeners = new HashMap<String, ChatCommunicationChannel>();
-    private Map<String, Long> _lastSeen = new HashMap<String, Long>();
-    private Map<String, Long> _lastActive = new HashMap<String, Long>();
 
     private final int _channelInactivityTimeoutPeriod;
-    private final int _userIdleTimeoutPeriod;
     private boolean _privateRoom;
     private Set<String> _allowedPlayers;
     private boolean _allowSpectatorsToChat;
@@ -29,14 +26,13 @@ public class ChatRoomMediator {
 
     private Map<String, ChatCommandCallback> _chatCommandCallbacks = new HashMap<String, ChatCommandCallback>();
 
-    public ChatRoomMediator(String roomName, boolean muteJoinPartMessages, int secondsTimeoutPeriod, int secondsIdlePeriod, boolean privateRoom, Set<String> allowedPlayers, boolean allowSpectatorsToChat, boolean playtesting) {
+    public ChatRoomMediator(String roomName, boolean muteJoinPartMessages, int secondsTimeoutPeriod, boolean privateRoom, Set<String> allowedPlayers, boolean allowSpectatorsToChat, boolean playtesting) {
         _logger = LogManager.getLogger("chat."+roomName);
         _privateRoom = privateRoom;
         _allowedPlayers = allowedPlayers;
         _allowSpectatorsToChat = allowSpectatorsToChat;
         _playtesting = playtesting;
         _channelInactivityTimeoutPeriod = 1000 * secondsTimeoutPeriod;
-        _userIdleTimeoutPeriod = Math.max(0, secondsIdlePeriod) * 1000;
         _chatRoom = new ChatRoom(muteJoinPartMessages);
     }
 
@@ -57,7 +53,6 @@ public class ChatRoomMediator {
                 throw new PrivateInformationException();
 
             _listeners.put(playerId, listener);
-            recordPresence(playerId, true);
             _chatRoom.joinChatRoom(playerId, _allowedPlayers != null && !_allowedPlayers.contains(playerId) && !_allowSpectatorsToChat, listener);
             return listener.consumeMessages(0);
         } finally {
@@ -82,8 +77,6 @@ public class ChatRoomMediator {
         try {
             _chatRoom.partChatRoom(playerId);
             _listeners.remove(playerId);
-            _lastSeen.remove(playerId);
-            _lastActive.remove(playerId);
         } finally {
             _lock.writeLock().unlock();
         }
@@ -96,7 +89,6 @@ public class ChatRoomMediator {
         _lock.writeLock().lock();
         try {
             if (admin || _allowedPlayers == null || _allowedPlayers.contains(playerId) || _allowSpectatorsToChat) {
-                recordPresence(playerId, false);
                 _logger.trace(playerId + ": " + message);
                 _chatRoom.postMessage(playerId, message);
             }
@@ -141,8 +133,6 @@ public class ChatRoomMediator {
                 if (currentTime > (listener.getLastAccessed() + _channelInactivityTimeoutPeriod)) {
                     _chatRoom.partChatRoom(playerId);
                     _listeners.remove(playerId);
-                    _lastSeen.remove(playerId);
-                    _lastActive.remove(playerId);
                 }
             }
         } finally {
@@ -156,55 +146,6 @@ public class ChatRoomMediator {
             return _chatRoom.getUsersInRoom();
         } finally {
             _lock.readLock().unlock();
-        }
-    }
-
-    public void markSeen(String playerId) {
-        _lock.writeLock().lock();
-        try {
-            recordPresence(playerId, true);
-        } finally {
-            _lock.writeLock().unlock();
-        }
-    }
-
-    public void markActive(String playerId) {
-        _lock.writeLock().lock();
-        try {
-            recordPresence(playerId, false);
-        } finally {
-            _lock.writeLock().unlock();
-        }
-    }
-
-    public Map<String, String> getUserStatusMap() {
-        _lock.readLock().lock();
-        try {
-            Map<String, String> statuses = new HashMap<String, String>();
-            long now = System.currentTimeMillis();
-            for (String user : _chatRoom.getUsersInRoom()) {
-                String status = "online";
-                if (_userIdleTimeoutPeriod > 0) {
-                    Long lastActive = _lastActive.get(user);
-                    if (lastActive != null && now - lastActive > _userIdleTimeoutPeriod) {
-                        status = "away";
-                    }
-                }
-                statuses.put(user, status);
-            }
-            return statuses;
-        } finally {
-            _lock.readLock().unlock();
-        }
-    }
-
-    private void recordPresence(String playerId, boolean passive) {
-        long now = System.currentTimeMillis();
-        _lastSeen.put(playerId, now);
-        if (!passive) {
-            _lastActive.put(playerId, now);
-        } else if (!_lastActive.containsKey(playerId)) {
-            _lastActive.put(playerId, now);
         }
     }
 }
