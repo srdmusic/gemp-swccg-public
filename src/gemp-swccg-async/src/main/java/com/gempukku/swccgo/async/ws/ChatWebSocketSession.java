@@ -99,7 +99,6 @@ public class ChatWebSocketSession implements WebSocketSession {
                 JSONObject json = JSON.parseObject(trimmed);
                 String type = json.getString("type");
                 if ("presence".equals(type)) {
-                    _chatRoom.markActive(_player.getName());
                     sendUsersEvent();
                     return null;
                 }
@@ -122,7 +121,6 @@ public class ChatWebSocketSession implements WebSocketSession {
         payload.put("room", _room);
         payload.put("messages", serializeMessages(messages));
         payload.put("users", buildUsers());
-        payload.put("userStatus", buildUserStatusMap());
         sendEvent("snapshot", payload);
     }
 
@@ -130,14 +128,12 @@ public class ChatWebSocketSession implements WebSocketSession {
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
         payload.put("message", serializeMessage(chatMessage));
         payload.put("users", buildUsers());
-        payload.put("userStatus", buildUserStatusMap());
         sendEvent("message", payload);
     }
 
     private void sendUsersEvent() {
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
         payload.put("users", buildUsers());
-        payload.put("userStatus", buildUserStatusMap());
         sendEvent("users", payload);
     }
 
@@ -174,7 +170,6 @@ public class ChatWebSocketSession implements WebSocketSession {
                 return;
             }
             _channel.touch();
-            _chatRoom.markSeen(_player.getName());
             maybeSendUsers();
         }, 5, 10, TimeUnit.SECONDS);
     }
@@ -248,20 +243,6 @@ public class ChatWebSocketSession implements WebSocketSession {
             }
         }
         return new ArrayList<String>(users);
-    }
-
-    private Map<String, String> buildUserStatusMap() {
-        Map<String, String> statusMap = new LinkedHashMap<String, String>();
-        Map<String, String> rawStatuses = _chatRoom.getUserStatusMap();
-        for (String user : _chatRoom.getUsersInRoom()) {
-            String formatted = formatPlayerNameForChatList(user);
-            if (formatted.isEmpty()) {
-                continue;
-            }
-            String status = rawStatuses.get(user);
-            statusMap.put(formatted, status != null ? status : "online");
-        }
-        return statusMap;
     }
 
     private String formatPlayerNameForChatList(String userInRoom) {

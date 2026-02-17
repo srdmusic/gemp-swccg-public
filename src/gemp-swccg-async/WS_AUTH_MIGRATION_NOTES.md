@@ -18,17 +18,18 @@ This branch is intentionally scoped to transport/auth foundation changes only.
 
 Keeping this split avoids leaking Netty frame logic into gameplay/hall/chat code.
 
-## Why WS Payloads Are JSON But UI Still Uses XML Internally
+## Why Game WS Payloads Stay XML
 
-The existing browser UI expects XML (`gameState`, `update`, `hall`, `chat`) and has
-deep logic tied to those structures.
+The existing game UI expects XML (`gameState`, `update`) and has deep logic tied to
+those structures.
 
 To keep the migration small:
 
-- server sends structured JSON over websocket,
-- client adapts JSON back into the existing XML shape.
+- game websocket sends legacy XML directly,
+- client consumes that XML directly (no JSON-to-XML rebuild for game state),
+- websocket control messages (ack/error) remain small JSON envelopes.
 
-This allows websocket transport and JWT auth to land first without rewriting legacy UI.
+This keeps websocket transport and JWT auth in scope without rewriting game UI parsing.
 
 ## WS-Only Fallback Policy (This Branch)
 

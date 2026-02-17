@@ -6,20 +6,31 @@ import com.gempukku.polling.WaitingRequest;
 import com.gempukku.swccgo.PrivateInformationException;
 import com.gempukku.swccgo.SubscriptionConflictException;
 import com.gempukku.swccgo.SubscriptionExpiredException;
-import com.gempukku.swccgo.async.game.GameJsonSerializer;
-import com.gempukku.swccgo.async.game.GameJsonVisitor;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.db.PlayerDAO;
+import com.gempukku.swccgo.game.ParticipantCommunicationVisitor;
 import com.gempukku.swccgo.game.Player;
 import com.gempukku.swccgo.game.SwccgGameMediator;
 import com.gempukku.swccgo.game.SwccgoServer;
+import com.gempukku.swccgo.game.state.EventSerializer;
 import com.gempukku.swccgo.game.state.GameCommunicationChannel;
+import com.gempukku.swccgo.game.state.GameEvent;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.util.concurrent.ScheduledFuture;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -36,7 +47,7 @@ public class GameWebSocketSession implements WebSocketSession {
     private final String _gameId;
     private final String _participantId;
     private final Integer _requestedChannelNumber;
-    private final GameJsonSerializer _serializer = new GameJsonSerializer();
+    private final EventSerializer _eventSerializer = new EventSerializer();
     private final Set<Phase> _autoPassDefault = new HashSet<Phase>();
     private final AtomicBoolean _closed = new AtomicBoolean(false);
     private final AtomicBoolean _sending = new AtomicBoolean(false);
@@ -85,7 +96,6 @@ public class GameWebSocketSession implements WebSocketSession {
             return;
         }
 
-        GameJsonVisitor visitor = new GameJsonVisitor();
         boolean needsSignup = _requestedChannelNumber == null;
         if (!needsSignup) {
             try {
@@ -102,6 +112,20 @@ public class GameWebSocketSession implements WebSocketSession {
             } catch (SubscriptionExpiredException exp) {
                 needsSignup = true;
             }
+        }
+
+        Document snapshotDoc;
+        XmlGameVisitor visitor;
+        try {
+            snapshotDoc = createGameDocument(needsSignup ? "gameState" : "update");
+            visitor = new XmlGameVisitor(snapshotDoc, snapshotDoc.getDocumentElement());
+            if (_channelNumber >= 0) {
+                snapshotDoc.getDocumentElement().setAttribute("cn", String.valueOf(_channelNumber));
+            }
+        } catch (Exception exp) {
+            sendError("Failed to initialize game session.", 500);
+            _ctx.close();
+            return;
         }
 
         if (needsSignup) {
@@ -132,7 +156,7 @@ public class GameWebSocketSession implements WebSocketSession {
             _gameMediator.processVisitor(_gameChannel, _channelNumber, _resourceOwner.getName(), visitor);
         }
 
-        sendSnapshot(visitor);
+        sendSnapshot(snapshotDoc);
         registerForUpdates();
         startTicker();
         scheduleTokenExpiry();
@@ -298,12 +322,8 @@ public class GameWebSocketSession implements WebSocketSession {
         return _autoPassDefault;
     }
 
-    private void sendSnapshot(GameJsonVisitor visitor) {
-        Map<String, Object> payload = new LinkedHashMap<String, Object>();
-        payload.put("eventType", "gameState");
-        payload.put("gameId", _gameId);
-        payload.putAll(_serializer.buildPayload(visitor));
-        sendEvent("snapshot", payload);
+    private void sendSnapshot(Document snapshotDoc) {
+        sendXmlDocument(snapshotDoc);
     }
 
     private void requestUpdate() {
@@ -315,12 +335,11 @@ public class GameWebSocketSession implements WebSocketSession {
         }
         try {
             _gameChannel.unregisterRequest(_waitingRequest);
-            GameJsonVisitor visitor = new GameJsonVisitor();
+            Document updateDoc = createGameDocument("update");
+            updateDoc.getDocumentElement().setAttribute("cn", String.valueOf(_channelNumber));
+            XmlGameVisitor visitor = new XmlGameVisitor(updateDoc, updateDoc.getDocumentElement());
             _gameMediator.processVisitor(_gameChannel, _channelNumber, _resourceOwner.getName(), visitor);
-            Map<String, Object> payload = new LinkedHashMap<String, Object>();
-            payload.put("gameId", _gameId);
-            payload.putAll(_serializer.buildPayload(visitor));
-            sendEvent("update", payload);
+            sendXmlDocument(updateDoc);
         } catch (Exception exp) {
             sendError("Failed to process game update.", 500);
         } finally {
@@ -385,6 +404,50 @@ public class GameWebSocketSession implements WebSocketSession {
                 .addListener(ChannelFutureListener.CLOSE);
     }
 
+    private Document createGameDocument(String rootName) throws Exception {
+        DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+        Document doc = documentBuilder.newDocument();
+        Element root = doc.createElement(rootName);
+        doc.appendChild(root);
+        return doc;
+    }
+
+    private Node serializeClocks(Document doc, Map<String, Integer> secondsLeft) {
+        Element clocks = doc.createElement("clocks");
+        for (Map.Entry<String, Integer> userClock : secondsLeft.entrySet()) {
+            Element clock = doc.createElement("clock");
+            clock.setAttribute("participantId", userClock.getKey());
+            clock.appendChild(doc.createTextNode(userClock.getValue().toString()));
+            clocks.appendChild(clock);
+        }
+        return clocks;
+    }
+
+    private void sendXmlDocument(Document document) {
+        final String xml;
+        try {
+            xml = serializeXml(document);
+        } catch (Exception exp) {
+            sendError("Failed to serialize game update.", 500);
+            return;
+        }
+        synchronized (_sendLock) {
+            _ctx.executor().execute(() -> {
+                if (_ctx.channel().isActive()) {
+                    _ctx.writeAndFlush(new TextWebSocketFrame(xml));
+                }
+            });
+        }
+    }
+
+    private String serializeXml(Document document) throws Exception {
+        StringWriter writer = new StringWriter();
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.transform(new DOMSource(document), new StreamResult(writer));
+        return writer.toString();
+    }
+
     private void sendAck(String action) {
         Map<String, Object> payload = new LinkedHashMap<String, Object>();
         payload.put("action", action);
@@ -430,6 +493,37 @@ public class GameWebSocketSession implements WebSocketSession {
                     _ctx.writeAndFlush(new TextWebSocketFrame(json));
                 }
             });
+        }
+    }
+
+    private class XmlGameVisitor implements ParticipantCommunicationVisitor {
+        private final Document _doc;
+        private final Element _root;
+        private int _channelNumber = -1;
+
+        private XmlGameVisitor(Document doc, Element root) {
+            _doc = doc;
+            _root = root;
+        }
+
+        @Override
+        public void visitChannelNumber(int channelNumber) {
+            _channelNumber = channelNumber;
+            _root.setAttribute("cn", String.valueOf(channelNumber));
+        }
+
+        @Override
+        public void visitGameEvent(GameEvent gameEvent) {
+            _root.appendChild(_eventSerializer.serializeEvent(_doc, gameEvent));
+        }
+
+        @Override
+        public void visitClock(Map<String, Integer> secondsLeft) {
+            _root.appendChild(serializeClocks(_doc, secondsLeft));
+        }
+
+        private int getChannelNumber() {
+            return _channelNumber;
         }
     }
 

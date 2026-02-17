@@ -72,9 +72,9 @@ public class HallServer extends AbstractServer {
     private boolean _operational;
     private boolean _shutdown;
     private boolean _privateGamesEnabled;
-    private boolean _aiTablesEnabled;
     private boolean _inGameStatisticsEnabled;
     private boolean _bonusAbilitiesEnabled;
+    private boolean _aiTablesEnabled;
 
     private ReadWriteLock _hallDataAccessLock = new ReentrantReadWriteLock(false);
 
@@ -110,9 +110,9 @@ public class HallServer extends AbstractServer {
         _gempSettingDAO = gempSettingDAO;
         _botStatsDAO = botStatsDAO;
         _privateGamesEnabled = _gempSettingDAO.privateGamesEnabled();
-        _aiTablesEnabled = _gempSettingDAO.aiTablesEnabled();
         _inGameStatisticsEnabled = _gempSettingDAO.inGameStatisticsEnabled();
         _bonusAbilitiesEnabled = _gempSettingDAO.bonusAbilitiesEnabled();
+        _aiTablesEnabled = _gempSettingDAO.aiTablesEnabled();
         _adminService = adminService;
         _tournamentPrizeSchemeRegistry = tournamentPrizeSchemeRegistry;
         _pairingMechanismRegistry = pairingMechanismRegistry;
@@ -256,7 +256,7 @@ public class HallServer extends AbstractServer {
      *         is sitting at a table or playing).
      */
     public void createNewTable(String type, Player player, String deckName, boolean sampleDeck, String tableDesc,
-            boolean isPrivate, Player librarian, boolean playVsAi, String aiSkill, String aiDeckName)
+            boolean isPrivate, Player librarian, boolean playVsAi, String aiSkill, String aiDeckName, boolean aiDeckSample)
             throws HallException {
         if (_shutdown)
             throw new HallException(
@@ -319,8 +319,8 @@ public class HallServer extends AbstractServer {
 
             // AI Logic
             if (playVsAi) {
-                if (!_aiTablesEnabled) {
-                    throw new HallException("Bot tables are currently disabled.");
+                if (!aiTablesEnabled()) {
+                    throw new HallException("Bot tables are currently disabled");
                 }
                 if (aiDeckName == null || aiDeckName.isEmpty()) {
                     throw new HallException("AI deck must be selected");
@@ -328,12 +328,13 @@ public class HallServer extends AbstractServer {
 
                 aiSkill = normalizeAiSkill(aiSkill);
 
+                Player aiDeckOwner = aiDeckSample ? librarian : player;
                 aiDeck = validateUserAndDeck(
                         format,
-                        librarian, // AI decks come from librarian
+                        aiDeckOwner,
                         aiDeckName,
                         collectionType,
-                        true, // AI decks are always sample decks
+                        aiDeckSample,
                         librarian);
 
                 Side aiSide = aiDeck.getSide(_library);
@@ -364,14 +365,6 @@ public class HallServer extends AbstractServer {
         } finally {
             _hallDataAccessLock.writeLock().unlock();
         }
-    }
-
-    // Backward-compatible overload for handlers that still pass aiDeckSample.
-    public void createNewTable(String type, Player player, String deckName, boolean sampleDeck, String tableDesc,
-            boolean isPrivate, Player librarian, boolean playVsAi, String aiSkill, String aiDeckName,
-            boolean aiDeckSample) throws HallException {
-        createNewTable(type, player, deckName, sampleDeck, tableDesc, isPrivate, librarian, playVsAi, aiSkill,
-                aiDeckName);
     }
 
     private String normalizeAiSkill(String aiSkill) {
@@ -417,11 +410,6 @@ public class HallServer extends AbstractServer {
         _privateGamesEnabled = enabled;
     }
 
-    public void setAiTablesEnabled(boolean enabled) {
-        _gempSettingDAO.setAiTablesEnabled(enabled);
-        _aiTablesEnabled = enabled;
-    }
-
     public void setInGameStatisticsEnabled(boolean enabled) {
         _gempSettingDAO.setInGameStatisticsEnabled(enabled);
         _inGameStatisticsEnabled = enabled;
@@ -432,12 +420,13 @@ public class HallServer extends AbstractServer {
         _bonusAbilitiesEnabled = enabled;
     }
 
-    public boolean privateGamesAllowed() {
-        return _privateGamesEnabled;
+    public void setAiTablesEnabled(boolean enabled) {
+        _gempSettingDAO.setAiTablesEnabled(enabled);
+        _aiTablesEnabled = enabled;
     }
 
-    public boolean aiTablesEnabled() {
-        return _aiTablesEnabled;
+    public boolean privateGamesAllowed() {
+        return _privateGamesEnabled;
     }
 
     public boolean inGameStatisticsEnabled() {
@@ -448,8 +437,8 @@ public class HallServer extends AbstractServer {
         return _bonusAbilitiesEnabled;
     }
 
-    public boolean isShutdown() {
-        return _shutdown;
+    public boolean aiTablesEnabled() {
+        return _aiTablesEnabled;
     }
 
     public int removeInGameStatisticsListeners() {
