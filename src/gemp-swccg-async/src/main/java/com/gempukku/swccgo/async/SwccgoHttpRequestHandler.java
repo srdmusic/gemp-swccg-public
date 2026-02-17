@@ -56,7 +56,7 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
     private static final long SIX_MONTHS = 1000L*60L*60L*24L*30L*6L;
     private final Logger _log = LogManager.getLogger(SwccgoHttpRequestHandler.class);
     private static final Logger _accesslog = LogManager.getLogger("access");
-    private final Map<String, CachedFile> _fileCache = Collections.synchronizedMap(new HashMap<>());
+    private final Map<String, byte[]> _fileCache = Collections.synchronizedMap(new HashMap<>());
     private final Map<Type, Object> _objects;
     private final UriRequestHandler _uriRequestHandler;
 
@@ -368,16 +368,6 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
         ctx.close();
     }
 
-    private static class CachedFile {
-        private final byte[] bytes;
-        private final long lastModified;
-
-        private CachedFile(byte[] bytes, long lastModified) {
-            this.bytes = bytes;
-            this.lastModified = lastModified;
-        }
-    }
-
     private class ResponseSender implements ResponseWriter {
         private final ChannelHandlerContext ctx;
         private final HttpRequest request;
@@ -485,9 +475,7 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
         public void writeFile(File file, Map<String, String> headers) {
             try {
                 String canonicalPath = file.getCanonicalPath();
-                long lastModified = file.lastModified();
-                CachedFile cached = _fileCache.get(canonicalPath);
-                byte[] fileBytes = cached != null && cached.lastModified == lastModified ? cached.bytes : null;
+                byte[] fileBytes = _fileCache.get(canonicalPath);
                 if (fileBytes == null) {
                     if (!file.exists() || !file.isFile()) {
                         byte[] content = new byte[0];
@@ -501,7 +489,7 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
                         IOUtils.copy(fis, baos);
                         fileBytes = baos.toByteArray();
-                        _fileCache.put(canonicalPath, new CachedFile(fileBytes, lastModified));
+                        _fileCache.put(canonicalPath, fileBytes);
                     }
                 }
 
