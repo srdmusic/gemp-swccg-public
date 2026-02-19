@@ -52,10 +52,9 @@ import com.gempukku.swccgo.logic.timing.Action;
 public class Card501_212_BACK extends AbstractObjective {
     public Card501_212_BACK() {
         super(Side.LIGHT, 7, Title.Gather_Allies_And_Train, ExpansionSet.PLAYTESTING, Rarity.V);
-        setGameText("While this side up, Jedi survivors are deploy -1. if your holocron is about to leave table, place it in Used Pile. Opponent's total battle destiny where they have a character of ability > 4 is -1. During your move phase, may use 2 Force to relocate a Jedi between a Jabiim site and a battleground site as a regular move. At the end of your turn, if Jedi occupy two battleground sites, opponent loses 1 Force. Flip this card if Jedi do not occupy two sites.");
+        setGameText("While this side up, Jedi survivors are deploy -1. If your holocron is about to leave table, place it in Used Pile. Opponent's total battle destiny where they have a character of ability > 4 is -1. During your move phase, may use 2 Force to relocate a Jedi between a Jabiim site and a battleground site as a regular move. At the end of opponent's turn, if Jedi occupy two battleground sites, opponent loses 1 Force. Flip this card if Jedi do not occupy two non-Mapuzo sites.");
         addIcons(Icon.VIRTUAL_SET_26);
         setTestingText("Gather Allies And Train");
-        hideFromDeckBuilder();
     }
 
     @Override
@@ -106,7 +105,7 @@ public class Card501_212_BACK extends AbstractObjective {
         }
 
         // Check condition(s)
-        if (TriggerConditions.isEndOfYourTurn(game, effectResult, playerId)
+        if (TriggerConditions.isEndOfOpponentsTurn(game, effectResult, playerId)
                 && GameConditions.occupiesWith(game, self, playerId, 2, Filters.battleground_site, Filters.Jedi)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
@@ -121,7 +120,7 @@ public class Card501_212_BACK extends AbstractObjective {
         // Check condition(s)
         if (TriggerConditions.isTableChanged(game, effectResult)
                 && GameConditions.canBeFlipped(game, self)
-                && !GameConditions.occupiesWith(game, self, playerId, 2, Filters.site, SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jedi)) {
+                && !GameConditions.occupiesWith(game, self, playerId, 2, Filters.and(Filters.not(Filters.Mapuzo_location), Filters.site), SpotOverride.INCLUDE_EXCLUDED_FROM_BATTLE, Filters.Jedi)) {
 
             RequiredGameTextTriggerAction action = new RequiredGameTextTriggerAction(self, gameTextSourceCardId);
             action.setSingletonTrigger(true);
