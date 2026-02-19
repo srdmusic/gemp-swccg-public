@@ -35,6 +35,7 @@ import com.gempukku.swccgo.logic.effects.choose.ChooseCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.choose.DeployCardFromReserveDeckEffect;
 import com.gempukku.swccgo.logic.modifiers.DeployCostModifier;
 import com.gempukku.swccgo.logic.modifiers.MayNotDeployModifier;
+import com.gempukku.swccgo.logic.modifiers.MayNotPlayModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextModifier;
 import com.gempukku.swccgo.logic.modifiers.ModifyGameTextType;
@@ -68,7 +69,8 @@ public class Card501_212_BACK extends AbstractObjective {
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
         // For remainder of game
-        modifiers.add(new MayNotDeployModifier(self, Filters.or(genericLocations, jediExceptJediSurvivors), playerId));
+        modifiers.add(new MayNotDeployModifier(self, Filters.or(genericLocations, Filters.Anakin, jediExceptJediSurvivors), playerId));
+        modifiers.add(new MayNotPlayModifier(self, Filters.A_Jedis_Resilience, playerId));
         modifiers.add(new ModifyGameTextModifier(self, Filters.Weapon_Levitation, ModifyGameTextType.WEAPON_LEVITATION_MAY_NOT_STEAL_WEAPONS));
 
         // While this side up
