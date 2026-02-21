@@ -22,6 +22,7 @@ var GempSwccgHallUI = Class.extend({
     isPrivateCheckbox:null,
     adminTab:null,
     userInfo:null,
+    deckBuilderLink:null,
 
     pocketDiv:null,
     pocketValue:null,
@@ -80,8 +81,12 @@ var GempSwccgHallUI = Class.extend({
         this.buttonsDiv.append(this.controlsLeft);
         this.buttonsDiv.append(this.controlsRight);
 
-        this.controlsLeft.append("<a href='deckBuild.html' target='_blank'>Deck Builder</a>");
-        this.controlsLeft.append(" | ");
+        this.deckBuilderLink = $("<a href='deckBuild.html' target='_blank'>Deck Builder</a>");
+        this.deckBuilderLink.click(function () {
+            that.markDeckBuilderDeliveryPending(false);
+        });
+        this.controlsLeft.append(this.deckBuilderLink);
+        this.controlsLeft.append(" | " );
 
 //        this.buttonsDiv.append("<a href='merchant.html'>Merchant</a>");
 //        this.buttonsDiv.append(" | ");
@@ -174,6 +179,10 @@ var GempSwccgHallUI = Class.extend({
                 }
             });
 
+
+        window.onDeliveryReceived = function() {
+            that.markDeckBuilderDeliveryPending(true);
+        };
         this.updateCreateTableLabel();
         this.div.append(this.buttonsDiv);
         this.hallResized(width, height);
@@ -181,6 +190,18 @@ var GempSwccgHallUI = Class.extend({
         this.getHall();
         this.updateDecks();
     },
+
+
+    markDeckBuilderDeliveryPending:function (pending) {
+        if (this.deckBuilderLink == null)
+            return;
+
+        if (pending)
+            this.deckBuilderLink.css({color:"#ffd54f", "font-weight":"bold"}).attr("title", "New items available in Deck Builder");
+        else
+            this.deckBuilderLink.css({color:"", "font-weight":""}).attr("title", "");
+    },
+
 
 
     addQueuesTable: function(displayed) {
