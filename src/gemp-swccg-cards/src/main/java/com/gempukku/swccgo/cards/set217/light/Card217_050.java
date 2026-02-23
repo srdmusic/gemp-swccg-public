@@ -116,7 +116,12 @@ public class Card217_050 extends AbstractEpicEventDeployable {
             action.setText("Retrieve 1 Force");
             // Perform result(s)
             action.appendEffect(
-                    new RetrieveForceEffect(action, playerId, 1));
+                    new RetrieveForceEffect(action, playerId, 1) {
+                        @Override
+                        public boolean isDueToInitiatingBattle() {
+                            return true;
+                        }
+                    });
             return Collections.singletonList(action);
         }
 
