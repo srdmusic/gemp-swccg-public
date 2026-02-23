@@ -84,16 +84,7 @@ public class Card3_102 extends AbstractImmediateEffect {
     }
 
     @Override
-    protected List<TopLevelGameTextAction> getGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        return getCancelFrozenDinnerAction(playerId, game, self, gameTextSourceCardId);
-    }
-
-    @Override
     protected List<TopLevelGameTextAction> getOpponentsCardGameTextTopLevelActions(final String playerId, SwccgGame game, final PhysicalCard self, int gameTextSourceCardId) {
-        return getCancelFrozenDinnerAction(playerId, game, self, gameTextSourceCardId);
-    }
-
-    private List<TopLevelGameTextAction> getCancelFrozenDinnerAction(String playerId, SwccgGame game, PhysicalCard self, int gameTextSourceCardId) {
         String opponent = game.getOpponent(self.getOwner());
 
         // Check condition(s)
