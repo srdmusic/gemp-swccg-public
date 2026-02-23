@@ -3,7 +3,6 @@ package com.gempukku.swccgo.cards.set106.dark;
 import com.gempukku.swccgo.cards.AbstractImperial;
 import com.gempukku.swccgo.cards.GameConditions;
 import com.gempukku.swccgo.cards.conditions.AtSameSiteAsCondition;
-import com.gempukku.swccgo.cards.conditions.InPlayDataSetCondition;
 import com.gempukku.swccgo.cards.effects.usage.OncePerTurnEffect;
 import com.gempukku.swccgo.common.ExpansionSet;
 import com.gempukku.swccgo.common.Icon;
@@ -22,7 +21,6 @@ import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
 import com.gempukku.swccgo.logic.effects.UnrespondableEffect;
 import com.gempukku.swccgo.logic.modifiers.DeploysFreeToLocationModifier;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
-import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.modifiers.SatisfiesAllAttritionWhenForfeitedModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 
@@ -57,7 +55,6 @@ public class Card106_016 extends AbstractImperial {
     protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         Filter imperialVeteranFilter = Filters.and(Icon.IMPERIAL, Filters.or(Keyword.LEADER, Filters.and(Filters.trooper, Filters.not(Filters.cadet))));
-        modifiers.add(new PowerModifier(self, Filters.isInCardInPlayData(self), new InPlayDataSetCondition(self), 1));
         modifiers.add(new SatisfiesAllAttritionWhenForfeitedModifier(self, new AtSameSiteAsCondition(self, imperialVeteranFilter)));
         return modifiers;
     }
