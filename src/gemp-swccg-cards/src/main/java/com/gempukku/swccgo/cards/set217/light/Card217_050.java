@@ -32,7 +32,6 @@ import com.gempukku.swccgo.logic.timing.EffectResult;
 import com.gempukku.swccgo.logic.timing.PassthruEffect;
 import com.gempukku.swccgo.logic.timing.results.ChoiceMadeResult;
 
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -107,10 +106,10 @@ public class Card217_050 extends AbstractEpicEventDeployable {
 
     @Override
     protected List<OptionalGameTextTriggerAction> getGameTextOptionalAfterTriggers(String playerId, SwccgGame game, EffectResult effectResult, PhysicalCard self, int gameTextSourceCardId) {
+        List<OptionalGameTextTriggerAction> actions = new LinkedList<>();
 
-        if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious))
-                || (TriggerConditions.battleInitiated(game, effectResult, playerId)
-                && GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker))) {
+        if (TriggerConditions.battleInitiated(game, effectResult, playerId)
+                && GameConditions.isDuringBattleWithParticipant(game, Filters.Skywalker)) {
 
             final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
             action.setText("Retrieve 1 Force");
@@ -122,10 +121,19 @@ public class Card217_050 extends AbstractEpicEventDeployable {
                             return true;
                         }
                     });
-            return Collections.singletonList(action);
+            actions.add(action);
         }
 
-        return null;
+        if (TriggerConditions.justLost(game, effectResult, Filters.and(Filters.opponents(self), Filters.Sidious))) {
+
+            final OptionalGameTextTriggerAction action = new OptionalGameTextTriggerAction(self, gameTextSourceCardId);
+            action.setText("Retrieve 1 Force");
+            // Perform result(s)
+            action.appendEffect(
+                    new RetrieveForceEffect(action, playerId, 1));
+            actions.add(action);
+        }
+        return actions;
     }
 
     @Override
