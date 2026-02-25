@@ -157,8 +157,8 @@ public class Card_7_127_Tests {
 
         assertEquals(0,scn.GetLSUsedPileCount());
 
-        assertTrue(scn.LSCardActionAvailable(spaceport_street,"related spaceport"));
-        scn.LSUseCardAction(spaceport_street,"related spaceport");
+        assertTrue(scn.LSCardActionAvailable(spaceport_street,"from here to related spaceport site"));
+        scn.LSUseCardAction(spaceport_street,"from here to related spaceport site");
         assertTrue(scn.LSDecisionAvailable("move from"));
         scn.LSChooseCard(spaceport_street);
         assertTrue(scn.LSDecisionAvailable("move to"));
@@ -178,7 +178,97 @@ public class Card_7_127_Tests {
     }
 
     @Test
-    public void SpaceportStreetLSCanRelocateUndercoverSpyTest() {
+    public void SpaceportStreetLSCanRelocateFromRelatedSpaceportSiteTest() {
+        //test1: Can use LS text to target to relocate from related spaceport site
+        //test2: Cannot use LS text to target from relocate to same site
+        //test3: Cannot use LS text to target from unrelated spaceport site
+        //test4: Cannot use LS text to target from related non-spaceport site
+        //test5: Can successfully relocate to spaceport street
+        //test6: Relocation is free
+        var scn = GetScenario();
+
+        var rebeltrooper1 = scn.GetLSFiller(1);
+        var rebeltrooper2 = scn.GetLSFiller(2);
+        var rebeltrooper3 = scn.GetLSFiller(3);
+        var rebeltrooper4 = scn.GetLSFiller(4);
+        var rebeltrooper5 = scn.GetLSFiller(5);
+        var tat = scn.GetLSCard("tat");
+        var kessel = scn.GetLSCard("kessel");
+        var spaceport_street = scn.GetLSCard("spaceport_street");
+        var spaceport_db = scn.GetLSCard("spaceport_db");
+        var spaceport_city = scn.GetLSCard("spaceport_city");
+        var lars_farm = scn.GetLSCard("lars_farm");
+
+        var spaceport_prefect = scn.GetDSCard("spaceport_prefect");
+
+        scn.StartGame();
+
+        scn.MoveLocationToTable(tat);
+        scn.MoveLocationToTable(kessel);
+        scn.MoveLocationToTable(lars_farm);
+        scn.MoveCardsToLocation(lars_farm,rebeltrooper1);
+
+        scn.MoveCardsToDSHand(spaceport_prefect);
+        scn.MoveCardsToLSHand(rebeltrooper2, rebeltrooper3, rebeltrooper4, rebeltrooper5, spaceport_db, spaceport_street, spaceport_city);
+
+        scn.SkipToPhase(Phase.DEPLOY);
+        scn.DSPlayCard(spaceport_prefect);
+        scn.DSChooseCard(tat);
+        scn.DSChooseCard(lars_farm);
+        scn.DSChoose("Left");
+        scn.PassAllResponses();
+        scn.MoveCardsToLocation(spaceport_prefect,rebeltrooper2);
+
+        scn.SkipToLSTurn(Phase.DEPLOY);
+        scn.LSPlayCard(spaceport_street);
+        scn.LSChooseCard(tat);
+        scn.LSChoose("Left");
+        scn.PassAllResponses();
+        scn.DSPass();
+        scn.MoveCardsToLocation(spaceport_street,rebeltrooper3);
+
+        scn.LSPlayCard(spaceport_db);
+        scn.LSChooseCard(tat);
+        scn.LSChooseCard(spaceport_street);
+        scn.LSChoose("Left");
+        scn.PassAllResponses();
+        scn.DSPass();
+        scn.MoveCardsToLocation(spaceport_db,rebeltrooper4);
+
+        scn.LSPlayCard(spaceport_city);
+        scn.LSChooseCard(kessel);
+        scn.PassAllResponses();
+        scn.DSPass();
+        scn.MoveCardsToLocation(spaceport_city,rebeltrooper5);
+
+        scn.SkipToPhase(Phase.MOVE);
+
+        assertEquals(0,scn.GetLSUsedPileCount());
+
+        assertTrue(scn.LSCardActionAvailable(spaceport_street,"from related spaceport site to"));
+        scn.LSUseCardAction(spaceport_street,"from related spaceport site to");
+        assertTrue(scn.LSDecisionAvailable("move from"));
+
+        assertTrue(scn.LSHasCardChoiceAvailable(spaceport_db)); //test1: spaceport and related
+        assertTrue(scn.LSHasCardChoiceAvailable(spaceport_prefect)); //test1: spaceport and related
+        assertFalse(scn.LSHasCardChoiceAvailable(spaceport_street)); //test2: same site
+        assertFalse(scn.LSHasCardChoiceAvailable(spaceport_city)); //test3: spaceport, but not related
+        assertFalse(scn.LSHasCardChoiceAvailable(lars_farm)); //test4: related, but not spaceport
+
+        scn.LSChooseCard(spaceport_db);
+        assertTrue(scn.LSDecisionAvailable("move to"));
+
+        scn.LSChooseCard(spaceport_street);
+        assertTrue(scn.LSDecisionAvailable("card to move"));
+        scn.LSChooseCard(rebeltrooper4);
+
+        scn.PassAllResponses();
+        assertTrue(scn.CardsAtLocation(spaceport_street,rebeltrooper4)); //test5: successfully relocated
+        assertEquals(0,scn.GetLSUsedPileCount()); //test6: movement was free
+    }
+
+    @Test
+    public void SpaceportStreetLSCanRelocateToRelatedSpaceportSiteUndercoverSpyTest() {
         //shows fixed: https://github.com/PlayersCommittee/gemp-swccg-public/issues/676
         //test1: LS can choose undercover spy to relocate with LS text
         //test2: LS undercover spy can successfully relocate to a related spaceport site
@@ -225,8 +315,8 @@ public class Card_7_127_Tests {
 
         scn.SkipToPhase(Phase.MOVE);
 
-        assertTrue(scn.LSCardActionAvailable(spaceport_street,"related spaceport"));
-        scn.LSUseCardAction(spaceport_street,"related spaceport");
+        assertTrue(scn.LSCardActionAvailable(spaceport_street,"from here to related spaceport site"));
+        scn.LSUseCardAction(spaceport_street,"from here to related spaceport site");
         assertTrue(scn.LSDecisionAvailable("move from"));
         scn.LSChooseCard(spaceport_street);
         assertTrue(scn.LSDecisionAvailable("move to"));
@@ -239,6 +329,67 @@ public class Card_7_127_Tests {
 
         scn.PassAllResponses();
         assertTrue(scn.CardsAtLocation(spaceport_prefect,boushh)); //test2: successfully relocated
+    }
+
+    @Test
+    public void SpaceportStreetLSCanRelocateFromRelatedSpaceportSiteUndercoverSpyTest() {
+        //test1: LS can choose undercover spy to relocate with LS text
+        //test2: LS undercover spy can successfully relocate to spaceport street
+        var scn = GetScenario();
+
+        var tat = scn.GetLSCard("tat");
+        var spaceport_street = scn.GetLSCard("spaceport_street");
+        var spaceport_db = scn.GetLSCard("spaceport_db");
+        var spaceport_city = scn.GetLSCard("spaceport_city");
+        var lars_farm = scn.GetLSCard("lars_farm");
+        var boushh = scn.GetLSCard("boushh");
+
+        var spaceport_prefect = scn.GetDSCard("spaceport_prefect");
+
+        scn.StartGame();
+
+        scn.MoveLocationToTable(tat);
+        scn.MoveLocationToTable(lars_farm);
+
+        scn.MoveCardsToDSHand(spaceport_prefect);
+        scn.MoveCardsToLSHand(boushh, spaceport_db, spaceport_street, spaceport_city);
+
+        scn.SkipToPhase(Phase.DEPLOY);
+        scn.DSPlayCard(spaceport_prefect);
+        scn.DSChooseCard(lars_farm);
+        scn.DSChoose("Left");
+        scn.PassAllResponses();
+
+        scn.SkipToLSTurn(Phase.DEPLOY);
+        scn.LSPlayCard(spaceport_street);
+        scn.LSChoose("Left");
+        scn.PassAllResponses();
+        scn.DSPass();
+
+        scn.LSPlayCard(spaceport_db);
+        scn.LSChooseCard(spaceport_street);
+        scn.LSChoose("Left");
+        scn.PassAllResponses();
+        scn.DSPass();
+
+        scn.LSDeployCard(boushh);
+        scn.LSChooseCard(spaceport_db);
+        scn.PassAllResponses();
+
+        scn.SkipToPhase(Phase.MOVE);
+
+        assertTrue(scn.LSCardActionAvailable(spaceport_street,"from related spaceport site to"));
+        scn.LSUseCardAction(spaceport_street,"from related spaceport site to");
+        assertTrue(scn.LSDecisionAvailable("move from"));
+        assertTrue(scn.LSHasCardChoiceAvailable(spaceport_db)); //test1: spaceport and related
+        scn.LSChooseCard(spaceport_db);
+        assertTrue(scn.LSDecisionAvailable("move to"));
+        scn.LSChooseCard(spaceport_street);
+        assertTrue(scn.LSDecisionAvailable("card to move"));
+        scn.LSChooseCard(boushh);
+
+        scn.PassAllResponses();
+        assertTrue(scn.CardsAtLocation(spaceport_street,boushh)); //test2: successfully relocated
     }
 
 }
