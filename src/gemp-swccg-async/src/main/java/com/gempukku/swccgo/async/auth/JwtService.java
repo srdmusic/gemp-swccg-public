@@ -92,7 +92,14 @@ public class JwtService {
             return null;
 
         String unsignedToken = parts[0] + "." + parts[1];
-        String expectedSignature = sign(unsignedToken);
+        String expectedSignature;
+        try {
+            expectedSignature = sign(unsignedToken);
+        } catch (IllegalStateException e) {
+            // Signing failure during verification is extremely unlikely; treat
+            // the token as invalid rather than propagate and crash the server.
+            return null;
+        }
         if (!constantTimeEquals(expectedSignature, parts[2]))
             return null;
 
@@ -122,6 +129,15 @@ public class JwtService {
         return new JwtToken(subject, exp);
     }
 
+    /**
+     * Compute the HMAC-SHA256 signature of the provided value using the
+     * configured secret.  In the previous incarnation a failure during
+     * signing was swallowed and an empty string returned; that would allow the
+     * rest of the token code to continue as if nothing had gone wrong and
+     * ultimately issue/accept a bogus token.  A problem in this method is
+     * catastrophic – the application cannot safely operate – so we propagate
+     * the error instead of hiding it.
+     */
     private String sign(String value) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
@@ -129,7 +145,7 @@ public class JwtService {
             byte[] signature = mac.doFinal(value.getBytes(StandardCharsets.UTF_8));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(signature);
         } catch (Exception e) {
-            return "";
+            throw new IllegalStateException("Failed to compute JWT signature", e);
         }
     }
 
