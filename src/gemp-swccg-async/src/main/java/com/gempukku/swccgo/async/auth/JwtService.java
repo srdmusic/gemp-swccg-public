@@ -28,9 +28,21 @@ public class JwtService {
         String secretValue = ApplicationConfiguration.getProperty("jwt.secret");
         if (secretValue == null || secretValue.isEmpty())
             secretValue = "change-me";
+
+        // When running in the production container we set APP_ENV=production.
+        // In that case we must not allow the default key - the application would be
+        // trivially compromised if someone left the value as "change-me".  During
+        // development a warning is sufficient so that a fresh checkout still works
+        // without any configuration.
+        boolean isProduction = "production".equalsIgnoreCase(System.getenv("APP_ENV"));
         if ("change-me".equals(secretValue)) {
             Logger logger = LogManager.getLogger(JwtService.class);
-            logger.warn("jwt.secret is using the default value; set JWT_SECRET in production.");
+            if (isProduction) {
+                // fail fast in prod so that configuration mistakes are obvious
+                throw new IllegalStateException("jwt.secret is using the default value; set JWT_SECRET in production environment.");
+            } else {
+                logger.warn("jwt.secret is using the default value; set JWT_SECRET in production.");
+            }
         }
         _secret = secretValue.getBytes(StandardCharsets.UTF_8);
         long ttlSeconds = parseLong(ApplicationConfiguration.getProperty("jwt.ttl.seconds"), 86400L);
