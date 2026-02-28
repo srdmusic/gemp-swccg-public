@@ -247,7 +247,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
                     else completeTargetFilter = getValidTransferDeviceOrWeaponTargetFilter(playerId, game, self, playCardOption, forFree, transferTargetFilter);
 
                     // Check that a valid target to transfer to as attached can be found
-                    if (Filters.canSpot(game, self, spotOverrides, TargetingReason.TO_BE_DEPLOYED_ON, completeTargetFilter)) {
+                    if (Filters.canSpot(game, self, spotOverrides, TargetingReason.TO_BE_TRANSFERRED_TO, completeTargetFilter)) {
                         transferDeviceOrWeaponAction = new TransferDeviceOrWeaponAction(playerId, self, playCardOption, forFree, completeTargetFilter);
                     }
 
@@ -302,7 +302,7 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
     @Override
     public Filter getValidTransferDeviceOrWeaponTargetFilter(String playerId, SwccgGame game, PhysicalCard self, PlayCardOption playCardOption, boolean forFree, Filter transferTargetFilter) {
         return Filters.and(Filters.your(self), Filters.or(Filters.character, Filters.starship, Filters.vehicle), Filters.not(Filters.hasAttached(self)),
-                Filters.not(Filters.attachedToWithRecursiveChecking(self)), Filters.presentWith(self), Filters.not(Filters.undercover_spy), transferTargetFilter, getValidTransferTargetFilter(playerId, game, self, playCardOption, forFree));
+                Filters.not(Filters.attachedToWithRecursiveChecking(self)), Filters.presentWith(self), transferTargetFilter, getValidTransferTargetFilter(playerId, game, self, playCardOption, forFree));
 
         /// Temp list form of 'and' conditions above, for clarity
 //        return Filters.and( Filters.your(self),
@@ -311,7 +311,6 @@ public abstract class AbstractDeployable extends AbstractNonLocationPlaysToTable
 //                            Filters.not(Filters.attachedToWithRecursiveChecking(self)),
 //                            Filters.presentWith(self),
 //                            transferTargetFilter, ////////this is typically presentWith(self) for getting top level actions
-//                            Filters.not(Filters.undercover_spy),
 //                            getValidTransferTargetFilter(playerId, game, self, playCardOption, forFree) ///////this handles deploy restrictions
 //                          );
     }
