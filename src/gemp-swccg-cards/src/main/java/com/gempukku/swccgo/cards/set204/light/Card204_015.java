@@ -37,7 +37,7 @@ import java.util.List;
  */
 public class Card204_015 extends AbstractNormalEffect {
     public Card204_015() {
-        super(Side.LIGHT, 2, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "We're Leaving", Uniqueness.UNIQUE, ExpansionSet.SET_04, Rarity.V);
+        super(Side.LIGHT, 2, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "We're Leaving", Uniqueness.UNIQUE, ExpansionSet.SET_4, Rarity.V);
         setVirtualSuffix(true);
         setLore("Qui-Gon realized that sometimes it's best to just leave, before any more damage is done.");
         setGameText("Deploy on table. If your Podracer is on table and opponent's is not, they generate no Force at Podrace Arena. Once during opponent's control phase, if you are winning (or have won) a Podrace, may stack the bottom card of your Lost Pile on Credits Will Do Fine. [Immune to Alter.]");

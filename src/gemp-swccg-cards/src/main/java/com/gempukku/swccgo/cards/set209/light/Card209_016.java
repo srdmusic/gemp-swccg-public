@@ -37,7 +37,7 @@ import java.util.List;
  */
 public class Card209_016 extends AbstractNormalEffect {
     public Card209_016() {
-        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Brave Resistance", Uniqueness.UNIQUE, ExpansionSet.SET_09, Rarity.V);
+        super(Side.LIGHT, 5, PlayCardZoneOption.YOUR_SIDE_OF_TABLE, "A Brave Resistance", Uniqueness.UNIQUE, ExpansionSet.SET_9, Rarity.V);
         setLore("");
         setGameText("If your [Episode VII] objective on table, deploy on table (only at start of game). Twice per game, may [upload] a Resistance leader. Resistance characters with printed forfeit < 6 are forfeit +1. Where you have a Resistance Agent, your total power is +3. Strike Planning is canceled. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_9);
