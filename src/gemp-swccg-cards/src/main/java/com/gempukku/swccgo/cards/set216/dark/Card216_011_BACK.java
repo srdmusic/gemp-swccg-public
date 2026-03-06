@@ -51,7 +51,6 @@ public class Card216_011_BACK extends AbstractObjective {
         super(Side.DARK, 7, Title.Taking_Control_Of_The_Weapon, ExpansionSet.SET_16, Rarity.V);
         setGameText("While this side up, A Bright Center To The Universe cancels opponent's Force drain modifiers everywhere. Vader may make a regular move to a battle just initiated. At Death Star, system it orbits, and sites related to either, your total battle destiny is +1 (+2 if your non-unique card with ability in battle). During your draw phase, may retrieve a non-unique card with ability. Flip this card if you do not have a leader at a Scarif battleground site. Place out of play if Death Star or Shield Gate not on table.");
         addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("Taking Control Of The Weapon");
     }
 
     @Override

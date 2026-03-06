@@ -42,7 +42,6 @@ public class Card223_025 extends AbstractLostInterrupt {
         setGameText(" If two Imperials (or two Black Sun agents) in battle, re-circulate and shuffle your Reserve Deck. OR Once per game, if Emperor or Tarkin on table, Allegations Of Corruption stacks opponent's just played Interrupt; this does not count towards that card's once per game limit.");
         addIcons(Icon.VIRTUAL_SET_23);
         setVirtualSuffix(true);
-        setTestingText("The Empire's Back (V)");
     }
 
     @Override

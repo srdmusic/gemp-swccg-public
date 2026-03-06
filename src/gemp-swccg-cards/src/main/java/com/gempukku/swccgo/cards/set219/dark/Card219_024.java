@@ -40,7 +40,6 @@ public class Card219_024 extends AbstractUsedInterrupt {
         setLore("The Empire considers alien species to be inferior.");
         setGameText("If an Imperial leader just won a battle, opponent loses 1 Force (and stacks it on Thrawn's Art Collection if possible). OR Suspend Ancient Watering Hole for remainder of turn. OR If you have 4 artwork cards, you retrieve 1 Force and opponent loses 1 Force.");
         addIcons(Icon.VIRTUAL_SET_19);
-        setTestingText("Understand Art, Understand A Species");
     }
 
     @Override

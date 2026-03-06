@@ -52,7 +52,6 @@ public class Card220_005 extends AbstractAlien {
         addIcons(Icon.DAGOBAH, Icon.PILOT, Icon.WARRIOR, Icon.VIRTUAL_SET_20);
         addKeywords(Keyword.BOUNTY_HUNTER, Keyword.SCOUT);
         setSpecies(Species.GAND);
-        setTestingText("Zuckuss (V)");
     }
 
     @Override

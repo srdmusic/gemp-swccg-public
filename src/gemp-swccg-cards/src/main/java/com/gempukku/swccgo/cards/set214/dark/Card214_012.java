@@ -35,7 +35,6 @@ public class Card214_012 extends AbstractNormalEffect {
         setGameText("If I Want That Map on table, deploy on table. Locations where there is a Resistance Agent or Rey gain [Episode VII]. Once per turn, may [download] a Jakku or Kijimi battleground. Your non-unique [Episode VII] troopers are forfeit +1. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_14);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("The First Order Was Just The Beginning");
     }
 
     @Override

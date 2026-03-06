@@ -45,7 +45,6 @@ public class Card218_009 extends AbstractNormalEffect {
         setGameText("If Shield Gate on table, deploy on table. Once per game, may [upload] Devastator. May [download] Comm Chief or Praji to Scarif system. Vader is power +2 and his game text may not be canceled. If opponent just lost a battle, they lose 1 Force. Death Star moves for free. [Immune to Alter.]");
         addIcons(Icon.PREMIUM, Icon.VIRTUAL_SET_18);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("Crush The Rebellion (V)");
     }
 
     @Override

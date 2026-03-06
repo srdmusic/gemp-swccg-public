@@ -41,7 +41,6 @@ public class Card222_018 extends AbstractUsedOrLostInterrupt {
         setLore("'You should not have come back.'");
         setGameText("USED: During battle, cancel game text of an opponent's hut or Jedi survivor. LOST: Cancel Clash Of Sabers (targeting your character of ability > 3) or Old Ben. OR Target a Jedi. Target is power - 2 for remainder of turn.");
         addIcon(Icon.VIRTUAL_SET_22);
-        setTestingText("Your Powers Are Weak, Old Man (V)");
     }
 
     @Override

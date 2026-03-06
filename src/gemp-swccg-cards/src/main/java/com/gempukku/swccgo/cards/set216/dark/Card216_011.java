@@ -40,7 +40,6 @@ public class Card216_011 extends AbstractObjective {
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy [Set 16] Death Star and Scarif systems, Citadel Tower, and Shield Gate. For remainder of game, you may not deploy Endor Shield, non-Imperial characters, or non-Imperial starships. Once per turn, may [download] a Scarif battleground. Your non-unique Imperials, vehicles, and capital starships are deploy -1 (-2 if a Star Destroyer). Non-unique Imperials are forfeit +1. Flip this card if Krennic or Tarkin at a Scarif battleground site and Death Star orbiting Scarif.");
         addIcons(Icon.VIRTUAL_SET_16);
-        setTestingText("On The Verge Of Greatness");
     }
 
     @Override

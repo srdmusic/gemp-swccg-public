@@ -57,7 +57,6 @@ public class Card225_036 extends AbstractEpicEventDeployable {
         super(Side.DARK, PlayCardZoneOption.ATTACHED, Title.With_Thunderous_Applause, Uniqueness.UNIQUE, ExpansionSet.SET_25, Rarity.V);
         setGameText("Deploy on Galactic Senate. [Set 17] Passel Argente's game text and your Political Effects are canceled. Twice per turn, may target your agenda here: Blockade: Cancel a 'react.' Taxation: Place a character with politics from hand in Used Pile to activate 1 Force. Trade: During your draw phase, place a card from hand in Lost Pile, shuffle that pile, and take top card into hand. Wealth: Subtract 1 from attrition against you.");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_25);
-        setTestingText("With Thunderous Applause");
     }
 
     @Override
