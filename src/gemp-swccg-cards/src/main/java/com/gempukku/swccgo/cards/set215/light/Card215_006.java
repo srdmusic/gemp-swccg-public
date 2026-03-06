@@ -36,7 +36,6 @@ public class Card215_006 extends AbstractSite {
         addIcon(Icon.LIGHT_FORCE, 2);
         addIcon(Icon.DARK_FORCE, 1);
         addIcons(Icon.INTERIOR_SITE, Icon.MOBILE, Icon.SCOMP_LINK, Icon.VIRTUAL_SET_15);
-        setTestingText("Death Star: Central Core");
     }
 
     @Override

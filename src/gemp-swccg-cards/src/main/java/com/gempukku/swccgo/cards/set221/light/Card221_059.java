@@ -35,7 +35,6 @@ public class Card221_059 extends AbstractUsedInterrupt {
         setLore("In the end, Watto finally came to understand the agony of defeat.");
         setGameText("If Podrace Arena on table, [upload] Jar Jar, Padme, or Skywalker Hut. OR During your control phase, if you have won a Podrace and [Tatooine] Anakin is present at a battleground site, opponent loses 1 Force for each [Dark Side] at that site.");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
-        setTestingText("Eventually You'll Lose");
     }
 
     @Override

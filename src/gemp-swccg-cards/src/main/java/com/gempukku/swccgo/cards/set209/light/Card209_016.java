@@ -42,7 +42,6 @@ public class Card209_016 extends AbstractNormalEffect {
         setGameText("If your [Episode VII] objective on table, deploy on table (only at start of game). Twice per game, may [upload] a Resistance leader. Resistance characters with printed forfeit < 6 are forfeit +1. Where you have a Resistance Agent, your total power is +3. Strike Planning is canceled. [Immune to Alter.]");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_9);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("A Brave Resistance");
     }
 
     @Override

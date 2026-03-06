@@ -43,7 +43,6 @@ public class Card204_015 extends AbstractNormalEffect {
         setGameText("Deploy on table. If your Podracer is on table and opponent's is not, they generate no Force at Podrace Arena. Once during opponent's control phase, if you are winning (or have won) a Podrace, may stack the bottom card of your Lost Pile on Credits Will Do Fine. [Immune to Alter.]");
         addIcons(Icon.CORUSCANT, Icon.EPISODE_I, Icon.VIRTUAL_SET_4);
         addImmuneToCardTitle(Title.Alter);
-        setTestingText("We're Leaving (V)");
     }
 
     @Override

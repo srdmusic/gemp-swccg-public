@@ -55,7 +55,6 @@ public class Card226_028_BACK extends AbstractObjective {
         super(Side.LIGHT, 7, Title.Gather_Allies_And_Train, ExpansionSet.SET_26, Rarity.V);
         setGameText("While this side up, Jedi survivors are deploy -1. If your holocron is about to leave table, place it in Used Pile. Opponent's total battle destiny where they have a character of ability > 4 is -1. During your move phase, may use 2 Force to relocate a Jedi between a Jabiim site and a battleground site as a regular move. At the end of opponent's turn, if Jedi occupy two battleground sites, opponent loses 1 Force. Flip this card if Jedi do not occupy two non-Mapuzo sites.");
         addIcons(Icon.VIRTUAL_SET_26);
-        setTestingText("Gather Allies And Train");
     }
 
     @Override

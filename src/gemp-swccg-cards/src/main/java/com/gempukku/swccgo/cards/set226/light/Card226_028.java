@@ -44,7 +44,6 @@ public class Card226_028 extends AbstractObjective {
         setFrontOfDoubleSidedCard(true);
         setGameText("Deploy Mining Village, Safehouse, Underground Corridor, and Fallen Order. For remainder of game, you may not deploy <> locations, Anakin, or Jedi (except Jedi survivors) or play A Jedi's Resilience. Weapon Levitation may not steal weapons. Once per turn, may [download] a Jabiim location. While this side up, you may not play Nabrun Leids. Your Force drains at Mapuzo sites are -1. Once per turn, may [download] a holocron. Flip this card if Jedi occupy two non-Mapuzo sites.");
         addIcons(Icon.VIRTUAL_SET_26);
-        setTestingText("The Hidden Path");
     }
 
 @Override

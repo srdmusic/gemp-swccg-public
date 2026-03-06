@@ -46,7 +46,6 @@ public class Card221_057 extends AbstractUsedInterrupt {
         setLore("'Deal!'");
         setGameText("Each player may choose to play a Defensive Shield from under their Starting Effect or to exchange a card in hand with one of their race destinies. [Immune to Sense.] OR If a battle involving Qui-Gon was just initiated at a junkyard, weapons may not be fired this battle.");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_21);
-        setTestingText("Either Way, You Win (V)");
     }
 
     @Override

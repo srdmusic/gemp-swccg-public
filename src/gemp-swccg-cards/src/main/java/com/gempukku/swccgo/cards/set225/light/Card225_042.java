@@ -42,7 +42,6 @@ public class Card225_042 extends AbstractLostInterrupt {
         setGameText("If your Skywalker in battle alone with a character of greater ability, add one battle destiny. OR Deploy a lightsaber on a Skywalker from Lost Pile (or Force Pile; reshuffle). OR Once per game, during a battle or duel involving a Skywalker, make a just drawn destiny = 2.");
         addIcons(Icon.CLOUD_CITY, Icon.VIRTUAL_SET_25);
         setVirtualSuffix(true);
-        setTestingText("Courage Of A Skywalker (V)");
     }
 
     @Override

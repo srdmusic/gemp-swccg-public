@@ -40,7 +40,6 @@ public class Card227_001 extends AbstractStartingInterrupt {
         setLore("Advanced preparation in Podracing is usually the key to winning. A little extra work at the start can mean a lot in the long run.");
         setGameText("If Credits Will Do Fine on table, deploy Podrace Arena, a Podracer, Boonta Eve Podrace, and three Effects that deploy for free and are always [Immune to Alter]. Opponent may deploy a Podracer (or play a Defensive Shield from under their Starting Effect). Place Interrupt in Lost Pile.");
         addIcons(Icon.TATOOINE, Icon.EPISODE_I, Icon.VIRTUAL_SET_27);
-        setTestingText("Podrace Prep (V)");
     }
 
     @Override

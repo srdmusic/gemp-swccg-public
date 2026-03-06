@@ -37,7 +37,6 @@ public class Card225_009 extends AbstractUsedOrLostInterrupt {
         setLore("'He's my brother.'");
         setGameText("USED: Subtract 1 from a just drawn Force Lightning or 'choke' destiny (unless targeting an Undercover spy). OR If a [Skywalker] Effect on table, [upload] Chief Chirpa's Hut or Guest Quarters. LOST: If Leia in battle, all immunity to attrition there is canceled.");
         addIcons(Icon.SKYWALKER, Icon.VIRTUAL_SET_25);
-        setTestingText("My Sister Has It");
     }
 
     @Override

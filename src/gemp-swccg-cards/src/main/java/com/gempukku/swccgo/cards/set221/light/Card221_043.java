@@ -42,7 +42,6 @@ public class Card221_043 extends AbstractLostInterrupt {
         setLore("It had been decades since Vader had felt the sting of an enemy's blade.");
         setGameText("If His Destiny on table, choose: Luke steals Luke's Lightsaber. (Immune to Weapon Of A Sith.) OR Cancel Dark Strike, Force Field, or You Are Beaten. OR Cancel the game text of a Dark Jedi with Luke for remainder of turn. OR Target a Jedi. Target is power +2 for remainder of turn.");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
-        setTestingText("A Jedi's Fury");
     }
 
     @Override

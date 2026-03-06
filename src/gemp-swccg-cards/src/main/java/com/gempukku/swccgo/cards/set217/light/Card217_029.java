@@ -46,7 +46,6 @@ public class Card217_029 extends AbstractEpicEventDeployable {
                 "Feel The Force Flowing Through You: Rey and characters with her may not add battle destiny draws. " +
                 "Rey, The Force Will Be With You, Always: Unless Rey is on Jakku, she adds 1 to your total Force generation.");
         addIcons(Icon.EPISODE_VII, Icon.VIRTUAL_SET_17);
-        setTestingText("Be With Me");
     }
 
     @Override
