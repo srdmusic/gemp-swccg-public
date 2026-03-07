@@ -3446,7 +3446,7 @@ const fixedImages = {
 "219_16":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/noescape.png",
 "219_17":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/observationholocam.png",
 "219_18":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/surelyyoucandobetter.png",
-"219_19":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/theemperor.png",
+"219_19":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/theemperorrelentless.png",
 "219_20":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/thrawnsartcollection.png",
 "219_21":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/thrawnpincer.png",
 "219_22":"https://res.starwarsccg.org/cards/Virtual19-Dark/hires/thunderflare.png",
