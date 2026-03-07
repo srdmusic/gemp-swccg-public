@@ -22,9 +22,10 @@ public class League {
     private LeagueData _leagueData;
     private boolean _invitationOnly;
     private String _registrationInfo;
+    private boolean _lockDecks;
 
 
-    public League(SwccgCardBlueprintLibrary library, int cost, String name, String type, String clazz, String parameters, int status, boolean allowSpectators, boolean allowTimeExtensions, boolean showPlayerNames, boolean invitationOnly, String registrationInfo, int decisionTimeoutSeconds, int timePerPlayerMinutes) {
+    public League(SwccgCardBlueprintLibrary library, int cost, String name, String type, String clazz, String parameters, int status, boolean allowSpectators, boolean allowTimeExtensions, boolean showPlayerNames, boolean invitationOnly, String registrationInfo, int decisionTimeoutSeconds, int timePerPlayerMinutes, boolean lockDecks) {
         _library = library;
         _cost = cost;
         _name = name;
@@ -39,6 +40,7 @@ public class League {
         _timePerPlayerMinutes = timePerPlayerMinutes;
         _invitationOnly = invitationOnly;
         _registrationInfo = registrationInfo;
+        _lockDecks = lockDecks;
     }
 
     public int getCost() {
@@ -70,6 +72,8 @@ public class League {
     public int getDecisionTimeoutSeconds() { return _decisionTimeoutSeconds; }
 
     public int getTimePerPlayerMinutes() { return _timePerPlayerMinutes; }
+
+    public boolean getLockDecks() { return _lockDecks; }
 
     public synchronized LeagueData getLeagueData(SoloDraftDefinitions soloDraftDefinitions) {
         if (_leagueData == null) {

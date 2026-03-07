@@ -1206,7 +1206,7 @@ var GempSwccgCommunication = Class.extend({
     previewConstructedLeague:function (name, cost, start, collectionType,  
                               allowTimeExtensions, allowSpectators, showPlayerNames, 
                               invitationOnly, registrationInfo, decisionTimeoutSeconds, 
-                              timePerPlayerMinutes, formats, serieDurations, maxMatches,
+                              timePerPlayerMinutes, lockDecks, formats, serieDurations, maxMatches,
                               callback, errorMap) {
         $.ajax({
             type:"POST",
@@ -1225,6 +1225,7 @@ var GempSwccgCommunication = Class.extend({
                 registrationInfo:registrationInfo,
                 decisionTimeoutSeconds:decisionTimeoutSeconds,
                 timePerPlayerMinutes:timePerPlayerMinutes,
+                lockDecks:lockDecks,
                 formats:formats,
                 serieDurations:serieDurations,
                 maxMatches:maxMatches
@@ -1238,7 +1239,7 @@ var GempSwccgCommunication = Class.extend({
     addConstructedLeague:function (name, cost, start, collectionType,  
                               allowTimeExtensions, allowSpectators, showPlayerNames, 
                               invitationOnly, registrationInfo, decisionTimeoutSeconds, 
-                              timePerPlayerMinutes, formats, serieDurations, maxMatches,
+                              timePerPlayerMinutes, lockDecks, formats, serieDurations, maxMatches,
                               callback, errorMap) {
         $.ajax({
             type:"POST",
@@ -1257,6 +1258,7 @@ var GempSwccgCommunication = Class.extend({
                 registrationInfo:registrationInfo,
                 decisionTimeoutSeconds:decisionTimeoutSeconds,
                 timePerPlayerMinutes:timePerPlayerMinutes,
+                lockDecks:lockDecks,
                 formats:formats,
                 serieDurations:serieDurations,
                 maxMatches:maxMatches

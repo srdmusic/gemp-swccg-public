@@ -681,7 +681,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             if(!preview) {
                 _leagueDao.addLeague(cost, name, code, leagueData.getClass().getName(), parameters, leagueStart, displayEnd,
                         allowSpectators, allowTimeExtensions, showPlayerNames, invitationOnly, registrationInfo,
-                        decisionTimeoutSeconds, timePerPlayerMinutes);
+                        decisionTimeoutSeconds, timePerPlayerMinutes, false);
                 _leagueService.clearCache();
 
                 responseWriter.writeHtmlResponse("OK");
@@ -790,7 +790,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             if(!preview) {
                 _leagueDao.addLeague(cost, name, code, leagueData.getClass().getName(), parameters, leagueStart, displayEnd,
                         allowSpectators, allowTimeExtensions, showPlayerNames, invitationOnly, registrationInfo,
-                        decisionTimeoutSeconds, timePerPlayerMinutes);
+                        decisionTimeoutSeconds, timePerPlayerMinutes, false);
                 _leagueService.clearCache();
 
                 responseWriter.writeHtmlResponse("OK");
@@ -869,6 +869,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             String registrationInfo = getFormParameterSafely(postDecoder, "registrationInfo");
             String decisionTimeoutStr = getFormParameterSafely(postDecoder, "decisionTimeoutSeconds");
             String timePerPlayerStr = getFormParameterSafely(postDecoder, "timePerPlayerMinutes");
+            String lockDecksStr = getFormParameterSafely(postDecoder, "lockDecks");
 
             Throw400IfStringNull("name", name);
             int cost = Throw400IfNullOrNonInteger("cost", costStr);
@@ -886,6 +887,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             //Throw400IfStringNull("registrationInfo", registrationInfo);
             int decisionTimeoutSeconds = Throw400IfNullOrNonInteger("decisionTimeoutSeconds", decisionTimeoutStr);
             int timePerPlayerMinutes = Throw400IfNullOrNonInteger("timePerPlayerMinutes", timePerPlayerStr);
+            boolean lockDecks = Throw400IfNullOrNonBoolean("lockDecks", lockDecksStr);
 
             if(registrationInfo.toLowerCase().contains("starwarsccg.org") && !registrationInfo.contains(" ")) {
                 registrationInfo = "<a href='" + registrationInfo + "' target='_blank'>" + registrationInfo + "</a>";
@@ -909,7 +911,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             if(!preview) {
                 _leagueDao.addLeague(cost, name, code, leagueData.getClass().getName(), parameters, leagueStart, displayEnd,
                         allowSpectators, allowTimeExtensions, showPlayerNames, invitationOnly, registrationInfo,
-                        decisionTimeoutSeconds, timePerPlayerMinutes);
+                        decisionTimeoutSeconds, timePerPlayerMinutes, lockDecks);
 
                 _leagueService.clearCache();
 
@@ -936,6 +938,7 @@ public class AdminRequestHandler extends SwccgoServerRequestHandler implements U
             leagueElem.setAttribute("registrationInfo", registrationInfo);
             leagueElem.setAttribute("decisionTimeoutSeconds", String.valueOf(decisionTimeoutSeconds));
             leagueElem.setAttribute("timePerPlayerMinutes", String.valueOf(timePerPlayerMinutes));
+            leagueElem.setAttribute("lockDecks", String.valueOf(lockDecks));
 
             for (LeagueSeriesData serie : series) {
                 Element serieElem = doc.createElement("serie");
