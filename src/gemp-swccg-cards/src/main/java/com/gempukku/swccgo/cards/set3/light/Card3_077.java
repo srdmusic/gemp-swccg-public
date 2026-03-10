@@ -77,8 +77,7 @@ public class Card3_077 extends AbstractArtilleryWeapon {
                 float cost1 = 99;
                 float cost2 = 99;
                 float moveCost;
-                //for (PhysicalCard warrior : Filters.filterActive(game, self, potentialWarriors)) {
-                for (PhysicalCard warrior : Filters.filterActive(game, self, Filters.and(potentialWarriors, Filters.canMoveUsingLandspeed(playerId, false, false, false, 0)))) {
+                for (PhysicalCard warrior : Filters.filterActive(game, self, potentialWarriors)) {
                     if (Filters.canMoveToUsingLandspeed(playerId, warrior, false, false, false, 0, null).accepts(game, potentialDestination)) {
                         moveCost = game.getModifiersQuerying().getMoveUsingLandspeedCost(game.getGameState(), warrior, fromSite, potentialDestination, false, 0);
                         if (cost1 > cost2) {
@@ -191,8 +190,7 @@ public class Card3_077 extends AbstractArtilleryWeapon {
         }
 
         //Check condition(s)
-        Filter potentialWarrior = Filters.and(potentialWarriors, Filters.none); ///temp!
-///        Filter potentialWarrior = Filters.and(potentialWarriors, Filters.mayMoveMRBCAloneForFree);
+        Filter potentialWarrior = Filters.and(potentialWarriors, Filters.canMoveMediumRepeatingBlasterCannonAloneForFree);
         if (GameConditions.isDuringYourPhase(game, self, Phase.MOVE)
                 && GameConditions.isPresentWith(game, self, 1, potentialWarrior)) {
 
@@ -212,7 +210,7 @@ public class Card3_077 extends AbstractArtilleryWeapon {
             if (!validDestinations.isEmpty()) {
 
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
-                action.setText("Move (for free) using one warrior");
+                action.setText("Move (for free) using one warrior"); ///is this text misleading? (warrior move is not free, but no additional cost required)
 
                 action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose site to move to", Filters.in(validDestinations)) {
                     @Override
@@ -235,6 +233,7 @@ public class Card3_077 extends AbstractArtilleryWeapon {
                                 action.addAnimationGroup(selectedWarrior);
                                 final float moveCost = game.getModifiersQuerying().getMoveUsingLandspeedCost(game.getGameState(), selectedWarrior, fromSite, toSite, false, 0);
 
+                                /// see comment block in 'normal' carry action above about using MoveArtilleryWeaponUsingLandspeedEffect
                                 /// until the above is implemented, section below accomplishes a very similar effect
                                 action.appendCost(new PayMoveUsingLandspeedCostEffect(action, playerId, selectedWarrior, toSite, false, 0));
 

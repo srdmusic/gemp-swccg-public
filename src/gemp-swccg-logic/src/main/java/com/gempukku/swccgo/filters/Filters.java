@@ -14687,6 +14687,16 @@ public class Filters {
     }
 
     /**
+     * Filter that accepts cards that can move Medium Repeating Blaster Cannon alone (for free)
+     */
+    public static final Filter canMoveMediumRepeatingBlasterCannonAloneForFree = new Filter() {
+        @Override
+        public boolean accepts(GameState gameState, ModifiersQuerying modifiersQuerying, PhysicalCard physicalCard) {
+            return modifiersQuerying.mayMoveMediumRepeatingBlasterCannonAloneForFree(gameState, physicalCard);
+        }
+    };
+
+    /**
      * Gets a filter representing cards that a card may deploy to only based on presence and Force icons.
      * This is generally called by a getValidDeployTargetFilter and combined with other Filters to figure out
      * valid targets for a card to deploy to.

@@ -36,6 +36,7 @@ public class Card_3_077_Tests {
                     put("gunganGuard2","14_013");
                     put("mando1","216_030"); //heavy infantry mandolorian (warrior with landspeed = 3)
                     put("mando2","216_030");
+                    put("yutani","8_001"); //captain yutani
                 }},
 				new HashMap<>()
 				{{
@@ -844,6 +845,103 @@ public class Card_3_077_Tests {
         assertFalse(scn.LSHasCardChoiceAvailable(warrior1)); //test3
     }
 
+    @Test
+    public void MRBCCanBeCarriedByYutaniBasicTest() {
+        //Test1: MRBC present with Yutani can be carried to an adjacent site by Yutani alone
+        //Test2: paid force cost of 1
+        //Test3: Yutani and MRBC successfully moved
+        var scn = GetScenario();
+
+        var mrbc = scn.GetLSCard("mrbc");
+        var yutani = scn.GetLSCard("yutani");
+        var cantina = scn.GetLSCard("cantina");
+
+        var marketplace = scn.GetDSStartingLocation();
+
+        scn.StartGame();
+        scn.MoveLocationToTable(cantina); //adjacent to marketplace (DS starting site)
+        scn.MoveCardsToLocation(cantina, yutani);
+        scn.AttachCardsTo(cantina, mrbc);
+        scn.SkipToLSTurn(Phase.MOVE);
+
+        assertEquals(5,scn.GetLSForcePileCount()); //enough to pay cost 3 to move
+
+        assertTrue(scn.LSMoveAvailable(yutani)); //landspeed to marketplace
+        assertFalse(scn.LSCardActionAvailable(mrbc, "Move using two warriors"));
+        assertTrue(scn.LSCardActionAvailable(mrbc, "Move (for free) using one warrior")); //test1
+        scn.LSUseCardAction(mrbc,"Move (for free) using one warrior");
+
+        assertTrue(scn.LSDecisionAvailable("Choose site"));
+        assertTrue(scn.LSHasCardChoiceAvailable(marketplace));
+        assertFalse(scn.LSHasCardChoiceAvailable(cantina));
+        scn.LSChooseCard(marketplace);
+
+        assertTrue(scn.LSDecisionAvailable("Choose warrior"));
+        assertTrue(scn.LSHasCardChoiceAvailable(yutani));
+        scn.LSChooseCard(yutani);
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.AwaitingDSMovePhaseActions());
+        assertEquals(4,scn.GetLSForcePileCount()); //test2
+        assertTrue(scn.CardsAtLocation(marketplace, yutani));
+        assertFalse(scn.IsAttachedTo(cantina,mrbc));
+        assertTrue(scn.IsAttachedTo(marketplace,mrbc)); //test3
+    }
+
+    @Test
+    public void MRBCCanBeCarriedByWarriorAndYutaniTest() {
+        //Test1: MRBC present with Yutani can be carried to an adjacent site by Yutani and another warrior for +1 cost
+        //Test2: paid force cost of 3
+        //Test3: Yutani, warrior, and MRBC successfully moved
+        var scn = GetScenario();
+
+        var mrbc = scn.GetLSCard("mrbc");
+        var warrior = scn.GetLSFiller(1);
+        var yutani = scn.GetLSCard("yutani");
+        var cantina = scn.GetLSCard("cantina");
+
+        var marketplace = scn.GetDSStartingLocation();
+
+        scn.StartGame();
+        scn.MoveLocationToTable(cantina); //adjacent to marketplace (DS starting site)
+        scn.MoveCardsToLocation(cantina, yutani, warrior);
+        scn.AttachCardsTo(cantina, mrbc);
+        scn.SkipToLSTurn(Phase.MOVE);
+
+        assertEquals(5,scn.GetLSForcePileCount()); //enough to pay cost 3 to move
+
+        assertTrue(scn.LSMoveAvailable(yutani)); //landspeed to marketplace
+        assertTrue(scn.LSMoveAvailable(warrior)); //landspeed to marketplace
+        assertTrue(scn.LSCardActionAvailable(mrbc, "Move using two warriors"));
+        assertTrue(scn.LSCardActionAvailable(mrbc, "Move (for free) using one warrior")); //test1
+        scn.LSUseCardAction(mrbc,"Move using two warriors");
+
+        assertTrue(scn.LSDecisionAvailable("Choose site"));
+        assertTrue(scn.LSHasCardChoiceAvailable(marketplace));
+        assertFalse(scn.LSHasCardChoiceAvailable(cantina));
+        scn.LSChooseCard(marketplace);
+
+        assertTrue(scn.LSDecisionAvailable("Choose first warrior"));
+        assertTrue(scn.LSHasCardChoiceAvailable(yutani));
+        assertTrue(scn.LSHasCardChoiceAvailable(warrior));
+        scn.LSChooseCard(yutani);
+
+        assertTrue(scn.LSDecisionAvailable("Choose second warrior"));
+        assertFalse(scn.LSHasCardChoiceAvailable(yutani));
+        assertTrue(scn.LSHasCardChoiceAvailable(warrior));
+        scn.LSChooseCard(warrior);
+
+        scn.PassAllResponses();
+
+        assertTrue(scn.AwaitingDSMovePhaseActions());
+        assertEquals(2,scn.GetLSForcePileCount()); //paid 3 to move
+        assertTrue(scn.CardsAtLocation(marketplace, yutani));
+        assertTrue(scn.CardsAtLocation(marketplace, warrior));
+        assertFalse(scn.IsAttachedTo(cantina,mrbc));
+        assertTrue(scn.IsAttachedTo(marketplace,mrbc));
+    }
+
     /// other move tests to add
     //could be clearer to use hoth marker sites for clear landspeed move checks?
 
@@ -852,6 +950,7 @@ public class Card_3_077_Tests {
 
     //can only choose warriors
     //can only choose warriors within movement cost limitations for site selected
+    //cannot choose undercover spy
 
     //warrior aboard open vehicle
 
