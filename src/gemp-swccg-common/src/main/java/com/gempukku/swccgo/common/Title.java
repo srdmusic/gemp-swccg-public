@@ -16,6 +16,7 @@ public interface Title {
     String A_Gift = "A Gift";
     String A_Good_Blaster_At_Your_Side = "A Good Blaster At Your Side";
     String A_Great_Tactician_Creates_Plans = "A Great Tactician Creates Plans";
+    String A_Jedis_Resilience = "A Jedi's Resilience";
     String A_Million_Voices_Crying_Out = "A Million Voices Crying Out";
     String A_Siths_Plans = "A Sith's Plans";
     String A_Power_Loss = "A Power Loss";
@@ -44,6 +45,7 @@ public interface Title {
     String All_Too_Easy = "All Too Easy";
     String All_Wings_Report_In = "All Wings Report In";
     String All_Wrapped_Up = "All Wrapped Up";
+    String Allegations_Of_Corruption = "Allegations Of Corruption";
     String Alter = "Alter";
     String Alternatives_To_Fighting = "Alternatives To Fighting";
     String Always_Thinking_With_Your_Stomach = "Always Thinking With Your Stomach";
@@ -56,6 +58,7 @@ public interface Title {
     String Anakins_Lightsaber = "Anakin's Lightsaber";
     String Anakins_Podracer = "Anakin's Podracer";
     String Anchorhead = "Tatooine: Anchorhead";
+    String Ancient_Watering_Hole = "Ancient Watering Hole";
     String And_Now_Youll_Give_It_To_Me = "And Now You'll Give It To Me";
     String Anger_Fear_Aggression = "Anger, Fear, Aggression";
     String Anoat = "Anoat";

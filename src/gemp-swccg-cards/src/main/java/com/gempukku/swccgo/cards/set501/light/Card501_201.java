@@ -17,10 +17,12 @@ import com.gempukku.swccgo.logic.GameUtils;
 import com.gempukku.swccgo.logic.TriggerConditions;
 import com.gempukku.swccgo.logic.actions.CancelCardActionBuilder;
 import com.gempukku.swccgo.logic.actions.PlayInterruptAction;
+import com.gempukku.swccgo.logic.effects.AddUntilEndOfTurnModifierEffect;
 import com.gempukku.swccgo.logic.effects.CancelGameTextUntilEndOfTurnEffect;
 import com.gempukku.swccgo.logic.effects.RespondablePlayCardEffect;
 import com.gempukku.swccgo.logic.effects.TargetCardOnTableEffect;
-import com.gempukku.swccgo.logic.effects.choose.StealCardIntoHandFromTableEffect;
+import com.gempukku.swccgo.logic.effects.choose.StealCardAndAttachFromTableEffect;
+import com.gempukku.swccgo.logic.modifiers.PowerModifier;
 import com.gempukku.swccgo.logic.timing.Action;
 import com.gempukku.swccgo.logic.timing.Effect;
 
@@ -38,7 +40,7 @@ public class Card501_201 extends AbstractLostInterrupt {
     public Card501_201() {
         super(Side.LIGHT, 5, "A Jedi's Fury", Uniqueness.UNIQUE, ExpansionSet.PLAYTESTING, Rarity.V);
         setLore("It had been decades since Vader had felt the sting of an enemy's blade.");
-        setGameText("If His Destiny on table, choose: Cancel Dark Strike, Force Field, or You Are Beaten. OR Steal Luke's Lightsaber into hand (immune to Weapon Of A Sith). OR Cancel the game text of a Dark Jedi with Luke for remainder of turn.");
+        setGameText("If His Destiny on table, choose: Luke steals Luke's Lightsaber. (Immune to Weapon Of A Sith.) OR Cancel Dark Strike, Force Field, or You Are Beaten. OR Cancel the game text of a Dark Jedi with Luke for remainder of turn. OR Target a Jedi. Target is power +2 for remainder of turn.");
         addIcons(Icon.DEATH_STAR_II, Icon.VIRTUAL_SET_21);
         setTestingText("A Jedi's Fury");
     }
@@ -63,50 +65,62 @@ public class Card501_201 extends AbstractLostInterrupt {
         List<PlayInterruptAction> actions = new LinkedList<>();
         
         TargetingReason targetingReason = TargetingReason.TO_BE_STOLEN;
-        Filter filterLukesLightsaber = Filters.and(Filters.opponents(self), Filters.Lukes_Lightsaber, Filters.weapon);
-        if (GameConditions.canTarget(game, self, Filters.His_Destiny)
-                && GameConditions.canTarget(game, self, targetingReason, filterLukesLightsaber)) {
 
-            final PlayInterruptAction action = new PlayInterruptAction(game, self);
-            action.setImmuneTo(Title.Weapon_Of_A_Sith);
-            action.setText("Steal Luke's Lightsaber into hand");
-            // Choose target(s)
-            action.appendTargeting(
-                    new TargetCardOnTableEffect(action, playerId, "Choose Luke's Lightsaber", targetingReason, filterLukesLightsaber) {
-                        @Override
-                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
-                            action.addAnimationGroup(targetedCard);
-                            // Allow response(s)
-                            action.allowResponses("Steal " + GameUtils.getCardLink(targetedCard) + " into hand",
-                                    new RespondablePlayCardEffect(action) {
-                                        @Override
-                                        protected void performActionResults(Action targetingAction) {
-                                            // Get the targeted card(s) from the action using the targetGroupId.
-                                            // This needs to be done in case the target(s) were changed during the responses.
-                                            final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+        // Check condition(s)
+        if (GameConditions.canTarget(game, self, Filters.His_Destiny)) {
+            final Filter characterFilter = Filters.and(Filters.character, Filters.Luke);
+            final Filter weaponFilter = Filters.and(Filters.opponents(self), Filters.character_weapon, Filters.Lukes_Lightsaber, Filters.canBeStolenBy(self, characterFilter));
+            if (GameConditions.canTarget(game, self, targetingReason, weaponFilter)) {
 
-                                            // Perform result(s)
-                                            action.appendEffect(
-                                                    new StealCardIntoHandFromTableEffect(action, finalTarget));
+                final PlayInterruptAction action = new PlayInterruptAction(game, self);
+                action.setImmuneTo(Title.Weapon_Of_A_Sith);
+                action.setText("Luke steals Luke's Lightsaber");
+                // Choose target(s)
+                action.appendTargeting(
+                        new TargetCardOnTableEffect(action, playerId, "Choose Luke's Lightsaber to steal", targetingReason, weaponFilter) {
+                            @Override
+                            protected void cardTargeted(final int targetGroupId1, final PhysicalCard weapon) {
+                                final Filter characterToStealWeaponFilter = Filters.and(characterFilter, Filters.canStealAndCarry(weapon));
+                                action.appendTargeting(
+                                        new TargetCardOnTableEffect(action, playerId, "Choose Luke to steal weapon", characterToStealWeaponFilter) {
+                                            @Override
+                                            protected void cardTargeted(final int targetGroupId2, PhysicalCard character) {
+                                                // Allow response(s)
+                                                action.allowResponses("Have " + GameUtils.getCardLink(character) + " 'steal' " + GameUtils.getCardLink(weapon),
+                                                        new RespondablePlayCardEffect(action) {
+                                                            @Override
+                                                            protected void performActionResults(Action targetingAction) {
+                                                                // Get the targeted card(s) from the action using the targetGroupId.
+                                                                // This needs to be done in case the target(s) were changed during the responses.
+                                                                PhysicalCard finalWeapon = action.getPrimaryTargetCard(targetGroupId1);
+                                                                PhysicalCard finalCharacter = action.getPrimaryTargetCard(targetGroupId2);
+
+                                                                // Perform result(s)
+                                                                action.appendEffect(
+                                                                        new StealCardAndAttachFromTableEffect(action, finalWeapon, finalCharacter));
+                                                            }
+                                                        }
+                                                );
+                                            }
                                         }
-                                    }
-                            );
-                        }
-                    }
-            );
-            actions.add(action);
+                                    );
+                            }
+                        });
+                    
+                actions.add(action);
+            }
         }
 
         if (GameConditions.canTarget(game, self, Filters.His_Destiny)) {
-            Filter filter = Filters.and(Filters.opponents(self), Filters.Dark_Jedi, Filters.with(self, Filters.Luke));
+            Filter filterDarkJedi = Filters.and(Filters.opponents(self), Filters.Dark_Jedi, Filters.with(self, Filters.Luke));
 
-            if (GameConditions.canTarget(game, self, filter)) {
+            if (GameConditions.canTarget(game, self, filterDarkJedi)) {
 
                 final PlayInterruptAction action = new PlayInterruptAction(game, self);
                 action.setText("Cancel game text of a Dark Jedi");
                 // Choose target(s)
                 action.appendTargeting(
-                        new TargetCardOnTableEffect(action, playerId, "Choose Dark Jedi", filter) {
+                        new TargetCardOnTableEffect(action, playerId, "Choose Dark Jedi", filterDarkJedi) {
                             @Override
                             protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
                                 action.addAnimationGroup(targetedCard);
@@ -132,6 +146,39 @@ public class Card501_201 extends AbstractLostInterrupt {
             }
         }
 
+        Filter filterJedi = Filters.Jedi;
+        if (GameConditions.canTarget(game, self, Filters.His_Destiny)
+                && GameConditions.canTarget(game, self, filterJedi)) {
+
+            final PlayInterruptAction action = new PlayInterruptAction(game, self);
+            action.setText("Target a Jedi to be power +2");
+            // Choose target(s)
+            action.appendTargeting(
+                    new TargetCardOnTableEffect(action, playerId, "Choose Jedi", filterJedi) {
+                        @Override
+                        protected void cardTargeted(final int targetGroupId, PhysicalCard targetedCard) {
+                            action.addAnimationGroup(targetedCard);
+                            // Allow response(s)
+                            action.allowResponses("Make " + GameUtils.getCardLink(targetedCard) + " power +2",
+                                    new RespondablePlayCardEffect(action) {
+                                        @Override
+                                        protected void performActionResults(Action targetingAction) {
+                                            // Get the targeted card(s) from the action using the targetGroupId.
+                                            // This needs to be done in case the target(s) were changed during the responses.
+                                            final PhysicalCard finalTarget = action.getPrimaryTargetCard(targetGroupId);
+
+                                            // Perform result(s)
+                                            action.appendEffect(new AddUntilEndOfTurnModifierEffect(action,
+                                                    new PowerModifier(self, finalTarget, 2)
+                                                    , "Makes " + GameUtils.getCardLink(finalTarget) + " power +2"));
+                                        }
+                                    }
+                            );
+                        }
+                    }
+            );
+            actions.add(action);
+        }
         return actions;
     }
 }

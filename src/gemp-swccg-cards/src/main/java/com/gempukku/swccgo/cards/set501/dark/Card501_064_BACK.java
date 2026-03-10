@@ -65,7 +65,7 @@ public class Card501_064_BACK extends AbstractObjective {
         List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new ModifyGameTextModifier(self, Filters.A_Bright_Center_To_The_Universe, ModifyGameTextType.A_BRIGHT_CENTER_TO_THE_UNIVERSE__CANCELS_OPPONENTS_FORCE_DRAIN_MODIFIERS_EVERYWHERE));
         modifiers.add(new TotalBattleDestinyModifier(self, battleDestinyBonusLocations,
-                new ConditionEvaluator(1, 2, new InBattleCondition(self, Filters.and(Filters.your(playerId), Filters.non_unique, Filters.hasAbility))), playerId));
+                new ConditionEvaluator(1, 2, new InBattleCondition(self, Filters.and(Filters.your(playerId), Filters.non_unique, Filters.hasAbilityOrHasPermanentPilotWithAbility))), playerId));
         return modifiers;
     }
 
@@ -146,7 +146,7 @@ public class Card501_064_BACK extends AbstractObjective {
                     new OncePerPhaseEffect(action));
             // Perform result(s)
             action.appendEffect(
-                    new RetrieveCardEffect(action, playerId, Filters.and(Filters.non_unique, Filters.hasAbility)));
+                    new RetrieveCardEffect(action, playerId, Filters.and(Filters.non_unique, Filters.hasAbilityOrHasPermanentPilotWithAbility)));
             actions.add(action);
         }
         return actions;
