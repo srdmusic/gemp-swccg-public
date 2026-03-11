@@ -89,7 +89,7 @@ public class Card_3_077_Tests {
         scn.BlueprintKeywordCheck(card, new ArrayList<>() {{
             add(Keyword.BLASTER);
             add(Keyword.CANNON);
-            //add(Keyword.WEAPON_MAY_USE_DB_TRANSIT);
+            add(Keyword.WEAPON_MAY_USE_DB_TRANSIT);
 		}});
 		scn.BlueprintIconCheck(card, new ArrayList<>() {{
 			add(Icon.HOTH);
