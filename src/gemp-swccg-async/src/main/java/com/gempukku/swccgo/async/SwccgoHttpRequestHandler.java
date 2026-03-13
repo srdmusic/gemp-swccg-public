@@ -54,6 +54,10 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     private static final long SIX_MONTHS = 1000L*60L*60L*24L*30L*6L;
+    private static final String WEBSOCKET_PATH = "/gemp-swccg-server/ws";
+    private static final String REWRITTEN_WEBSOCKET_PATH = "/ws";
+    private static final String X_FORWARDED_HOST = "X-Forwarded-Host";
+    private static final String X_FORWARDED_PROTO = "X-Forwarded-Proto";
     private final Logger _log = LogManager.getLogger(SwccgoHttpRequestHandler.class);
     private static final Logger _accesslog = LogManager.getLogger("access");
     private final Map<String, byte[]> _fileCache = Collections.synchronizedMap(new HashMap<>());
@@ -140,9 +144,13 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
         }
     }
 
-    private boolean isWebSocketRequest(HttpRequest request) {
+    static boolean isWebSocketRequest(HttpRequest request) {
         String upgrade = request.headers().get(HttpHeaderNames.UPGRADE);
-        return upgrade != null && "websocket".equalsIgnoreCase(upgrade);
+        if (upgrade != null && "websocket".equalsIgnoreCase(upgrade))
+            return true;
+
+        return request.headers().contains(HttpHeaderNames.SEC_WEBSOCKET_KEY)
+                && request.headers().contains(HttpHeaderNames.SEC_WEBSOCKET_VERSION);
     }
 
     private boolean respondWithError(ResponseSender responseSender, int status) {
@@ -157,9 +165,11 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
 
         QueryStringDecoder decoder = new QueryStringDecoder(request.uri());
         String path = decoder.path();
-        if (!"/gemp-swccg-server/ws".equals(path)) {
+        if (!isSupportedWebSocketPath(path)) {
             return respondWithError(responseSender, 404);
         }
+
+        normalizeWebSocketHandshakeHeaders(request);
 
         String token = getQueryParameter(decoder, "token");
         if (token == null || token.isEmpty())
@@ -240,9 +250,26 @@ public class SwccgoHttpRequestHandler extends SimpleChannelInboundHandler<FullHt
         return true;
     }
 
-    private String getWebSocketLocation(HttpRequest request) {
-        String host = request.headers().get(HttpHeaderNames.HOST);
-        return "ws://" + host + "/gemp-swccg-server/ws";
+    static String getWebSocketLocation(HttpRequest request) {
+        String host = request.headers().get(X_FORWARDED_HOST);
+        if (host == null || host.isEmpty())
+            host = request.headers().get(HttpHeaderNames.HOST);
+
+        String forwardedProto = request.headers().get(X_FORWARDED_PROTO);
+        String scheme = forwardedProto != null && forwardedProto.toLowerCase().startsWith("https")
+                ? "wss://"
+                : "ws://";
+
+        return scheme + host + WEBSOCKET_PATH;
+    }
+
+    static boolean isSupportedWebSocketPath(String path) {
+        return WEBSOCKET_PATH.equals(path) || REWRITTEN_WEBSOCKET_PATH.equals(path);
+    }
+
+    static void normalizeWebSocketHandshakeHeaders(HttpRequest request) {
+        request.headers().set(HttpHeaderNames.UPGRADE, HttpHeaderValues.WEBSOCKET);
+        request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.UPGRADE);
     }
 
     private String getQueryParameter(QueryStringDecoder decoder, String parameterName) {
