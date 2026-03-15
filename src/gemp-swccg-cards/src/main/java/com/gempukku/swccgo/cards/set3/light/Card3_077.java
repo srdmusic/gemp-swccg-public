@@ -43,7 +43,7 @@ public class Card3_077 extends AbstractArtilleryWeapon {
         setLore("Merr-Sonn Mark II repeating blaster. Accepts power cells from a very wide variety of sources, a benefit for Rebels accustomed to scavenging for supplies.");
         setGameText("Deploy on a site. May be moved by two warriors for 1 additional Force. Your warrior present may target up to two characters or two creatures at same or adjacent site using 2 Force. Draw two destiny. Target(s) hit if total destiny > total defense value.");
         addIcons(Icon.HOTH);
-        addKeywords(Keyword.BLASTER, Keyword.CANNON, Keyword.WEAPON_MAY_USE_DB_TRANSIT);
+        addKeywords(Keyword.BLASTER, Keyword.CANNON, Keyword.ARTILLERY_WEAPON_MAY_USE_DB_TRANSIT);
     }
 
     @Override
@@ -285,21 +285,6 @@ public class Card3_077 extends AbstractArtilleryWeapon {
 
         return actions;
     }
-
-    /// notes for PR discussion:
-
-    /// modeled firing code after Ahsoka Tano With Lightsabers
-
-    /// updated buildFireWeaponByCharacterPresentWithHitAction, using buildFireWeaponWithHitAction as a model
-    ///     handle multiple targets
-    ///     handle statistic (not sure if this is needed/relevant?)
-    ///     handle alternateDefenseValue (and associated Filter), likely needed for use with future E-Web?
-    ///     change Total Destiny printing message to be after adding plusOrMinus
-
-    /// open questions:
-    /// not sure when to apply the addAnimationGroup calls
-    /// action text: "Move (for free) using one warrior" may be misleading to players (only the MRBC is free)
-    ///         could just use "Move using one warrior"?
 
 }
 

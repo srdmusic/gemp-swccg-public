@@ -89,7 +89,7 @@ public class Card_3_077_Tests {
         scn.BlueprintKeywordCheck(card, new ArrayList<>() {{
             add(Keyword.BLASTER);
             add(Keyword.CANNON);
-            add(Keyword.WEAPON_MAY_USE_DB_TRANSIT);
+            add(Keyword.ARTILLERY_WEAPON_MAY_USE_DB_TRANSIT);
 		}});
 		scn.BlueprintIconCheck(card, new ArrayList<>() {{
 			add(Icon.HOTH);
@@ -947,6 +947,7 @@ public class Card_3_077_Tests {
 
     //can use DB transit
     //can only use DB transit once per turn
+    //can fire, carry, etc after DB transit (checks properly re-attached to destination)
 
     //can only choose warriors
     //can only choose warriors within movement cost limitations for site selected
