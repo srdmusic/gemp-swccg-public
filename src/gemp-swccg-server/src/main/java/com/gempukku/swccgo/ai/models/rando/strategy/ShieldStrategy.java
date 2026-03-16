@@ -260,13 +260,25 @@ public class ShieldStrategy {
     private final Set<String> opponentCardsSeen = new HashSet<>();
     private String opponentObjective = null;
 
-    // Shield pacing - don't play all shields immediately
+    // V29.1: Shield pacing — don't burn all 4 shield slots immediately.
+    // Play 2 shields on turn 1 for basic protection, then WAIT to see what the
+    // opponent is running before committing remaining slots. This lets us pick
+    // targeted counters (e.g. anti-drain, anti-retrieval) instead of generic shields.
+    // The pacing cap is checked by ActionTextEvaluator to gate K&D "Play a Defensive
+    // Shield" actions, AND by scoreShield() to rank individual shield picks.
+    // Turn 0 = PLAY_STARTING_CARDS (setup) — shields from K&D aren't played here,
+    // but allow 4 in case other starting effects deploy shields directly.
     private static final Map<Integer, Integer> SHIELD_PACING = new LinkedHashMap<>();
     static {
-        SHIELD_PACING.put(1, 2);  // Play at most 2 shields on turn 1
-        SHIELD_PACING.put(2, 3);  // Play at most 3 shields by turn 2
-        SHIELD_PACING.put(3, 4);  // Play all 4 shields by turn 3
+        SHIELD_PACING.put(0, 4);  // Setup phase: no limit (K&D shields aren't played here)
+        SHIELD_PACING.put(1, 2);  // Turn 1: play 2 shields max — scout opponent first
+        SHIELD_PACING.put(2, 3);  // Turn 2: play 1 more (now we've seen opponent's cards)
+        SHIELD_PACING.put(3, 4);  // Turn 3+: fill remaining slots
     }
+
+    // V29: How many of the played shields were auto-play (not triggered by conditions)
+    private int autoPlayShieldsUsed = 0;
+    private static final int MAX_AUTO_PLAY_SHIELDS = 3;  // Reserve 1 slot for situational
 
     /**
      * Default constructor - side will be set when game starts.
@@ -301,6 +313,7 @@ public class ShieldStrategy {
         opponentCardsSeen.clear();
         opponentObjective = null;
         maxShields = 4;
+        autoPlayShieldsUsed = 0;
     }
 
     /**
@@ -340,6 +353,21 @@ public class ShieldStrategy {
      */
     public void recordShieldPlayed(String blueprintId, String cardTitle) {
         shieldsPlayed.add(blueprintId);
+        // V29: Track whether this was an auto-play shield
+        Map<String, ShieldInfo> shieldDb = (mySide == Side.DARK) ? DARK_SHIELDS : LIGHT_SHIELDS;
+        for (ShieldInfo info : shieldDb.values()) {
+            if (info.blueprintIds.contains(blueprintId) ||
+                info.name.toLowerCase(Locale.ROOT).contains(cardTitle.toLowerCase(Locale.ROOT))) {
+                if (info.category == ShieldCategory.AUTO_PLAY_IMMEDIATE ||
+                    info.category == ShieldCategory.AUTO_PLAY_EARLY) {
+                    autoPlayShieldsUsed++;
+                    LOG.info("V29 Auto-play shield #{}: {} ({})", autoPlayShieldsUsed, cardTitle, info.category);
+                } else {
+                    LOG.info("V29 Situational shield played: {} ({})", cardTitle, info.category);
+                }
+                break;
+            }
+        }
         int played = shieldsPlayed.size();
         int remaining = shieldsRemaining();
         LOG.info("Shield #{} played: {} ({} remaining of {})", played, cardTitle, remaining, maxShields);
@@ -413,6 +441,12 @@ public class ShieldStrategy {
 
     /**
      * Score a defensive shield for deployment priority.
+     *
+     * V29: Smart shield selection — don't always play the same 4 shields.
+     * - Auto-play shields are capped at 3 slots (reserve 1 for situational)
+     * - Situational shields get a massive boost when their conditions are met
+     *   (opponent plays specific cards/objective), outscoring auto-play shields
+     * - Reserved slot is released on turn 4+ if no situational conditions are met
      */
     public float scoreShield(String blueprintId, String cardTitle, int turnNumber) {
         // Check if already played
@@ -447,6 +481,27 @@ public class ShieldStrategy {
             return 50.0f;
         }
 
+        // Never play obsolete shields
+        if (shieldInfo.category == ShieldCategory.NEVER) {
+            return -100.0f;
+        }
+
+        // Check if conditions are met (opponent cards, objective, timing)
+        ConditionResult result = checkConditions(shieldInfo, turnNumber);
+        boolean conditionsMet = result.shouldPlay && !result.reasons.isEmpty();
+        boolean isAutoPlay = (shieldInfo.category == ShieldCategory.AUTO_PLAY_IMMEDIATE ||
+                              shieldInfo.category == ShieldCategory.AUTO_PLAY_EARLY);
+        boolean isSituational = (shieldInfo.category == ShieldCategory.SITUATIONAL_HIGH ||
+                                 shieldInfo.category == ShieldCategory.SITUATIONAL_MEDIUM);
+
+        // V29: Check if auto-play shields have used their allocation
+        // Reserve 1 slot for situational shields (until turn 4+ when we give up waiting)
+        if (isAutoPlay && autoPlayShieldsUsed >= MAX_AUTO_PLAY_SHIELDS && turnNumber < 4) {
+            LOG.info("V29 {}: Auto-play cap reached ({}/{}), reserving slot for situational shield",
+                cardTitle, autoPlayShieldsUsed, MAX_AUTO_PLAY_SHIELDS);
+            return -30.0f;
+        }
+
         // Base score by category
         float score;
         switch (shieldInfo.category) {
@@ -457,25 +512,22 @@ public class ShieldStrategy {
                 score = 150.0f;
                 break;
             case SITUATIONAL_HIGH:
-                score = 100.0f;
+                score = conditionsMet ? 250.0f : 80.0f;  // V29: Outscores auto-play when triggered
                 break;
             case SITUATIONAL_MEDIUM:
-                score = 75.0f;
+                score = conditionsMet ? 200.0f : 50.0f;  // V29: Matches auto-play when triggered
                 break;
             case LOW_PRIORITY:
-                score = 25.0f;
+                score = conditionsMet ? 120.0f : 25.0f;
                 break;
-            case NEVER:
             default:
                 score = -100.0f;
         }
 
-        // Check conditions
-        ConditionResult result = checkConditions(shieldInfo, turnNumber);
-        if (result.shouldPlay && !result.reasons.isEmpty()) {
-            score += 50.0f;
+        // Log condition matches
+        if (conditionsMet) {
             for (String reason : result.reasons) {
-                LOG.debug("{}: +50 ({})", cardTitle, reason);
+                LOG.info("V29 {}: CONDITION MET — {} (boosted score)", cardTitle, reason);
             }
         }
 
@@ -491,11 +543,15 @@ public class ShieldStrategy {
             score += 25.0f;
         }
 
-        // Shields remaining affects urgency
+        // V29: Last shield slot — prefer situational with conditions met
         if (shieldsRemaining() <= 1) {
-            if (shieldInfo.category == ShieldCategory.LOW_PRIORITY ||
-                shieldInfo.category == ShieldCategory.SITUATIONAL_MEDIUM) {
+            if (isSituational && conditionsMet) {
+                score += 50.0f;  // Extra urgency — last chance to play a targeted counter
+                LOG.info("V29 {}: Last slot + conditions met — extra +50", cardTitle);
+            } else if (shieldInfo.category == ShieldCategory.LOW_PRIORITY) {
                 score -= 30.0f;
+            } else if (isSituational && !conditionsMet) {
+                score -= 40.0f;  // Don't waste last slot on untriggered situational
             }
         }
 

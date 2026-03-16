@@ -1,6 +1,9 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
+import com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle;
+import com.gempukku.swccgo.ai.models.rando.strategy.OpponentDeckTracker;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
+import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
@@ -64,6 +67,9 @@ public class DecisionContext {
     private ObjectiveHandler objectiveHandler;
     private ShieldStrategy shieldStrategy;
     private DeployPhasePlanner deployPhasePlanner;
+    private ObjectiveAnalyzer objectiveAnalyzer;
+    private DeckOracle deckOracle;  // V22.6: Full deck knowledge
+    private OpponentDeckTracker opponentDeckTracker;  // V24.7: Opponent destiny intel
 
     public DecisionContext(GameState gameState, String playerId, String decisionType,
                           String decisionText, String decisionId, Phase phase) {
@@ -317,5 +323,31 @@ public class DecisionContext {
 
     public void setDeployPhasePlanner(DeployPhasePlanner deployPhasePlanner) {
         this.deployPhasePlanner = deployPhasePlanner;
+    }
+
+    public ObjectiveAnalyzer getObjectiveAnalyzer() {
+        return objectiveAnalyzer;
+    }
+
+    public void setObjectiveAnalyzer(ObjectiveAnalyzer objectiveAnalyzer) {
+        this.objectiveAnalyzer = objectiveAnalyzer;
+    }
+
+    // V22.6: DeckOracle — full deck knowledge
+    public DeckOracle getDeckOracle() {
+        return deckOracle;
+    }
+
+    public void setDeckOracle(DeckOracle deckOracle) {
+        this.deckOracle = deckOracle;
+    }
+
+    // V24.7: OpponentDeckTracker — destiny intel from deck peeks
+    public OpponentDeckTracker getOpponentDeckTracker() {
+        return opponentDeckTracker;
+    }
+
+    public void setOpponentDeckTracker(OpponentDeckTracker opponentDeckTracker) {
+        this.opponentDeckTracker = opponentDeckTracker;
     }
 }

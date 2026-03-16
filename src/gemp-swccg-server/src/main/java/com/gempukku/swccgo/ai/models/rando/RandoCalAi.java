@@ -10,6 +10,7 @@ import com.gempukku.swccgo.ai.models.rando.evaluators.CombinedEvaluator;
 import com.gempukku.swccgo.ai.models.rando.evaluators.DecisionContext;
 import com.gempukku.swccgo.ai.models.rando.evaluators.EvaluatedAction;
 import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
+import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer;
 import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
 import com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy;
 import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
@@ -63,12 +64,19 @@ public class RandoCalAi extends HeuristicAiBase {
 
     // Objective handler for starting card requirements
     private final ObjectiveHandler objectiveHandler;
+    private final ObjectiveAnalyzer objectiveAnalyzer;
 
     // Shield strategy for defensive shields
     private final ShieldStrategy shieldStrategy;
 
     // Deploy phase planner for holistic deployment plans
     private final DeployPhasePlanner deployPhasePlanner;
+
+    // V22.6: DeckOracle for full deck knowledge
+    private final com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle deckOracle;
+
+    // V24.7: OpponentDeckTracker for destiny intel from deck peeks
+    private final com.gempukku.swccgo.ai.models.rando.strategy.OpponentDeckTracker opponentDeckTracker;
 
     // Personality system (will be set via setter after construction)
     private AstrogatorPersonality personality;
@@ -193,8 +201,11 @@ public class RandoCalAi extends HeuristicAiBase {
         this.decisionTracker = new DecisionTracker();
         this.strategyController = new StrategyController();
         this.objectiveHandler = new ObjectiveHandler();
+        this.objectiveAnalyzer = new ObjectiveAnalyzer();
         this.shieldStrategy = new ShieldStrategy();
         this.deployPhasePlanner = new DeployPhasePlanner();
+        this.deckOracle = new com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle();
+        this.opponentDeckTracker = new com.gempukku.swccgo.ai.models.rando.strategy.OpponentDeckTracker();
         this.personality = new AstrogatorPersonality();
         this.holidayOverlay = HolidayOverlay.getInstance();
         LOG.info("RandoCalAi initialized with {} evaluators", combinedEvaluator.getEvaluators().size());
@@ -464,6 +475,30 @@ public class RandoCalAi extends HeuristicAiBase {
         try {
             // Track game/turn changes for chat
             trackGameState(playerId, gameState);
+
+            // V25: AUTO-CONCEDE when losing by 20+ in Lost Pile
+            // When the deficit is this large, the game is unwinnable. Conceding saves time
+            // for both players instead of dragging out a lost game.
+            if (gameState != null && currentGame != null) {
+                try {
+                    String opponentId = gameState.getOpponent(playerId);
+                    if (opponentId != null) {
+                        int myLostPile = gameState.getLostPile(playerId).size();
+                        int opponentLostPile = gameState.getLostPile(opponentId).size();
+                        int lostPileDeficit = myLostPile - opponentLostPile;
+                        if (lostPileDeficit >= 30) {
+                            LOG.warn("V29 AUTO-CONCEDE: Lost Pile deficit is {} (mine={}, opponent={}). Conceding.",
+                                lostPileDeficit, myLostPile, opponentLostPile);
+                            currentGame.playerLost(playerId,
+                                com.gempukku.swccgo.common.GameEndReason.LOSS__CONCEDED);
+                            // Return any valid response to avoid NPE
+                            return super.decide(playerId, decision, gameState);
+                        }
+                    }
+                } catch (Exception e) {
+                    LOG.debug("V25 AUTO-CONCEDE: Error checking lost pile: {}", e.getMessage());
+                }
+            }
 
             // Update decision tracker state for loop detection
             updateDecisionTrackerState(gameState, playerId);
@@ -790,8 +825,27 @@ public class RandoCalAi extends HeuristicAiBase {
         // Set strategy components so evaluators can use them
         evalContext.setStrategyController(strategyController);
         evalContext.setObjectiveHandler(objectiveHandler);
+        evalContext.setObjectiveAnalyzer(objectiveAnalyzer);
+
+        if (!objectiveAnalyzer.isAnalyzed() && currentGame != null && mySide != null) {
+            objectiveAnalyzer.analyze(currentGame, playerId, mySide);
+        } else if (objectiveAnalyzer.isAnalyzed() && currentGame != null) {
+            // V29.7: Refresh flip status each evaluation so we detect when objective actually flips
+            objectiveAnalyzer.refreshFlipStatus(currentGame.getGameState(), playerId);
+        }
         evalContext.setShieldStrategy(shieldStrategy);
+        deployPhasePlanner.setObjectiveAnalyzer(objectiveAnalyzer);
         evalContext.setDeployPhasePlanner(deployPhasePlanner);
+
+        // V22.6: DeckOracle — full deck knowledge
+        if (!deckOracle.isAnalyzed() && currentGame != null) {
+            deckOracle.analyze(currentGame, playerId, mySide);
+        }
+        deckOracle.refresh(gameState, playerId);
+        evalContext.setDeckOracle(deckOracle);
+
+        // V24.7: OpponentDeckTracker — destiny intel from deck peeks
+        evalContext.setOpponentDeckTracker(opponentDeckTracker);
 
         return evalContext;
     }
@@ -1206,9 +1260,12 @@ public class RandoCalAi extends HeuristicAiBase {
             strategyController.setSide(mySide);
             strategyController.reset();
             objectiveHandler.reset();
+            objectiveAnalyzer.reset();
             shieldStrategy.setSide(mySide);
             shieldStrategy.reset();
             deployPhasePlanner.reset();
+            deckOracle.reset();  // V22.6: Reset deck knowledge for new game
+            opponentDeckTracker.reset();  // V24.7: Reset opponent intel for new game
             LOG.debug("[RandoCalAi] All strategy components reset for new game as {} side", mySide);
 
             // Run game-start verification
@@ -1256,6 +1313,7 @@ public class RandoCalAi extends HeuristicAiBase {
             lastTurn = currentTurn;
             chatManager.setCurrentTurn(currentTurn);
             strategyController.startNewTurn(currentTurn);
+
             LOG.info("🎲 Turn changed to {} (was {})", currentTurn, lastTurn - 1);
 
             // Queue turn message with route score

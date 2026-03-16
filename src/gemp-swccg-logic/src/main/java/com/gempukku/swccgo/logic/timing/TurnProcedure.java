@@ -132,8 +132,13 @@ public class TurnProcedure implements Snapshotable<TurnProcedure> {
             // Check if a winner of the game can be declared.
             _game.checkLifeForceDepleted();
 
-            // Check if an unusually large number loops since user decision, which means game is probably in a loop
-            if (numSinceDecision >= 5000) {
+            // Check if an unusually large number loops since user decision, which means game is probably in a loop.
+            // MODIFICATION: Increased from 5000 to 500000 for local bot-vs-bot play.
+            // The AI fast-path (auto-passing empty Optional responses at the mediator level)
+            // means the engine processes many more internal effects between "real" decisions,
+            // so the original 5000 limit was far too low. Each AI's DecisionTracker provides
+            // actual infinite-loop protection by detecting repeated decision patterns.
+            if (numSinceDecision >= 500000) {
                 _game.getGameState().sendMessage("There's been " + numSinceDecision + " actions/effects since last user decision. Game is probably looping, so ending game.");
                 _actionStack.dumpStack(_game);
                 effectResults = _game.getActionsEnvironment().consumeEffectResults();

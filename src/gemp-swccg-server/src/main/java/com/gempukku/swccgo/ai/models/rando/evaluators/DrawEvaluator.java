@@ -225,6 +225,32 @@ public class DrawEvaluator extends ActionEvaluator {
             return;
         }
 
+        // === V24.10: DIG FOR PIETT — KEY ENGINE CARD ===
+        // Piett is THE critical pilot for TDIGWATT's Executor engine.
+        // If Piett isn't in hand or reserve, he's stuck in the force pile — draw to find him.
+        // The earlier we find Piett, the earlier Executor gets on the table via AMSD.
+        com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle drawOracle = context.getDeckOracle();
+        if (drawOracle != null && drawOracle.isAnalyzed()) {
+            boolean piettInHand = drawOracle.isCardInHand("Admiral Piett") || drawOracle.isCardInHand("Piett");
+            boolean piettInReserve = drawOracle.isCardInReserve("Admiral Piett") || drawOracle.isCardInReserve("Piett");
+            boolean piettInPlay = drawOracle.isCardInPlay("Admiral Piett") || drawOracle.isCardInPlay("Piett");
+            boolean piettLost = drawOracle.isCardLost("Admiral Piett") || drawOracle.isCardLost("Piett");
+
+            if (!piettInHand && !piettInReserve && !piettInPlay && !piettLost) {
+                // Piett is in the force pile (or used pile cycling back) — DRAW to find him!
+                float piettBonus = 0.0f;
+                if (turnNumber <= 2) {
+                    piettBonus = 200.0f;  // Turns 1-2: maximum urgency — Executor MUST come out
+                } else if (turnNumber <= 4) {
+                    piettBonus = 150.0f;  // Turns 3-4: still very important
+                } else {
+                    piettBonus = 80.0f;   // Later turns: still worth finding
+                }
+                action.addReasoning("V24.10 DIG FOR PIETT: Not in hand/reserve — must be in force pile! Draw to find him!", piettBonus);
+                logger.warn("V24.10 PIETT DIG: Piett not in hand/reserve/play/lost — drawing aggressively to find him! (+{})", piettBonus);
+            }
+        }
+
         // === BASELINE: DRAW TOWARDS DYNAMIC SOFT CAP ===
         String phaseNote = turnNumber <= 3 ? "early" : (turnNumber <= 6 ? "mid" : "late");
 

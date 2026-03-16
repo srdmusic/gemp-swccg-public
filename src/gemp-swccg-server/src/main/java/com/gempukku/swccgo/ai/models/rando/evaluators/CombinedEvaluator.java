@@ -107,7 +107,8 @@ public class CombinedEvaluator {
         if (bestAction.getScore() < BAD_ACTION_THRESHOLD) {
             boolean canPass = !context.isNoPass() && context.getMin() == 0;
 
-            if (canPass && random.nextFloat() < 0.5f) {
+            // V24.5: No randomness — always pass when all actions are bad
+            if (canPass) {
                 LOG.info("All actions bad (best: {}), choosing to PASS", bestAction.getScore());
                 EvaluatedAction passAction = new EvaluatedAction(
                     "",  // Empty = pass

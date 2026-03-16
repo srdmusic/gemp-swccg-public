@@ -23,7 +23,7 @@ public final class RandoConfig {
     public static final int HAND_SOFT_CAP = 12;
 
     /** Random action chance (0-100) - adds some unpredictability */
-    public static final int CHAOS_PERCENT = 25;
+    public static final int CHAOS_PERCENT = 0;  // Reduced from 25% for better strategic play
 
     // =========================================================================
     // Deploy Strategy
@@ -55,7 +55,7 @@ public final class RandoConfig {
     public static final int REACT_THREAT_THRESHOLD = 8;
 
     /** Minimum power floor for establish/early game (weak char buddy) */
-    public static final int MIN_ESTABLISH_POWER = 4;
+    public static final int MIN_ESTABLISH_POWER = 2;
 
     /** Maximum establish locations per plan (don't spread too thin) */
     public static final int MAX_ESTABLISH_LOCATIONS = 2;
@@ -69,6 +69,14 @@ public final class RandoConfig {
     /** Weak character power threshold (needs buddy to deploy) */
     public static final int WEAK_CHARACTER_POWER = 3;
 
+    /**
+     * Minimum power a solo character must have to establish at an opponent-icon
+     * location alone. Characters below this threshold must deploy as a group.
+     * Prevents lone Jango (4), Mara (5) etc. from being left isolated where
+     * the opponent can counter-deploy and initiate a winning battle.
+     */
+    public static final int MIN_SOLO_DEPLOY_POWER = 6;
+
     /** Power advantage beyond which we're safe (uncontested fortified) */
     public static final int UNCONTESTED_FORTIFIED_THRESHOLD = 6;
 
@@ -79,7 +87,7 @@ public final class RandoConfig {
     public static final int MATCHING_PILOT_BONUS = 3;
 
     /** Ability threshold for drawing battle destiny */
-    public static final int ABILITY_THRESHOLD = 4;
+    public static final int ABILITY_THRESHOLD = 2;
 
     /** Extra power needed to compensate for no destiny draw */
     public static final int ABILITY_POWER_COMPENSATION = 3;
