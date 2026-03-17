@@ -47,6 +47,11 @@ public class Card3_077 extends AbstractArtilleryWeapon {
     }
 
     @Override
+    public String getTitleAbbreviated() {
+        return "MR Blaster Cannon"; //prevents firing action text truncation
+    }
+
+    @Override
     protected Filter getGameTextValidDeployTargetFilter(SwccgGame game, PhysicalCard self, PlayCardOptionId playCardOptionId, boolean asReact) {
         return Filters.site;
     }
@@ -70,9 +75,8 @@ public class Card3_077 extends AbstractArtilleryWeapon {
             /// should be using getMoveUsingLandspeedFilter instead of canMoveToUsingLandspeed everywhere?
 
             Collection<PhysicalCard> validDestinations = new HashSet<>();
-            /// moving with landspeed implies destination site must be related, so this is a quick way to reduce sites to check
-            for (PhysicalCard potentialDestination : Filters.filterActive(game, self, Filters.relatedSite(self))) {
-                /// could iterate through pairs - less efficient, but clearer
+
+            for (PhysicalCard potentialDestination : Filters.filterActive(game, self, Filters.relatedSite(self))) { // landspeed implies site must be related, so this reduces sites to check
                 //scan warriors (tracking the cheapest pair) and add valid site as soon as cost is payable
                 float cost1 = 99;
                 float cost2 = 99;
@@ -102,12 +106,9 @@ public class Card3_077 extends AbstractArtilleryWeapon {
                     @Override
                     protected void cardTargeted(final int targetGroupId, PhysicalCard toSite) {
                         action.addAnimationGroup(toSite);
-                        action.addAnimationGroup(self); ///is this needed?
+                        action.addAnimationGroup(self);
 
                         Collection<PhysicalCard> eligibleFirstWarriors = new HashSet<>();
-
-                        //could replace potentialWarriors with potentialWarriorsThatCanMoveToSite below, for all remaining calls
-                        //Filter potentialWarriorsThatCanMoveToSite = Filters.and(potentialWarriors, Filters.movableAsRegularMoveUsingLandspeed(playerId, false, false, false, 0, null, toSite));
 
                         //add first warrior only if they can reach the destination and at least one other warrior can reach the destination (and can pay combined cost)
                         for (PhysicalCard warrior : Filters.filterActive(game, self, potentialWarriors)) {
@@ -127,7 +128,7 @@ public class Card3_077 extends AbstractArtilleryWeapon {
                             }
                         }
 
-                        ///if eligibleFirstWarriors is empty (should be impossible!), handle here with error message?
+                        if(eligibleFirstWarriors.isEmpty()) game.getGameState().sendMessage("Card3_077 eligibleFirstWarriors was empty. Please report this error."); //jic? should be impossible
                         action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose first warrior to carry", Filters.in(eligibleFirstWarriors)) {
                             @Override
                             protected void cardTargeted(final int targetGroupId, PhysicalCard firstWarrior) {
@@ -144,21 +145,23 @@ public class Card3_077 extends AbstractArtilleryWeapon {
                                     }
                                 }
 
-                                ///if eligibleSecondWarriors is empty (should be impossible!), handle here with error message?
+                                if(eligibleSecondWarriors.isEmpty()) game.getGameState().sendMessage("Card3_077 eligibleSecondWarriors was empty. Please report this error."); //jic? should be impossible
                                 action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose second warrior to carry", Filters.in(eligibleSecondWarriors)) {
                                     @Override
                                     protected void cardTargeted(final int targetGroupId, PhysicalCard secondWarrior) {
                                         action.addAnimationGroup(secondWarrior);
 
-                                        /// replace with a new MoveArtilleryWeaponUsingLandspeedEffect / Action
-                                        /// this will handle the simultaneous aspect described in AR (including cost?)
-                                        /// would accept an artillery card, a collection of characters to move, and additional cost
-                                        /// for this action, it would be: (self, collection: firstWarrior,secondWarrior, 1)
-                                        /// for the modified action Yutani provides, it would be: (self, collection: Yutani, 0)
-
+                                        /// TODO:
+                                        /// Implement a new MoveArtilleryWeaponUsingLandspeedEffect / Action
+                                        /// that will handle the simultaneous aspect described in AR (including cost).
+                                        /// Should accept as parameters: artillery weapon card, collection of character cards to move, and additional cost
+                                        /// This action would use: (self, collection: firstWarrior,secondWarrior, 1)
+                                        /// The modified action Yutani provides, would use: (self, collection: Yutani, 0)
                                         /// can look at AddCardsToMoveUsingLandspeedSimultaneouslyEffect from Rebel Squad Leader for ideas
 
                                         /// until the above is implemented, section below accomplishes a very similar effect
+
+                                        // Pay cost(s)
                                         action.appendCost(new PayMoveUsingLandspeedCostEffect(action, playerId, firstWarrior, toSite, false, 0));
                                         action.appendCost(new PayMoveUsingLandspeedCostEffect(action, playerId, secondWarrior, toSite, false, 0));
                                         action.appendCost(new UseForceEffect(action, playerId, 1));
@@ -216,7 +219,7 @@ public class Card3_077 extends AbstractArtilleryWeapon {
                     @Override
                     protected void cardTargeted(final int targetGroupId, PhysicalCard toSite) {
                         action.addAnimationGroup(toSite);
-                        action.addAnimationGroup(self); ///is this needed?
+                        action.addAnimationGroup(self);
 
                         Collection<PhysicalCard> eligibleWarrior = new HashSet<>();
                         for (PhysicalCard warrior : Filters.filterActive(game, self, potentialWarrior)) {
@@ -226,14 +229,15 @@ public class Card3_077 extends AbstractArtilleryWeapon {
                             }
                         }
 
-                        ///if eligibleWarrior is empty (should be impossible!), handle here with error message?
+                        if(eligibleWarrior.isEmpty()) game.getGameState().sendMessage("Card3_077 eligibleWarriors was empty. Please report this error."); //jic? should be impossible
                         action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose warrior to carry", Filters.in(eligibleWarrior)) {
                             @Override
                             protected void cardTargeted(final int targetGroupId, PhysicalCard selectedWarrior) {
                                 action.addAnimationGroup(selectedWarrior);
                                 final float moveCost = game.getModifiersQuerying().getMoveUsingLandspeedCost(game.getGameState(), selectedWarrior, fromSite, toSite, false, 0);
 
-                                /// see comment block in 'normal' carry action above about using MoveArtilleryWeaponUsingLandspeedEffect
+                                /// see comment block in 'normal' carry action above about using MoveArtilleryWeaponUsingLandspeedEffect / Action
+
                                 /// until the above is implemented, section below accomplishes a very similar effect
                                 action.appendCost(new PayMoveUsingLandspeedCostEffect(action, playerId, selectedWarrior, toSite, false, 0));
 
