@@ -69,14 +69,12 @@ public class Card3_077 extends AbstractArtilleryWeapon {
 
         // Check condition(s)
         if (GameConditions.isDuringYourPhase(game, self, Phase.MOVE)
-                && GameConditions.canUseForce(game, playerId, 1) ///probably drop this check
+                && GameConditions.canUseForce(game, playerId, 1)
                 && GameConditions.isPresentWith(game, self, 2, potentialWarriors)) {
-
-            /// should be using getMoveUsingLandspeedFilter instead of canMoveToUsingLandspeed everywhere?
 
             Collection<PhysicalCard> validDestinations = new HashSet<>();
 
-            for (PhysicalCard potentialDestination : Filters.filterActive(game, self, Filters.relatedSite(self))) { // landspeed implies site must be related, so this reduces sites to check
+            for (PhysicalCard potentialDestination : Filters.filterTopLocationsOnTable(game, Filters.relatedSite(self))) { // landspeed implies site must be related, so this reduces sites to check
                 //scan warriors (tracking the cheapest pair) and add valid site as soon as cost is payable
                 float cost1 = 99;
                 float cost2 = 99;
@@ -128,7 +126,6 @@ public class Card3_077 extends AbstractArtilleryWeapon {
                             }
                         }
 
-                        if(eligibleFirstWarriors.isEmpty()) game.getGameState().sendMessage("Card3_077 eligibleFirstWarriors was empty. Please report this error."); //jic? should be impossible
                         action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose first warrior to carry", Filters.in(eligibleFirstWarriors)) {
                             @Override
                             protected void cardTargeted(final int targetGroupId, PhysicalCard firstWarrior) {
@@ -145,7 +142,6 @@ public class Card3_077 extends AbstractArtilleryWeapon {
                                     }
                                 }
 
-                                if(eligibleSecondWarriors.isEmpty()) game.getGameState().sendMessage("Card3_077 eligibleSecondWarriors was empty. Please report this error."); //jic? should be impossible
                                 action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose second warrior to carry", Filters.in(eligibleSecondWarriors)) {
                                     @Override
                                     protected void cardTargeted(final int targetGroupId, PhysicalCard secondWarrior) {
@@ -198,7 +194,7 @@ public class Card3_077 extends AbstractArtilleryWeapon {
                 && GameConditions.isPresentWith(game, self, 1, potentialWarrior)) {
 
             Collection<PhysicalCard> validDestinations = new HashSet<>();
-            for (PhysicalCard potentialDestination : Filters.filterActive(game, self, Filters.relatedSite(self))) {
+            for (PhysicalCard potentialDestination : Filters.filterTopLocationsOnTable(game, Filters.relatedSite(self))) {
                 for (PhysicalCard warrior : Filters.filterActive(game, self, Filters.and(potentialWarrior,Filters.canMoveUsingLandspeed(playerId, false, false, false, 0)))) {
                     if (Filters.canMoveToUsingLandspeed(playerId, warrior, false, false, false, 0, null).accepts(game, potentialDestination)) {
                         float moveCost = game.getModifiersQuerying().getMoveUsingLandspeedCost(game.getGameState(), warrior, fromSite, potentialDestination, false, 0);
@@ -213,7 +209,7 @@ public class Card3_077 extends AbstractArtilleryWeapon {
             if (!validDestinations.isEmpty()) {
 
                 final TopLevelGameTextAction action = new TopLevelGameTextAction(self, gameTextSourceCardId);
-                action.setText("Move (for free) using one warrior"); ///is this text misleading? (warrior move is not free, but no additional cost required)
+                action.setText("Move (for free) using one warrior");
 
                 action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose site to move to", Filters.in(validDestinations)) {
                     @Override
@@ -229,7 +225,6 @@ public class Card3_077 extends AbstractArtilleryWeapon {
                             }
                         }
 
-                        if(eligibleWarrior.isEmpty()) game.getGameState().sendMessage("Card3_077 eligibleWarriors was empty. Please report this error."); //jic? should be impossible
                         action.appendTargeting(new TargetCardOnTableEffect(action, playerId, "Choose warrior to carry", Filters.in(eligibleWarrior)) {
                             @Override
                             protected void cardTargeted(final int targetGroupId, PhysicalCard selectedWarrior) {
