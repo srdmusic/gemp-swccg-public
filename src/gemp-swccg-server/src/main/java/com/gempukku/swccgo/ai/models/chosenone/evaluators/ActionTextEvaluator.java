@@ -1,4 +1,4 @@
-package com.gempukku.swccgo.ai.models.rando.evaluators;
+package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.common.CardCategory;
@@ -140,20 +140,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Sith Fury on turn 1 wastes 4 force searching an empty Lost Pile.
             if (gameState != null) {
                 String pid = context.getPlayerId();
-
-                // === V29.14: NO ESCAPE — "Take top card of Lost Pile into hand" ===
-                // This is FREE card advantage (not a search), works with any pile size >= 1.
-                // Must be checked BEFORE the V23 empty pile guard so it doesn't get penalized.
-                if (textLower.contains("take top card") && textLower.contains("lost pile")) {
-                    int lostSize = gameState.getLostPile(pid).size();
-                    if (lostSize > 0) {
-                        action.addReasoning("V29.14 NO ESCAPE: Free card from Lost Pile — always take it!", 200.0f);
-                        logger.warn("V29.14 NO ESCAPE: '{}' — Lost Pile has {} cards, taking top card!", actionText, lostSize);
-                        actions.add(action);
-                        continue;
-                    }
-                }
-
                 // Lost Pile searches
                 if (textLower.contains("lost pile") && (textLower.contains("take") ||
                     textLower.contains("search") || textLower.contains("retrieve"))) {
@@ -222,7 +208,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 (textLower.contains("star destroyer") && textLower.contains("pilot") && textLower.contains("deploy")) ||
                 (textLower.contains("reveal") && textLower.contains("pilot") && textLower.contains("star destroyer")))) {
 
-                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle amsdOracle = context.getDeckOracle();
+                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle amsdOracle = context.getDeckOracle();
                 int currentTurn = context.getTurnNumber();
 
                 // V24.10: Check if AMSD already failed this turn — don't waste a second attempt.
@@ -252,31 +238,28 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         boolean piettInHand = amsdOracle.isCardInHand("Admiral Piett") || amsdOracle.isCardInHand("Piett");
                         boolean executorInReserve = amsdOracle.isCardInReserve("Executor") ||
                             amsdOracle.isCardInReserve("Flagship Executor");
-                        // V29.4: AMSD deploys Star Destroyer from HAND or RESERVE DECK!
-                        // Previous code blocked when Executor was in hand — that was WRONG.
-                        // AMSD is actually the BEST way to deploy Executor from hand because
-                        // it deploys Piett+Executor simultaneously to the same system.
+                        // V24.14: Also check if Executor is in hand — AMSD pulls from RESERVE only!
                         boolean executorInHand = amsdOracle.isCardInHand("Executor") ||
                             amsdOracle.isCardInHand("Flagship Executor");
-                        boolean executorAvailable = executorInReserve || executorInHand;
-
-                        // V29.4: Diagnostic logging — trace exactly what DeckOracle sees
-                        logger.warn("V29.4 AMSD DIAGNOSTIC: piettInHand={}, executorInReserve={}, executorInHand={}, executorAvailable={}",
-                            piettInHand, executorInReserve, executorInHand, executorAvailable);
-
-                        if (piettInHand && executorAvailable) {
-                            // Piett + Executor available (in hand or reserve). ALLOW AMSD, boost it!
+                        if (executorInHand) {
+                            action.addReasoning("V24.14 AMSD BLOCKED: Executor in hand — deploy manually!", -9999.0f);
+                            logger.warn("V24.14 AMSD BLOCK (generic): Executor in hand — can't pull from reserve!");
+                            amsdOracle.recordAmsdFailedOnTurn(currentTurn);
+                            actions.add(action);
+                            continue;
+                        }
+                        if (piettInHand && executorInReserve) {
+                            // Perfect — Piett + Executor available. ALLOW AMSD, boost it!
                             // V24.15: On turn 1-2, AMSD is CRITICAL — must fire immediately after Bespin!
                             // Later turns: still high priority but less urgent.
                             float amsdBoost = 500.0f;
-                            String source = executorInHand ? "hand" : "reserve";
                             if (currentTurn <= 2) {
                                 amsdBoost = 1500.0f;  // V24.15: Mega-boost on early turns — Executor MUST deploy ASAP!
-                                action.addReasoning("V24.15 AMSD MEGA PRIORITY: Turn " + currentTurn + " — Executor (from " + source + ") MUST deploy NOW to control Bespin!", amsdBoost);
-                                logger.warn("V24.15 AMSD MEGA PRIORITY: Turn {} — Piett in hand + Executor in {} — mega-boost +{} to ensure AMSD fires!", currentTurn, source, amsdBoost);
+                                action.addReasoning("V24.15 AMSD MEGA PRIORITY: Turn " + currentTurn + " — Executor MUST deploy NOW to control Bespin!", amsdBoost);
+                                logger.warn("V24.15 AMSD MEGA PRIORITY: Turn {} — Piett + Executor ready, mega-boost +{} to ensure AMSD fires!", currentTurn, amsdBoost);
                             } else {
-                                action.addReasoning("V24.10 AMSD APPROVED: Piett + Executor (from " + source + ") ready — fire AMSD!", amsdBoost);
-                                logger.warn("V24.10 AMSD: Generic reveal — Piett in hand, Executor in {} — APPROVED (+{})!", source, amsdBoost);
+                                action.addReasoning("V24.10 AMSD APPROVED: Piett + Executor ready — fire AMSD!", amsdBoost);
+                                logger.warn("V24.10 AMSD: Generic reveal — Piett in hand, Executor in reserve — APPROVED (+{})!", amsdBoost);
                             }
                         } else if (!piettInHand) {
                             action.addReasoning("V24.10 AMSD BLOCKED: Piett NOT in hand — can't use AMSD!", -9999.0f);
@@ -285,10 +268,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             actions.add(action);
                             continue;
                         } else {
-                            // V29.4: Executor not in hand OR reserve — truly unavailable
-                            // Could be in force pile, used pile, lost pile, or not in deck
-                            action.addReasoning("V29.4 AMSD BLOCKED: Piett in hand but Executor NOT in hand or reserve (may be in force/used pile)!", -9999.0f);
-                            logger.warn("V29.4 AMSD BLOCK: Piett in hand but Executor not available (not in hand or reserve) — might be activated to force pile!");
+                            action.addReasoning("V24.10 AMSD BLOCKED: Piett in hand but Executor NOT in reserve!", -9999.0f);
+                            logger.warn("V24.10 AMSD BLOCK: Generic reveal — Piett in hand but Executor not in reserve!");
                             amsdOracle.recordAmsdFailedOnTurn(currentTurn);
                             actions.add(action);
                             continue;
@@ -306,19 +287,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     actions.add(action);
                     continue;
                 } else {
-                    // Action specifically names Piett — verify Piett in hand AND Executor available
+                    // Action specifically names Piett — verify Piett in hand AND Executor in reserve
                     if (amsdOracle != null && amsdOracle.isAnalyzed()) {
                         boolean piettInHand = amsdOracle.isCardInHand("Admiral Piett") || amsdOracle.isCardInHand("Piett");
                         boolean executorInReserve = amsdOracle.isCardInReserve("Executor") ||
                             amsdOracle.isCardInReserve("Flagship Executor");
-                        // V29.4: AMSD deploys from HAND or RESERVE — check both!
+                        // V24.14: Also check if Executor is in hand — AMSD pulls from RESERVE only!
                         boolean executorInHand = amsdOracle.isCardInHand("Executor") ||
                             amsdOracle.isCardInHand("Flagship Executor");
-                        boolean executorAvailable = executorInReserve || executorInHand;
-
-                        // V29.4: Diagnostic logging
-                        logger.warn("V29.4 AMSD DIAGNOSTIC (specific): piettInHand={}, executorInReserve={}, executorInHand={}, executorAvailable={}",
-                            piettInHand, executorInReserve, executorInHand, executorAvailable);
 
                         if (!piettInHand) {
                             action.addReasoning("V24.10 AMSD BLOCKED: Piett is NOT in hand — can't use AMSD!", -9999.0f);
@@ -327,27 +303,53 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             actions.add(action);
                             continue;
                         }
-                        if (!executorAvailable) {
-                            // V29.4: Executor not in hand OR reserve — truly unavailable
-                            action.addReasoning("V29.4 AMSD BLOCKED: Piett in hand but Executor NOT in hand or reserve!", -9999.0f);
-                            logger.warn("V29.4 AMSD GATE: Piett in hand but Executor not available — HARD BLOCK");
+                        if (executorInHand) {
+                            // V24.14: Executor is in hand — AMSD can only pull from reserve!
+                            // Deploy Executor manually from hand instead.
+                            action.addReasoning("V24.14 AMSD BLOCKED: Executor is in HAND, not reserve — deploy manually instead!", -9999.0f);
+                            logger.warn("V24.14 AMSD BLOCK: Executor in hand! AMSD pulls from reserve only — deploy Executor from hand!");
+                            amsdOracle.recordAmsdFailedOnTurn(currentTurn);
+                            actions.add(action);
+                            continue;
+                        }
+                        if (!executorInReserve) {
+                            action.addReasoning("V24.10 AMSD BLOCKED: Piett in hand but Executor NOT in reserve!", -9999.0f);
+                            logger.warn("V24.10 AMSD GATE: Piett in hand but Executor not in reserve — HARD BLOCK");
                             amsdOracle.recordAmsdFailedOnTurn(currentTurn);
                             actions.add(action);
                             continue;
                         }
                         // Both confirmed — boost AMSD priority!
                         // V24.15: On turn 1-2, mega-boost to ensure Executor deploys ASAP
-                        String source = executorInHand ? "hand" : "reserve";
                         float amsdBoostSpecific = (currentTurn <= 2) ? 1500.0f : 500.0f;
                         if (currentTurn <= 2) {
-                            action.addReasoning("V24.15 AMSD MEGA PRIORITY: Turn " + currentTurn + " — Executor (from " + source + ") MUST deploy NOW!", amsdBoostSpecific);
-                            logger.warn("V24.15 AMSD MEGA PRIORITY (specific): Turn {} — Executor in {} — +{} mega-boost!", currentTurn, source, amsdBoostSpecific);
+                            action.addReasoning("V24.15 AMSD MEGA PRIORITY: Turn " + currentTurn + " — Executor MUST deploy NOW!", amsdBoostSpecific);
+                            logger.warn("V24.15 AMSD MEGA PRIORITY (specific): Turn {} — +{} mega-boost!", currentTurn, amsdBoostSpecific);
                         } else {
-                            action.addReasoning("V24.10 AMSD APPROVED: Piett + Executor (from " + source + ") ready!", amsdBoostSpecific);
-                            logger.warn("V24.10 AMSD APPROVED: Piett in hand + Executor in {} — +{}!", source, amsdBoostSpecific);
+                            action.addReasoning("V24.10 AMSD APPROVED: Piett + Executor ready!", amsdBoostSpecific);
+                            logger.warn("V24.10 AMSD APPROVED: Piett in hand + Executor in reserve — +{}!", amsdBoostSpecific);
                         }
                     }
-                    // V29.4: If oracle unavailable, allow AMSD (best guess — don't block without data)
+                    // V24.14: If oracle unavailable, also check hand directly via GameState
+                    else if (gameState != null) {
+                        // Fallback: scan hand for Executor
+                        boolean executorFoundInHand = false;
+                        try {
+                            for (PhysicalCard hc : gameState.getHand(context.getPlayerId())) {
+                                if (hc != null && hc.getTitle() != null &&
+                                    hc.getTitle().toLowerCase(java.util.Locale.ROOT).contains("executor")) {
+                                    executorFoundInHand = true;
+                                    break;
+                                }
+                            }
+                        } catch (Exception e) { /* ignore */ }
+                        if (executorFoundInHand) {
+                            action.addReasoning("V24.14 AMSD BLOCKED: Executor found in hand — deploy manually!", -9999.0f);
+                            logger.warn("V24.14 AMSD FALLBACK: Executor in hand (no oracle) — block AMSD!");
+                            actions.add(action);
+                            continue;
+                        }
+                    }
                 }
             }
 
@@ -356,7 +358,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Once all targets have been pulled, every search fails — stop wasting the action.
             if (textLower.contains("cloud city occupation") && textLower.contains("dark deal") &&
                 textLower.contains("bespin")) {
-                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle tdigOracle = context.getDeckOracle();
+                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle tdigOracle = context.getDeckOracle();
                 if (tdigOracle != null && tdigOracle.isAnalyzed()) {
                     boolean anyTargetInReserve =
                         tdigOracle.isCardInReserve("Bespin") ||
@@ -380,12 +382,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // DeckOracle tracks what's left — stop wasting the action when reserve is empty.
             if (textLower.contains("sorry") || textLower.contains("i'm sorry") ||
                 (textLower.contains("interior") && textLower.contains("cloud city") && textLower.contains("site"))) {
-                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer sorryObjAnalyzer =
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer sorryObjAnalyzer =
                     context.getObjectiveAnalyzer();
                 if (sorryObjAnalyzer != null && sorryObjAnalyzer.isAnalyzed()
                     && sorryObjAnalyzer.needsBespinSystemPresence()) {
                     // Use DeckOracle to check if any CC interior sites remain in reserve
-                    com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle sorryOracle = context.getDeckOracle();
+                    com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle sorryOracle = context.getDeckOracle();
                     boolean ccSitesInReserve = true; // default to true if oracle unavailable
                     if (sorryOracle != null && sorryOracle.isAnalyzed()) {
                         ccSitesInReserve = sorryOracle.isCardInReserve("Cloud City: Upper Walkway")
@@ -412,293 +414,90 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
-            // ========== V29.7: WE MUST ACCELERATE OUR PLANS ==========
-            // Card text: "Use 3 Force to take one Effect... OR Deploy a Blockade Flagship site...
-            //             OR Take one Interrupt with 'Podracer(s)'..."
-            // RULES:
-            //   1. Deploy Blockade Flagship site = the ONLY good use
-            //   2. Once that site is already on table, ALL uses of Accelerate are wasteful
-            //   3. Effect/interrupt pulls cost 3 Force for minimal value — NEVER use
-            //   4. If grabber has grabbed this card, each copy costs +1 more — even worse
-            // V29.7 FIX: The action texts from this card are:
-            //   "Take Effect into hand from Reserve Deck"
-            //   "Deploy a Blockade Flagship site from Reserve Deck"
-            //   "Take Interrupt into hand from Reserve Deck"
-            // These do NOT contain "accelerate"! Must also identify by source card title.
-            boolean isAccelerateCard = textLower.contains("accelerate our plans") || textLower.contains("accelerate");
-            if (!isAccelerateCard && cardId != null && gameState != null) {
-                // V29.7: Look up the source card to check if it's Accelerate Plans
-                try {
-                    PhysicalCard sourceCard = gameState.findCardById(Integer.parseInt(cardId));
-                    if (sourceCard != null && sourceCard.getTitle() != null
-                        && sourceCard.getTitle().toLowerCase(java.util.Locale.ROOT).contains("accelerate")) {
-                        isAccelerateCard = true;
-                    }
-                } catch (Exception e) { /* ignore parse errors */ }
-            }
-            if (isAccelerateCard) {
+            // ========== V25: WE MUST ACCELERATE OUR PLANS — LOCATIONS ONLY ==========
+            // Accelerate Our Plans costs 3 Force to search reserve deck.
+            // User says: "Accelerate is for pull locations. Not a huge need to pull effects."
+            // The action text tells us what type of card is being pulled:
+            //   "plays ...Accelerate Our Plans... to take an Effect of any kind..."
+            //   "plays ...Accelerate Our Plans... to take an Interrupt with the word 'Podracer(s)'..."
+            //   "plays ...Accelerate Our Plans... to take a location..."
+            // Restrict to locations; penalize effects/interrupts heavily.
+            if (textLower.contains("accelerate our plans") || textLower.contains("accelerate")) {
+                // Check what type of card this pull targets
                 boolean isLocationPull = textLower.contains("location") || textLower.contains("site")
-                    || textLower.contains("system") || textLower.contains("deploy a blockade")
-                    || textLower.contains("blockade flagship");
+                    || textLower.contains("system");
                 boolean isEffectPull = textLower.contains("effect");
                 boolean isInterruptPull = textLower.contains("interrupt");
+                boolean isCharacterPull = textLower.contains("character");
+                boolean isStarshipPull = textLower.contains("starship") || textLower.contains("vehicle");
 
-                // V29: Check if the Blockade Flagship site is already on table
-                boolean blockadeSiteOnTable = false;
-                GameState accelGs = context.getGameState();
-                if (accelGs != null) {
-                    try {
-                        for (PhysicalCard loc : accelGs.getTopLocations()) {
-                            if (loc == null || loc.getBlueprint() == null) continue;
-                            String locTitle = loc.getTitle();
-                            if (locTitle != null && locTitle.toLowerCase(java.util.Locale.ROOT).contains("blockade flagship")) {
-                                blockadeSiteOnTable = true;
-                                break;
-                            }
-                        }
-                    } catch (Exception e) { /* ignore */ }
-                }
-
-                if (blockadeSiteOnTable) {
-                    // Site already deployed — NO reason to use Accelerate anymore
-                    action.addReasoning("V29.7 ACCELERATE: Blockade Flagship site already on table — "
-                        + "don't waste 3+ Force on effect/interrupt pull!", -400.0f);
-                    logger.warn("V29.7 ACCELERATE BLOCKED: BFS already on table — all uses wasteful (-400)");
-                } else if (isLocationPull) {
-                    // Location/site pull — the only good use
-                    com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle accelOracle = context.getDeckOracle();
+                if (isLocationPull) {
+                    // Location pull — check if any locations remain in reserve
+                    com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle accelOracle = context.getDeckOracle();
                     if (accelOracle != null && accelOracle.isAnalyzed()) {
-                        java.util.List<com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard> locsInReserve =
+                        java.util.List<com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle.DeckCard> locsInReserve =
                             accelOracle.getCardsByCategory(com.gempukku.swccgo.common.CardCategory.LOCATION,
                                 com.gempukku.swccgo.common.Zone.RESERVE_DECK);
                         if (locsInReserve.isEmpty()) {
-                            action.addReasoning("V29.7 ACCELERATE: No locations in reserve — search will FAIL!", -500.0f);
-                            logger.warn("V29.7 ACCELERATE BLOCKED: Location pull but NO locations in reserve! (-500)");
+                            action.addReasoning("V25 ACCELERATE: No locations in reserve — search will FAIL! Don't waste 3 Force!", -500.0f);
+                            logger.warn("V25 ACCELERATE BLOCKED: Location pull but NO locations in reserve! (-500)");
                         } else {
-                            action.addReasoning("V29.7 ACCELERATE: Deploy Blockade Flagship site — good use!", 100.0f);
-                            logger.info("V29.7 ACCELERATE: Location pull — {} locations in reserve", locsInReserve.size());
+                            action.addReasoning("V25 ACCELERATE: Pull location from reserve — " + locsInReserve.size() + " available!", 100.0f);
+                            logger.info("V25 ACCELERATE: Location pull — {} locations in reserve", locsInReserve.size());
                         }
                     } else {
-                        action.addReasoning("V29.7 ACCELERATE: Location pull (no oracle)", 50.0f);
+                        // No oracle — default mild positive for location pull
+                        action.addReasoning("V25 ACCELERATE: Location pull (no oracle)", 50.0f);
                     }
+                } else if (isEffectPull || isInterruptPull) {
+                    // Effect or interrupt pull — PENALIZE. User explicitly says don't pull these.
+                    // 3 Force for a search that gives opponent a free look at your reserve is wasteful.
+                    action.addReasoning("V25 ACCELERATE: DON'T pull " + (isEffectPull ? "effects" : "interrupts")
+                        + " — 3 Force wasted! Use Accelerate for LOCATIONS only!", -300.0f);
+                    logger.warn("V25 ACCELERATE BLOCKED: {} pull penalized — Accelerate is for locations only! (-300)",
+                        isEffectPull ? "Effect" : "Interrupt");
+                } else if (isCharacterPull || isStarshipPull) {
+                    // Character/starship pulls — mild penalty, not as bad as effects but still not ideal
+                    action.addReasoning("V25 ACCELERATE: Prefer location pulls — " +
+                        (isCharacterPull ? "character" : "starship") + " pull is suboptimal", -100.0f);
+                    logger.info("V25 ACCELERATE: {} pull penalized (-100)", isCharacterPull ? "Character" : "Starship");
                 } else {
-                    // Effect, interrupt, or any other pull — ALWAYS bad. Costs 3+ Force for low value.
-                    action.addReasoning("V29.7 ACCELERATE: DON'T use 3 Force for "
-                        + (isEffectPull ? "effect" : isInterruptPull ? "interrupt" : "non-location")
-                        + " pull — Accelerate is for the Blockade Flagship site ONLY!", -400.0f);
-                    logger.warn("V29.7 ACCELERATE BLOCKED: Non-location pull — waste of 3+ Force (-400)");
+                    // Unknown pull type — mild penalty
+                    action.addReasoning("V25 ACCELERATE: Unknown pull type — prefer locations", -50.0f);
                 }
             }
 
-            // ========== V29: FORCE PUSH — BATTLE USE ONLY ==========
-            // Force Push has two modes:
-            //   1. BATTLE: "use 2 Force to target your Dark Jedi and opponent's character...
-            //      Both targets are excluded from battle" — GOOD, removes threat
-            //   2. FORCE PILE EXCHANGE: "Exchange two cards from hand with any one card
-            //      from Force Pile" — BAD, wasteful. You draw Force Pile cards anyway.
-            // Also applies to "Force Push & Podracer Collision" combo card.
-            // ALWAYS prefer battle use. NEVER use for Force Pile exchange.
-            if (textLower.contains("force push")) {
-                boolean isBattleUse = textLower.contains("exclude") || textLower.contains("battle")
-                    || textLower.contains("target your") || textLower.contains("dark jedi");
-                boolean isExchangeUse = textLower.contains("exchange") || textLower.contains("force pile");
-
-                if (isBattleUse && !isExchangeUse) {
-                    // Battle exclusion — good use! Removes a threat from battle
-                    action.addReasoning("V29 FORCE PUSH: Battle exclusion — remove threat! Good use.", 80.0f);
-                    logger.info("V29 FORCE PUSH: Battle use — exclude characters from battle (+80)");
-                } else if (isExchangeUse) {
-                    // Force Pile exchange — wasteful. You draw those cards anyway.
-                    action.addReasoning("V29 FORCE PUSH: DON'T exchange with Force Pile — you draw those cards anyway! Save for battle.", -300.0f);
-                    logger.warn("V29 FORCE PUSH BLOCKED: Force Pile exchange is wasteful — save for battle (-300)");
+            // ========== V25: CRUSH THE REBELLION — CHECK RESERVE FOR TARGETS ==========
+            // Crush The Rebellion (once per turn) searches reserve for I Have You Now or Evader.
+            // If neither card is in reserve, the search fails and gives opponent a free look.
+            // Use DeckOracle to check before wasting the action.
+            if (textLower.contains("crush the rebellion") || textLower.contains("crush rebellion")) {
+                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle crushOracle = context.getDeckOracle();
+                if (crushOracle != null && crushOracle.isAnalyzed()) {
+                    boolean hasTarget = crushOracle.isCardInReserve("I Have You Now")
+                        || crushOracle.isCardInReserve("Evader");
+                    if (!hasTarget) {
+                        action.addReasoning("V25 CRUSH: No I Have You Now or Evader in reserve — search will FAIL! Stop wasting!", -400.0f);
+                        logger.warn("V25 CRUSH BLOCKED: No targets in reserve — don't activate! (-400)");
+                    } else {
+                        action.addReasoning("V25 CRUSH: Target available in reserve — pull it!", 80.0f);
+                        logger.info("V25 CRUSH: I Have You Now or Evader available in reserve");
+                    }
                 }
             }
 
-            // ========== V29.8: IAYF VADER-ON-TABLE CHECK (ANY SOURCE) ==========
-            // IAYF can deploy Vader's Lightsaber from RESERVE or LOST PILE.
-            // The reserve-only check below misses the Lost Pile case.
-            // This broader check catches both: if source is IAYF and action involves
-            // lightsaber, Vader MUST be on table.
-            if (textLower.contains("lightsaber") && cardId != null && gameState != null) {
-                try {
-                    PhysicalCard iaySourceCard = gameState.findCardById(Integer.parseInt(cardId));
-                    if (iaySourceCard != null && iaySourceCard.getTitle() != null
-                        && iaySourceCard.getTitle().toLowerCase(java.util.Locale.ROOT).contains("i am your father")) {
-                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer iayObj = context.getObjectiveAnalyzer();
-                        boolean vaderPresent = iayObj != null && iayObj.isVaderOnTable(gameState, context.getPlayerId());
-                        if (!vaderPresent) {
-                            action.addReasoning("V29.8 IAYF: Vader NOT on table — can't deploy lightsaber from ANY source!", -500.0f);
-                            logger.warn("V29.8 IAYF BLOCKED: Vader not on table — lightsaber deploy from {} impossible!",
-                                textLower.contains("lost") ? "Lost Pile" : "Reserve/other");
-                        }
-                    }
-                } catch (Exception iayE) {
-                    logger.debug("V29.8: Error checking IAYF vader: {}", iayE.getMessage());
-                }
-            }
-
-            // ========== V29.8: SENSE & UNCERTAIN — BLOCK REDRAW HAND USAGE ==========
-            // Sense & Uncertain Is The Future has two functions:
-            //   1. As Sense: cancel an opponent's interrupt (GOOD — save for this!)
-            //   2. As Uncertain: make each player redraw hand (TERRIBLE — helps opponent too,
-            //      costs 3 Force, loses cards currently in hand, is a Lost Interrupt)
-            // Rando must NEVER use the redraw hand function. Save Sense for defense.
-            if (textLower.contains("redraw") && textLower.contains("hand")) {
-                action.addReasoning("V29.8 SENSE REDRAW BLOCKED: NEVER redraw hand — save Sense for canceling opponent interrupts! Costs 3 Force AND helps opponent!", -600.0f);
-                logger.warn("V29.8 SENSE REDRAW BLOCKED: Attempted to redraw hand — massive penalty (-600)");
-            }
-            // Also catch the "make each player" variant
-            if (textLower.contains("each player") && (textLower.contains("redraw") || textLower.contains("shuffle"))) {
-                action.addReasoning("V29.8 SENSE UNCERTAIN BLOCKED: Don't make both players redraw — helps opponent!", -600.0f);
-                logger.warn("V29.8 SENSE UNCERTAIN BLOCKED: Attempted mutual redraw — massive penalty (-600)");
-            }
-
-            // ========== V29.7: UNIVERSAL RESERVE DECK PULL VALIDATION ==========
-            // PROBLEM: Many cards produce GENERIC action texts like "Deploy card from Reserve Deck"
-            // or "Take card into hand from Reserve Deck". The V25 checks looked for card names
-            // like "crush the rebellion" in action text — but those names were NEVER in the text!
-            // FIX: Look up the SOURCE CARD via cardId to identify what's generating the action,
-            // then check DeckOracle for valid targets based on the source card's identity.
-            if (textLower.contains("from reserve") && cardId != null && gameState != null) {
-                String sourceTitle = null;
-                try {
-                    PhysicalCard sourceCard = gameState.findCardById(Integer.parseInt(cardId));
-                    if (sourceCard != null && sourceCard.getTitle() != null) {
-                        sourceTitle = sourceCard.getTitle();
-                    }
-                } catch (Exception e) { /* ignore parse errors */ }
-
-                if (sourceTitle != null) {
-                    String sourceLower = sourceTitle.toLowerCase(java.util.Locale.ROOT);
-                    com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle pullOracle = context.getDeckOracle();
-
-                    // --- CRUSH THE REBELLION: pulls I Have You Now or Evader ---
-                    if (sourceLower.contains("crush") && sourceLower.contains("rebellion")) {
-                        if (pullOracle != null && pullOracle.isAnalyzed()) {
-                            boolean hasTarget = pullOracle.isCardInReserve("I Have You Now")
-                                || pullOracle.isCardInReserve("Evader");
-                            if (!hasTarget) {
-                                action.addReasoning("V29.7 CRUSH: No I Have You Now or Evader in reserve — WILL FAIL!", -400.0f);
-                                logger.warn("V29.7 CRUSH BLOCKED: No targets in reserve (source: {})", sourceTitle);
-                            }
-                            // V29.9: Check if IHYN/Evader already in hand — don't pull duplicates!
-                            boolean ihynInHand = pullOracle.isCardInHand("I Have You Now");
-                            boolean evaderInHand = pullOracle.isCardInHand("Evader");
-                            boolean ihynInReserve = pullOracle.isCardInReserve("I Have You Now");
-                            boolean evaderInReserve = pullOracle.isCardInReserve("Evader");
-                            if (ihynInHand && evaderInHand) {
-                                // Both targets already in hand — this pull is useless
-                                action.addReasoning("V29.9 CRUSH DUPLICATE: Both IHYN and Evader already in hand — pulling another is wasteful!", -300.0f);
-                                logger.warn("V29.9 CRUSH DUPLICATE: Both targets in hand — blocking (-300)");
-                            } else if (ihynInHand && !evaderInReserve) {
-                                // IHYN in hand and no Evader in reserve — would pull a second IHYN
-                                action.addReasoning("V29.9 CRUSH DUPLICATE: IHYN already in hand, no Evader in reserve — save Crush!", -250.0f);
-                                logger.warn("V29.9 CRUSH DUPLICATE: IHYN in hand, no Evader in reserve — blocking (-250)");
-                            } else if (evaderInHand && !ihynInReserve) {
-                                // Evader in hand and no IHYN in reserve — would pull a second Evader
-                                action.addReasoning("V29.9 CRUSH DUPLICATE: Evader already in hand, no IHYN in reserve — save Crush!", -250.0f);
-                                logger.warn("V29.9 CRUSH DUPLICATE: Evader in hand, no IHYN in reserve — blocking (-250)");
-                            }
-                        }
-                    }
-
-                    // --- I AM YOUR FATHER: deploys Vader's Lightsaber ---
-                    else if (sourceLower.contains("i am your father")) {
-                        if (pullOracle != null && pullOracle.isAnalyzed()) {
-                            boolean hasSaber = pullOracle.isCardInReserve("Vader's Lightsaber")
-                                || pullOracle.isCardInReserve("Darth Vader's Lightsaber");
-                            // Also check if Vader is on table — lightsaber deploys ON Vader
-                            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer objA = context.getObjectiveAnalyzer();
-                            boolean vaderOnTable = objA != null && objA.isVaderOnTable(gameState, context.getPlayerId());
-
-                            if (!vaderOnTable && textLower.contains("lightsaber")) {
-                                action.addReasoning("V29.7 IAYF: Vader NOT on table — can't deploy lightsaber!", -500.0f);
-                                logger.warn("V29.7 IAYF BLOCKED: Vader not on table — lightsaber deploy impossible!");
-                            } else if (!hasSaber && textLower.contains("lightsaber")) {
-                                action.addReasoning("V29.7 IAYF: Vader's Lightsaber not in reserve — WILL FAIL!", -400.0f);
-                                logger.warn("V29.7 IAYF BLOCKED: No lightsaber in reserve (source: {})", sourceTitle);
-                            }
-                        }
-                    }
-
-                    // --- YOU ARE BEATEN: pulls IAYF or specific card from reserve ---
-                    else if (sourceLower.contains("you are beaten")) {
-                        if (pullOracle != null && pullOracle.isAnalyzed()) {
-                            boolean hasIAYF = pullOracle.isCardInReserve("I Am Your Father");
-                            if (!hasIAYF) {
-                                action.addReasoning("V29.7 YOU ARE BEATEN: No I Am Your Father in reserve — WILL FAIL!", -400.0f);
-                                logger.warn("V29.7 YOU ARE BEATEN BLOCKED: No IAYF in reserve (source: {})", sourceTitle);
-                            }
-                        }
-                    }
-
-                    // --- BLAST POINTS: pulls Ghhhk or Hyperwave Scan ---
-                    else if (sourceLower.contains("blast points")) {
-                        if (pullOracle != null && pullOracle.isAnalyzed()) {
-                            boolean hasTarget = pullOracle.isCardInReserve("Ghhhk")
-                                || pullOracle.isCardInReserve("Hyperwave Scan");
-                            if (!hasTarget) {
-                                action.addReasoning("V29.7 BLAST POINTS: No Ghhhk or Hyperwave Scan in reserve — WILL FAIL!", -400.0f);
-                                logger.warn("V29.7 BLAST POINTS BLOCKED: No targets in reserve (source: {})", sourceTitle);
-                            }
-                        }
-                    }
-
-                    // --- HUNT DOWN (objective): deploys location from reserve ---
-                    else if (sourceLower.contains("hunt down") && textLower.contains("location")) {
-                        if (pullOracle != null && pullOracle.isAnalyzed()) {
-                            java.util.List<com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard> locsInReserve =
-                                pullOracle.getCardsByCategory(com.gempukku.swccgo.common.CardCategory.LOCATION,
-                                    com.gempukku.swccgo.common.Zone.RESERVE_DECK);
-                            if (locsInReserve.isEmpty()) {
-                                action.addReasoning("V29.7 HUNT DOWN: No locations left in reserve — WILL FAIL!", -400.0f);
-                                logger.warn("V29.7 HUNT DOWN BLOCKED: No locations in reserve (source: {})", sourceTitle);
-                            }
-                        }
-                    }
-
-                    // --- IMPERIAL COMMAND: pulls admiral or general ---
-                    else if (sourceLower.contains("imperial command")) {
-                        if (pullOracle != null && pullOracle.isAnalyzed()) {
-                            boolean hasTarget = pullOracle.hasTargetInReserve("admiral", "general");
-                            if (!hasTarget) {
-                                action.addReasoning("V29.7 IMPERIAL COMMAND: No admirals/generals in reserve — WILL FAIL!", -400.0f);
-                                logger.warn("V29.7 IMPERIAL COMMAND BLOCKED: No targets in reserve (source: {})", sourceTitle);
-                            }
-                        }
-                    }
-
-                    // --- ENDOR SHIELD: pulls admiral ---
-                    else if (sourceLower.contains("endor shield")) {
-                        if (pullOracle != null && pullOracle.isAnalyzed()) {
-                            boolean hasTarget = pullOracle.hasTargetInReserve("admiral");
-                            if (!hasTarget) {
-                                action.addReasoning("V29.7 ENDOR SHIELD: No admirals in reserve — WILL FAIL!", -400.0f);
-                                logger.warn("V29.7 ENDOR SHIELD BLOCKED: No admirals in reserve (source: {})", sourceTitle);
-                            }
-                        }
-                    }
-
-                    // --- VISAGE OF THE EMPEROR: pulls lightsaber ---
-                    else if (sourceLower.contains("visage") && textLower.contains("lightsaber")) {
-                        if (pullOracle != null && pullOracle.isAnalyzed()) {
-                            boolean hasTarget = pullOracle.hasTargetInReserve("lightsaber");
-                            if (!hasTarget) {
-                                action.addReasoning("V29.7 VISAGE: No lightsabers in reserve — WILL FAIL!", -400.0f);
-                                logger.warn("V29.7 VISAGE BLOCKED: No lightsabers in reserve (source: {})", sourceTitle);
-                            }
-                        }
-                    }
-
-                    // --- KIR KANOS: pulls Royal Guard ---
-                    else if (sourceLower.contains("kir kanos")) {
-                        if (pullOracle != null && pullOracle.isAnalyzed()) {
-                            boolean hasTarget = pullOracle.hasTargetInReserve("royal guard", "kanos", "kyneugh");
-                            if (!hasTarget) {
-                                action.addReasoning("V29.7 KIR KANOS: No Royal Guards in reserve — WILL FAIL!", -400.0f);
-                                logger.warn("V29.7 KIR KANOS BLOCKED: No Royal Guards in reserve (source: {})", sourceTitle);
-                            }
-                        }
+            // ========== V25: I AM YOUR FATHER — CHECK RESERVE FOR TARGETS ==========
+            // I Am Your Father searches reserve for specific cards (lightsabers, interrupts).
+            // If the target isn't in reserve, don't waste the search.
+            if (textLower.contains("i am your father") && (textLower.contains("reserve") || textLower.contains("take"))) {
+                com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle iayOracle = context.getDeckOracle();
+                if (iayOracle != null && iayOracle.isAnalyzed()) {
+                    // Extract what card is being searched for from the action text
+                    // Common patterns: "take X into hand from Reserve Deck"
+                    int reserveSize = gameState != null ? gameState.getReserveDeckSize(context.getPlayerId()) : 10;
+                    if (reserveSize <= 2) {
+                        action.addReasoning("V25 I AM YOUR FATHER: Reserve nearly empty (" + reserveSize + ") — likely to fail!", -200.0f);
+                        logger.warn("V25 IAYF: Reserve too small ({}) for search!", reserveSize);
                     }
                 }
             }
@@ -798,14 +597,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // ========== Force Activation ==========
             if (actionText.equals("Activate Force")) {
                 action.setActionType(ActionType.ACTIVATE_FORCE);
-                try {
-                    evaluateActivateForce(action, context);
-                } catch (Exception e) {
-                    // V29.13: NEVER skip activation due to exceptions.
-                    // Default to high score so Rando always activates Force.
-                    logger.warn("V29.13: Exception in evaluateActivateForce, defaulting to ACTIVATE: {}", e.getMessage());
-                    action.addReasoning("V29.13 SAFE DEFAULT: Always activate Force", VERY_GOOD_DELTA);
-                }
+                evaluateActivateForce(action, context);
             }
 
             // ========== Force Drain ==========
@@ -821,55 +613,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
             }
 
             // ========== Play a Card ==========
-            // V29.1: If the source card is Knowledge And Defense (V), this is a shield play.
-            // Apply shield pacing — play 2 shields on turn 1, hold the rest to scout opponent.
             else if (actionText.equals("Play a card")) {
                 action.setActionType(ActionType.PLAY_CARD);
-                boolean isKnDShieldPlay = false;
-                if (cardId != null && gameState != null) {
-                    try {
-                        PhysicalCard sourceCard = gameState.findCardById(Integer.parseInt(cardId));
-                        if (sourceCard != null) {
-                            String sourceTitle = sourceCard.getTitle();
-                            if (sourceTitle != null && sourceTitle.toLowerCase().contains("knowledge and defense")) {
-                                isKnDShieldPlay = true;
-                            }
-                        }
-                    } catch (Exception e) {
-                        // Ignore — fall through to generic evaluation
-                    }
-                }
-                if (isKnDShieldPlay) {
-                    com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy shieldStrat = context.getShieldStrategy();
-                    int turnNum = context.getTurnNumber();
-                    if (shieldStrat != null && shieldStrat.atPacingCap(turnNum)) {
-                        action.addReasoning("V29.1 K&D SHIELD PACING: Holding shield slot — scout opponent first (turn " + turnNum + ")", -40.0f);
-                    } else {
-                        action.addReasoning("K&D: Play defensive shield (slots available)", VERY_GOOD_DELTA);
-                    }
-                } else {
-                    evaluatePlayCard(action, context);
-                }
+                evaluatePlayCard(action, context);
             }
 
             // ========== Fire Weapons ==========
-            // V29.12: Fire MUST score higher than throw (250) so Rando fires the
-            // lightsaber BEFORE throwing it. Throwing sacrifices the weapon (places it
-            // in Lost Pile), so if throw happens first, fire becomes impossible.
-            // Fire first = hit target + THEN throw for attrition destiny = double trouble.
             else if (actionText.contains("Fire")) {
                 action.setActionType(ActionType.FIRE_WEAPON);
                 // Check if there are valid (non-HIT) targets before firing
                 // Ported from Python action_text_evaluator.py - don't fire at already-hit targets
                 boolean hasValidTargets = checkForValidWeaponTargets(context);
                 if (hasValidTargets) {
-                    if (context.getPhase() == Phase.BATTLE) {
-                        // V29.12: In battle, fire weapons BEFORE throw — score must beat throw's 200
-                        action.addReasoning("V29.12 FIRE WEAPON: Fire FIRST in battle — hit target before throwing!", 300.0f);
-                        logger.warn("V29.12 FIRE WEAPON: Battle phase fire — must happen before throw (+300)");
-                    } else {
-                        action.addReasoning("Firing weapons at valid targets", VERY_GOOD_DELTA);
-                    }
+                    action.addReasoning("Firing weapons at valid targets", VERY_GOOD_DELTA);
                 } else {
                     action.addReasoning("All targets already HIT - save weapon", BAD_DELTA);
                     logger.debug("Skipping weapon fire - no valid (unhit) targets");
@@ -880,109 +636,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
             else if (textLower.contains("add") && textLower.contains("battle destiny")) {
                 action.setActionType(ActionType.BATTLE_DESTINY);
                 action.addReasoning("Adding battle destiny is great", VERY_GOOD_DELTA);
-            }
-
-            // ========== V29.10/V29.12: LIGHTSABER THROW — ADD DESTINY TO ATTRITION ==========
-            // After firing a lightsaber, Vader can also 'throw' it to add destiny to attrition.
-            // This is a SEPARATE action from firing — both can be done in the same battle.
-            // The throw adds extra attrition damage which can be decisive.
-            // Action text: "'Throw' to add destiny to attrition"
-            //
-            // V29.12 CRITICAL: Throw MUST score LOWER than Fire (300).
-            // Throwing places the lightsaber in Lost Pile — if Rando throws first,
-            // he can NEVER fire it. The correct sequence is:
-            //   1. FIRE lightsaber at target (hit them, reduce forfeit) — score 300
-            //   2. THROW lightsaber (sacrifice it for attrition destiny) — score 200
-            // This gives "double trouble" — hit + extra attrition in the same battle.
-            if (textLower.contains("throw") && textLower.contains("add destiny to attrition")) {
-                if (context.getPhase() == Phase.BATTLE) {
-                    action.addReasoning("V29.12 LIGHTSABER THROW: Add destiny to attrition — do AFTER firing!", 200.0f);
-                    logger.warn("V29.12 LIGHTSABER THROW: Battle phase throw (+200, below fire's +300)");
-                } else {
-                    action.addReasoning("V29.10 LIGHTSABER THROW: Throw lightsaber to add destiny to attrition!", 150.0f);
-                }
-            }
-
-            // ========== V29.10: HATRED CARD — CANCEL OPPONENT GAME TEXT ==========
-            // Stacking a Hatred Card on an opponent's character cancels their game text.
-            // This is CRITICAL because it removes attrition immunity and other protections.
-            // Without Hatred, winning a battle does NOTHING if opponent is immune to attrition.
-            // Action text variants:
-            //   "Stack a 'Hatred Card'" (previous game)
-            //   "USED: Stack 'Hatred' card on opponent's character" (this game)
-            // BEST TIMING: Deploy phase — stack Hatred BEFORE initiating battle.
-            // This way opponent's immunities are already gone when battle starts.
-            if (textLower.contains("hatred")) {
-                String decisionText = context.getDecisionText() != null
-                    ? context.getDecisionText().toLowerCase(Locale.ROOT) : "";
-                boolean isDeployPhase = context.getPhase() == Phase.DEPLOY
-                    || decisionText.contains("deploy");
-                boolean isBattlePhase = context.getPhase() == Phase.BATTLE
-                    || decisionText.contains("battle") || decisionText.contains("weapons segment");
-
-                if (isDeployPhase) {
-                    // Deploy phase — IDEAL time: stack Hatred then initiate battle
-                    action.addReasoning("V29.10 HATRED: Stack Hatred Card NOW during deploy — cancel opponent game text BEFORE battle!", 300.0f);
-                    logger.warn("V29.10 HATRED: Deploy phase Hatred stack — removes immunities before battle (+300)");
-                } else if (isBattlePhase) {
-                    // During battle — still useful, removes immunities for attrition
-                    action.addReasoning("V29.10 HATRED: Stack Hatred Card to cancel opponent game text — removes attrition immunity!", 250.0f);
-                    logger.warn("V29.10 HATRED: Battle phase Hatred stack (+250)");
-                }
-                // Other phases (Activate, Control) — don't bother, save it for deploy/battle
-            }
-
-            // ========== V29.9: I HAVE YOU NOW — PLAY DURING BATTLE ==========
-            // IHYN adds extra battle destiny draws when Vader is in the battle.
-            // This is DEVASTATING — 2-3 extra destiny draws can turn any battle into a win.
-            // Must be played DURING a battle. Check if we're in battle phase and Vader is present.
-            // Also catch "i have you now" in source card check for generic action texts.
-            if (textLower.contains("i have you now") || textLower.contains("ihyn")) {
-                if (context.getPhase() == Phase.BATTLE) {
-                    // In battle — check if Vader is participating
-                    boolean vaderInBattle = false;
-                    try {
-                        if (gameState != null && gameState.getBattleState() != null) {
-                            PhysicalCard battleLoc = gameState.getBattleState().getBattleLocation();
-                            if (battleLoc != null) {
-                                String ihynPlayerId = context.getPlayerId();
-                                for (PhysicalCard bCard : gameState.getCardsAtLocation(battleLoc)) {
-                                    if (bCard == null || !ihynPlayerId.equals(bCard.getOwner())) continue;
-                                    if (bCard.getTitle() != null && bCard.getTitle().toLowerCase(java.util.Locale.ROOT).contains("vader")) {
-                                        vaderInBattle = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.debug("V29.9 IHYN: Error checking Vader in battle: {}", e.getMessage());
-                    }
-
-                    if (vaderInBattle) {
-                        action.addReasoning("V29.9 IHYN: Vader in battle — PLAY I HAVE YOU NOW for devastating extra destiny draws!", 300.0f);
-                        logger.warn("V29.9 IHYN: Vader in battle — mega boost (+300) for I Have You Now!");
-                    } else {
-                        // Still good even without Vader — adds destiny draws
-                        action.addReasoning("V29.9 IHYN: Play I Have You Now for extra battle destiny!", 100.0f);
-                        logger.info("V29.9 IHYN: Playing during battle without Vader (+100)");
-                    }
-                } else {
-                    // Not in battle — save IHYN for when we need it
-                    action.addReasoning("V29.9 IHYN: Save I Have You Now for battle!", -200.0f);
-                    logger.info("V29.9 IHYN: Not in battle — save for later (-200)");
-                }
-            }
-            // Also check source card for IHYN when action text is generic
-            else if (context.getPhase() == Phase.BATTLE && cardId != null && gameState != null) {
-                try {
-                    PhysicalCard ihynSource = gameState.findCardById(Integer.parseInt(cardId));
-                    if (ihynSource != null && ihynSource.getTitle() != null
-                        && ihynSource.getTitle().toLowerCase(java.util.Locale.ROOT).contains("i have you now")) {
-                        action.addReasoning("V29.9 IHYN: Play I Have You Now during battle — extra destiny draws!", 200.0f);
-                        logger.warn("V29.9 IHYN (source): I Have You Now detected via source card — boost +200");
-                    }
-                } catch (Exception e) { /* ignore */ }
             }
 
             // ========== Battle Destiny Modifier (+1 to battle destiny) ==========
@@ -1034,7 +687,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 // Check if we're running a Bespin/Cloud City objective with no ship there yet
                 boolean bespinChainActive = false;
                 try {
-                    com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer objAnalyzer =
+                    com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer objAnalyzer =
                         context.getObjectiveAnalyzer();
                     if (objAnalyzer != null && objAnalyzer.isAnalyzed() &&
                         objAnalyzer.needsBespinSystemPresence()) {
@@ -1063,33 +716,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     // Ignore — fall back to default scoring
                 }
 
-                // V29.7: Check if there are actually admirals/generals left in Reserve
-                boolean hasValidTarget = true;
-                try {
-                    com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle oracle = context.getDeckOracle();
-                    if (oracle != null && oracle.isAnalyzed()) {
-                        hasValidTarget = oracle.hasTargetInReserve("admiral", "general");
-                        if (!hasValidTarget) {
-                            logger.warn("V29.7 PULL CHECK: No admirals/generals left in Reserve — blocking pull!");
-                        }
-                    }
-                } catch (Exception pullCheckE) {
-                    // Can't check — assume target exists
-                }
-
-                if (!hasValidTarget) {
-                    // No valid targets in Reserve — don't waste Force on this!
-                    action.addReasoning("V29.7 NO TARGET: No admirals/generals in Reserve Deck — skip!", -300.0f);
-                } else if (bespinChainActive) {
+                if (bespinChainActive) {
                     // Admiral pilot → Executor chain: this is Turn 1 critical for TDIGWATT.
                     // Score it as high as AMSD itself so we never skip this pull.
                     action.addReasoning(
-                        "CRITICAL: Admiral pilot enables Executor deploy to Bespin — must pull T1!", 300.0f);
-                    logger.warn("EXECUTOR CHAIN: Admiral pull with no Bespin ship — boosting to 300 (enables Executor pipeline)");
+                        "CRITICAL: Admiral pilot enables Executor deploy to Bespin — must pull T1!", 200.0f);
+                    logger.warn("EXECUTOR CHAIN: Admiral pull with no Bespin ship — boosting to 200 (enables Executor pipeline)");
                 } else {
-                    // V29.7: Pulls ALWAYS fire before locations and characters.
-                    // Getting cards into hand first means better deploy choices later.
-                    action.addReasoning("V29.7 PULL FIRST: Retrieve admiral/general into hand before deploying!", 250.0f);
+                    action.addReasoning("Retrieve admiral/general into hand", GOOD_DELTA);
                 }
             }
 
@@ -1237,64 +871,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         logger.debug("V24.9: Error checking spy-blocked sites: {}", e.getMessage());
                     }
                 }
-
-                // === V29.7: VADER'S CASTLE RETREAT PENALTY ===
-                // Mustafar: Vader's Castle can teleport Vader back to Mustafar.
-                // This is TERRIBLE when Vader is at a location where he can force drain!
-                // Mustafar has 0 opponent icons = no drain value. Moving Vader there
-                // means losing a turn of draining at the current location.
-                // Only allow Castle retreat if Vader is outnumbered and about to die.
-                if ((textLower.contains("vader") && textLower.contains("castle")) ||
-                    textLower.contains("mustafar")) {
-                    try {
-                        // Find Vader's current location and check drain potential
-                        String pid = context.getPlayerId();
-                        if (gameState != null && pid != null) {
-                            for (PhysicalCard card : gameState.getAllPermanentCards()) {
-                                if (card == null || !pid.equals(card.getOwner())) continue;
-                                com.gempukku.swccgo.common.Zone zone = card.getZone();
-                                if (zone == null || !zone.isInPlay()) continue;
-                                String cTitle = card.getTitle();
-                                if (cTitle == null || !cTitle.toLowerCase(java.util.Locale.ROOT).contains("vader")) continue;
-                                if (card.getBlueprint() == null || card.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
-
-                                // Found Vader — check his current location
-                                PhysicalCard vaderLoc = card.getAtLocation();
-                                if (vaderLoc == null && card.getAttachedTo() != null) {
-                                    // Vader might be aboard a vehicle/starship — get the vehicle's location
-                                    vaderLoc = card.getAttachedTo().getAtLocation();
-                                }
-                                if (vaderLoc != null && vaderLoc.getTitle() != null) {
-                                    String vLocTitle = vaderLoc.getTitle().toLowerCase(java.util.Locale.ROOT);
-                                    if (vLocTitle.contains("mustafar")) {
-                                        // Vader is already at Mustafar — this is a move OUT, which is fine
-                                        break;
-                                    }
-                                    // Vader is at a non-Mustafar location — check if it has drain value
-                                    SwccgCardBlueprint locBp = vaderLoc.getBlueprint();
-                                    if (locBp != null) {
-                                        int oppIcons = 0;
-                                        if (context.getSide() == Side.DARK) {
-                                            oppIcons = locBp.getIconCount(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
-                                        } else {
-                                            oppIcons = locBp.getIconCount(com.gempukku.swccgo.common.Icon.DARK_FORCE);
-                                        }
-                                        if (oppIcons > 0) {
-                                            // Vader is at a location with drain value — DON'T retreat!
-                                            action.addReasoning("V29.7 VADER RETREAT: Vader is draining " + oppIcons +
-                                                " at " + vaderLoc.getTitle() + " — DON'T retreat to Mustafar!", -300.0f);
-                                            logger.warn("V29.7 VADER RETREAT BLOCKED: Vader at {} with {} drain — retreating to Mustafar is terrible! (-300)",
-                                                vaderLoc.getTitle(), oppIcons);
-                                        }
-                                    }
-                                }
-                                break; // Found Vader, done
-                            }
-                        }
-                    } catch (Exception e) {
-                        logger.debug("V29.7: Error checking Vader retreat: {}", e.getMessage());
-                    }
-                }
             }
             else if (actionText.equals("Take off") || actionText.equals("Land")) {
                 action.setActionType(ActionType.MOVE);
@@ -1306,67 +882,9 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 action.addReasoning("Making opponent lose force", GOOD_DELTA);
             }
 
-            // ========== V29.7: Deploy Docking Bay — Smart Strategy ==========
-            // Docking bays are SHARED — opponent can deploy characters to YOUR docking bays!
-            // Only deploy a docking bay if we don't already have empty ones on the table.
-            // Empty docking bays = free locations for the opponent.
-            else if (actionText.contains("Deploy docking bay") || textLower.contains("deploy a docking bay")) {
-                boolean hasEmptyDockingBay = false;
-                int emptyBayCount = 0;
-                int totalOurBays = 0;
-                GameState bayGs = context.getGameState();
-                String bayPlayerId = context.getPlayerId();
-                if (bayGs != null && bayPlayerId != null) {
-                    try {
-                        for (PhysicalCard loc : bayGs.getTopLocations()) {
-                            if (loc == null || loc.getTitle() == null) continue;
-                            String locTitle = loc.getTitle().toLowerCase(java.util.Locale.ROOT);
-                            // Check if this is a docking bay we own
-                            if (locTitle.contains("docking bay") || locTitle.contains("landing platform")) {
-                                // Check if we control it (our card)
-                                if (bayPlayerId.equals(loc.getOwner())) {
-                                    totalOurBays++;
-                                    // Check if any of OUR characters are there
-                                    boolean hasFriendlyChar = false;
-                                    java.util.List<PhysicalCard> cardsHere = bayGs.getCardsAtLocation(loc);
-                                    if (cardsHere != null) {
-                                        for (PhysicalCard pc : cardsHere) {
-                                            if (pc != null && bayPlayerId.equals(pc.getOwner())
-                                                && pc.getBlueprint() != null
-                                                && pc.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.CHARACTER) {
-                                                hasFriendlyChar = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    if (!hasFriendlyChar) {
-                                        hasEmptyDockingBay = true;
-                                        emptyBayCount++;
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception e) { /* ignore */ }
-                }
-
-                if (hasEmptyDockingBay) {
-                    // Already have empty docking bays — deploying MORE just gives opponent more free locations!
-                    action.addReasoning("V29.7 DOCKING BAY: Already have " + emptyBayCount
-                        + " empty bay(s) — deploy characters there first, don't give opponent more locations!", -200.0f);
-                    logger.warn("V29.7 DOCKING BAY BLOCKED: {} empty bay(s) on table — don't deploy more (-200)", emptyBayCount);
-                } else if (totalOurBays >= 2) {
-                    // Already have 2+ bays with characters — probably don't need more
-                    action.addReasoning("V29.7 DOCKING BAY: Already have " + totalOurBays + " bays — enough for transit", -50.0f);
-                } else if (totalOurBays == 0) {
-                    // V29.7: FIRST docking bay — VERY high priority! This creates a battleground
-                    // location where our characters can safely deploy. Must fire BEFORE character
-                    // deploys so characters have a friendly BG location to go to.
-                    action.addReasoning("V29.7 FIRST DOCKING BAY: Deploy FIRST to create battleground for characters!", 200.0f);
-                    logger.warn("V29.7 FIRST BAY: No bays on table — high priority deploy (+200)");
-                } else {
-                    // Have 1 manned bay — second bay OK for transit network
-                    action.addReasoning("V29.7 DOCKING BAY: Deploy second bay for transit network", GOOD_DELTA);
-                }
+            // ========== Deploy Docking Bay ==========
+            else if (actionText.contains("Deploy docking bay")) {
+                action.addReasoning("Deploying docking bay", GOOD_DELTA);
             }
 
             // ========== V25: HUNT DOWN V — VADER CASTLE DEPLOY ACTION ==========
@@ -1374,7 +892,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Hunt Down V is the objective, this is THE most important action in the game.
             // Vader must be on table for the deck to function.
             else if (actionText.contains("Deploy Vader from Reserve Deck") || actionText.contains("Deploy Vader here")) {
-                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer vaderObjAnalyzer =
+                com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer vaderObjAnalyzer =
                     context.getObjectiveAnalyzer();
                 if (vaderObjAnalyzer != null && vaderObjAnalyzer.isAnalyzed() && vaderObjAnalyzer.isHuntDownV()) {
                     boolean vaderOnTable = false;
@@ -1400,79 +918,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
                 } else {
                     action.addReasoning("Deploy Vader from reserve", VERY_GOOD_DELTA);
-                }
-            }
-
-            // ========== V26/V29.6: Dining Room — Deploy Lando (TDIGWATT) ==========
-            // Dining Room's game text deploys Lando from Reserve Deck — a key TDIGWATT piece.
-            // DeployEvaluator can't find the card (it's in reserve, not hand), so we boost
-            // here in ActionTextEvaluator.
-            //
-            // V29.6 FIX: Check if Lando would be ALONE at Dining Room. If no friendly
-            // characters are already there, deploying Lando alone is suicide — opponent
-            // will drop a character + weapon and kill him immediately. Defer until we
-            // have a buddy at Dining Room first.
-            else if ((textLower.contains("dining room") || textLower.contains("deploy lando"))
-                     && textLower.contains("reserve")) {
-                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer drLandoAnalyzer =
-                    context.getObjectiveAnalyzer();
-
-                // V29.6: Check if there are friendly characters at Dining Room
-                boolean friendliesAtDiningRoom = false;
-                int friendlyCountAtDR = 0;
-                try {
-                    GameState drGameState = context.getGameState();
-                    String drPlayerId = context.getPlayerId();
-                    if (drGameState != null && drPlayerId != null) {
-                        // Find Dining Room on the table
-                        java.util.List<PhysicalCard> allLocs = drGameState.getTopLocations();
-                        PhysicalCard diningRoomCard = null;
-                        if (allLocs != null) {
-                            for (PhysicalCard loc : allLocs) {
-                                if (loc != null && loc.getTitle() != null
-                                    && loc.getTitle().toLowerCase(java.util.Locale.ROOT).contains("dining room")) {
-                                    diningRoomCard = loc;
-                                    break;
-                                }
-                            }
-                        }
-                        if (diningRoomCard != null) {
-                            java.util.List<PhysicalCard> cardsAtDR = drGameState.getCardsAtLocation(diningRoomCard);
-                            if (cardsAtDR != null) {
-                                for (PhysicalCard c : cardsAtDR) {
-                                    if (c != null && drPlayerId.equals(c.getOwner())
-                                        && c.getBlueprint() != null
-                                        && c.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
-                                        friendlyCountAtDR++;
-                                    }
-                                }
-                            }
-                            friendliesAtDiningRoom = (friendlyCountAtDR > 0);
-                        }
-                    }
-                } catch (Exception e) {
-                    logger.debug("V29.6 DINING ROOM: Error checking friendlies at DR: {}", e.getMessage());
-                }
-
-                if (drLandoAnalyzer != null && drLandoAnalyzer.isAnalyzed()
-                    && drLandoAnalyzer.needsBespinSystemPresence()) {
-                    if (friendliesAtDiningRoom) {
-                        // Buddies present — safe to deploy Lando!
-                        action.addReasoning("V29.6 DINING ROOM: Deploy Lando with " + friendlyCountAtDR + " friendlies — safe!", 150.0f);
-                        logger.warn("V29.6 DINING ROOM: Lando deploy with {} friendlies at DR — +150", friendlyCountAtDR);
-                    } else {
-                        // Lando would be ALONE — defer until we have a buddy there.
-                        // Small positive so it's still considered but won't beat deploying a character first.
-                        action.addReasoning("V29.6 DINING ROOM: Lando would be ALONE — deploy a buddy first!", -30.0f);
-                        logger.warn("V29.6 DINING ROOM: Lando deploy DEFERRED — no friendlies at DR, penalty -30");
-                    }
-                } else {
-                    if (friendliesAtDiningRoom) {
-                        action.addReasoning("Dining Room: Deploy Lando from reserve (friendlies present)", GOOD_DELTA);
-                    } else {
-                        action.addReasoning("V29.6 Dining Room: Lando alone — risky!", -20.0f);
-                        logger.info("V29.6 DINING ROOM: Non-TDIGWATT Lando deploy deferred — alone at DR");
-                    }
                 }
             }
 
@@ -1516,32 +961,37 @@ public class ActionTextEvaluator extends ActionEvaluator {
 
             // ========== Retrieve Force ==========
             else if (textLower.contains("retrieve") || actionText.contains("Place out of play to retrieve")) {
-                int lostPileSize = gameState != null ? gameState.getLostPile(context.getPlayerId()).size() : 0;
-                if (lostPileSize > 15) {
-                    action.addReasoning("High lost pile - retrieve worth it", GOOD_DELTA);
+                // === V29.14: WOKLING — Don't place out of play until generating 15+ Force ===
+                if (actionText.contains("Place out of play to retrieve") && gameState != null) {
+                    float forceGen = gameState.getPlayersTotalForceGeneration(context.getPlayerId());
+                    if (forceGen < 15.0f) {
+                        action.addReasoning("V29.14 WOKLING: Only generating " + forceGen + " Force — keep Wokling on table for force gen!", VERY_BAD_DELTA);
+                        logger.warn("V29.14 WOKLING: Force gen={}, need 15+ before placing out of play. BLOCKING.", forceGen);
+                    } else {
+                        int lostPileSize = gameState.getLostPile(context.getPlayerId()).size();
+                        if (lostPileSize > 5) {
+                            action.addReasoning("V29.14 WOKLING: Force gen=" + forceGen + " (15+) and lost pile=" + lostPileSize + " — OK to place out of play", GOOD_DELTA);
+                            logger.warn("V29.14 WOKLING: Force gen={}, lost pile={} — allowing place out of play", forceGen, lostPileSize);
+                        } else {
+                            action.addReasoning("V29.14 WOKLING: Force gen OK but lost pile too small (" + lostPileSize + ")", BAD_DELTA);
+                        }
+                    }
                 } else {
-                    action.addReasoning("Low lost pile - save retrieve", BAD_DELTA);
+                    int lostPileSize = gameState != null ? gameState.getLostPile(context.getPlayerId()).size() : 0;
+                    if (lostPileSize > 15) {
+                        action.addReasoning("High lost pile - retrieve worth it", GOOD_DELTA);
+                    } else {
+                        action.addReasoning("Low lost pile - save retrieve", BAD_DELTA);
+                    }
                 }
             }
 
             // ========== Defensive Shields ==========
-            // V29.1: Shield pacing — don't burn all 4 shield slots immediately.
-            // Play 2 shields on turn 1 to get basic protection, then WAIT to see
-            // what the opponent is running before committing the remaining slots.
-            // This lets us pick targeted counters instead of generic shields.
             else if (actionText.contains("Play a Defensive Shield")) {
                 if (!context.isMyTurn()) {
                     action.addReasoning("Defensive shield during opponent's turn - prefer pass", -10.0f);
                 } else {
-                    // Check shield pacing via ShieldStrategy
-                    com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy shieldStrat = context.getShieldStrategy();
-                    int turnNum = context.getTurnNumber();
-                    if (shieldStrat != null && shieldStrat.atPacingCap(turnNum)) {
-                        // We've played enough shields for this turn — hold remaining slots
-                        action.addReasoning("V29.1 SHIELD PACING: Holding shield slot — wait to scout opponent (turn " + turnNum + ")", -40.0f);
-                    } else {
-                        action.addReasoning("Defensive shield", VERY_GOOD_DELTA);
-                    }
+                    action.addReasoning("Defensive shield", VERY_GOOD_DELTA);
                 }
             }
 
@@ -1749,42 +1199,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     String.format("%.1f", action.getScore()));
             }
 
-            // ========== V29.6/V29.11: BLASTER RACK — ONLY RACK TO SAVE WEAPONS FROM DYING CHARACTERS ==========
-            // Blaster Rack stacks a weapon on it. This is ONLY useful at the END of a battle
-            // when a character carrying the weapon has been HIT or is about to be forfeited
-            // to satisfy attrition/battle damage. Proactively racking weapons outside of battle
-            // damage resolution is terrible — it strips characters of weapons before they can fire.
-            // Example: Vader had lightsaber, Rando racked it, Vader went to battle unarmed.
-            // Action text can be "Stack character weapon" OR contain "rack" + "stack"
-            else if ((textLower.contains("rack") && textLower.contains("stack"))
-                || (textLower.contains("stack") && textLower.contains("character weapon"))) {
-                Phase rackPhase = context.getPhase();
-                // Check if we're in battle damage/attrition resolution
-                // During battle damage, the decision text often references damage/attrition/forfeit
-                boolean duringBattleDamage = false;
-                try {
-                    GameState rackGs = context.getGameState();
-                    if (rackGs != null && rackGs.isDuringBattle()) {
-                        // We're in a battle — check if damage is being resolved
-                        // If the game is asking us to use rack during battle, it's likely
-                        // because we're about to lose the character carrying the weapon.
-                        duringBattleDamage = true;
-                    }
-                } catch (Exception e) {
-                    logger.debug("V29.6 RACK: Error checking battle state: {}", e.getMessage());
-                }
-
-                if (duringBattleDamage) {
-                    // During battle — racking to save a weapon from a dying character is GOOD
-                    action.addReasoning("V29.6 BLASTER RACK: Battle in progress — save weapon from dying character!", 80.0f);
-                    logger.warn("V29.6 BLASTER RACK: ALLOWED during battle — saving weapon! '{}'", actionText);
-                } else {
-                    // Outside battle — proactive racking is TERRIBLE
-                    action.addReasoning("V29.6 BLASTER RACK: Do NOT rack weapons outside battle — characters need them!", -500.0f);
-                    logger.warn("V29.6 BLASTER RACK: BLOCKED proactive racking outside battle — '{}'", actionText);
-                }
-            }
-
             // ========== Default/Unknown ==========
             else {
                 action.addReasoning("Unknown action type", 0.0f);
@@ -1813,13 +1227,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
         int lifeForce = reserveSize + forcePile + usedPile;
 
         int maxForcePile = 20;
-        // V29.13: Reduced reserve-for-destiny from 2-3 to 1.
-        // Old logic stopped activating when reserve had 2-3 cards, leaving Rando with
-        // too little Force to deploy characters. This caused a death spiral:
-        // low reserve → stop activating → can't deploy → lose battles → lower reserve.
-        // Having Force to deploy characters is MORE important than saving cards for
-        // destiny draws. If you can't deploy, you lose the game outright.
-        int reserveForDestiny = 1;
+        int reserveForDestiny = lifeForce < 10 ? 2 : 3;
 
         boolean wouldActivateZero = false;
         String skipReason = null;
@@ -1829,19 +1237,16 @@ public class ActionTextEvaluator extends ActionEvaluator {
             wouldActivateZero = true;
             skipReason = "Force pile at max (" + forcePile + "/" + maxForcePile + ")";
         }
-        // V29.13: Only stop activating when reserve is critically empty (≤1 card)
-        // This ensures Rando always has Force available for deployment
+        // Check if reserve too low
         else if (reserveSize <= reserveForDestiny) {
             wouldActivateZero = true;
-            skipReason = "Reserve (" + reserveSize + ") at minimum — save last card for destiny";
+            skipReason = "Reserve (" + reserveSize + ") needed for destiny draws";
         }
 
         if (wouldActivateZero) {
             action.addReasoning("Skip activation: " + skipReason, BAD_DELTA);
-        } else if (reserveSize < 4) {
-            // V29.13: Mild caution when reserve is low, but still activate
-            // (was < 5 with BAD_DELTA, now < 4 with mild penalty)
-            action.addReasoning("Reserve getting low (" + reserveSize + ") - still activating", -20.0f);
+        } else if (reserveSize < 5) {
+            action.addReasoning("Reserve critically low (" + reserveSize + ") - save for destiny", BAD_DELTA);
         } else {
             action.addReasoning("Activate force (good)", VERY_GOOD_DELTA);
         }
@@ -1930,7 +1335,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
         // Check if we're under Battle Order rules (force drains cost +3 extra)
         // Battle Order is typically triggered when opponent has mains + specific cards
         boolean underBattleOrder = false;
-        com.gempukku.swccgo.ai.models.rando.strategy.StrategyController strategyController = context.getStrategyController();
+        com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController strategyController = context.getStrategyController();
         if (strategyController != null) {
             underBattleOrder = strategyController.isUnderBattleOrderRules();
         }
@@ -2002,32 +1407,6 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 action.addReasoning("Force drain is good", VERY_GOOD_DELTA);
             }
         }
-
-        // === V29.9: HUNT DOWN FORCE DRAIN PRIORITY ===
-        // For Hunt Down (V or regular), force drains are extra valuable because:
-        // 1. Visage Of The Emperor adds +1 to each drain while we occupy a battleground
-        // 2. Vader's presence at battleground locations enables draining
-        // 3. Hunt Down V gives bonus force loss from lightsaber combat
-        // Boost force drains significantly when running Hunt Down objective.
-        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer drainObjAnalyzer = context.getObjectiveAnalyzer();
-        if (drainObjAnalyzer != null && drainObjAnalyzer.isAnalyzed() && drainObjAnalyzer.isHuntDownV()) {
-            // Check if we're draining at a location with opponent icons (actual drain value)
-            boolean highValueDrain = false;
-            if (gameState != null && locationCardId != null) {
-                try {
-                    PhysicalCard drainLoc = gameState.findCardById(Integer.parseInt(locationCardId));
-                    if (drainLoc != null && drainLoc.getBlueprint() != null) {
-                        int oppIcons = drainLoc.getBlueprint().getIconCount(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
-                        if (oppIcons >= 2) {
-                            highValueDrain = true;
-                            action.addReasoning("V29.9 HUNT DOWN DRAIN: High-value drain location (" + oppIcons + " opponent icons)!", 40.0f);
-                        }
-                    }
-                } catch (Exception e) { /* ignore */ }
-            }
-            // General Hunt Down drain boost
-            action.addReasoning("V29.9 HUNT DOWN: Force drains are critical — Visage adds +1, keep pressure on!", 30.0f);
-        }
     }
 
     private void evaluatePlayCard(EvaluatedAction action, DecisionContext context) {
@@ -2098,32 +1477,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
     private void evaluateTakeIntoHand(EvaluatedAction action, DecisionContext context, String actionText, String textLower) {
         if (textLower.contains("palpatine")) {
             action.addReasoning("Avoid taking Palpatine", BAD_DELTA);
-            return;
-        }
-
-        // V29.7: Detect RETURN-TO-HAND (bouncing own card from table) vs RETRIEVE (from deck).
-        // Retrieval actions always specify the source: "from Reserve Deck", "from Force Pile", etc.
-        // If no source pile is mentioned, the card is being RETURNED from table — that's BAD!
-        // Example: Corporal Vandolay's "Take an ISB agent into hand" = bounce deployed character.
-        // EXCEPTION: "destiny" / "re-draw" actions are battle destiny management, NOT bounces.
-        boolean isFromDeck = textLower.contains("from reserve") || textLower.contains("from force pile")
-            || textLower.contains("from used pile") || textLower.contains("from lost pile");
-        boolean isDestinyAction = textLower.contains("destiny") || textLower.contains("re-draw")
-            || textLower.contains("redraw");
-
-        if (!isFromDeck && !isDestinyAction) {
-            // This is a bounce/return from table — VERY bad! We just paid to deploy that character.
-            action.addReasoning("V29.7 BOUNCE: Return own card from table to hand — DON'T undo your deploy!", -300.0f);
-            logger.warn("V29.7 BOUNCE BLOCKED: '{}' would return deployed card to hand (-300)", actionText);
-        } else if (isFromDeck && textLower.contains("from reserve")) {
-            // V29.7: PULL FIRST RULE — retrievals from Reserve Deck are FREE actions
-            // from effects like Endor Shield, Mobilization Points, etc.
-            // These should ALWAYS fire before locations (+200) and characters.
-            // Getting cards into hand first = better deploy decisions.
-            action.addReasoning("V29.7 PULL FIRST: Get cards into hand before deploying!", 250.0f);
         } else {
-            // From force pile, used pile, or destiny management — normal priority
-            action.addReasoning("Take card into hand", GOOD_DELTA);
+            String blueprintId = extractBlueprintFromText(actionText);
+            if (blueprintId != null) {
+                // Could look up card metadata here if needed
+                action.addReasoning("Take card into hand", GOOD_DELTA);
+            } else {
+                action.addReasoning("Taking card into hand", GOOD_DELTA);
+            }
         }
     }
 

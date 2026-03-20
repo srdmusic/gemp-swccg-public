@@ -232,9 +232,16 @@ case "$1" in
     reload-fast)
         print_status "Rebuilding and restarting application (skipping tests)..."
         if check_containers; then
-            # Run Maven build inside container and wait for completion
-            print_status "Running Maven build (skipping tests)..."
-            if ! docker exec gemp_swccg_app_1 mvn install -DskipTests; then
+            # Kill Java process first to release file locks on target/ classes
+            print_status "Stopping Java process to release file locks..."
+            docker exec gemp_swccg_app_1 bash -c "pkill -f web.jar 2>/dev/null" || true
+            sleep 2
+
+            # Run Maven CLEAN build inside container — 'clean' is required on macOS Docker
+            # because volume mount timestamp syncing is unreliable, causing Maven's
+            # incremental compiler to skip changed files.
+            print_status "Running Maven clean build (skipping tests)..."
+            if ! docker exec gemp_swccg_app_1 bash -c "cd /opt/gemp-swccg/src && mvn clean install -DskipTests"; then
                 print_error "Maven build failed!"
                 exit 1
             fi

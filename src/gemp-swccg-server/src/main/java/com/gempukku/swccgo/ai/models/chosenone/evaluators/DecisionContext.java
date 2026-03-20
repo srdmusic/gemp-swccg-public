@@ -1,12 +1,12 @@
-package com.gempukku.swccgo.ai.models.rando.evaluators;
+package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
-import com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle;
-import com.gempukku.swccgo.ai.models.rando.strategy.OpponentDeckTracker;
-import com.gempukku.swccgo.ai.models.rando.strategy.DeployPhasePlanner;
-import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer;
-import com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveHandler;
-import com.gempukku.swccgo.ai.models.rando.strategy.ShieldStrategy;
-import com.gempukku.swccgo.ai.models.rando.strategy.StrategyController;
+import com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle;
+import com.gempukku.swccgo.ai.models.chosenone.strategy.OpponentDeckTracker;
+import com.gempukku.swccgo.ai.models.chosenone.strategy.DeployPhasePlanner;
+import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer;
+import com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveHandler;
+import com.gempukku.swccgo.ai.models.chosenone.strategy.ShieldStrategy;
+import com.gempukku.swccgo.ai.models.chosenone.strategy.StrategyController;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
 import com.gempukku.swccgo.game.PhysicalCard;

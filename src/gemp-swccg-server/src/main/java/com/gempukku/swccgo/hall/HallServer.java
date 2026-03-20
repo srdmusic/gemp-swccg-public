@@ -1111,7 +1111,15 @@ public class HallServer extends AbstractServer {
             swccgGameMediator.addGameResultListener(listener);
         }
         if (aiPlayerId != null) {
-            AiRegistry.register(swccgGameMediator.getGameId(), aiPlayerId, createAiForSkill(aiSkill));
+            SwccgAiController aiController = createAiForSkill(aiSkill);
+            // V29.15: Pass deck name so AI can make saga-aware Epic Event choices
+            for (SwccgGameParticipant p : participants) {
+                if (p.getPlayerId().equals(aiPlayerId) && p.getDeck() != null) {
+                    aiController.setDeckName(p.getDeck().getDeckName());
+                    break;
+                }
+            }
+            AiRegistry.register(swccgGameMediator.getGameId(), aiPlayerId, aiController);
             // Add bot stats tracking for AI games (both result listener and real-time state listener)
             if (_botStatsDAO != null) {
                 BotStatsGameResultListener botStatsListener = new BotStatsGameResultListener(
@@ -1207,8 +1215,12 @@ public class HallServer extends AbstractServer {
 
             // Register BOTH AIs in AiRegistry
             String gameId = swccgGameMediator.getGameId();
-            AiRegistry.register(gameId, lightPlayerId, createAiForSkill(lightSkill));
-            AiRegistry.register(gameId, darkPlayerId, createAiForSkill(darkSkill));
+            SwccgAiController lightAi = createAiForSkill(lightSkill);
+            lightAi.setDeckName(lightDeckName);  // V29.15: Pass deck name for saga-aware choices
+            AiRegistry.register(gameId, lightPlayerId, lightAi);
+            SwccgAiController darkAi = createAiForSkill(darkSkill);
+            darkAi.setDeckName(darkDeckName);  // V29.15: Pass deck name for saga-aware choices
+            AiRegistry.register(gameId, darkPlayerId, darkAi);
 
             // Set up chat room for both bots
             ChatRoomMediator gameChatRoom = _swccgoServer.getGameChatRoom(gameId);

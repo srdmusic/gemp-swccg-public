@@ -6,7 +6,7 @@ services:
     container_name: ${APP_CONTAINER_NAME}
     build: 
       context: .
-      dockerfile: gemp_app.Dockerfile
+      dockerfile: ./docker/gemp_app.Dockerfile
     image: gemp_app
     expose:
       - "80"
@@ -22,16 +22,16 @@ services:
         published: "${DEBUGGER_PORT}"
     volumes:
        - type: bind
-         source: ../gemp-swccg-async/src/main/web
+         source: /Users/steve/gemp-swccg-public/src/gemp-swccg-async/src/main/web
          target: /opt/gemp-swccg/web
        - type: bind
-         source: ../..
+         source: /Users/steve/gemp-swccg-public
          target: /opt/gemp-swccg
        - type: bind
-         source: ../../logs
+         source: /Users/steve/gemp-swccg-public/logs
          target: /logs
        - type: bind
-         source: ../../logs/nohup.out
+         source: /Users/steve/gemp-swccg-public/logs/nohup.out
          target: /opt/gemp-swccg/src/nohup.out
     networks:
       gemp_net_1:
@@ -40,7 +40,7 @@ services:
     command: >
       nohup 
       java -Xmx15g 
-      -javaagent:/opt/gemp-swccg/newrelic.jar
+      -javaagent:/opt/gemp-swccg/newrelic/newrelic.jar
       -Dlog4j.debug 
       -Dlog4j.configurationFile=/opt/gemp-swccg/src/gemp-swccg-async/src/main/resources/prod-log4j.xml 
       -jar /opt/gemp-swccg/src/gemp-swccg-async/target/web.jar 

@@ -359,6 +359,141 @@ public class MoveEvaluator extends ActionEvaluator {
                         }
                     }
 
+                    // === V32: ABILITY >= 4 MOVE PROTECTION ===
+                    // SWCCG requires total ability >= 4 at a site to draw battle destiny.
+                    // NEVER move a character away from a site if it leaves remaining
+                    // friendly ability < 4. This is even more important than V27 buddy
+                    // protection because it directly affects battle destiny draws.
+                    {
+                        // Check if current location is a site (ability rule applies to sites)
+                        boolean isSite = currentLocation.getBlueprint() != null
+                            && currentLocation.getBlueprint().getCardSubtype() != null
+                            && currentLocation.getBlueprint().getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE;
+
+                        if (isSite) {
+                            float totalAbilityHere = 0;
+                            float moverAbility = 0;
+                            int friendlyCharsHere = 0;
+
+                            // Get mover's ability
+                            if (cardToMove.getBlueprint() != null && cardToMove.getBlueprint().hasAbilityAttribute()) {
+                                Float ma = cardToMove.getBlueprint().getAbility();
+                                moverAbility = ma != null ? ma : 0;
+                            }
+
+                            // Sum all friendly character ability at this site
+                            for (PhysicalCard c : gameState.getCardsAtLocation(currentLocation)) {
+                                if (c == null || !playerId.equals(c.getOwner())) continue;
+                                if (c.getBlueprint() == null) continue;
+                                if (c.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                                friendlyCharsHere++;
+                                if (c.getBlueprint().hasAbilityAttribute()) {
+                                    Float cAb = c.getBlueprint().getAbility();
+                                    totalAbilityHere += (cAb != null ? cAb : 0);
+                                }
+                            }
+
+                            float abilityAfterMove = totalAbilityHere - moverAbility;
+
+                            // Only applies if there will be remaining characters after move
+                            if (friendlyCharsHere > 1 && abilityAfterMove > 0 && abilityAfterMove < 4.0f) {
+                                // Moving away drops ability below 4 — heavy penalty
+                                float abilityPenalty = -300.0f;
+
+                                // Check if opponent has presence (makes it even worse)
+                                String v32Opponent = game.getOpponent(playerId);
+                                float theirPower = 0;
+                                try {
+                                    theirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, currentLocation, v32Opponent, false, false);
+                                } catch (Exception e) { /* ignore */ }
+
+                                if (theirPower > 0) {
+                                    abilityPenalty = -500.0f; // Enemy present + can't draw destiny = disaster
+                                }
+
+                                action.addReasoning(String.format(
+                                    "V32 ABILITY DANGER: Moving %s away drops ability from %.0f to %.0f (< 4) at %s! NO BATTLE DESTINY!%s",
+                                    cardToMove.getTitle(), totalAbilityHere, abilityAfterMove,
+                                    currentLocation.getTitle(),
+                                    theirPower > 0 ? " ENEMY POWER=" + (int)theirPower : ""),
+                                    abilityPenalty);
+                                logger.warn("V32 ABILITY MOVE BLOCK: {} moving from {} would leave ability {} < 4!{}",
+                                    cardToMove.getTitle(), currentLocation.getTitle(),
+                                    abilityAfterMove, theirPower > 0 ? " ENEMY=" + (int)theirPower : "");
+                            } else if (friendlyCharsHere == 1 && totalAbilityHere < 4.0f) {
+                                // This is the ONLY character and has < 4 ability — moving AWAY is actually GOOD
+                                // because we should consolidate with allies who have more ability
+                                action.addReasoning(String.format(
+                                    "V32 ABILITY SOLO ESCAPE: %s alone with ability %.0f < 4 — move to join allies!",
+                                    cardToMove.getTitle(), totalAbilityHere), 50.0f);
+                            }
+                        }
+                    }
+
+                    // === V31: POST-FLIP MOVE CONSOLIDATION ===
+                    // After objective flips, if we occupy 3+ objective locations but only
+                    // need 2 to prevent flip-back, move characters from the weakest/3rd
+                    // location to reinforce the 2 strongest. This reduces the defense burden.
+                    {
+                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer moveConsolidateAnalyzer =
+                            context.getObjectiveAnalyzer();
+                        if (moveConsolidateAnalyzer != null && moveConsolidateAnalyzer.isAnalyzed()
+                            && moveConsolidateAnalyzer.isFlipped()) {
+                            try {
+                                java.util.Set<String> objFrags = moveConsolidateAnalyzer.getFlipConditionLocationFragments();
+                                String curLocTitle = currentLocation.getTitle();
+                                boolean atObjLoc = false;
+                                if (curLocTitle != null) {
+                                    for (String frag : objFrags) {
+                                        if (curLocTitle.toLowerCase(Locale.ROOT).contains(frag.toLowerCase(Locale.ROOT))) {
+                                            atObjLoc = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                // Count occupied objective locations and find the weakest
+                                java.util.Map<String, Float> objPowerMap = new java.util.LinkedHashMap<>();
+                                for (PhysicalCard loc : gameState.getTopLocations()) {
+                                    if (loc == null || loc.getTitle() == null) continue;
+                                    String lt = loc.getTitle().toLowerCase(Locale.ROOT);
+                                    boolean isObj = false;
+                                    for (String frag : objFrags) {
+                                        if (lt.contains(frag.toLowerCase(Locale.ROOT))) { isObj = true; break; }
+                                    }
+                                    if (!isObj) continue;
+                                    float pwr = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, loc, playerId, false, false);
+                                    if (pwr > 0) objPowerMap.put(loc.getTitle(), pwr);
+                                }
+
+                                if (objPowerMap.size() >= 3 && atObjLoc) {
+                                    // Find the weakest objective location
+                                    String weakestObjLoc = null;
+                                    float weakestPwr = Float.MAX_VALUE;
+                                    for (java.util.Map.Entry<String, Float> entry : objPowerMap.entrySet()) {
+                                        if (entry.getValue() < weakestPwr) {
+                                            weakestPwr = entry.getValue();
+                                            weakestObjLoc = entry.getKey();
+                                        }
+                                    }
+
+                                    // If we're AT the weakest location, encourage moving to reinforce a stronger one
+                                    if (weakestObjLoc != null && curLocTitle.equals(weakestObjLoc)) {
+                                        action.addReasoning(String.format(
+                                            "V31 POST-FLIP CONSOLIDATE: At weakest obj loc %s (power %.0f) — move to reinforce stronger position!",
+                                            weakestObjLoc, weakestPwr), 200.0f);
+                                        logger.warn("V31 POST-FLIP CONSOLIDATE: {} should leave {} (weakest, power={}) to reinforce",
+                                            cardToMove.getTitle(), weakestObjLoc, (int)weakestPwr);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                logger.debug("V31 MOVE CONSOLIDATE: Error: {}", e.getMessage());
+                            }
+                        }
+                    }
+
                     // === V29.12: HUNT DOWN — VADER MUST LEAVE CASTLE AND HUNT ===
                     // When playing Hunt Down V, armed Vader sitting at an uncontested location
                     // (like Vader's Castle) is WASTING turns. The whole point of Hunt Down is

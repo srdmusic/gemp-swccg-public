@@ -24,16 +24,16 @@ services:
         published: "${DEBUGGER_PORT}"
     volumes:
        - type: bind
-         source: ../gemp-swccg-async/src/main/web
+         source: /Users/steve/gemp-swccg-public/src/gemp-swccg-async/src/main/web
          target: /opt/gemp-swccg/web
        - type: bind
-         source: ../..
+         source: /Users/steve/gemp-swccg-public
          target: /opt/gemp-swccg
        - type: bind
-         source: ../../logs
+         source: /Users/steve/gemp-swccg-public/logs
          target: /logs
        - type: bind
-         source: ../../logs/nohup.out
+         source: /Users/steve/gemp-swccg-public/logs/nohup.out
          target: /opt/gemp-swccg/src/nohup.out
     networks:
       gemp_net_1:
@@ -67,7 +67,7 @@ services:
       # Shut down the container and delete the CONTENTS of the 
       # folder if you wish to rebuild a fresh database.
        - type: bind
-         source: ../../database
+         source: /Users/steve/gemp-swccg-public/database
          target: /var/lib/mysql
     networks:
       gemp_net_1:
