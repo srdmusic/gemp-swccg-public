@@ -84,7 +84,7 @@ public class AbilityRequiredForBattleDestinyModifier extends AbstractModifier {
     }
 
     @Override
-    public float getUnmodifiableAbilityRequiredToDrawBattleDestiny(String playerId, GameState gameState, ModifiersQuerying modifiersQuerying) {
+    public float getAbilityHardRequirementToDrawBattleDestiny(String playerId, GameState gameState, ModifiersQuerying modifiersQuerying) {
         if (_playerId.equals(playerId))
             return _evaluator.evaluateExpression(gameState, modifiersQuerying, null);
         else

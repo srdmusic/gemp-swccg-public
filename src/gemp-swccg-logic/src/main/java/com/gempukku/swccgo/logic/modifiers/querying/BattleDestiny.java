@@ -43,7 +43,7 @@ public interface BattleDestiny extends BaseQuery, Flags, LocationControl {
 
 		for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.ABILITY_HARD_REQUIREMENT_FOR_BATTLE_DESTINY, battleState.getBattleLocation())) {
 			if (modifier.isForPlayer(player)) {
-				float value = modifier.getUnmodifiableAbilityRequiredToDrawBattleDestiny(player, gameState, query());
+				float value = modifier.getAbilityHardRequirementToDrawBattleDestiny(player, gameState, query());
 				abilityRequiredWasChanged = true;
 				abilityRequired = Math.max(abilityRequired, value);
 			}
@@ -51,7 +51,7 @@ public interface BattleDestiny extends BaseQuery, Flags, LocationControl {
 
 		for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.ABILITY_MORE_THAN_HARD_REQUIREMENT_FOR_BATTLE_DESTINY, battleState.getBattleLocation())) {
 			if (modifier.isForPlayer(player)) {
-				float value = modifier.getUnmodifiableAbilityRequiredToDrawBattleDestiny(player, gameState, query());
+				float value = modifier.getAbilityHardRequirementToDrawBattleDestiny(player, gameState, query());
 				if (!abilityRequiredWasChanged || value >= abilityRequired) {
 					abilityRequiredWasChanged = true;
 					moreThanAbilityRequired = true;
