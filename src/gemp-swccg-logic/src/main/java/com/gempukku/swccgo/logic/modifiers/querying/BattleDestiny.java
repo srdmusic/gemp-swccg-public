@@ -28,46 +28,60 @@ public interface BattleDestiny extends BaseQuery, Flags, LocationControl {
 		if (battleState == null)
 			return 0;
 
-		int result = 0;
-		float abilityRequired = 4;
-		boolean abilityRequiredWasChanged = false;
-		boolean moreThanAbilityRequired = false;
+		int result = 0; // Number of battle destiny draws for player.
 
-		for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.ABILITY_REQUIRED_FOR_BATTLE_DESTINY_MODIFIER, battleState.getBattleLocation())) {
-			if (modifier.isForPlayer(player)) {
-				float value = modifier.getAbilityRequiredToDrawBattleDestinyModifier(player, gameState, query());
-				abilityRequiredWasChanged = true;
-				abilityRequired += value;
-			}
-		}
+		float abilityBasicThreshold = 4; // Ability that entitles user to a "normal" battle destiny draw. If not satisfied, the "normal" draw is denied, but added draws are still allowed.
+		float abilityHardRequirement = 0; // If set (e.g. Prince Xizor sets this to 6) and not satisfied, the "normal" battle destiny draw AND added battle destiny draws are all denied.
+		float abilityMoreThanHardRequirement = 0; // If set (e.g. Vader's Personal Shuttle sets this to 5) and not satisfied, the "normal" battle destiny draw AND added battle destiny draws are all denied.
+		boolean abilityHardRequirementSet = false;
+		boolean abilityMoreThanHardRequirementSet = false;
 
+		// For cards like Prince Xizor, find the strictest requirement.
 		for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.ABILITY_HARD_REQUIREMENT_FOR_BATTLE_DESTINY, battleState.getBattleLocation())) {
 			if (modifier.isForPlayer(player)) {
 				float value = modifier.getAbilityHardRequirementToDrawBattleDestiny(player, gameState, query());
-				abilityRequiredWasChanged = true;
-				abilityRequired = Math.max(abilityRequired, value);
+				abilityHardRequirement = Math.max(abilityHardRequirement, value);
+				abilityHardRequirementSet = true;
 			}
 		}
 
+		// For cards like Vader's Personal Shuttle,, find the strictest requirement.
 		for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.ABILITY_MORE_THAN_HARD_REQUIREMENT_FOR_BATTLE_DESTINY, battleState.getBattleLocation())) {
 			if (modifier.isForPlayer(player)) {
 				float value = modifier.getAbilityHardRequirementToDrawBattleDestiny(player, gameState, query());
-				if (!abilityRequiredWasChanged || value >= abilityRequired) {
-					abilityRequiredWasChanged = true;
-					moreThanAbilityRequired = true;
-					abilityRequired = Math.max(abilityRequired, value);
+				abilityMoreThanHardRequirement = Math.max(abilityMoreThanHardRequirement, value);
+				abilityMoreThanHardRequirementSet = true;
+			}
+		}
+
+		// Cards like Doikk Na'ts now increase all types of thresholds/requirements that already exist.
+		for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.ABILITY_REQUIRED_FOR_BATTLE_DESTINY_MODIFIER, battleState.getBattleLocation())) {
+			if (modifier.isForPlayer(player)) {
+				float value = modifier.getAbilityRequiredToDrawBattleDestinyModifier(player, gameState, query());
+				abilityBasicThreshold += value;
+				if (abilityHardRequirementSet) {
+					abilityHardRequirement += value;
+				}
+				if (abilityMoreThanHardRequirementSet) {
+					abilityMoreThanHardRequirement += value;
 				}
 			}
 		}
 
 		float abilityForBattle = getTotalAbilityAtLocation(gameState, player, battleState.getBattleLocation(), false, false, true, battleState.getPlayerInitiatedBattle(), true, false, null);
-		if ((!moreThanAbilityRequired && (abilityForBattle >= abilityRequired)) || (abilityForBattle > abilityRequired))
-			result = 1;
 
-		// Skip destiny draw adders if ability required was changed and requirement is not met
-		if (!abilityRequiredWasChanged
-				|| (!moreThanAbilityRequired && (abilityForBattle >= abilityRequired))
-				|| (abilityForBattle > abilityRequired)) {
+		// Find out if player gets 1 "normal" battle destiny draw for having enough ability. All requirements must be met.
+		// Example: A lone IG-88 With Riot Gun fails this step because he never meets the abilityBasicThreshold
+		if (abilityForBattle > abilityBasicThreshold
+				&& (!abilityHardRequirementSet || (abilityForBattle >= abilityHardRequirement))
+				&& (!abilityMoreThanHardRequirementSet || (abilityForBattle > abilityMoreThanHardRequirement))) {
+			result = 1;
+		}
+
+		// Find out if player is allowed to add battle destiny draws (only the hard requirements, if any exist, must be met).
+		// Example: A lone IG-88 With Riot Gun will pass this step, but only if there are no hard requirements.
+		if ((!abilityHardRequirementSet || (abilityForBattle >= abilityHardRequirement))
+				&& (!abilityMoreThanHardRequirementSet || (abilityForBattle > abilityMoreThanHardRequirement))) {
 			for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.NUM_BATTLE_DESTINY_DRAWS, battleState.getBattleLocation())) {
 				if (modifier.isForPlayer(player)) {
 					result += modifier.getValue(gameState, query(), battleState.getBattleLocation());
