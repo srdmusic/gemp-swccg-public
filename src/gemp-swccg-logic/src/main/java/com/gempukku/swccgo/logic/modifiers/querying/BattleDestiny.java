@@ -3,7 +3,6 @@ package com.gempukku.swccgo.logic.modifiers.querying;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.DestinyType;
 import com.gempukku.swccgo.game.PhysicalCard;
-import com.gempukku.swccgo.game.state.AttackState;
 import com.gempukku.swccgo.game.state.BattleState;
 import com.gempukku.swccgo.game.state.DrawDestinyState;
 import com.gempukku.swccgo.game.state.GameState;
@@ -11,7 +10,6 @@ import com.gempukku.swccgo.logic.effects.DrawDestinyEffect;
 import com.gempukku.swccgo.logic.modifiers.Modifier;
 import com.gempukku.swccgo.logic.modifiers.ModifierFlag;
 import com.gempukku.swccgo.logic.modifiers.ModifierType;
-import com.gempukku.swccgo.logic.modifiers.NumDestinyDrawsDuringAttackModifier;
 
 import java.util.*;
 
@@ -43,7 +41,7 @@ public interface BattleDestiny extends BaseQuery, Flags, LocationControl {
 			}
 		}
 
-		for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.UNMODIFIABLE_ABILITY_REQUIRED_FOR_BATTLE_DESTINY, battleState.getBattleLocation())) {
+		for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.ABILITY_HARD_REQUIREMENT_FOR_BATTLE_DESTINY, battleState.getBattleLocation())) {
 			if (modifier.isForPlayer(player)) {
 				float value = modifier.getUnmodifiableAbilityRequiredToDrawBattleDestiny(player, gameState, query());
 				abilityRequiredWasChanged = true;
@@ -51,7 +49,7 @@ public interface BattleDestiny extends BaseQuery, Flags, LocationControl {
 			}
 		}
 
-		for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.UNMODIFIABLE_ABILITY_MORE_THAN_REQUIRED_FOR_BATTLE_DESTINY, battleState.getBattleLocation())) {
+		for (Modifier modifier : getModifiersAffectingCard(gameState, ModifierType.ABILITY_MORE_THAN_HARD_REQUIREMENT_FOR_BATTLE_DESTINY, battleState.getBattleLocation())) {
 			if (modifier.isForPlayer(player)) {
 				float value = modifier.getUnmodifiableAbilityRequiredToDrawBattleDestiny(player, gameState, query());
 				if (!abilityRequiredWasChanged || value >= abilityRequired) {
