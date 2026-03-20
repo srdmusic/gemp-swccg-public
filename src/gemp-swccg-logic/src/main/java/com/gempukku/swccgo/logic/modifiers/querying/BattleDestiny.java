@@ -72,7 +72,7 @@ public interface BattleDestiny extends BaseQuery, Flags, LocationControl {
 
 		// Find out if player gets 1 "normal" battle destiny draw for having enough ability. All requirements must be met.
 		// Example: A lone IG-88 With Riot Gun fails this step because he never meets the abilityBasicThreshold
-		if (abilityForBattle > abilityBasicThreshold
+		if (abilityForBattle >= abilityBasicThreshold
 				&& (!abilityHardRequirementSet || (abilityForBattle >= abilityHardRequirement))
 				&& (!abilityMoreThanHardRequirementSet || (abilityForBattle > abilityMoreThanHardRequirement))) {
 			result = 1;
