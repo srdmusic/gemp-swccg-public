@@ -129,7 +129,7 @@ public class BattleEvaluator extends ActionEvaluator {
             EvaluatedAction action = new EvaluatedAction(
                 actionId,
                 ActionType.BATTLE,
-                50.0f,  // Base score
+                100.0f,  // V34: Raised base score from 50 — bot needs to actually fight
                 actionText
             );
 
@@ -192,12 +192,12 @@ public class BattleEvaluator extends ActionEvaluator {
                                             targetLocation.getTitle(), (int)ourPower, (int)theirPower);
                                     } else if (effectiveDiff >= MARGINAL_THRESHOLD) {
                                         foundFavorableBattle = true;
-                                        action.addReasoning(String.format("Favorable battle at %s (power %.0f vs %.0f, ability %.0f vs %.0f)",
-                                            targetLocation.getTitle(), ourPower, theirPower, ourAbility, theirAbility), 40.0f);
+                                        action.addReasoning(String.format("V34 Favorable battle at %s (power %.0f vs %.0f, ability %.0f vs %.0f)",
+                                            targetLocation.getTitle(), ourPower, theirPower, ourAbility, theirAbility), 150.0f); // V34: Raised from 40
                                     } else if (effectiveDiff >= -MARGINAL_THRESHOLD) {
-                                        // Close to even — mild discourage
-                                        action.addReasoning(String.format("Even battle at %s (power %.0f vs %.0f) - risky",
-                                            targetLocation.getTitle(), ourPower, theirPower), -30.0f);
+                                        // V34: Close to even — still worth trying if we have presence
+                                        action.addReasoning(String.format("V34 Even battle at %s (power %.0f vs %.0f) - marginal",
+                                            targetLocation.getTitle(), ourPower, theirPower), 30.0f); // V34: Changed from -30 to +30
                                     } else {
                                         // Unfavorable — strong discourage
                                         float penalty = -60.0f;

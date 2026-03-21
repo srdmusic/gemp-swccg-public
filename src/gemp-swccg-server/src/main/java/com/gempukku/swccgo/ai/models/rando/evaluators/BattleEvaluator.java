@@ -129,7 +129,7 @@ public class BattleEvaluator extends ActionEvaluator {
             EvaluatedAction action = new EvaluatedAction(
                 actionId,
                 ActionType.BATTLE,
-                50.0f,  // Base score
+                100.0f,  // V34: Raised base score from 50 — Rando needs to actually fight
                 actionText
             );
 
@@ -327,12 +327,12 @@ public class BattleEvaluator extends ActionEvaluator {
                                         action.addReasoning(String.format("V29.7 WEAPONS NOT ENOUGH: power %.0f+weapons vs %.0f — still risky",
                                             ourPower, theirPower), -150.0f);
                                     } else if (weaponEffectiveDiff >= FAVORABLE_THRESHOLD) {
-                                        // Strong advantage (with weapons) — good to initiate
+                                        // V34: Strong advantage (with weapons) — FIGHT!
                                         foundFavorableBattle = true;
-                                        float battleBonus = 40.0f;
+                                        float battleBonus = 150.0f; // V34: Raised from 40 — Rando was too passive
                                         String battleReason;
                                         if (weaponBonus > 0) {
-                                            battleBonus += weaponBonus * 5.0f; // Extra bonus for being armed
+                                            battleBonus += weaponBonus * 10.0f; // V34: Raised from 5x — weapons are devastating
                                             if (ourVaderHere && lukeHere) {
                                                 battleBonus += 100.0f; // HUGE bonus: Vader vs Luke (Hunt Down!)
                                                 battleReason = String.format("V29.7 VADER vs LUKE at %s! Power %.0f + weapons vs %.0f — CHALLENGE!",
@@ -349,9 +349,9 @@ public class BattleEvaluator extends ActionEvaluator {
                                         action.addReasoning(battleReason, battleBonus);
                                     } else if (weaponEffectiveDiff >= MARGINAL_THRESHOLD) {
                                         if (weaponBonus > 0) {
-                                            // Marginal with weapons — worth trying, weapons tip the balance
-                                            action.addReasoning(String.format("V29.7 ARMED MARGINAL at %s (power %.0f + weapons vs %.0f) — weapons help!",
-                                                targetLocation.getTitle(), ourPower, theirPower), 10.0f);
+                                            // V34: Marginal with weapons — weapons tip the balance, GO FIGHT
+                                            action.addReasoning(String.format("V34 ARMED MARGINAL at %s (power %.0f + weapons vs %.0f) — weapons help!",
+                                                targetLocation.getTitle(), ourPower, theirPower), 80.0f);
                                         } else {
                                             // Slight advantage but risky without weapons
                                             action.addReasoning(String.format("V29 MARGINAL at %s (power %.0f vs %.0f) — risky with weapons",
@@ -461,8 +461,8 @@ public class BattleEvaluator extends ActionEvaluator {
                         }
                         if (theirDrain >= 2 && hasWinnableBattle && isBehindOnLifeForce) {
                             action.addReasoning(
-                                String.format("V22 MUST-FIGHT: Opponent draining from %d uncontested locations, we're behind - must engage", theirDrain),
-                                80.0f);
+                                String.format("V34 MUST-FIGHT: Opponent draining from %d uncontested locations, we're behind - must engage!", theirDrain),
+                                200.0f); // V34: Raised from 80 — inaction = guaranteed loss
                             logger.warn("[BattleEvaluator] V22 MUST-FIGHT override: drain threat={}, behind=true", theirDrain);
                         } else if (theirDrain >= 2 && !hasWinnableBattle && isBehindOnLifeForce) {
                             logger.warn("V29 MUST-FIGHT BLOCKED: Behind on life but outpowered everywhere — don't suicide!");

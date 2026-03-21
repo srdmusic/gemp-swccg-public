@@ -431,6 +431,51 @@ public class MoveEvaluator extends ActionEvaluator {
                         }
                     }
 
+                    // === V33: ABILITY 7 BUDDY MOVE PROTECTION ===
+                    // Don't move a character away from a site if it drops friendly ability
+                    // below the buddy threshold (7). This complements the V33 deploy bonus.
+                    {
+                        boolean v33IsSite = currentLocation.getBlueprint() != null
+                            && currentLocation.getBlueprint().getCardSubtype() != null
+                            && currentLocation.getBlueprint().getCardSubtype() == com.gempukku.swccgo.common.CardSubtype.SITE;
+
+                        if (v33IsSite) {
+                            float v33TotalAbility = 0;
+                            float v33MoverAbility = 0;
+                            int v33FriendlyChars = 0;
+
+                            if (cardToMove.getBlueprint() != null && cardToMove.getBlueprint().hasAbilityAttribute()) {
+                                Float v33Ma = cardToMove.getBlueprint().getAbility();
+                                v33MoverAbility = v33Ma != null ? v33Ma : 0;
+                            }
+
+                            for (PhysicalCard c : gameState.getCardsAtLocation(currentLocation)) {
+                                if (c == null || !playerId.equals(c.getOwner())) continue;
+                                if (c.getBlueprint() == null) continue;
+                                if (c.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                                v33FriendlyChars++;
+                                if (c.getBlueprint().hasAbilityAttribute()) {
+                                    Float cAb = c.getBlueprint().getAbility();
+                                    v33TotalAbility += (cAb != null ? cAb : 0);
+                                }
+                            }
+
+                            float v33AbilityAfterMove = v33TotalAbility - v33MoverAbility;
+
+                            // Only penalize if currently >= 7 and would drop below 7
+                            if (v33FriendlyChars > 1 && v33TotalAbility >= RandoConfig.ABILITY_BUDDY_THRESHOLD
+                                && v33AbilityAfterMove < RandoConfig.ABILITY_BUDDY_THRESHOLD && v33AbilityAfterMove >= 4.0f) {
+                                action.addReasoning(String.format(
+                                    "V33 BUDDY BREAK: Moving %s drops ability from %.0f to %.0f (< %d) at %s",
+                                    cardToMove.getTitle(), v33TotalAbility, v33AbilityAfterMove,
+                                    RandoConfig.ABILITY_BUDDY_THRESHOLD, currentLocation.getTitle()), -150.0f);
+                                logger.warn("V33 BUDDY BREAK: {} from {} would drop ability {} → {} (< {})",
+                                    cardToMove.getTitle(), currentLocation.getTitle(),
+                                    v33TotalAbility, v33AbilityAfterMove, RandoConfig.ABILITY_BUDDY_THRESHOLD);
+                            }
+                        }
+                    }
+
                     // === V31: POST-FLIP MOVE CONSOLIDATION ===
                     // After objective flips, if we occupy 3+ objective locations but only
                     // need 2 to prevent flip-back, move characters from the weakest/3rd
@@ -1327,6 +1372,92 @@ public class MoveEvaluator extends ActionEvaluator {
                 }
             } catch (Exception e) {
                 logger.debug("V29.13 DRAIN CHECK: Error: {}", e.getMessage());
+            }
+        }
+
+        // === V34: DESTINATION-AWARE CONTEST BONUS ===
+        // Check if the specific destination of this move has opponents.
+        // Moving TOWARD opponents = good (can battle next turn, block their drains).
+        // Moving to empty location while opponents drain uncontested elsewhere = bad.
+        // This fixes the bug where Hunt Down and weapon hunter bonuses applied equally
+        // to ALL move actions regardless of where they actually go.
+        {
+            String v34ActionText = action.getDisplayText() != null
+                ? action.getDisplayText().toLowerCase(Locale.ROOT) : "";
+            PhysicalCard v34Dest = null;
+
+            for (PhysicalCard locCard : gameState.getLocationsInOrder()) {
+                if (locCard == null || locCard == location) continue;
+                String locName = locCard.getTitle() != null
+                    ? locCard.getTitle().toLowerCase(Locale.ROOT) : "";
+                if (!locName.isEmpty() && v34ActionText.contains(locName)) {
+                    v34Dest = locCard;
+                    break;
+                }
+            }
+
+            if (v34Dest != null) {
+                float destOppPower = 0;
+                try {
+                    destOppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                        gameState, v34Dest, opponentId, false, false);
+                } catch (Exception e) { /* ignore */ }
+
+                if (destOppPower > 0) {
+                    // Moving TO a location with opponents — CONTEST their drain!
+                    float contestBonus = 250.0f;
+                    // Extra bonus if we're armed (can battle effectively)
+                    if (cardToMove != null) {
+                        try {
+                            List<PhysicalCard> v34Att = gameState.getAttachedCards(cardToMove);
+                            if (v34Att != null) {
+                                for (PhysicalCard att : v34Att) {
+                                    if (att != null && att.getBlueprint() != null
+                                        && att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
+                                        contestBonus += 100.0f; // Armed = even better for contesting
+                                        break;
+                                    }
+                                }
+                            }
+                        } catch (Exception e) { /* ignore */ }
+                    }
+                    action.addReasoning(String.format(
+                        "V34 CONTEST: Moving to %s where opponents have power %.0f — block their drain and fight!",
+                        v34Dest.getTitle(), destOppPower), contestBonus);
+                    logger.warn("V34 CONTEST: {} moving to {} (opponent power {}) — bonus +{}",
+                        cardToMove != null ? cardToMove.getTitle() : "?",
+                        v34Dest.getTitle(), (int)destOppPower, (int)contestBonus);
+                } else {
+                    // Moving to empty location — check if opponents are draining uncontested elsewhere
+                    boolean opponentsUncontested = false;
+                    String opUncontestedLoc = null;
+                    float opUncontestedPower = 0;
+                    try {
+                        for (PhysicalCard otherLoc : gameState.getLocationsInOrder()) {
+                            if (otherLoc == null || otherLoc == location || otherLoc == v34Dest) continue;
+                            float oppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                gameState, otherLoc, opponentId, false, false);
+                            float ourPowerThere = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                gameState, otherLoc, playerId, false, false);
+                            if (oppPower > 0 && ourPowerThere == 0) {
+                                opponentsUncontested = true;
+                                if (oppPower > opUncontestedPower) {
+                                    opUncontestedPower = oppPower;
+                                    opUncontestedLoc = otherLoc.getTitle();
+                                }
+                            }
+                        }
+                    } catch (Exception e) { /* ignore */ }
+
+                    if (opponentsUncontested) {
+                        action.addReasoning(String.format(
+                            "V34 WRONG DIRECTION: Moving to empty %s while opponents drain uncontested at %s (power %.0f)!",
+                            v34Dest.getTitle(), opUncontestedLoc, opUncontestedPower), -150.0f);
+                        logger.warn("V34 WRONG DIRECTION: {} to empty {} while opponents at {} (power {})",
+                            cardToMove != null ? cardToMove.getTitle() : "?",
+                            v34Dest.getTitle(), opUncontestedLoc, (int)opUncontestedPower);
+                    }
+                }
             }
         }
 

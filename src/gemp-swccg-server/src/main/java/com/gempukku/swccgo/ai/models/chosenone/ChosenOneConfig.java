@@ -89,6 +89,9 @@ public final class ChosenOneConfig {
     /** Ability threshold for drawing battle destiny (SWCCG rule: need >= 4 at site) */
     public static final int ABILITY_THRESHOLD = 4;
 
+    /** V33: Soft ability target — bonus for deploying to sites below this, penalty for moving away and dropping below */
+    public static final int ABILITY_BUDDY_THRESHOLD = 7;
+
     /** Extra power needed to compensate for no destiny draw */
     public static final int ABILITY_POWER_COMPENSATION = 3;
 

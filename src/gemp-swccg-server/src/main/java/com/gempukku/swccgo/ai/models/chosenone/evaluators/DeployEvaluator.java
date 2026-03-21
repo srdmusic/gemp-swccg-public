@@ -806,6 +806,70 @@ public class DeployEvaluator extends ActionEvaluator {
                         continue;
                     }
 
+                    // === V34: DEPLOY DIRECTLY TO OPPONENTS — CONTEST THEIR LOCATIONS ===
+                    // Deploy to locations where opponents have presence instead of empty locations.
+                    // This prevents the "deploy to empty site, then waste Force moving" pattern.
+                    if (blueprint.getCardCategory() == CardCategory.CHARACTER && gameState != null) {
+                        try {
+                            String opponentIdDeploy = game.getOpponent(playerId);
+                            String actionTextLowerDeploy = actionText.toLowerCase(Locale.ROOT);
+
+                            for (PhysicalCard locCard : gameState.getAllPermanentCards()) {
+                                if (locCard == null || locCard.getBlueprint() == null) continue;
+                                if (locCard.getBlueprint().getCardCategory() != CardCategory.LOCATION) continue;
+                                com.gempukku.swccgo.common.Zone locZone = locCard.getZone();
+                                if (locZone == null || !locZone.isInPlay()) continue;
+                                String locTitleDeploy = locCard.getTitle() != null
+                                    ? locCard.getTitle().toLowerCase(Locale.ROOT) : "";
+                                if (locTitleDeploy.isEmpty()) continue;
+                                if (!actionTextLowerDeploy.contains(locTitleDeploy)) continue;
+
+                                float oppPowerHere = 0;
+                                try {
+                                    oppPowerHere = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, locCard, opponentIdDeploy, false, false);
+                                } catch (Exception e) { /* ignore */ }
+
+                                if (oppPowerHere > 0) {
+                                    float engageBonus = 250.0f;
+                                    if (oppPowerHere >= 6) engageBonus += 100.0f;
+                                    action.addReasoning(String.format(
+                                        "V34 DIRECT ENGAGE: Deploy %s to %s where opponents are (power %.0f) — contest their drain!",
+                                        card.getTitle(), locCard.getTitle(), oppPowerHere), engageBonus);
+                                    LOG.warn("V34 DIRECT ENGAGE: {} to {} — opponents power={} (+{})",
+                                        card.getTitle(), locCard.getTitle(), (int)oppPowerHere, (int)engageBonus);
+                                } else {
+                                    boolean opponentsElsewhere = false;
+                                    for (PhysicalCard otherLoc : gameState.getAllPermanentCards()) {
+                                        if (otherLoc == null || otherLoc.getBlueprint() == null) continue;
+                                        if (otherLoc.getBlueprint().getCardCategory() != CardCategory.LOCATION) continue;
+                                        if (otherLoc == locCard) continue;
+                                        com.gempukku.swccgo.common.Zone oz = otherLoc.getZone();
+                                        if (oz == null || !oz.isInPlay()) continue;
+                                        try {
+                                            float otherOppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                                gameState, otherLoc, opponentIdDeploy, false, false);
+                                            if (otherOppPower > 0) {
+                                                opponentsElsewhere = true;
+                                                break;
+                                            }
+                                        } catch (Exception e) { /* ignore */ }
+                                    }
+                                    if (opponentsElsewhere) {
+                                        action.addReasoning(String.format(
+                                            "V34 EMPTY DEPLOY: %s to %s has NO opponents — deploy where they ARE instead!",
+                                            card.getTitle(), locCard.getTitle()), -200.0f);
+                                        LOG.warn("V34 EMPTY DEPLOY: {} to {} — no opponents here, opponents elsewhere (-200)",
+                                            card.getTitle(), locCard.getTitle());
+                                    }
+                                }
+                                break;
+                            }
+                        } catch (Exception e) {
+                            LOG.debug("V34 DIRECT ENGAGE: Error: {}", e.getMessage());
+                        }
+                    }
+
                     // === CARD VALUE SCORING ===
                     // Score based on power + ability vs cost
                     int cardValue = powerVal + abilityVal;
@@ -898,6 +962,167 @@ public class DeployEvaluator extends ActionEvaluator {
                             } else {
                                 action.addReasoning("V22.7: We occupy Bespin — safe to deploy " + card.getTitle(), 50.0f);
                             }
+                        }
+                    }
+
+                    // === V33: ONE WEAPON PER CHARACTER (HARD BLOCK) ===
+                    // A character should only ever have one weapon. If the target character
+                    // already has ANY weapon attached, hard-block this deploy (-9999).
+                    if (category == CardCategory.WEAPON && gameState != null) {
+                        try {
+                            String v33PlayerId = context.getPlayerId();
+                            for (PhysicalCard tableCard : gameState.getAllPermanentCards()) {
+                                if (tableCard == null || !v33PlayerId.equals(tableCard.getOwner())) continue;
+                                com.gempukku.swccgo.common.Zone v33Zone = tableCard.getZone();
+                                if (v33Zone == null || !v33Zone.isInPlay()) continue;
+                                if (tableCard.getBlueprint() == null || tableCard.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                String v33CharTitle = tableCard.getTitle() != null ? tableCard.getTitle().toLowerCase(Locale.ROOT) : "";
+                                if (v33CharTitle.isEmpty() || !actionLower.contains(v33CharTitle)) continue;
+
+                                java.util.List<PhysicalCard> v33Attachments = gameState.getAttachedCards(tableCard);
+                                if (v33Attachments != null) {
+                                    for (PhysicalCard att : v33Attachments) {
+                                        if (att != null && att.getBlueprint() != null
+                                            && att.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
+                                            action.addReasoning(String.format(
+                                                "V33 ONE WEAPON: %s already has a weapon — BLOCKED!",
+                                                tableCard.getTitle()), -9999.0f);
+                                            LOG.warn("V33 ONE WEAPON: {} on {} BLOCKED — character already armed!",
+                                                card.getTitle(), tableCard.getTitle());
+                                            break;
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                        } catch (Exception e) {
+                            LOG.debug("V33 ONE WEAPON: Error: {}", e.getMessage());
+                        }
+                    }
+
+                    // === V29.9: LIGHTSABER DEPLOY PRIORITY ===
+                    if (category == CardCategory.WEAPON && gameState != null) {
+                        boolean isLightsaber = cardTitleLower.contains("lightsaber");
+                        boolean isVadersLightsaber = cardTitleLower.contains("vader") && isLightsaber;
+                        boolean isDarkJediLightsaber = cardTitleLower.contains("dark jedi") && isLightsaber;
+
+                        if (isLightsaber) {
+                            try {
+                                String wepPlayerId = context.getPlayerId();
+                                boolean matchingCharOnTable = false;
+                                boolean charAlreadyHasWeapon = false;
+
+                                for (PhysicalCard tableCard : gameState.getAllPermanentCards()) {
+                                    if (tableCard == null || !wepPlayerId.equals(tableCard.getOwner())) continue;
+                                    com.gempukku.swccgo.common.Zone wepZone = tableCard.getZone();
+                                    if (wepZone == null || !wepZone.isInPlay()) continue;
+                                    if (tableCard.getBlueprint() == null || tableCard.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+
+                                    String tTitle = tableCard.getTitle() != null ? tableCard.getTitle().toLowerCase(Locale.ROOT) : "";
+                                    boolean isTargetChar = false;
+
+                                    if (isVadersLightsaber) {
+                                        if (tTitle.contains("vader")) isTargetChar = true;
+                                    } else if (cardTitleLower.contains("mara") && tTitle.contains("mara")) {
+                                        isTargetChar = true;
+                                    } else if (cardTitleLower.contains("maul") && tTitle.contains("maul")) {
+                                        isTargetChar = true;
+                                    } else if (isDarkJediLightsaber || !isVadersLightsaber) {
+                                        if (tTitle.contains("inquisitor") || tTitle.contains("sister")
+                                            || tTitle.contains("brother") || tTitle.contains("maul")
+                                            || tTitle.contains("mara") || tTitle.contains("dark jedi")) {
+                                            isTargetChar = true;
+                                        }
+                                    }
+
+                                    if (isTargetChar) {
+                                        matchingCharOnTable = true;
+                                        java.util.List<PhysicalCard> attachments = gameState.getAttachedCards(tableCard);
+                                        if (attachments != null) {
+                                            for (PhysicalCard att : attachments) {
+                                                if (att != null && att.getBlueprint() != null
+                                                    && att.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
+                                                    charAlreadyHasWeapon = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    }
+                                }
+
+                                if (matchingCharOnTable && !charAlreadyHasWeapon) {
+                                    float saberBoost = 400.0f;
+                                    if (isVadersLightsaber) saberBoost = 500.0f;
+                                    action.addReasoning(String.format(
+                                        "V29.11 LIGHTSABER: %s on table without weapon — deploy %s NOW! (+%.0f)",
+                                        isVadersLightsaber ? "Vader" : "Dark Jedi",
+                                        isVadersLightsaber ? "Vader's Lightsaber" : "lightsaber",
+                                        saberBoost), saberBoost);
+                                    LOG.warn("V29.11 LIGHTSABER: {} deploying on unarmed character — TOP PRIORITY (+{})!",
+                                        card.getTitle(), (int)saberBoost);
+                                } else if (matchingCharOnTable && charAlreadyHasWeapon) {
+                                    action.addReasoning("V29.11 LIGHTSABER: Character already has a weapon — other characters need it!", -300.0f);
+                                    LOG.info("V29.11 LIGHTSABER: {} — target already armed, BLOCKED (-300)", card.getTitle());
+                                } else {
+                                    action.addReasoning("V29.11 LIGHTSABER: No matching character on table — save for later!", -200.0f);
+                                    LOG.info("V29.11 LIGHTSABER: {} — no target character, penalizing", card.getTitle());
+                                }
+                            } catch (Exception e) {
+                                LOG.debug("V29.11 LIGHTSABER: Error checking weapon deploy: {}", e.getMessage());
+                            }
+                        }
+                    }
+
+                    // === V33: NAMED WEAPON PRIORITY ===
+                    if (category == CardCategory.WEAPON && gameState != null) {
+                        try {
+                            boolean isNamedWeapon = cardTitleLower.contains("vader") || cardTitleLower.contains("mara")
+                                || cardTitleLower.contains("maul") || cardTitleLower.contains("palpatine")
+                                || cardTitleLower.contains("emperor") || cardTitleLower.contains("luke")
+                                || cardTitleLower.contains("obi-wan") || cardTitleLower.contains("ahsoka")
+                                || cardTitleLower.contains("sabine") || cardTitleLower.contains("inquisitor")
+                                || cardTitleLower.contains("tarkin") || cardTitleLower.contains("piett");
+
+                            if (isNamedWeapon) {
+                                action.addReasoning("V33 NAMED WEAPON: Character-specific weapon — deploy priority!", 200.0f);
+                                LOG.warn("V33 NAMED WEAPON: {} is character-specific — boosted (+200)", card.getTitle());
+                            } else {
+                                String v33wPlayerId = context.getPlayerId();
+                                String targetCharName = null;
+                                for (PhysicalCard tableCard : gameState.getAllPermanentCards()) {
+                                    if (tableCard == null || !v33wPlayerId.equals(tableCard.getOwner())) continue;
+                                    com.gempukku.swccgo.common.Zone v33wZone = tableCard.getZone();
+                                    if (v33wZone == null || !v33wZone.isInPlay()) continue;
+                                    if (tableCard.getBlueprint() == null || tableCard.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                    String v33wCharTitle = tableCard.getTitle() != null ? tableCard.getTitle().toLowerCase(Locale.ROOT) : "";
+                                    if (!v33wCharTitle.isEmpty() && actionLower.contains(v33wCharTitle)) {
+                                        targetCharName = v33wCharTitle;
+                                        break;
+                                    }
+                                }
+
+                                if (targetCharName != null) {
+                                    java.util.List<PhysicalCard> v33Hand = gameState.getHand(v33wPlayerId);
+                                    if (v33Hand != null) {
+                                        for (PhysicalCard hc : v33Hand) {
+                                            if (hc == null || hc == card || hc.getBlueprint() == null) continue;
+                                            if (hc.getBlueprint().getCardCategory() != CardCategory.WEAPON) continue;
+                                            String hcTitle = hc.getTitle() != null ? hc.getTitle().toLowerCase(Locale.ROOT) : "";
+                                            if (hcTitle.contains(targetCharName.split(",")[0].split(" ")[0])) {
+                                                action.addReasoning(String.format(
+                                                    "V33 NAMED WEAPON WAIT: %s has named weapon %s in hand — save the slot!",
+                                                    targetCharName, hc.getTitle()), -400.0f);
+                                                LOG.warn("V33 NAMED WEAPON WAIT: Generic {} blocked on {} — named {} in hand!",
+                                                    card.getTitle(), targetCharName, hc.getTitle());
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (Exception e) {
+                            LOG.debug("V33 NAMED WEAPON: Error: {}", e.getMessage());
                         }
                     }
 
@@ -1152,6 +1377,64 @@ public class DeployEvaluator extends ActionEvaluator {
                             }
                         } catch (Exception e) {
                             LOG.debug("V32 ABILITY CHECK: Error: {}", e.getMessage());
+                        }
+                    }
+
+                    // === V33: ABILITY 7 BUDDY SYSTEM ===
+                    // Encourage stacking ability at sites to reach 7+.
+                    if (category == CardCategory.CHARACTER && card != null && card.getBlueprint() != null
+                        && gameState != null && game != null) {
+                        try {
+                            float v33CardAbility = 0;
+                            if (card.getBlueprint().hasAbilityAttribute()) {
+                                Float v33Ab = card.getBlueprint().getAbility();
+                                v33CardAbility = v33Ab != null ? v33Ab : 0;
+                            }
+
+                            String v33PlayerId = context.getPlayerId();
+                            for (PhysicalCard loc : gameState.getTopLocations()) {
+                                if (loc == null || loc.getTitle() == null) continue;
+                                if (loc.getBlueprint() == null || loc.getBlueprint().getCardSubtype() == null) continue;
+                                if (loc.getBlueprint().getCardSubtype() != com.gempukku.swccgo.common.CardSubtype.SITE) continue;
+
+                                String v33SiteTitle = loc.getTitle().toLowerCase(Locale.ROOT);
+                                if (!actionLower.contains(v33SiteTitle)) continue;
+
+                                float v33CurrentAbility = 0;
+                                for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
+                                    if (c == null || !v33PlayerId.equals(c.getOwner())) continue;
+                                    if (c.getBlueprint() == null) continue;
+                                    if (c.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                    if (c.getBlueprint().hasAbilityAttribute()) {
+                                        Float cAb = c.getBlueprint().getAbility();
+                                        v33CurrentAbility += (cAb != null ? cAb : 0);
+                                    }
+                                }
+
+                                float v33TotalAfter = v33CurrentAbility + v33CardAbility;
+
+                                if (v33CurrentAbility < ChosenOneConfig.ABILITY_BUDDY_THRESHOLD) {
+                                    if (v33TotalAfter >= ChosenOneConfig.ABILITY_BUDDY_THRESHOLD) {
+                                        action.addReasoning(String.format(
+                                            "V33 BUDDY FIX: Deploy brings ability from %.0f to %.0f (>= %d) at %s!",
+                                            v33CurrentAbility, v33TotalAfter, ChosenOneConfig.ABILITY_BUDDY_THRESHOLD,
+                                            loc.getTitle()), 150.0f);
+                                        LOG.warn("V33 BUDDY FIX: {} (ability {}) at {} — brings total from {} to {} (>= {})",
+                                            card.getTitle(), v33CardAbility, loc.getTitle(),
+                                            v33CurrentAbility, v33TotalAfter, ChosenOneConfig.ABILITY_BUDDY_THRESHOLD);
+                                    } else if (v33CurrentAbility > 0) {
+                                        action.addReasoning(String.format(
+                                            "V33 BUDDY BONUS: Reinforcing ability at %s (%.0f → %.0f, target %d)",
+                                            loc.getTitle(), v33CurrentAbility, v33TotalAfter,
+                                            ChosenOneConfig.ABILITY_BUDDY_THRESHOLD), 100.0f);
+                                        LOG.warn("V33 BUDDY BONUS: {} reinforcing {} — ability {} → {}",
+                                            card.getTitle(), loc.getTitle(), v33CurrentAbility, v33TotalAfter);
+                                    }
+                                }
+                                break;
+                            }
+                        } catch (Exception e) {
+                            LOG.debug("V33 BUDDY SYSTEM: Error: {}", e.getMessage());
                         }
                     }
 
