@@ -539,6 +539,24 @@ public class MoveEvaluator extends ActionEvaluator {
                         }
                     }
 
+                    // === V35.7: HUNT DOWN — VADER NEVER RETREATS TO CASTLE ===
+                    // Vader must NEVER move back to Mustafar: Vader's Castle. That's a retreat.
+                    // Castle is only for deploying FROM, not retreating TO.
+                    {
+                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer castleAnalyzer =
+                            context.getObjectiveAnalyzer();
+                        if (castleAnalyzer != null && castleAnalyzer.isAnalyzed() && castleAnalyzer.isHuntDownV()
+                            && cardToMove != null && cardToMove.getTitle() != null
+                            && cardToMove.getTitle().toLowerCase(Locale.ROOT).contains("vader")) {
+                            String moveText = action.getDisplayText() != null
+                                ? action.getDisplayText().toLowerCase(Locale.ROOT) : "";
+                            if (moveText.contains("mustafar") || moveText.contains("vader's castle")) {
+                                action.addReasoning("V35.7 NO RETREAT: Vader NEVER goes back to Castle — HUNT!", -800.0f);
+                                logger.warn("V35.7 NO RETREAT: Blocking Vader move to Mustafar/Castle (-800)");
+                            }
+                        }
+                    }
+
                     // === V29.12: HUNT DOWN — VADER MUST LEAVE CASTLE AND HUNT ===
                     // When playing Hunt Down V, armed Vader sitting at an uncontested location
                     // (like Vader's Castle) is WASTING turns. The whole point of Hunt Down is

@@ -604,20 +604,51 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     }
 
                     // --- I AM YOUR FATHER: deploys Vader's Lightsaber ---
+                    // V35.8: IAYF can pull from Reserve Deck (free) OR Lost Pile (lose 1 Force).
+                    // Both should score EXTREMELY high when Vader is on table unarmed.
+                    // The Lost Pile retrieval is a KEY mechanic of Hunt Down — Vader throws
+                    // his lightsaber every battle, then retrieves it for the next battle.
                     else if (sourceLower.contains("i am your father")) {
-                        if (pullOracle != null && pullOracle.isAnalyzed()) {
-                            boolean hasSaber = pullOracle.isCardInReserve("Vader's Lightsaber")
-                                || pullOracle.isCardInReserve("Darth Vader's Lightsaber");
-                            // Also check if Vader is on table — lightsaber deploys ON Vader
-                            com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer objA = context.getObjectiveAnalyzer();
-                            boolean vaderOnTable = objA != null && objA.isVaderOnTable(gameState, context.getPlayerId());
+                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer objA = context.getObjectiveAnalyzer();
+                        boolean vaderOnTable = objA != null && objA.isVaderOnTable(gameState, context.getPlayerId());
 
-                            if (!vaderOnTable && textLower.contains("lightsaber")) {
-                                action.addReasoning("V29.7 IAYF: Vader NOT on table — can't deploy lightsaber!", -500.0f);
-                                logger.warn("V29.7 IAYF BLOCKED: Vader not on table — lightsaber deploy impossible!");
-                            } else if (!hasSaber && textLower.contains("lightsaber")) {
-                                action.addReasoning("V29.7 IAYF: Vader's Lightsaber not in reserve — WILL FAIL!", -400.0f);
-                                logger.warn("V29.7 IAYF BLOCKED: No lightsaber in reserve (source: {})", sourceTitle);
+                        if (!vaderOnTable && textLower.contains("lightsaber")) {
+                            action.addReasoning("V29.7 IAYF: Vader NOT on table — can't deploy lightsaber!", -500.0f);
+                            logger.warn("V29.7 IAYF BLOCKED: Vader not on table");
+                        } else if (vaderOnTable && textLower.contains("lightsaber")) {
+                            // V35.8: Vader IS on table — check if he's armed
+                            boolean vaderArmed = false;
+                            try {
+                                String iayPid = context.getPlayerId();
+                                for (PhysicalCard tc : gameState.getAllPermanentCards()) {
+                                    if (tc == null || !iayPid.equals(tc.getOwner())) continue;
+                                    if (tc.getBlueprint() == null) continue;
+                                    String tcTitle = tc.getTitle() != null ? tc.getTitle().toLowerCase(Locale.ROOT) : "";
+                                    if (!tcTitle.contains("vader")) continue;
+                                    if (tc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                    com.gempukku.swccgo.common.Zone tcZ = tc.getZone();
+                                    if (tcZ == null || !tcZ.isInPlay()) continue;
+                                    java.util.List<PhysicalCard> atts = gameState.getAttachedCards(tc);
+                                    if (atts != null) {
+                                        for (PhysicalCard att : atts) {
+                                            if (att != null && att.getBlueprint() != null
+                                                && att.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
+                                                vaderArmed = true;
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    break;
+                                }
+                            } catch (Exception e) { /* ignore */ }
+
+                            if (!vaderArmed) {
+                                // Vader unarmed — retrieving lightsaber is TOP PRIORITY
+                                action.addReasoning("V35.8 IAYF: Vader UNARMED — retrieve lightsaber NOW! Critical for battle!", 600.0f);
+                                logger.warn("V35.8 IAYF: Vader unarmed — lightsaber retrieval TOP PRIORITY (+600)");
+                            } else {
+                                // Vader already armed — still good to have a spare but lower priority
+                                action.addReasoning("V35.8 IAYF: Vader armed — spare lightsaber retrieval", 50.0f);
                             }
                         }
                     }

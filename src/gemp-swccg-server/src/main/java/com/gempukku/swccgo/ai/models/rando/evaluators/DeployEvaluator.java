@@ -1388,9 +1388,11 @@ public class DeployEvaluator extends ActionEvaluator {
 
                                     String deployCardLower = card.getTitle() != null ? card.getTitle().toLowerCase(Locale.ROOT) : "";
                                     if (v35JediHere && deployCardLower.contains("vader")) {
-                                        engageBonus += (float) RandoConfig.SCORE_VADER_SEEK_JEDI; // +350 Vader hunts Jedi
-                                        LOG.warn("V35 HUNT JEDI DEPLOY: Vader to {} with Jedi! (+{})",
-                                            locCard.getTitle(), RandoConfig.SCORE_VADER_SEEK_JEDI);
+                                        // V35.8: Raised from +350 to +600 — killing Jedi is THE objective
+                                        // of Hunt Down. Opponent loses extra Force when Jedi dies.
+                                        engageBonus += 600.0f;
+                                        LOG.warn("V35.8 HUNT JEDI DEPLOY: Vader to {} with JEDI! (+600)",
+                                            locCard.getTitle());
                                     }
                                     if (v35JediHere && isInquisitor(deployCardLower)) {
                                         engageBonus += 250.0f; // Inquisitor vs Jedi = power bonuses + destiny
