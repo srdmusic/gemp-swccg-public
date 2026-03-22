@@ -278,6 +278,17 @@ public class BattleEvaluator extends ActionEvaluator {
                                         if (charCountWithoutVader <= 1) barrierRiskPenalty = -250.0f; // Solo char left = suicide
                                         if (powerDeficitWithoutVader > 10) barrierRiskPenalty -= 100.0f; // Even worse
 
+                                        // V35: VADER EXPENDABILITY — In Hunt Down V, Vader is expendable.
+                                        // Multiple copies in deck, lightsaber retrievable from Lost Pile.
+                                        // Reduce barrier risk to encourage aggressive Vader battles.
+                                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer expendAnalyzer =
+                                            context.getObjectiveAnalyzer();
+                                        if (expendAnalyzer != null && expendAnalyzer.isAnalyzed() && expendAnalyzer.isHuntDownV()) {
+                                            barrierRiskPenalty = barrierRiskPenalty * RandoConfig.VADER_EXPENDABILITY_FACTOR;
+                                            logger.warn("V35 VADER EXPENDABLE: Barrier risk reduced to {} (Hunt Down — Vader is replaceable)",
+                                                (int)barrierRiskPenalty);
+                                        }
+
                                         action.addReasoning(String.format(
                                             "V29.9 BARRIER RISK: If opponent Barriers Vader, remaining power %.0f vs %.0f — %s!",
                                             powerWithoutVader, theirPower,
@@ -304,6 +315,58 @@ public class BattleEvaluator extends ActionEvaluator {
                                             huntBonus), huntBonus);
                                         logger.warn("V29.9 HUNT DOWN: Armed Vader aggressiveness boost +{} (Luke: {})",
                                             (int)huntBonus, lukeHere);
+                                    }
+                                }
+
+                                // === V35: INQUISITOR BATTLE DESTINY BONUS ===
+                                // Hunt Down V objective gives +1 total battle destiny where you have
+                                // an Inquisitor (+2 if hatred card present). This is like 1-2 extra
+                                // destiny draws — massive advantage. Also check for Jedi opponents.
+                                {
+                                    com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v35ObjAnalyzer =
+                                        context.getObjectiveAnalyzer();
+                                    if (v35ObjAnalyzer != null && v35ObjAnalyzer.isAnalyzed() && v35ObjAnalyzer.isHuntDownV()
+                                        && cardsHere != null) {
+                                        boolean inquisitorInBattle = false;
+                                        boolean hatredAtLocation = false;
+                                        boolean jediAtLocation = false;
+
+                                        for (PhysicalCard bCard : cardsHere) {
+                                            if (bCard == null || bCard.getBlueprint() == null) continue;
+                                            String bTitle = bCard.getTitle() != null ? bCard.getTitle().toLowerCase(Locale.ROOT) : "";
+
+                                            if (playerId.equals(bCard.getOwner())) {
+                                                // Our characters — check for Inquisitors
+                                                if (isInquisitor(bTitle)) {
+                                                    inquisitorInBattle = true;
+                                                }
+                                            } else {
+                                                // Opponent characters — check for Jedi/Padawan and stacked hatred
+                                                if (isJediOrPadawan(bTitle)) {
+                                                    jediAtLocation = true;
+                                                }
+                                                try {
+                                                    java.util.List<PhysicalCard> stacked = gameState.getStackedCards(bCard);
+                                                    if (stacked != null && !stacked.isEmpty()) {
+                                                        hatredAtLocation = true;
+                                                    }
+                                                } catch (Exception e) { /* ignore */ }
+                                            }
+                                        }
+
+                                        if (inquisitorInBattle) {
+                                            float destinyBonus = 120.0f; // +1 battle destiny from objective
+                                            if (hatredAtLocation) destinyBonus = 250.0f; // +2 battle destiny
+                                            if (jediAtLocation) destinyBonus += 100.0f; // FMFTD and Fifth Brother bonuses
+                                            action.addReasoning(String.format(
+                                                "V35 HUNT DESTINY: Inquisitor in battle%s%s — +%d total battle destiny!",
+                                                hatredAtLocation ? " + HATRED" : "",
+                                                jediAtLocation ? " vs JEDI" : "",
+                                                hatredAtLocation ? 2 : 1), destinyBonus);
+                                            logger.warn("V35 HUNT DESTINY at {}: Inquisitor={}, hatred={}, jedi={} — bonus +{}",
+                                                targetLocation.getTitle(), inquisitorInBattle, hatredAtLocation,
+                                                jediAtLocation, (int)destinyBonus);
+                                        }
                                     }
                                 }
 

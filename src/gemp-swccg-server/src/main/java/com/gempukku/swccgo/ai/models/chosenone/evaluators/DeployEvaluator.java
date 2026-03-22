@@ -833,9 +833,42 @@ public class DeployEvaluator extends ActionEvaluator {
                                 if (oppPowerHere > 0) {
                                     float engageBonus = 250.0f;
                                     if (oppPowerHere >= 6) engageBonus += 100.0f;
+
+                                    // V35: Check for Jedi at this location — Vader/Inquisitor bonuses
+                                    boolean v35JediHere = false;
+                                    boolean v35HatredHere = false;
+                                    try {
+                                        for (PhysicalCard lc : gameState.getCardsAtLocation(locCard)) {
+                                            if (lc == null) continue;
+                                            String lcTitle = lc.getTitle() != null ? lc.getTitle().toLowerCase(Locale.ROOT) : "";
+                                            if (opponentIdDeploy.equals(lc.getOwner())) {
+                                                if (isJediOrPadawan(lcTitle)) v35JediHere = true;
+                                                java.util.List<PhysicalCard> stacked = gameState.getStackedCards(lc);
+                                                if (stacked != null && !stacked.isEmpty()) v35HatredHere = true;
+                                            }
+                                        }
+                                    } catch (Exception e) { /* ignore */ }
+
+                                    String deployCardLower = card.getTitle() != null ? card.getTitle().toLowerCase(Locale.ROOT) : "";
+                                    if (v35JediHere && deployCardLower.contains("vader")) {
+                                        engageBonus += (float) ChosenOneConfig.SCORE_VADER_SEEK_JEDI; // +350 Vader hunts Jedi
+                                        LOG.warn("V35 HUNT JEDI DEPLOY: Vader to {} with Jedi! (+{})",
+                                            locCard.getTitle(), ChosenOneConfig.SCORE_VADER_SEEK_JEDI);
+                                    }
+                                    if (v35JediHere && isInquisitor(deployCardLower)) {
+                                        engageBonus += 250.0f; // Inquisitor vs Jedi = power bonuses + destiny
+                                        LOG.warn("V35 INQUISITOR vs JEDI: {} to {} (+250)", card.getTitle(), locCard.getTitle());
+                                    }
+                                    if (v35HatredHere && isInquisitor(deployCardLower)) {
+                                        engageBonus += (float) ChosenOneConfig.SCORE_INQUISITOR_HATRED_SYNERGY; // +300
+                                        LOG.warn("V35 INQUISITOR+HATRED: {} to {} with hatred (+{})",
+                                            card.getTitle(), locCard.getTitle(), ChosenOneConfig.SCORE_INQUISITOR_HATRED_SYNERGY);
+                                    }
+
                                     action.addReasoning(String.format(
-                                        "V34 DIRECT ENGAGE: Deploy %s to %s where opponents are (power %.0f) — contest their drain!",
-                                        card.getTitle(), locCard.getTitle(), oppPowerHere), engageBonus);
+                                        "V34 DIRECT ENGAGE: Deploy %s to %s (opp power %.0f%s%s) — contest!",
+                                        card.getTitle(), locCard.getTitle(), oppPowerHere,
+                                        v35JediHere ? " JEDI" : "", v35HatredHere ? " HATRED" : ""), engageBonus);
                                     LOG.warn("V34 DIRECT ENGAGE: {} to {} — opponents power={} (+{})",
                                         card.getTitle(), locCard.getTitle(), (int)oppPowerHere, (int)engageBonus);
                                 } else {

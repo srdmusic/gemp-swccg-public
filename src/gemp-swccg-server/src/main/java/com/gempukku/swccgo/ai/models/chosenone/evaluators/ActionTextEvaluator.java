@@ -1,6 +1,7 @@
 package com.gempukku.swccgo.ai.models.chosenone.evaluators;
 
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
+import com.gempukku.swccgo.ai.models.chosenone.ChosenOneConfig;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
 import com.gempukku.swccgo.common.Side;
@@ -499,6 +500,176 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         action.addReasoning("V25 I AM YOUR FATHER: Reserve nearly empty (" + reserveSize + ") — likely to fail!", -200.0f);
                         logger.warn("V25 IAYF: Reserve too small ({}) for search!", reserveSize);
                     }
+                }
+            }
+
+            // ========== V35: HATRED CARD — CANCEL OPPONENT GAME TEXT ==========
+            // Stacking a Hatred Card on an opponent's character cancels their game text.
+            // This is CRITICAL because it removes attrition immunity and other protections.
+            // Without Hatred, winning a battle does NOTHING if opponent is immune to attrition.
+            // Action text variants:
+            //   "Stack a 'Hatred Card'" (previous game)
+            //   "USED: Stack 'Hatred' card on opponent's character" (this game)
+            // BEST TIMING: Deploy phase — stack Hatred BEFORE initiating battle.
+            // This way opponent's immunities are already gone when battle starts.
+            if (textLower.contains("hatred")) {
+                String decisionText = context.getDecisionText() != null
+                    ? context.getDecisionText().toLowerCase(Locale.ROOT) : "";
+                boolean isDeployPhase = context.getPhase() == Phase.DEPLOY
+                    || decisionText.contains("deploy");
+                boolean isBattlePhase = context.getPhase() == Phase.BATTLE
+                    || decisionText.contains("battle") || decisionText.contains("weapons segment");
+
+                // V35: Context-aware hatred scoring — check if Inquisitor is with opponents
+                boolean v35InquisitorWithOpponents = false;
+                boolean v35InquisitorOnTable = false;
+                boolean v35JediAtInquisitorLoc = false;
+                try {
+                    if (gameState != null) {
+                        String v35Pid = context.getPlayerId();
+                        String v35Oid = gameState.getOpponent(v35Pid);
+                        for (PhysicalCard tCard : gameState.getAllPermanentCards()) {
+                            if (tCard == null || !v35Pid.equals(tCard.getOwner())) continue;
+                            if (tCard.getBlueprint() == null) continue;
+                            if (tCard.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                            com.gempukku.swccgo.common.Zone tz = tCard.getZone();
+                            if (tz == null || !tz.isInPlay()) continue;
+                            String tTitle = tCard.getTitle() != null ? tCard.getTitle().toLowerCase(Locale.ROOT) : "";
+                            if (isInquisitor(tTitle)) {
+                                v35InquisitorOnTable = true;
+                                PhysicalCard inqLoc = tCard.getAtLocation();
+                                if (inqLoc != null) {
+                                    float oppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, inqLoc, v35Oid, false, false);
+                                    if (oppPower > 0) {
+                                        v35InquisitorWithOpponents = true;
+                                        // Check for Jedi at this location
+                                        for (PhysicalCard lc : gameState.getCardsAtLocation(inqLoc)) {
+                                            if (lc == null || !v35Oid.equals(lc.getOwner())) continue;
+                                            String lcT = lc.getTitle() != null ? lc.getTitle().toLowerCase(Locale.ROOT) : "";
+                                            if (isJediOrPadawan(lcT)) { v35JediAtInquisitorLoc = true; break; }
+                                        }
+                                    }
+                                }
+                                if (v35InquisitorWithOpponents) break; // Found ideal setup
+                            }
+                        }
+                    }
+                } catch (Exception e) { /* ignore */ }
+
+                if (!v35InquisitorOnTable) {
+                    // V35: No Inquisitor on table — can't use "There Are Many Hunting You Now"
+                    action.addReasoning("V35 HATRED: No Inquisitor on table — hatred placement impossible!", -100.0f);
+                    logger.info("V35 HATRED: No Inquisitor — blocking hatred action (-100)");
+                } else if (v35InquisitorWithOpponents) {
+                    float hatredScore = isDeployPhase ? (float) ChosenOneConfig.SCORE_HATRED_WITH_INQUISITOR : 350.0f;
+                    if (v35JediAtInquisitorLoc) hatredScore += 150.0f; // Hunt Down destiny bonus with Jedi
+                    action.addReasoning(String.format(
+                        "V35 HATRED: Inquisitor WITH opponents%s — stack hatred to cancel game text! (+%.0f)",
+                        v35JediAtInquisitorLoc ? " + JEDI" : "", hatredScore), hatredScore);
+                    logger.warn("V35 HATRED: Inquisitor with opponents (jedi={}) — score +{}",
+                        v35JediAtInquisitorLoc, (int)hatredScore);
+                } else if (isDeployPhase) {
+                    action.addReasoning("V35 HATRED: Inquisitor on table but not with opponents — proactive hatred (+200)", 200.0f);
+                    logger.info("V35 HATRED: Proactive hatred stack (+200)");
+                } else if (isBattlePhase) {
+                    action.addReasoning("V29.10 HATRED: Stack during battle — removes immunity (+100)", 100.0f);
+                }
+            }
+
+            // ========== V35: FEEL MY FATHER'S DEADLY TOUCH (FMFTD) ==========
+            // FMFTD has LOST mode (add battle destiny) and USED mode (place hatred).
+            // Critical card for Inquisitor synergy with hatred and Jedi presence.
+            if (textLower.contains("feel my father") || textLower.contains("fmftd")
+                || textLower.contains("deadly touch")) {
+                boolean isFmftdBattle = context.getPhase() == Phase.BATTLE;
+                boolean isFmftdUsedMode = textLower.contains("stack") || textLower.contains("hatred")
+                    || textLower.contains("used");
+                boolean isFmftdLostMode = textLower.contains("destiny") || textLower.contains("lost")
+                    || textLower.contains("add");
+
+                if (isFmftdLostMode || isFmftdBattle) {
+                    // LOST mode — check for Inquisitor/Jedi/Hatred synergy
+                    boolean v35FmInq = false;
+                    boolean v35FmJedi = false;
+                    boolean v35FmHatred = false;
+                    try {
+                        if (gameState != null && gameState.getBattleState() != null) {
+                            PhysicalCard fmBattleLoc = gameState.getBattleState().getBattleLocation();
+                            if (fmBattleLoc != null) {
+                                String fmPid = context.getPlayerId();
+                                String fmOid = gameState.getOpponent(fmPid);
+                                for (PhysicalCard bc : gameState.getCardsAtLocation(fmBattleLoc)) {
+                                    if (bc == null) continue;
+                                    String bcTitle = bc.getTitle() != null ? bc.getTitle().toLowerCase(Locale.ROOT) : "";
+                                    if (fmPid.equals(bc.getOwner()) && isInquisitor(bcTitle)) v35FmInq = true;
+                                    if (fmOid != null && fmOid.equals(bc.getOwner())) {
+                                        if (isJediOrPadawan(bcTitle)) v35FmJedi = true;
+                                        java.util.List<PhysicalCard> st = gameState.getStackedCards(bc);
+                                        if (st != null && !st.isEmpty()) v35FmHatred = true;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) { /* ignore */ }
+
+                    int synCount = (v35FmInq ? 1 : 0) + (v35FmJedi ? 1 : 0) + (v35FmHatred ? 1 : 0);
+                    if (synCount >= 3) {
+                        action.addReasoning("V35 FMFTD LOST: Inquisitor + Jedi + Hatred — ADD 2 BATTLE DESTINY!", (float) ChosenOneConfig.SCORE_FMFTD_FULL_SYNERGY);
+                        logger.warn("V35 FMFTD: Full synergy! +{}", ChosenOneConfig.SCORE_FMFTD_FULL_SYNERGY);
+                    } else if (synCount >= 2) {
+                        action.addReasoning("V35 FMFTD LOST: Inquisitor with Jedi or Hatred — add 1 battle destiny!", 350.0f);
+                    } else if (v35FmInq) {
+                        action.addReasoning("V35 FMFTD LOST: Inquisitor in battle — add destiny!", 200.0f);
+                    } else {
+                        action.addReasoning("V35 FMFTD LOST: No Inquisitor in battle — limited value", 50.0f);
+                    }
+                } else if (isFmftdUsedMode) {
+                    // USED mode — place hatred card
+                    if (context.getPhase() == Phase.DEPLOY || context.getPhase() == Phase.MOVE) {
+                        action.addReasoning("V35 FMFTD USED: Place hatred on opponent — cancel game text!", 350.0f);
+                    } else {
+                        action.addReasoning("V35 FMFTD USED: Place hatred — decent timing", 150.0f);
+                    }
+                } else if (isFmftdBattle) {
+                    // Generic FMFTD during battle — likely the LOST mode
+                    action.addReasoning("V35 FMFTD: Play during battle for extra destiny!", 250.0f);
+                } else {
+                    action.addReasoning("V35 FMFTD: Save for battle if possible", -100.0f);
+                }
+            }
+
+            // ========== V35: VADER SELF-RECALL (Hunt Down V once-per-game) ==========
+            // "Take Vader into hand" — allows redeploying Vader to hunt Jedi elsewhere
+            // "Return an Inquisitor here to hand" — Eighth Brother repositioning
+            else if (textLower.contains("take vader into hand") || (textLower.contains("return") && textLower.contains("inquisitor") && textLower.contains("hand"))) {
+                if (textLower.contains("vader")) {
+                    // Vader self-recall — check if there are Jedi elsewhere to hunt
+                    boolean v35JediElsewhere = false;
+                    try {
+                        if (gameState != null) {
+                            String v35Oid = gameState.getOpponent(context.getPlayerId());
+                            for (PhysicalCard loc : gameState.getTopLocations()) {
+                                if (loc == null) continue;
+                                for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
+                                    if (c == null || !v35Oid.equals(c.getOwner())) continue;
+                                    String ct = c.getTitle() != null ? c.getTitle().toLowerCase(Locale.ROOT) : "";
+                                    if (isJediOrPadawan(ct)) { v35JediElsewhere = true; break; }
+                                }
+                                if (v35JediElsewhere) break;
+                            }
+                        }
+                    } catch (Exception e) { /* ignore */ }
+
+                    if (v35JediElsewhere) {
+                        action.addReasoning("V35 VADER RECALL: Take Vader into hand — Jedi elsewhere to hunt! Redeploy!", 300.0f);
+                        logger.warn("V35 VADER RECALL: Jedi detected elsewhere — recalling Vader to redeploy (+300)");
+                    } else {
+                        action.addReasoning("V35 VADER RECALL: Take Vader into hand — no clear target, keep him deployed", -100.0f);
+                    }
+                } else {
+                    // Inquisitor recall (Eighth Brother ability)
+                    action.addReasoning("V35 INQUISITOR RECALL: Return Inquisitor to hand for repositioning", 100.0f);
                 }
             }
 

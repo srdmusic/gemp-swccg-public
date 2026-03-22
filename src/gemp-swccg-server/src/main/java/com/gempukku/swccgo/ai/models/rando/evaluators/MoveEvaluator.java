@@ -576,10 +576,12 @@ public class MoveEvaluator extends ActionEvaluator {
 
                             // If Vader is armed and no opponents here — GO HUNT!
                             if (vaderArmed && theirPowerHere == 0) {
-                                // Find if any opponent characters are on the table at other locations
+                                // V35: Find opponents, but PRIORITIZE Jedi/Padawan targets
                                 boolean opponentsElsewhere = false;
                                 String bestTargetLoc = null;
                                 float bestTargetPower = 0;
+                                String bestJediLoc = null;
+                                float bestJediPower = 0;
                                 try {
                                     for (PhysicalCard loc : gameState.getTopLocations()) {
                                         if (loc == null || loc == currentLocation) continue;
@@ -591,20 +593,39 @@ public class MoveEvaluator extends ActionEvaluator {
                                                 bestTargetPower = opPower;
                                                 bestTargetLoc = loc.getTitle();
                                             }
+                                            // V35: Check for Jedi/Padawan at this location
+                                            for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
+                                                if (c == null || !opponentIdHunt.equals(c.getOwner())) continue;
+                                                String cTitle = c.getTitle() != null ? c.getTitle().toLowerCase(Locale.ROOT) : "";
+                                                if (isJediOrPadawan(cTitle)) {
+                                                    if (opPower > bestJediPower) {
+                                                        bestJediPower = opPower;
+                                                        bestJediLoc = loc.getTitle();
+                                                    }
+                                                    break;
+                                                }
+                                            }
                                         }
                                     }
                                 } catch (Exception e) { /* ignore */ }
 
                                 if (opponentsElsewhere) {
-                                    float huntMoveBonus = 200.0f;
+                                    // V35: Prefer Jedi location over generic highest-power location
+                                    String huntTarget = (bestJediLoc != null) ? bestJediLoc : bestTargetLoc;
+                                    float huntTargetPower = (bestJediLoc != null) ? bestJediPower : bestTargetPower;
+                                    float huntMoveBonus = (bestJediLoc != null)
+                                        ? (float) RandoConfig.SCORE_VADER_SEEK_JEDI  // V35: +350 for Jedi
+                                        : 200.0f; // Generic opponent
                                     String locName = currentLocation.getTitle() != null
                                         ? currentLocation.getTitle() : "current location";
                                     action.addReasoning(String.format(
-                                        "V29.12 HUNT DOWN: Armed Vader at %s with NO opponents — GO HUNT! Target: %s (power %.0f)",
-                                        locName, bestTargetLoc != null ? bestTargetLoc : "?", bestTargetPower),
+                                        "V35 HUNT %s: Armed Vader at %s — GO HUNT! Target: %s (power %.0f)",
+                                        bestJediLoc != null ? "JEDI" : "DOWN",
+                                        locName, huntTarget != null ? huntTarget : "?", huntTargetPower),
                                         huntMoveBonus);
-                                    logger.warn("V29.12 HUNT DOWN MOVE: Armed Vader at {} (no opponents) — pushing toward {} (power {})",
-                                        locName, bestTargetLoc, (int)bestTargetPower);
+                                    logger.warn("V35 HUNT {}: Armed Vader at {} — target {} (power {}, bonus +{})",
+                                        bestJediLoc != null ? "JEDI" : "DOWN",
+                                        locName, huntTarget, (int)huntTargetPower, (int)huntMoveBonus);
                                 }
                             }
                         }
@@ -1421,12 +1442,31 @@ public class MoveEvaluator extends ActionEvaluator {
                             }
                         } catch (Exception e) { /* ignore */ }
                     }
+                    // V35: Extra bonus if destination has Jedi/Padawan and we're Vader
+                    boolean v35JediAtDest = false;
+                    try {
+                        for (PhysicalCard dc : gameState.getCardsAtLocation(v34Dest)) {
+                            if (dc == null || playerId.equals(dc.getOwner())) continue;
+                            String dcTitle = dc.getTitle() != null ? dc.getTitle().toLowerCase(Locale.ROOT) : "";
+                            if (isJediOrPadawan(dcTitle)) {
+                                v35JediAtDest = true;
+                                break;
+                            }
+                        }
+                    } catch (Exception e) { /* ignore */ }
+
+                    if (v35JediAtDest && cardToMove != null && cardToMove.getTitle() != null
+                        && cardToMove.getTitle().toLowerCase(Locale.ROOT).contains("vader")) {
+                        contestBonus += 150.0f; // V35: Vader hunting Jedi
+                    }
+
                     action.addReasoning(String.format(
-                        "V34 CONTEST: Moving to %s where opponents have power %.0f — block their drain and fight!",
-                        v34Dest.getTitle(), destOppPower), contestBonus);
-                    logger.warn("V34 CONTEST: {} moving to {} (opponent power {}) — bonus +{}",
+                        "V34 CONTEST: Moving to %s where opponents have power %.0f%s — block their drain and fight!",
+                        v34Dest.getTitle(), destOppPower, v35JediAtDest ? " [JEDI!]" : ""), contestBonus);
+                    logger.warn("V34 CONTEST: {} moving to {} (opponent power {}{}) — bonus +{}",
                         cardToMove != null ? cardToMove.getTitle() : "?",
-                        v34Dest.getTitle(), (int)destOppPower, (int)contestBonus);
+                        v34Dest.getTitle(), (int)destOppPower,
+                        v35JediAtDest ? " JEDI" : "", (int)contestBonus);
                 } else {
                     // Moving to empty location — check if opponents are draining uncontested elsewhere
                     boolean opponentsUncontested = false;

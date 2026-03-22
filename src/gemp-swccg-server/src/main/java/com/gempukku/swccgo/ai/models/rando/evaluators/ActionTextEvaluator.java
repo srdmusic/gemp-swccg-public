@@ -1,5 +1,6 @@
 package com.gempukku.swccgo.ai.models.rando.evaluators;
 
+import com.gempukku.swccgo.ai.models.rando.RandoConfig;
 import com.gempukku.swccgo.ai.common.AiPriorityCards;
 import com.gempukku.swccgo.common.CardCategory;
 import com.gempukku.swccgo.common.Phase;
@@ -920,16 +921,61 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 boolean isBattlePhase = context.getPhase() == Phase.BATTLE
                     || decisionText.contains("battle") || decisionText.contains("weapons segment");
 
-                if (isDeployPhase) {
-                    // Deploy phase — IDEAL time: stack Hatred then initiate battle
-                    action.addReasoning("V29.10 HATRED: Stack Hatred Card NOW during deploy — cancel opponent game text BEFORE battle!", 300.0f);
-                    logger.warn("V29.10 HATRED: Deploy phase Hatred stack — removes immunities before battle (+300)");
+                // V35: Context-aware hatred scoring — check if Inquisitor is with opponents
+                boolean v35InquisitorWithOpponents = false;
+                boolean v35InquisitorOnTable = false;
+                boolean v35JediAtInquisitorLoc = false;
+                try {
+                    if (gameState != null) {
+                        String v35Pid = context.getPlayerId();
+                        String v35Oid = gameState.getOpponent(v35Pid);
+                        for (PhysicalCard tCard : gameState.getAllPermanentCards()) {
+                            if (tCard == null || !v35Pid.equals(tCard.getOwner())) continue;
+                            if (tCard.getBlueprint() == null) continue;
+                            if (tCard.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                            com.gempukku.swccgo.common.Zone tz = tCard.getZone();
+                            if (tz == null || !tz.isInPlay()) continue;
+                            String tTitle = tCard.getTitle() != null ? tCard.getTitle().toLowerCase(Locale.ROOT) : "";
+                            if (isInquisitor(tTitle)) {
+                                v35InquisitorOnTable = true;
+                                PhysicalCard inqLoc = tCard.getAtLocation();
+                                if (inqLoc != null) {
+                                    float oppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, inqLoc, v35Oid, false, false);
+                                    if (oppPower > 0) {
+                                        v35InquisitorWithOpponents = true;
+                                        // Check for Jedi at this location
+                                        for (PhysicalCard lc : gameState.getCardsAtLocation(inqLoc)) {
+                                            if (lc == null || !v35Oid.equals(lc.getOwner())) continue;
+                                            String lcT = lc.getTitle() != null ? lc.getTitle().toLowerCase(Locale.ROOT) : "";
+                                            if (isJediOrPadawan(lcT)) { v35JediAtInquisitorLoc = true; break; }
+                                        }
+                                    }
+                                }
+                                if (v35InquisitorWithOpponents) break; // Found ideal setup
+                            }
+                        }
+                    }
+                } catch (Exception e) { /* ignore */ }
+
+                if (!v35InquisitorOnTable) {
+                    // V35: No Inquisitor on table — can't use "There Are Many Hunting You Now"
+                    action.addReasoning("V35 HATRED: No Inquisitor on table — hatred placement impossible!", -100.0f);
+                    logger.info("V35 HATRED: No Inquisitor — blocking hatred action (-100)");
+                } else if (v35InquisitorWithOpponents) {
+                    float hatredScore = isDeployPhase ? (float) RandoConfig.SCORE_HATRED_WITH_INQUISITOR : 350.0f;
+                    if (v35JediAtInquisitorLoc) hatredScore += 150.0f; // Hunt Down destiny bonus with Jedi
+                    action.addReasoning(String.format(
+                        "V35 HATRED: Inquisitor WITH opponents%s — stack hatred to cancel game text! (+%.0f)",
+                        v35JediAtInquisitorLoc ? " + JEDI" : "", hatredScore), hatredScore);
+                    logger.warn("V35 HATRED: Inquisitor with opponents (jedi={}) — score +{}",
+                        v35JediAtInquisitorLoc, (int)hatredScore);
+                } else if (isDeployPhase) {
+                    action.addReasoning("V35 HATRED: Inquisitor on table but not with opponents — proactive hatred (+200)", 200.0f);
+                    logger.info("V35 HATRED: Proactive hatred stack (+200)");
                 } else if (isBattlePhase) {
-                    // During battle — still useful, removes immunities for attrition
-                    action.addReasoning("V29.10 HATRED: Stack Hatred Card to cancel opponent game text — removes attrition immunity!", 250.0f);
-                    logger.warn("V29.10 HATRED: Battle phase Hatred stack (+250)");
+                    action.addReasoning("V29.10 HATRED: Stack during battle — removes immunity (+100)", 100.0f);
                 }
-                // Other phases (Activate, Control) — don't bother, save it for deploy/battle
             }
 
             // ========== V29.9: I HAVE YOU NOW — PLAY DURING BATTLE ==========
@@ -983,6 +1029,101 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         logger.warn("V29.9 IHYN (source): I Have You Now detected via source card — boost +200");
                     }
                 } catch (Exception e) { /* ignore */ }
+            }
+
+            // ========== V35: FAR MORE FRIGHTENING THAN DEATH ==========
+            // FMFTD has two modes:
+            // USED: Stack hatred on opponent's leader/ability>3 at battleground
+            // LOST: Add 1-2 battle destiny if Inquisitor with Jedi/Padawan/Hatred
+            // Detect via testingTexts or action text containing "far more frightening"
+            if (textLower.contains("far more frightening") || textLower.contains("fmftd")) {
+                boolean isFmftdBattle = context.getPhase() == Phase.BATTLE;
+                boolean isFmftdUsedMode = textLower.contains("stack") || (textLower.contains("hatred") && !textLower.contains("destiny"));
+                boolean isFmftdLostMode = textLower.contains("destiny") || textLower.contains("add");
+
+                if (isFmftdLostMode && isFmftdBattle) {
+                    // LOST mode during battle — check for Inquisitor + Jedi + Hatred synergy
+                    boolean v35FmInq = false;
+                    boolean v35FmJedi = false;
+                    boolean v35FmHatred = false;
+                    try {
+                        if (gameState != null && gameState.getBattleState() != null) {
+                            PhysicalCard fmBattleLoc = gameState.getBattleState().getBattleLocation();
+                            if (fmBattleLoc != null) {
+                                String fmPid = context.getPlayerId();
+                                String fmOid = gameState.getOpponent(fmPid);
+                                for (PhysicalCard bc : gameState.getCardsAtLocation(fmBattleLoc)) {
+                                    if (bc == null) continue;
+                                    String bcTitle = bc.getTitle() != null ? bc.getTitle().toLowerCase(Locale.ROOT) : "";
+                                    if (fmPid.equals(bc.getOwner()) && isInquisitor(bcTitle)) v35FmInq = true;
+                                    if (fmOid != null && fmOid.equals(bc.getOwner())) {
+                                        if (isJediOrPadawan(bcTitle)) v35FmJedi = true;
+                                        java.util.List<PhysicalCard> st = gameState.getStackedCards(bc);
+                                        if (st != null && !st.isEmpty()) v35FmHatred = true;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) { /* ignore */ }
+
+                    int synCount = (v35FmInq ? 1 : 0) + (v35FmJedi ? 1 : 0) + (v35FmHatred ? 1 : 0);
+                    if (synCount >= 3) {
+                        action.addReasoning("V35 FMFTD LOST: Inquisitor + Jedi + Hatred — ADD 2 BATTLE DESTINY!", (float) RandoConfig.SCORE_FMFTD_FULL_SYNERGY);
+                        logger.warn("V35 FMFTD: Full synergy! +{}", RandoConfig.SCORE_FMFTD_FULL_SYNERGY);
+                    } else if (synCount >= 2) {
+                        action.addReasoning("V35 FMFTD LOST: Inquisitor with Jedi or Hatred — add 1 battle destiny!", 350.0f);
+                    } else if (v35FmInq) {
+                        action.addReasoning("V35 FMFTD LOST: Inquisitor in battle — add destiny!", 200.0f);
+                    } else {
+                        action.addReasoning("V35 FMFTD LOST: No Inquisitor in battle — limited value", 50.0f);
+                    }
+                } else if (isFmftdUsedMode) {
+                    // USED mode — place hatred card
+                    if (context.getPhase() == Phase.DEPLOY || context.getPhase() == Phase.MOVE) {
+                        action.addReasoning("V35 FMFTD USED: Place hatred on opponent — cancel game text!", 350.0f);
+                    } else {
+                        action.addReasoning("V35 FMFTD USED: Place hatred — decent timing", 150.0f);
+                    }
+                } else if (isFmftdBattle) {
+                    // Generic FMFTD during battle — likely the LOST mode
+                    action.addReasoning("V35 FMFTD: Play during battle for extra destiny!", 250.0f);
+                } else {
+                    action.addReasoning("V35 FMFTD: Save for battle if possible", -100.0f);
+                }
+            }
+
+            // ========== V35: VADER SELF-RECALL (Hunt Down V once-per-game) ==========
+            // "Take Vader into hand" — allows redeploying Vader to hunt Jedi elsewhere
+            // "Return an Inquisitor here to hand" — Eighth Brother repositioning
+            else if (textLower.contains("take vader into hand") || textLower.contains("return") && textLower.contains("inquisitor") && textLower.contains("hand")) {
+                if (textLower.contains("vader")) {
+                    // Vader self-recall — check if there are Jedi elsewhere to hunt
+                    boolean v35JediElsewhere = false;
+                    try {
+                        if (gameState != null) {
+                            String v35Oid = gameState.getOpponent(context.getPlayerId());
+                            for (PhysicalCard loc : gameState.getTopLocations()) {
+                                if (loc == null) continue;
+                                for (PhysicalCard c : gameState.getCardsAtLocation(loc)) {
+                                    if (c == null || !v35Oid.equals(c.getOwner())) continue;
+                                    String ct = c.getTitle() != null ? c.getTitle().toLowerCase(Locale.ROOT) : "";
+                                    if (isJediOrPadawan(ct)) { v35JediElsewhere = true; break; }
+                                }
+                                if (v35JediElsewhere) break;
+                            }
+                        }
+                    } catch (Exception e) { /* ignore */ }
+
+                    if (v35JediElsewhere) {
+                        action.addReasoning("V35 VADER RECALL: Take Vader into hand — Jedi elsewhere to hunt! Redeploy!", 300.0f);
+                        logger.warn("V35 VADER RECALL: Jedi detected elsewhere — recalling Vader to redeploy (+300)");
+                    } else {
+                        action.addReasoning("V35 VADER RECALL: Take Vader into hand — no clear target, keep him deployed", -100.0f);
+                    }
+                } else {
+                    // Inquisitor recall (Eighth Brother ability)
+                    action.addReasoning("V35 INQUISITOR RECALL: Return Inquisitor to hand for repositioning", 100.0f);
+                }
             }
 
             // ========== Battle Destiny Modifier (+1 to battle destiny) ==========

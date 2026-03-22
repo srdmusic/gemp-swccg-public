@@ -210,6 +210,53 @@ public class BattleEvaluator extends ActionEvaluator {
                                     // We're alone here - no battle possible
                                     action.addReasoning("No opponent here", -20.0f);
                                 }
+
+                                // V35: INQUISITOR BATTLE DESTINY BONUS
+                                // Scan for our Inquisitors and opponent Jedi/hatred at this location
+                                // Inquisitors get extra battle destiny draws from Hunt Down V objective
+                                {
+                                    List<PhysicalCard> cardsHere = gameState.getCardsAtLocation(targetLocation);
+                                    boolean inquisitorInBattle = false;
+                                    boolean hatredAtLocation = false;
+                                    boolean jediAtLocation = false;
+
+                                    for (PhysicalCard bCard : cardsHere) {
+                                        if (bCard == null || bCard.getBlueprint() == null) continue;
+                                        String bTitle = bCard.getTitle() != null ? bCard.getTitle().toLowerCase(Locale.ROOT) : "";
+
+                                        if (playerId.equals(bCard.getOwner())) {
+                                            // Our characters — check for Inquisitors
+                                            if (isInquisitor(bTitle)) {
+                                                inquisitorInBattle = true;
+                                            }
+                                        } else {
+                                            // Opponent characters — check for Jedi/Padawan and stacked hatred
+                                            if (isJediOrPadawan(bTitle)) {
+                                                jediAtLocation = true;
+                                            }
+                                            try {
+                                                java.util.List<PhysicalCard> stacked = gameState.getStackedCards(bCard);
+                                                if (stacked != null && !stacked.isEmpty()) {
+                                                    hatredAtLocation = true;
+                                                }
+                                            } catch (Exception e) { /* ignore */ }
+                                        }
+                                    }
+
+                                    if (inquisitorInBattle) {
+                                        float destinyBonus = 120.0f; // +1 battle destiny from objective
+                                        if (hatredAtLocation) destinyBonus = 250.0f; // +2 battle destiny
+                                        if (jediAtLocation) destinyBonus += 100.0f; // FMFTD and Fifth Brother bonuses
+                                        action.addReasoning(String.format(
+                                            "V35 HUNT DESTINY: Inquisitor in battle%s%s — +%d total battle destiny!",
+                                            hatredAtLocation ? " + HATRED" : "",
+                                            jediAtLocation ? " vs JEDI" : "",
+                                            hatredAtLocation ? 2 : 1), destinyBonus);
+                                        logger.warn("V35 HUNT DESTINY at {}: Inquisitor={}, hatred={}, jedi={} — bonus +{}",
+                                            targetLocation.getTitle(), inquisitorInBattle, hatredAtLocation,
+                                            jediAtLocation, (int)destinyBonus);
+                                    }
+                                }
                             }
 
                             // V22.4: Fallback — if we couldn't identify the specific location,

@@ -745,12 +745,31 @@ public class MoveEvaluator extends ActionEvaluator {
                             }
                         } catch (Exception e) { /* ignore */ }
                     }
+                    // V35: Extra bonus if destination has Jedi/Padawan and we're Vader
+                    boolean v35JediAtDest = false;
+                    try {
+                        for (PhysicalCard dc : gameState.getCardsAtLocation(v34Dest)) {
+                            if (dc == null || playerId.equals(dc.getOwner())) continue;
+                            String dcTitle = dc.getTitle() != null ? dc.getTitle().toLowerCase(Locale.ROOT) : "";
+                            if (isJediOrPadawan(dcTitle)) {
+                                v35JediAtDest = true;
+                                break;
+                            }
+                        }
+                    } catch (Exception e) { /* ignore */ }
+
+                    if (v35JediAtDest && cardToMove != null && cardToMove.getTitle() != null
+                        && cardToMove.getTitle().toLowerCase(Locale.ROOT).contains("vader")) {
+                        contestBonus += 150.0f; // V35: Vader hunting Jedi
+                    }
+
                     action.addReasoning(String.format(
-                        "V34 CONTEST: Moving to %s where opponents have power %.0f — block their drain and fight!",
-                        v34Dest.getTitle(), destOppPower), contestBonus);
-                    logger.warn("V34 CONTEST: {} moving to {} (opponent power {}) — bonus +{}",
+                        "V34 CONTEST: Moving to %s where opponents have power %.0f%s — block their drain and fight!",
+                        v34Dest.getTitle(), destOppPower, v35JediAtDest ? " [JEDI!]" : ""), contestBonus);
+                    logger.warn("V34 CONTEST: {} moving to {} (opponent power {}{}) — bonus +{}",
                         cardToMove != null ? cardToMove.getTitle() : "?",
-                        v34Dest.getTitle(), (int)destOppPower, (int)contestBonus);
+                        v34Dest.getTitle(), (int)destOppPower,
+                        v35JediAtDest ? " JEDI" : "", (int)contestBonus);
                 } else {
                     // Moving to empty location — check if opponents are draining uncontested elsewhere
                     boolean opponentsUncontested = false;
