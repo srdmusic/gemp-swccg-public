@@ -47,18 +47,12 @@ public class Card210_006 extends AbstractAlien {
     }
 
     @Override
-    protected List<Modifier> getGameTextAlwaysOnModifiers(SwccgGame game, PhysicalCard self) {
+    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
         UtinniEffectCompletedCondition KesselRunCompleted = new UtinniEffectCompletedCondition(self.getOwner(), Filters.Kessel_Run);
 
         List<Modifier> modifiers = new LinkedList<Modifier>();
-        modifiers.add(new TotalPowerModifier(self, Filters.here(self), KesselRunCompleted, 2, self.getOwner()));
-        return modifiers;
-    }
-
-    @Override
-    protected List<Modifier> getGameTextWhileActiveInPlayModifiers(SwccgGame game, final PhysicalCard self) {
-        List<Modifier> modifiers = new LinkedList<Modifier>();
         modifiers.add(new AddsPowerToPilotedBySelfModifier(self, 3));
+        modifiers.add(new TotalPowerModifier(self, Filters.here(self), KesselRunCompleted, 2, self.getOwner()));
         modifiers.add(new ImmuneToAttritionLessThanModifier(self, 3));
         return modifiers;
     }
