@@ -889,11 +889,19 @@ public class DeployEvaluator extends ActionEvaluator {
                                         } catch (Exception e) { /* ignore */ }
                                     }
                                     if (opponentsElsewhere) {
+                                        com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer emptyDeployAnalyzer =
+                                            context.getObjectiveAnalyzer();
+                                        boolean isHuntDown = emptyDeployAnalyzer != null
+                                            && emptyDeployAnalyzer.isAnalyzed() && emptyDeployAnalyzer.isHuntDownV();
+                                        float emptyPenalty = isHuntDown ? -1500.0f : -200.0f; // V35.2: raised from -800
                                         action.addReasoning(String.format(
-                                            "V34 EMPTY DEPLOY: %s to %s has NO opponents — deploy where they ARE instead!",
-                                            card.getTitle(), locCard.getTitle()), -200.0f);
-                                        LOG.warn("V34 EMPTY DEPLOY: {} to {} — no opponents here, opponents elsewhere (-200)",
-                                            card.getTitle(), locCard.getTitle());
+                                            "V35.1 EMPTY DEPLOY: %s to %s has NO opponents — %s!",
+                                            card.getTitle(), locCard.getTitle(),
+                                            isHuntDown ? "HUNT DOWN: GO WHERE OPPONENTS ARE" : "deploy where they ARE instead"),
+                                            emptyPenalty);
+                                        LOG.warn("V35.1 EMPTY DEPLOY: {} to {} — no opponents, opponents elsewhere (penalty {}{})",
+                                            card.getTitle(), locCard.getTitle(), (int)emptyPenalty,
+                                            isHuntDown ? " HUNT DOWN HARD BLOCK" : "");
                                     }
                                 }
                                 break;
@@ -1629,6 +1637,117 @@ public class DeployEvaluator extends ActionEvaluator {
                             }
                         } catch (Exception e) {
                             LOG.debug("V30 MATCHING SHIP CHECK: Error: {}", e.getMessage());
+                        }
+                    }
+
+                    // === V35.6: SHIP ABILITY CHECK — NEED >= 4 ABILITY AT SYSTEM ===
+                    if ((category == CardCategory.STARSHIP || category == CardCategory.VEHICLE)
+                        && card != null && card.getBlueprint() != null && gameState != null) {
+                        try {
+                            float shipAbility = 0;
+                            if (card.getBlueprint().hasAbilityAttribute()) {
+                                Float sa = card.getBlueprint().getAbility();
+                                shipAbility = sa != null ? sa : 0;
+                            }
+                            String v36Pid = context.getPlayerId();
+                            boolean matchingPilotAffordable = false;
+                            float matchingPilotAbility = 0;
+                            String matchingPilotTitle = null;
+                            int shipCost = card.getBlueprint().getDeployCost() != null
+                                ? card.getBlueprint().getDeployCost().intValue() : 0;
+                            Filter matchPilotFilter = card.getBlueprint().getMatchingPilotFilter();
+                            java.util.List<PhysicalCard> v36Hand = gameState.getHand(v36Pid);
+                            if (v36Hand != null && matchPilotFilter != null) {
+                                for (PhysicalCard hc : v36Hand) {
+                                    if (hc == null || hc.getBlueprint() == null) continue;
+                                    if (hc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                    if (matchPilotFilter.accepts(game.getGameState(), game.getModifiersQuerying(), hc)) {
+                                        matchingPilotTitle = hc.getTitle();
+                                        Float mpAb = hc.getBlueprint().getAbility();
+                                        matchingPilotAbility = mpAb != null ? mpAb : 0;
+                                        int pilotCost = hc.getBlueprint().getDeployCost() != null
+                                            ? hc.getBlueprint().getDeployCost().intValue() : 0;
+                                        int totalCost = shipCost + Math.max(0, pilotCost / 2);
+                                        if (context.getForcePileSize() >= totalCost) matchingPilotAffordable = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            float totalAbilityWithPilot = shipAbility + (matchingPilotAffordable ? matchingPilotAbility : 0);
+                            if (matchingPilotAffordable && matchingPilotTitle != null) {
+                                action.addReasoning(String.format(
+                                    "V35.6 NAMED PILOT: %s + %s (ability %.0f+%.0f=%.0f) — deploy together!",
+                                    card.getTitle(), matchingPilotTitle, shipAbility, matchingPilotAbility, totalAbilityWithPilot),
+                                    300.0f);
+                            }
+                            // V35.7: ALL ships with ability < 4 need a pilot
+                            if (shipAbility < 4.0f) {
+                                boolean anyPilotHelps = false;
+                                if (v36Hand != null) {
+                                    for (PhysicalCard hc : v36Hand) {
+                                        if (hc == null || hc.getBlueprint() == null) continue;
+                                        if (hc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                        if (!hc.getBlueprint().hasAbilityAttribute()) continue;
+                                        Float hcAb = hc.getBlueprint().getAbility();
+                                        if (hcAb != null && (shipAbility + hcAb) >= 4.0f) {
+                                            anyPilotHelps = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (!anyPilotHelps) {
+                                    action.addReasoning(String.format(
+                                        "V35.7 SHIP ABILITY: %s ability %.0f — BLOCKED!",
+                                        card.getTitle(), shipAbility), -800.0f);
+                                } else if (!matchingPilotAffordable) {
+                                    action.addReasoning(String.format(
+                                        "V35.7 SHIP: %s needs pilot but can't afford both!",
+                                        card.getTitle()), -400.0f);
+                                } else {
+                                    action.addReasoning(String.format(
+                                        "V35.7 SHIP: %s needs pilot aboard for ability 4",
+                                        card.getTitle()), -100.0f);
+                                }
+                            }
+                        } catch (Exception e) {
+                            LOG.debug("V35.6 SHIP ABILITY: Error: {}", e.getMessage());
+                        }
+                    }
+
+                    // === V35.5: DON'T DEPLOY WEAK STARSHIPS AGAINST STRONG OPPONENTS ===
+                    if ((category == CardCategory.STARSHIP || category == CardCategory.VEHICLE)
+                        && gameState != null && game != null) {
+                        try {
+                            String v35ShipPid = context.getPlayerId();
+                            String v35ShipOid = gameState.getOpponent(v35ShipPid);
+                            String v35ShipActionLower = actionText.toLowerCase(Locale.ROOT);
+                            float ourShipPower = 0;
+                            if (card.getBlueprint().hasPowerAttribute()) {
+                                Float sp = card.getBlueprint().getPower();
+                                ourShipPower = sp != null ? sp : 0;
+                            }
+                            for (PhysicalCard sysLoc : gameState.getLocationsInOrder()) {
+                                if (sysLoc == null || sysLoc.getTitle() == null) continue;
+                                if (sysLoc.getBlueprint() == null || sysLoc.getBlueprint().getCardSubtype() == null) continue;
+                                if (sysLoc.getBlueprint().getCardSubtype() != com.gempukku.swccgo.common.CardSubtype.SYSTEM
+                                    && sysLoc.getBlueprint().getCardSubtype() != com.gempukku.swccgo.common.CardSubtype.SECTOR) continue;
+                                String sysTitle = sysLoc.getTitle().toLowerCase(Locale.ROOT);
+                                if (sysTitle.isEmpty() || !v35ShipActionLower.contains(sysTitle)) continue;
+                                float oppShipPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    gameState, sysLoc, v35ShipOid, false, false);
+                                if (oppShipPower > 0 && oppShipPower > ourShipPower * 1.5f) {
+                                    float shipPenalty = -600.0f;
+                                    if (oppShipPower > ourShipPower * 3) shipPenalty = -1000.0f;
+                                    action.addReasoning(String.format(
+                                        "V35.5 SHIP SUICIDE: %s (power %.0f) vs opponent (power %.0f) — OUTGUNNED!",
+                                        card.getTitle(), ourShipPower, oppShipPower), shipPenalty);
+                                    LOG.warn("V35.5 SHIP SUICIDE: {} power {} vs opponent {} — BLOCKED ({})",
+                                        card.getTitle(), (int)ourShipPower, (int)oppShipPower, (int)shipPenalty);
+                                }
+                                break;
+                            }
+                        } catch (Exception e) {
+                            LOG.debug("V35.5 SHIP CHECK: Error: {}", e.getMessage());
                         }
                     }
 

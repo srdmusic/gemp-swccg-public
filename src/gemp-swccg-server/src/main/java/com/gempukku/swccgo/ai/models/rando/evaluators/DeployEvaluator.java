@@ -1272,15 +1272,34 @@ public class DeployEvaluator extends ActionEvaluator {
                                     boolean isNotVader = !deployCardTitle.contains("vader");
 
                                     if (deploysToVaderLoc && isNotVader) {
-                                        // Deploying WITH Vader — HUGE bonus!
-                                        float groupBonus = 250.0f;
-                                        // Extra bonus for characters with high power (more battle impact)
-                                        if (powerVal >= 5) groupBonus += 50.0f;
-                                        action.addReasoning(String.format(
-                                            "V29.12 HUNT DOWN GROUP: Deploy %s WITH Vader at %s — overwhelming force!",
-                                            card.getTitle(), vaderLoc.getTitle()), groupBonus);
-                                        LOG.warn("V29.12 HUNT DOWN GROUP: {} deploying WITH Vader at {} (+{})",
-                                            card.getTitle(), vaderLoc.getTitle(), (int)groupBonus);
+                                        // V35.1: Only give grouping bonus if opponents are at Vader's location
+                                        // or nowhere else on the board. Don't group at empty locations!
+                                        float oppAtVaderLoc = 0;
+                                        try {
+                                            String v351Oid = game.getOpponent(playerId);
+                                            oppAtVaderLoc = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                                gameState, vaderLoc, v351Oid, false, false);
+                                        } catch (Exception e) { /* ignore */ }
+
+                                        if (oppAtVaderLoc > 0) {
+                                            // Opponents at Vader's location — GREAT, deploy to fight!
+                                            float groupBonus = 350.0f; // V35.1: Raised from 250
+                                            if (powerVal >= 5) groupBonus += 50.0f;
+                                            action.addReasoning(String.format(
+                                                "V35.1 HUNT GROUP+ENGAGE: Deploy %s WITH Vader at %s — opponents here (power %.0f)!",
+                                                card.getTitle(), vaderLoc.getTitle(), oppAtVaderLoc), groupBonus);
+                                            LOG.warn("V35.1 HUNT GROUP+ENGAGE: {} with Vader at {} — opponents power={} (+{})",
+                                                card.getTitle(), vaderLoc.getTitle(), (int)oppAtVaderLoc, (int)groupBonus);
+                                        } else {
+                                            // Vader is at an EMPTY location — grouping here wastes deployment
+                                            // Only mild bonus (better to deploy where opponents are)
+                                            float groupBonus = 50.0f; // V35.1: Reduced from 250!
+                                            action.addReasoning(String.format(
+                                                "V35.1 HUNT GROUP (EMPTY): Deploy %s with Vader at %s — but NO opponents here!",
+                                                card.getTitle(), vaderLoc.getTitle()), groupBonus);
+                                            LOG.warn("V35.1 HUNT GROUP EMPTY: {} with Vader at {} — no opponents (only +{})",
+                                                card.getTitle(), vaderLoc.getTitle(), (int)groupBonus);
+                                        }
                                     } else if (isNotVader && !deploysToVaderLoc) {
                                         // Deploying AWAY from Vader — penalize
                                         // Exception: if deploying to a location where we need presence for objective
@@ -1302,10 +1321,12 @@ public class DeployEvaluator extends ActionEvaluator {
                                         }
 
                                         if (!isObjRelevant) {
+                                            // V35.7: Raised from -150 to -600. Inquisitors MUST deploy with Vader.
+                                            // The old -150 was easily overridden by DIRECT ENGAGE (+350) at spy locations.
                                             action.addReasoning(String.format(
-                                                "V29.12 HUNT DOWN SCATTER: %s deploying AWAY from Vader — group up instead!",
-                                                card.getTitle()), -150.0f);
-                                            LOG.warn("V29.12 HUNT DOWN SCATTER: {} NOT at Vader's location ({}) — penalizing (-150)",
+                                                "V35.7 HUNT SCATTER: %s deploying AWAY from Vader at %s — MUST group with Vader!",
+                                                card.getTitle(), vaderLoc.getTitle()), -600.0f);
+                                            LOG.warn("V35.7 HUNT SCATTER: {} NOT at Vader's location ({}) — hard penalty (-600)",
                                                 card.getTitle(), vaderLoc.getTitle());
                                         }
                                     }
@@ -1407,11 +1428,22 @@ public class DeployEvaluator extends ActionEvaluator {
                                         } catch (Exception e) { /* ignore */ }
                                     }
                                     if (opponentsElsewhere) {
+                                        // V35.1: Hunt Down V — HARD BLOCK deploying to empty sites
+                                        // This deck hunts and destroys ALL opponents. Never deploy
+                                        // to empty locations when opponents exist at battlegrounds.
+                                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer emptyDeployAnalyzer =
+                                            context.getObjectiveAnalyzer();
+                                        boolean isHuntDown = emptyDeployAnalyzer != null
+                                            && emptyDeployAnalyzer.isAnalyzed() && emptyDeployAnalyzer.isHuntDownV();
+                                        float emptyPenalty = isHuntDown ? -1500.0f : -200.0f; // V35.2: -800 wasn't enough, raised to -1500
                                         action.addReasoning(String.format(
-                                            "V34 EMPTY DEPLOY: %s to %s has NO opponents — deploy where they ARE instead!",
-                                            card.getTitle(), locCard.getTitle()), -200.0f); // V34: Raised from -75
-                                        LOG.warn("V34 EMPTY DEPLOY: {} to {} — no opponents here, opponents elsewhere (-200)",
-                                            card.getTitle(), locCard.getTitle());
+                                            "V35.1 EMPTY DEPLOY: %s to %s has NO opponents — %s!",
+                                            card.getTitle(), locCard.getTitle(),
+                                            isHuntDown ? "HUNT DOWN: GO WHERE OPPONENTS ARE" : "deploy where they ARE instead"),
+                                            emptyPenalty);
+                                        LOG.warn("V35.1 EMPTY DEPLOY: {} to {} — no opponents, opponents elsewhere (penalty {}{})",
+                                            card.getTitle(), locCard.getTitle(), (int)emptyPenalty,
+                                            isHuntDown ? " HUNT DOWN HARD BLOCK" : "");
                                     }
                                 }
                                 break; // Found the target location
@@ -2296,6 +2328,157 @@ public class DeployEvaluator extends ActionEvaluator {
                             }
                         } catch (Exception e) {
                             LOG.debug("V30 MATCHING SHIP CHECK: Error: {}", e.getMessage());
+                        }
+                    }
+
+                    // === V35.6: SHIP ABILITY CHECK — NEED >= 4 ABILITY AT SYSTEM ===
+                    // Just like sites need ability >= 4 to draw battle destiny, ships at
+                    // systems need total ability >= 4. A ship's permanent pilot provides
+                    // some ability (usually 1-2), but you need additional pilots to reach 4.
+                    // Don't deploy a ship unless you have enough Force to also deploy pilots
+                    // that bring total ability to >= 4, OR the ship's permanent pilot alone has >= 4.
+                    // Also: if the ship has a matching pilot (Emperor for Emperor's Shuttle,
+                    // Vader for Vader's Shuttle), strongly boost deploying that pilot aboard.
+                    if ((category == CardCategory.STARSHIP || category == CardCategory.VEHICLE)
+                        && card != null && card.getBlueprint() != null && gameState != null) {
+                        try {
+                            // Get ship's built-in ability (permanent pilot)
+                            float shipAbility = 0;
+                            if (card.getBlueprint().hasAbilityAttribute()) {
+                                Float sa = card.getBlueprint().getAbility();
+                                shipAbility = sa != null ? sa : 0;
+                            }
+
+                            // Check if matching pilot is in hand and affordable
+                            String v36Pid = context.getPlayerId();
+                            boolean matchingPilotAffordable = false;
+                            float matchingPilotAbility = 0;
+                            String matchingPilotTitle = null;
+                            int shipCost = card.getBlueprint().getDeployCost() != null
+                                ? card.getBlueprint().getDeployCost().intValue() : 0;
+
+                            // Use the ship's matching pilot filter
+                            Filter matchPilotFilter = card.getBlueprint().getMatchingPilotFilter();
+                            java.util.List<PhysicalCard> v36Hand = gameState.getHand(v36Pid);
+                            if (v36Hand != null && matchPilotFilter != null) {
+                                for (PhysicalCard hc : v36Hand) {
+                                    if (hc == null || hc.getBlueprint() == null) continue;
+                                    if (hc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                    if (matchPilotFilter.accepts(game.getGameState(), game.getModifiersQuerying(), hc)) {
+                                        matchingPilotTitle = hc.getTitle();
+                                        Float mpAb = hc.getBlueprint().getAbility();
+                                        matchingPilotAbility = mpAb != null ? mpAb : 0;
+                                        // Check if we can afford ship + pilot
+                                        int pilotCost = hc.getBlueprint().getDeployCost() != null
+                                            ? hc.getBlueprint().getDeployCost().intValue() : 0;
+                                        // Matching pilot often deploys free or reduced aboard
+                                        // Assume reduced cost (half) for matching pilot
+                                        int totalCost = shipCost + Math.max(0, pilotCost / 2);
+                                        int availForce = context.getForcePileSize();
+                                        if (availForce >= totalCost) matchingPilotAffordable = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            float totalAbilityWithPilot = shipAbility + (matchingPilotAffordable ? matchingPilotAbility : 0);
+
+                            if (matchingPilotAffordable && matchingPilotTitle != null) {
+                                // Matching pilot in hand and affordable — DEPLOY TOGETHER
+                                action.addReasoning(String.format(
+                                    "V35.6 NAMED PILOT: %s has matching pilot %s in hand (ability %.0f+%.0f=%.0f) — deploy together!",
+                                    card.getTitle(), matchingPilotTitle, shipAbility, matchingPilotAbility, totalAbilityWithPilot),
+                                    300.0f);
+                                LOG.warn("V35.6 NAMED PILOT: {} + {} — total ability {} (+300)",
+                                    card.getTitle(), matchingPilotTitle, totalAbilityWithPilot);
+                            }
+
+                            // V35.7: ALL ships with ability < 4 need a pilot. Period.
+                            // Even if a pilot CAN help, deploying a ship solo is dangerous
+                            // because Rando might not follow up with the pilot deploy.
+                            if (shipAbility < 4.0f) {
+                                boolean anyPilotHelps = false;
+                                if (v36Hand != null) {
+                                    for (PhysicalCard hc : v36Hand) {
+                                        if (hc == null || hc.getBlueprint() == null) continue;
+                                        if (hc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                        if (!hc.getBlueprint().hasAbilityAttribute()) continue;
+                                        Float hcAb = hc.getBlueprint().getAbility();
+                                        if (hcAb != null && (shipAbility + hcAb) >= 4.0f) {
+                                            anyPilotHelps = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (!anyPilotHelps) {
+                                    // No pilot in hand can reach ability 4 — HARD BLOCK
+                                    action.addReasoning(String.format(
+                                        "V35.7 SHIP ABILITY: %s ability %.0f — no pilot can reach 4! BLOCKED!",
+                                        card.getTitle(), shipAbility), -800.0f);
+                                    LOG.warn("V35.7 SHIP ABILITY: {} ability {} — HARD BLOCK (-800)",
+                                        card.getTitle(), shipAbility);
+                                } else if (!matchingPilotAffordable) {
+                                    // Pilot exists but can't afford ship+pilot together — risky
+                                    action.addReasoning(String.format(
+                                        "V35.7 SHIP ABILITY: %s needs pilot but can't afford both! (ship cost %d, Force %d)",
+                                        card.getTitle(), shipCost, context.getForcePileSize()), -400.0f);
+                                    LOG.warn("V35.7 SHIP ABILITY: {} — pilot exists but unaffordable (-400)",
+                                        card.getTitle());
+                                } else {
+                                    // Pilot exists and affordable — mild warning to deploy together
+                                    action.addReasoning(String.format(
+                                        "V35.7 SHIP: %s needs %s aboard for ability 4 — deploy together!",
+                                        card.getTitle(), matchingPilotTitle != null ? matchingPilotTitle : "a pilot"), -100.0f);
+                                }
+                            }
+                        } catch (Exception e) {
+                            LOG.debug("V35.6 SHIP ABILITY: Error: {}", e.getMessage());
+                        }
+                    }
+
+                    // === V35.5: DON'T DEPLOY WEAK STARSHIPS AGAINST STRONG OPPONENTS ===
+                    // Emperor's Personal Shuttle (power 2) should NOT deploy to a system where
+                    // Han, Chewie, And The Falcon (power 8+) is waiting. That's suicide.
+                    // Check opponent ship power at the target system before deploying.
+                    if ((category == CardCategory.STARSHIP || category == CardCategory.VEHICLE)
+                        && gameState != null && game != null) {
+                        try {
+                            String v35ShipPid = context.getPlayerId();
+                            String v35ShipOid = gameState.getOpponent(v35ShipPid);
+                            String v35ShipActionLower = actionText.toLowerCase(Locale.ROOT);
+
+                            // Get our ship's power
+                            float ourShipPower = 0;
+                            if (card.getBlueprint().hasPowerAttribute()) {
+                                Float sp = card.getBlueprint().getPower();
+                                ourShipPower = sp != null ? sp : 0;
+                            }
+
+                            // Find the target system in action text
+                            for (PhysicalCard sysLoc : gameState.getLocationsInOrder()) {
+                                if (sysLoc == null || sysLoc.getTitle() == null) continue;
+                                if (sysLoc.getBlueprint() == null || sysLoc.getBlueprint().getCardSubtype() == null) continue;
+                                if (sysLoc.getBlueprint().getCardSubtype() != com.gempukku.swccgo.common.CardSubtype.SYSTEM
+                                    && sysLoc.getBlueprint().getCardSubtype() != com.gempukku.swccgo.common.CardSubtype.SECTOR) continue;
+                                String sysTitle = sysLoc.getTitle().toLowerCase(Locale.ROOT);
+                                if (sysTitle.isEmpty() || !v35ShipActionLower.contains(sysTitle)) continue;
+
+                                // Found target system — check opponent ship power there
+                                float oppShipPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    gameState, sysLoc, v35ShipOid, false, false);
+                                if (oppShipPower > 0 && oppShipPower > ourShipPower * 1.5f) {
+                                    float shipPenalty = -600.0f;
+                                    if (oppShipPower > ourShipPower * 3) shipPenalty = -1000.0f; // Massive mismatch
+                                    action.addReasoning(String.format(
+                                        "V35.5 SHIP SUICIDE: %s (power %.0f) vs opponent ships (power %.0f) at %s — OUTGUNNED!",
+                                        card.getTitle(), ourShipPower, oppShipPower, sysLoc.getTitle()), shipPenalty);
+                                    LOG.warn("V35.5 SHIP SUICIDE: {} power {} vs opponent {} at {} — BLOCKED ({})",
+                                        card.getTitle(), (int)ourShipPower, (int)oppShipPower, sysLoc.getTitle(), (int)shipPenalty);
+                                }
+                                break;
+                            }
+                        } catch (Exception e) {
+                            LOG.debug("V35.5 SHIP CHECK: Error: {}", e.getMessage());
                         }
                     }
 

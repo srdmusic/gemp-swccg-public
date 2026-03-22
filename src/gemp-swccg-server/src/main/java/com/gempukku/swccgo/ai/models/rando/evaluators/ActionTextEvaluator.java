@@ -921,10 +921,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 boolean isBattlePhase = context.getPhase() == Phase.BATTLE
                     || decisionText.contains("battle") || decisionText.contains("weapons segment");
 
-                // V35: Context-aware hatred scoring — check if Inquisitor is with opponents
-                boolean v35InquisitorWithOpponents = false;
-                boolean v35InquisitorOnTable = false;
-                boolean v35JediAtInquisitorLoc = false;
+                // V35.3: STRICT hatred scoring — ONLY place hatred when Vader or Inquisitor
+                // is at the SAME SITE as an opponent character. No proactive/remote hatred.
+                boolean v35VaderOrInqWithOpponents = false;
+                boolean v35InqOnTable = false;
+                boolean v35JediAtSameSite = false;
                 try {
                     if (gameState != null) {
                         String v35Pid = context.getPlayerId();
@@ -936,45 +937,47 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             com.gempukku.swccgo.common.Zone tz = tCard.getZone();
                             if (tz == null || !tz.isInPlay()) continue;
                             String tTitle = tCard.getTitle() != null ? tCard.getTitle().toLowerCase(Locale.ROOT) : "";
+                            // V35.7: Hatred requires INQUISITOR only (NOT Vader alone).
+                            // The card "There Are Many Hunting You Now" requires "your Inquisitor"
+                            // at the same location. Vader alone cannot use hatred.
                             if (isInquisitor(tTitle)) {
-                                v35InquisitorOnTable = true;
-                                PhysicalCard inqLoc = tCard.getAtLocation();
-                                if (inqLoc != null) {
+                                v35InqOnTable = true;
+                                PhysicalCard charLoc = tCard.getAtLocation();
+                                if (charLoc != null) {
                                     float oppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
-                                        gameState, inqLoc, v35Oid, false, false);
+                                        gameState, charLoc, v35Oid, false, false);
                                     if (oppPower > 0) {
-                                        v35InquisitorWithOpponents = true;
-                                        // Check for Jedi at this location
-                                        for (PhysicalCard lc : gameState.getCardsAtLocation(inqLoc)) {
+                                        v35VaderOrInqWithOpponents = true;
+                                        for (PhysicalCard lc : gameState.getCardsAtLocation(charLoc)) {
                                             if (lc == null || !v35Oid.equals(lc.getOwner())) continue;
                                             String lcT = lc.getTitle() != null ? lc.getTitle().toLowerCase(Locale.ROOT) : "";
-                                            if (isJediOrPadawan(lcT)) { v35JediAtInquisitorLoc = true; break; }
+                                            if (isJediOrPadawan(lcT)) { v35JediAtSameSite = true; break; }
                                         }
                                     }
                                 }
-                                if (v35InquisitorWithOpponents) break; // Found ideal setup
+                                if (v35VaderOrInqWithOpponents) break;
                             }
                         }
                     }
                 } catch (Exception e) { /* ignore */ }
 
-                if (!v35InquisitorOnTable) {
-                    // V35: No Inquisitor on table — can't use "There Are Many Hunting You Now"
-                    action.addReasoning("V35 HATRED: No Inquisitor on table — hatred placement impossible!", -100.0f);
-                    logger.info("V35 HATRED: No Inquisitor — blocking hatred action (-100)");
-                } else if (v35InquisitorWithOpponents) {
+                if (!v35InqOnTable) {
+                    // V35.7: No Inquisitor on table — hatred requires Inquisitor, BLOCK
+                    action.addReasoning("V35.7 HATRED: No Inquisitor on table — hatred requires Inquisitor!", -500.0f);
+                    logger.warn("V35.7 HATRED: No Inquisitor — hard block (-500)");
+                } else if (v35VaderOrInqWithOpponents) {
+                    // V35.7: Inquisitor AT SAME SITE as opponent — hatred is useful!
                     float hatredScore = isDeployPhase ? (float) RandoConfig.SCORE_HATRED_WITH_INQUISITOR : 350.0f;
-                    if (v35JediAtInquisitorLoc) hatredScore += 150.0f; // Hunt Down destiny bonus with Jedi
+                    if (v35JediAtSameSite) hatredScore += 150.0f;
                     action.addReasoning(String.format(
-                        "V35 HATRED: Inquisitor WITH opponents%s — stack hatred to cancel game text! (+%.0f)",
-                        v35JediAtInquisitorLoc ? " + JEDI" : "", hatredScore), hatredScore);
-                    logger.warn("V35 HATRED: Inquisitor with opponents (jedi={}) — score +{}",
-                        v35JediAtInquisitorLoc, (int)hatredScore);
-                } else if (isDeployPhase) {
-                    action.addReasoning("V35 HATRED: Inquisitor on table but not with opponents — proactive hatred (+200)", 200.0f);
-                    logger.info("V35 HATRED: Proactive hatred stack (+200)");
-                } else if (isBattlePhase) {
-                    action.addReasoning("V29.10 HATRED: Stack during battle — removes immunity (+100)", 100.0f);
+                        "V35.7 HATRED: Inquisitor WITH opponents%s — cancel game text! (+%.0f)",
+                        v35JediAtSameSite ? " + JEDI" : "", hatredScore), hatredScore);
+                    logger.warn("V35.7 HATRED: Inquisitor with opponents (jedi={}) — score +{}",
+                        v35JediAtSameSite, (int)hatredScore);
+                } else {
+                    // V35.3: Vader/Inquisitor NOT at same site as any opponent — DON'T waste hatred
+                    action.addReasoning("V35.3 HATRED: Vader/Inquisitor not at same site as opponents — save for later!", -300.0f);
+                    logger.warn("V35.3 HATRED: No Vader/Inq co-located with opponents — blocked (-300)");
                 }
             }
 
@@ -1121,8 +1124,92 @@ public class ActionTextEvaluator extends ActionEvaluator {
                         action.addReasoning("V35 VADER RECALL: Take Vader into hand — no clear target, keep him deployed", -100.0f);
                     }
                 } else {
-                    // Inquisitor recall (Eighth Brother ability)
-                    action.addReasoning("V35 INQUISITOR RECALL: Return Inquisitor to hand for repositioning", 100.0f);
+                    // V35.1: Inquisitor recall — DON'T recall if opponents are nearby!
+                    // Eighth Brother's ability returns an Inquisitor to hand. Only do this
+                    // if there are NO opponents at adjacent sites. If opponents are nearby,
+                    // keep the Inquisitor to fight!
+                    boolean opponentsNearby = false;
+                    try {
+                        if (gameState != null) {
+                            String recallPid = context.getPlayerId();
+                            String recallOid = gameState.getOpponent(recallPid);
+                            for (PhysicalCard loc : gameState.getTopLocations()) {
+                                if (loc == null) continue;
+                                float oppPwr = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    gameState, loc, recallOid, false, false);
+                                if (oppPwr > 0) { opponentsNearby = true; break; }
+                            }
+                        }
+                    } catch (Exception e) { /* ignore */ }
+
+                    if (opponentsNearby) {
+                        action.addReasoning("V35.1 INQUISITOR RECALL BLOCK: Opponents on the board — KEEP Inquisitor to fight!", -400.0f);
+                        logger.warn("V35.1 INQUISITOR RECALL BLOCKED: Opponents present — don't pull back (-400)");
+                    } else {
+                        action.addReasoning("V35 INQUISITOR RECALL: No opponents on board — safe to reposition", 100.0f);
+                    }
+                }
+            }
+
+            // ========== V35.4: STUNNING LEADER — ONLY USE DEFENSIVELY ==========
+            // Stunning Leader excludes characters from battle. This is ONLY useful when:
+            // 1. OPPONENT initiated the battle (we're defending)
+            // 2. Opponent has a clear power advantage (we need to reduce their forces)
+            // NEVER use when WE initiated battle — we started it to WIN, not to exclude everyone!
+            else if (textLower.contains("stunning leader") || textLower.contains("exclude") && textLower.contains("from battle")) {
+                if (context.getPhase() == Phase.BATTLE && gameState != null) {
+                    try {
+                        com.gempukku.swccgo.game.state.BattleState bState = gameState.getBattleState();
+                        if (bState != null) {
+                            String slPlayerId = context.getPlayerId();
+                            String slInitiator = bState.getPlayerInitiatedBattle();
+                            boolean weInitiated = slPlayerId != null && slPlayerId.equals(slInitiator);
+
+                            if (weInitiated) {
+                                // WE started this battle — NEVER use Stunning Leader to exclude!
+                                action.addReasoning("V35.4 STUNNING LEADER: WE initiated battle — do NOT exclude! Fight to WIN!", -600.0f);
+                                logger.warn("V35.4 STUNNING LEADER BLOCKED: We initiated battle — don't exclude characters (-600)");
+                            } else {
+                                // Opponent initiated — check if they have advantage
+                                PhysicalCard slBattleLoc = bState.getBattleLocation();
+                                if (slBattleLoc != null) {
+                                    String slOpp = gameState.getOpponent(slPlayerId);
+                                    float slOurPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, slBattleLoc, slPlayerId, false, false);
+                                    float slTheirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                        gameState, slBattleLoc, slOpp, false, false);
+                                    if (slTheirPower > slOurPower) {
+                                        // Opponent is stronger — Stunning Leader is valuable defensively
+                                        action.addReasoning(String.format(
+                                            "V35.4 STUNNING LEADER: Opponent stronger (%.0f vs %.0f) — exclude threats!",
+                                            slOurPower, slTheirPower), 200.0f);
+                                    } else {
+                                        // We're winning even though they initiated — don't waste it
+                                        action.addReasoning("V35.4 STUNNING LEADER: We're winning this battle — save it!", -200.0f);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        logger.debug("V35.4 STUNNING LEADER: Error: {}", e.getMessage());
+                    }
+                } else {
+                    // Not in battle — save for when we need it
+                    action.addReasoning("V35.4 STUNNING LEADER: Save for defensive use during battle!", -100.0f);
+                }
+            }
+
+            // ========== V35.4: YOU ARE BEATEN — DON'T WASTE ON UNDERCOVER SPIES ==========
+            // You Are Beaten targets opponent characters. But undercover spies appear on OUR side
+            // and aren't valid targets for combat effects. Don't waste this interrupt.
+            // Also: only use during battle or when it will lead to meaningful attrition.
+            else if (textLower.contains("you are beaten")) {
+                if (context.getPhase() == Phase.BATTLE) {
+                    action.addReasoning("V35.4 YOU ARE BEATEN: During battle — use for attrition!", 150.0f);
+                } else {
+                    // Outside battle — this is usually a waste
+                    action.addReasoning("V35.4 YOU ARE BEATEN: Not in battle — save for combat!", -200.0f);
+                    logger.info("V35.4 YOU ARE BEATEN: Not in battle — penalizing (-200)");
                 }
             }
 
@@ -1344,38 +1431,47 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 action.setActionType(ActionType.MOVE);
                 action.addReasoning("Movement option (see MoveEvaluator)", 0.0f);
 
-                // === V24.9: BOOST MOVEMENT WHEN ENEMY SPY BLOCKS OUR DRAIN ===
-                // If our character is at a CC location where an opponent spy gives them presence,
-                // our force drain is reduced/zeroed. Moving to an unoccupied CC site lets us drain.
-                // Boost the movement action so Rando doesn't just pass with unused force.
+                // === V35.4: BOOST MOVEMENT WHEN ENEMY SPY/PRESENCE BLOCKS OUR DRAIN ===
+                // If our character is at ANY location where an opponent (including undercover spy)
+                // has presence, our force drain is blocked. Moving away lets us drain elsewhere.
+                // Undercover spies deploy on OUR side but count as opponent presence!
                 if (gameState != null && context.getPlayerId() != null) {
                     try {
                         String opponentId = gameState.getOpponent(context.getPlayerId());
-                        // Check all CC locations for enemy spy presence blocking our drains
                         for (com.gempukku.swccgo.game.PhysicalCard loc : gameState.getLocationsInOrder()) {
                             if (loc == null || loc.getTitle() == null) continue;
-                            String locLower = loc.getTitle().toLowerCase(java.util.Locale.ROOT);
-                            if (!locLower.contains("cloud city")) continue;
 
                             boolean weHavePresence = false;
                             boolean oppHasPresence = false;
+                            boolean oppHasUndercoverSpy = false;
                             for (com.gempukku.swccgo.game.PhysicalCard card : gameState.getCardsAtLocation(loc)) {
                                 if (card == null) continue;
                                 if (context.getPlayerId().equals(card.getOwner())) {
                                     weHavePresence = true;
+                                    // V35.4: Check if this is actually an opponent's undercover spy
+                                    // Undercover spies appear on our side but are opponent cards
+                                    if (card.isUndercover()) {
+                                        oppHasUndercoverSpy = true;
+                                    }
                                 } else if (opponentId != null && opponentId.equals(card.getOwner())) {
                                     oppHasPresence = true;
                                 }
                             }
-                            // If both sides present at CC site, opponent blocks our drain
-                            if (weHavePresence && oppHasPresence) {
-                                action.addReasoning("V24.9: Enemy spy/presence blocking CC drain — movement valuable!", 150.0f);
-                                logger.warn("V24.9: Enemy presence at {} blocking our drain — boosting movement (+150)", loc.getTitle());
-                                break; // One boost is enough
+                            // If opponent has presence (or undercover spy) at our location, drain is blocked
+                            if (weHavePresence && (oppHasPresence || oppHasUndercoverSpy)) {
+                                float spyBonus = oppHasUndercoverSpy ? 250.0f : 150.0f;
+                                action.addReasoning(String.format(
+                                    "V35.4: %s blocking drain at %s — move away to drain elsewhere!",
+                                    oppHasUndercoverSpy ? "UNDERCOVER SPY" : "Enemy presence",
+                                    loc.getTitle()), spyBonus);
+                                logger.warn("V35.4: {} at {} blocking our drain — boosting movement (+{})",
+                                    oppHasUndercoverSpy ? "UNDERCOVER SPY" : "Enemy",
+                                    loc.getTitle(), (int)spyBonus);
+                                break;
                             }
                         }
                     } catch (Exception e) {
-                        logger.debug("V24.9: Error checking spy-blocked sites: {}", e.getMessage());
+                        logger.debug("V35.4: Error checking spy-blocked sites: {}", e.getMessage());
                     }
                 }
 
@@ -1916,9 +2012,46 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
 
                 if (duringBattleDamage) {
-                    // During battle — racking to save a weapon from a dying character is GOOD
-                    action.addReasoning("V29.6 BLASTER RACK: Battle in progress — save weapon from dying character!", 80.0f);
-                    logger.warn("V29.6 BLASTER RACK: ALLOWED during battle — saving weapon! '{}'", actionText);
+                    // V35.2: During battle — but ONLY rack weapons from characters AT the battle!
+                    // Bug: Rando racked Vader's Lightsaber from Mustafar while battle was at Mos Eisley.
+                    boolean weaponCharAtBattle = false;
+                    try {
+                        GameState rackGs2 = context.getGameState();
+                        if (rackGs2 != null && rackGs2.getBattleState() != null) {
+                            PhysicalCard battleLoc = rackGs2.getBattleState().getBattleLocation();
+                            if (battleLoc != null) {
+                                String rackPid = context.getPlayerId();
+                                for (PhysicalCard tableCard : rackGs2.getAllPermanentCards()) {
+                                    if (tableCard == null || !rackPid.equals(tableCard.getOwner())) continue;
+                                    if (tableCard.getBlueprint() == null) continue;
+                                    if (tableCard.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.WEAPON) continue;
+                                    com.gempukku.swccgo.common.Zone wz = tableCard.getZone();
+                                    if (wz == null || !wz.isInPlay()) continue;
+                                    String wTitle = tableCard.getTitle() != null ? tableCard.getTitle().toLowerCase(Locale.ROOT) : "";
+                                    if (wTitle.isEmpty() || !textLower.contains(wTitle)) continue;
+                                    PhysicalCard parentChar = tableCard.getAttachedTo();
+                                    if (parentChar != null) {
+                                        PhysicalCard charLoc = parentChar.getAtLocation();
+                                        if (charLoc != null && charLoc == battleLoc) {
+                                            weaponCharAtBattle = true;
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        logger.debug("V35.2 RACK: Error checking weapon location: {}", e.getMessage());
+                        weaponCharAtBattle = true; // Default to allow if check fails
+                    }
+
+                    if (weaponCharAtBattle) {
+                        action.addReasoning("V35.2 RACK: Character in battle — save weapon!", 80.0f);
+                        logger.warn("V35.2 RACK: Weapon's character AT battle — saving '{}'", actionText);
+                    } else {
+                        action.addReasoning("V35.2 RACK: Character NOT in this battle — do NOT rack!", -500.0f);
+                        logger.warn("V35.2 RACK: BLOCKED — weapon's character not at battle! '{}'", actionText);
+                    }
                 } else {
                     // Outside battle — proactive racking is TERRIBLE
                     action.addReasoning("V29.6 BLASTER RACK: Do NOT rack weapons outside battle — characters need them!", -500.0f);
@@ -2297,9 +2430,27 @@ public class ActionTextEvaluator extends ActionEvaluator {
             return;
         }
 
-        // Try to analyze the target and location
+        // V35.1: NEVER barrier our OWN characters! "You Are Beaten" can target any character,
+        // but preventing our OWN character from battling/moving is self-sabotage.
+        // Check if the target belongs to us — if so, HARD BLOCK.
         GameState gameState = context.getGameState();
         String playerId = context.getPlayerId();
+        if (gameState != null && playerId != null && targetCardName != null) {
+            String targetLower = targetCardName.toLowerCase();
+            for (PhysicalCard card : gameState.getAllPermanentCards()) {
+                if (card == null || card.getTitle() == null) continue;
+                if (card.getTitle().toLowerCase().contains(targetLower) || targetLower.contains(card.getTitle().toLowerCase())) {
+                    if (playerId.equals(card.getOwner())) {
+                        action.addReasoning(String.format(
+                            "V35.1 SELF-BARRIER BLOCK: %s is OUR character — NEVER prevent our own from battling!",
+                            targetCardName), -9999.0f);
+                        logger.warn("V35.1 SELF-BARRIER: Blocking barrier on OWN character {} (-9999)", targetCardName);
+                        return;
+                    }
+                    break;
+                }
+            }
+        }
         float targetPower = 0;
         float ourPower = 0;
         float theirPower = 0;

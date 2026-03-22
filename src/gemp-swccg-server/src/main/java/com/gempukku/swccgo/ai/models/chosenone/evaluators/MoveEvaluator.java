@@ -641,14 +641,18 @@ public class MoveEvaluator extends ActionEvaluator {
                     return;
 
                 case CRUSH:
+                    // V35.2: NEVER leave when crushing — STAY AND DESTROY!
+                    action.addReasoning("V35.2 STAY AND CRUSH: Power +" + (int)powerDiff + " — DESTROY them!", -500.0f);
+                    return;
+
                 case FAVORABLE:
-                    action.addReasoning("Power advantage (" + (int)powerDiff + ") - stay and fight!",
-                                       BAD_DELTA * 2);
+                    // V35.2: Strong advantage — stay and battle!
+                    action.addReasoning("V35.2 STAY AND FIGHT: Power +" + (int)powerDiff + " — battle them!", -400.0f);
                     return;
 
                 case RISKY:
-                    // Contested - could go either way
-                    action.addReasoning("Contested location - risky to leave", BAD_DELTA);
+                    // V35.2: Even fight — hold position
+                    action.addReasoning("V35.2 CONTESTED: Even power (" + (int)powerDiff + ") — hold position!", -200.0f);
                     break;
             }
         }
@@ -793,12 +797,14 @@ public class MoveEvaluator extends ActionEvaluator {
                     } catch (Exception e) { /* ignore */ }
 
                     if (opponentsUncontested) {
+                        // V35.1: Strong penalty for moving to empty sites when opponents are uncontested
+                        float wrongDirPenalty = -400.0f;
                         action.addReasoning(String.format(
-                            "V34 WRONG DIRECTION: Moving to empty %s while opponents drain uncontested at %s (power %.0f)!",
-                            v34Dest.getTitle(), opUncontestedLoc, opUncontestedPower), -150.0f);
-                        logger.warn("V34 WRONG DIRECTION: {} to empty {} while opponents at {} (power {})",
+                            "V35.1 WRONG DIRECTION: Moving to empty %s while opponents at %s (power %.0f) — GO FIGHT!",
+                            v34Dest.getTitle(), opUncontestedLoc, opUncontestedPower), wrongDirPenalty);
+                        logger.warn("V35.1 WRONG DIRECTION: {} to empty {} while opponents at {} (penalty {})",
                             cardToMove != null ? cardToMove.getTitle() : "?",
-                            v34Dest.getTitle(), opUncontestedLoc, (int)opUncontestedPower);
+                            v34Dest.getTitle(), opUncontestedLoc, (int)wrongDirPenalty);
                     }
                 }
             }
