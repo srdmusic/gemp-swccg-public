@@ -370,8 +370,16 @@ public class DeployEvaluator extends ActionEvaluator {
             String actionText = i < actionTexts.size() ? actionTexts.get(i) : "";
             String actionLower = actionText.toLowerCase(Locale.ROOT);
 
-            // Only handle deploy-related actions
-            if (!actionLower.contains("deploy")) {
+            // Only handle deploy-related actions (including persona replace)
+            if (!actionLower.contains("deploy") && !actionLower.contains("persona replace")) {
+                continue;
+            }
+
+            // V38.4: PERSONA REPLACE — usually BAD
+            if (actionLower.contains("persona replace")) {
+                EvaluatedAction prAction = new EvaluatedAction(actionId, ActionType.DEPLOY, -500.0f, actionText);
+                prAction.addReasoning("V38.4 PERSONA REPLACE: Loses armed character — blocked!", -500.0f);
+                actions.add(prAction);
                 continue;
             }
 
@@ -381,6 +389,25 @@ public class DeployEvaluator extends ActionEvaluator {
                 50.0f,  // Base score
                 actionText
             );
+
+            // V38.4: DEPLOY URGENCY — hand size + Force pile
+            {
+                int handSize = hand != null ? hand.size() : 0;
+                float urgencyBonus = 0;
+                if (handSize >= 12) {
+                    urgencyBonus = 200.0f + (handSize - 12) * 50.0f;
+                } else if (handSize >= 9) {
+                    urgencyBonus = 100.0f + (handSize - 9) * 30.0f;
+                }
+                if (availableForce >= 10 && handSize >= 8) {
+                    urgencyBonus += 100.0f;
+                }
+                if (urgencyBonus > 0) {
+                    action.addReasoning(String.format(
+                        "V38.4 DEPLOY URGENCY: hand=%d, force=%d (+%.0f)",
+                        handSize, availableForce, urgencyBonus), urgencyBonus);
+                }
+            }
 
             // === APPLY PHASE-LEVEL PLAN ===
             // V24.10: NEVER hold back on turns 1-2. The engine MUST be built ASAP:
@@ -647,12 +674,14 @@ public class DeployEvaluator extends ActionEvaluator {
                                         continue;  // Skip all other scoring - this action is blocked
                                     }
                                 } else if (plan.isWaitingForPlannedCards()) {
-                                    // Plan cards are in hand but not affordable - HARD BLOCK non-plan deploys
-                                    // We want to PASS and save force for the planned cards!
-                                    LOG.warn("🚫 BLOCKING off-plan deploy - saving force for planned cards: {}", card.getTitle());
-                                    action.addReasoning("BLOCKED: Saving force for planned cards!", -200.0f);
-                                    actions.add(action);
-                                    continue;  // Skip all other scoring
+                                    if (availableForce < 8) {
+                                        LOG.warn("📋 Low force — saving for planned cards: {}", card.getTitle());
+                                        action.addReasoning("Saving force for planned cards", -200.0f);
+                                        actions.add(action);
+                                        continue;
+                                    } else {
+                                        action.addReasoning("V38.4: Plenty of Force — deploy off-plan!", -20.0f);
+                                    }
                                 } else {
                                     action.addReasoning("NOT in deployment plan", -50.0f);
                                 }
@@ -806,6 +835,51 @@ public class DeployEvaluator extends ActionEvaluator {
                         continue;
                     }
 
+                    // === V36: CONTEST ALL DRAIN LOCATIONS ===
+                    // Opponent drains are the #1 damage source. Every uncontested drain site
+                    // bleeds 1-3 Force per turn. Deploying even one character stops the drain.
+                    // This is UNIVERSAL — applies to ALL decks, not just Hunt Down.
+                    // Scan all locations: if opponent has presence and we don't, that's a
+                    // drain site we MUST contest. Bonus scales with drain amount.
+                    if (blueprint.getCardCategory() == CardCategory.CHARACTER && gameState != null) {
+                        try {
+                            String v36Pid = context.getPlayerId();
+                            String v36Oid = game.getOpponent(v36Pid);
+                            String v36ActionLower = actionText.toLowerCase(Locale.ROOT);
+
+                            // Find which location this deploy targets
+                            for (PhysicalCard v36Loc : gameState.getTopLocations()) {
+                                if (v36Loc == null || v36Loc.getTitle() == null) continue;
+                                String v36LocLower = v36Loc.getTitle().toLowerCase(Locale.ROOT);
+                                if (v36LocLower.isEmpty() || !v36ActionLower.contains(v36LocLower)) continue;
+
+                                float v36OppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    gameState, v36Loc, v36Oid, false, false);
+                                float v36OurPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    gameState, v36Loc, v36Pid, false, false);
+
+                                if (v36OppPower > 0 && v36OurPower == 0) {
+                                    // Opponent is draining here uncontested! STOP THE BLEEDING!
+                                    float drainAmount = 1.0f;
+                                    try {
+                                        drainAmount = game.getModifiersQuerying().getForceDrainAmount(
+                                            gameState, v36Loc, v36Oid);
+                                    } catch (Exception e) { /* default 1 */ }
+
+                                    float contestDrainBonus = 200.0f + (drainAmount * 100.0f);
+                                    action.addReasoning(String.format(
+                                        "V36 CONTEST DRAIN: %s drains %.0f at %s UNCONTESTED — deploy to STOP the bleeding!",
+                                        v36Oid, drainAmount, v36Loc.getTitle()), contestDrainBonus);
+                                    LOG.warn("V36 CONTEST DRAIN: {} to {} — opponent drains {} uncontested (+{})",
+                                        card.getTitle(), v36Loc.getTitle(), (int)drainAmount, (int)contestDrainBonus);
+                                }
+                                break; // Found target location
+                            }
+                        } catch (Exception e) {
+                            LOG.debug("V36 CONTEST DRAIN: Error: {}", e.getMessage());
+                        }
+                    }
+
                     // === V34: DEPLOY DIRECTLY TO OPPONENTS — CONTEST THEIR LOCATIONS ===
                     // Deploy to locations where opponents have presence instead of empty locations.
                     // This prevents the "deploy to empty site, then waste Force moving" pattern.
@@ -889,19 +963,60 @@ public class DeployEvaluator extends ActionEvaluator {
                                         } catch (Exception e) { /* ignore */ }
                                     }
                                     if (opponentsElsewhere) {
+                                        // V36: SMART EMPTY DEPLOY — penalty depends on context.
+                                        // If we have enough Force AND characters to challenge opponents,
+                                        // heavy penalty for empty site. But if we CAN'T challenge
+                                        // (low Force, no characters in hand to pair up), deploying to
+                                        // an empty drain site is acceptable for force economy.
                                         com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer emptyDeployAnalyzer =
                                             context.getObjectiveAnalyzer();
                                         boolean isHuntDown = emptyDeployAnalyzer != null
                                             && emptyDeployAnalyzer.isAnalyzed() && emptyDeployAnalyzer.isHuntDownV();
-                                        float emptyPenalty = isHuntDown ? -1500.0f : -200.0f; // V35.2: raised from -800
+
+                                        // Check if this empty site has force drain icons (useful for our drains)
+                                        boolean hasDrainValue = false;
+                                        try {
+                                            com.gempukku.swccgo.common.Side mySide36 = context.getSide();
+                                            com.gempukku.swccgo.game.SwccgCardBlueprint locBp = locCard.getBlueprint();
+                                            if (locBp != null) {
+                                                int myIcons = (mySide36 == com.gempukku.swccgo.common.Side.DARK)
+                                                    ? locBp.getIconCount(com.gempukku.swccgo.common.Icon.DARK_FORCE)
+                                                    : locBp.getIconCount(com.gempukku.swccgo.common.Icon.LIGHT_FORCE);
+                                                if (myIcons > 0) hasDrainValue = true;
+                                            }
+                                        } catch (Exception e) { /* ignore */ }
+
+                                        // Count characters in hand that could deploy to opponent locations
+                                        int charsInHand = 0;
+                                        try {
+                                            java.util.List<PhysicalCard> v36Hand = gameState.getHand(playerId);
+                                            if (v36Hand != null) {
+                                                for (PhysicalCard hc : v36Hand) {
+                                                    if (hc != null && hc.getBlueprint() != null
+                                                        && hc.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                                        charsInHand++;
+                                                    }
+                                                }
+                                            }
+                                        } catch (Exception e) { /* ignore */ }
+
+                                        float emptyPenalty;
+                                        if (isHuntDown && charsInHand >= 2) {
+                                            // V37.4: Reduced from -600 — was blocking ALL deploys
+                                            emptyPenalty = -300.0f;
+                                        } else if (isHuntDown) {
+                                            emptyPenalty = hasDrainValue ? -50.0f : -150.0f;
+                                        } else {
+                                            emptyPenalty = -150.0f;
+                                        }
+
                                         action.addReasoning(String.format(
-                                            "V35.1 EMPTY DEPLOY: %s to %s has NO opponents — %s!",
+                                            "V36 EMPTY DEPLOY: %s to %s — no opponents here%s (penalty %.0f)",
                                             card.getTitle(), locCard.getTitle(),
-                                            isHuntDown ? "HUNT DOWN: GO WHERE OPPONENTS ARE" : "deploy where they ARE instead"),
+                                            hasDrainValue ? " but has drain icons" : "", emptyPenalty),
                                             emptyPenalty);
-                                        LOG.warn("V35.1 EMPTY DEPLOY: {} to {} — no opponents, opponents elsewhere (penalty {}{})",
-                                            card.getTitle(), locCard.getTitle(), (int)emptyPenalty,
-                                            isHuntDown ? " HUNT DOWN HARD BLOCK" : "");
+                                        LOG.warn("V36 EMPTY DEPLOY: {} to {} (hunt={}, charsInHand={}, drainIcons={}, penalty={})",
+                                            card.getTitle(), locCard.getTitle(), isHuntDown, charsInHand, hasDrainValue, (int)emptyPenalty);
                                     }
                                 }
                                 break;
@@ -1254,10 +1369,36 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
 
                                     if (unoccupiedObjLocs > 0 && deploysToUnoccupiedObjLoc) {
+                                        // V36: DEFEND YOUR TERRITORY — objective sites left empty get
+                                        // occupied by opponent Jedi who drain 2-3 per turn. Malachor sites
+                                        // must have presence BEFORE the opponent gets there.
+                                        // On turns 1-3, this is the #1 priority for Inquisitors.
+                                        float defendBonus = 250.0f;
+                                        int turnNum = context.getTurnNumber();
+                                        boolean isHuntDown36 = flipObjAnalyzer.isHuntDownV();
+                                        String deployCardLower36 = card.getTitle() != null
+                                            ? card.getTitle().toLowerCase(Locale.ROOT) : "";
+                                        boolean isInquisitor36 = isInquisitor(deployCardLower36);
+
+                                        if (isHuntDown36 && turnNum <= 3) {
+                                            // Early game Hunt Down — CRITICAL to defend Malachor
+                                            defendBonus = 800.0f; // V36: Overrides Hunt Block -2000
+                                            if (isInquisitor36) defendBonus = 1000.0f; // Inquisitors are ideal defenders
+                                            LOG.warn("V36 DEFEND MALACHOR: {} to empty obj site EARLY (turn {}) — must defend! (+{})",
+                                                card.getTitle(), turnNum, (int)defendBonus);
+                                        } else if (isHuntDown36) {
+                                            // Later turns — still important but less urgent
+                                            defendBonus = 500.0f;
+                                            LOG.warn("V36 DEFEND TERRITORY: {} to empty obj site (turn {}) — +{}",
+                                                card.getTitle(), turnNum, (int)defendBonus);
+                                        }
+
                                         action.addReasoning(String.format(
-                                            "V31 PRE-FLIP SPREAD: Deploy to unoccupied obj location! (%d/%d occupied)",
-                                            occupiedObjLocs, occupiedObjLocs + unoccupiedObjLocs), 250.0f);
-                                        LOG.warn("V31 PRE-FLIP: {} deploying to unoccupied obj loc (+250)", card.getTitle());
+                                            "V36 DEFEND TERRITORY: Deploy to unoccupied obj location! (%d/%d occupied%s)",
+                                            occupiedObjLocs, occupiedObjLocs + unoccupiedObjLocs,
+                                            isHuntDown36 && turnNum <= 3 ? " — EARLY DEFENSE CRITICAL" : ""), defendBonus);
+                                        LOG.warn("V36 PRE-FLIP: {} to unoccupied obj loc (+{}) — {}/{} occupied",
+                                            card.getTitle(), (int)defendBonus, occupiedObjLocs, occupiedObjLocs + unoccupiedObjLocs);
                                     } else if (unoccupiedObjLocs > 0) {
                                         action.addReasoning(String.format(
                                             "V31 PRE-FLIP: %d obj locations still unoccupied — spread out!",

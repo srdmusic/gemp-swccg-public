@@ -81,20 +81,40 @@ public class ForceActivationEvaluator extends ActionEvaluator {
 
         int amount;
 
-        // Standard force activation logic
-        if (textLower.contains("force to activate") || textLower.contains("activate force")) {
-            // EARLY GAME AGGRESSION: Turns 1-3, activate maximum to build resources
-            if (context.getTurnNumber() <= 3) {
-                amount = maxVal;
-                logger.info("Early game (turn {}) - activating max force: {}", context.getTurnNumber(), amount);
-            } else {
-                // Calculate optimal amount using game state logic
-                amount = calculateActivationAmount(context, maxVal);
+        // V38.2: Activate max, but if Reserve would drop below 4, save for destiny.
+        int reserveDeck = context.getReserveDeckSize();
+        int reserveAfterActivation = reserveDeck - maxVal;
+
+        if (reserveAfterActivation < 4) {
+            int reserveNeeded = 2;
+            if (gameState != null) {
+                try {
+                    String actPid = context.getPlayerId();
+                    for (PhysicalCard tc : gameState.getAllPermanentCards()) {
+                        if (tc == null || !actPid.equals(tc.getOwner())) continue;
+                        if (tc.getBlueprint() == null) continue;
+                        if (tc.getBlueprint().getCardCategory() != com.gempukku.swccgo.common.CardCategory.CHARACTER) continue;
+                        com.gempukku.swccgo.common.Zone tz = tc.getZone();
+                        if (tz == null || !tz.isInPlay()) continue;
+                        java.util.List<PhysicalCard> atts = gameState.getAttachedCards(tc);
+                        if (atts != null) {
+                            for (PhysicalCard att : atts) {
+                                if (att != null && att.getBlueprint() != null
+                                    && att.getBlueprint().getCardCategory() == com.gempukku.swccgo.common.CardCategory.WEAPON) {
+                                    reserveNeeded = 4;
+                                    break;
+                                }
+                            }
+                        }
+                        if (reserveNeeded == 4) break;
+                    }
+                } catch (Exception e) { /* ignore */ }
             }
+            amount = Math.max(0, reserveDeck - reserveNeeded);
+            amount = Math.min(amount, maxVal);
+            if (amount <= 0) amount = Math.min(maxVal, 1);
         } else {
-            // Unknown INTEGER decision - use max value
             amount = maxVal;
-            logger.info("Unknown INTEGER decision, using max: {}", amount);
         }
 
         // Ensure amount is within bounds

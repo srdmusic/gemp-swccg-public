@@ -641,17 +641,17 @@ public class MoveEvaluator extends ActionEvaluator {
                     return;
 
                 case CRUSH:
-                    // V35.2: NEVER leave when crushing — STAY AND DESTROY!
-                    action.addReasoning("V35.2 STAY AND CRUSH: Power +" + (int)powerDiff + " — DESTROY them!", -500.0f);
+                    // V37.1: ABSOLUTE BLOCK — NEVER leave when crushing!
+                    action.addReasoning("V37.1 STAY AND CRUSH: Power +" + (int)powerDiff + " — HARD BLOCK!", -9999.0f);
                     return;
 
                 case FAVORABLE:
-                    // V35.2: Strong advantage — stay and battle!
-                    action.addReasoning("V35.2 STAY AND FIGHT: Power +" + (int)powerDiff + " — battle them!", -400.0f);
+                    // V37.1: ABSOLUTE BLOCK — stay and fight!
+                    action.addReasoning("V37.1 STAY AND FIGHT: Power +" + (int)powerDiff + " — HARD BLOCK!", -9999.0f);
                     return;
 
                 case RISKY:
-                    // V35.2: Even fight — hold position
+                    // V37.1: Even fight — strong hold
                     action.addReasoning("V35.2 CONTESTED: Even power (" + (int)powerDiff + ") — hold position!", -200.0f);
                     break;
             }
@@ -733,7 +733,19 @@ public class MoveEvaluator extends ActionEvaluator {
 
                 if (destOppPower > 0) {
                     // Moving TO a location with opponents — CONTEST their drain!
+                    // V36: Extra bonus if they're draining there UNCONTESTED
+                    float ourPowerAtDest = 0;
+                    try {
+                        ourPowerAtDest = game.getModifiersQuerying().getTotalPowerAtLocation(
+                            gameState, v34Dest, playerId, false, false);
+                    } catch (Exception e) { /* ignore */ }
                     float contestBonus = 250.0f;
+                    if (ourPowerAtDest == 0) {
+                        // UNCONTESTED drain! Extra urgency
+                        contestBonus += 150.0f;
+                        logger.warn("V36 CONTEST DRAIN: {} — opponent drains UNCONTESTED at {} — extra urgency!",
+                            cardToMove != null ? cardToMove.getTitle() : "?", v34Dest.getTitle());
+                    }
                     // Extra bonus if we're armed
                     if (cardToMove != null) {
                         try {
@@ -797,14 +809,27 @@ public class MoveEvaluator extends ActionEvaluator {
                     } catch (Exception e) { /* ignore */ }
 
                     if (opponentsUncontested) {
-                        // V35.1: Strong penalty for moving to empty sites when opponents are uncontested
-                        float wrongDirPenalty = -400.0f;
                         action.addReasoning(String.format(
-                            "V35.1 WRONG DIRECTION: Moving to empty %s while opponents at %s (power %.0f) — GO FIGHT!",
-                            v34Dest.getTitle(), opUncontestedLoc, opUncontestedPower), wrongDirPenalty);
-                        logger.warn("V35.1 WRONG DIRECTION: {} to empty {} while opponents at {} (penalty {})",
-                            cardToMove != null ? cardToMove.getTitle() : "?",
-                            v34Dest.getTitle(), opUncontestedLoc, (int)wrongDirPenalty);
+                            "V38.3 WRONG DIRECTION: Moving to empty %s while opponents at %s — HARD BLOCK!",
+                            v34Dest.getTitle(), opUncontestedLoc), -9999.0f);
+                    }
+
+                    // V38.3: CASTLE RETREAT BLOCK
+                    String v34DestTitle = v34Dest.getTitle() != null
+                        ? v34Dest.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                    if (v34DestTitle.contains("mustafar") && v34DestTitle.contains("castle")) {
+                        boolean anyOpponentsOnBoard = false;
+                        try {
+                            for (PhysicalCard otherLoc2 : gameState.getLocationsInOrder()) {
+                                if (otherLoc2 == null) continue;
+                                float op2 = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    gameState, otherLoc2, opponentId, false, false);
+                                if (op2 > 0) { anyOpponentsOnBoard = true; break; }
+                            }
+                        } catch (Exception e) { /* ignore */ }
+                        if (anyOpponentsOnBoard) {
+                            action.addReasoning("V38.3 CASTLE RETREAT: NEVER retreat to Castle!", -9999.0f);
+                        }
                     }
                 }
             }

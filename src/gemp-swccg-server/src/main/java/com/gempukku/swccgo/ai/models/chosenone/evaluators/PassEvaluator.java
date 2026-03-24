@@ -148,6 +148,14 @@ public class PassEvaluator extends ActionEvaluator {
                 } else if (handSize < 7) {
                     float bonus = 4.0f * earlyGameMultiplier;
                     action.addReasoning("Hand below target (" + handSize + "/7) - conserve force", bonus);
+                } else if (handSize >= 10) {
+                    // V37.4: HAND BLOAT — 10+ cards = hoarding. Deploy!
+                    if (phase == Phase.DEPLOY) {
+                        float bloatPenalty = -50.0f - (handSize - 10) * 20.0f;
+                        if (forcePile >= 8) bloatPenalty -= 100.0f;
+                        action.addReasoning(String.format(
+                            "V37.4 HAND BLOAT: %d cards, %d Force — DEPLOY!", handSize, forcePile), bloatPenalty);
+                    }
                 }
             }
 

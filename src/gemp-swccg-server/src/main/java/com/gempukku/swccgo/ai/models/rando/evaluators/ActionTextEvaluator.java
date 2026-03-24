@@ -51,12 +51,14 @@ public class ActionTextEvaluator extends ActionEvaluator {
             return true;
         }
 
-        // Also handle MULTIPLE_CHOICE for capacity slot decisions and Epic Event choices
+        // Also handle MULTIPLE_CHOICE for capacity slot decisions, Epic Event choices,
+        // and the critical "not activated Force" confirmation
         if ("MULTIPLE_CHOICE".equals(decisionType)) {
             String decisionText = context.getDecisionText();
             if (decisionText != null) {
                 String dtLower = decisionText.toLowerCase();
-                if (dtLower.contains("capacity slot") || dtLower.contains("choose an option")) {
+                if (dtLower.contains("capacity slot") || dtLower.contains("choose an option")
+                    || dtLower.contains("not activated force") || dtLower.contains("have not activated")) {
                     return true;
                 }
             }
@@ -87,6 +89,24 @@ public class ActionTextEvaluator extends ActionEvaluator {
             if (blocked.contains(actionId) || blocked.contains(actionText)) {
                 action.addReasoning("BLOCKED (loop prevention)", -200.0f);
                 logger.debug("Blocked action: {}", actionText);
+            }
+
+            // ========== V38.3: "Not activated Force" — ALWAYS go back and activate ==========
+            // The game asks "You have not activated Force. Do you want to Pass?"
+            // Options: "Yes" (pass without activating) and "No" (go back and activate)
+            // ALWAYS choose "No" — Force is essential for deploying characters.
+            {
+                String decisionTextCheck = context.getDecisionText() != null
+                    ? context.getDecisionText().toLowerCase() : "";
+                if (decisionTextCheck.contains("not activated force") || decisionTextCheck.contains("have not activated")) {
+                    if (textLower.equals("no")) {
+                        action.addReasoning("V38.3 MUST ACTIVATE: Go back and activate Force!", 9999.0f);
+                        logger.warn("V38.3 MUST ACTIVATE: Choosing 'No' to go back and activate Force");
+                    } else if (textLower.equals("yes")) {
+                        action.addReasoning("V38.3 NEVER SKIP ACTIVATION: Do not pass without activating!", -9999.0f);
+                        logger.warn("V38.3 BLOCKED: Refusing to skip Force activation");
+                    }
+                }
             }
 
             // ========== Skip ALL Deploy Actions ==========
@@ -616,39 +636,67 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             action.addReasoning("V29.7 IAYF: Vader NOT on table — can't deploy lightsaber!", -500.0f);
                             logger.warn("V29.7 IAYF BLOCKED: Vader not on table");
                         } else if (vaderOnTable && textLower.contains("lightsaber")) {
-                            // V35.8: Vader IS on table — check if he's armed
-                            boolean vaderArmed = false;
+                            // V37: USE DECKORACLE to check WHERE the lightsaber actually is!
+                            // IAYF can pull from Reserve Deck (free) or Lost Pile (lose 1 Force).
+                            // The action text tells us which zone — don't try Reserve if it's in Lost.
+                            boolean pullFromReserve = textLower.contains("reserve");
+                            boolean pullFromLost = textLower.contains("lost");
+
+                            boolean saberInReserve = false;
+                            boolean saberInLost = false;
                             try {
-                                String iayPid = context.getPlayerId();
-                                for (PhysicalCard tc : gameState.getAllPermanentCards()) {
-                                    if (tc == null || !iayPid.equals(tc.getOwner())) continue;
-                                    if (tc.getBlueprint() == null) continue;
-                                    String tcTitle = tc.getTitle() != null ? tc.getTitle().toLowerCase(Locale.ROOT) : "";
-                                    if (!tcTitle.contains("vader")) continue;
-                                    if (tc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                    com.gempukku.swccgo.common.Zone tcZ = tc.getZone();
-                                    if (tcZ == null || !tcZ.isInPlay()) continue;
-                                    java.util.List<PhysicalCard> atts = gameState.getAttachedCards(tc);
-                                    if (atts != null) {
-                                        for (PhysicalCard att : atts) {
-                                            if (att != null && att.getBlueprint() != null
-                                                && att.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
-                                                vaderArmed = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    break;
+                                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle iayOracle = context.getDeckOracle();
+                                if (iayOracle != null && iayOracle.isAnalyzed()) {
+                                    saberInReserve = iayOracle.isCardInReserve("Darth Vader's Lightsaber");
+                                    saberInLost = iayOracle.isCardLost("Darth Vader's Lightsaber");
+                                    logger.info("V37 IAYF ZONE CHECK: saber in reserve={}, in lost={}, action={}",
+                                        saberInReserve, saberInLost, pullFromReserve ? "RESERVE" : pullFromLost ? "LOST" : "UNKNOWN");
                                 }
                             } catch (Exception e) { /* ignore */ }
 
-                            if (!vaderArmed) {
-                                // Vader unarmed — retrieving lightsaber is TOP PRIORITY
-                                action.addReasoning("V35.8 IAYF: Vader UNARMED — retrieve lightsaber NOW! Critical for battle!", 600.0f);
-                                logger.warn("V35.8 IAYF: Vader unarmed — lightsaber retrieval TOP PRIORITY (+600)");
+                            // V37: Block if trying to pull from wrong zone
+                            if (pullFromReserve && !saberInReserve) {
+                                action.addReasoning("V37 IAYF: Lightsaber NOT in Reserve Deck — WILL FAIL! Check Lost Pile instead.", -600.0f);
+                                logger.warn("V37 IAYF BLOCKED: Trying reserve but saber not there! (in lost={})", saberInLost);
+                            } else if (pullFromLost && !saberInLost) {
+                                action.addReasoning("V37 IAYF: Lightsaber NOT in Lost Pile — check Reserve instead.", -400.0f);
+                                logger.warn("V37 IAYF BLOCKED: Trying lost pile but saber not there! (in reserve={})", saberInReserve);
                             } else {
-                                // Vader already armed — still good to have a spare but lower priority
-                                action.addReasoning("V35.8 IAYF: Vader armed — spare lightsaber retrieval", 50.0f);
+                                // Lightsaber IS in the target zone — check if Vader is armed
+                                boolean vaderArmed = false;
+                                try {
+                                    String iayPid = context.getPlayerId();
+                                    for (PhysicalCard tc : gameState.getAllPermanentCards()) {
+                                        if (tc == null || !iayPid.equals(tc.getOwner())) continue;
+                                        if (tc.getBlueprint() == null) continue;
+                                        String tcTitle = tc.getTitle() != null ? tc.getTitle().toLowerCase(Locale.ROOT) : "";
+                                        if (!tcTitle.contains("vader")) continue;
+                                        if (tc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                                        com.gempukku.swccgo.common.Zone tcZ = tc.getZone();
+                                        if (tcZ == null || !tcZ.isInPlay()) continue;
+                                        java.util.List<PhysicalCard> atts = gameState.getAttachedCards(tc);
+                                        if (atts != null) {
+                                            for (PhysicalCard att : atts) {
+                                                if (att != null && att.getBlueprint() != null
+                                                    && att.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
+                                                    vaderArmed = true;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    }
+                                } catch (Exception e) { /* ignore */ }
+
+                                if (!vaderArmed) {
+                                    action.addReasoning(String.format(
+                                        "V37 IAYF: Vader UNARMED — retrieve lightsaber from %s NOW!",
+                                        pullFromLost ? "Lost Pile" : "Reserve"), 600.0f);
+                                    logger.warn("V37 IAYF: Vader unarmed, saber in {} — TOP PRIORITY (+600)",
+                                        pullFromLost ? "Lost" : "Reserve");
+                                } else {
+                                    action.addReasoning("V35.8 IAYF: Vader armed — spare lightsaber retrieval", 50.0f);
+                                }
                             }
                         }
                     }
@@ -730,6 +778,25 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                 action.addReasoning("V29.7 KIR KANOS: No Royal Guards in reserve — WILL FAIL!", -400.0f);
                                 logger.warn("V29.7 KIR KANOS BLOCKED: No Royal Guards in reserve (source: {})", sourceTitle);
                             }
+                        }
+                    }
+
+                    // === V37: UNIVERSAL RESERVE SEARCH SAFETY NET ===
+                    // Any "from reserve" action that wasn't caught by a specific rule above
+                    // should still be cautious. Failed searches give opponent free deck intel.
+                    // If DeckOracle shows reserve deck is very small, penalize searches
+                    // because they reveal more information proportionally.
+                    if (pullOracle != null && pullOracle.isAnalyzed()) {
+                        java.util.List<com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle.DeckCard> reserveCards =
+                            pullOracle.getCardsInZone(com.gempukku.swccgo.common.Zone.RESERVE_DECK);
+                        if (reserveCards.size() <= 3) {
+                            action.addReasoning("V37 RESERVE INTEL RISK: Only " + reserveCards.size() +
+                                " cards in reserve — search reveals almost everything to opponent!", -200.0f);
+                            logger.warn("V37 RESERVE RISK: {} cards in reserve — search gives opponent too much intel (-200)",
+                                reserveCards.size());
+                        } else if (reserveCards.size() <= 8) {
+                            action.addReasoning("V37 RESERVE CAUTION: " + reserveCards.size() +
+                                " cards in reserve — opponent will see deck composition", -50.0f);
                         }
                     }
                 }
@@ -945,6 +1012,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // BEST TIMING: Deploy phase — stack Hatred BEFORE initiating battle.
             // This way opponent's immunities are already gone when battle starts.
             if (textLower.contains("hatred")) {
+                // V37.1: Only place hatred on OUR turn — placing during opponent's turn
+                // wastes it because we can't follow up with a battle this turn.
+                if (gameState != null && !context.isMyTurn()) {
+                    action.addReasoning("V37.1 HATRED: Not our turn — save hatred for our deploy phase!", -600.0f);
+                    logger.warn("V37.1 HATRED: Opponent's turn — blocking hatred placement (-600)");
+                } else {
+
                 String decisionText = context.getDecisionText() != null
                     ? context.getDecisionText().toLowerCase(Locale.ROOT) : "";
                 boolean isDeployPhase = context.getPhase() == Phase.DEPLOY
@@ -1010,6 +1084,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     action.addReasoning("V35.3 HATRED: Vader/Inquisitor not at same site as opponents — save for later!", -300.0f);
                     logger.warn("V35.3 HATRED: No Vader/Inq co-located with opponents — blocked (-300)");
                 }
+            } // end V37.1 isMyTurn else block
             }
 
             // ========== V29.9: I HAVE YOU NOW — PLAY DURING BATTLE ==========
@@ -1182,11 +1257,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
-            // ========== V35.4: STUNNING LEADER — ONLY USE DEFENSIVELY ==========
-            // Stunning Leader excludes characters from battle. This is ONLY useful when:
-            // 1. OPPONENT initiated the battle (we're defending)
-            // 2. Opponent has a clear power advantage (we need to reduce their forces)
-            // NEVER use when WE initiated battle — we started it to WIN, not to exclude everyone!
+            // ========== V37.2: STUNNING LEADER — DEFENSIVE ONLY ==========
+            // Stunning Leader excludes characters from battle. Good when DEFENDING
+            // against a stronger opponent (saves Vader from certain death).
+            // BAD when WE initiated (we started the fight to WIN).
             else if (textLower.contains("stunning leader") || textLower.contains("exclude") && textLower.contains("from battle")) {
                 if (context.getPhase() == Phase.BATTLE && gameState != null) {
                     try {
@@ -1197,11 +1271,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             boolean weInitiated = slPlayerId != null && slPlayerId.equals(slInitiator);
 
                             if (weInitiated) {
-                                // WE started this battle — NEVER use Stunning Leader to exclude!
-                                action.addReasoning("V35.4 STUNNING LEADER: WE initiated battle — do NOT exclude! Fight to WIN!", -600.0f);
-                                logger.warn("V35.4 STUNNING LEADER BLOCKED: We initiated battle — don't exclude characters (-600)");
+                                // WE started this battle — NEVER cancel our own attack!
+                                action.addReasoning("V37.2 STUNNING LEADER: WE initiated — fight to WIN!", -9999.0f);
+                                logger.warn("V37.2 STUNNING LEADER: HARD BLOCK — we initiated this battle!");
                             } else {
-                                // Opponent initiated — check if they have advantage
+                                // Opponent initiated — check if we're outmatched
                                 PhysicalCard slBattleLoc = bState.getBattleLocation();
                                 if (slBattleLoc != null) {
                                     String slOpp = gameState.getOpponent(slPlayerId);
@@ -1209,24 +1283,25 @@ public class ActionTextEvaluator extends ActionEvaluator {
                                         gameState, slBattleLoc, slPlayerId, false, false);
                                     float slTheirPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                         gameState, slBattleLoc, slOpp, false, false);
-                                    if (slTheirPower > slOurPower) {
-                                        // Opponent is stronger — Stunning Leader is valuable defensively
+                                    if (slTheirPower > slOurPower * 1.5f) {
+                                        // Badly outmatched — Stunning Leader saves our characters!
                                         action.addReasoning(String.format(
-                                            "V35.4 STUNNING LEADER: Opponent stronger (%.0f vs %.0f) — exclude threats!",
-                                            slOurPower, slTheirPower), 200.0f);
+                                            "V37.2 STUNNING LEADER: Outmatched %.0f vs %.0f — exclude to survive!",
+                                            slOurPower, slTheirPower), 300.0f);
+                                        logger.warn("V37.2 STUNNING LEADER: Defensive use — saving characters from {} vs {}",
+                                            (int)slOurPower, (int)slTheirPower);
                                     } else {
-                                        // We're winning even though they initiated — don't waste it
-                                        action.addReasoning("V35.4 STUNNING LEADER: We're winning this battle — save it!", -200.0f);
+                                        // Close fight — fight it out instead of excluding
+                                        action.addReasoning("V37.2 STUNNING LEADER: Close fight — battle instead!", -300.0f);
                                     }
                                 }
                             }
                         }
                     } catch (Exception e) {
-                        logger.debug("V35.4 STUNNING LEADER: Error: {}", e.getMessage());
+                        logger.debug("V37.2 STUNNING LEADER: Error: {}", e.getMessage());
                     }
                 } else {
-                    // Not in battle — save for when we need it
-                    action.addReasoning("V35.4 STUNNING LEADER: Save for defensive use during battle!", -100.0f);
+                    action.addReasoning("V37.2 STUNNING LEADER: Not in battle — save!", -200.0f);
                 }
             }
 
@@ -1392,9 +1467,55 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 evaluateSenseCancel(action, context, actionText);
             }
 
-            // ========== Cancel/Redraw Destiny ==========
-            else if (textLower.contains("cancel and redraw") && textLower.contains("destiny")) {
-                action.addReasoning("Redraw destiny (current may be low)", GOOD_DELTA);
+            // ========== V37: Cancel/Redraw Destiny — CHECK CURRENT VALUE FIRST ==========
+            // Imperial Enforcement and similar cards cancel a destiny draw and cause a redraw.
+            // Only use if the current destiny is LOW (< 3). A 6-destiny character draw is
+            // essentially the best possible — NEVER cancel that.
+            // Use DeckOracle average to decide if redraw is likely to improve.
+            else if (textLower.contains("cancel") && textLower.contains("redraw") && textLower.contains("destiny")) {
+                // Try to extract the current destiny value from the action text
+                // Format often includes the drawn card name — check for high destiny numbers
+                float currentDestinyDrawn = -1;
+                try {
+                    // The action text often says "cancel X's battle destiny draw of <CardName>"
+                    // We can check DeckOracle for average destiny to decide
+                    com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle redrawOracle = context.getDeckOracle();
+                    double avgDest = 3.0;
+                    if (redrawOracle != null && redrawOracle.isAnalyzed()) {
+                        avgDest = redrawOracle.getAverageDestinyInReserve();
+                    }
+
+                    // Extract destiny number from action text if present (e.g., "draw of X as a 6")
+                    java.util.regex.Matcher destMatcher = java.util.regex.Pattern.compile("as a (\\d+)").matcher(textLower);
+                    if (destMatcher.find()) {
+                        currentDestinyDrawn = Float.parseFloat(destMatcher.group(1));
+                    }
+
+                    if (currentDestinyDrawn >= 0) {
+                        if (currentDestinyDrawn >= 3) {
+                            // Good destiny draw — do NOT cancel! Average would likely be worse.
+                            action.addReasoning(String.format(
+                                "V37 DON'T REDRAW: Current destiny %.0f is GOOD (avg %.1f) — keep it!",
+                                currentDestinyDrawn, avgDest), -300.0f);
+                            logger.warn("V37 REDRAW BLOCKED: Destiny {} is >= 3 (avg {}) — don't cancel!",
+                                (int)currentDestinyDrawn, String.format("%.1f", avgDest));
+                        } else {
+                            // Low destiny — redraw is likely to improve
+                            action.addReasoning(String.format(
+                                "V37 REDRAW: Current destiny %.0f is LOW (avg %.1f) — try for better!",
+                                currentDestinyDrawn, avgDest), 100.0f);
+                        }
+                    } else {
+                        // Couldn't determine current value — use average as guide
+                        if (avgDest >= 3.5) {
+                            action.addReasoning("Redraw destiny — good average in reserve", GOOD_DELTA);
+                        } else {
+                            action.addReasoning("Redraw destiny — risky, low average in reserve", -50.0f);
+                        }
+                    }
+                } catch (Exception e) {
+                    action.addReasoning("Redraw destiny", GOOD_DELTA);
+                }
             }
 
             // ========== Cancel Weapon Targeting ==========
@@ -2105,51 +2226,15 @@ public class ActionTextEvaluator extends ActionEvaluator {
     // ========== Helper Methods ==========
 
     private void evaluateActivateForce(EvaluatedAction action, DecisionContext context) {
-        GameState gameState = context.getGameState();
-        if (gameState == null) {
-            action.addReasoning("Default activate", GOOD_DELTA);
-            return;
-        }
-
-        String playerId = context.getPlayerId();
-        int reserveSize = gameState.getReserveDeckSize(playerId);
-        int forcePile = gameState.getForcePileSize(playerId);
-        int usedPile = gameState.getUsedPile(playerId).size();
-        int lifeForce = reserveSize + forcePile + usedPile;
-
-        int maxForcePile = 20;
-        // V29.13: Reduced reserve-for-destiny from 2-3 to 1.
-        // Old logic stopped activating when reserve had 2-3 cards, leaving Rando with
-        // too little Force to deploy characters. This caused a death spiral:
-        // low reserve → stop activating → can't deploy → lose battles → lower reserve.
-        // Having Force to deploy characters is MORE important than saving cards for
-        // destiny draws. If you can't deploy, you lose the game outright.
-        int reserveForDestiny = 1;
-
-        boolean wouldActivateZero = false;
-        String skipReason = null;
-
-        // Check if force pile at cap
-        if (forcePile >= maxForcePile) {
-            wouldActivateZero = true;
-            skipReason = "Force pile at max (" + forcePile + "/" + maxForcePile + ")";
-        }
-        // V29.13: Only stop activating when reserve is critically empty (≤1 card)
-        // This ensures Rando always has Force available for deployment
-        else if (reserveSize <= reserveForDestiny) {
-            wouldActivateZero = true;
-            skipReason = "Reserve (" + reserveSize + ") at minimum — save last card for destiny";
-        }
-
-        if (wouldActivateZero) {
-            action.addReasoning("Skip activation: " + skipReason, BAD_DELTA);
-        } else if (reserveSize < 4) {
-            // V29.13: Mild caution when reserve is low, but still activate
-            // (was < 5 with BAD_DELTA, now < 4 with mild penalty)
-            action.addReasoning("Reserve getting low (" + reserveSize + ") - still activating", -20.0f);
-        } else {
-            action.addReasoning("Activate force (good)", VERY_GOOD_DELTA);
-        }
+        // V38.3: ALWAYS activate Force. ALWAYS. No exceptions.
+        // Force is the currency for deploying characters. Without Force, Rando
+        // can't deploy, can't fight, and slowly loses by attrition.
+        // The old code had a Force pile cap of 20 and reserve-low checks that
+        // caused Rando to skip activation entirely, leading to death spirals.
+        // The ForceActivationEvaluator (INTEGER handler) now manages how MUCH
+        // to activate. This function just needs to score the ACTION highly.
+        action.addReasoning("V38.3 ALWAYS ACTIVATE: Force is currency — activate it!", 500.0f);
+        logger.info("V38.3 ACTIVATE FORCE: Scored +500 — always activate");
     }
 
     private void evaluateForceDrain(EvaluatedAction action, DecisionContext context, String locationCardId) {
@@ -2366,6 +2451,30 @@ public class ActionTextEvaluator extends ActionEvaluator {
     private void evaluateSenseCancel(EvaluatedAction action, DecisionContext context, String actionText) {
         String textLower = actionText.toLowerCase();
         boolean isDestinyBased = textLower.contains("draw destiny") || textLower.contains("if destiny");
+
+        // V37.3: NEVER cancel your OWN interrupts!
+        // Rando played FMFTD then Sensed his own FMFTD — self-sabotage.
+        // Check if the interrupt being canceled was played by US.
+        // Clue: if the action text mentions a card that we just played this turn,
+        // or if we're the active player and the interrupt belongs to us.
+        GameState senseGs = context.getGameState();
+        if (senseGs != null) {
+            try {
+                String sensePid = context.getPlayerId();
+                // Check if the interrupt target name matches one of OUR cards
+                // Hunt Down specific: FMFTD, Force Lightning, Force Push are ours
+                String[] ourInterrupts = {"far more frightening", "force lightning", "force push",
+                    "stunning leader", "i have you now", "sniper", "dark strike",
+                    "we must accelerate", "ghhhk", "force field", "no escape"};
+                for (String ourInt : ourInterrupts) {
+                    if (textLower.contains(ourInt)) {
+                        action.addReasoning("V37.3 SENSE SELF-CANCEL: NEVER cancel our OWN interrupt!", -9999.0f);
+                        logger.warn("V37.3 SENSE SELF-CANCEL: Tried to cancel our own '{}' — HARD BLOCKED!", ourInt);
+                        return;
+                    }
+                }
+            } catch (Exception e) { /* ignore */ }
+        }
 
         // Check priority cards system for target value
         AiPriorityCards.SenseTargetResult senseResult = AiPriorityCards.getSenseTargetValue(actionText);

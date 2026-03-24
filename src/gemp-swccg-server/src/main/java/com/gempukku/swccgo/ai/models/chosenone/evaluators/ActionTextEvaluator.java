@@ -51,12 +51,13 @@ public class ActionTextEvaluator extends ActionEvaluator {
             return true;
         }
 
-        // Also handle MULTIPLE_CHOICE for capacity slot decisions and Epic Event choices
+        // Also handle MULTIPLE_CHOICE for capacity slot, Epic Event, and activation confirmation
         if ("MULTIPLE_CHOICE".equals(decisionType)) {
             String decisionText = context.getDecisionText();
             if (decisionText != null) {
                 String dtLower = decisionText.toLowerCase();
-                if (dtLower.contains("capacity slot") || dtLower.contains("choose an option")) {
+                if (dtLower.contains("capacity slot") || dtLower.contains("choose an option")
+                    || dtLower.contains("not activated force") || dtLower.contains("have not activated")) {
                     return true;
                 }
             }
@@ -87,6 +88,19 @@ public class ActionTextEvaluator extends ActionEvaluator {
             if (blocked.contains(actionId) || blocked.contains(actionText)) {
                 action.addReasoning("BLOCKED (loop prevention)", -200.0f);
                 logger.debug("Blocked action: {}", actionText);
+            }
+
+            // ========== V38.3: "Not activated Force" — ALWAYS go back and activate ==========
+            {
+                String decisionTextCheck = context.getDecisionText() != null
+                    ? context.getDecisionText().toLowerCase() : "";
+                if (decisionTextCheck.contains("not activated force") || decisionTextCheck.contains("have not activated")) {
+                    if (textLower.equals("no")) {
+                        action.addReasoning("V38.3 MUST ACTIVATE: Go back and activate Force!", 9999.0f);
+                    } else if (textLower.equals("yes")) {
+                        action.addReasoning("V38.3 NEVER SKIP ACTIVATION!", -9999.0f);
+                    }
+                }
             }
 
             // ========== Skip ALL Deploy Actions ==========
@@ -487,19 +501,62 @@ public class ActionTextEvaluator extends ActionEvaluator {
                 }
             }
 
-            // ========== V25: I AM YOUR FATHER — CHECK RESERVE FOR TARGETS ==========
-            // I Am Your Father searches reserve for specific cards (lightsabers, interrupts).
-            // If the target isn't in reserve, don't waste the search.
-            if (textLower.contains("i am your father") && (textLower.contains("reserve") || textLower.contains("take"))) {
+            // ========== V37: I AM YOUR FATHER — DECKORACLE ZONE CHECK ==========
+            // IAYF can pull Vader's Lightsaber from Reserve (free) or Lost Pile (lose 1 Force).
+            // Use DeckOracle to verify the lightsaber is actually in the target zone.
+            // Failed searches give opponent free intel about our deck composition.
+            if (textLower.contains("i am your father") && textLower.contains("lightsaber")) {
+                boolean pullFromReserve = textLower.contains("reserve");
+                boolean pullFromLost = textLower.contains("lost");
                 com.gempukku.swccgo.ai.models.chosenone.strategy.DeckOracle iayOracle = context.getDeckOracle();
+                boolean saberInReserve = false;
+                boolean saberInLost = false;
                 if (iayOracle != null && iayOracle.isAnalyzed()) {
-                    // Extract what card is being searched for from the action text
-                    // Common patterns: "take X into hand from Reserve Deck"
-                    int reserveSize = gameState != null ? gameState.getReserveDeckSize(context.getPlayerId()) : 10;
-                    if (reserveSize <= 2) {
-                        action.addReasoning("V25 I AM YOUR FATHER: Reserve nearly empty (" + reserveSize + ") — likely to fail!", -200.0f);
-                        logger.warn("V25 IAYF: Reserve too small ({}) for search!", reserveSize);
+                    saberInReserve = iayOracle.isCardInReserve("Darth Vader's Lightsaber");
+                    saberInLost = iayOracle.isCardLost("Darth Vader's Lightsaber");
+                }
+                if (pullFromReserve && !saberInReserve) {
+                    action.addReasoning("V37 IAYF: Lightsaber NOT in Reserve — WILL FAIL and gives opponent deck intel!", -600.0f);
+                    logger.warn("V37 IAYF BLOCKED: Saber not in reserve (in lost={})", saberInLost);
+                } else if (pullFromLost && !saberInLost) {
+                    action.addReasoning("V37 IAYF: Lightsaber NOT in Lost Pile — check Reserve instead.", -400.0f);
+                } else {
+                    // Saber IS in target zone — check if Vader needs it
+                    boolean vaderArmed = false;
+                    try {
+                        String iayPid = context.getPlayerId();
+                        for (PhysicalCard tc : gameState.getAllPermanentCards()) {
+                            if (tc == null || !iayPid.equals(tc.getOwner())) continue;
+                            if (tc.getBlueprint() == null) continue;
+                            String tcTitle = tc.getTitle() != null ? tc.getTitle().toLowerCase(Locale.ROOT) : "";
+                            if (!tcTitle.contains("vader") || tc.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
+                            com.gempukku.swccgo.common.Zone tcZ = tc.getZone();
+                            if (tcZ == null || !tcZ.isInPlay()) continue;
+                            java.util.List<PhysicalCard> atts = gameState.getAttachedCards(tc);
+                            if (atts != null) {
+                                for (PhysicalCard att : atts) {
+                                    if (att != null && att.getBlueprint() != null
+                                        && att.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
+                                        vaderArmed = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    } catch (Exception e) { /* ignore */ }
+                    if (!vaderArmed) {
+                        action.addReasoning(String.format("V37 IAYF: Vader UNARMED — retrieve lightsaber from %s NOW!",
+                            pullFromLost ? "Lost Pile" : "Reserve"), 600.0f);
+                    } else {
+                        action.addReasoning("V37 IAYF: Vader armed — spare lightsaber", 50.0f);
                     }
+                }
+            } else if (textLower.contains("i am your father") && (textLower.contains("reserve") || textLower.contains("take"))) {
+                // Non-lightsaber IAYF search — basic reserve size check
+                int reserveSize = gameState != null ? gameState.getReserveDeckSize(context.getPlayerId()) : 10;
+                if (reserveSize <= 2) {
+                    action.addReasoning("V37 IAYF: Reserve nearly empty (" + reserveSize + ") — search gives opponent intel!", -200.0f);
                 }
             }
 
@@ -513,6 +570,11 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // BEST TIMING: Deploy phase — stack Hatred BEFORE initiating battle.
             // This way opponent's immunities are already gone when battle starts.
             if (textLower.contains("hatred")) {
+                // V37.1: Only place hatred on OUR turn
+                if (gameState != null && !context.isMyTurn()) {
+                    action.addReasoning("V37.1 HATRED: Not our turn — save for deploy phase!", -600.0f);
+                } else {
+
                 String decisionText = context.getDecisionText() != null
                     ? context.getDecisionText().toLowerCase(Locale.ROOT) : "";
                 boolean isDeployPhase = context.getPhase() == Phase.DEPLOY
@@ -573,6 +635,7 @@ public class ActionTextEvaluator extends ActionEvaluator {
                     action.addReasoning("V35.3 HATRED: Vader/Inquisitor not at same site as opponents — save!", -300.0f);
                     logger.warn("V35.3 HATRED: No co-location — blocked (-300)");
                 }
+            } // end V37.1 isMyTurn else
             }
 
             // ========== V35: FEEL MY FATHER'S DEADLY TOUCH (FMFTD) ==========
@@ -1476,42 +1539,8 @@ public class ActionTextEvaluator extends ActionEvaluator {
     // ========== Helper Methods ==========
 
     private void evaluateActivateForce(EvaluatedAction action, DecisionContext context) {
-        GameState gameState = context.getGameState();
-        if (gameState == null) {
-            action.addReasoning("Default activate", GOOD_DELTA);
-            return;
-        }
-
-        String playerId = context.getPlayerId();
-        int reserveSize = gameState.getReserveDeckSize(playerId);
-        int forcePile = gameState.getForcePileSize(playerId);
-        int usedPile = gameState.getUsedPile(playerId).size();
-        int lifeForce = reserveSize + forcePile + usedPile;
-
-        int maxForcePile = 20;
-        int reserveForDestiny = lifeForce < 10 ? 2 : 3;
-
-        boolean wouldActivateZero = false;
-        String skipReason = null;
-
-        // Check if force pile at cap
-        if (forcePile >= maxForcePile) {
-            wouldActivateZero = true;
-            skipReason = "Force pile at max (" + forcePile + "/" + maxForcePile + ")";
-        }
-        // Check if reserve too low
-        else if (reserveSize <= reserveForDestiny) {
-            wouldActivateZero = true;
-            skipReason = "Reserve (" + reserveSize + ") needed for destiny draws";
-        }
-
-        if (wouldActivateZero) {
-            action.addReasoning("Skip activation: " + skipReason, BAD_DELTA);
-        } else if (reserveSize < 5) {
-            action.addReasoning("Reserve critically low (" + reserveSize + ") - save for destiny", BAD_DELTA);
-        } else {
-            action.addReasoning("Activate force (good)", VERY_GOOD_DELTA);
-        }
+        // V38.3: ALWAYS activate Force. No exceptions.
+        action.addReasoning("V38.3 ALWAYS ACTIVATE: Force is currency!", 500.0f);
     }
 
     private void evaluateForceDrain(EvaluatedAction action, DecisionContext context, String locationCardId) {

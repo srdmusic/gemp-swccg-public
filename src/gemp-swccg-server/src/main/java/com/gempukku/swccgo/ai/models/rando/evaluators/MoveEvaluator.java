@@ -539,20 +539,44 @@ public class MoveEvaluator extends ActionEvaluator {
                         }
                     }
 
-                    // === V35.7: HUNT DOWN — VADER NEVER RETREATS TO CASTLE ===
-                    // Vader must NEVER move back to Mustafar: Vader's Castle. That's a retreat.
-                    // Castle is only for deploying FROM, not retreating TO.
+                    // === V37: NEVER MOVE FROM BATTLEGROUND TO NON-BATTLEGROUND ===
+                    // Moving from a battleground (where you can drain/battle) to a non-battleground
+                    // (like Mustafar: Vader's Castle) is almost always wrong. You lose drain potential
+                    // and can't initiate battles at non-battleground sites.
+                    // Exception: moving to a non-battleground to pick up a character (shuttle), but
+                    // that's handled by specific shuttle logic elsewhere.
                     {
-                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer castleAnalyzer =
-                            context.getObjectiveAnalyzer();
-                        if (castleAnalyzer != null && castleAnalyzer.isAnalyzed() && castleAnalyzer.isHuntDownV()
-                            && cardToMove != null && cardToMove.getTitle() != null
-                            && cardToMove.getTitle().toLowerCase(Locale.ROOT).contains("vader")) {
-                            String moveText = action.getDisplayText() != null
-                                ? action.getDisplayText().toLowerCase(Locale.ROOT) : "";
-                            if (moveText.contains("mustafar") || moveText.contains("vader's castle")) {
-                                action.addReasoning("V35.7 NO RETREAT: Vader NEVER goes back to Castle — HUNT!", -800.0f);
-                                logger.warn("V35.7 NO RETREAT: Blocking Vader move to Mustafar/Castle (-800)");
+                        String moveText37 = action.getDisplayText() != null
+                            ? action.getDisplayText().toLowerCase(Locale.ROOT) : "";
+                        // Find destination location
+                        PhysicalCard destLoc37 = null;
+                        for (PhysicalCard loc37 : gameState.getLocationsInOrder()) {
+                            if (loc37 == null || loc37 == currentLocation) continue;
+                            String locName37 = loc37.getTitle() != null ? loc37.getTitle().toLowerCase(Locale.ROOT) : "";
+                            if (!locName37.isEmpty() && moveText37.contains(locName37)) {
+                                destLoc37 = loc37;
+                                break;
+                            }
+                        }
+
+                        if (destLoc37 != null && destLoc37.getBlueprint() != null) {
+                            boolean destIsBattleground = false;
+                            try {
+                                destIsBattleground = game.getModifiersQuerying().isBattleground(gameState, destLoc37, null);
+                            } catch (Exception e) { /* ignore */ }
+
+                            boolean currentIsBattleground = false;
+                            try {
+                                currentIsBattleground = game.getModifiersQuerying().isBattleground(gameState, currentLocation, null);
+                            } catch (Exception e) { /* ignore */ }
+
+                            if (currentIsBattleground && !destIsBattleground) {
+                                action.addReasoning(String.format(
+                                    "V37 NO RETREAT: Moving from battleground %s to non-battleground %s — lose drain and battle ability!",
+                                    currentLocation.getTitle(), destLoc37.getTitle()), -800.0f);
+                                logger.warn("V37 NO RETREAT: {} from battleground {} to non-battleground {} (-800)",
+                                    cardToMove != null ? cardToMove.getTitle() : "?",
+                                    currentLocation.getTitle(), destLoc37.getTitle());
                             }
                         }
                     }
@@ -1111,25 +1135,25 @@ public class MoveEvaluator extends ActionEvaluator {
                     return;
 
                 case CRUSH:
-                    // V35.2: NEVER leave when we're crushing them — STAY AND DESTROY!
-                    action.addReasoning("V35.2 STAY AND CRUSH: Power advantage +" + (int)powerDiff + " — DESTROY them!",
-                                       -500.0f);
-                    logger.warn("V35.2 STAY AND CRUSH at {}: power +{} — blocking move (-500)",
+                    // V37.1: ABSOLUTE BLOCK — NEVER leave when crushing opponents!
+                    action.addReasoning("V37.1 STAY AND CRUSH: Power +" + (int)powerDiff + " — DESTROY them! HARD BLOCK!",
+                                       -9999.0f);
+                    logger.warn("V37.1 STAY AND CRUSH at {}: power +{} — HARD BLOCK (-9999)",
                         location.getTitle(), (int)powerDiff);
                     return;
 
                 case FAVORABLE:
-                    // V35.2: Strong advantage — stay and initiate battle!
-                    action.addReasoning("V35.2 STAY AND FIGHT: Power advantage +" + (int)powerDiff + " — battle them!",
-                                       -400.0f);
-                    logger.warn("V35.2 STAY AND FIGHT at {}: power +{} — blocking move (-400)",
+                    // V37.1: ABSOLUTE BLOCK — strong advantage, STAY AND FIGHT!
+                    action.addReasoning("V37.1 STAY AND FIGHT: Power +" + (int)powerDiff + " — HARD BLOCK!",
+                                       -9999.0f);
+                    logger.warn("V37.1 STAY AND FIGHT at {}: power +{} — HARD BLOCK (-9999)",
                         location.getTitle(), (int)powerDiff);
                     return;
 
                 case RISKY:
-                    // V35.2: Even fight — still don't leave unless there's a very good reason
-                    action.addReasoning("V35.2 CONTESTED: Even power (" + (int)powerDiff + ") — hold position!",
-                                       -200.0f);
+                    // V37.1: Even fight — very strong discouragement to leave
+                    action.addReasoning("V37.1 CONTESTED: Even power (" + (int)powerDiff + ") — hold position!",
+                                       -500.0f);
                     break;
             }
         }
@@ -1455,7 +1479,19 @@ public class MoveEvaluator extends ActionEvaluator {
 
                 if (destOppPower > 0) {
                     // Moving TO a location with opponents — CONTEST their drain!
+                    // V36: Extra bonus if they're draining there UNCONTESTED
+                    float ourPowerAtDest = 0;
+                    try {
+                        ourPowerAtDest = game.getModifiersQuerying().getTotalPowerAtLocation(
+                            gameState, v34Dest, playerId, false, false);
+                    } catch (Exception e) { /* ignore */ }
                     float contestBonus = 250.0f;
+                    if (ourPowerAtDest == 0) {
+                        // UNCONTESTED drain! Extra urgency
+                        contestBonus += 150.0f;
+                        logger.warn("V36 CONTEST DRAIN: {} — opponent drains UNCONTESTED at {} — extra urgency!",
+                            cardToMove != null ? cardToMove.getTitle() : "?", v34Dest.getTitle());
+                    }
                     // Extra bonus if we're armed (can battle effectively)
                     if (cardToMove != null) {
                         try {
@@ -1519,14 +1555,37 @@ public class MoveEvaluator extends ActionEvaluator {
                     } catch (Exception e) { /* ignore */ }
 
                     if (opponentsUncontested) {
-                        // V35.1: Strong penalty for moving to empty sites when opponents are uncontested
-                        float wrongDirPenalty = -400.0f;
+                        // V38.3: HARD BLOCK moving to empty locations when opponents exist
+                        float wrongDirPenalty = -9999.0f; // V38.3: Raised from -400 — HARD BLOCK
                         action.addReasoning(String.format(
-                            "V35.1 WRONG DIRECTION: Moving to empty %s while opponents at %s (power %.0f) — GO FIGHT!",
-                            v34Dest.getTitle(), opUncontestedLoc, opUncontestedPower), wrongDirPenalty);
-                        logger.warn("V35.1 WRONG DIRECTION: {} to empty {} while opponents at {} (penalty {})",
+                            "V38.3 WRONG DIRECTION: Moving to empty %s while opponents at %s — HARD BLOCK!",
+                            v34Dest.getTitle(), opUncontestedLoc), wrongDirPenalty);
+                        logger.warn("V38.3 WRONG DIRECTION: {} to empty {} — opponents at {} — HARD BLOCKED",
                             cardToMove != null ? cardToMove.getTitle() : "?",
-                            v34Dest.getTitle(), opUncontestedLoc, (int)wrongDirPenalty);
+                            v34Dest.getTitle(), opUncontestedLoc);
+                    }
+
+                    // V38.3: CASTLE RETREAT BLOCK — NEVER move to Mustafar: Vader's Castle
+                    // when there are opponents ANYWHERE on the board. Castle is a safe haven
+                    // that contributes nothing to the fight.
+                    String v34DestTitle = v34Dest.getTitle() != null
+                        ? v34Dest.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                    if (v34DestTitle.contains("mustafar") && v34DestTitle.contains("castle")) {
+                        boolean anyOpponentsOnBoard = false;
+                        try {
+                            for (PhysicalCard otherLoc2 : gameState.getLocationsInOrder()) {
+                                if (otherLoc2 == null) continue;
+                                float op2 = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                    gameState, otherLoc2, opponentId, false, false);
+                                if (op2 > 0) { anyOpponentsOnBoard = true; break; }
+                            }
+                        } catch (Exception e) { /* ignore */ }
+                        if (anyOpponentsOnBoard) {
+                            action.addReasoning("V38.3 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!",
+                                -9999.0f);
+                            logger.warn("V38.3 CASTLE RETREAT BLOCKED: {} trying to flee to Mustafar Castle!",
+                                cardToMove != null ? cardToMove.getTitle() : "?");
+                        }
                     }
                 }
             }

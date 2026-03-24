@@ -149,12 +149,18 @@ public class PassEvaluator extends ActionEvaluator {
                 } else if (handSize < 7) {
                     float bonus = 4.0f * earlyGameMultiplier;
                     action.addReasoning("Hand below target (" + handSize + "/7) - conserve force", bonus);
-                } else if (handSize >= 15) {
-                    // V29.6: HAND BLOAT — if we have 15+ cards, we're hoarding.
-                    // Penalize passing during deploy phase — we should be deploying, not passing!
+                } else if (handSize >= 10) {
+                    // V37.4: HAND BLOAT — 10+ cards in hand = hoarding. DEPLOY SOMETHING!
+                    // 15+ cards with 19 Force in pile = total paralysis. Must fix.
                     if (phase == Phase.DEPLOY) {
-                        float bloatPenalty = -30.0f - (handSize - 15) * 10.0f;
-                        action.addReasoning("V29.6 HAND BLOAT: " + handSize + " cards — stop passing, deploy!", bloatPenalty);
+                        float bloatPenalty = -50.0f - (handSize - 10) * 20.0f;
+                        // Extra penalty if Force pile is also large (total paralysis)
+                        if (forcePile >= 8) bloatPenalty -= 100.0f;
+                        action.addReasoning(String.format(
+                            "V37.4 HAND BLOAT: %d cards in hand, %d Force — DEPLOY SOMETHING!",
+                            handSize, forcePile), bloatPenalty);
+                        logger.warn("V37.4 HAND BLOAT: hand={}, force={} — pass penalty {}",
+                            handSize, forcePile, (int)bloatPenalty);
                     }
                 }
             }
