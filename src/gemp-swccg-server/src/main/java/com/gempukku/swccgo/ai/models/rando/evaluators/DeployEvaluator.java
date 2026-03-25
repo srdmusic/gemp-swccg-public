@@ -378,9 +378,9 @@ public class DeployEvaluator extends ActionEvaluator {
             // V38.4: PERSONA REPLACE — usually BAD. Replacing Vader with a different
             // version puts the current one in Lost Pile (losing any attached weapons).
             if (actionLower.contains("persona replace")) {
-                EvaluatedAction prAction = new EvaluatedAction(actionId, ActionType.DEPLOY, -500.0f, actionText);
-                prAction.addReasoning("V38.4 PERSONA REPLACE: Loses armed character — blocked!", -500.0f);
-                LOG.warn("V38.4 PERSONA REPLACE BLOCKED: '{}'", actionText);
+                EvaluatedAction prAction = new EvaluatedAction(actionId, ActionType.DEPLOY, -50.0f, actionText);
+                prAction.addReasoning("V39 PERSONA REPLACE: Loses armed character — caution (-50, was -500)", -50.0f);
+                LOG.warn("V39 PERSONA REPLACE: '{}' — mild penalty (-50, was -500)", actionText);
                 actions.add(prAction);
                 continue;
             }
@@ -605,7 +605,8 @@ public class DeployEvaluator extends ActionEvaluator {
                     context.getObjectiveAnalyzer();
                 int bfTurn = context.getTurnNumber();
                 if (bespinFirstAnalyzer != null && bespinFirstAnalyzer.isAnalyzed()
-                    && bespinFirstAnalyzer.needsBespinSystemPresence()) {
+                    && bespinFirstAnalyzer.needsBespinSystemPresence()
+                    && !bespinFirstAnalyzer.isHuntDownV()) { // V39: TDIGWATT only — Hunt Down deploys freely
                     // Check Bespin occupation FIRST — if we occupy it, guard is off permanently
                     boolean weOccupyBespinSpace = false;
                     GameState bfGs = context.getGameState();
@@ -670,9 +671,9 @@ public class DeployEvaluator extends ActionEvaluator {
 
                         if (!isLocationDeploy && !isAmsdAction && !isExecutorDeploy && !isShipDeploy && !isBespinDeploy) {
                             action.addReasoning(
-                                "V29 BESPIN-FIRST: Executor MUST deploy before characters! " +
-                                "Get Bespin → Executor/AMSD → THEN characters.", -500.0f);
-                            LOG.warn("V29 BESPIN-FIRST: BLOCKING deploy '{}' on turn {} — Bespin not occupied, deploy Executor first!",
+                                "V39 BESPIN-FIRST: Executor should deploy before characters (TDIGWATT) " +
+                                "Get Bespin → Executor/AMSD → THEN characters.", -50.0f);
+                            LOG.warn("V39 BESPIN-FIRST: Penalizing deploy '{}' on turn {} — Bespin not occupied (-50, was -500)",
                                 actionText.length() > 60 ? actionText.substring(0, 60) : actionText, bfTurn);
                         }
                     }
@@ -813,8 +814,8 @@ public class DeployEvaluator extends ActionEvaluator {
                                         boolean isTdigwattDL = dlObjAnalyzer != null && dlObjAnalyzer.isAnalyzed()
                                             && !dlObjAnalyzer.isHuntDownV();
                                         if (isTdigwattDL) {
-                                            LOG.warn("V40 BLOCKING non-location deploy during DEPLOY_LOCATIONS plan (turn 1, TDIGWATT): {}", card.getTitle());
-                                            action.addReasoning("BLOCKED: Plan is DEPLOY_LOCATIONS ONLY (turn 1, TDIGWATT) - deploy locations first!", -1000.0f);
+                                            LOG.warn("V39 DEPLOY_LOCATIONS: Non-location deploy during turn 1 TDIGWATT — penalty (-100, was -1000): {}", card.getTitle());
+                                            action.addReasoning("V39: DEPLOY_LOCATIONS turn 1 TDIGWATT — prefer locations first (-100, was -1000)", -100.0f);
                                             actions.add(action);
                                             continue;  // Skip all other scoring - this action is blocked
                                         } else {
@@ -1060,10 +1061,10 @@ public class DeployEvaluator extends ActionEvaluator {
                             }
                             if ((dtfOnTable || grabberUnused) && forceAfterThisDeploy <= 0) {
                                 action.addReasoning(
-                                    String.format("V29.13 INTERRUPT RESERVE: %s%s but 0 Force left for them after deploy",
+                                    String.format("V39 INTERRUPT RESERVE: %s%s but 0 Force left for them after deploy (mild)",
                                         dtfOnTable ? "DTF active" : "",
                                         grabberUnused ? (dtfOnTable ? " + grabber ready" : "Grabber ready") : ""),
-                                    -30.0f);
+                                    -3.0f); // V39: was -30
                             }
                         } catch (Exception e) {
                             LOG.debug("V29: Error checking force reserve during deploy: {}", e.getMessage());
@@ -1225,11 +1226,11 @@ public class DeployEvaluator extends ActionEvaluator {
                                                 card.getTitle(), targetLoc != null ? targetLoc.getTitle() : "?"), 50.0f);
                                         LOG.info("V29 OBJ-FLIP: Allowing solo {} for objective flip — has escape route", card.getTitle());
                                     } else {
-                                        // Strong preference penalty — still allow but it's risky
+                                        // V39: Mild penalty — still allow but it's risky (was -150)
                                         action.addReasoning(
-                                            String.format("V29 OBJ-FLIP: %s solo at '%s' for flip but NO escape route — risky!",
-                                                card.getTitle(), targetLoc != null ? targetLoc.getTitle() : "?"), -150.0f);
-                                        LOG.warn("V29 OBJ-FLIP: Solo {} for flip but no escape route — penalizing", card.getTitle());
+                                            String.format("V39 OBJ-FLIP: %s solo at '%s' for flip but NO escape route — mild caution",
+                                                card.getTitle(), targetLoc != null ? targetLoc.getTitle() : "?"), -15.0f);
+                                        LOG.warn("V39 OBJ-FLIP: Solo {} for flip but no escape route — mild penalty (-15, was -150)", card.getTitle());
                                     }
                                 } else {
                                     // V38: Check if this is a STAGING deploy — non-battleground
@@ -1262,19 +1263,19 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
 
                                     if (isStagingDeploy) {
-                                        // V38: Staging deploy — mild penalty, can move to buddy next turn
+                                        // V39: Staging deploy — very mild penalty (was -80)
                                         action.addReasoning(String.format(
-                                            "V38 STAGING: %s to non-battleground — move to buddy up next turn",
-                                            card.getTitle()), -80.0f);
-                                        LOG.info("V38 STAGING: {} deploying to staging site — can buddy next turn (-80)",
+                                            "V39 STAGING: %s to non-battleground — move to buddy up next turn",
+                                            card.getTitle()), -8.0f);
+                                        LOG.info("V39 STAGING: {} deploying to staging site — can buddy next turn (-8, was -80)",
                                             card.getTitle());
                                     } else {
-                                        // V38: Softer penalty than old -300 — allow with mild discourage
+                                        // V39: Very mild solo caution (was -150)
                                         action.addReasoning(
-                                            String.format("V38 SOLO CAUTION: %s (power %d) solo — vulnerable but acceptable",
+                                            String.format("V39 SOLO CAUTION: %s (power %d) solo — acceptable",
                                                 card.getTitle(), powerVal),
-                                            -150.0f); // V38: Reduced from -300
-                                        LOG.info("V38 SOLO CAUTION: {} (power {}) — mild penalty (-150)",
+                                            -15.0f); // V39: was -150
+                                        LOG.info("V39 SOLO CAUTION: {} (power {}) — mild penalty (-15, was -150)",
                                             card.getTitle(), powerVal);
                                     }
                                 }
@@ -1866,9 +1867,9 @@ public class DeployEvaluator extends ActionEvaluator {
                             LOG.debug("V22.7: Could not check Bespin occupation: {}", e.getMessage());
                         }
                         if (!weOccupyBespin) {
-                            action.addReasoning("V22.7 BLOCKED: " + card.getTitle() +
-                                " will SELF-CANCEL — we don't occupy Bespin system!", -800.0f);
-                            LOG.warn("🚫 V22.7: BLOCKING {} — we don't occupy Bespin, it will self-cancel!",
+                            action.addReasoning("V39 BLOCKED: " + card.getTitle() +
+                                " will SELF-CANCEL — we don't occupy Bespin system! (-80, was -800)", -80.0f);
+                            LOG.warn("V39 V22.7: {} — we don't occupy Bespin, it will self-cancel (-80, was -800)!",
                                 card.getTitle());
                             actions.add(action);
                             continue;
@@ -2011,13 +2012,13 @@ public class DeployEvaluator extends ActionEvaluator {
                                     LOG.warn("V29.11 LIGHTSABER: {} deploying on unarmed character — TOP PRIORITY (+{})!",
                                         card.getTitle(), (int)saberBoost);
                                 } else if (matchingCharOnTable && charAlreadyHasWeapon) {
-                                    // V29.11: Character already armed — STRONG block, don't double-weapon
-                                    action.addReasoning("V29.11 LIGHTSABER: Character already has a weapon — other characters need it!", -300.0f);
-                                    LOG.info("V29.11 LIGHTSABER: {} — target already armed, BLOCKED (-300)", card.getTitle());
+                                    // V39: Character already armed — mild penalty (was -300)
+                                    action.addReasoning("V39 LIGHTSABER: Character already has a weapon — other characters need it!", -30.0f);
+                                    LOG.info("V39 LIGHTSABER: {} — target already armed (-30, was -300)", card.getTitle());
                                 } else {
-                                    // No matching character on table — don't deploy orphan weapon
-                                    action.addReasoning("V29.11 LIGHTSABER: No matching character on table — save for later!", -200.0f);
-                                    LOG.info("V29.11 LIGHTSABER: {} — no target character, penalizing", card.getTitle());
+                                    // V39: No matching character on table — mild penalty (was -200)
+                                    action.addReasoning("V39 LIGHTSABER: No matching character on table — save for later!", -20.0f);
+                                    LOG.info("V39 LIGHTSABER: {} — no target character (-20, was -200)", card.getTitle());
                                 }
                             } catch (Exception e) {
                                 LOG.debug("V29.11 LIGHTSABER: Error checking weapon deploy: {}", e.getMessage());
@@ -2072,9 +2073,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                             // Check if hand weapon is named for the target character
                                             if (hcTitle.contains(targetCharName.split(",")[0].split(" ")[0])) {
                                                 action.addReasoning(String.format(
-                                                    "V33 NAMED WEAPON WAIT: %s has named weapon %s in hand — save the slot!",
-                                                    targetCharName, hc.getTitle()), -400.0f);
-                                                LOG.warn("V33 NAMED WEAPON WAIT: Generic {} blocked on {} — named {} in hand!",
+                                                    "V39 NAMED WEAPON WAIT: %s has named weapon %s in hand — save the slot!",
+                                                    targetCharName, hc.getTitle()), -40.0f); // V39: was -400
+                                                LOG.warn("V39 NAMED WEAPON WAIT: Generic {} on {} — named {} in hand (-40, was -400)",
                                                     card.getTitle(), targetCharName, hc.getTitle());
                                                 break;
                                             }
@@ -2164,16 +2165,16 @@ public class DeployEvaluator extends ActionEvaluator {
                                         action.addReasoning("V29.2 LANDO: Key piece + backup present — safe to deploy!", 200.0f);
                                         LOG.warn("V29.2 LANDO: +200 — has backup at CC site! (actionText='{}')", actionText);
                                     } else {
-                                        action.addReasoning("V40 LANDO: Key piece — deploy freely even without backup!", 0.0f);
-                                        LOG.warn("V40 LANDO: neutral (was -100) — no friendly chars at CC! (actionText='{}')", actionText);
+                                        action.addReasoning("V39 LANDO: Key piece — mild caution without backup (-10, was -100)", -10.0f);
+                                        LOG.warn("V39 LANDO: mild penalty (-10, was -100) — no friendly chars at CC! (actionText='{}')", actionText);
                                     }
                                 } else if (isLobotDeploy) {
                                     if (haveCharAtCCSite) {
                                         action.addReasoning("V29.2 LOBOT: Helps flip TDIGWATT + backup present!", 150.0f);
                                         LOG.warn("V29.2 LOBOT: +150 — has backup!");
                                     } else {
-                                        action.addReasoning("V40 LOBOT: Deploy freely even without backup!", 0.0f);
-                                        LOG.warn("V40 LOBOT: neutral (was -100) — no backup at CC!");
+                                        action.addReasoning("V39 LOBOT: Deploy with mild caution — no backup (-10, was -100)", -10.0f);
+                                        LOG.warn("V39 LOBOT: mild penalty (-10, was -100) — no backup at CC!");
                                     }
                                 }
                             }
@@ -2266,11 +2267,10 @@ public class DeployEvaluator extends ActionEvaluator {
                                         LOG.warn("V36 PRE-FLIP: {} to unoccupied obj loc (+{}) — {}/{} occupied",
                                             card.getTitle(), (int)defendBonus, occupiedObjLocs, occupiedObjLocs + unoccupiedObjLocs);
                                     } else if (unoccupiedObjLocs > 0) {
-                                        // Mild penalty for deploying to already-occupied location when
-                                        // unoccupied objective locations still need presence
+                                        // V39: Very mild penalty for stacking when obj locs need presence (was -50)
                                         action.addReasoning(String.format(
-                                            "V31 PRE-FLIP: %d obj locations still unoccupied — spread out instead of stacking!",
-                                            unoccupiedObjLocs), -50.0f);
+                                            "V39 PRE-FLIP: %d obj locations still unoccupied — consider spreading out",
+                                            unoccupiedObjLocs), -5.0f);
                                     }
                                 } else {
                                     // === POST-FLIP: Consolidate to fewer locations ===
@@ -2628,9 +2628,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                     if (amsdInPlay) {
                                         // Prefer AMSD pull but allow manual fallback (soft penalty, NOT hard block)
                                         action.addReasoning(String.format(
-                                            "V30 AMSD AVAILABLE: %s in reserve + AMSD on table — prefer AMSD pull, manual OK as fallback",
-                                            matchingShipName), -500.0f);
-                                        LOG.warn("V30 AMSD: {} in reserve — soft penalty (-500), prefer AMSD but not hard-blocked",
+                                            "V39 AMSD AVAILABLE: %s in reserve + AMSD on table — prefer AMSD pull, manual OK",
+                                            matchingShipName), -50.0f); // V39: was -500
+                                        LOG.warn("V39 AMSD: {} in reserve — mild penalty (-50, was -500), prefer AMSD but not blocked",
                                             matchingShipName);
                                     } else {
                                         // No AMSD — deploy pilot normally, ship will come later
@@ -2837,12 +2837,12 @@ public class DeployEvaluator extends ActionEvaluator {
                                 float oppShipPower = game.getModifiersQuerying().getTotalPowerAtLocation(
                                     gameState, sysLoc, v35ShipOid, false, false);
                                 if (oppShipPower > 0 && oppShipPower > ourShipPower * 1.5f) {
-                                    // V40: Ship vs overwhelming opponent — mild caution
-                                    float shipPenalty = -100.0f;
+                                    // V39: Ship vs overwhelming opponent — very mild caution (was -100)
+                                    float shipPenalty = -10.0f;
                                     action.addReasoning(String.format(
-                                        "V40 SHIP CAUTION: %s (power %.0f) vs opponent ships (power %.0f) at %s (mild caution)",
+                                        "V39 SHIP CAUTION: %s (power %.0f) vs opponent ships (power %.0f) at %s (very mild)",
                                         card.getTitle(), ourShipPower, oppShipPower, sysLoc.getTitle()), shipPenalty);
-                                    LOG.warn("V40 SHIP CAUTION: {} power {} vs opponent {} at {} — mild caution (-100, was -600/-1000)",
+                                    LOG.warn("V39 SHIP CAUTION: {} power {} vs opponent {} at {} — very mild (-10, was -100)",
                                         card.getTitle(), (int)ourShipPower, (int)oppShipPower, sysLoc.getTitle());
                                 }
                                 break;
@@ -2917,7 +2917,8 @@ public class DeployEvaluator extends ActionEvaluator {
                             com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer execObjAnalyzer =
                                 context.getObjectiveAnalyzer();
                             if (execObjAnalyzer != null && execObjAnalyzer.isAnalyzed()
-                                && execObjAnalyzer.needsBespinSystemPresence()) {
+                                && execObjAnalyzer.needsBespinSystemPresence()
+                                && !execObjAnalyzer.isHuntDownV()) { // V39: TDIGWATT only
 
                                 // V24.10: BESPIN MUST BE ON TABLE BEFORE EXECUTOR
                                 // Executor needs to deploy TO Bespin system. If Bespin isn't on the
