@@ -38,6 +38,10 @@ public class ActionTextEvaluator extends ActionEvaluator {
     private Set<String> barrieredTargets = new HashSet<>();
     private int barrierTurn = 0;
 
+    // V39: Track IHYN plays per battle — only play once per battle
+    private boolean ihynPlayedThisBattle = false;
+    private int ihynBattleId = -1;
+
     public ActionTextEvaluator() {
         super("ActionText");
     }
@@ -1094,6 +1098,24 @@ public class ActionTextEvaluator extends ActionEvaluator {
             // Also catch "i have you now" in source card check for generic action texts.
             if (textLower.contains("i have you now") || textLower.contains("ihyn")) {
                 if (context.getPhase() == Phase.BATTLE) {
+                    // V39: Only play IHYN ONCE per battle
+                    int currentBattleHash = gameState != null && gameState.getBattleState() != null
+                        ? System.identityHashCode(gameState.getBattleState()) : 0;
+                    if (currentBattleHash != ihynBattleId) {
+                        // New battle — reset tracker
+                        ihynPlayedThisBattle = false;
+                        ihynBattleId = currentBattleHash;
+                    }
+                    if (ihynPlayedThisBattle) {
+                        action.addReasoning("V39 IHYN: Already played once this battle — BLOCK second play!", -9999.0f);
+                        logger.warn("V39 IHYN: BLOCKED second play — once per battle limit");
+                        actions.add(action);
+                        continue;
+                    }
+                    // Mark as played (will be set when this action is chosen)
+                    // Note: we set it here optimistically — if this action wins, it's played
+                    ihynPlayedThisBattle = true;
+
                     // In battle — check if Vader is participating
                     boolean vaderInBattle = false;
                     try {

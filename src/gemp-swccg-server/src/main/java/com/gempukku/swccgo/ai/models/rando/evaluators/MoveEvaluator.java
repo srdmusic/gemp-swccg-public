@@ -1423,9 +1423,10 @@ public class MoveEvaluator extends ActionEvaluator {
                         gameState, location, playerId);
 
                     if (destDrainAmount < currentDrainAmount && destDrainAmount < 1) {
-                        // Moving to a WORSE drain location
-                        float drainPenalty = -80.0f;
-                        if (destDrainAmount <= 0) drainPenalty = -120.0f;
+                        // V39: Moving from a good drain site to a bad one — HARD BLOCK
+                        // Ninth Sister moved from drain 2 to drain 0. Never do this.
+                        float drainPenalty = -500.0f;
+                        if (destDrainAmount <= 0 && currentDrainAmount >= 2) drainPenalty = -9999.0f; // HARD BLOCK
                         action.addReasoning(String.format(
                             "V29.13 BAD DRAIN SITE: %s has drain %.0f (current location has %.0f) — stay for better drain!",
                             destLocation.getTitle(), destDrainAmount, currentDrainAmount), drainPenalty);

@@ -670,10 +670,12 @@ public class DeployEvaluator extends ActionEvaluator {
                         boolean isBespinDeploy = guardCheckText.contains("bespin");
 
                         if (!isLocationDeploy && !isAmsdAction && !isExecutorDeploy && !isShipDeploy && !isBespinDeploy) {
+                            // V39.2: RESTORE full penalty for TDIGWATT — V39 reduced this too aggressively
+                            // TDIGWATT NEEDS Bespin → Executor → Piett sequence. Without it, the deck fails.
                             action.addReasoning(
-                                "V39 BESPIN-FIRST: Executor should deploy before characters (TDIGWATT) " +
-                                "Get Bespin → Executor/AMSD → THEN characters.", -50.0f);
-                            LOG.warn("V39 BESPIN-FIRST: Penalizing deploy '{}' on turn {} — Bespin not occupied (-50, was -500)",
+                                "V29 BESPIN-FIRST: Executor MUST deploy before characters! (TDIGWATT) " +
+                                "Get Bespin → Executor/AMSD → THEN characters.", -500.0f);
+                            LOG.warn("V39.2 BESPIN-FIRST RESTORED: TDIGWATT needs sequence — blocking '{}' turn {} (-500)",
                                 actionText.length() > 60 ? actionText.substring(0, 60) : actionText, bfTurn);
                         }
                     }
@@ -814,8 +816,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                         boolean isTdigwattDL = dlObjAnalyzer != null && dlObjAnalyzer.isAnalyzed()
                                             && !dlObjAnalyzer.isHuntDownV();
                                         if (isTdigwattDL) {
-                                            LOG.warn("V39 DEPLOY_LOCATIONS: Non-location deploy during turn 1 TDIGWATT — penalty (-100, was -1000): {}", card.getTitle());
-                                            action.addReasoning("V39: DEPLOY_LOCATIONS turn 1 TDIGWATT — prefer locations first (-100, was -1000)", -100.0f);
+                                            // V39.2: RESTORE full penalty for TDIGWATT turn 1 location plan
+                                            LOG.warn("V39.2 DEPLOY_LOCATIONS RESTORED: TDIGWATT turn 1 — locations first! Blocking: {}", card.getTitle());
+                                            action.addReasoning("V29 DEPLOY_LOCATIONS: TDIGWATT turn 1 — deploy locations first!", -1000.0f);
                                             actions.add(action);
                                             continue;  // Skip all other scoring - this action is blocked
                                         } else {
@@ -1730,6 +1733,7 @@ public class DeployEvaluator extends ActionEvaluator {
                             String v40ActionLower = actionText.toLowerCase(Locale.ROOT);
 
                             // --- Deploy Vader/Emperor solo OK: +100 ---
+                            String cardTitleLower = card.getTitle() != null ? card.getTitle().toLowerCase(Locale.ROOT) : "";
                             if (cardTitleLower.contains("vader") || cardTitleLower.contains("emperor")
                                 || cardTitleLower.contains("palpatine")) {
                                 action.addReasoning("V40 ELITE: Vader/Emperor deploy bonus!", 100.0f);
@@ -2626,12 +2630,17 @@ public class DeployEvaluator extends ActionEvaluator {
                                             || matchOracle.isCardInPlay("Alert My Star Destroyer!");
                                     }
                                     if (amsdInPlay) {
-                                        // Prefer AMSD pull but allow manual fallback (soft penalty, NOT hard block)
+                                        // V39.2: Restore AMSD prefer for TDIGWATT, mild for Hunt Down
+                                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer amsdObjCheck =
+                                            context.getObjectiveAnalyzer();
+                                        boolean isHuntDownAmsd = amsdObjCheck != null && amsdObjCheck.isAnalyzed()
+                                            && amsdObjCheck.isHuntDownV();
+                                        float amsdPenalty = isHuntDownAmsd ? -50.0f : -500.0f; // TDIGWATT: full, Hunt Down: mild
                                         action.addReasoning(String.format(
-                                            "V39 AMSD AVAILABLE: %s in reserve + AMSD on table — prefer AMSD pull, manual OK",
-                                            matchingShipName), -50.0f); // V39: was -500
-                                        LOG.warn("V39 AMSD: {} in reserve — mild penalty (-50, was -500), prefer AMSD but not blocked",
-                                            matchingShipName);
+                                            "V39.2 AMSD: %s in reserve + AMSD on table — prefer AMSD pull (penalty %.0f)",
+                                            matchingShipName, amsdPenalty), amsdPenalty);
+                                        LOG.warn("V39.2 AMSD: {} in reserve — penalty {} (huntDown={})",
+                                            matchingShipName, (int)amsdPenalty, isHuntDownAmsd);
                                     } else {
                                         // No AMSD — deploy pilot normally, ship will come later
                                         LOG.info("V30 MATCHING: {} in reserve but no AMSD — deploy {} normally",
