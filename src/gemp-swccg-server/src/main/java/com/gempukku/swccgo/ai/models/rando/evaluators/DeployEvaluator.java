@@ -392,33 +392,33 @@ public class DeployEvaluator extends ActionEvaluator {
                 actionText
             );
 
-            // === V38.4: AGGRESSIVE DEPLOY — HAND SIZE + FORCE PILE URGENCY ===
-            // Cards in hand do NOTHING. Cards on table drain/battle/occupy.
-            // The more cards in hand and Force available, the more urgently we must deploy.
-            // This counteracts the many -200 to -600 penalties that stack up and cause
-            // Rando to pass with 15 Force and 12 cards in hand.
+            // === V40: DEPLOY URGENCY — mild base boost, lets buddy/drain bonuses differentiate ===
+            // Cards in hand do NOTHING. This gives a mild push to get cards out,
+            // but the real differentiation comes from buddy (+200), opponent location (+300),
+            // drain icons (+200), beat-down (+500) bonuses that stack on top.
+            // The urgency just ensures deploys beat Pass (5.0) — the smart bonuses
+            // determine WHERE to deploy.
             {
                 int handSize = hand != null ? hand.size() : 0;
                 float urgencyBonus = 0;
 
-                // Scale with hand size: bigger hand = more urgency to deploy
-                if (handSize >= 12) {
-                    urgencyBonus = 200.0f + (handSize - 12) * 50.0f; // +200 at 12, +250 at 13, +300 at 14...
-                } else if (handSize >= 9) {
-                    urgencyBonus = 100.0f + (handSize - 9) * 30.0f; // +100 at 9, +130 at 10, +160 at 11
+                // Mild base urgency — just enough to beat Pass, not enough to override
+                // location-quality evaluation
+                if (handSize >= 10) {
+                    urgencyBonus = 30.0f + (handSize - 10) * 10.0f; // +30 at 10, +40 at 11, +50 at 12...
+                } else if (handSize >= 7) {
+                    urgencyBonus = 15.0f; // Mild nudge
                 }
 
-                // Scale with Force available: more Force = less reason to hoard
+                // Extra nudge if lots of Force available — should be spending it
                 if (availableForce >= 10 && handSize >= 8) {
-                    urgencyBonus += 100.0f; // Surplus Force — spend it!
+                    urgencyBonus += 20.0f;
                 }
 
                 if (urgencyBonus > 0) {
                     action.addReasoning(String.format(
-                        "V38.4 DEPLOY URGENCY: hand=%d, force=%d — get cards on table! (+%.0f)",
+                        "V40 DEPLOY URGENCY: hand=%d, force=%d (+%.0f base)",
                         handSize, availableForce, urgencyBonus), urgencyBonus);
-                    LOG.warn("V38.4 DEPLOY URGENCY: hand={}, force={} — boost +{} (action='{}')",
-                        handSize, availableForce, (int)urgencyBonus, actionText);
                 }
             }
 
@@ -435,9 +435,9 @@ public class DeployEvaluator extends ActionEvaluator {
                     context.getObjectiveAnalyzer();
                 boolean isHuntDownHoldBack = holdBackObjAnalyzer != null && holdBackObjAnalyzer.isAnalyzed()
                     && holdBackObjAnalyzer.isHuntDownV();
-                // V40: Only apply hold-back for TDIGWATT (non-Hunt Down). All others deploy freely.
+                // V40: Only apply hold-back for TDIGWATT (needs Bespin). All others deploy freely.
                 boolean isTdigwattDeck = holdBackObjAnalyzer != null && holdBackObjAnalyzer.isAnalyzed()
-                    && !holdBackObjAnalyzer.isHuntDownV();
+                    && holdBackObjAnalyzer.needsBespinSystemPresence();
                 if (!isTdigwattDeck) {
                     // V40: NOT TDIGWATT — NEVER hold back, deploy freely
                     LOG.warn("V40 NO HOLD_BACK: Not TDIGWATT deck — ignoring hold-back, deploy freely! Action: '{}'",
@@ -670,13 +670,11 @@ public class DeployEvaluator extends ActionEvaluator {
                         boolean isBespinDeploy = guardCheckText.contains("bespin");
 
                         if (!isLocationDeploy && !isAmsdAction && !isExecutorDeploy && !isShipDeploy && !isBespinDeploy) {
-                            // V39.2: RESTORE full penalty for TDIGWATT — V39 reduced this too aggressively
-                            // TDIGWATT NEEDS Bespin → Executor → Piett sequence. Without it, the deck fails.
-                            action.addReasoning(
-                                "V29 BESPIN-FIRST: Executor MUST deploy before characters! (TDIGWATT) " +
-                                "Get Bespin → Executor/AMSD → THEN characters.", -500.0f);
-                            LOG.warn("V39.2 BESPIN-FIRST RESTORED: TDIGWATT needs sequence — blocking '{}' turn {} (-500)",
-                                actionText.length() > 60 ? actionText.substring(0, 60) : actionText, bfTurn);
+                            // V40.1: TDIGWATT — prefer Bespin/Executor but DON'T block other deploys.
+                            // Bespin and Executor get POSITIVE bonuses instead of blocking characters.
+                            // This way characters still deploy, just with slightly lower priority.
+                            action.addReasoning("V40.1 TDIGWATT: Bespin/Executor preferred but deploying is fine", 0.0f);
+                            LOG.info("V40.1 BESPIN-FIRST: Turn {} — no penalty, Bespin/Executor get bonus instead", bfTurn);
                         }
                     }
                 }
@@ -814,7 +812,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                         com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer dlObjAnalyzer =
                                             context.getObjectiveAnalyzer();
                                         boolean isTdigwattDL = dlObjAnalyzer != null && dlObjAnalyzer.isAnalyzed()
-                                            && !dlObjAnalyzer.isHuntDownV();
+                                            && dlObjAnalyzer.needsBespinSystemPresence();
                                         if (isTdigwattDL) {
                                             // V39.2: RESTORE full penalty for TDIGWATT turn 1 location plan
                                             LOG.warn("V39.2 DEPLOY_LOCATIONS RESTORED: TDIGWATT turn 1 — locations first! Blocking: {}", card.getTitle());
@@ -1018,9 +1016,9 @@ public class DeployEvaluator extends ActionEvaluator {
                                 // its own maintenance at end of turn. Small tiebreaker — NOT a blocker.
                                 // The card can be lost as attrition in battle, or Rando activates
                                 // more Force next turn to cover it.
-                                float maintPenalty = -50.0f; // V40: mild caution for maintenance
+                                float maintPenalty = -5.0f; // V40.1: very mild caution
                                 if (forceAfterThisDeploy <= 0) {
-                                    maintPenalty = -500.0f; // V40: Zero Force left — maintenance card will immediately die
+                                    maintPenalty = -20.0f; // V40.1: Zero Force — card may die but that's OK
                                 }
                                 action.addReasoning(
                                     String.format("V29.13 MAINT AWARENESS: This card costs %d maint at end of turn, " +
@@ -1899,38 +1897,55 @@ public class DeployEvaluator extends ActionEvaluator {
                         }
                     }
 
-                    // === V33: ONE WEAPON PER CHARACTER (HARD BLOCK) ===
-                    // A character should only ever have one weapon. If the target character
-                    // already has ANY weapon attached, hard-block this deploy (-9999).
-                    // This is universal — applies to all weapons, not just lightsabers.
+                    // === V33/V40: ONE WEAPON PER CHARACTER (HARD BLOCK) ===
+                    // V40 FIX: The old V33 code tried to match character names in action text,
+                    // but generic "Deploy" actions don't contain the target name. So it never fired.
+                    // NEW approach: check if ALL our characters on table already have weapons.
+                    // Also try to match character name in action text as before.
                     if (category == CardCategory.WEAPON && gameState != null) {
                         try {
                             String v33PlayerId = context.getPlayerId();
-                            // Parse target character from action text (format: "on <Character Name>")
+                            boolean foundUnarmedChar = false;
+                            boolean foundArmedTarget = false;
+
                             for (PhysicalCard tableCard : gameState.getAllPermanentCards()) {
                                 if (tableCard == null || !v33PlayerId.equals(tableCard.getOwner())) continue;
                                 com.gempukku.swccgo.common.Zone v33Zone = tableCard.getZone();
                                 if (v33Zone == null || !v33Zone.isInPlay()) continue;
                                 if (tableCard.getBlueprint() == null || tableCard.getBlueprint().getCardCategory() != CardCategory.CHARACTER) continue;
-                                String v33CharTitle = tableCard.getTitle() != null ? tableCard.getTitle().toLowerCase(Locale.ROOT) : "";
-                                if (v33CharTitle.isEmpty() || !actionLower.contains(v33CharTitle)) continue;
 
-                                // Found likely target character — check for existing weapons
+                                boolean hasWeapon = false;
                                 java.util.List<PhysicalCard> v33Attachments = gameState.getAttachedCards(tableCard);
                                 if (v33Attachments != null) {
                                     for (PhysicalCard att : v33Attachments) {
                                         if (att != null && att.getBlueprint() != null
                                             && att.getBlueprint().getCardCategory() == CardCategory.WEAPON) {
-                                            action.addReasoning(String.format(
-                                                "V33 ONE WEAPON: %s already has a weapon — BLOCKED!",
-                                                tableCard.getTitle()), -9999.0f);
-                                            LOG.warn("V33 ONE WEAPON: {} on {} BLOCKED — character already armed!",
-                                                card.getTitle(), tableCard.getTitle());
+                                            hasWeapon = true;
                                             break;
                                         }
                                     }
                                 }
-                                break; // Only check first matching character
+
+                                if (!hasWeapon) {
+                                    foundUnarmedChar = true;
+                                }
+
+                                // Also try action text matching (original V33 approach)
+                                String v33CharTitle = tableCard.getTitle() != null ? tableCard.getTitle().toLowerCase(Locale.ROOT) : "";
+                                if (!v33CharTitle.isEmpty() && actionLower.contains(v33CharTitle) && hasWeapon) {
+                                    foundArmedTarget = true;
+                                    action.addReasoning(String.format(
+                                        "V33 ONE WEAPON: %s already has a weapon — BLOCKED!",
+                                        tableCard.getTitle()), -9999.0f);
+                                    LOG.warn("V33 ONE WEAPON: {} on {} BLOCKED — character already armed!",
+                                        card.getTitle(), tableCard.getTitle());
+                                }
+                            }
+
+                            // V40: If action text didn't match but ALL characters are armed, block
+                            if (!foundArmedTarget && !foundUnarmedChar) {
+                                action.addReasoning("V40 ALL ARMED: Every character already has a weapon — no valid target!", -9999.0f);
+                                LOG.warn("V40 ALL ARMED: {} — all characters have weapons, blocking deploy", card.getTitle());
                             }
                         } catch (Exception e) {
                             LOG.debug("V33 ONE WEAPON: Error: {}", e.getMessage());
@@ -2635,7 +2650,7 @@ public class DeployEvaluator extends ActionEvaluator {
                                             context.getObjectiveAnalyzer();
                                         boolean isHuntDownAmsd = amsdObjCheck != null && amsdObjCheck.isAnalyzed()
                                             && amsdObjCheck.isHuntDownV();
-                                        float amsdPenalty = isHuntDownAmsd ? -50.0f : -500.0f; // TDIGWATT: full, Hunt Down: mild
+                                        float amsdPenalty = isHuntDownAmsd ? -5.0f : -20.0f; // V40.1: very mild preference for AMSD
                                         action.addReasoning(String.format(
                                             "V39.2 AMSD: %s in reserve + AMSD on table — prefer AMSD pull (penalty %.0f)",
                                             matchingShipName, amsdPenalty), amsdPenalty);
@@ -2955,12 +2970,12 @@ public class DeployEvaluator extends ActionEvaluator {
                                 } else {
                                     int execTurn = context.getTurnNumber();
                                     if (execTurn <= 2) {
-                                        // Turns 1-2: MAXIMUM priority — Executor MUST come out now
-                                        action.addReasoning("V24.9 EXECUTOR CRITICAL: Bespin on table — MUST deploy NOW!", 600.0f);
-                                        LOG.warn("V24.9 EXECUTOR CRITICAL: {} on turn {} + Bespin on table — MAXIMUM priority (+600)!", card.getTitle(), execTurn);
+                                        // V40.1: Turns 1-2: ABSOLUTE priority — Executor is the engine
+                                        action.addReasoning("V40.1 EXECUTOR: Bespin on table — deploy NOW!", 3000.0f);
+                                        LOG.warn("V40.1 EXECUTOR: {} turn {} + Bespin on table — +3000!", card.getTitle(), execTurn);
                                     } else {
-                                        action.addReasoning("V24.6 EXECUTOR: Key ship for TDIGWATT — deploy to Bespin!", 350.0f);
-                                        LOG.warn("V24.6 EXECUTOR: {} in hand + Bespin on table — deploy priority (+350)!", card.getTitle());
+                                        action.addReasoning("V40.1 EXECUTOR: Key ship for TDIGWATT — deploy to Bespin!", 1500.0f);
+                                        LOG.warn("V40.1 EXECUTOR: {} + Bespin on table — +1500!", card.getTitle());
                                     }
                                 }
                             }
@@ -3030,17 +3045,19 @@ public class DeployEvaluator extends ActionEvaluator {
                         action.addReasoning("Pilot character", 10.0f);
                     }
 
-                    // === V24.9: PIETT DEPLOY PRIORITY FOR TDIGWATT ===
-                    // Piett is THE matching pilot for Executor. If TDIGWATT is active,
-                    // deploying Piett is critical — he enables AMSD + Executor combo.
-                    if (cardTitleLower.contains("piett")) {
-                        com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer piettObjAnalyzer =
-                            context.getObjectiveAnalyzer();
-                        if (piettObjAnalyzer != null && piettObjAnalyzer.isAnalyzed()
-                            && piettObjAnalyzer.needsBespinSystemPresence()) {
-                            action.addReasoning("V24.9 PIETT: Key Executor pilot for TDIGWATT — deploy ASAP!", 200.0f);
-                            LOG.warn("V24.9 PIETT: {} in hand — critical pilot for Executor (+200)!", card.getTitle());
+                    // === V40.1: PIETT DEPLOY — ONLY ABOARD EXECUTOR ===
+                    // Piett is the matching pilot for Executor. He should NEVER deploy to a
+                    // Cloud City site — he belongs on the ship. If Executor isn't on table yet,
+                    // Piett should WAIT (deploy later when Executor arrives via AMSD).
+                    // Exception: if deploying aboard a ship (action text contains "aboard" or "pilot")
+                    // V40.1: Executor pilots (Piett, Gherant) — deploy aboard ship, not ground
+                    if (cardTitleLower.contains("piett") || cardTitleLower.contains("gherant")) {
+                        boolean deployingAboardShip = actionLower.contains("aboard") || actionLower.contains("pilot")
+                            || actionLower.contains("executor") || actionLower.contains("simultaneously");
+                        if (deployingAboardShip) {
+                            action.addReasoning("V40.1 PILOT ABOARD: Deploy aboard ship!", 300.0f);
                         }
+                        // No penalty for ground — positive scoring only
                     }
 
                     // === MATCHING PILOT CHECK ===

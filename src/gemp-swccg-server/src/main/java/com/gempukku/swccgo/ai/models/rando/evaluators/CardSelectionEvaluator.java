@@ -3136,42 +3136,31 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                         if (blueprint != null) {
                             action.setDisplayText("Select pilot " + (title != null ? title : cardId));
 
-                            // === V24.10: AMSD PILOT GUARD — PIETT ONLY ===
-                            // AMSD should ONLY be used with Piett + Executor.
-                            // Block ALL other pilots regardless of matching ships.
+                            // === V40.1: AMSD PILOT SELECTION — BOOST PIETT ===
+                            // Positive-only: Piett gets massive bonus for AMSD.
+                            // Other pilots get no bonus (natural scoring handles them).
                             if (isAmsdPilotChoice) {
                                 String pilotLower = (title != null) ? title.toLowerCase(java.util.Locale.ROOT) : "";
 
-                                if (!pilotLower.contains("piett")) {
-                                    // NOT Piett — hard block, no exceptions
-                                    action.setScore(-9999.0f);
-                                    action.addReasoning("V24.10 AMSD BLOCKED: Only Piett may use AMSD — " +
-                                        title + " is not allowed!", -9999.0f);
-                                    logger.warn("V24.10 AMSD HARD BLOCK: {} is NOT Piett — only Piett + Executor for AMSD!", title);
-                                    actions.add(action);
-                                    continue;
-                                }
-
-                                // It's Piett — verify Executor is in reserve
-                                com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle oracle = context.getDeckOracle();
-                                if (oracle != null && oracle.isAnalyzed()) {
-                                    boolean executorInReserve = oracle.isCardInReserve("Executor") ||
-                                        oracle.isCardInReserve("Flagship Executor");
-                                    if (!executorInReserve) {
-                                        action.setScore(-9999.0f);
-                                        action.addReasoning("V24.10 AMSD: Piett selected but Executor NOT in reserve!", -9999.0f);
-                                        logger.warn("V24.10 AMSD: Piett but Executor not in reserve — HARD BLOCK");
-                                        actions.add(action);
-                                        continue;
+                                if (pilotLower.contains("piett")) {
+                                    // Piett is THE pilot for AMSD + Executor
+                                    com.gempukku.swccgo.ai.models.rando.strategy.DeckOracle oracle = context.getDeckOracle();
+                                    boolean executorAvailable = true; // default allow
+                                    if (oracle != null && oracle.isAnalyzed()) {
+                                        executorAvailable = oracle.isCardInReserve("Executor")
+                                            || oracle.isCardInReserve("Flagship Executor")
+                                            || oracle.isCardInHand("Executor")
+                                            || oracle.isCardInHand("Flagship Executor");
                                     }
-                                    // Piett + Executor in reserve — approved!
-                                    action.addReasoning("V24.10 AMSD: Piett + Executor in reserve — APPROVED!", 300.0f);
-                                    logger.warn("V24.10 AMSD: Piett + Executor in reserve — APPROVED (+300)");
-                                } else {
-                                    // Oracle unavailable but it's Piett — allow (best guess)
-                                    action.addReasoning("V24.10 AMSD: Piett selected (oracle unavailable — allowing)", 200.0f);
-                                    logger.warn("V24.10 AMSD: Piett selected, oracle unavailable — allowing (+200)");
+                                    if (executorAvailable) {
+                                        action.addReasoning("V40.1 AMSD: Piett + Executor available — BEST choice!", 500.0f);
+                                        logger.warn("V40.1 AMSD: Piett selected + Executor available (+500)");
+                                    } else {
+                                        action.addReasoning("V40.1 AMSD: Piett but Executor not found — still best pilot", 100.0f);
+                                        logger.warn("V40.1 AMSD: Piett but Executor not available (+100)");
+                                    }
                                 }
+                                // Non-Piett pilots: no bonus, no penalty — natural scoring applies
                             }
 
                             // Prefer high-ability pilots
@@ -3631,6 +3620,92 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                                     action.addReasoning("V24.14B VEHICLE TO SPACE: Vehicles don't belong in space!", -300.0f);
                                     logger.warn("V24.14B VEHICLE MOVE: Vehicle moving to space {} — penalized (-300)", title);
                                 }
+                            }
+                        }
+
+                        // === V41: HUNT DOWN — MOVE DESTINATION AWARENESS ===
+                        // When choosing a move destination (e.g., Vader's Castle ability),
+                        // STRONGLY prefer locations with opponents, especially Jedi.
+                        // This fixes Vader going to empty Mapuzo Safehouse instead of
+                        // Malachor Entrance where Obi-Wan was draining 4 per turn.
+                        if (game != null && playerId != null) {
+                            try {
+                                String opponentId = gameState.getOpponent(playerId);
+
+                                // Check if opponents are at this destination
+                                if (theirPower > 0) {
+                                    // Opponents here — GREAT move destination!
+                                    float contestBonus = 300.0f;
+
+                                    // Extra bonus if uncontested (we have no presence)
+                                    if (ourPower == 0) {
+                                        contestBonus += 200.0f;
+                                        logger.warn("V41 MOVE DEST CONTEST: {} is UNCONTESTED by us — urgent! (+500)", title);
+                                    }
+
+                                    // Check for Jedi/Padawan at destination (Hunt Down priority)
+                                    boolean jediAtDest = false;
+                                    for (PhysicalCard c : gameState.getCardsAtLocation(location)) {
+                                        if (c == null || playerId.equals(c.getOwner())) continue;
+                                        String cTitle = c.getTitle() != null ? c.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                                        if (ActionEvaluator.isJediOrPadawan(cTitle)) {
+                                            jediAtDest = true;
+                                            break;
+                                        }
+                                    }
+                                    if (jediAtDest) {
+                                        contestBonus += 200.0f;
+                                        logger.warn("V41 HUNT JEDI DEST: Jedi at {} — Vader must go here! (+{})", title, (int)contestBonus);
+                                    }
+
+                                    action.addReasoning(String.format(
+                                        "V41 CONTEST DEST: Opponents (power %.0f) at %s%s — go fight!",
+                                        theirPower, title, jediAtDest ? " [JEDI!]" : ""), contestBonus);
+                                } else {
+                                    // No opponents here — check if opponents are draining uncontested ELSEWHERE
+                                    boolean opponentsElsewhere = false;
+                                    String worstDrainLoc = null;
+                                    float worstDrainPower = 0;
+                                    for (PhysicalCard otherLoc : gameState.getTopLocations()) {
+                                        if (otherLoc == null || otherLoc == location) continue;
+                                        float oppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                            gameState, otherLoc, opponentId, false, false);
+                                        float ourPowerThere = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                            gameState, otherLoc, playerId, false, false);
+                                        if (oppPower > 0 && ourPowerThere == 0) {
+                                            opponentsElsewhere = true;
+                                            if (oppPower > worstDrainPower) {
+                                                worstDrainPower = oppPower;
+                                                worstDrainLoc = otherLoc.getTitle();
+                                            }
+                                        }
+                                    }
+                                    if (opponentsElsewhere) {
+                                        // V41: WRONG DIRECTION — moving to empty site while opponents drain elsewhere
+                                        action.addReasoning(String.format(
+                                            "V41 WRONG DIRECTION: %s is empty — opponents draining at %s! Go there instead!",
+                                            title, worstDrainLoc), -9999.0f);
+                                        logger.warn("V41 WRONG DIRECTION: {} is empty, opponents at {} — BLOCKED", title, worstDrainLoc);
+                                    }
+                                }
+
+                                // V41: CASTLE RETREAT BLOCK — never move back to Castle when opponents exist
+                                String destTitleLower = title != null ? title.toLowerCase(java.util.Locale.ROOT) : "";
+                                if (destTitleLower.contains("mustafar") && destTitleLower.contains("castle")) {
+                                    boolean anyOpponents = false;
+                                    for (PhysicalCard otherLoc : gameState.getTopLocations()) {
+                                        if (otherLoc == null) continue;
+                                        float op = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                            gameState, otherLoc, opponentId, false, false);
+                                        if (op > 0) { anyOpponents = true; break; }
+                                    }
+                                    if (anyOpponents) {
+                                        action.addReasoning("V41 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!", -9999.0f);
+                                        logger.warn("V41 CASTLE RETREAT BLOCKED in move destination selection");
+                                    }
+                                }
+                            } catch (Exception e) {
+                                logger.debug("V41 MOVE DEST: Error: {}", e.getMessage());
                             }
                         }
 

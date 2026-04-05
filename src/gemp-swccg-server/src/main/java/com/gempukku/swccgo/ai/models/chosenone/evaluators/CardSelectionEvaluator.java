@@ -2942,6 +2942,92 @@ public class CardSelectionEvaluator extends ActionEvaluator {
                             }
                         }
 
+                        // === V41: HUNT DOWN — MOVE DESTINATION AWARENESS ===
+                        // When choosing a move destination (e.g., Vader's Castle ability),
+                        // STRONGLY prefer locations with opponents, especially Jedi.
+                        // This fixes Vader going to empty Mapuzo Safehouse instead of
+                        // Malachor Entrance where Obi-Wan was draining 4 per turn.
+                        if (game != null && playerId != null) {
+                            try {
+                                String opponentId = gameState.getOpponent(playerId);
+
+                                // Check if opponents are at this destination
+                                if (theirPower > 0) {
+                                    // Opponents here — GREAT move destination!
+                                    float contestBonus = 300.0f;
+
+                                    // Extra bonus if uncontested (we have no presence)
+                                    if (ourPower == 0) {
+                                        contestBonus += 200.0f;
+                                        logger.warn("V41 MOVE DEST CONTEST: {} is UNCONTESTED by us — urgent! (+500)", title);
+                                    }
+
+                                    // Check for Jedi/Padawan at destination (Hunt Down priority)
+                                    boolean jediAtDest = false;
+                                    for (PhysicalCard c : gameState.getCardsAtLocation(location)) {
+                                        if (c == null || playerId.equals(c.getOwner())) continue;
+                                        String cTitle = c.getTitle() != null ? c.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                                        if (ActionEvaluator.isJediOrPadawan(cTitle)) {
+                                            jediAtDest = true;
+                                            break;
+                                        }
+                                    }
+                                    if (jediAtDest) {
+                                        contestBonus += 200.0f;
+                                        logger.warn("V41 HUNT JEDI DEST: Jedi at {} — Vader must go here! (+{})", title, (int)contestBonus);
+                                    }
+
+                                    action.addReasoning(String.format(
+                                        "V41 CONTEST DEST: Opponents (power %.0f) at %s%s — go fight!",
+                                        theirPower, title, jediAtDest ? " [JEDI!]" : ""), contestBonus);
+                                } else {
+                                    // No opponents here — check if opponents are draining uncontested ELSEWHERE
+                                    boolean opponentsElsewhere = false;
+                                    String worstDrainLoc = null;
+                                    float worstDrainPower = 0;
+                                    for (PhysicalCard otherLoc : gameState.getTopLocations()) {
+                                        if (otherLoc == null || otherLoc == location) continue;
+                                        float oppPower = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                            gameState, otherLoc, opponentId, false, false);
+                                        float ourPowerThere = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                            gameState, otherLoc, playerId, false, false);
+                                        if (oppPower > 0 && ourPowerThere == 0) {
+                                            opponentsElsewhere = true;
+                                            if (oppPower > worstDrainPower) {
+                                                worstDrainPower = oppPower;
+                                                worstDrainLoc = otherLoc.getTitle();
+                                            }
+                                        }
+                                    }
+                                    if (opponentsElsewhere) {
+                                        // V41: WRONG DIRECTION — moving to empty site while opponents drain elsewhere
+                                        action.addReasoning(String.format(
+                                            "V41 WRONG DIRECTION: %s is empty — opponents draining at %s! Go there instead!",
+                                            title, worstDrainLoc), -9999.0f);
+                                        logger.warn("V41 WRONG DIRECTION: {} is empty, opponents at {} — BLOCKED", title, worstDrainLoc);
+                                    }
+                                }
+
+                                // V41: CASTLE RETREAT BLOCK — never move back to Castle when opponents exist
+                                String destTitleLower = title != null ? title.toLowerCase(java.util.Locale.ROOT) : "";
+                                if (destTitleLower.contains("mustafar") && destTitleLower.contains("castle")) {
+                                    boolean anyOpponents = false;
+                                    for (PhysicalCard otherLoc : gameState.getTopLocations()) {
+                                        if (otherLoc == null) continue;
+                                        float op = game.getModifiersQuerying().getTotalPowerAtLocation(
+                                            gameState, otherLoc, opponentId, false, false);
+                                        if (op > 0) { anyOpponents = true; break; }
+                                    }
+                                    if (anyOpponents) {
+                                        action.addReasoning("V41 CASTLE RETREAT: NEVER retreat to Castle while opponents exist!", -9999.0f);
+                                        logger.warn("V41 CASTLE RETREAT BLOCKED in move destination selection");
+                                    }
+                                }
+                            } catch (Exception e) {
+                                logger.debug("V41 MOVE DEST: Error: {}", e.getMessage());
+                            }
+                        }
+
                         // === V24.3C: DR. EVAZAN WEAPON COMBO — MOVEMENT PREFERENCE ===
                         // Move Evazan toward weapon characters, and weapon chars toward Evazan.
                         boolean movingEvazan = moveDecisionText.contains("evazan");

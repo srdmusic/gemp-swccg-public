@@ -276,6 +276,58 @@ public class MoveEvaluator extends ActionEvaluator {
                 PhysicalCard currentLocation = cardToMove.getAtLocation();
 
                 if (currentLocation != null) {
+                    // === V40: NEVER move from battleground to non-battleground ===
+                    // Battlegrounds are where you fight and drain. Moving to a non-battleground
+                    // gives up battle/drain capability for nothing. Exception: TDIGWATT Cloud City
+                    // corridors which are part of the objective strategy.
+                    {
+                        String v40ActionText = action.getDisplayText() != null
+                            ? action.getDisplayText().toLowerCase(java.util.Locale.ROOT) : "";
+                        boolean currentIsBattleground = false;
+                        boolean destIsNonBattleground = false;
+                        try {
+                            currentIsBattleground = game.getModifiersQuerying().isBattleground(
+                                gameState, currentLocation, null);
+                        } catch (Exception e) { /* ignore */ }
+
+                        if (currentIsBattleground) {
+                            // Find destination and check if it's a non-battleground
+                            for (PhysicalCard destLoc : gameState.getLocationsInOrder()) {
+                                if (destLoc == null || destLoc == currentLocation) continue;
+                                String destName = destLoc.getTitle() != null
+                                    ? destLoc.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                                if (!destName.isEmpty() && v40ActionText.contains(destName)) {
+                                    try {
+                                        {
+                                            boolean destIsBG = game.getModifiersQuerying().isBattleground(
+                                                gameState, destLoc, null);
+                                            if (!destIsBG) {
+                                                destIsNonBattleground = true;
+                                                // Exception: TDIGWATT Cloud City corridors
+                                                com.gempukku.swccgo.ai.models.rando.strategy.ObjectiveAnalyzer v40Obj =
+                                                    context.getObjectiveAnalyzer();
+                                                // Exceptions: TDIGWATT Cloud City OR objective-relevant location
+                                                boolean isTdigwattCC = v40Obj != null && v40Obj.isAnalyzed()
+                                                    && v40Obj.needsBespinSystemPresence()
+                                                    && destName.contains("cloud city");
+                                                boolean isObjLocation = v40Obj != null && v40Obj.isAnalyzed()
+                                                    && v40Obj.isObjectiveRelevantLocation(destLoc.getTitle());
+                                                if (!isTdigwattCC && !isObjLocation) {
+                                                    action.addReasoning(String.format(
+                                                        "V40 BG→NON-BG: Moving from battleground to non-battleground %s — BLOCKED!",
+                                                        destLoc.getTitle()), -9999.0f);
+                                                    logger.warn("V40 BG→NON-BG BLOCKED: {} from {} to non-BG {}",
+                                                        cardToMove.getTitle(), currentLocation.getTitle(), destLoc.getTitle());
+                                                }
+                                            }
+                                        }
+                                    } catch (Exception e) { /* ignore */ }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
                     // Analyze if we should move FROM this location
                     rankMoveFromLocation(action, gameState, game, playerId, mySide,
                                         cardToMove, currentLocation);

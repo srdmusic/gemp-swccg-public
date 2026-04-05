@@ -290,13 +290,12 @@ public class ActionTextEvaluator extends ActionEvaluator {
                             piettInHand, executorInReserve, executorInHand, executorAvailable);
 
                         if (piettInHand && executorAvailable) {
-                            // Piett + Executor available (in hand or reserve). ALLOW AMSD, boost it!
-                            // V24.15: On turn 1-2, AMSD is CRITICAL — must fire immediately after Bespin!
-                            // Later turns: still high priority but less urgent.
-                            float amsdBoost = 500.0f;
+                            // V40.1: AMSD is THE highest priority action in TDIGWATT.
+                            // Nothing should outscore this. Piett + Executor = entire engine.
+                            float amsdBoost = 2000.0f;
                             String source = executorInHand ? "hand" : "reserve";
                             if (currentTurn <= 2) {
-                                amsdBoost = 1500.0f;  // V24.15: Mega-boost on early turns — Executor MUST deploy ASAP!
+                                amsdBoost = 5000.0f;  // V40.1: Absolute maximum — NOTHING outscores AMSD on turns 1-2
                                 action.addReasoning("V24.15 AMSD MEGA PRIORITY: Turn " + currentTurn + " — Executor (from " + source + ") MUST deploy NOW to control Bespin!", amsdBoost);
                                 logger.warn("V24.15 AMSD MEGA PRIORITY: Turn {} — Piett in hand + Executor in {} — mega-boost +{} to ensure AMSD fires!", currentTurn, source, amsdBoost);
                             } else {

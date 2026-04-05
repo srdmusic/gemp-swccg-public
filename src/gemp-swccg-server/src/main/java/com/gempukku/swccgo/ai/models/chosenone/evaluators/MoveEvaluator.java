@@ -196,6 +196,41 @@ public class MoveEvaluator extends ActionEvaluator {
                 PhysicalCard currentLocation = cardToMove.getAtLocation();
 
                 if (currentLocation != null) {
+                    // === V40: NEVER move from battleground to non-battleground ===
+                    {
+                        String v40ActionText = action.getDisplayText() != null
+                            ? action.getDisplayText().toLowerCase(java.util.Locale.ROOT) : "";
+                        boolean currentIsBG = false;
+                        try {
+                            currentIsBG = game.getModifiersQuerying().isBattleground(
+                                gameState, currentLocation, null);
+                        } catch (Exception e) { /* ignore */ }
+                        if (currentIsBG) {
+                            for (PhysicalCard destLoc : gameState.getLocationsInOrder()) {
+                                if (destLoc == null || destLoc == currentLocation) continue;
+                                String destName = destLoc.getTitle() != null
+                                    ? destLoc.getTitle().toLowerCase(java.util.Locale.ROOT) : "";
+                                if (!destName.isEmpty() && v40ActionText.contains(destName)) {
+                                    try {
+                                        if (!game.getModifiersQuerying().isBattleground(gameState, destLoc, null)) {
+                                            com.gempukku.swccgo.ai.models.chosenone.strategy.ObjectiveAnalyzer v40Obj =
+                                                context.getObjectiveAnalyzer();
+                                            boolean isTdigwattCC = v40Obj != null && v40Obj.isAnalyzed()
+                                                && v40Obj.needsBespinSystemPresence()
+                                                && destName.contains("cloud city");
+                                            boolean isObjLocation = v40Obj != null && v40Obj.isAnalyzed()
+                                                && v40Obj.isObjectiveRelevantLocation(destLoc.getTitle());
+                                            if (!isTdigwattCC && !isObjLocation) {
+                                                action.addReasoning("V40 BG→NON-BG: BLOCKED!", -9999.0f);
+                                            }
+                                        }
+                                    } catch (Exception e) { /* ignore */ }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
                     // Analyze if we should move FROM this location
                     rankMoveFromLocation(action, gameState, game, playerId, mySide,
                                         cardToMove, currentLocation);
