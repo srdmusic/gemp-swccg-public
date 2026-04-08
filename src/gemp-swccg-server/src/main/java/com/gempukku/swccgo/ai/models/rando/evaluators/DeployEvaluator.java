@@ -2179,8 +2179,35 @@ public class DeployEvaluator extends ActionEvaluator {
                                     }
                                 }
 
+                                // V41: Check opponent presence at Dining Room before deploying Lando there
+                                boolean opponentAtDiningRoom = false;
+                                int opCharsAtDR = 0;
+                                if (landoGs != null && landoGame != null) {
+                                    try {
+                                        String oppId = landoGame.getOpponent(context.getPlayerId());
+                                        for (PhysicalCard loc : landoGs.getTopLocations()) {
+                                            if (loc == null || loc.getTitle() == null) continue;
+                                            if (!loc.getTitle().toLowerCase(Locale.ROOT).contains("dining room")) continue;
+                                            for (PhysicalCard c : landoGs.getCardsAtLocation(loc)) {
+                                                if (c != null && oppId != null && oppId.equals(c.getOwner())
+                                                    && c.getBlueprint() != null
+                                                    && c.getBlueprint().getCardCategory() == CardCategory.CHARACTER) {
+                                                    opponentAtDiningRoom = true;
+                                                    opCharsAtDR++;
+                                                }
+                                            }
+                                            break;
+                                        }
+                                    } catch (Exception e) { /* ignore */ }
+                                }
+
                                 if (isLandoDeploy) {
-                                    if (haveCharAtCCSite) {
+                                    if (opponentAtDiningRoom && !haveCharAtCCSite) {
+                                        // V41: Opponents at Dining Room and no friendlies — Lando will die!
+                                        action.addReasoning("V41 LANDO INTO ENEMY: " + opCharsAtDR
+                                            + " opponents at Dining Room — Lando dies instantly! Wait for Vader!", -9999.0f);
+                                        LOG.warn("V41 LANDO INTO ENEMY: {} opponents at DR, no backup — HARD BLOCK!", opCharsAtDR);
+                                    } else if (haveCharAtCCSite) {
                                         action.addReasoning("V29.2 LANDO: Key piece + backup present — safe to deploy!", 200.0f);
                                         LOG.warn("V29.2 LANDO: +200 — has backup at CC site! (actionText='{}')", actionText);
                                     } else {

@@ -1468,23 +1468,28 @@ public class CardSelectionEvaluator extends ActionEvaluator {
 
                                             boolean hasProtection = friendlyCharsAtSite > 0;
                                             boolean canDeployProtector = charsInHand >= 1;
+                                            boolean opponentAtThisSite = opponentCharsAtThisSite > 0;
                                             boolean opponentThreatens = (opponentCharsAtAnyCCSite + opponentCharsAtThisSite) > 0;
 
-                                            if (hasProtection) {
+                                            if (opponentAtThisSite && !hasProtection) {
+                                                // V41: HARD BLOCK — opponent characters AT THIS SITE and no friendlies!
+                                                action.addReasoning("V41 LANDO INTO ENEMY: " + opponentCharsAtThisSite
+                                                    + " opponents at " + title + " — Lando dies instantly! BLOCKED!", -9999.0f);
+                                                logger.warn("V41 LANDO INTO ENEMY: {} opponents at {} — HARD BLOCK!",
+                                                    opponentCharsAtThisSite, title);
+                                            } else if (hasProtection) {
                                                 // Friendlies at site — Lando is safe
                                                 logger.info("V25 LANDO: {} — {} friendlies here — safe to deploy", title, friendlyCharsAtSite);
                                             } else if (!canDeployProtector) {
                                                 // Lando would be ALONE and we have NO characters in hand to protect him.
-                                                // Even on Turn 1 this is dangerous — opponent deploys right after us.
                                                 action.addReasoning("V25 LANDO ALONE BLOCK: No protection at " + title
                                                     + " and no characters in hand to deploy alongside — wait for backup!", -500.0f);
                                                 logger.warn("V25 LANDO ALONE: {} — no friendlies, no hand chars — BLOCKED (-500)!", title);
                                             } else if (opponentThreatens) {
-                                                // Lando alone but we DO have chars in hand AND opponent at CC
-                                                // Mild penalty — we can deploy protectors but it's still risky
-                                                action.addReasoning("V25 LANDO CAUTION: Alone at " + title
-                                                    + " but " + charsInHand + " chars in hand — deploy protector ASAP!", -100.0f);
-                                                logger.warn("V25 LANDO: {} — alone + opponent at CC, but {} chars in hand (-100)",
+                                                // Lando alone but we DO have chars in hand AND opponent at other CC site
+                                                action.addReasoning("V41 LANDO CAUTION: Alone at " + title
+                                                    + " — opponent at CC sites! Deploy protector first!", -400.0f);
+                                                logger.warn("V41 LANDO: {} — alone + opponent at CC, {} chars in hand (-400)",
                                                     title, charsInHand);
                                             } else {
                                                 // Lando alone, no opponent at CC, but we have chars in hand
