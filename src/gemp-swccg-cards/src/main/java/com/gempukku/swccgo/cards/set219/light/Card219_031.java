@@ -68,7 +68,7 @@ public class Card219_031 extends AbstractSite {
             if (GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, SpotOverride.INCLUDE_UNDERCOVER, Filters.and(Icon.EPISODE_I, Filters.Jedi), self, otherBattlegroundSites, false)) {
                 MoveUsingLocationTextAction action = new MoveUsingLocationTextAction(playerOnLightSideOfLocation, game, self, gameTextSourceCardId, SpotOverride.INCLUDE_UNDERCOVER, Filters.and(Icon.EPISODE_I, Filters.Jedi), self, otherBattlegroundSites, false);
                 action.setText("Move from here to other site");
-                action.setActionMsg("Move an [Episode 1] Jedi from " + GameUtils.getCardLink(self) + " to other battleground (or Coruscant) site");
+                action.setActionMsg("Move an [Episode 1] Jedi from " + GameUtils.getCardLink(self) + " to other battleground site");
                 actions.add(action);
             }
             if (GameConditions.canPerformMovementUsingLocationText(playerOnLightSideOfLocation, game, SpotOverride.INCLUDE_UNDERCOVER, Filters.and(Icon.EPISODE_I, Filters.Jedi), otherBattlegroundSites, self, false)) {
